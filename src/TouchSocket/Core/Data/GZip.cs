@@ -86,7 +86,7 @@ namespace TouchSocket.Core
         {
             using (GZipStream gZipStream = new GZipStream(new MemoryStream(data, offset, length), CompressionMode.Decompress))
             {
-                byte[] bytes = BytePool.GetByteCore(1024 * 64);
+                byte[] bytes = BytePool.Default.GetByteCore(1024 * 64);
                 try
                 {
                     int r;
@@ -98,7 +98,7 @@ namespace TouchSocket.Core
                 }
                 finally
                 {
-                    BytePool.Recycle(bytes);
+                    BytePool.Default.Recycle(bytes);
                 }
             }
         }

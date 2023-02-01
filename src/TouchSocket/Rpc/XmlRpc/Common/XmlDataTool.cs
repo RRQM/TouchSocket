@@ -247,7 +247,7 @@ namespace TouchSocket.Rpc.XmlRpc
 
             CreateParam(xml, valueElement, value);
 
-            ByteBlock xmlBlock = BytePool.GetByteBlock(1024 * 4);
+            ByteBlock xmlBlock = new ByteBlock();
             xml.Save(xmlBlock);
 
             string xmlString = Encoding.UTF8.GetString(xmlBlock.Buffer, 0, xmlBlock.Len);

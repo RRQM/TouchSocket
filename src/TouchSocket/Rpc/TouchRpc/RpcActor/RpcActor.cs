@@ -72,7 +72,6 @@ namespace TouchSocket.Rpc.TouchRpc
         /// </summary>
         public Action<RpcActor, VerifyOptionEventArgs> OnHandshaking { get; set; }
 
-
         /// <summary>
         /// 接收到数据
         /// </summary>
@@ -333,7 +332,8 @@ namespace TouchSocket.Rpc.TouchRpc
                                 waitSetID.Message = ex.Message;
                             }
                             byteBlock.Reset();
-                            Send(TouchRpcUtility.P_1001_ResetID_Response, byteBlock.WriteObject(waitSetID));
+                            byteBlock.WriteObject(waitSetID);
+                            Send(TouchRpcUtility.P_1001_ResetID_Response, byteBlock);
                         }
                         catch (Exception ex)
                         {

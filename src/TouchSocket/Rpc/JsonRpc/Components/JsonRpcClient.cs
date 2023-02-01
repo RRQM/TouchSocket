@@ -444,7 +444,7 @@ namespace TouchSocket.Rpc.JsonRpc
             JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = m_waitHandle.GetWaitData(context);
 
-            using (ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength))
+            using (ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength))
             {
                 if (invokeOption == default)
                 {
@@ -550,7 +550,7 @@ namespace TouchSocket.Rpc.JsonRpc
             JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = m_waitHandle.GetWaitData(context);
 
-            using (ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength))
+            using (ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength))
             {
                 if (invokeOption == default)
                 {
@@ -673,7 +673,7 @@ namespace TouchSocket.Rpc.JsonRpc
             JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = m_waitHandle.GetWaitData(context);
 
-            using (ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength))
+            using (ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength))
             {
                 if (invokeOption == default)
                 {
@@ -768,7 +768,7 @@ namespace TouchSocket.Rpc.JsonRpc
             JsonRpcWaitResult context = new JsonRpcWaitResult();
             WaitData<IWaitResult> waitData = m_waitHandle.GetWaitData(context);
 
-            using (ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength))
+            using (ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength))
             {
                 if (invokeOption == default)
                 {

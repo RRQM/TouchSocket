@@ -123,21 +123,21 @@ namespace TouchSocket.Sockets
                 case FixedHeaderType.Byte:
                     {
                         byte dataLen = (byte)(length - offset);
-                        byteBlock = BytePool.GetByteBlock(dataLen + 1);
+                        byteBlock = new ByteBlock(dataLen + 1);
                         lenBytes = new byte[] { dataLen };
                         break;
                     }
                 case FixedHeaderType.Ushort:
                     {
                         ushort dataLen = (ushort)(length - offset);
-                        byteBlock = BytePool.GetByteBlock(dataLen + 2);
+                        byteBlock = new ByteBlock(dataLen + 2);
                         lenBytes = TouchSocketBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
                         int dataLen = length - offset;
-                        byteBlock = BytePool.GetByteBlock(dataLen + 4);
+                        byteBlock = new ByteBlock(dataLen + 4);
                         lenBytes = TouchSocketBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
@@ -190,20 +190,20 @@ namespace TouchSocket.Sockets
                 case FixedHeaderType.Byte:
                     {
                         byte dataLen = (byte)length;
-                        byteBlock = BytePool.GetByteBlock(dataLen + 1);
+                        byteBlock = new ByteBlock(dataLen + 1);
                         lenBytes = new byte[] { dataLen };
                         break;
                     }
                 case FixedHeaderType.Ushort:
                     {
                         ushort dataLen = (ushort)length;
-                        byteBlock = BytePool.GetByteBlock(dataLen + 2);
+                        byteBlock = new ByteBlock(dataLen + 2);
                         lenBytes = TouchSocketBitConverter.Default.GetBytes(dataLen);
                         break;
                     }
                 case FixedHeaderType.Int:
                     {
-                        byteBlock = BytePool.GetByteBlock(length + 4);
+                        byteBlock = new ByteBlock(length + 4);
                         lenBytes = TouchSocketBitConverter.Default.GetBytes(length);
                         break;
                     }
@@ -263,7 +263,7 @@ namespace TouchSocket.Sockets
         /// <param name="r"></param>
         private void SeamPackage(byte[] buffer, int r)
         {
-            ByteBlock byteBlock = BytePool.GetByteBlock(r + m_agreementTempBytes.Length);
+            ByteBlock byteBlock = new ByteBlock(r + m_agreementTempBytes.Length);
             byteBlock.Write(m_agreementTempBytes);
             byteBlock.Write(buffer, 0, r);
             r += m_agreementTempBytes.Length;
@@ -325,14 +325,14 @@ namespace TouchSocket.Sockets
                 int recedSurPlusLength = r - index - (byte)FixedHeaderType;
                 if (recedSurPlusLength >= length)
                 {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(length);
+                    ByteBlock byteBlock = new ByteBlock(length);
                     byteBlock.Write(dataBuffer, index + (byte)FixedHeaderType, length);
                     PreviewHandle(byteBlock);
                     m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    m_tempByteBlock = BytePool.GetByteBlock(length);
+                    m_tempByteBlock = new ByteBlock(length);
                     m_surPlusLength = length - recedSurPlusLength;
                     m_tempByteBlock.Write(dataBuffer, index + (byte)FixedHeaderType, recedSurPlusLength);
                     if (UpdateCacheTimeWhenRev)

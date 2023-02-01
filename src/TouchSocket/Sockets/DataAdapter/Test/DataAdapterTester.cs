@@ -163,7 +163,7 @@ namespace TouchSocket.Sockets
                 {
                     if (block == null)
                     {
-                        block = BytePool.GetByteBlock(bufferLength);
+                        block = BytePool.Default.GetByteBlock(bufferLength);
                         byteBlocks.Add(block);
                     }
                     int surLen = bufferLength - block.Pos;
@@ -208,7 +208,7 @@ namespace TouchSocket.Sockets
 
         private ByteBlock Write(QueueDataBytes transferByte, ref int offset)
         {
-            ByteBlock block = BytePool.GetByteBlock(bufferLength, true);
+            ByteBlock block = BytePool.Default.GetByteBlock(bufferLength, true);
             int len = Math.Min(transferByte.Length - offset, bufferLength);
             block.Write(transferByte.Buffer, offset, len);
             offset += len;

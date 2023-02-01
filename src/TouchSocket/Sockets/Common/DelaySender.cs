@@ -98,7 +98,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                byte[] buffer = BytePool.GetByteCore(DelayLength);
+                byte[] buffer = BytePool.Default.GetByteCore(DelayLength);
                 while (!DisposedValue)
                 {
                     try
@@ -118,7 +118,7 @@ namespace TouchSocket.Sockets
                         break;
                     }
                 }
-                BytePool.Recycle(buffer);
+                BytePool.Default.Recycle(buffer);
                 Sending = false;
             }
             catch

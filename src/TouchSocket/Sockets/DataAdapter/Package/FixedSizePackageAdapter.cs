@@ -112,7 +112,7 @@ namespace TouchSocket.Sockets
             {
                 throw new OverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = BytePool.GetByteBlock(FixedSize);
+            ByteBlock byteBlock = new ByteBlock(FixedSize);
 
             byteBlock.Write(buffer, offset, length);
             for (int i = (int)byteBlock.Position; i < FixedSize; i++)
@@ -146,7 +146,7 @@ namespace TouchSocket.Sockets
             {
                 throw new OverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = BytePool.GetByteBlock(FixedSize);
+            ByteBlock byteBlock = new ByteBlock(FixedSize);
 
             foreach (var item in transferBytes)
             {
@@ -202,14 +202,14 @@ namespace TouchSocket.Sockets
             {
                 if (r - index >= FixedSize)
                 {
-                    ByteBlock byteBlock = BytePool.GetByteBlock(FixedSize);
+                    ByteBlock byteBlock = new ByteBlock(FixedSize);
                     byteBlock.Write(dataBuffer, index, FixedSize);
                     PreviewHandle(byteBlock);
                     m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    m_tempByteBlock = BytePool.GetByteBlock(FixedSize);
+                    m_tempByteBlock = new ByteBlock(FixedSize);
                     m_surPlusLength = FixedSize - (r - index);
                     m_tempByteBlock.Write(dataBuffer, index, r - index);
                     if (UpdateCacheTimeWhenRev)

@@ -709,7 +709,7 @@ namespace TouchSocket.Sockets
                     SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += EventArgs_Completed;
 
-                    ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength);
+                    ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength);
                     eventArgs.UserToken = byteBlock;
                     eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
                     if (!m_mainSocket.ReceiveAsync(eventArgs))
@@ -906,7 +906,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                ByteBlock byteBlock = BytePool.GetByteBlock(BufferLength);
+                ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
@@ -1073,7 +1073,7 @@ namespace TouchSocket.Sockets
                 HandleBuffer(byteBlock);
                 try
                 {
-                    ByteBlock newByteBlock = BytePool.GetByteBlock(BufferLength);
+                    ByteBlock newByteBlock = BytePool.Default.GetByteBlock(BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 

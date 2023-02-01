@@ -93,16 +93,11 @@ namespace TouchSocket.Core
                 }
             }
 
-            if (!ReflectionFirst)
+            if (!GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
             {
                 m_invoker = CreateInvoker(method);
             }
         }
-
-        /// <summary>
-        /// 反射优先。实测在unity中执行il2cpp时，需要设置该值为true，其余时候为false即可。
-        /// </summary>
-        public static bool ReflectionFirst { get; set; }
 
         /// <summary>
         /// 是否具有返回值
@@ -157,7 +152,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.None:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -170,7 +165,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.Task:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -185,7 +180,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -219,7 +214,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.Task:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -232,7 +227,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -260,7 +255,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.None:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -273,7 +268,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.Task:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }
@@ -288,7 +283,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         object re;
-                        if (m_isByRef || ReflectionFirst)
+                        if (m_isByRef || GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
                         {
                             re = m_info.Invoke(instance, parameters);
                         }

@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class FileResourceController : IFileResourceController
     {
-        
+
         /// <inheritdoc/>
         public virtual void GetFileInfo<T>(string path, bool md5, ref T fileInfo) where T : RemoteFileInfo
         {
@@ -62,7 +62,6 @@ namespace TouchSocket.Rpc.TouchRpc
             }
         }
 
-       
         /// <inheritdoc/>
         public virtual bool TryReadTempInfo(string path, TransferFlags flags, ref TouchRpcFileInfo info)
         {
