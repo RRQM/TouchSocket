@@ -1,0 +1,89 @@
+---
+id: remotestreamaccess
+title: b.远程流访问
+---
+
+
+
+- 引用[TouchSocketPro](https://www.nuget.org/packages/TouchSocketPro)
+- 适用版本：0.5.0及以上 <a name="IiNnZ"></a>
+
+## 一、说明企业版
+
+可以在通信对方，创建一个Stream，然后映射到本地，由本地直接进行读、写等操作。
+
+<a name="wVtxT"></a>
+
+## 二、场景
+
+当远程主机拥有一个超大流数据（可能是文件，或者其他）时，本地只想访问其部分数据的话，就可以使用该功能。
+例如，假设C服务器有个10Gb的文件。A客户端需要其10000-20000字节之间的数据，那你此时可以使用该功能，直接进行读取。
+
+<a name="Gk4I5"></a>
+
+## 三、代码示例
+
+下列以客户端作为请求端，以服务器作为响应端。实际上服务器也可以做请求端。
+
+【请求端】
+任意TouchRpc终端（除udp协议）均可以调用LoadRemoteStream创建一个流数据映射。
+同时可以传递一个元数据组。用于载入自定义消息。
+
+```csharp
+RemoteStream remoteStream = client.LoadRemoteStream(new Metadata().AddOrUpdate("1", "1"));
+```
+
+【响应端】
+响应端定义一个插件，重写OnLoadingStream，然后实现需要载入的具体流信息。示例中是以MemoryStream作为流主体。
+
+```csharp
+class MyTcpTouchRpcPlugin : TouchRpcPluginBase
+{
+    protected override void OnLoadingStream(ITouchRpc client, LoadingStreamEventArgs e)
+    {
+        if (e.Metadata["1"]=="1")
+        {
+            e.Stream = new MemoryStream();
+        }
+        base.OnLoadingStream(client, e);
+    }
+}
+
+```
+
+<a name="vSQzO"></a>
+
+## 四、读写
+
+当RemoteStream被成功创建以后，即可直接Read、Write。因为RemoteStream继承自Stream。
+
+```csharp
+var client = GetClient();
+RemoteStream remoteStream = client.LoadRemoteStream(new Metadata().AddOrUpdate("1", "1"));
+
+byte[] data = new byte[] { 0, 1, 2, 3, 4 };
+remoteStream.Write(data);
+Assert.True(remoteStream.Length==5);
+Assert.True(remoteStream.Position==5);
+
+remoteStream.Position = 0;
+byte[] buffer=new byte[5];
+remoteStream.Read(buffer);
+Assert.True(buffer.SequenceEqual(data));
+Assert.True(remoteStream.Position == 5);
+Assert.True(remoteStream.Length == 5);
+
+remoteStream.SafeDispose();
+```
+
+<a name="o5Dnp"></a>
+
+## 五、释放
+
+当**断开连接**，或者请求方主动调用Dispose时，响应方的Stream均会被实际的Dispose掉。
+
+<a name="IMyyk"></a>
+
+## 六、性能
+
+图中示例为直接读取一个Window.iso文件所示。

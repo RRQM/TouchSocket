@@ -1,0 +1,90 @@
+---
+id: callxmlrpc
+title: 发现、调用服务
+---
+
+
+## 直接调用
+
+直接调用，则是不使用**任何代理**，直接Call RPC，使用比较简单。
+
+```csharp
+static void Main(string[] args)
+{
+    var client = GetXmlRpcClient();
+
+    //直接调用
+    int result1 = client.Invoke<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+    Console.WriteLine($"直接调用，返回结果:{result1}");
+
+    Console.ReadKey();
+}
+static XmlRpcClient GetXmlRpcClient()
+{
+    XmlRpcClient jsonRpcClient = new XmlRpcClient();
+    jsonRpcClient.Setup("http://127.0.0.1:7706/xmlRpc");
+    jsonRpcClient.Connect();
+    Console.WriteLine("连接成功");
+    return jsonRpcClient;
+}
+```
+
+【亦或者直接使用字符串调用】
+在Http-Post方式即可。
+
+```xml
+<?xml version="1.0"?>
+<methodCall>
+  <methodName>Sum</methodName>
+  <params>
+    <param>
+    <value>
+      <i4>10</i4>
+    </value>
+    </param>
+    <param>
+      <value>
+        <i4>20</i4>
+      </value>
+    </param>
+  </params>
+</methodCall>
+```
+
+<a name="rrWhi"></a>
+
+## 代理调用RPC
+
+代理调用的便捷在于，不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。 <a name="AbsXl"></a>
+
+#### 如何生成获取代理文件？
+
+[获取代理文件详情](https://www.yuque.com/eo2w71/rrqm/a13509bfc3581f4576861b690b4a809a) <a name="jsQUz"></a>
+
+#### 调用
+
+当代理被客户端获取以后，客户端项目中会多出一个**RRQMProxy**的文件（或者如果是服务器生成的本地代理，则需要复制到客户端项目中），在该文件中，则包含了所有的**代理方法**和**代理类**，可直接由代理类发起调用。
+
+
+```csharp
+static void Main(string[] args)
+{
+    var client = GetXmlRpcClient();
+
+    Server server = new Server(client);
+    int result2 = server.Sum(10, 20);
+    Console.WriteLine($"代理调用，返回结果:{result2}");
+
+    Console.ReadKey();
+}
+
+static XmlRpcClient GetXmlRpcClient()
+{
+    XmlRpcClient jsonRpcClient = new XmlRpcClient();
+    jsonRpcClient.Setup("http://127.0.0.1:7706/xmlRpc");
+    jsonRpcClient.Connect();
+    Console.WriteLine("连接成功");
+    return jsonRpcClient;
+}
+
+```

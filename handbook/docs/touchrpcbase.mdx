@@ -1,0 +1,86 @@
+---
+id: touchrpcbase
+title: 基础功能
+---
+
+## 一、连接验证
+
+连接验证可以初步保证连接客户端的安全性。框架内部默认使用一个string类型的Token作为验证凭证。当然也允许服务器进行其他验证。具体如下：
+
+【Token验证】
+在服务器或客户端的配置上，设置VerifyToken，即可实现字符串Token验证。
+
+```csharp
+var config = new TouchSocketConfig()//配置
+       .SetVerifyToken("TouchRpc");
+
+```
+
+【动态验证】
+使用插件，重写**OnHandshaking**相关。然后可以自行判断一些信息，比如：IP地址、元数据等。
+
+```csharp
+internal class MyTouchRpcPlugin : TouchRpcPluginBase
+{
+    protected override void OnHandshaking(ITouchRpc client, VerifyOptionEventArgs e)
+    {
+        if (e.Metadata["a"] != "a")
+        {
+            e.IsPermitOperation = false;//不允许连接
+            e.Message = "元数据不对";//同时返回消息
+            e.Handled= true;//表示该消息已在此处处理。
+            return;
+        }
+        if (e.Token == "123")
+        {
+            e.IsPermitOperation = true;
+            e.Handled = true;
+            return;
+        }
+        base.OnHandshaking(client, e);
+    }
+}
+```
+
+<a name="CbVzc"></a>
+
+## 二、ID同步
+
+在TouchRpc中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其ID也**完全一致**。
+所以在任意一方修改ID（调用ResetID），都会同时修改远程ID。
+所以合理使用该操作，可以完成复用ID（重置ID）的需求。
+
+
+## 一、说明
+
+协议扩展功能，就是对现有的TouchRpc进行自定义的扩展协议。其目的就是为了应对更加复杂，高要求的需求。
+
+例1：当需要广播消息时，可能大家都会想到使用rpc直接进行广播。但是如此一来，每广播一个客户端，就需要序列化一次。因为数据都是一样的，所以多次序列化显得非常没有必要。那么这时候，可以自定义协议，然后先序列化，然后直接广播数据。
+
+自定义协议效率如何呢？
+自定义协议的效率是非常高的，99%接近于底层协议（可能是tcp、udp、websocket）效率。
+
+<a name="YZ1bY"></a>
+
+## 二、使用
+
+使用起来是非常简单的，每个TouchRpc客户端或者TouchRpc服务端，都实现了Send方法接口。
+第一个参数为short类型，使用者可以**约定任意数值**（**不要使用小于0的，因为框架内部在使用**）。
+
+在**接收方**在OnReceivedProtocolData函数中，已经包含了协议参数，所以直接自行筛选即可。
+
+```csharp
+internal class MyTouchRpcPlugin : TouchRpcPluginBase
+{
+    protected override void OnReceivedProtocolData(ITouchRpc client, ProtocolDataEventArgs e)
+    {
+        if (e.Protocol == 10)
+        {
+            //判断完协议以后，从e.ByteBlock可以拿到实际的数据
+            //但是需要注意的是，真实数据会整体向右偏移2个字节。
+            string msg = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 2, e.ByteBlock.Len - 2);
+        }
+        base.OnReceivedProtocolData(client, e);
+    }
+}
+```
