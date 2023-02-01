@@ -18,7 +18,47 @@ import Tag from "@site/src/components/Tag.js";
 
 :::
 
-## v1.0.0（已发布）
+## v1.2.0
+
+更新日期：2023.2.1
+
+更新描述：兼容性更新。
+
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc支持命名元组。
+  
+  - &nbsp;<Tag>修复</Tag> 序列化、反射在unity中使用il2cpp编译的bug。
+
+  - &nbsp;<Tag>新增</Tag> ByteBlock对于int，long等数据，写入和读取的时候支持大小端指定。
+
+  - &nbsp;<Tag>调整</Tag> 将BytePoll由静态调整为实例，且由其Default实例作为默认。
+---
+
+## v1.1.0
+
+更新日期：2023.1.13
+
+更新描述：小版本升级，可能会有不兼容。请按下列提示修改。 
+
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc系文件传输时，文件夹不存在的提示。
+  - &nbsp;<Tag>优化</Tag> WaitingClient，当客户端断开连接时，可选是否抛出异常。
+  - &nbsp;<Tag>优化</Tag> Fast序列化时。可选序列化只读属性。
+
+  - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
+
+  - &nbsp;<Tag>新增</Tag> Tcp客户端新增Disconnecting事件。在主动Close时生效。
+
+  - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
+
+  - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
+---
+
+## v1.0.0
+
+更新日期：2023.1.1
+
+更新描述：大版本升级，请详细阅读下列更新日志。
 
   - &nbsp;<Tag>升级</Tag> 将最高版本升级为NET7。
 

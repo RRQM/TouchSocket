@@ -1,6 +1,6 @@
 module.exports = {
   title: "TouchSocket",
-  tagline: "让 .NET 开发更简单，更通用，更流行。",
+  tagline: "网络开发",
   url: "https://rrqm_home.gitee.io",
   baseUrl: "/touchsocket",
   onBrokenLinks: "throw",
