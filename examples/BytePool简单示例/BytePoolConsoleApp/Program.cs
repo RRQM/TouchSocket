@@ -9,12 +9,12 @@ namespace BytePoolConsoleApp
         {
             Console.ReadKey();
 
-            BytePool.AddSizeKey(1024 * 1024);
+            BytePool.Default.AddSizeKey(1024 * 1024);
             //BytePool.AutoZero = true;
             for (int i = 0; i < 5; i++)
             {
-                byte[] data = BytePool.GetByteCore(1024 * 10, true);
-                BytePool.Recycle(data);
+                byte[] data = BytePool.Default.GetByteCore(1024 * 10, true);
+                BytePool.Default.Recycle(data);
                 using (ByteBlock byteBlock = new ByteBlock(1024 * 10, true))
                 {
                     //最重要：千万不要引用byteBlock.Buffer
