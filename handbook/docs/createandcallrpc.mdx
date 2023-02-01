@@ -9,7 +9,7 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 
 过程是什么？ 过程就是业务处理、计算任务，更直白的说，就是程序，就是想调用本地方法一样调用远程的过程。
 
-TouchRpc支持服务器与客户端互相调用，也支持客户端之间相互调用。 <a name="ivLCr"></a>
+TouchRpc支持服务器与客户端互相调用，也支持客户端之间相互调用。
 
 ## 二、定义服务
 
@@ -57,7 +57,7 @@ public class MyRpcServer : TransientRpcServer
 
 ## 三、启动rpc服务器
 
-以下仅示例基于Tcp协议TouchRpc。其他协议的服务器请看[创建TouchRpc服务器](<..\7.2 创建TouchRpc服务器.md>)
+以下仅示例基于Tcp协议TouchRpc。其他协议的服务器请看[创建TouchRpc服务器](./createtouchrpcservice.mdx)
 
 ```csharp
 var service =new  TcpTouchRpcService();
@@ -106,7 +106,7 @@ bool result = client.Invoke<bool>("Login", InvokeOption.WaitInvoke, 123, "abc");
 
 详细步骤：
 
-1. [生成代理文件](9、生成，获取代理.md)
+1. [生成代理文件](./generateproxy.mdx)
 2. 将生成的cs文件添加到调用端一起编译。
 
 例如：以上示例，会生成下列代理代码。
@@ -231,7 +231,7 @@ bool result = client.Login(123, "abc");//Login是扩展方法。可能需要额�
 
 ## 一、说明
 
-一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器主动调用客户端，所以需要反向rpc。 <a name="FlEWm"></a>
+一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器主动调用客户端，所以需要反向rpc。
 
 ## 二、定义、发布反向RPC服务
 
@@ -313,7 +313,7 @@ if (tcpTouchRpcService.TryGetSocketClient(id, out var rpcSocketClient))
 
 具体步骤
 
-1. [设置调用上下文](<3. 调用上下文.md>)
+1. 设置调用上下文
 2. 上下文的Caller，即为服务器辅助类终端，进行强转即可。
 
 ## 一、说明
