@@ -18,9 +18,9 @@ namespace TouchSocket.Core
         None=0,
 
         /// <summary>
-        /// 针对Unity优化。
-        /// 一般来说，在unity2020及以下版本，中执行il2cpp时，需要设置该值。
+        /// 针对Unity2020及以下优化。
+        /// 一般来说，当在unity2020及以下版本，中执行il2cpp编译时，需要设置该值。
         /// </summary>
-        Unity=1
+        Unity = 1
     }
 }

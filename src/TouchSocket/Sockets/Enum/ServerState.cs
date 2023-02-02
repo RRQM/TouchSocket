@@ -28,6 +28,11 @@ namespace TouchSocket.Sockets
         Running,
 
         /// <summary>
+        /// 运行遇到异常
+        /// </summary>
+        Exception,
+
+        /// <summary>
         /// 已停止
         /// </summary>
         Stopped,

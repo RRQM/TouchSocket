@@ -256,41 +256,59 @@ namespace TouchSocket.Sockets
         /// </summary>
         public IService Start()
         {
-            if (m_serverState == ServerState.Disposed)
+            try
             {
-                throw new Exception("无法重新利用已释放对象");
-            }
+                if (m_serverState == ServerState.Disposed)
+                {
+                    throw new Exception("无法重新利用已释放对象");
+                }
 
-            switch (m_serverState)
+                switch (m_serverState)
+                {
+                    case ServerState.None:
+                        {
+                            if (m_config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
+                            {
+                                BeginReceive(iPHost);
+                            }
+
+                            break;
+                        }
+                    case ServerState.Running:
+                        return this;
+
+                    case ServerState.Stopped:
+                        {
+                            if (m_config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
+                            {
+                                BeginReceive(iPHost);
+                            }
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new Exception("无法再次利用已释放对象");
+                        }
+                }
+
+                m_serverState = ServerState.Running;
+
+                if (UsePlugin)
+                {
+                    PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                }
+                return this;
+            }
+            catch (Exception ex)
             {
-                case ServerState.None:
-                    {
-                        if (m_config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                        {
-                            BeginReceive(iPHost);
-                        }
-
-                        break;
-                    }
-                case ServerState.Running:
-                    break;
-
-                case ServerState.Stopped:
-                    {
-                        if (m_config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                        {
-                            BeginReceive(iPHost);
-                        }
-                        break;
-                    }
-                case ServerState.Disposed:
-                    {
-                        throw new Exception("无法再次利用已释放对象");
-                    }
+                m_serverState = ServerState.Exception;
+                if (UsePlugin)
+                {
+                    PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }) ;
+                }
+                throw;
             }
-
-            m_serverState = ServerState.Running;
-            return this;
+            
         }
 
         /// <summary>
@@ -298,10 +316,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public IService Stop()
         {
-            if (m_monitor != null)
-            {
-                m_monitor.Socket.Dispose();
-            }
+            m_monitor?.Socket.Dispose();
             m_monitor = null;
             m_serverState = ServerState.Stopped;
             foreach (var item in m_socketAsyncs)
@@ -309,6 +324,11 @@ namespace TouchSocket.Sockets
                 item.SafeDispose();
             }
             m_socketAsyncs.Clear();
+
+            if (UsePlugin)
+            {
+                PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+            }
             return this;
         }
 
@@ -318,8 +338,25 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            Stop();
-            m_serverState = ServerState.Disposed;
+            if (!this.DisposedValue)
+            {
+                if (disposing)
+                {
+                    m_monitor?.Socket.Dispose();
+                    m_monitor = null;
+                    m_serverState = ServerState.Disposed;
+                    foreach (var item in m_socketAsyncs)
+                    {
+                        item.SafeDispose();
+                    }
+                    m_socketAsyncs.Clear();
+
+                    if (UsePlugin)
+                    {
+                        PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                    }
+                }
+            }
             base.Dispose(disposing);
         }
 
