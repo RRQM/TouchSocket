@@ -63,4 +63,20 @@ using (ByteBlock byteBlock=new ByteBlock())
 压缩接口
 内部还定义了一个IDataCompressor的压缩接口。目的是为了向成熟框架传递压缩方法（例如TcpClient）。
 默认配备了一个GZipDataCompressor。可以直接使用。当然大家可以自由扩展其他压缩方法。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1665549130715-947d0d57-4615-48f1-831d-a4bc6a3f4e8d.png#clientId=u22e1f3fc-8c50-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=496&id=udd4a81fc&margin=%5Bobject%20Object%5D&name=image.png&originHeight=496&originWidth=835&originalType=binary&ratio=1&rotation=0&showTitle=false&size=345546&status=done&style=none&taskId=u843c040e-b897-4d63-9c08-51cddf75242&title=&width=835)
+
+```csharp
+class MyDataCompressor : IDataCompressor
+{
+    public byte[] Compress(ArraySegment<byte> data)
+    {
+        //此处实现压缩
+        throw new NotImplementedException();
+    }
+
+    public byte[] Decompress(ArraySegment<byte> data)
+    {
+        //此处实现压缩
+        throw new NotImplementedException();
+    }
+}
+```

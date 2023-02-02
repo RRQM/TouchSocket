@@ -1,33 +1,90 @@
 ---
 id: fastbinaryformatter
-title: 高性能序列化
+title: 高性能二进制序列化
 ---
 
 ## 一、说明
-该序列化以二进制方式进行序列化，不要求类型相同，仅为[相似结构](https://www.yuque.com/eo2w71/rrqm/d104f4159d543b4ae28db195ef623cf7#Y0Cko)即可。支持**基础类型**、**自定义实体类**、**结构体**、**数据**、**字典**、**List**、以及自定义序列化。
-[
-](https://www.nuget.org/packages/RRQMCore/)
-## 二、序列化
+该序列化以二进制方式进行序列化，不要求序列化与反序列化类型相同，使用体验和兼容性与json相似。支持**基础类型**、**自定义实体类**、**结构体**、**元组**、**数组**、**字典**、**List**等。
+
+## 二、序列化、反序列化
 ```csharp
- public static void FastBinarySerialize(ByteBlock stream, object obj)
- {
-     FastBinaryFormatter bf = new FastBinaryFormatter();
-     bf.Serialize(stream, obj);
- }
+var obj = "TouchSocket";
+var data = SerializeConvert.FastBinarySerialize(obj);
+var newobj = SerializeConvert.FastBinaryDeserialize<string>(data);
 ```
-## 三、反序列化
+
+## 三、自定义转换器
+
+自定义转化器的使用，可以解决**所有类型**的序列化，但是这需要自己编写一些代码。具体操作如下：
+
+1. 声明转换器。
 ```csharp
-public object RRQMBinaryDeserialize(byte[] data, int offset, Type type)
+/// <summary>
+/// 继承<see cref="FastBinaryConverter{T}"/>或者实现<see cref="IFastBinaryConverter"/>
+/// </summary>
+class StudentFastBinaryConverter : FastBinaryConverter<Student>
 {
-    FastBinaryFormatter bf = new FastBinaryFormatter();
-    return bf.Deserialize(data, offset, type);
+    protected override Student Read(byte[] buffer, int offset, int len)
+    {
+        var byteBlock = new ValueByteBlock(buffer);
+        byteBlock.Pos = offset;
+        var obj = new Student();
+        obj.P1 = byteBlock.ReadInt32();
+        obj.P2 = byteBlock.ReadString();
+        return obj;
+    }
+
+    protected override int Write(ByteBlock byteBlock, Student obj)
+    {
+        //此处可以直接嵌套Json序列化，但是为演示效果，下列将依然使用二进制方式
+        int pos = byteBlock.Pos;
+        byteBlock.Write(obj.P1);
+        byteBlock.Write(obj.P2);
+        return byteBlock.Pos - pos;//返回的即是obj所有的字节长度
+    }
 }
 ```
-## 四、快捷序列化
-在静态类`SerializeConvert`中，提供了快捷的序列化方式，以供方便使用。
-## ![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1663812694768-3b2d4cb6-c589-4479-9f9b-222a9ab65991.png#clientId=u051b4acd-2df2-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=326&id=ud292820e&name=image.png&originHeight=326&originWidth=1152&originalType=binary&ratio=1&rotation=0&showTitle=false&size=345481&status=done&style=none&taskId=u77352d5a-8e74-4dd0-ac51-49017d791ed&title=&width=1152)
-## 
-## 五、性能对比
+
+2. 附加转换器
+
+```csharp {1}
+[FastConverter(typeof(StudentFastBinaryConverter))]
+class Student
+{
+    public int P1 { get; set; }
+    public string P2 { get; set; }
+}
+```
+
+:::tip
+
+当类型已经定义，无法通过特性添加转换器时，可以通过`FastBinaryFormatter.AddFastBinaryConverter(typeof(Student),new StudentFastBinaryConverter());`直接添加。
+
+:::  
+
+
+## 四、性能测试
+
+### 4.1 简单测试
+
+**待测试类型**
+
+```csharp
+[Serializable]
+public class MyPackPerson
+{
+    public int Age { get; set; }
+    public string Name { get; set; }
+}
+```
+
+**结果**
+
+以下测试是执行10000次序列化和反序列的结果。
+
+![](../static/img/docs/fastbinaryformatter-1.png)
+
+### 4.2 复杂类型测试
 
 **待测试类**
 
@@ -52,6 +109,7 @@ public class Student
     public Dictionary<string, string> Dic3 { get; set; }
     public Dictionary<int, Arg> Dic4 { get; set; }
 }
+
 [Serializable]
 public class Arg
 {
@@ -77,10 +135,10 @@ public class Person
 }
 ```
 
-**测试代码**
+**赋值**
 
 ```csharp
- Student student = new Student();
+Student student = new Student();
 student.P1 = 10;
 student.P2 = "若汝棋茗";
 student.P3 = 100;
@@ -126,44 +184,10 @@ student.Dic4 = new Dictionary<int, Arg>();
 student.Dic4.Add(1, new Arg(1));
 student.Dic4.Add(2, new Arg(2));
 student.Dic4.Add(3, new Arg(3));
-
-BytePool bytePool = new BytePool(1024 * 1024 * 10, 102400);
-
-TimeSpan timeSpan1 = TimeMeasurer.Run(() =>
-{
-    for (int i = 0; i < 100000; i++)
-    {
-        ByteBlock byteBlock = bytePool.GetByteBlock(1024 * 100);
-        SerializeConvert.RRQMBinarySerialize(byteBlock, student,true);
-        Student student1 = SerializeConvert.RRQMBinaryDeserialize<Student>(byteBlock.Buffer,
-        byteBlock.Dispose();
-        if (i % 1000 == 0)
-        {
-            Console.WriteLine(i);
-        }
-    }
-});
-
-TimeSpan timeSpan2 = TimeMeasurer.Run(() =>
-{
-    for (int i = 0; i < 100000; i++)
-    {
-        ByteBlock byteBlock = bytePool.GetByteBlock(1024 * 100);
-        SerializeConvert.BinarySerialize(byteBlock, student);
-        byteBlock.Position = 0;
-        Student student1 = SerializeConvert.BinaryDeserialize<Student>(byteBlock);
-        byteBlock.Dispose();
-        if (i % 1000 == 0)
-        {
-            Console.WriteLine(i);
-        }
-    }
-});
-
-Console.WriteLine($"RRQM:{timeSpan1}");
-Console.WriteLine($"System:{timeSpan2}");
 ```
 
-**测试结果**
+**结果**
 
-![](https://img-blog.csdnimg.cn/img_convert/787c262d6b61cdba0d8ee2f5a4239d8f.png#crop=0&crop=0&crop=1&crop=1&id=UIsJi&originHeight=1569&originWidth=2376&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=)
+Fast的效率比System自带的，快了近7倍，比System.Text.Json快了4倍多，比NewtonsoftJson快了近30倍。
+
+![](../static/img/docs/fastbinaryformatter-2.png)

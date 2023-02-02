@@ -151,7 +151,7 @@ module.exports = {
           {
             type: "doc",
             id: "fastbinaryformatter",
-            label: "4.7 高性能序列化"
+            label: "4.7 高性能二进制序列化"
           },
           {
             type: "doc",
@@ -202,18 +202,18 @@ module.exports = {
         [
           {
             type: "doc",
-            id: "tcpdescription",
-            label: "6.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
             id: "createtcpservice",
-            label: "6.2 创建TcpService"
+            label: "6.1 创建TcpService"
           },
           {
             type: "doc",
             id: "createtcpclient",
-            label: "6.3 创建TcpClient"
+            label: "6.2 创建TcpClient"
+          },
+          {
+            type: "doc",
+            id: "tcppluginbase",
+            label: "6.3 Tcp插件基础"
           },
           {
             type: "doc",

@@ -5,14 +5,17 @@ title: 插件系统
 
 ## 说明
 - 插件是对TouchSocket产品的横向扩展。
+
 ## 产品特点
 
 - 简单易用。
 - 易扩展。
+
 ## 产品应用场景
 
 - TCP基础使用场景。
 - 自定义协议解析场景。
+
 ## 插件特性
 【多线程并发】
 插件的所有触发，均是同一实例，所以在服务器运行时，几乎都是并发触发的，所有应当考虑并发问题。
@@ -38,14 +41,16 @@ title: 插件系统
 具体操作如下：
 
 1. 声明IAPlugin接口，继承**IPlugin**。
-2. 声明GoToA接口方法（该方法必须**两个**参数，第一参数无要求，一般为触发主体，第二参数**必须继承**自**RRQMEventArgs//TODO:这里应该修改为EventArgs？未找到TouchSocketEventArgs类似，还有下面的代码**）。
+2. 声明GoToA接口方法（该方法必须**两个**参数，第一参数无要求，一般为触发主体，第二参数**必须继承**自**TouchSocketEventArgs**）。
 3. 在合适时候，判断当前配置是否支持插件，然后使用服务器或客户端的**PluginsManager**属性调用**Raise**方法，此处的泛型（**IAPlugin**）必须为接口类型。
+
 ```csharp
 public interface IAPlugin : IPlugin
 {
-    void GoToA(ITcpClientBase client,RRQMEventArgs e);
+    void GoToA(ITcpClientBase client,TouchSocketEventArgs e);
 }
 ```
+
 ```csharp
 public class MyTClient : TcpClient
 {
@@ -55,7 +60,7 @@ public class MyTClient : TcpClient
         {
             if (byteBlock.ToString()=="A")
             {
-                this.PluginsManager.Raise<IAPlugin>("GoToA",this,new RRQMEventArgs());
+                this.PluginsManager.Raise<IAPlugin>("GoToA",this,new TouchSocketEventArgs());
             }
         }
     }

@@ -21,8 +21,20 @@ TouchSocket内置了**_Container_**容器。只需要引入TouchSocket.Core即�
 - 支持Object注入。
 
 ## 三、注入方式
+
 对于一个类，默认情况下，会支持构造函数、属性、方法三种注入方式。但是，当明确知道该类型仅会使用其中部分方式注入时，可以设置注入类型，以此节约性能。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/25438888/1655695330593-c974d0a6-8c8b-4279-b1e0-7e012bed7dfd.png#clientId=u0d2b3083-5d77-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=121&id=u6c4a0fc0&margin=%5Bobject%20Object%5D&name=image.png&originHeight=121&originWidth=856&originalType=binary&ratio=1&rotation=0&showTitle=false&size=96952&status=done&style=none&taskId=u9f41967d-75c8-4d54-bed0-acaaa4a4715&title=&width=856)
+
+```csharp {4}
+/// <summary>
+/// 让MyClass仅支持构造函数和属性注入
+/// </summary>
+[DependencyType(DependencyType.Constructor | DependencyType.Property)]
+class MyClass
+{
+
+}
+```
+
 #### 3.1 构造函数注入
 其中MyLog1，MyLog2虽然没有注册，但是因为是实例，所以依然可以成功构造。
 ```csharp
