@@ -361,34 +361,52 @@ namespace TouchSocket.Sockets
         /// <exception cref="System.Exception"></exception>
         public override IService Start()
         {
-            IPHost[] iPHosts = Config.GetValue<IPHost[]>(TouchSocketConfigExtension.ListenIPHostsProperty);
-            if (iPHosts == null || iPHosts.Length == 0)
+            try
             {
-                throw new Exception("IPHosts为空，无法绑定");
+                IPHost[] iPHosts = Config.GetValue(TouchSocketConfigExtension.ListenIPHostsProperty);
+                if (iPHosts == null || iPHosts.Length == 0)
+                {
+                    throw new Exception("IPHosts为空，无法绑定");
+                }
+                switch (m_serverState)
+                {
+                    case ServerState.None:
+                        {
+                            BeginListen(iPHosts);
+                            break;
+                        }
+                    case ServerState.Running:
+                        {
+                            return this;
+                        }
+                    case ServerState.Stopped:
+                        {
+                            BeginListen(iPHosts);
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new Exception("无法重新利用已释放对象");
+                        }
+                }
+                m_serverState = ServerState.Running;
+
+                if (UsePlugin)
+                {
+                    PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                }
+                return this;
             }
-            switch (m_serverState)
+            catch (Exception ex)
             {
-                case ServerState.None:
-                    {
-                        BeginListen(iPHosts);
-                        break;
-                    }
-                case ServerState.Running:
-                    {
-                        return this;
-                    }
-                case ServerState.Stopped:
-                    {
-                        BeginListen(iPHosts);
-                        break;
-                    }
-                case ServerState.Disposed:
-                    {
-                        throw new Exception("无法重新利用已释放对象");
-                    }
+                m_serverState = ServerState.Exception;
+
+                if (UsePlugin)
+                {
+                    PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) {  Message=ex.Message });
+                }
+                throw;
             }
-            m_serverState = ServerState.Running;
-            return this;
         }
 
         /// <summary>
@@ -400,10 +418,7 @@ namespace TouchSocket.Sockets
             {
                 foreach (var item in m_monitors)
                 {
-                    if (item.Socket != null)
-                    {
-                        item.Socket.Dispose();
-                    }
+                    item.Socket?.Dispose();
                 }
             }
             m_monitors = null;
@@ -411,7 +426,10 @@ namespace TouchSocket.Sockets
             Clear();
 
             m_serverState = ServerState.Stopped;
-
+            if (UsePlugin)
+            {
+                PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+            }
             return this;
         }
 
@@ -440,15 +458,16 @@ namespace TouchSocket.Sockets
                     {
                         foreach (var item in m_monitors)
                         {
-                            if (item.Socket != null)
-                            {
-                                item.Socket.Dispose();
-                            }
+                            item.Socket?.Dispose();
                         }
                         m_monitors = null;
                     }
                     Clear();
                     m_serverState = ServerState.Disposed;
+                    if (UsePlugin)
+                    {
+                        PluginsManager.Raise<IServicePlugin>(nameof(IServicePlugin.OnStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+                    }
                     PluginsManager.Clear();
                 }
             }

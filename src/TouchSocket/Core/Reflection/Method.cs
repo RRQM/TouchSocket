@@ -67,33 +67,34 @@ namespace TouchSocket.Core
                 if (item.ParameterType.IsByRef)
                 {
                     m_isByRef = true;
-                    if (method.ReturnType == typeof(Task))
-                    {
-                        HasReturn = false;
-                        TaskType = TaskReturnType.Task;
-                    }
-                    else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-                    {
-                        HasReturn = true;
-                        ReturnType = method.ReturnType.GetGenericArguments()[0];
-                        TaskType = TaskReturnType.TaskObject;
-                    }
-                    else if (method.ReturnType == typeof(void))
-                    {
-                        HasReturn = false;
-                        TaskType = TaskReturnType.None;
-                    }
-                    else
-                    {
-                        HasReturn = true;
-                        TaskType = TaskReturnType.None;
-                        ReturnType = method.ReturnType;
-                    }
-                    return;
                 }
             }
-
-            if (!GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            if (this.m_isByRef||GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            {
+                if (method.ReturnType == typeof(Task))
+                {
+                    HasReturn = false;
+                    TaskType = TaskReturnType.Task;
+                }
+                else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                {
+                    HasReturn = true;
+                    ReturnType = method.ReturnType.GetGenericArguments()[0];
+                    TaskType = TaskReturnType.TaskObject;
+                }
+                else if (method.ReturnType == typeof(void))
+                {
+                    HasReturn = false;
+                    TaskType = TaskReturnType.None;
+                }
+                else
+                {
+                    HasReturn = true;
+                    TaskType = TaskReturnType.None;
+                    ReturnType = method.ReturnType;
+                }
+            }
+            else
             {
                 m_invoker = CreateInvoker(method);
             }

@@ -25,13 +25,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 插件实现基类
     /// </summary>
-    public abstract class TcpPluginBase<TClient> : DisposableObject, ITcpPlugin, IConfigPlugin
+    public abstract class TcpPluginBase<TClient> : PluginBase, ITcpPlugin, IConfigPlugin
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public int Order { get; set; }
-
         void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
         {
             OnConnected((TClient)client, e);
