@@ -5,8 +5,6 @@ title: 生成、获取代理
 
 ## 一、说明
 
-<a name="yZOS9"></a>
-
 #### 1.1 为什么要生成代理？
 
 使用rpc的原则就是像使用本地方法一样，让开发者感觉不到任何的不同。所以就必须把服务代理到本地，常见的方式有三种，**动态代理接口**，**静态织入**，**静态编译**。三种方式殊途同归，最终都是构建本地数据结构，然后和远程通信。三种方式各有优缺，具体如下：
@@ -16,23 +14,21 @@ title: 生成、获取代理
 | **优点** | 动态构建类，灵活、适应性强。 | 静态代码生成，自定义类参数自动生成，修改较灵活，调用效率高 | 自定义类参数自动生成，密封性强，安全性高，调用效率高。 |
 | **缺点** | 调用效率较低，自定义类参数须自行构建，实现须IL支持，对调用平台有要求，例如：IOS不允许动态类生成，则不可使用。 | 项目代码管理难统一，强迫症猝死 | 服务一旦有破坏性升级，则必须重新替换dll，灵活性几乎为0。 |
 
-<a name="SxFfC"></a>
 
-#### 1.2 为什么TouchRpc不支持接口代理调用？
+#### 1.2 为什么不直接支持接口代理调用？
 
 【原因一】
-TouchRpc支持out和ref参数，在使用代理时，效率不高。
+支持out和ref参数，在使用代理时，效率不高。
 
 【原因二】
-TouchRpc需要在参数支持调用上下文，所以无法直接用接口调用。
+需要在参数支持调用上下文，所以无法直接用接口调用。
 
 【原因三】
-TouchRpc支持单次调用的调用配置（例如超时时间，取消调用，序列化方式等）
+支持单次调用的调用配置（例如超时时间，取消调用，序列化方式等）
 
 【原因四】
 引用问题，当在服务接口中，使用了其他的项目的数据结构的话，在接口调用项目上也需要引用该项目。太麻烦。
 
-<a name="aJ0WL"></a>
 
 #### 1.3 TouchRpc源文件代理相比接口代理，有什么优缺点？
 
@@ -64,9 +60,10 @@ TouchRpc支持单次调用的调用配置（例如超时时间，取消调用，
 - 不需要再让同事一次次发你dll，只需要，他启动服务，你更新引用就ok。
 - 不需要怕程序集数据泄露，因为一切都是转写的，而且只转写应用的、公共的部分。
 
-<a name="qJpS4"></a>
 
-## 二、从本地获取代理
+## 二、从服务端获取代理
+
+### 2.1 生成代理
 
 在开发过程中，如果服务器和客户端，都是我们自己开发的话（在同一个电脑），就可以使用本地代理生成。
 
@@ -130,16 +127,15 @@ string codeString = CodeGenerator.ConvertToCode("RRQMProxy", codes);
 
 亦或者，为防止篡改生成的代码，不想把代理代码直接投入使用，那可以考虑将代码单独编译成dll，然后将编译的程序集加载到客户端。
 
-<a name="fSglb"></a>
 
-## 三、代理类型添加
+### 2.2 代理类型添加
 
 > 通过之前的学习，大家可能大概明白了，在RRQMRPC中，客户端与服务器在进行交互时，所需的数据结构不要求是同一类型，仅是[数据类型结构相同](https://gitee.com/RRQM_OS/RRQM/wikis/RRQM%E4%B8%93%E4%B8%9A%E5%90%8D%E7%A7%B0%E8%A7%A3%E9%87%8A?sort_id=4872799)即可。所以在声明了服务以后，服务中所包含的自定义类型，会被复刻成结构相同的类型，但是这也仅仅局限于参数与服务`相同程序集`的时候。如果服务中引入了其他程序集的数据结构，则不会复刻。所以在客户端调用时，需要引入同一程序集。
 
 但是，往往在服务中，会引入其他程序集，例如，我们习惯在项目中建立一个Models程序集，用于存放所有的实体模型，那是不是意味着客户端也必须引入这个程序集才能调用呢？没别的方法了？？
 ***有，且不只有一种*** <a name="r9HVa"></a>
 
-#### 3.1 添加代理类型
+#### 2.2.1 添加代理类型
 
 在服务注册之前，任意时刻，可调用CodeGenerator.AddProxyType静态方法，添加代理类型，同时可传入一个bool值，表明是否深度搜索，比如，假如RpcArgsClassLib.ProxyClass1中还有其他类型，则参数为True时，依然会代理。
 
@@ -151,13 +147,78 @@ CodeGenerator.AddProxyType<RpcArgsClassLib.ProxyClass2>(deepSearch:true);
 
 <a name="L9jEG"></a>
 
-#### 3.2 标记自定义类
+#### 2.2.2 标记自定义类
 
-在需要代理的类上面声明RRQMProxy标签，然后也可以重新指定代理类名。
+在需要代理的类上面声明RpcProxy标签，然后也可以重新指定代理类名。
 
 ```csharp
-[RRQMProxy("MyArgs")]
+[RpcProxy("MyArgs")]
 public class Args
 {
 }
 ```
+
+## 三、客户端源代码生成代理
+
+前一种方式已经算是几近完美的代理生成方案，但是有时候，当大家协作时，喜欢全部自己敲写。
+
+例如：
+
+对于下列服务，有时候就是喜欢自己写个接口，然后直接调用。
+
+```csharp
+public class MyRpcServer : RpcServer
+{
+    [TouchRpc]
+    public bool Login(string account, string password)
+    {
+        if (account == "123" && password == "abc")
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
+```
+
+```csharp
+public interface IMyRpcServer
+{
+    public bool Login(string account, string password);
+}
+```
+
+以往来说，实现这种方式的绝大多数，大概是使用IL动态构建一个类，然后动态实现接口代理，伪代码如下：
+
+```csharp
+IMyRpcServer myRpcServer=ProxyGenerator.CreateProxy<IMyRpcServer>();
+```
+
+但是现在，时代变了，我们有了源代码生成，那么事情将变得无比简单。
+
+同样，我们需要设置接口，如下：
+
+```csharp
+/// <summary>
+/// GeneratorRpcProxy的标识，表明这个接口应该被生成其他源代码。
+/// ConsoleApp2.MyRpcServer参数是整个rpc调用的前缀，即：除方法名的所有，包括服务的类名。
+/// </summary>
+[GeneratorRpcProxy("ConsoleApp2.MyRpcServer")]
+interface IMyRpcServer
+{
+    [Description("这是登录方法")]//该作用是生成注释
+    [GeneratorRpcMethod]//表面该方法应该被代理，也可以通过参数，直接设置调用键
+    public bool Login(string account, string password);
+}
+```
+
+这时候，神奇的一幕发生了，凡是实现IRpcClient的接口的实例，都增加了扩展方法。而这功能，和服务器生成的扩展Rpc方法的功能是一致的。
+
+![](../static/img/docs/generateproxy-1.png)
+
+:::note 备注
+
+源代码生成功能目前仅企业版支持。
+
+:::  
