@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -37,7 +38,7 @@ namespace TouchSocket.Rpc
         {
             m_assembly = assembly;
             PropertyDic = new ConcurrentDictionary<Type, ClassCellCode>();
-            GenericTypeDic = new ConcurrentDictionary<Type, string>();
+            //GenericTypeDic = new ConcurrentDictionary<Type, string>();
         }
 
         /// <summary>
@@ -45,10 +46,10 @@ namespace TouchSocket.Rpc
         /// </summary>
         public Assembly[] Assembly => m_assembly;
 
-        /// <summary>
-        /// 泛型类型字典
-        /// </summary>
-        public ConcurrentDictionary<Type, string> GenericTypeDic { get; private set; }
+        ///// <summary>
+        ///// 泛型类型字典
+        ///// </summary>
+        //public ConcurrentDictionary<Type, string> GenericTypeDic { get; private set; }
 
         /// <summary>
         /// 属性类型字典。
@@ -96,12 +97,42 @@ namespace TouchSocket.Rpc
                 Type elementType = type.GetElementType();
                 return GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
             }
-            else if (type.FullName.StartsWith("System.ValueTuple"))
+            else if (type.IsValueTuple())
             {
-                Type[] elementType = type.GetGenericArguments();
+                Type[] elementTypes = type.GetGenericArguments();
 
-                var strs = elementType.Select(e => GetTypeFullName(e));
-                return $"({string.Join(",", strs)})";
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append("(");
+
+                List<string> strings = new List<string>();
+                var tupleNames = new List<string>();
+                if (tupleElementNames != null && tupleElementNames.Count > 0)
+                {
+                    tupleNames.AddRange(tupleElementNames.Skip(0).Take(elementTypes.Length));
+                    tupleElementNames.RemoveRange(0, elementTypes.Length);
+                }
+                for (int i = 0; i < elementTypes.Length; i++)
+                {
+                    string item = GetTypeFullName(elementTypes[i]);
+                    if (tupleNames.Count > 0)
+                    {
+                        strings.Add($"{item} {tupleNames[i]}");
+                    }
+                    else
+                    {
+                        strings.Add($"{item}");
+                    }
+                }
+                //var strs = elementTypes.Select(e => GetTypeFullName(e));
+
+
+                //foreach (var item in strs)
+                //{
+
+                //}
+                stringBuilder.Append(string.Join(",", strings));
+                stringBuilder.Append(")");
+                return stringBuilder.ToString();
             }
             else if (type.IsByRef)
             {
@@ -111,9 +142,18 @@ namespace TouchSocket.Rpc
             {
                 return type.FullName;
             }
+            else if (m_listType.Contains(type.Name))
+            {
+                string typeInnerString = GetTypeFullName(type.GetGenericArguments()[0]);
+                string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                return typeString;
+            }
             else if (m_listType.Contains(type.Name) || m_dicType.Contains(type.Name))
             {
-                return GenericTypeDic[type];
+                string keyString = GetTypeFullName(type.GetGenericArguments()[0]);
+                string valueString = GetTypeFullName(type.GetGenericArguments()[1]);
+                string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                return typeString;
             }
             else if (PropertyDic.ContainsKey(type))
             {
@@ -125,6 +165,7 @@ namespace TouchSocket.Rpc
             }
         }
 
+        private List<string> tupleElementNames;
         /// <summary>
         /// 获取类型全名
         /// </summary>
@@ -132,59 +173,65 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public string GetTypeFullName(ParameterInfo parameterInfo)
         {
-            Type type= parameterInfo.ParameterType.GetRefOutType();
-            if (type.IsGenericType && type.FullName.StartsWith("System.ValueTuple"))
-            {
-                Type[] elementType = type.GetGenericArguments();
+            //Type type= parameterInfo.ParameterType.GetRefOutType();
+            //if (type.IsGenericType && type.FullName.Contains("System.ValueTuple"))
+            //{
+            //    Type[] elementType = type.GetGenericArguments();
+            //    var strs = elementType.Select(e => GetTypeFullName(e));
 
-                var strs = elementType.Select(e => GetTypeFullName(e));
-                var names = parameterInfo.GetTupleElementNames().ToArray();
-                if (names == null)
+            //    else
+            //    {
+            //        StringBuilder stringBuilder=new StringBuilder();
+            //        stringBuilder.Append("(");
+            //        int i = 0;
+            //        foreach (var item in strs)
+            //        {
+            //            stringBuilder.Append($"{item} {names[i]} ");
+            //            if (names.Count-1>i)
+            //            {
+            //                stringBuilder.Append(",");
+            //            }
+            //            i++;
+            //        }
+            //        stringBuilder.Append(")");
+            //        return stringBuilder.ToString();
+            //    }
+            //}
+            if (parameterInfo.ParameterType.FullName.Contains("System.ValueTuple"))
+            {
+                tupleElementNames = parameterInfo.GetTupleElementNames()?.ToList();
+                if (tupleElementNames.Count == 3)
                 {
-                    return $"({string.Join(",", strs)})";
-                }
-                else
-                {
-                    StringBuilder stringBuilder=new StringBuilder();
-                    stringBuilder.Append("(");
-                    int i = 0;
-                    foreach (var item in strs)
-                    {
-                        stringBuilder.Append($"{item} {names[i]} ");
-                        if (names.Length-1>i)
-                        {
-                            stringBuilder.Append(",");
-                        }
-                        i++;
-                    }
-                    stringBuilder.Append(")");
-                    return stringBuilder.ToString();
+
                 }
             }
-
+            else
+            {
+                tupleElementNames = default;
+            }
             return GetTypeFullName(parameterInfo.ParameterType);
         }
 
         internal void CheckDeep()
         {
-            foreach (var strItem in GenericTypeDic)
-            {
-                bool goon = true;
-                string strItemNew = strItem.Value;
-                while (goon)
-                {
-                    goon = false;
-                    foreach (var item in GenericTypeDic.Keys)
-                    {
-                        if (strItemNew.Contains(item.FullName))
-                        {
-                            strItemNew = strItemNew.Replace(item.FullName, item.Name);
-                            goon = true;
-                        }
-                    }
-                }
-                GenericTypeDic[strItem.Key] = strItemNew;
-            }
+            //foreach (var strItem in GenericTypeDic)
+            //{
+            //    bool goon = true;
+            //    string strItemNew = strItem.Value;
+            //    while (goon)
+            //    {
+            //        goon = false;
+            //        foreach (var item in GenericTypeDic.Keys)
+            //        {
+            //            if (strItemNew.Contains(item.FullName))
+            //            {
+            //                strItemNew = strItemNew.Replace(item.FullName, item.Name);
+            //                goon = true;
+            //            }
+            //        }
+            //    }
+            //    GenericTypeDic[strItem.Key] = strItemNew;
+            //}
 
             foreach (var strItem in PropertyDic)
             {
@@ -246,29 +293,29 @@ namespace TouchSocket.Rpc
             else if (type.IsGenericType)
             {
                 Type[] types = type.GetGenericArguments();
+                //if (m_listType.Contains(type.Name))
+                //{
+                //    string typeInnerString = GetTypeFullName(types[0]);
+                //    string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                //    if (!GenericTypeDic.ContainsKey(type)&& !type.FullName.Contains("System.ValueTuple"))
+                //    {
+                //        GenericTypeDic.TryAdd(type, typeString);
+                //    }
+                //}
+                //else if (m_dicType.Contains(type.Name))
+                //{
+                //    string keyString = GetTypeFullName(types[0]);
+                //    string valueString = GetTypeFullName(types[1]);
+                //    string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                //    if (!GenericTypeDic.ContainsKey(type) && !type.FullName.Contains("System.ValueTuple"))
+                //    {
+                //        GenericTypeDic.TryAdd(type, typeString);
+                //    }
+                //}
+
                 foreach (Type itemType in types)
                 {
                     AddTypeString(itemType, ref deep);
-                }
-
-                if (m_listType.Contains(type.Name))
-                {
-                    string typeInnerString = GetTypeFullName(types[0]);
-                    string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                    if (!GenericTypeDic.ContainsKey(type))
-                    {
-                        GenericTypeDic.TryAdd(type, typeString);
-                    }
-                }
-                else if (m_dicType.Contains(type.Name))
-                {
-                    string keyString = GetTypeFullName(types[0]);
-                    string valueString = GetTypeFullName(types[1]);
-                    string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                    if (!GenericTypeDic.ContainsKey(type))
-                    {
-                        GenericTypeDic.TryAdd(type, typeString);
-                    }
                 }
             }
             else if (type.IsEnum)
@@ -448,6 +495,19 @@ namespace TouchSocket.Rpc
             }
         }
 
+        //internal void AddTypeString(ParameterInfo  parameterInfo, ref int deep)
+        //{
+        //    if (parameterInfo.ParameterType.FullName.Contains("System.ValueTuple"))
+        //    {
+        //        tupleElementNames = parameterInfo.GetTupleElementNames()?.ToList();
+        //    }
+        //    else
+        //    {
+        //        tupleElementNames = default;
+        //    }
+
+        //    AddTypeString(parameterInfo.ParameterType, ref deep);
+        //}
         private bool AllowGen(Assembly assembly)
         {
             foreach (var item in m_assembly)

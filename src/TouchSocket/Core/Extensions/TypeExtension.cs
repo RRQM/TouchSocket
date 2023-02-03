@@ -85,6 +85,18 @@ namespace TouchSocket.Core
               (TouchSocketCoreUtility.nullableType));
         }
 
+        /// <summary>
+        /// 判断该类型是否为值元组类型
+        /// </summary>
+        /// <param name="theType"></param>
+        /// <returns></returns>
+        public static bool IsValueTuple(this Type theType)
+        {
+            return theType.IsValueType &&
+                 theType.IsGenericType &&
+                 theType.FullName.StartsWith("System.ValueTuple");
+        }
+
         #endregion Type扩展
     }
 }
