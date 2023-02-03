@@ -164,9 +164,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tcp命令行执行插件", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpCommandLineConsoleApp", "examples\Tcp简单示例\Tcp命令行执行插件\TcpCommandLineConsoleApp\TcpCommandLineConsoleApp.csproj", "{15554D7C-32B3-48A2-9475-2364A721A1F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AccessRestrictionsConsoleApp", "examples\BlogsDemos\AccessRestrictionsConsoleApp\AccessRestrictionsConsoleApp.csproj", "{0897A17C-8822-4E42-83BE-A59F21A4E5E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AccessRestrictionsConsoleApp", "examples\BlogsDemos\AccessRestrictionsConsoleApp\AccessRestrictionsConsoleApp.csproj", "{0897A17C-8822-4E42-83BE-A59F21A4E5E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DifferentProtocolConsoleApp", "examples\BlogsDemos\DifferentProtocolConsoleApp\DifferentProtocolConsoleApp.csproj", "{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DifferentProtocolConsoleApp", "examples\BlogsDemos\DifferentProtocolConsoleApp\DifferentProtocolConsoleApp.csproj", "{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "源代码生成代理", "源代码生成代理", "{32AE404F-B9EB-4793-A947-CACD58B2B5E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeneratorRpcProxyConsoleApp", "examples\TouchRpc简单示例\源代码生成代理\GeneratorRpcProxyConsoleApp\GeneratorRpcProxyConsoleApp.csproj", "{0AFDF908-C9A1-471D-ADEB-04B1002397DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -374,6 +378,10 @@ Global
 		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AFDF908-C9A1-471D-ADEB-04B1002397DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AFDF908-C9A1-471D-ADEB-04B1002397DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AFDF908-C9A1-471D-ADEB-04B1002397DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AFDF908-C9A1-471D-ADEB-04B1002397DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -438,6 +446,8 @@ Global
 		{15554D7C-32B3-48A2-9475-2364A721A1F7} = {5B8D8451-E920-42E5-9F6A-D6D1238A24B4}
 		{0897A17C-8822-4E42-83BE-A59F21A4E5E2} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
 		{5BEF24DB-61B5-4615-A578-3BEB1F4FD1D8} = {EB38E883-88AF-4E4C-9DCD-FAEBD8A20968}
+		{32AE404F-B9EB-4793-A947-CACD58B2B5E2} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
+		{0AFDF908-C9A1-471D-ADEB-04B1002397DA} = {32AE404F-B9EB-4793-A947-CACD58B2B5E2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

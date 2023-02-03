@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="1.2.0" />
+    <PackageReference Include="TouchSocket" Version="1.2.1" />
   </ItemGroup>
 	<ItemGroup>
 	  <None Update="SGCC测试数据.txt">
