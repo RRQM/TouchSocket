@@ -175,7 +175,7 @@ namespace TouchSocket.Rpc
                 if (serverCellCode.IncludeInterface)
                 {
                     //接口
-                    codeString.AppendLine($"public interface I{serverCellCode.Name}:IRemoteServer");//类开始
+                    codeString.AppendLine($"public interface I{serverCellCode.Name}:{typeof(IRemoteServer).FullName}");//类开始
                     codeString.AppendLine("{");
                     foreach (var item in serverCellCode.Methods.Values)
                     {
@@ -308,18 +308,18 @@ namespace TouchSocket.Rpc
 
             classCodeGenerator.CheckDeep();
 
-            foreach (var item in classCodeGenerator.GenericTypeDic.Keys.ToArray())
-            {
-                if (m_ignoreTypes.Contains(item))
-                {
-                    classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
-                }
+            //foreach (var item in classCodeGenerator.GenericTypeDic.Keys.ToArray())
+            //{
+            //    if (m_ignoreTypes.Contains(item))
+            //    {
+            //        classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
+            //    }
 
-                if (m_ignoreAssemblies.Contains(item.Assembly))
-                {
-                    classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
-                }
-            }
+            //    if (m_ignoreAssemblies.Contains(item.Assembly))
+            //    {
+            //        classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
+            //    }
+            //}
 
             foreach (var item in classCodeGenerator.PropertyDic.Keys.ToArray())
             {
