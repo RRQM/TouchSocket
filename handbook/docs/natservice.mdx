@@ -2,20 +2,18 @@
 id: natservice
 title: Tcp端口转发
 ---
+import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 NATService是具有转发功能的TCP服务器。他的职能是将收到的TCP数据转发到多个目标服务器。也能将多个目标服务器的数据转发到连接客户端。
 
 ## 二、常见使用场景
 
-**调试场景：**在生产环境中，想要调试客户端，要么中断服务器，要么就将实际数据转发到NAT，然后在不影响实际场景的情况下进行调试。
+- **调试场景：**在生产环境中，想要调试客户端，要么中断服务器，要么就将实际数据转发到NAT，然后在不影响实际场景的情况下进行调试。
+- **内网穿透场景：**一般tcp都会使用转发式的内网穿透。
 
-**内网穿透场景：**一般tcp都会使用转发式的内网穿透。
 
-## 三、可配置项
-继承TcpService。
-
-## 四、创建NATService
+## 三、创建NATService
 
 ```csharp
 static void Main(string[] args)
@@ -31,7 +29,12 @@ static void Main(string[] args)
 }
 ```
 
-**NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。**
+:::tip 提示
+
+NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
+
+:::  
+
 ```csharp
  class MyNATService : NATService
  {
@@ -73,7 +76,9 @@ static void Main(string[] args)
 
 
 ```
-## 五、转发断线重连企业版
+
+## 四、转发断线重连 <Tag>企业版</Tag>
+
 ```csharp
 try
 {
@@ -94,5 +99,3 @@ catch (Exception ex)
     socketClient.Logger.Exception(ex);
 }
 ```
-
-## 

@@ -212,43 +212,38 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "tcppluginbase",
-            label: "6.3 Tcp插件基础"
-          },
-          {
-            type: "doc",
             id: "waitingclient",
-            label: "6.4 同步请求"
+            label: "6.3 同步请求"
           },
           {
             type: "doc",
             id: "natservice",
-            label: "6.5 Tcp端口转发"
+            label: "6.4 Tcp端口转发"
           },
           {
             type: "doc",
             id: "resetid",
-            label: "6.6 服务器重置ID"
+            label: "6.5 服务器重置ID"
           },
           {
             type: "doc",
             id: "reconnection",
-            label: "6.7 断线重连"
+            label: "6.6 断线重连"
           },
           {
             type: "doc",
             id: "tcpcommandlineplugin",
-            label: "6.8 命令行执行插件"
+            label: "6.7 命令行执行插件"
           },
           {
             type: "doc",
             id: "heartbeat",
-            label: "6.9 心跳设计"
+            label: "6.8 心跳设计"
           },
           {
             type: "doc",
             id: "tcpother",
-            label: "6.10 其他场景应用"
+            label: "6.9 其他场景应用"
           },
         ]
     },
