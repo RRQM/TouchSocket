@@ -122,6 +122,13 @@
 		],
 		"description": "importHighlight"
 	},
+	"importTag": {
+		"prefix": "importTag",
+		"body": [
+			"import Tag from \"@site/src/components/Tag.js\";"
+		],
+		"description": "importTag"
+	},
 	"tagHighlight": {
 		"prefix": "tagHighlight",
 		"body": [

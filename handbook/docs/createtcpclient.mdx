@@ -3,7 +3,9 @@ id: createtcpclient
 title: 创建TcpClient
 ---
 
+
 ## 一、说明
+
 TcpClient是Tcp系客户端基类，他直接参与tcp的连接、发送、接收、处理、断开等，他的业务与服务器的**SocketClient**是一一对应的。
 
 ## 二、特点
@@ -22,24 +24,26 @@ TcpClient是Tcp系客户端基类，他直接参与tcp的连接、发送、接�
 - 自定义协议解析场景：可解析任意数据格式的TCP数据报文。
 
 
-## 六、支持插件接口客户端、服务器均支持
-声明自定义实例类，然后实现**ITcpPlugin**接口，即可实现下列事务的触发。
-或者继承自**TcpPluginBase**类，重写相应方法即可。
+## 四、支持插件
 
-| ###  ITcpPlugin
- |  |
+支持**ITcpPlugin**接口，或者继承自**TcpPluginBase**类，重写相应方法即可。
+
+|  插件方法| 功能 |
 | --- | --- |
-| OnConnected | 客户端连接成功后触发 |
-| OnConnecting | 在即将完成连接时触发。 |
-| OnDisconnected | 会话断开后触发 |
-| OnReceivedData | 在收到数据时触发 |
+| OnConnecting | 在Socket完成初始化，但是并未连接时触发。 |
+| OnConnected | 在Socket完成连接，且成功后触发 |
+| OnDisconnecting | 当客户端主动调用Close时触发 |
+| OnDisconnected | 当客户端断开连接后触发 |
+| OnReceivingData | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
+| OnReceivedData | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | OnSendingData | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
-| OnIDChanged | 当Client的ID被更改后触发 |
 
-## 七、创建TcpClient
+## 五、创建TcpClient
+
 简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
 
 代码如下：
+
 ```csharp
 TcpClient tcpClient = new TcpClient();
 tcpClient.Connected += (client, e) => { };//成功连接到服务器
@@ -62,11 +66,14 @@ tcpClient.Connect();
 tcpClient.Send("RRQM");
 ```
 
-## 八、接收数据
+## 六、接收数据
+
 在TcpClient中，接收数据的方式有很多种。多种方式可以组合使用。
 
-#### 8.1 Received委托处理
+#### 6.1 Received委托处理
+
 当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+
 ```csharp
 TcpClient tcpClient = new TcpClient();
 tcpClient.Received += (client, byteBlock, requestInfo) =>
@@ -86,7 +93,8 @@ tcpClient.Setup(config);
 tcpClient.Connect();
 ```
 
-#### 8.2 插件处理推荐
+#### 6.2 插件处理推荐
+
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 1. 服务器配置启用插件（UsePlugin）
@@ -94,7 +102,9 @@ tcpClient.Connect();
 3. 添加插件
 
 代码如下：
+
 （1）声明插件
+
 ```csharp
 public class MyPlugin : TcpPluginBase<TcpClient>
 {
@@ -115,7 +125,9 @@ public class MyPlugin : TcpPluginBase<TcpClient>
     }
 }
 ```
+
 （2）创建使用插件处理的客户端
+
 ```csharp
 TcpClient client = new TcpClient();
 client.Setup(new TouchSocketConfig()
@@ -132,9 +144,12 @@ client.Setup(new TouchSocketConfig()
     .Connect();
 ```
 
-## 九、发送数据
+## 七、发送数据
+
 【同步发送】
+
 TcpClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
+
 ```csharp
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
@@ -142,7 +157,9 @@ public virtual void Send(byte[] buffer, int offset, int length);
 ```
 
 【异步发送】
+
 TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
+
 ```csharp
 public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
