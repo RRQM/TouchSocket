@@ -41,6 +41,14 @@ export default function (props) {
       icon: "youhua",
       bgColor: "#38e550",
     },
+
+    推荐: {
+      bgColor: "#38e550",
+    },
+
+    企业版: {
+      bgColor: "#23AAF2",
+    },
   };
   return (
     <label

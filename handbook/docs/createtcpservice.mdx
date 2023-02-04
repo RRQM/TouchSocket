@@ -3,6 +3,8 @@ id: createtcpservice
 title: 创建TcpService
 ---
 
+import Tag from "@site/src/components/Tag.js";
+
 ## 一、说明
 TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SocketClient**类实例。而**SocketClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
 
@@ -22,10 +24,16 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 - 所有Tcp基础使用场景：可跨平台、跨语言使用。
 - 自定义协议解析场景：可解析任意数据格式的TCP数据报文。
 
+## 四、服务器架构
+服务器在收到**新客户端连接**时，会创建一个SocketClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
 
-## 四、创建TcpService
+SocketClient在Service里面以字典映射。ID为键，SocketClient本身为值。
 
-### 4.1 简单创建
+<img src={require('../static/img/docs/createtcpservice-2.png').default} width="500" />
+
+## 五、创建TcpService
+
+### 5.1 简单创建
 直接初始化TcpService，会使用默认的**SocketClient**。
 简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
 
@@ -68,7 +76,7 @@ service.Setup(new TouchSocketConfig()//载入配置
     .Start();//启动
 ```
 
-### 4.2 泛型创建
+### 5.2 泛型创建
 通过泛型创建服务器，可以实现很多有意思，且能**重写**一些有用的功能。下面就演示，如何通过泛型创建服务器。
 
 代码如下：
@@ -153,10 +161,10 @@ service.Setup(new TouchSocketConfig()//载入配置
 > 由上述代码可以看出，通过继承，可以更加灵活的实现扩展。但实际上，很多业务我们希望大家能通过插件完成。
 
 
-## 五、接收数据
+## 六、接收数据
 在TcpService中，接收数据的方式有很多种。多种方式可以组合使用。
 
-### 5.1 Received委托处理
+### 6.1 Received委托处理
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 ```csharp
 TcpService service = new TcpService();
@@ -176,10 +184,12 @@ service.Setup(new TouchSocketConfig()//载入配置
     .Start();//启动
 ```
 
-### 5.2 重写SocketClient处理
-正如8.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
+### 6.2 重写SocketClient处理
 
-### 5.3 插件处理推荐
+正如5.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
+
+### 6.3 插件处理 <Tag>推荐</Tag>
+
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 1. 服务器配置启用插件（UsePlugin）
@@ -187,7 +197,9 @@ service.Setup(new TouchSocketConfig()//载入配置
 3. 添加插件
 
 代码如下：
+
 （1）声明插件
+
 ```csharp
 public class MyPlugin : TcpPluginBase<SocketClient>
 {
@@ -208,7 +220,9 @@ public class MyPlugin : TcpPluginBase<SocketClient>
     }
 }
 ```
+
 （2）创建使用插件处理的服务器
+
 ```csharp
 TcpService service = new TcpService();
 service.Setup(new TouchSocketConfig()
@@ -225,8 +239,15 @@ service.Setup(new TouchSocketConfig()
     .Start();
 ```
 
-## 六、AspNetCore中创建
+## 七、AspNetCore中创建
+
 首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
+
+:::tip 建议
+
+在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也即时一些。
+
+:::  
 
 在AspNetCore中使用TcpService，**不应该**像普通端一样，订阅Received。应该是通过**插件**，**注入**等方式实现。步骤如下：
 
@@ -234,7 +255,9 @@ service.Setup(new TouchSocketConfig()
 2. 新建插件，处理收到的数据。
 
 代码如下：
+
 （1）声明插件
+
 ```csharp
 public class MyTcpPlugin : TcpPluginBase<SocketClient>
 {
@@ -260,7 +283,9 @@ public class MyTcpPlugin : TcpPluginBase<SocketClient>
     }
 }
 ```
+
 （2）注入服务
+
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
@@ -277,7 +302,9 @@ public void ConfigureServices(IServiceCollection services)
 }
 
 ```
+
 然后在任意地方，也可获得服务。
+
 ![image.png](../static/img/docs/createtcpservice-1.png)
 
 :::tip 提示
@@ -287,18 +314,30 @@ public void ConfigureServices(IServiceCollection services)
 :::
 
 
-## 七、发送数据
+## 八、发送数据
+
 按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SocketClient**的实例，通过**该实例**即可将数据发送至**客户端**。
-### 7.1 如何获取SocketClient？
-（1）直接调用
+
+### 8.1 如何获取SocketClient？
+
+（1）直接获取所有在线客户端
+
 通过`service.GetClients`方法，获取当前在线的所有客户端。
+
 ```csharp
 SocketClient[] socketClients = service.GetClients();
 ```
-**注意：由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.ID，然后再通过服务器查找。**
+
+:::caution 注意
+
+由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.ID，然后再通过服务器查找。
+
+:::  
 
 （2）通过ID获取
+
 先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+
 ```csharp
 string[] ids = service.GetIDs();
 if (service.TryGetSocketClient(ids[0], out SocketClient socketClient))
@@ -306,9 +345,11 @@ if (service.TryGetSocketClient(ids[0], out SocketClient socketClient))
 }
 ```
 
-#### 7.2 发送
+#### 8.2 发送
+
 【同步发送】
-SocketClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
+
+SocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 ```csharp
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
@@ -322,8 +363,17 @@ public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(ByteBlock byteBlock);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
 ```
-#### 11.3 通过TcpService发送
+
+:::tip 提示
+
+通过上述方法发送的数据，都会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。
+
+:::  
+
+#### 8.3 通过TcpService发送
+
 通过ID发送数据。
+
 ```csharp
 public virtual void Send(string id, ByteBlock byteBlock);
 public virtual void Send(string id, byte[] buffer, int offset, int length);
