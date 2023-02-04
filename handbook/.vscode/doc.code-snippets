@@ -129,6 +129,13 @@
 		],
 		"description": "importTag"
 	},
+	"Tag": {
+		"prefix": "Tag",
+		"body": [
+			"<Tag>$0</Tag>"
+		],
+		"description": "importTag"
+	},
 	"tagHighlight": {
 		"prefix": "tagHighlight",
 		"body": [

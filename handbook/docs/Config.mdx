@@ -3,12 +3,7 @@ id: config
 title: 配置类
 ---
 
-## 一、配置基础
-
-
-## 二、Tcp基础配置
-
-### 2.1 SetBufferLength
+### SetBufferLength
 
 缓存池容量（单位：byte），默认1024×64。
 
@@ -18,11 +13,11 @@ title: 配置类
 2. 如果数据包较大，例如文件传输等，建议64k，甚至更大的值。
 3. 该值虽然无上限，但是一般不要超过1Mb，不然不仅没意义，还很浪费
 
-### 2.2 SetMaxPackageSize
+### SetMaxPackageSize
 
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
 
-### 2.3 SetThreadCount
+### SetThreadCount
 
 多线程数量。该值在Auto模式下指示线程池的最少线程数量和IO线程数量。
 
@@ -30,6 +25,10 @@ title: 配置类
 
 1. 异步处理接收数据，此时线程数量设置为内核线程左右的值即可。
 2. 同步处理接收数据，此时应当考虑两个因素。该操作是否为耗时操作，如果是，则该值在允许范围内，应当设置更可能大的值。如果不是，则设置为内核线程左右的值即可。
+
+### SetGetDefaultNewID
+
+配置初始ID的分配策略
 
 ### SetListenIPHosts
 
