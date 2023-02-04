@@ -286,7 +286,16 @@ namespace TouchSocket.Rpc.TouchRpc
                                 Send(TouchRpcUtility.P_1000_Handshake_Response, byteBlock);
                                 IsHandshaked = true;
                                 args.Message = "Success";
-                                OnHandshaked?.Invoke(this, args);
+                                ThreadPool.QueueUserWorkItem((o) =>
+                                {
+                                    try
+                                    {
+                                        OnHandshaked?.Invoke(this, args);
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }, default);
                             }
                             else
                             {

@@ -921,13 +921,19 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     using (ByteBlock returnByteBlock = new ByteBlock())
                     {
+                        var methodName = rpcPackage.MethodName;
+                        var parametersBytes = rpcPackage.ParametersBytes;
+
                         rpcPackage.SwitchId();
                         rpcPackage.MethodName = default;
                         rpcPackage.ParametersBytes = default;
                         rpcPackage.Status = TouchSocketStatus.Success.ToValue();
                         rpcPackage.Package(returnByteBlock);
                         Send(TouchRpcUtility.P_1200_Invoke_Response, returnByteBlock);
+
                         rpcPackage.SwitchId();
+                        rpcPackage.MethodName = methodName;
+                        rpcPackage.ParametersBytes = parametersBytes;
                     }
                 }
 
