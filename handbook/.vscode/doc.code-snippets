@@ -94,6 +94,13 @@
 		],
 		"description": "imgstatic"
 	},
+	"imgLink": {
+		"prefix": "imgLink",
+		"body": [
+			"<img src={require('$0').default} width=\"500\" />",
+		],
+		"description": "imgLink"
+	},
 	"link": {
 		"prefix": "link",
 		"body": [
