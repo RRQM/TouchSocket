@@ -45,7 +45,8 @@ namespace ServiceConsoleApp
                 }
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置     
+            service.Setup(new TouchSocketConfig()//载入配置
+                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -54,11 +55,10 @@ namespace ServiceConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
+                    a.Add<MyServicePluginClass>();
                     //a.Add();//此处可以添加插件
                 }))
                 .Start();//启动
-
-            service.Logger.Info("服务器已启动");
             return service;
         }
 
@@ -85,6 +85,31 @@ namespace ServiceConsoleApp
                 .Connect();
             tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
+        }
+    }
+
+    /// <summary>
+    /// 可以继承<see cref="TcpServicePlugin"/>,或者直接实现<see cref="IServicePlugin"/>
+    /// </summary>
+    class MyServicePluginClass :TcpServicePlugin
+    {
+        protected override void OnStarted(TcpService sender, ServiceStateEventArgs e)
+        {
+            if (e.ServerState == ServerState.Running)
+            {
+                ConsoleLogger.Default.Info($"服务器成功启动");
+            }
+            else
+            {
+                ConsoleLogger.Default.Info($"服务器启动失败，状态：{e.ServerState}，异常：{e.Exception}");
+            }
+            
+            base.OnStarted(sender, e);
+        }
+
+        protected override void OnStoped(TcpService sender, ServiceStateEventArgs e)
+        {
+            base.OnStoped(sender, e);
         }
     }
 
