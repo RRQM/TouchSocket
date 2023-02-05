@@ -174,7 +174,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneratorRpcProxyConsoleApp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Udp组播、广播", "Udp组播、广播", "{ECB9C1D8-AB1D-4105-AF2F-BC9D14158BF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdpBroadcastConsoleApp", "examples\Udp简单示例\Udp组播、广播\UdpBroadcastConsoleApp\UdpBroadcastConsoleApp.csproj", "{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpBroadcastConsoleApp", "examples\Udp简单示例\Udp组播、广播\UdpBroadcastConsoleApp\UdpBroadcastConsoleApp.csproj", "{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rpc流式数据传输", "Rpc流式数据传输", "{F4BC22A9-7007-46B1-B168-DFB2A2E0EA24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcStreamConsoleApp", "examples\TouchRpc简单示例\Rpc流式数据传输\RpcStreamConsoleApp\RpcStreamConsoleApp.csproj", "{23B63A76-3759-4522-AA7C-721B5098C822}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -390,6 +394,10 @@ Global
 		{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23B63A76-3759-4522-AA7C-721B5098C822}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23B63A76-3759-4522-AA7C-721B5098C822}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23B63A76-3759-4522-AA7C-721B5098C822}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23B63A76-3759-4522-AA7C-721B5098C822}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -458,6 +466,8 @@ Global
 		{0AFDF908-C9A1-471D-ADEB-04B1002397DA} = {32AE404F-B9EB-4793-A947-CACD58B2B5E2}
 		{ECB9C1D8-AB1D-4105-AF2F-BC9D14158BF3} = {F4D798A3-8D65-4750-9552-B02BCE081508}
 		{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92} = {ECB9C1D8-AB1D-4105-AF2F-BC9D14158BF3}
+		{F4BC22A9-7007-46B1-B168-DFB2A2E0EA24} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
+		{23B63A76-3759-4522-AA7C-721B5098C822} = {F4BC22A9-7007-46B1-B168-DFB2A2E0EA24}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
