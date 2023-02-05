@@ -7,6 +7,7 @@ title: 固定包头数据处理适配器
 ## 一、说明
 
 固定包头数据处理适配器是处理粘包、分包问题的最有力、最可靠、最高效、最稳定的一种方案，它基本上适用于**所有场景**。即使**跨语言**使用，也只需要在其他语言中设计**相同算法**就可以。
+
 ## 二、特点
 
 1. 最有力的解决粘包。分包问题。
@@ -14,12 +15,11 @@ title: 固定包头数据处理适配器
 3. 支持指定包头长度，Byte、Ushort、Int三种类型作为包头。
 4. 最好在客户端与服务器均使用TouchSocket组件时使用。不然就需要非TouchSocket的一方适配包头算法。
 
-
 ## 三、协议算法
 
-Byte包头算法：以第一个字节作为后续整个数据的长度，整个数据长度区间为\[0,255]。
-Ushort包头算法：前2个字节，且为[默认端序（小端）](../../04、Core/4.3 大小端转换器.mdx)的排列，作为后续整个数据的长度，整个数据长度区间为\[0,65535]。
-Int包头算法（默认配置）：前4个字节，且为[默认端序（小端）](../../04、Core/4.3 大小端转换器.mdx)排列，作为后续整个数据的长度，整个数据长度区间为\[0,2^31]。
+- Byte包头算法：以第一个字节作为后续整个数据的长度，整个数据长度区间为[0,255]。
+- Ushort包头算法：前2个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx#四默认端)的排列，作为后续整个数据的长度，整个数据长度区间为[0,65535]。
+- Int包头算法（默认配置）：前4个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx#四默认端)排列，作为后续整个数据的长度，整个数据长度区间为[0,2^31]。
 
 
 ## 四、使用
@@ -29,9 +29,9 @@ Int包头算法（默认配置）：前4个字节，且为[默认端序（小端
 步骤
 
 1. TouchSocketConfig配置中设置（可以同时指定HeaderType等属性）
-2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据。
 
-```csharp
+```csharp {10}
 TcpService service = new TcpService();
 service.Received += (client, byteBlock, requestInfo) =>
 {
@@ -40,7 +40,19 @@ service.Received += (client, byteBlock, requestInfo) =>
 };
 
 service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] {  new IPHost(7790) })
-    .SetDataHandlingAdapter(()=> { return new FixedHeaderPackageAdapter(); }))//配置适配器
+    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+    .SetDataHandlingAdapter(() => { return new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int }; }))//配置适配器
     .Start();//启动
 ```
+
+:::caution 注意
+
+接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
+
+:::  
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
