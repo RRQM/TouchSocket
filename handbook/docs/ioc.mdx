@@ -35,7 +35,7 @@ class MyClass
 }
 ```
 
-#### 3.1 构造函数注入
+### 3.1 构造函数注入
 其中MyLog1，MyLog2虽然没有注册，但是因为是实例，所以依然可以成功构造。
 ```csharp
 [Fact]
@@ -73,7 +73,7 @@ public class MyLog3 : ILog
         }
 }
 ```
-#### 3.2 属性注入
+### 3.2 属性注入
 使用**DependencyParamterInject**，或者**DependencyInject**标记属性，即可注入。
 
 示例中使用的是单接口多实现，所以使用**DependencyParamterInject**标记。
@@ -116,7 +116,7 @@ public class MyLog5 : ILog
         }
 }
 ```
-#### 3.2 方法注入
+### 3.2 方法注入
 使用**DependencyInject**标记属性，即可对方法注入。
 
 同时，示例中演示了默认参数设定。在初始化MyLog6后，A=10，B="TouchSocket"。

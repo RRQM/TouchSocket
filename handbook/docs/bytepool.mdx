@@ -23,7 +23,7 @@ using (ByteBlock byteBlock3=new ByteBlock())
 ```
 ## 四、使用
 基础使用和MemoryStream一致，下面仅介绍特定使用。
-#### 4.1 写入、读取数据对象
+### 4.1 写入、读取数据对象
 ```csharp
 using (ByteBlock byteBlock = new ByteBlock())
 {
@@ -42,7 +42,7 @@ using (ByteBlock byteBlock = new ByteBlock())
     byte[] BytesValue = byteBlock.ReadBytesPackage();
 }
 ```
-#### 4.2 多线程同步协作（Hold）
+### 4.2 多线程同步协作（Hold）
 在多线程异步时，设计架构应当遵守谁（Thread）创建的ByteBlock，由谁释放，这样就能很好的避免未释放的情况发生。实际上RRQMSocket中，就是秉承这样的设计，任何非用户创建的ByteBlock，都会由创建的线程最后释放。但是在使用中，经常出现异步多线程的操作。
 以RRQMSocket的TcpClient为例。如果直接在收到数据时，使用Task异步，则必定会发生关于ByteBlock的各种各样的异常。
 **原因非常简单，byteBlock对象在到达HandleReceivedData时，触发Task异步，此时触发线程会立即返回，并释放byteBlock，而Task异步线程会滞后，然后试图从已释放的byteBlock中获取数据，所以，必定发生异常。**

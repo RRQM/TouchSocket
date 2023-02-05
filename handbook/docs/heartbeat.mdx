@@ -4,17 +4,20 @@ title: 心跳设计
 ---
 
 ## 一、说明
-#### 1.1 为什么要设置心跳？
+
+### 1.1 为什么要设置心跳？
+
 心跳机制一般是**客户端**向**服务器**定时发送一个特定的数据包，让服务器知道自己还在线，以确保连接的有效性的机制。 网络中的接收和发送数据都是使用操作系统中的 SOCKET 进行实现。 但是如果此 套接字 已经断开，那发送数据和接收数据的时候就一定会有问题。 可是如何判断这个套接字是否还可以使用呢？ 这个就需要在系统中创建心跳机制。 
 
-其实TCP中已经为我们实现了一个[内置心跳机制（SetKeepAliveValue）](https://www.yuque.com/rrqm/touchsocket/436f0f670b44744c9f1082d97ced2613#cmsde)。但是该机制受限于操作系统，而且很容易误报。所以很少被大家使用。
+其实TCP中已经为我们实现了一个[内置心跳机制（SetKeepAliveValue）](./config.mdx#setkeepalivevalue)。但是该机制受限于操作系统，而且很容易误报。所以很少被大家使用。
 
 大家使用最多的，就是自己设计数据包，然后预留心跳格式，当对方收到心跳包时，直接返回响应包即可。
 
 那么，按这个思路，让我们使用优雅的实现吧。
 
 ## 二、设计数据格式
-使用心跳之前，必须要明确数据格式，绝对不能混淆业务数据。一般在适配Plc等现成模块时，他们是有固定的数据格式，这时候你可以参阅[数据处理适配器](https://www.yuque.com/rrqm/touchsocket/c260017413d76209ed86a27f267283af)，快速的解析数据。
+
+使用心跳之前，必须要明确数据格式，绝对不能混淆业务数据。一般在适配Plc等现成模块时，他们是有固定的数据格式，这时候你可以参阅[数据处理适配器](./adapterdemodescription.mdx)，快速的解析数据。
 
 但是在本文中，并没有规定的格式，所以我们需要先设计一种简单高效的数据格式。
 
@@ -24,8 +27,10 @@ title: 心跳设计
 | --- | --- | --- |
 | 2字节（Ushort） | 1字节（Byte） | n字节（<65535） |
 
-#### 2.1 解析数据格式
+### 2.1 解析数据格式
+
 下列代码主要实现对上述数据格式的解析
+
 ```csharp
 internal class MyFixedHeaderDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyRequestInfo>
 {
@@ -104,6 +109,7 @@ internal enum DataType : byte
 ```
 
 ## 三、创建扩展类
+
 下列代码可选，主要实现对Client增加Ping的扩展方法。方便调用。
 
 ```csharp
@@ -148,7 +154,9 @@ internal static class DependencyExtensions
 ```
 
 ## 四、创建心跳插件类
+
 下列代码主要实现心跳插件的功能。默认每五秒自动触发一次。且接收方收到Ping后，直接会回复Pong。
+
 ```csharp
 internal class HeartbeatAndReceivePlugin : TcpPluginBase
 {
@@ -208,6 +216,7 @@ internal class HeartbeatAndReceivePlugin : TcpPluginBase
 ```
 
 ## 五、测试、启动
+
 ```csharp
 /// <summary>
 /// 示例心跳。
