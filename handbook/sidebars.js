@@ -254,23 +254,18 @@ module.exports = {
         [
           {
             type: "doc",
-            id: "upddescription",
-            label: "7.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
             id: "createudpsession",
-            label: "7.2 创建UdpSession"
+            label: "7.1 创建UdpSession"
           },
           {
             type: "doc",
             id: "udptransmitbigdata",
-            label: "7.3 传输大于64K的数据"
+            label: "7.2 传输大于64K的数据"
           },
           {
             type: "doc",
             id: "udpbroadcast",
-            label: "7.4 组播、广播"
+            label: "7.3 组播、广播"
           },
         ]
     },

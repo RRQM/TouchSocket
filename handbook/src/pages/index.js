@@ -81,7 +81,7 @@ function Banner() {
           <div className="TouchSocket-get-start-btn">
             <Link className="TouchSocket-get-start" to={useBaseUrl("docs")}>
               入门指南
-              <span className="TouchSocket-version">v1.0</span>
+              {/* <span className="TouchSocket-version">v1.0</span> */}
             </Link>
           </div>
         </div>
