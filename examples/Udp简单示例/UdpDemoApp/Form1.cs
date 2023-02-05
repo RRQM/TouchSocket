@@ -80,4 +80,9 @@ namespace UdpDemoApp
             }
         }
     }
+
+    class MyUdpPluginClass:UdpSessionPluginBase
+    {
+
+    }
 }

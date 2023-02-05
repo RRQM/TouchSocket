@@ -3,15 +3,15 @@ id: udptransmitbigdata
 title: 传输大于64K的数据
 ---
 
-## 说明
+## 一、说明
 UDP由于自身限制，每次发送的数据包最大约64K，但是在局域网内，有时候希望传输更大的数据。所以必须有策略发送。
 
 TouchSocket可通过简单设置，实现该功能。
 
-## 使用
+## 二、使用
+
 只需要在配置中，设置其适配器为**UdpPackageAdapter**类型即可（默认为**NormalUdpDataHandlingAdapter**）。同时可以根据传输数据的大小，修改相关属性，如：**MTU**，**Timeout**等。
 
-_**此模式下，发送端与接收端均必须为TouchSocket（或实现相同算法），且为相同设置。**_
 ```csharp
 UdpSession udpSession = new UdpSession();
 udpSession.Received += (endpoint, byteBlock, requestInfo) =>
@@ -24,10 +24,17 @@ udpSession.Setup(new TouchSocketConfig()
     .SetUdpDataHandlingAdapter(()=> new UdpPackageAdapter()));//加载配置
 udpSession.Start();//启动
 ```
-## 原理
+:::caution 注意
+
+**此模式下，发送端与接收端均必须为TouchSocket（或实现相同算法），且为相同设置。**
+
+:::  
+
+## 三、原理
+
 在发送时，会将要发送的数据分割成MTU长度的数据。然后为其编号，然后发送，最后由接收方重组。
 
-## 数据格式
+### 3.1 数据格式
 
 **ID：由雪花算法生成，在并发请求时1毫秒中有400w分之一的概率发生ID重复。但基本可以忽略不计。**
 
