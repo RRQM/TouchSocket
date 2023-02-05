@@ -8,7 +8,7 @@ title: 模板解析“固定包头”数据适配器
 
 和用户自定义适配器相比，使用模板解析将会更加简单流程。例如在上节所说的数据格式，前三个字节是**固定长度**的，为3，而后续长度则由第一个字节计算可得，所以我们把类似这样的数据格式，叫做“**固定包头**”数据，那么，他就可以使用固定包头数据解析模板。
 
-
+<img src={require('../static/img/docs/datahandleadapter-1.png').default}/>
 
 ## 二、特点
 
@@ -29,7 +29,9 @@ title: 模板解析“固定包头”数据适配器
 4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
 
 【MyFixedHeaderRequestInfo】
+
 首先，新建MyFixedHeaderRequestInfo类，然后实现**IFixedHeaderRequestInfo**用户自定义固定包头接口。
+
 然后在**OnParsingHeader**函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为Body 。
 
 ```csharp
@@ -118,7 +120,7 @@ public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandl
 
 【接收】
 
-```csharp
+```csharp {15}
 TcpService service = new TcpService();
 service.Received += (client, byteBlock, requestInfo) =>
 {
@@ -136,3 +138,16 @@ service.Setup(new TouchSocketConfig()//载入配置
     .SetDataHandlingAdapter(() => { return new MyFixedHeaderCustomDataHandlingAdapter(); }))//配置适配器
     .Start();//启动
 ```
+
+:::tip 提示
+
+上述示例的数据是经典的固定包头格式，具有Fixed+Data的明显分割点。但有时候，也有一些数据有好几段，例如：具有Crc校验的数据，也就是Fixed+Data+Crc的格式，这时候，我们可以把Data+Crc看做一段数据，然后解析即可。
+
+:::  
+
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  

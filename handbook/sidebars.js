@@ -344,11 +344,6 @@ module.exports = {
                   id: "tlvdatahandlingadapter",
                   label: "l.三元组编码TLV适配器"
                 },
-                {
-                  type: "doc",
-                  id: "independentuse",
-                  label: "m.独立使用适配器"
-                },
               ]
           },
           {
@@ -382,8 +377,13 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "independentusedatahandlingadapter",
+            label: "8.5 独立使用适配器"
+          },
+          {
+            type: "doc",
             id: "dataadaptertester",
-            label: "8.5 适配器完整性、性能测试"
+            label: "8.6 适配器完整性、性能测试"
           },
         ]
     },
