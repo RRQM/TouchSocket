@@ -19,7 +19,7 @@ TouchRpc服务器的架构与其所属的基础协议架构一致，例如，在
 
 <a name="JgmHn"></a>
 
-#### 3.1 基于Tcp协议
+### 3.1 基于Tcp协议
 
 这是基于Tcp协议TouchRpc。配置设置与[TcpService](./createtcpservice.mdx)一致。
 
@@ -42,7 +42,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 <a name="wuiMD"></a>
 
-#### 3.2 基于Http协议
+### 3.2 基于Http协议
 
 这是基于Http升级协议。在该解析器中，配置设置[HttpService](./createhttpservice.mdx)一致。
 
@@ -65,7 +65,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 <a name="IAQ9G"></a>
 
-#### 3.3 基于Udp协议
+### 3.3 基于Udp协议
 
 这是基于UDP协议解析器。在该解析器中，配置设置与[UdpSession](./createudpsession.mdx)一致。因为udp是无连接的，所以不需要SetVerifyToken。
 
@@ -87,7 +87,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 <a name="vW1M2"></a>
 
-#### 3.4 基于AspNetCore的Websocket协议
+### 3.4 基于AspNetCore的Websocket协议
 
 具体步骤
 

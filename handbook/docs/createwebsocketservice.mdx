@@ -30,7 +30,7 @@ WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器
 ## 四、创建WebSocket服务
 
 
-#### 4.1 简单通过插件创建
+### 4.1 简单通过插件创建
 
 通过插件创建的话，只能指定一个特殊url路由。如果想获得连接前的Http请求，也必须再添加一个实现IWebSocketPlugin接口的插件，然后从OnHandshaking方法中捕获。
 
@@ -58,7 +58,7 @@ Console.WriteLine("ws://127.0.0.1:7789/ws");
 ```
 
 
-#### 4.2 通过WebApi创建
+### 4.2 通过WebApi创建
 
 通过WebApi的方式会更加灵活，也能很方便的获得Http相关参数。还能实现多个Url的连接路由。
 实现步骤：

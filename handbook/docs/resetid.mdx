@@ -19,7 +19,7 @@ title: 服务器重置ID
 .SetGetDefaultNewID(()=> { return new Guid().ToString(); })
 ```
 
-## 三、创建能代表客户端的ID
+## 三、创建能代表连接的ID
 
 上述这种ID规范，是与连接信息没有任何关联的，这也就意味着，这种方式是无法关联SocketClient的。
 
@@ -42,4 +42,21 @@ m_service.Connecting = (client, e) =>
 
 ## 四、即时修改ID
 
-但这样，应该还不足以应对所有情况。因为，有时候我们希望，在该连接完成某种验证之后复用之前的ID，以应对情况，那这时候，可以使用TcpService，或者SocketClient的**ResetID**的方法，来实现需求。
+上述修改ID的方式，应该还不足以应对所有情况。有时候我们希望，在该连接完成，且经过某种验证之后再设置新的ID，那么我们可以通过**ResetID**的方法，来实现需求。
+
+### 4.1 通过Service直接修改
+
+```csharp
+service.ResetID("oldId","newId");
+```
+
+### 4.2 通过SocketClient修改
+```csharp
+socketClient.ResetID("newId");
+```
+
+:::note 备注
+
+上述的ID标识，仅仅是服务器（TcpService）和辅助客户端（SocketClient）之间的关联。与客户端（TcpClient）是没有任何关系的。
+
+:::  

@@ -75,7 +75,7 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-####
+###
 
 
 ## 一、直接调用
@@ -288,7 +288,7 @@ client.Connect();
 下列示例以TcpTouchRpcSocketClient为例，其余一致。
 
 
-#### 4.1 通过服务器直接获取
+### 4.1 通过服务器直接获取
 
 可以获取所有终端。
 
@@ -309,7 +309,7 @@ if (tcpTouchRpcService.TryGetSocketClient(id, out var rpcSocketClient))
 }
 ```
 
-#### 4.2 通过调用上下文获取
+### 4.2 通过调用上下文获取
 
 具体步骤
 

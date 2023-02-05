@@ -70,7 +70,7 @@ tcpClient.Send("RRQM");
 
 在TcpClient中，接收数据的方式有很多种。多种方式可以组合使用。
 
-#### 6.1 Received委托处理
+### 6.1 Received委托处理
 
 当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
@@ -93,7 +93,7 @@ tcpClient.Setup(config);
 tcpClient.Connect();
 ```
 
-#### 6.2 插件处理推荐
+### 6.2 插件处理推荐
 
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
