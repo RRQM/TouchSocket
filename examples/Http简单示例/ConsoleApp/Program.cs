@@ -10,7 +10,7 @@ namespace ConsoleApp
     {
         private static void Main(string[] args)
         {
-            //证书在RRQMBox/Ssl证书相关/证书生成.zip  解压获取。
+            //证书在Ssl证书相关/证书生成.zip  解压获取。
             //然后放在运行目录。
             //最后客户端需要先安装证书。
 
@@ -25,6 +25,11 @@ namespace ConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyHttpPlug>();
+
+                    //default插件应该最后添加，其作用是
+                    //1、为找不到的路由返回404
+                    //2、处理header为Option的探视跨域请求。
+                    a.UseDefaultHttpServicePlugin();
                 }))
                 .Start();
 
@@ -40,24 +45,27 @@ namespace ConsoleApp
     /// <summary>
     /// 支持GET、Post、Put，Delete，或者其他
     /// </summary>
-    internal class MyHttpPlug : HttpPluginBase
+    internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
     {
-        protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
+        protected override void OnGet(HttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/success"))
             {
+                //直接响应文字
                 e.Context.Response.FromText("Success").Answer();//直接回应
                 Console.WriteLine("处理完毕");
                 e.Handled = true;
             }
             else if (e.Context.Request.UrlEquals("/file"))
             {
+                //直接回应文件。
                 e.Context.Response
                     .SetStatus()//必须要有状态
-                    .FromFile(@"D:\System\Windows.iso", e.Context.Request);//直接回应文件。
+                    .FromFile(@"D:\System\Windows.iso", e.Context.Request);
             }
             else if (e.Context.Request.UrlEquals("/html"))
             {
+                //回应html
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine("<!DOCTYPE html>");
                 stringBuilder.AppendLine("<html>");
@@ -83,7 +91,7 @@ namespace ConsoleApp
             base.OnGet(client, e);
         }
 
-        protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
+        protected override void OnPost(HttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/uploadfile"))
             {
