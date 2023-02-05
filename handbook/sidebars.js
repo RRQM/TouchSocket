@@ -191,97 +191,92 @@ module.exports = {
         ]
     },
     {
-      type: "doc",
-      id: "config",
-      label: "05、配置类"
-    },
-    {
       type: "category",
-      label: "06、Tcp组件",
+      label: "05、Tcp组件",
       items:
         [
           {
             type: "doc",
             id: "createtcpservice",
-            label: "6.1 创建TcpService"
+            label: "5.1 创建TcpService"
           },
           {
             type: "doc",
             id: "createtcpclient",
-            label: "6.2 创建TcpClient"
+            label: "5.2 创建TcpClient"
           },
           {
             type: "doc",
             id: "waitingclient",
-            label: "6.3 同步请求"
+            label: "5.3 同步请求"
           },
           {
             type: "doc",
             id: "natservice",
-            label: "6.4 Tcp端口转发"
+            label: "5.4 Tcp端口转发"
           },
           {
             type: "doc",
             id: "resetid",
-            label: "6.5 服务器重置ID"
+            label: "5.5 服务器重置ID"
           },
           {
             type: "doc",
             id: "reconnection",
-            label: "6.6 断线重连"
+            label: "5.6 断线重连"
           },
           {
             type: "doc",
             id: "tcpcommandlineplugin",
-            label: "6.7 命令行执行插件"
+            label: "5.7 命令行执行插件"
           },
           {
             type: "doc",
             id: "heartbeat",
-            label: "6.8 心跳设计"
+            label: "5.8 心跳设计"
           },
           {
             type: "doc",
             id: "tcpother",
-            label: "6.9 其他场景应用"
+            label: "5.9 其他场景应用"
           },
         ]
     },
     {
       type: "category",
-      label: "07、Udp组件",
+      label: "06、Udp组件",
       items:
         [
           {
             type: "doc",
             id: "createudpsession",
-            label: "7.1 创建UdpSession"
+            label: "6.1 创建UdpSession"
           },
           {
             type: "doc",
             id: "udptransmitbigdata",
-            label: "7.2 传输大于64K的数据"
+            label: "6.2 传输大于64K的数据"
           },
           {
             type: "doc",
             id: "udpbroadcast",
-            label: "7.3 组播、广播"
+            label: "6.3 组播、广播"
           },
         ]
     },
     {
       type: "category",
-      label: "08、数据处理适配器",
+      label: "07、数据处理适配器",
       items:
         [
           {
             type: "doc",
             id: "adapterdescription",
-            label: "8.1 介绍及使用"
+            label: "7.1 介绍及使用"
           },
           {
             type: "category",
-            label: "8.2 Tcp适配器",
+            label: "7.2 Tcp适配器",
             items:
               [
                 {
@@ -348,7 +343,7 @@ module.exports = {
           },
           {
             type: "category",
-            label: "8.3 Udp适配器",
+            label: "7.3 Udp适配器",
             items:
               [
                 {
@@ -360,7 +355,7 @@ module.exports = {
           },
           {
             type: "category",
-            label: "8.4 适配器案例赏析",
+            label: "7.4 适配器案例赏析",
             items:
               [
                 {
@@ -378,107 +373,102 @@ module.exports = {
           {
             type: "doc",
             id: "independentusedatahandlingadapter",
-            label: "8.5 独立使用适配器"
+            label: "7.5 独立使用适配器"
           },
           {
             type: "doc",
             id: "dataadaptertester",
-            label: "8.6 适配器完整性、性能测试"
+            label: "7.6 适配器完整性、性能测试"
           },
         ]
     },
     {
       type: "category",
-      label: "09、Http组件",
+      label: "08、Http组件",
       items:
         [
           {
             type: "doc",
-            id: "httpdescription",
-            label: "9.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
             id: "createhttpservice",
-            label: "9.2 创建HttpService"
+            label: "8.1 创建HttpService"
           },
           {
             type: "doc",
             id: "createhttpclient",
-            label: "9.3 创建HttpClient"
+            label: "8.2 创建HttpClient"
           },
           {
             type: "doc",
             id: "httpstaticpageplugin",
-            label: "9.4 静态页面插件"
+            label: "8.3 静态页面插件"
           },
           {
             type: "doc",
             id: "httpfiletransfer",
-            label: "9.5 文件传输"
+            label: "8.4 文件传输"
           },
         ]
     },
     {
       type: "category",
-      label: "10、WebSocket组件",
+      label: "9、WebSocket组件",
       items:
         [
           {
             type: "doc",
             id: "websocketdescription",
-            label: "10.1 产品及架构介绍"
+            label: "9.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "createwebsocketservice",
-            label: "10.2 创建WebSocket服务器"
+            label: "9.2 创建WebSocket服务器"
           },
           {
             type: "doc",
             id: "createwebsocketclient",
-            label: "10.3 创建WebSocket客户端"
+            label: "9.3 创建WebSocket客户端"
           },
           {
             type: "doc",
             id: "wscommandlineplugin",
-            label: "10.4 WSCommandLinePlugin"
+            label: "9.4 WSCommandLinePlugin"
           },
           {
             type: "doc",
             id: "wsjsonrpc",
-            label: "10.5 基于WS的JsonRpc"
+            label: "9.5 基于WS的JsonRpc"
           },
         ]
     },
     {
       type: "category",
-      label: "11、TouchRpc组件",
+      label: "10、TouchRpc组件",
       items:
         [
           {
             type: "doc",
             id: "touchrpcdescription",
-            label: "11.1 产品及架构介绍"
+            label: "10.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "createtouchrpcservice",
-            label: "11.2 创建TouchRpc服务器"
+            label: "10.2 创建TouchRpc服务器"
           },
           {
             type: "doc",
             id: "createtouchrpcclient",
-            label: "11.3 创建TouchRpc客户端"
+            label: "10.3 创建TouchRpc客户端"
           },
           {
             type: "doc",
             id: "touchrpcbase",
-            label: "11.4 基础功能"
+            label: "10.4 基础功能"
           },
           {
             type: "category",
-            label: "11.5 Rpc功能",
+            label: "10.5 Rpc功能",
             items:
               [
                 {
@@ -505,7 +495,7 @@ module.exports = {
           },
           {
             type: "category",
-            label: "11.6 文件传输",
+            label: "10.6 文件传输",
             items:
               [
                 {
@@ -528,88 +518,88 @@ module.exports = {
           {
             type: "doc",
             id: "remotefilecontrol",
-            label: "11.7 远程文件操作"
+            label: "10.7 远程文件操作"
           },
           {
             type: "doc",
             id: "streamtransfer",
-            label: "11.8 Stream传输"
+            label: "10.8 Stream传输"
           },
           {
             type: "doc",
             id: "remotestreamaccess",
-            label: "11.9 远程流访问"
+            label: "10.9 远程流访问"
           },
           {
             type: "doc",
             id: "eventbus",
-            label: "11.10 EventBus"
+            label: "10.10 EventBus"
           }
         ]
     },
     {
       type: "category",
-      label: "12、WebApi组件",
+      label: "11、WebApi组件",
       items:
         [
           {
             type: "doc",
             id: "webapidescription",
-            label: "12.1 产品及架构介绍"
+            label: "11.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "webapiservice",
-            label: "12.2 定义、发布、启动服务"
+            label: "11.2 定义、发布、启动服务"
           },
           {
             type: "doc",
             id: "callwebapi",
+            label: "11.3 发现、调用服务"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "12、JsonRpc组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "jsonrpcdescription",
+            label: "12.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "jsonrpcservice",
+            label: "12.2 定义、发布、启动服务"
+          },
+          {
+            type: "doc",
+            id: "calljsonrpc",
             label: "12.3 发现、调用服务"
           },
         ]
     },
     {
       type: "category",
-      label: "13、JsonRpc组件",
-      items:
-        [
-          {
-            type: "doc",
-            id: "jsonrpcdescription",
-            label: "13.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
-            id: "jsonrpcservice",
-            label: "13.2 定义、发布、启动服务"
-          },
-          {
-            type: "doc",
-            id: "calljsonrpc",
-            label: "13.3 发现、调用服务"
-          },
-        ]
-    },
-    {
-      type: "category",
-      label: "14、XmlRpc组件件",
+      label: "13、XmlRpc组件件",
       items:
         [
           {
             type: "doc",
             id: "xmlrpcdescription",
-            label: "14.1 产品及架构介绍"
+            label: "13.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "xmlrpcservice",
-            label: "14.2 定义、发布、启动服务"
+            label: "13.2 定义、发布、启动服务"
           },
           {
             type: "doc",
             id: "callxmlrpc",
-            label: "14.3 发现、调用服务"
+            label: "13.3 发现、调用服务"
           },
         ]
     }

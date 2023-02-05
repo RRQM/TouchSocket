@@ -142,5 +142,19 @@
 			"<Highlight color=\"#25c2a0\">Docusaurus 绿</Highlight>"
 		],
 		"description": "tagHighlight"
+	},
+	"details": {
+		"prefix": "details",
+		"body": [
+			"<details>",
+			"<summary>$1</summary>",
+			"<div>",
+		    "",
+		    "$0",
+		    "",
+			"</div>",
+		    "</details>"
+		],
+		"description": "details"
 	}
 }
