@@ -25,7 +25,7 @@ title: 终止因子分割数据处理适配器
 1. TouchSocketConfig配置中设置，同时指定数据的长度。
 2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
 
-```csharp
+```csharp {10}
 TcpService service = new TcpService();
 service.Received += (client, byteBlock, requestInfo) =>
 {
@@ -35,6 +35,24 @@ service.Received += (client, byteBlock, requestInfo) =>
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(new IPHost[] {  new IPHost(7790) })
-    .SetDataHandlingAdapter(()=> { return new FixedSizePackageAdapter(10); }))//配置适配器，固定数据长度为10字节。
+    .SetDataHandlingAdapter(()=> { return new TerminatorPackageAdapter("\r\n"); }))//配置终止字符适配器，以\r\n结尾。
     .Start();//启动
 ```
+
+:::tip 提示
+
+默认情况下终止因子不会保留在数据中，用户可通过ReserveTerminatorCode属性，设为true，来保留终止因子。
+
+:::  
+
+:::caution 注意
+
+接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
+
+:::  
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  

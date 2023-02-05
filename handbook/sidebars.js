@@ -302,7 +302,7 @@ module.exports = {
                 {
                   type: "doc",
                   id: "terminatorpackageadapter",
-                  label: "d.终止因子分割数据处理适配器"
+                  label: "d.终止因子数据处理适配器"
                 },
                 {
                   type: "doc",
@@ -317,22 +317,22 @@ module.exports = {
                 {
                   type: "doc",
                   id: "customfixedheaderdatahandlingadapter",
-                  label: "g.模板解析“固定包头”数据适配器"
+                  label: "g.模板解析固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "customunfixedheaderdatahandlingadapter",
-                  label: "h.模板解析“非固定包头”数据适配器"
+                  label: "h.模板解析非固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "bigfixedheadercustomdatahandlingadapter",
-                  label: "i.模板解析“大数据固定包头”数据适配器"
+                  label: "i.模板解析大数据固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "custombetweenanddatahandlingadapter",
-                  label: "j.模板解析“区间数据”数据适配器"
+                  label: "j.模板解析区间数据适配器"
                 },
                 {
                   type: "doc",
@@ -342,7 +342,7 @@ module.exports = {
                 {
                   type: "doc",
                   id: "tlvdatahandlingadapter",
-                  label: "l.三元组编码（TLV）适配器"
+                  label: "l.三元组编码TLV适配器"
                 },
                 {
                   type: "doc",

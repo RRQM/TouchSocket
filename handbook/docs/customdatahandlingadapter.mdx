@@ -3,33 +3,24 @@ id: customdatahandlingadapter
 title: 用户自定义适配器
 ---
 
-<a name="zLtDH"></a>
-
 ## 一、说明
 
 和原始适配器相比，用户自定义适配器（**CustomDataHandlingAdapter**）简单很多。因为他只需要考虑接下来如何处理即可。
 
-<a name="ndiFD"></a>
-
 ## 二、运行逻辑
-
-
 
 还是以下列数据为例：
 
+<img src={require('../static/img/docs/datahandleadapter-1.png').default}/>
 
-<a name="eCz77"></a>
 
 ## 三、特点
 
 1. 更加自由度的操作数据。
 2. 能够简单的缓存不能解析的数据。
 
-<a name="S5MfM"></a>
 
 ## 四、使用
-
-客户端与服务器均适用。下列以服务器为例。
 
 步骤
 
@@ -138,3 +129,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .SetDataHandlingAdapter(() => { return new MyCustomDataHandlingAdapter(); }))//配置适配器
     .Start();//启动
 ```
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  
