@@ -11,7 +11,7 @@ title: 服务器重置ID
 
 默认情况下服务器都会根据**历史连接数量**，为连接的客户端新分配ID。也就是说，第一个连接的，其ID就是1，以此类推。
 
-当然我们可以自由的定义ID策略，只需要在Config配置中，配置[SetGetDefaultNewID](../docs/config.mdx#setgetdefaultnewid)，自定义新ID来源即可。要求不和现连接的客户端ID重复。
+当然我们可以自由的定义ID策略，只需要在Config配置中，配置[SetGetDefaultNewID](../docs/createtcpservice.mdx#setgetdefaultnewid)，自定义新ID来源即可。要求不和现连接的客户端ID重复。
 
 下列示例，就是使用Guid作为初始ID。
 
