@@ -411,7 +411,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "9、WebSocket组件",
+      label: "09、WebSocket组件",
       items:
         [
           {

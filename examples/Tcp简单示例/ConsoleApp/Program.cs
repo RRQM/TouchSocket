@@ -91,7 +91,7 @@ namespace ServiceConsoleApp
     /// <summary>
     /// 可以继承<see cref="TcpServicePlugin"/>,或者直接实现<see cref="IServicePlugin"/>
     /// </summary>
-    class MyServicePluginClass :TcpServicePlugin
+    class MyServicePluginClass : TcpServicePlugin
     {
         protected override void OnStarted(TcpService sender, ServiceStateEventArgs e)
         {
@@ -103,7 +103,7 @@ namespace ServiceConsoleApp
             {
                 ConsoleLogger.Default.Info($"服务器启动失败，状态：{e.ServerState}，异常：{e.Exception}");
             }
-            
+
             base.OnStarted(sender, e);
         }
 
@@ -113,7 +113,7 @@ namespace ServiceConsoleApp
         }
     }
 
-    class MyPluginClass:TcpPluginBase<SocketClient>
+    class MyPluginClass : TcpPluginBase<SocketClient>
     {
         private readonly TcpService m_service;
 

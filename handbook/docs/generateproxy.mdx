@@ -3,6 +3,8 @@ id: generateproxy
 title: 生成、获取代理
 ---
 
+import Tag from "@site/src/components/Tag.js";
+
 ## 一、说明
 
 ### 1.1 为什么要生成代理？
@@ -158,7 +160,7 @@ public class Args
 }
 ```
 
-## 三、客户端源代码生成代理
+## 三、客户端源代码生成代理 <Tag>企业版</Tag>
 
 前一种方式已经算是几近完美的代理生成方案，但是有时候，当大家协作时，喜欢全部自己敲写。
 
@@ -217,10 +219,14 @@ interface IMyRpcServer
 
 ![](../static/img/docs/generateproxy-1.png)
 
-[本文示例代码](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/TouchRpc%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B/%E6%BA%90%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90%E4%BB%A3%E7%90%86/GeneratorRpcProxyConsoleApp)
 
-:::note 备注
+:::tip 提示
 
-源代码生成功能目前仅企业版支持。
+大家可能会疑问，源代码生成代理，和服务端生成代理，有什么区别？或者说有什么优点？
+实际上没有区别，也没有优点。之所以设计这个，是因为之前有人提过需求，想要完全分离前、后端。即：后端写好服务后，前端自由定义服务接口，和调用参数，仅此而已。
+
+所以，生成代理的方式，按照大家的习惯需求选择就可以。
 
 :::  
+
+[源代码生成代理示例代码](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/TouchRpc%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B/%E6%BA%90%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90%E4%BB%A3%E7%90%86/GeneratorRpcProxyConsoleApp)
