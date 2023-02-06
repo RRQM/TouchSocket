@@ -129,6 +129,17 @@ string codeString = CodeGenerator.ConvertToCode("RRQMProxy", codes);
 
 亦或者，为防止篡改生成的代码，不想把代理代码直接投入使用，那可以考虑将代码单独编译成dll，然后将编译的程序集加载到客户端。
 
+:::tip 提示
+
+上述行为，均是导出所有已注册的服务，当需要在同一个服务端，生成多个不同代理的源码时，可通过CodeGenerator静态类的相关方法直接生成。例如：
+
+```csharp {1}
+string codes=CodeGenerator.GetProxyCodes("Namespace",new Type[]{typeof(RpcServer) },new Type[] { typeof(TouchRpcAttribute)});
+```
+
+
+:::  
+
 
 ### 2.2 代理类型添加
 

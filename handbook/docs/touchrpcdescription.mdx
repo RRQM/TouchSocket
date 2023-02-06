@@ -113,37 +113,3 @@ TouchRpc像http和websocket一样，也是封装的应用层协议。它可以�
 | **Udp版** | 基于UDP Package协议，无连接，执行效率高，仅支持TouchRpc的Rpc功能。 |
 | **Http版** | 基于Http握手连接，数据交互仍然使用TCP。连接性能一般，但兼容性强，支持JsonRpc，WebApi，XmlRpc，WebSocket等一系列Http组件，且执行效率和TCP版一样高，支持TouchRpc所有功能。 |
 | **WebSocket版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的是WebSocket，所有效率只有Tcp版的80%。支持TouchRpc所有功能 |
-
-
-## 四、可配置项
-
-继承基类。
-
-
-| **属性名** | **属性描述** |
-| --- | --- |
-| SetVerifyTimeout | 设置验证超时时间，默认3000ms。（仅TcpTouchRpc可用） |
-| SetVerifyToken | 设置验证口令。 |
-| SetHeartbeatFrequency | 设置心跳。默认为间隔2000ms，连续3次无响应即视为断开。 |
-| SetSerializationSelector | 设置序列化选择器。 |
-| SetResponseType | 设置允许的响应类型 |
-| SetRootPath | 设置根路径 |
-
-## 五、支持插件接口
-
-声明自定义实例类，然后实现**ITouchRpcPlugin**接口，即可实现下列事务的触发。
-或者继承自**TouchRpcPluginBase**类，重写相应方法即可。
-
-|  插件方法 | 功能 |
-| --- | --- |
-| OnHandshaking | 客户端在验证连接。默认情况下，框架会首先验证连接Token是否正确，如果不正确则直接拒绝。不会有任何投递。用户也可以使用Metadata进行动态验证。 |
-| OnHandshaked | 客户端完成连接验证 |
-| OnFileTransfering | 在文件传输即将进行时触发。 |
-| OnFileTransfered | 当文件传输结束之后。并不意味着完成传输，请通过e.Result属性值进行判断。 |
-| OnLoadingStream | 在远程请求加载流时触发。 |
-| OnReceivedProtocolData | 收到协议数据 |
-| OnRemoteAccessing | 在远程操作访问之前。 |
-| OnRemoteAccessed | 在远程操作访问之后。 |
-| OnRouting | 当需要转发路由包时。一般所有的**客户端之间**的数据传输，都需要经过该函数的运行。 |
-| OnStreamTransfering | 即将接收流数据，用户需要在此事件中对e.Bucket初始化。 |
-| OnStreamTransfered | 流数据处理，用户需要在此事件中对e.Bucket手动释放。 当流数据传输结束之后。并不意味着完成传输，请通过e.Result属性值进行判断。 |

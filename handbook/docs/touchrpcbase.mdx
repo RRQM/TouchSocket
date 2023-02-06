@@ -7,7 +7,7 @@ title: 基础功能
 
 连接验证可以初步保证连接客户端的安全性。框架内部默认使用一个string类型的Token作为验证凭证。当然也允许服务器进行其他验证。具体如下：
 
-【Token验证】
+### 1.1 Token验证
 在服务器或客户端的配置上，设置VerifyToken，即可实现字符串Token验证。
 
 ```csharp
@@ -16,7 +16,8 @@ var config = new TouchSocketConfig()//配置
 
 ```
 
-【动态验证】
+### 1.2 动态验证
+
 使用插件，重写**OnHandshaking**相关。然后可以自行判断一些信息，比如：IP地址、元数据等。
 
 ```csharp
@@ -42,16 +43,12 @@ internal class MyTouchRpcPlugin : TouchRpcPluginBase
 }
 ```
 
-<a name="CbVzc"></a>
-
 ## 二、ID同步
 
-在TouchRpc中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其ID也**完全一致**。
-所以在任意一方修改ID（调用ResetID），都会同时修改远程ID。
-所以合理使用该操作，可以完成复用ID（重置ID）的需求。
+在TouchRpc中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其ID也**完全一致**。所以在任意一方修改ID（调用ResetID），都会同时修改远程ID。所以合理使用该操作，可以完成复用ID（重置ID）的需求。
 
 
-## 一、说明
+## 三、协议扩展
 
 协议扩展功能，就是对现有的TouchRpc进行自定义的扩展协议。其目的就是为了应对更加复杂，高要求的需求。
 
@@ -60,9 +57,8 @@ internal class MyTouchRpcPlugin : TouchRpcPluginBase
 自定义协议效率如何呢？
 自定义协议的效率是非常高的，99%接近于底层协议（可能是tcp、udp、websocket）效率。
 
-<a name="YZ1bY"></a>
 
-## 二、使用
+### 3.1 使用
 
 使用起来是非常简单的，每个TouchRpc客户端或者TouchRpc服务端，都实现了Send方法接口。
 第一个参数为short类型，使用者可以**约定任意数值**（**不要使用小于0的，因为框架内部在使用**）。
@@ -84,3 +80,9 @@ internal class MyTouchRpcPlugin : TouchRpcPluginBase
     }
 }
 ```
+
+:::caution 注意
+
+从ProtocolDataEventArgs解析的ByteBlock，其真实数据会整体向右偏移2个字节。因为前两个字节是ushort的Protocol。
+
+:::  
