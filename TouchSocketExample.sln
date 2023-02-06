@@ -178,7 +178,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpBroadcastConsoleApp", "e
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rpc流式数据传输", "Rpc流式数据传输", "{F4BC22A9-7007-46B1-B168-DFB2A2E0EA24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcStreamConsoleApp", "examples\TouchRpc简单示例\Rpc流式数据传输\RpcStreamConsoleApp\RpcStreamConsoleApp.csproj", "{23B63A76-3759-4522-AA7C-721B5098C822}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcStreamConsoleApp", "examples\TouchRpc简单示例\Rpc流式数据传输\RpcStreamConsoleApp\RpcStreamConsoleApp.csproj", "{23B63A76-3759-4522-AA7C-721B5098C822}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "序列化选择器", "序列化选择器", "{405C6B1D-CCFE-407A-9A96-3548C55B0D1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationSelectorConsoleApp", "examples\TouchRpc简单示例\序列化选择器\SerializationSelectorConsoleApp\SerializationSelectorConsoleApp.csproj", "{B77AD280-A493-444F-BC86-DFE32F4FDA3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializationSelectorClassLibrary", "examples\TouchRpc简单示例\序列化选择器\SerializationSelectorClassLibrary\SerializationSelectorClassLibrary.csproj", "{EB4DE5C1-A14A-456C-9473-78D39DED09A3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -398,6 +404,14 @@ Global
 		{23B63A76-3759-4522-AA7C-721B5098C822}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23B63A76-3759-4522-AA7C-721B5098C822}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23B63A76-3759-4522-AA7C-721B5098C822}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B77AD280-A493-444F-BC86-DFE32F4FDA3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B77AD280-A493-444F-BC86-DFE32F4FDA3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B77AD280-A493-444F-BC86-DFE32F4FDA3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B77AD280-A493-444F-BC86-DFE32F4FDA3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB4DE5C1-A14A-456C-9473-78D39DED09A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB4DE5C1-A14A-456C-9473-78D39DED09A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB4DE5C1-A14A-456C-9473-78D39DED09A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB4DE5C1-A14A-456C-9473-78D39DED09A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -468,6 +482,9 @@ Global
 		{C26AB687-63B1-4C4C-8FDC-B1CF182C9E92} = {ECB9C1D8-AB1D-4105-AF2F-BC9D14158BF3}
 		{F4BC22A9-7007-46B1-B168-DFB2A2E0EA24} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
 		{23B63A76-3759-4522-AA7C-721B5098C822} = {F4BC22A9-7007-46B1-B168-DFB2A2E0EA24}
+		{405C6B1D-CCFE-407A-9A96-3548C55B0D1F} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
+		{B77AD280-A493-444F-BC86-DFE32F4FDA3E} = {405C6B1D-CCFE-407A-9A96-3548C55B0D1F}
+		{EB4DE5C1-A14A-456C-9473-78D39DED09A3} = {405C6B1D-CCFE-407A-9A96-3548C55B0D1F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
