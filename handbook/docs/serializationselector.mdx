@@ -1,0 +1,139 @@
+---
+id: serializationselector
+title: 序列化选择器
+---
+
+## 一、说明
+
+从下图（图片来源[网络](https://www.jianshu.com/p/7d6853140e13)）可以看出，序列化是RPC中至关重要的一个环节，可以说，序列化的优劣，会很大程度的影响RPC调用性能。
+
+<img src={require('../static/img/docs/serializationselector-1.png').default} />
+
+## 二、支持的序列化
+
+在TouchRpc中，内置了四种序列化方式，分别为`FastBinary`、`Json`、`Xml`、`SystemBinary`。这四种方式的特点，就是其序列化的特点。
+
+|  | FastBinary | Json | Xml | SystemBinary |
+| --- | --- | --- | --- | --- |
+| 特点 | 序列化方式速度快，数据量小，但是兼容的数据格式也比较有限。仅支持基础类型、自定义实体类、数组、List、字典 | 兼容性好，可读性强，但是受字符串影响，性能不出众，且数据量受限制 | 兼容性一般，可读性强，同样受字符串影响，性能不出众，且数据量受限制 | 序列化速度快。但是兼容性低。且要求类必须一致，不然需要重新指定图根。 |
+
+## 三、使用预设序列化
+
+在TouchRpc中，选择序列化是非常简单的，且序列化方式完全由`调用端`决定。
+在实际的调用中，通过`InvokeOption`的参数指定。
+
+实际上，只需要传入相关参数即可。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption() //InvokeOption是结构体，所以成员必须全部初始化。
+{
+    FeedbackType = FeedbackType.WaitInvoke,
+    Timeout = 1000 * 10
+};
+;
+invokeOption.SerializationType = SerializationType.FastBinary;
+//invokeOption.SerializationType = RRQMCore.Serialization.SerializationType.Json;
+//invokeOption.SerializationType = RRQMCore.Serialization.SerializationType.Xml;
+string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
+```
+
+<a name="t0SF0"></a>
+
+### 1.3 自定义序列化
+
+**a).定义**
+想要实现自定义序列化，必须通过重写序列化选择器，实现`SerializeParameter`和`DeserializeParameter`函数。如果还想留用预设序列化，请按下代码示例即可。
+
+```csharp
+/// <summary>
+/// 序列化选择器
+/// </summary>
+public class MySerializationSelector : SerializationSelector
+{
+    /// <summary>
+    /// 反序列化
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameterBytes"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+    {
+        if (parameterBytes == null)
+        {
+            return parameterType.GetDefault();
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                }
+            case SerializationType.Json:
+                {
+                    return Encoding.UTF8.GetString(parameterBytes).FromJson(parameterType);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                }
+            default:
+                throw new RpcException("未指定的反序列化方式");
+        }
+    }
+
+    /// <summary>
+    /// 序列化参数
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+    {
+        if (parameter == null)
+        {
+            return null;
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinarySerialize(parameter);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinarySerialize(parameter);
+                }
+            case SerializationType.Json:
+                {
+                    return SerializeConvert.JsonSerializeToBytes(parameter);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlSerializeToBytes(parameter);
+                }
+            default:
+                throw new RpcException("未指定的序列化方式");
+        }
+    }
+}
+```
+
+**b).使用**
+首先在`解析器`和`客户端`**配置**中赋值解析器。
+
+```csharp
+var config = new TouchSocketConfig()//配置
+                   .SetSerializationSelector(new MySerializationSelector());
+```
+
+然后，因为赋值时是`SerializationType`的枚举类型，所以执行强制类型转换即可。
+
+```csharp
+InvokeOption invokeOption = new InvokeOption();
+invokeOption.SerializationType = (RRQMCore.Serialization.SerializationType)5;
+```
