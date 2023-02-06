@@ -11,17 +11,61 @@ TouchRpc的服务器有多种形式的host，每种服务器的创建都大同�
 
 ## 二、服务器架构
 
-TouchRpc服务器的架构与其所属的基础协议架构一致，例如，在基于tcp协议时，其架构就和tcp服务器一致。
-在收到**新客户端连接**时，会创建一个**TcpTouchRpcSocketClient**的类实例，与**客户端TcpTouchRpcClient**一一对应，后续的数据通信均由此实例负责。
+TouchRpc服务器的架构与其所属的基础协议架构一致，例如，在基于tcp协议时，其架构就和tcp服务器一致。在收到**新客户端连接**时，会创建一个**TcpTouchRpcSocketClient**的类实例，与**客户端TcpTouchRpcClient**一一对应，后续的数据通信均由此实例负责。
 
 
-## 三、创建
+## 三、可配置项
 
-<a name="JgmHn"></a>
+<details>
+<summary>可配置项</summary>
+<div>
 
-### 3.1 基于Tcp协议
+#### SetVerifyTimeout
+设置验证超时时间，默认3000ms。（仅TcpTouchRpc可用） 。
 
-这是基于Tcp协议TouchRpc。配置设置与[TcpService](./createtcpservice.mdx)一致。
+#### SetVerifyToken
+设置验证口令。 
+
+#### SetHeartbeatFrequency
+设置心跳。默认为间隔2000ms，连续3次无响应即视为断开。
+
+#### SetSerializationSelector
+设置序列化选择器。
+
+#### SetResponseType
+设置允许的响应类型
+
+#### SetRootPath
+设置根路径
+</div>
+</details>
+
+## 四、支持插件接口
+
+声明自定义实例类，然后实现**ITouchRpcPlugin**接口，即可实现下列事务的触发。
+或者继承自**TouchRpcPluginBase**类，重写相应方法即可。
+
+|  插件方法 | 功能 |
+| --- | --- |
+| OnHandshaking | 客户端在验证连接。默认情况下，框架会首先验证连接Token是否正确，如果不正确则直接拒绝。不会有任何投递。用户也可以使用Metadata进行动态验证。 |
+| OnHandshaked | 客户端完成连接验证 |
+| OnFileTransfering | 在文件传输即将进行时触发。 |
+| OnFileTransfered | 当文件传输结束之后。并不意味着完成传输，请通过e.Result属性值进行判断。 |
+| OnLoadingStream | 在远程请求加载流时触发。 |
+| OnReceivedProtocolData | 收到协议数据 |
+| OnRemoteAccessing | 在远程操作访问之前。 |
+| OnRemoteAccessed | 在远程操作访问之后。 |
+| OnRouting | 当需要转发路由包时。一般所有的**客户端之间**的数据传输，都需要经过该函数的运行。 |
+| OnStreamTransfering | 即将接收流数据，用户需要在此事件中对e.Bucket初始化。 |
+| OnStreamTransfered | 流数据处理，用户需要在此事件中对e.Bucket手动释放。 当流数据传输结束之后。并不意味着完成传输，请通过e.Result属性值进行判断。 |
+
+
+## 五、创建服务器
+
+
+### 5.1 基于Tcp协议
+
+这是基于Tcp协议TouchRpc。在可配置TouchRpc的基础之上，还可以配置与[TcpService可配置项](./createtcpservice.mdx#可配置项)相关的配置。
 
 ```csharp
 var service = new TcpTouchRpcService();
@@ -40,9 +84,7 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-<a name="wuiMD"></a>
-
-### 3.2 基于Http协议
+### 5.2 基于Http协议
 
 这是基于Http升级协议。在该解析器中，配置设置[HttpService](./createhttpservice.mdx)一致。
 
@@ -63,9 +105,7 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-<a name="IAQ9G"></a>
-
-### 3.3 基于Udp协议
+### 5.3 基于Udp协议
 
 这是基于UDP协议解析器。在该解析器中，配置设置与[UdpSession](./createudpsession.mdx)一致。因为udp是无连接的，所以不需要SetVerifyToken。
 
@@ -85,9 +125,7 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-<a name="vW1M2"></a>
-
-### 3.4 基于AspNetCore的Websocket协议
+### 5.4 基于AspNetCore的Websocket协议
 
 具体步骤
 
@@ -148,6 +186,3 @@ public void ConfigureServices(IServiceCollection services)
      });
  }
 ```
-
-
-##

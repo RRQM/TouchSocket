@@ -141,7 +141,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::tip 提示
 
-上述示例的数据是经典的固定包头格式，具有Fixed+Data的明显分割点。但有时候，也有一些数据有好几段，例如：具有Crc校验的数据，也就是Fixed+Data+Crc的格式，这时候，我们可以把Data+Crc看做一段数据，然后解析即可。
+上述示例的数据是经典的固定包头格式，具有Header+Body的明显分割点。但有时候，也有一些数据有好几段，例如：具有Crc校验的数据，也就是Header+Body+Crc的格式，这时候，我们可以把Body+Crc看做一段数据，然后从Header解析BodyLength以后，加上Crc的长度。最后会在OnParsingBody时，将Body和Crc一起投递，届时做好数据分割即可。
 
 :::  
 

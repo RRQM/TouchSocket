@@ -72,6 +72,9 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
 
         MyRequestInfo myRequestInfo = new MyRequestInfo();
 
+        //此操作实际上有两个作用，
+        //1.填充header
+        //2.将byteBlock.Pos递增3的长度。
         byteBlock.Read(out byte[] header, 3);//填充header
 
         //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
@@ -86,7 +89,10 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
         }
         else
         {
-            byteBlock.Read(out byte[] body, bodyLength);//填充body
+            //此操作实际上有两个作用，
+            //1.填充body
+            //2.将byteBlock.Pos递增bodyLength的长度。
+            byteBlock.Read(out byte[] body, bodyLength);
 
             myRequestInfo.Header = header;
             myRequestInfo.DataType = header[1];
