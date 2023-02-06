@@ -25,7 +25,14 @@ namespace SerializationSelectorConsoleApp
 
             var client = CreateClient();
 
-            var msg = client.Login(new LoginModel() { Account = "Account", Password = "Password" });
+            InvokeOption invokeOption = new InvokeOption()
+            {
+                FeedbackType = FeedbackType.WaitInvoke,
+                SerializationType = (SerializationType)4,
+                Timeout = 1000 * 10
+            };
+
+            var msg = client.Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
             Console.WriteLine(msg);
             Console.ReadKey();
         }
@@ -35,6 +42,7 @@ namespace SerializationSelectorConsoleApp
             TcpTouchRpcClient client = new TcpTouchRpcClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
+                .SetSerializationSelector(new MemoryPackSerializationSelector())
                 .SetVerifyToken("TouchRpc"));
             client.Connect();
             return client;
@@ -45,6 +53,7 @@ namespace SerializationSelectorConsoleApp
             var service = new TcpTouchRpcService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                   .SetSerializationSelector(new MemoryPackSerializationSelector())
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();

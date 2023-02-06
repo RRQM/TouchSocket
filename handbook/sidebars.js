@@ -493,8 +493,13 @@ module.exports = {
                 },
                 {
                   type: "doc",
+                  id: "serializationselector",
+                  label: "d.序列化选择器"
+                },
+                {
+                  type: "doc",
                   id: "generateproxy",
-                  label: "d.生成、获取代理"
+                  label: "e.生成、获取代理"
                 }
               ]
           },
