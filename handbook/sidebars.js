@@ -114,6 +114,11 @@ module.exports = {
       ],
     },
     {
+      type: "doc",
+      id:"startguide",
+      label: "04、入门指南",
+    },
+    {
       type: "category",
       label: "04、Core",
       items:
