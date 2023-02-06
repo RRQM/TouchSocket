@@ -14,12 +14,12 @@ title: 用户自定义适配器
 返回指令类型：
 
 - FilterResult.Cache：将ByteBlock中的，从ByteBlock.Pos到结束的所有数据进行缓存，用于和下次接收数据做拼接。
-- FilterResult.Success：完成本次数据解析，继续向下投递IRequestInfo对象。
+- FilterResult.Success：完成本次数据解析，向Received投递IRequestInfo对象。在返回之前，请一定确保已经修改ByteBlock.Pos属性。不然会发生无限循环的危险情况。
 - FilterResult.GoOn：将ByteBlock.Pos至结束的数据重新投递，所以在返回之前，请一定确保已经修改ByteBlock.Pos属性，至少已经递增一位。不然会发生无限循环的危险情况。
 
 :::danger 注意
 
-返回GoOn指令时，请一定确保已经修改ByteBlock.Pos属性，至少已经递增一位。不然会发生无限循环的危险情况。
+返回Success或者GoOn指令时，请一定确保已经修改ByteBlock.Pos属性，至少已经递增一位。不然会发生无限循环的危险情况。
 
 :::  
 
