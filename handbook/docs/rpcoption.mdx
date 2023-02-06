@@ -3,73 +3,7 @@ id: rpcoption
 title: 调用配置
 ---
 
-## 一、说明
-
-> RPC服务是无状态的，即只知道当前服务被调用，但无法得知是被谁调用，这个问题给日志记录、RPC回调等带来了很多麻烦事。但是，Touch的RPC支持调用上下文获取。在上下文中可以获得调用者（`ICaller`）信息等。
-
-<a name="Ga8VP"></a>
-
-## 二、通过标签参数获取
-
-**步骤：**
-
-1. RPC标签需要传入`MethodFlags.IncludeCallContext`参数。
-2. 定义的服务的第一个参数必须是`ICallContext`或其派生类。
-3. 最后获得其Caller属性即可得到调用者。
-
-```csharp
-public class MyRpcServer : RpcServer
-{
-    [Description("登录")]
-    [TouchRpc(MethodFlags = MethodFlags.IncludeCallContext)]//使用调用上才文
-    public bool Login(ICallContext callContext,string account,string password)
-    {
-        if (callContext.Caller is TcpTouchRpcSocketClient)
-        {
-            Console.WriteLine("TcpTouchRpc请求");
-        }
-        if (account=="123"&&password=="abc")
-        {
-            return true;
-        }
-
-        return false;
-    }
-}
-```
-
-<a name="Vu3AK"></a>
-
-## 三、通过瞬时生命周期获取
-
-步骤：
-
-1. 继承TransientRpcServer或者实现ITransientRpcServer接口。
-
-```csharp
-public class MyRpcServer : TransientRpcServer
-{
-    [Description("登录")]
-    [TouchRpc]
-    public bool Login(string account,string password)
-    {
-        if ( this.CallContext.Caller is TcpTouchRpcSocketClient)
-        {
-            Console.WriteLine("TcpTouchRpc请求");
-        }
-        if (account=="123"&&password=="abc")
-        {
-            return true;
-        }
-
-        return false;
-    }
-}
-```
-
-
-
-## 调用反馈类型
+## 一、调用反馈类型
 
 RPC在调用时，的调用状态有三种状态可选，分别为：`OnlySend`、`WaitSend`、`WaitInvoke`。区别是：
 
@@ -77,9 +11,7 @@ RPC在调用时，的调用状态有三种状态可选，分别为：`OnlySend`�
 | --- | --- | --- |
 | 仅发送RPC请求，在TCP底层协议下，能保证发送成功，但是不反馈服务器**任何状态**，也不会取得**返回值**、**异常**等信息。在UDP底层协议下，不保证发送成功，仅仅是具有请求动作而已。 | 发送RPC请求，并且等待收到状态返回，能保证RPC请求顺利到达服务，但是不能得知RPC服务是否成功执行，也不会取得**返回值**、**异常**等信息 | 发送RPC请求，且返回所有信息，包括是否成功调用，执行后的**返回值**或**异常**等信息。 |
 
-<a name="jOr0o"></a>
-
-### 使用
+### 1.1 使用
 
 同样的，在InvokeOption中可以直接赋值使用。
 
@@ -93,73 +25,11 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 
 ***注意：假如IInvokeOption使用的是InvokeOption的话，在new的时候，应该对其他参数也进行设置（因为它是结构体）。***
 
-
-## 说明
-
-RPC服务在被调用是，可以使用实现**IRpcActionFilter**的**特性（Attribute）**，进行相关AOP操作。
-
-<a name="nzqGX"></a>
-
-## 声明特性
-
-```csharp
-public class MyRpcActionFilterAttribute : RpcActionFilterAttribute, IRpcActionFilter
-{
-
-    public override void Executing(ICallContext callContext, ref InvokeResult invokeResult)
-    {
-        if (callContext.Caller is TcpTouchRpcSocketClient client)
-        {
-            client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
-        }
-        base.Executing(callContext, ref invokeResult);
-    }
-
-    public override void Executed(ICallContext callContext, ref InvokeResult invokeResult)
-    {
-        if (callContext.Caller is TcpTouchRpcSocketClient client)
-        {
-            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
-        }
-        base.Executed(callContext, ref invokeResult);
-    }
-
-    public override void ExecutException(ICallContext callContext, ref InvokeResult invokeResult, Exception exception)
-    {
-        if (callContext.Caller is TcpTouchRpcSocketClient client)
-        {
-            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
-        }
-
-        base.ExecutException(callContext, ref invokeResult, exception);
-    }
-}
-
-```
-
-<a name="ICJjw"></a>
-
-## 使用
-
-```csharp
- [Description("性能测试")]
- [TouchRpc]
- [MyRpcActionFilter]
- public int Performance(int a)
- {
-     return a;
- }
-```
-
-
-
-
-
-## 一、说明
+## 二、调用超时设置
 
 调用RPC，不能无限制等待，必须要有计时器，或者任务取消的功能。 <a name="bt54x"></a>
 
-### 1.1 计时器设置
+### 2.1 计时器设置
 
 直接对`InvokeOption`的`Timeout` 属性赋值即可，单位为`毫秒`。
 
@@ -169,9 +39,7 @@ invokeOption.Timeout = 1000 * 10;//10秒后无反应，则抛出RRQMTimeoutExcep
 string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 ```
 
-<a name="T7e0y"></a>
-
-### 1.2 任务取消
+### 2.2 任务取消
 
 在RPC调用时，计时器是一个好的选择，但是还不够完美，有时候我们希望能手动终结某个调用任务。这时候，计时器就不堪重任，需要能主动取消任务的功能。熟悉.net的小伙伴都知道，CancellationToken是具备这个功能的。同样的，只需要对`InvokeOption`的`CancellationToken` 赋值即可。
 
@@ -183,9 +51,7 @@ invokeOption.CancellationToken = tokenSource.Token;
 string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 ```
 
-<a name="seYXN"></a>
-
-### 1.3 服务任务取消
+### 2.3 服务任务取消
 
 实际上7.2的取消任务，仅仅能实现让客户端取消请求，但是服务器并不知道，如果想让服务器也感知任务消息，就必须依托于调用上下文。
 

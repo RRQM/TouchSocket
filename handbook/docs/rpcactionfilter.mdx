@@ -1,0 +1,68 @@
+---
+id: rpcactionfilter
+title: Rpc服务AOP
+---
+
+## 一、说明
+
+RPC服务在被调用是，可以使用实现**IRpcActionFilter**的**特性（Attribute）**，进行相关AOP操作。
+
+## 二、声明特性
+
+```csharp
+public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
+{
+    public override void Executing(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+    {
+        //invokeResult = new InvokeResult()
+        //{
+        //    Status = InvokeStatus.UnEnable,
+        //    Message = "不允许执行",
+        //    Result = default
+        //};
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
+        }
+        base.Executing(callContext, parameters, ref invokeResult);
+    }
+
+    public override void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+        }
+        base.Executed(callContext, parameters, ref invokeResult);
+    }
+
+    public override void ExecutException(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
+    {
+        if (callContext.Caller is TcpTouchRpcSocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+        }
+
+        base.ExecutException(callContext, parameters, ref invokeResult, exception);
+    }
+}
+```
+
+:::tip 提示
+
+每个方法都有详细的注释，仔细查看可能会事半功倍。
+
+:::  
+
+
+## 三、使用
+
+```csharp
+ [Description("性能测试")]
+ [TouchRpc]
+ [MyRpcActionFilter]
+ public int Performance(int a)
+ {
+     return a;
+ }
+```
