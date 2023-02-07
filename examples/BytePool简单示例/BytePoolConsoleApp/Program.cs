@@ -9,8 +9,16 @@ namespace BytePoolConsoleApp
         {
             Console.ReadKey();
 
-            BytePool bytePool = new BytePool();
-            BytePool defaultBytePool = BytePool.Default;
+
+            ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024, equalSize: false);
+            byteBlock1.Dispose();
+
+            ByteBlock byteBlock2 = BytePool.Default.GetByteBlock(byteSize: 1024 * 1024, equalSize: false);
+            byteBlock2.Dispose();
+
+            using (ByteBlock byteBlock3 = new ByteBlock())
+            {
+            }
 
             BytePool.Default.AddSizeKey(1024 * 1024);
             //BytePool.AutoZero = true;
