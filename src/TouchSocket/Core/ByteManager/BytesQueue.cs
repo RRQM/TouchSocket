@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// 字节块集合
     /// </summary>
     [DebuggerDisplay("Count = {bytesQueue.Count}")]
-    internal class BytesQueue
+    internal class BytesQueue: ConcurrentStack<byte[]>
     {
         internal int m_size;
 
@@ -31,9 +31,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 占用空间
         /// </summary>
-        public long FullSize => m_size * m_bytesQueue.Count;
-
-        private readonly ConcurrentQueue<byte[]> m_bytesQueue = new ConcurrentQueue<byte[]>();
+        public long FullSize => m_size * this.Count;
 
         internal long m_referenced;
 
@@ -44,7 +42,7 @@ namespace TouchSocket.Core
         public bool TryGet(out byte[] bytes)
         {
             m_referenced++;
-            return m_bytesQueue.TryDequeue(out bytes);
+            return base.TryPop(out bytes);
         }
 
         /// <summary>
@@ -53,12 +51,7 @@ namespace TouchSocket.Core
         /// <param name="bytes"></param>
         public void Add(byte[] bytes)
         {
-            m_bytesQueue.Enqueue(bytes);
-        }
-
-        internal void Clear()
-        {
-            m_bytesQueue.Clear();
+            base.Push(bytes);
         }
     }
 }

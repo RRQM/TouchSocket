@@ -4,7 +4,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>1.2.3</Version>
+		<Version>1.2.4</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
