@@ -1,0 +1,521 @@
+---
+id: createtcpservice
+title: 创建TcpService
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+## 一、说明
+TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SocketClient**类实例。而**SocketClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
+
+## 二、特点
+
+- 简单易用。
+- IOCP多线程。
+- 内存池支持
+- 高性能（实测服务器单客户端单线程，每秒可接收200w条8字节的信息，接收数据流量可达2.5GB/s）。
+- **多地址监听**（可以一次性监听多个IP及端口）
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
+- 超简单的同步发送、异步发送、接收等操作。
+- 基于委托、插件驱动，让每一步都能执行AOP。
+
+## 三、产品应用场景
+
+- 所有Tcp基础使用场景：可跨平台、跨语言使用。
+- 自定义协议解析场景：可解析任意数据格式的TCP数据报文。
+
+## 四、服务器架构
+
+服务器在收到**新客户端连接**时，会创建一个SocketClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
+
+SocketClient在Service里面以字典映射。ID为键，SocketClient本身为值。
+
+<img src={require('../static/img/docs/createtcpservice-2.png').default} width="500" />
+
+## 五、可配置项
+
+<details>
+<summary>可配置项</summary>
+<div>
+
+#### SetBufferLength
+
+发送、接收缓存容量（单位：byte），默认1024×64。设置建议：
+
+1. 如果数据包较小，建议10k左右的值。更加节约内存。
+2. 如果数据包较大，例如文件传输等，建议64k，甚至更大的值。
+3. 该值虽然无上限，但是一般不要超过1Mb，不然不仅没意义，还很浪费
+
+#### SetMaxPackageSize
+
+数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
+
+#### SetThreadCount
+
+多线程数量。该值在Auto模式下指示线程池的最少线程数量和IO线程数量。
+
+设置建议：
+
+1. 异步处理接收数据，此时线程数量设置为内核线程左右的值即可。
+2. 同步处理接收数据，此时应当考虑两个因素。该操作是否为耗时操作，如果是，则该值在允许范围内，应当设置更可能大的值。如果不是，则设置为内核线程左右的值即可。
+
+#### SetGetDefaultNewID
+
+配置初始ID的分配策略
+
+#### SetListenIPHosts
+
+监听IP和端口号组，可以一次性设置多个地址。 
+
+#### SetServerName
+服务器标识名称，无实际使用意义。
+
+#### SetBacklogProperty
+Tcp半连接挂起连接队列的最大长度。默认为30 
+
+#### SetMaxCount
+最大可连接数，默认为10000 
+
+#### SetReceiveType
+接收类型。
+- AUTO：自动接收模式。
+- None：不投递IO接收申请，用户可通过GetStream，获取到流以后，自己处理接收。注意：连接端不会感知主动断开。
+
+#### UsePlugin
+是否启用插件。在启用时或许会带来一点点性能损耗，基本上不是千万数据交互根本不值一提。
+
+#### SetServiceSslOption
+Ssl配置，为Null时则不启用。 
+
+#### UseNoDelay
+设置Socket的NoDelay属性，默认false。 
+
+#### UseDelaySender
+使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用**延迟算法**。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
+
+使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
+1. 如果一个包大于512kb，则不会延迟，直接发送。
+2. 如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10**微秒**左右），则会将这两个包压缩为一个包发送。
+
+#### UseReuseAddress
+启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题。
+
+#### SetRemoteIPHost
+
+链接到的远程IPHost，支持域名。支持类型：
+1. 使用IP&Port，传入形如：127.0.0.1:7789的字符串即可。
+2. 使用域名，必须包含协议类型，形如：http://baidu.com或者https://baidu.com:80
+
+#### SetClientSslOption
+客户端Ssl配置，为Null时则不启用。
+注意，当RemoteIPHost使用https、wss的域名时，该配置会使用系统默认配置生效。
+
+#### SetKeepAliveValue
+为Socket设置的属性。
+注意：该配置仅在window平台生效。
+
+#### SetBindIPHost
+绑定端口。
+- 在UdpSessionBase中表示本地监听地址
+- 在TcpClient中表示固定客户端端口号。
+
+使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
+
+如果一个包大于512kb，则不会延迟，直接发送。
+如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
+
+#### UseNoDelay
+设置Socket的NoDelay属性，默认false。
+
+#### UseBroadcast
+该值指定可以发送或接收广播数据包。
+
+</div>
+</details>
+
+
+## 六、支持插件
+
+支持**ITcpPlugin**接口，或者继承自**TcpPluginBase**类，重写相应方法即可。
+
+|  插件方法| 功能 |
+| --- | --- |
+| OnConnecting | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
+| OnConnected | 同意连接，且成功启动接收后触发 |
+| OnDisconnecting | 当客户端主动调用Close时触发 |
+| OnDisconnected | 当客户端断开连接后触发 |
+| OnReceivingData | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
+| OnReceivedData | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
+| OnSendingData | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
+| OnIDChanged | 当SocketClient的ID发生改变时触发。 |
+
+## 七、创建TcpService
+
+### 7.1 简单创建
+
+直接初始化TcpService，会使用默认的**SocketClient**。
+简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
+
+代码如下：
+
+```csharp
+TcpService service = new TcpService();
+service.Connecting = (client, e) => { };//有客户端正在连接
+service.Connected = (client, e) => { };//有客户端成功连接
+service.Disconnected = (client, e) => { };//有客户端断开连接
+service.Received = (client, byteBlock, requestInfo) =>
+{
+    //从客户端收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+
+    client.Send(mes);//将收到的信息直接返回给发送方
+
+    //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+
+    var ids = service.GetIDs();
+    foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+    {
+        if (clientId != client.ID)//不给自己发
+        {
+            service.Send(clientId, mes);
+        }
+    }
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    {
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+    })
+    .ConfigurePlugins(a =>
+    {
+        //a.Add();//此处可以添加插件
+    }))
+    .Start();//启动
+```
+
+### 7.2 泛型创建
+
+通过泛型创建服务器，可以实现很多有意思，且能**重写**一些有用的功能。下面就演示，如何通过泛型创建服务器。
+
+代码如下：
+
+（1）建立SocketClient继承类。
+
+```csharp
+public class MySocketClient : SocketClient
+{
+    protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        //此处逻辑单线程处理。
+
+        //此处处理数据，功能相当于Received委托。
+        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        Console.WriteLine($"已接收到信息：{mes}");
+    }
+}
+```
+
+（2）建立TcpService继承类。实际上如果业务不涉及服务器配置的话，可以省略该步骤，使用**TcpService的泛型**直接创建。
+
+```csharp
+public class MyService : TcpService<MySocketClient>
+{
+    protected override void LoadConfig(TouchSocketConfig config)
+    {
+        //此处加载配置，用户可以从配置中获取配置项。
+        base.LoadConfig(config);
+    }
+
+    protected override void OnConnecting(MySocketClient socketClient, ClientOperationEventArgs e)
+    {
+        //此处逻辑会多线程处理。
+
+       
+        //e.ID:对新连接的客户端进行ID初始化，例如可以设置为其IP地址。
+        //e.IsPermitOperation:指示是否允许该客户端链接。
+        base.OnConnecting(socketClient, e);
+    }
+}
+
+```
+
+（3）创建服务器（包含MyService）。
+
+```csharp
+MyService service = new MyService();
+service.Connecting = (client, e) => { };//有客户端正在连接
+service.Connected = (client, e) => { };//有客户端成功连接
+service.Disconnected = (client, e) => { };//有客户端断开连接
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    {
+        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+    })
+    .ConfigurePlugins(a =>
+    {
+        //a.Add();//此处可以添加插件
+    }))
+    .Start();//启动
+```
+
+（4）创建服务器（不含MyService）。
+
+```csharp
+TcpService<MySocketClient> service = new TcpService<MySocketClient>();
+service.Connecting = (client, e) => { };//有客户端正在连接
+service.Connected = (client, e) => { };//有客户端成功连接
+service.Disconnected = (client, e) => { };//有客户端断开连接
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    {
+        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+    })
+    .ConfigurePlugins(a =>
+    {
+        //a.Add();//此处可以添加插件
+    }))
+    .Start();//启动
+```
+
+:::tip 建议
+
+由上述代码可以看出，通过继承，可以更加灵活的实现扩展。但实际上，很多业务我们希望大家能通过插件完成。
+
+:::  
+
+
+## 八、接收数据
+
+在TcpService中，接收数据的方式有很多种。多种方式可以组合使用。
+
+### 8.1 Received委托处理
+
+当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+
+```csharp
+TcpService service = new TcpService();
+service.Received = (client, byteBlock, requestInfo) =>
+{
+    //从客户端收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    {
+        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+    }))
+    .Start();//启动
+```
+
+### 8.2 重写SocketClient处理
+
+正如6.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
+
+### 8.3 插件处理 <Tag>推荐</Tag>
+
+按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
+
+1. 服务器配置启用插件（UsePlugin）
+2. 新建插件类
+3. 添加插件
+
+代码如下：
+
+（1）声明插件
+
+```csharp
+public class MyPlugin : TcpPluginBase<SocketClient>
+{
+    public MyPlugin()
+    {
+        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
+    }
+    
+    protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+    {
+        //这里处理数据接收
+        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+        ByteBlock byteBlock = e.ByteBlock;
+        IRequestInfo requestInfo = e.RequestInfo;
+
+        //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+        base.OnReceivedData(client, e);
+    }
+}
+```
+
+（2）创建使用插件处理的服务器
+
+```csharp
+TcpService service = new TcpService();
+service.Setup(new TouchSocketConfig()
+    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })
+    .UsePlugin()
+    .ConfigureContainer(a=>
+    {
+        a.UseConsoleLogger();
+    })
+    .ConfigurePlugins(a => 
+    {
+        a.Add<MyPlugin>();
+    }))
+    .Start();
+```
+
+## 九、AspNetCore中创建
+
+首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
+
+:::tip 建议
+
+在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也即时一些。
+
+:::  
+
+在AspNetCore中使用TcpService，**不应该**像普通端一样，订阅Received。应该是通过**插件**，**注入**等方式实现。步骤如下：
+
+1. 注入TcpService，并做好配置（和常规服务器配置一样）。
+2. 新建插件，处理收到的数据。
+
+代码如下：
+
+（1）声明插件
+
+```csharp
+public class MyTcpPlugin : TcpPluginBase<SocketClient>
+{
+    private ILogger<MyTcpPlugin> m_logger;
+
+    public MyTcpPlugin(ILogger<MyTcpPlugin> logger)
+    {
+        this.m_logger = logger;
+    }
+
+    protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
+    {
+        m_logger.LogInformation("客户端连接");
+        base.OnConnected(client, e);
+    }
+
+    protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+    {
+        //这里处理数据接收
+        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+        ByteBlock byteBlock = e.ByteBlock;
+        IRequestInfo requestInfo = e.RequestInfo;
+    }
+}
+```
+
+（2）注入服务
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    var tcpService = services.AddTcpService(config =>
+      {
+          config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+          .UsePlugin()
+          .UseAspNetCoreContainer(services)
+          .ConfigurePlugins(a =>
+          {
+              a.Add<MyTcpPlugin>();//此插件就可以处理接收数据
+          });
+      });
+}
+
+```
+
+然后在任意地方，也可获得服务。
+
+![image.png](../static/img/docs/createtcpservice-1.png)
+
+:::tip 提示
+
+此时，TcpService与整个AspNetCore是共享IOC容器的。即：TcpService中的任何地方（例如：插件）也能获得AspNetCore已注册的服务。
+
+:::
+
+
+## 十、发送数据
+
+按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SocketClient**的实例，通过**该实例**即可将数据发送至**客户端**。
+
+### 10.1 如何获取SocketClient？
+
+（1）直接获取所有在线客户端
+
+通过`service.GetClients`方法，获取当前在线的所有客户端。
+
+```csharp
+SocketClient[] socketClients = service.GetClients();
+```
+
+:::caution 注意
+
+由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.ID，然后再通过服务器查找。
+
+:::  
+
+（2）通过ID获取
+
+先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+
+```csharp
+string[] ids = service.GetIDs();
+if (service.TryGetSocketClient(ids[0], out SocketClient socketClient))
+{
+}
+```
+
+### 10.2 发送
+
+【同步发送】
+
+SocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
+```csharp
+public virtual void Send(byte[] buffer);
+public virtual void Send(ByteBlock byteBlock);
+public virtual void Send(byte[] buffer, int offset, int length);
+```
+
+【异步发送】
+
+TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
+
+```csharp
+public virtual Task SendAsync(byte[] buffer);
+public virtual Task SendAsync(ByteBlock byteBlock);
+public virtual Task SendAsync(byte[] buffer, int offset, int length);
+```
+
+:::tip 提示
+
+通过上述方法发送的数据，都会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。
+
+:::  
+
+### 10.3 通过TcpService发送
+
+通过ID发送数据。
+
+```csharp
+public virtual void Send(string id, ByteBlock byteBlock);
+public virtual void Send(string id, byte[] buffer, int offset, int length);
+public virtual void Send(string id, byte[] buffer);
+public virtual Task SendAsync(string id, ByteBlock byteBlock);
+public virtual Task SendAsync(string id, byte[] buffer, int offset, int length);
+public virtual Task SendAsync(string id, byte[] buffer);
+```
+
+

@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rpc对比测试", "Rpc对比测试", "{49B4FE19-FB5C-4828-B01E-824B616C3563}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcPerformanceConsoleApp", "performancetest\Rpc对比测试\RpcPerformanceConsoleApp\RpcPerformanceConsoleApp.csproj", "{942F99CD-B6A9-42A0-9504-969465E69FA6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{942F99CD-B6A9-42A0-9504-969465E69FA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942F99CD-B6A9-42A0-9504-969465E69FA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942F99CD-B6A9-42A0-9504-969465E69FA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942F99CD-B6A9-42A0-9504-969465E69FA6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{942F99CD-B6A9-42A0-9504-969465E69FA6} = {49B4FE19-FB5C-4828-B01E-824B616C3563}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72E3B6D3-F2C0-4758-BADC-6EA7CF063120}
+	EndGlobalSection
+EndGlobal
