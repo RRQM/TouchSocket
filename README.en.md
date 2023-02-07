@@ -80,26 +80,26 @@ TouchSocket offers a variety of framework models that can be fully compatible wi
 - Exchange QQ group：234762506
 
 ## 🌟Explanation document
-- [ Homepage ](https://www.yuque.com/rrqm/touchsocket/index)
+- [ Homepage ](http://rrqm_home.gitee.io/touchsocket)
 
 ## 👑Functional cousin
 
 <p align="center">
-<img src="https://s1.328888.xyz/2022/09/04/1aFaw.png" alt="图片名称" align=center />
+<img src="images/1.png" alt="图片名称" align=center />
 </p>
 
 ## ✨Simple example
 
- **_The following only examples are created in the simplest way. For more details, please see [Explanation Document](https://www.yuque.com/rrqm/touchsocket/index)。_** 
+ **_The following only examples are created in the simplest way. For more details, please see [Explanation Document](http://rrqm_home.gitee.io/touchsocket)。_** 
 
  **【TcpService】** 
 
 ```
 TcpService service = new TcpService();
-service.Connecting += (client, e) => { };//Some client is connecting
-service.Connected += (client, e) => { };//There is a client connection
-service.Disconnected += (client, e) => { };//There is a client that is cut off and connected
-service.Received += (client, byteBlock, requestInfo) =>
+service.Connecting = (client, e) => { };//Some client is connecting
+service.Connected = (client, e) => { };//There is a client connection
+service.Disconnected = (client, e) => { };//There is a client that is cut off and connected
+service.Received = (client, byteBlock, requestInfo) =>
 {
     //从客户端收到信息
     string mes = byteBlock.ToString();
@@ -129,9 +129,9 @@ service.Setup(new TouchSocketConfig()//Load
  **【TcpClient】** 
 ```
 TcpClient tcpClient = new TcpClient();
-tcpClient.Connected += (client, e) => { };//Successfully connect to the server
-tcpClient.Disconnected += (client, e) => { };//The connection is disconnected from the server, and it will not be triggered when the connection is unsuccessful.
-tcpClient.Received += (client, byteBlock, requestInfo) =>
+tcpClient.Connected = (client, e) => { };//Successfully connect to the server
+tcpClient.Disconnected = (client, e) => { };//The connection is disconnected from the server, and it will not be triggered when the connection is unsuccessful.
+tcpClient.Received = (client, byteBlock, requestInfo) =>
 {
     //Receive information from the server
     string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
