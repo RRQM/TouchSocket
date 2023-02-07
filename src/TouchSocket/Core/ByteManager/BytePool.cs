@@ -58,12 +58,6 @@ namespace TouchSocket.Core
         public bool AutoZero { get; set; }
 
         /// <summary>
-        /// 表示内存池是否可用。
-        /// <para>当业务太轻量级，且要求超高并发时（千万数量级别），可禁用内存池。</para>
-        /// </summary>
-        public bool Disabled { get; set; }
-
-        /// <summary>
         /// 键容量
         /// </summary>
         public int KeyCapacity { get; set; }
@@ -166,11 +160,6 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public byte[] GetByteCore(int byteSize, bool equalSize = false)
         {
-            if (Disabled)
-            {
-                return new byte[byteSize];
-            }
-
             BytesQueue bytesCollection;
             if (equalSize)
             {
@@ -191,7 +180,8 @@ namespace TouchSocket.Core
             }
             else
             {
-                byteSize = HitSize(byteSize);
+                //byteSize = HitSize(byteSize);
+                //byteSize = byteSize;
                 //搜索已创建集合
                 if (bytesDictionary.TryGetValue(byteSize, out bytesCollection))
                 {
@@ -251,10 +241,6 @@ namespace TouchSocket.Core
         /// <param name="bytes"></param>
         public void Recycle(byte[] bytes)
         {
-            if (Disabled)
-            {
-                return;
-            }
             if (bytes == null || bytes.Length > MaxBlockSize || bytes.Length < MinBlockSize)
             {
                 return;

@@ -23,7 +23,7 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public sealed class ByteBlock : Stream, IByteBlock
+    public sealed class ByteBlock : Stream, IWrite
     {
         private static float m_ratio = 1.5f;
         private readonly bool m_needDis;
@@ -490,6 +490,28 @@ namespace TouchSocket.Core
         public void Write(byte[] buffer)
         {
             Write(buffer, 0, buffer.Length);
+        }
+
+        /// <summary>
+        /// 释放当前内存到指定内存池
+        /// </summary>
+        /// <param name="bytePool"></param>
+        public void Dispose(BytePool bytePool)
+        {
+            if (m_holding)
+            {
+                return;
+            }
+
+            if (m_needDis)
+            {
+                if (Interlocked.Decrement(ref m_dis) == 0)
+                {
+                    GC.SuppressFinalize(this);
+                    bytePool.Recycle(m_buffer);
+                    Dis();
+                }
+            }
         }
 
         /// <summary>
