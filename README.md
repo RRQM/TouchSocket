@@ -87,7 +87,7 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 - 交流QQ群：234762506
 
 ## 🌟说明文档
-- [ 文档首页 ](https://www.yuque.com/rrqm/touchsocket/index)
+- [ 文档首页 ](http://rrqm_home.gitee.io/touchsocket)
 
 ## 👑功能导图
 
@@ -97,7 +97,7 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 
 ## ✨简单示例
 
- **_以下仅以最简方式创建示例，更多详情请查看[说明文档](https://www.yuque.com/rrqm/touchsocket/index)。_** 
+ **_以下仅以最简方式创建示例，更多详情请查看[说明文档](http://rrqm_home.gitee.io/touchsocket)。_** 
 
  **【TcpService】** 
 
