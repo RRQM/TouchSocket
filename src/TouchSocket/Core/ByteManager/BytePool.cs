@@ -20,7 +20,7 @@ using System.Threading;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 字节池
+    /// 内存池
     /// </summary>
     public class BytePool
     {
@@ -34,7 +34,10 @@ namespace TouchSocket.Core
             Default = new BytePool();
         }
 
-        private BytePool()
+        /// <summary>
+        /// 内存池
+        /// </summary>
+        public BytePool()
         {
             m_timer = new Timer((o) =>
             {
