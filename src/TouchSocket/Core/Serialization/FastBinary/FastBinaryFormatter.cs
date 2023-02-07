@@ -463,9 +463,10 @@ namespace TouchSocket.Core
                 }
                 else if (type.IsClass || type.IsStruct())
                 {
-                    if (m_instanceCache.TryGetValue(type, out var serializObject) && serializObject.Converter != null)
+                    var serializeObj = GetOrAddInstance(type);
+                    if (serializeObj != null) 
                     {
-                        obj = serializObject.Converter.Read(datas, offset, len);
+                        obj = serializeObj.Converter.Read(datas, offset, len);
                     }
                     else
                     {
