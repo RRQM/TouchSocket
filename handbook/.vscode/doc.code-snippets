@@ -156,5 +156,12 @@
 		    "</details>"
 		],
 		"description": "details"
+	},
+	"ahref": {
+		"prefix": "ahref",
+		"body": [
+			"<a href=\"$1\">$0</a>"
+		],
+		"description": "ahref"
 	}
 }

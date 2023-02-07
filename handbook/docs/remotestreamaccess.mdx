@@ -3,23 +3,18 @@ id: remotestreamaccess
 title: b.远程流访问
 ---
 
+import Tag from "@site/src/components/Tag.js";
 
-
-- 引用[TouchSocketPro](https://www.nuget.org/packages/TouchSocketPro)
-- 适用版本：0.5.0及以上 <a name="IiNnZ"></a>
-
-## 一、说明企业版
+## 一、说明 <Tag>企业版</Tag>
 
 可以在通信对方，创建一个Stream，然后映射到本地，由本地直接进行读、写等操作。
 
-<a name="wVtxT"></a>
 
 ## 二、场景
 
 当远程主机拥有一个超大流数据（可能是文件，或者其他）时，本地只想访问其部分数据的话，就可以使用该功能。
 例如，假设C服务器有个10Gb的文件。A客户端需要其10000-20000字节之间的数据，那你此时可以使用该功能，直接进行读取。
 
-<a name="Gk4I5"></a>
 
 ## 三、代码示例
 
@@ -51,8 +46,6 @@ class MyTcpTouchRpcPlugin : TouchRpcPluginBase
 
 ```
 
-<a name="vSQzO"></a>
-
 ## 四、读写
 
 当RemoteStream被成功创建以后，即可直接Read、Write。因为RemoteStream继承自Stream。
@@ -76,14 +69,13 @@ Assert.True(remoteStream.Length == 5);
 remoteStream.SafeDispose();
 ```
 
-<a name="o5Dnp"></a>
-
 ## 五、释放
 
 当**断开连接**，或者请求方主动调用Dispose时，响应方的Stream均会被实际的Dispose掉。
 
-<a name="IMyyk"></a>
 
 ## 六、性能
 
 图中示例为直接读取一个Window.iso文件所示。
+
+<img src={require('../static/img/docs/remotestreamaccess-1.gif').default} />
