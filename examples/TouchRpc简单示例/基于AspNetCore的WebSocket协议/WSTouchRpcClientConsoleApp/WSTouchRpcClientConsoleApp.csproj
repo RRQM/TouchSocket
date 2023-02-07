@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\TouchRpcWebApplication\RpcProxy.cs" Link="RpcProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TouchSocket.AspNetCore" Version="1.2.0" />
+  </ItemGroup>
+</Project>

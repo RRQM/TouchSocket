@@ -1,0 +1,153 @@
+---
+id: customfixedheaderdatahandlingadapter
+title: 模板解析“固定包头”数据适配器
+---
+
+
+## 一、说明
+
+和用户自定义适配器相比，使用模板解析将会更加简单流程。例如在上节所说的数据格式，前三个字节是**固定长度**的，为3，而后续长度则由第一个字节计算可得，所以我们把类似这样的数据格式，叫做“**固定包头**”数据，那么，他就可以使用固定包头数据解析模板。
+
+<img src={require('../static/img/docs/datahandleadapter-1.png').default}/>
+
+## 二、特点
+
+1. 可以自由适配**99%**的数据协议（例如：modbus，电力控制协议等）。
+2. 可以随意定制数据协议。
+3. 可以与**任意语言、框架**对接数据。
+
+
+## 三、使用
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. 声明新建类，实现IFixedHeaderRequestInfo接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承CustomFixedHeaderDataHandlingAdapter，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+3. TouchSocketConfig配置中设置。
+4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
+
+【MyFixedHeaderRequestInfo】
+
+首先，新建MyFixedHeaderRequestInfo类，然后实现**IFixedHeaderRequestInfo**用户自定义固定包头接口。
+
+然后在**OnParsingHeader**函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为Body 。
+
+```csharp
+public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
+{
+    private int bodyLength;
+    /// <summary>
+    /// 接口实现，标识数据长度
+    /// </summary>
+    public int BodyLength
+    {
+        get { return bodyLength; }
+    }
+
+    private byte dataType;
+    /// <summary>
+    /// 自定义属性，标识数据类型
+    /// </summary>
+    public byte DataType
+    {
+        get { return dataType; }
+    }
+
+    private byte orderType;
+    /// <summary>
+    /// 自定义属性，标识指令类型
+    /// </summary>
+    public byte OrderType
+    {
+        get { return orderType; }
+    }
+
+    private byte[] body;
+    /// <summary>
+    /// 自定义属性，标识实际数据
+    /// </summary>
+    public byte[] Body
+    {
+        get { return body; }
+    }
+
+   
+    public bool OnParsingBody(byte[] body)
+    {
+        if (body.Length == this.bodyLength)
+        {
+            this.body = body;
+            return true;
+        }
+        return false;
+    }
+
+  
+    public bool OnParsingHeader(byte[] header)
+    {
+        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
+        this.bodyLength = header[0]-2;
+        this.dataType = header[1];
+        this.orderType = header[2];
+        return  true;
+    }
+}
+
+```
+
+新建MyFixedHeaderCustomDataHandlingAdapter继承**CustomFixedHeaderDataHandlingAdapter**，然后对HeaderLength作出赋值，以此表明固定包头的长度是多少。
+
+```csharp
+public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyFixedHeaderRequestInfo>
+{
+    /// <summary>
+    /// 接口实现，指示固定包头长度
+    /// </summary>
+    public override int HeaderLength => 3;
+
+    /// <summary>
+    /// 获取新实例
+    /// </summary>
+    /// <returns></returns>
+    protected override MyFixedHeaderRequestInfo GetInstance()
+    {
+        return new MyFixedHeaderRequestInfo();
+    }
+}
+```
+
+【接收】
+
+```csharp {15}
+TcpService service = new TcpService();
+service.Received += (client, byteBlock, requestInfo) =>
+{
+    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
+    if (requestInfo is MyFixedHeaderRequestInfo myRequestInfo)
+    {
+        //此处可以处理MyFixedHeaderRequestInfo的相关信息了。
+        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
+    }
+  
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+    .SetDataHandlingAdapter(() => { return new MyFixedHeaderCustomDataHandlingAdapter(); }))//配置适配器
+    .Start();//启动
+```
+
+:::tip 提示
+
+上述示例的数据是经典的固定包头格式，具有Header+Body的明显分割点。但有时候，也有一些数据有好几段，例如：具有Crc校验的数据，也就是Header+Body+Crc的格式，这时候，我们可以把Body+Crc看做一段数据，然后从Header解析BodyLength以后，加上Crc的长度。最后会在OnParsingBody时，将Body和Crc一起投递，届时做好数据分割即可。
+
+:::  
+
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  

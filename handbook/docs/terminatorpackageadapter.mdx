@@ -1,0 +1,58 @@
+---
+id: terminatorpackageadapter
+title: 终止因子分割数据处理适配器
+---
+
+
+## 一、说明
+
+终止因子数据处理适配器是通过**特殊字符或数值**的方式，来达到处理粘包、分包的目的。可随意设置分割因子的值，以及编码方式。不仅如此，还有异常数据设置，在达到设定值时，如果还没有发现分割因子，则抛弃数据。其稳定性仅次于固定包头，且使用场景也比较广泛。
+
+
+## 二、特点
+
+1. 最适用于字符串类（Json，Xml等）的信息交互。
+2. 算法简单，非常容易实现跨语言、跨框架。
+3. 发送普通流数据时，有很小的概率发生提前终止的情况（可设置复杂终止因子来解决）。
+
+
+## 三、使用
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. TouchSocketConfig配置中设置，同时指定数据的长度。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+
+```csharp {10}
+TcpService service = new TcpService();
+service.Received += (client, byteBlock, requestInfo) =>
+{
+    //从客户端收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] {  new IPHost(7790) })
+    .SetDataHandlingAdapter(()=> { return new TerminatorPackageAdapter("\r\n"); }))//配置终止字符适配器，以\r\n结尾。
+    .Start();//启动
+```
+
+:::tip 提示
+
+默认情况下终止因子不会保留在数据中，用户可通过ReserveTerminatorCode属性，设为true，来保留终止因子。
+
+:::  
+
+:::caution 注意
+
+接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
+
+:::  
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
