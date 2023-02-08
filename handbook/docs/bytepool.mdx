@@ -46,6 +46,12 @@ using (ByteBlock byteBlock3 = new ByteBlock())//通过using创建及释放时，
 
 :::  
 
+:::danger 危险
+
+无论何时何地，都不要直接引用ByteBlock.Buffer，可以直接使用。如果需要引用实际数据，请使用Read、ToArray等方法可复制导出新的数据内存。
+
+:::  
+
 ## 四、使用
 
 基础使用和MemoryStream一致，下面仅介绍特定使用。
