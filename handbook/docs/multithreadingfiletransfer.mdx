@@ -32,18 +32,14 @@ private TcpTouchRpcClientFactory CreateClientFactory()
     {
         MinCount = 5,
         MaxCount = 10,
-        OnGetMainConfig = () =>//配置主通信
-        {
-            return new TouchSocketConfig()
-            .SetRemoteIPHost("tcp://127.0.0.1:7789");
-        },
         OnGetTransferConfig = () => //配置辅助通信
         {
             return new TouchSocketConfig()
                .SetRemoteIPHost("tcp://127.0.0.1:7789");
         }
     };
-
+    clientFactory.MainConfig
+                    .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
     return clientFactory;
 }
 ```

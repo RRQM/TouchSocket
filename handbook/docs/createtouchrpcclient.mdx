@@ -101,3 +101,47 @@ client.Start();
          .SetRemoteIPHost("ws://127.0.0.1:5000/wstouchrpc"));
      client.ConnectAsync();
 ```
+
+
+### 4.5 TcpTouchRpcClientFactory
+
+```csharp
+var clientFactory = new TcpTouchRpcClientFactory()
+{
+    MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
+    MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
+    OnGetTransferConfig = () => //配置辅助通信
+    {
+        return new TouchSocketConfig()
+           .SetRemoteIPHost("tcp://127.0.0.1:7789");
+    }
+};
+
+clientFactory.MainConfig
+        .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
+
+//检测主通信器连接，然后如果没有连接，会自动建立连接
+Result result = clientFactory.CheckStatus();
+```
+
+### 4.5 HttpTouchRpcClientFactory
+
+```csharp
+var clientFactory = new HttpTouchRpcClientFactory()
+{
+    MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
+    MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
+    OnGetTransferConfig = () => //配置辅助通信
+    {
+        return new TouchSocketConfig()
+           .SetRemoteIPHost("tcp://127.0.0.1:7789");
+    }
+};
+
+clientFactory.MainConfig
+        .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
+
+//检测主通信器连接，然后如果没有连接，会自动建立连接
+Result result = clientFactory.CheckStatus();
+
+```

@@ -80,6 +80,12 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::tip 提示
 
+在SendThenReturn时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+
+:::  
+
+:::tip 提示
+
 实际上上述行为，只要实现IClient, IDefaultSender, ISend三个接口的类均可以使用。
 
 :::  
