@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.9.12" />
-    <PackageReference Include="TouchSocketPro" Version="1.2.9" />
+    <PackageReference Include="TouchSocketPro" Version="1.2.11" />
   </ItemGroup>
 
 </Project>
