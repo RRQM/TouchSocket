@@ -3,6 +3,7 @@ id: createtouchrpcclient
 title: 创建TouchRpc客户端
 ---
 
+import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
@@ -31,6 +32,13 @@ TouchRpc客户端对应的，也有四种不同协议的版本。
 
 #### SetRootPath
 设置根路径
+
+#### SetDefaultId
+设置客户端的默认Id
+
+#### SetMetadata
+设置连接时的元数据组
+
 </div>
 </details>
 
@@ -103,8 +111,11 @@ client.Start();
 ```
 
 
-### 4.5 TcpTouchRpcClientFactory
+### 4.5 TouchRpcClient工厂 <Tag>企业版</Tag>
 
+TouchRpcClient工厂工作模式是一种，由单个主通讯连接和多个传输通讯连接组成的连接池。默认提供了两种类型的Rpc客户端工厂，分别为`TcpTouchRpcClientFactory`，`HttpTouchRpcClientFactory`。两者工作流程及配置基本相同，下面以`TcpTouchRpcClientFactory`为例。
+
+【创建】
 ```csharp
 var clientFactory = new TcpTouchRpcClientFactory()
 {
@@ -124,24 +135,30 @@ clientFactory.MainConfig
 Result result = clientFactory.CheckStatus();
 ```
 
-### 4.5 HttpTouchRpcClientFactory
+:::tip 提示
 
-```csharp
-var clientFactory = new HttpTouchRpcClientFactory()
+一般的，主通讯器最好启用心跳插件，而传输通讯器，可以根据自己业务决定。
+
+:::  
+
+【使用】
+
+```csharp {5,10}
+var clientFactory = CreateTcpClientFactory();
+var client = clientFactory.GetTransferClient();
+try
 {
-    MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
-    MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
-    OnGetTransferConfig = () => //配置辅助通信
-    {
-        return new TouchSocketConfig()
-           .SetRemoteIPHost("tcp://127.0.0.1:7789");
-    }
-};
-
-clientFactory.MainConfig
-        .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
-
-//检测主通信器连接，然后如果没有连接，会自动建立连接
-Result result = clientFactory.CheckStatus();
-
+    //client.Invoke();//这里可以让得到的通讯器进行业务交流
+}
+finally
+{
+    //重中之重，必须要释放通讯器
+    clientFactory.ReleaseTransferClient(client);
+}
 ```
+
+:::tip 提示
+
+TouchRpcClient工厂只实现了IRpcClient和多线程文件传输的接口，所以和其他客户端相比，本身不具备其他的功能。但是可以通过单个通讯器进行其他业务的交互。
+
+:::  
