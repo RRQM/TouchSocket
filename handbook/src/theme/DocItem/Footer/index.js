@@ -28,12 +28,9 @@ function EditMetaRow({
   return (
     <div className={clsx(ThemeClassNames.docs.docFooterEditMetaRow, 'row')}>
       <div className="col">{editUrl && <EditThisPage editUrl={editUrl} />}</div>
-      <div className={clsx('col', styles.lastUpdated)}>
-      本站总访问量<span id="busuanzi_value_site_pv"></span>次
-      </div>
-     
       <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
       <div className={clsx('col', styles.lastUpdated)}>
+      📖<span id="busuanzi_value_page_pv"></span><br/>
         {(lastUpdatedAt || lastUpdatedBy) && (
           <LastUpdated
             lastUpdatedAt={lastUpdatedAt}
