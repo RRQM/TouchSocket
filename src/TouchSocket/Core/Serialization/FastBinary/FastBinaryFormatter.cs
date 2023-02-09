@@ -464,7 +464,7 @@ namespace TouchSocket.Core
                 else if (type.IsClass || type.IsStruct())
                 {
                     var serializeObj = GetOrAddInstance(type);
-                    if (serializeObj != null) 
+                    if (serializeObj.Converter!=null)
                     {
                         obj = serializeObj.Converter.Read(datas, offset, len);
                     }
