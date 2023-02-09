@@ -85,7 +85,7 @@ namespace TouchSocket.Core
               (TouchSocketCoreUtility.nullableType));
         }
 
-        /// <summary>
+         /// <summary>
         /// 判断该类型是否为值元组类型
         /// </summary>
         /// <param name="theType"></param>

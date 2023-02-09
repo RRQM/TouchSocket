@@ -25,8 +25,13 @@ namespace TouchRpcServerApp
         {
             var service = new TcpTouchRpcService();
             var config = new TouchSocketConfig()//配置
+                   .UsePlugin()
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .SetSerializationSelector(new DefaultSerializationSelector())
+                   .ConfigurePlugins(a => 
+                   {
+                       a.Add<MyTouchRpcPlugin>();
+                   })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();

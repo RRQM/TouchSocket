@@ -201,5 +201,18 @@ namespace TouchRpcClientApp
 
             client.SafeDispose();//client是长连接，可以复用，但在此处使用短连接。
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            //try
+            //{
+            //    Enterprise.ForTest();
+            //}
+            //catch
+            //{
+
+              
+            //}
+        }
     }
 }

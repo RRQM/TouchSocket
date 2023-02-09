@@ -292,7 +292,7 @@ namespace TouchSocket.Core
 
             if (dependencyTypeAttribute == null || dependencyTypeAttribute.Type.HasFlag(DependencyType.Method))
             {
-                var methods = toType.GetMethods().Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true)).ToList();
+                var methods = toType.GetMethods( BindingFlags.Default| BindingFlags.Instance| BindingFlags.Static| BindingFlags.Public| BindingFlags.NonPublic).Where(x => x.IsDefined(typeof(DependencyInjectAttribute), true)).ToList();
                 foreach (var item in methods)
                 {
                     parameters = item.GetParameters();
