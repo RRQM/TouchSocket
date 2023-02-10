@@ -173,6 +173,8 @@ public class Args
 
 ## 三、客户端源代码生成代理 <Tag>企业版</Tag>
 
+### 3.1 生成
+
 前一种方式已经算是几近完美的代理生成方案，但是有时候，当大家协作时，喜欢全部自己敲写。
 
 例如：
@@ -246,3 +248,97 @@ interface IMyRpcServer
 :::  
 
 [源代码生成代理示例代码](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/TouchRpc%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B/%E6%BA%90%E4%BB%A3%E7%A0%81%E7%94%9F%E6%88%90%E4%BB%A3%E7%90%86/GeneratorRpcProxyConsoleApp)
+
+### 3.2 推荐写法
+
+在TouchSocketPro中，关于Rpc，我们有更为推荐的写法。详细步骤如下：
+
+（1）新建类库项目，命名为`RpcClassLibrary`。然后在该程序集中，定义服务接口，和接口参数实体类。
+
+```csharp
+/// <summary>
+/// 定义服务接口。
+/// </summary>
+[GeneratorRpcProxy]
+public interface IUserServer:IRpcServer
+{
+    [GeneratorRpcMethod]
+    [TouchRpc]
+    LoginResponse Login(LoginRequest request);
+}
+```
+
+```csharp
+public class LoginRequest:RequestBase
+{
+    public string Account { get; set; }
+    public string Password { get; set; }
+}
+
+public class LoginResponse : ResponseBase
+{
+}
+
+//下面两个是请求和响应的基类，可以根据业务增加其他字段
+public class RequestBase
+{
+}
+
+public class ResponseBase
+{
+    public Result Result { get; set; }
+}
+```
+
+（2）新建类库项目，命名`RpcImplementationClassLibrary`，引用`RpcClassLibrary`项目，然后用于实现接口。
+
+```csharp
+public class UserServer : IUserServer
+{
+    public LoginResponse Login(LoginRequest request)
+    {
+        //返回假逻辑
+        return new LoginResponse() {  Result=Result.Success};
+    }
+}
+```
+
+(3)新建控制台项目，作为服务器，或客户端都可以，然后如果作为服务器，需要同时引用`RpcImplementationClassLibrary`和`RpcClassLibrary`，如果作为客户端仅引用`RpcClassLibrary`即可。
+
+如果作为服务器，需要按接口注册服务
+
+```csharp
+var service = new TcpTouchRpcService();
+var config = new TouchSocketConfig()//配置
+       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+           a.AddFileLogger();
+       })
+       .ConfigureRpcStore(a => 
+       {
+           a.RegisterServer<IUserServer, UserServer>();
+       })
+       .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
+
+service.Setup(config)
+    .Start();
+
+service.Logger.Info($"{service.GetType().Name}已启动");
+```
+
+如果作为客户端，直接调用即可。
+
+```csharp {8}
+TcpTouchRpcClient client = new TcpTouchRpcClient();
+client.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .SetVerifyToken("TouchRpc"));
+client.Connect();
+
+//Loging即为在RpcClassLibrary中自动生成的项目
+var response = client.Login(new RpcClassLibrary.Models.LoginRequest() { Account= "Account",Password= "Account" });
+Console.WriteLine(response.Result);
+```
+

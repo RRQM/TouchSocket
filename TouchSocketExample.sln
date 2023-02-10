@@ -188,7 +188,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationSelectorClassL
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TouchRpc工厂示例", "TouchRpc工厂示例", "{D4C8400D-94FB-4C82-A7A2-26BD970A42D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcFactoryConsoleApp", "examples\TouchRpc简单示例\TouchRpc工厂示例\RpcFactoryConsoleApp\RpcFactoryConsoleApp.csproj", "{7EA90D65-554E-427A-8D1E-24C11A3A605B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcFactoryConsoleApp", "examples\TouchRpc简单示例\TouchRpc工厂示例\RpcFactoryConsoleApp\RpcFactoryConsoleApp.csproj", "{7EA90D65-554E-427A-8D1E-24C11A3A605B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "推荐用法", "推荐用法", "{8CFACB33-960A-4BA7-972F-059B81E1A4B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcClassLibrary\RpcClassLibrary.csproj", "{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcImplementationClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcImplementationClassLibrary\RpcImplementationClassLibrary.csproj", "{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecommendRpcConsoleApp", "examples\TouchRpc简单示例\推荐用法\RecommendRpcConsoleApp\RecommendRpcConsoleApp.csproj", "{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -420,6 +428,18 @@ Global
 		{7EA90D65-554E-427A-8D1E-24C11A3A605B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EA90D65-554E-427A-8D1E-24C11A3A605B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EA90D65-554E-427A-8D1E-24C11A3A605B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -495,6 +515,10 @@ Global
 		{EB4DE5C1-A14A-456C-9473-78D39DED09A3} = {405C6B1D-CCFE-407A-9A96-3548C55B0D1F}
 		{D4C8400D-94FB-4C82-A7A2-26BD970A42D8} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
 		{7EA90D65-554E-427A-8D1E-24C11A3A605B} = {D4C8400D-94FB-4C82-A7A2-26BD970A42D8}
+		{8CFACB33-960A-4BA7-972F-059B81E1A4B2} = {54A8216A-AA96-4293-9285-D2173E1D2E69}
+		{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22} = {8CFACB33-960A-4BA7-972F-059B81E1A4B2}
+		{D3E53943-70C5-40C2-A76A-DB8FB0B951F0} = {8CFACB33-960A-4BA7-972F-059B81E1A4B2}
+		{211DDA93-B293-44AD-9A9D-FC1617EA6ECD} = {8CFACB33-960A-4BA7-972F-059B81E1A4B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
