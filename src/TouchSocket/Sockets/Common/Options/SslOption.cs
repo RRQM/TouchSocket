@@ -10,8 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace TouchSocket.Sockets
 {
@@ -20,27 +22,29 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class SslOption
     {
-        private SslProtocols sslProtocols;
+        /// <summary>
+        /// Ssl配置
+        /// </summary>
+        public SslOption()
+        {
+            CertificateValidationCallback = this.OnCertificateValidationCallback;
+        }
+
+        private bool OnCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
 
         /// <summary>
         /// 协议版本
         /// </summary>
-        public SslProtocols SslProtocols
-        {
-            get => sslProtocols;
-            set => sslProtocols = value;
-        }
-
-        private bool checkCertificateRevocation;
+        public SslProtocols SslProtocols { get; set; } = SslProtocols.Tls12 | SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Default |
+                         SslProtocols.Tls | SslProtocols.Tls11;
 
         /// <summary>
         /// 该值指定身份验证期间是否检查证书吊销列表
         /// </summary>
-        public bool CheckCertificateRevocation
-        {
-            get => checkCertificateRevocation;
-            set => checkCertificateRevocation = value;
-        }
+        public bool CheckCertificateRevocation { get; set; } = false;
 
         /// <summary>
         /// SSL验证回调。
