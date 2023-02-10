@@ -12,6 +12,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Linq;
+using System.Reflection;
 
 namespace TouchSocket.Core
 {
@@ -85,7 +87,43 @@ namespace TouchSocket.Core
               (TouchSocketCoreUtility.nullableType));
         }
 
-         /// <summary>
+        /// <summary>
+        /// 判断该类型是否为可空类型
+        /// </summary>
+        /// <param name="propertyInfo"></param>
+        /// <returns></returns>
+        public static bool IsNullableType(this PropertyInfo propertyInfo)
+        {
+            var att = propertyInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
+            if (att!=null)
+            {
+                return true;
+            }
+           
+            return (propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.
+              GetGenericTypeDefinition().Equals
+              (TouchSocketCoreUtility.nullableType));
+        }
+
+        /// <summary>
+        /// 判断该类型是否为可空类型
+        /// </summary>
+        /// <param name="fieldInfo"></param>
+        /// <returns></returns>
+        public static bool IsNullableType(this FieldInfo fieldInfo)
+        {
+            var att = fieldInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.NullableAttribute");
+            if (att != null)
+            {
+                return true;
+            }
+
+            return (fieldInfo.FieldType.IsGenericType && fieldInfo.FieldType.
+              GetGenericTypeDefinition().Equals
+              (TouchSocketCoreUtility.nullableType));
+        }
+
+        /// <summary>
         /// 判断该类型是否为值元组类型
         /// </summary>
         /// <param name="theType"></param>

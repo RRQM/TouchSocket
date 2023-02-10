@@ -97,6 +97,10 @@ namespace TouchSocket.Rpc
                 Type elementType = type.GetElementType();
                 return GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
             }
+            else if (type.IsNullableType())
+            {
+                return GetTypeFullName(type.GetGenericArguments().Length==0? type: type.GetGenericArguments()[0]);
+            }
             else if (type.IsValueTuple())
             {
                 Type[] elementTypes = type.GetGenericArguments();
@@ -173,43 +177,51 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public string GetTypeFullName(ParameterInfo parameterInfo)
         {
-            //Type type= parameterInfo.ParameterType.GetRefOutType();
-            //if (type.IsGenericType && type.FullName.Contains("System.ValueTuple"))
-            //{
-            //    Type[] elementType = type.GetGenericArguments();
-            //    var strs = elementType.Select(e => GetTypeFullName(e));
-
-            //    else
-            //    {
-            //        StringBuilder stringBuilder=new StringBuilder();
-            //        stringBuilder.Append("(");
-            //        int i = 0;
-            //        foreach (var item in strs)
-            //        {
-            //            stringBuilder.Append($"{item} {names[i]} ");
-            //            if (names.Count-1>i)
-            //            {
-            //                stringBuilder.Append(",");
-            //            }
-            //            i++;
-            //        }
-            //        stringBuilder.Append(")");
-            //        return stringBuilder.ToString();
-            //    }
-            //}
             if (parameterInfo.ParameterType.FullName.Contains("System.ValueTuple"))
             {
                 tupleElementNames = parameterInfo.GetTupleElementNames()?.ToList();
-                if (tupleElementNames.Count == 3)
-                {
-
-                }
             }
             else
             {
                 tupleElementNames = default;
             }
             return GetTypeFullName(parameterInfo.ParameterType);
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="propertyInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(PropertyInfo  propertyInfo)
+        {
+            if (propertyInfo.PropertyType.FullName.Contains("System.ValueTuple"))
+            {
+                tupleElementNames = propertyInfo.GetTupleElementNames()?.ToList();
+            }
+            else
+            {
+                tupleElementNames = default;
+            }
+            return GetTypeFullName(propertyInfo.PropertyType);
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="fieldInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(FieldInfo fieldInfo)
+        {
+            if (fieldInfo.FieldType.FullName.Contains("System.ValueTuple"))
+            {
+                tupleElementNames = fieldInfo.GetTupleElementNames()?.ToList();
+            }
+            else
+            {
+                tupleElementNames = default;
+            }
+            return GetTypeFullName(fieldInfo.FieldType);
         }
 
         internal void CheckDeep()
@@ -253,7 +265,12 @@ namespace TouchSocket.Rpc
             }
         }
 
-        internal void AddTypeString(Type type, ref int deep)
+        /// <summary>
+        /// 添加类型字符串
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="deep"></param>
+        public void AddTypeString(Type type, ref int deep)
         {
             if (CodeGenerator.m_ignoreTypes.Contains(type))
             {
@@ -273,7 +290,7 @@ namespace TouchSocket.Rpc
                 type = type.GetRefOutType();
             }
 
-            if (type.IsPrimitive && type == typeof(string))
+            if (type.IsPrimitive || type == typeof(string))
             {
                 return;
             }
@@ -293,26 +310,6 @@ namespace TouchSocket.Rpc
             else if (type.IsGenericType)
             {
                 Type[] types = type.GetGenericArguments();
-                //if (m_listType.Contains(type.Name))
-                //{
-                //    string typeInnerString = GetTypeFullName(types[0]);
-                //    string typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                //    if (!GenericTypeDic.ContainsKey(type)&& !type.FullName.Contains("System.ValueTuple"))
-                //    {
-                //        GenericTypeDic.TryAdd(type, typeString);
-                //    }
-                //}
-                //else if (m_dicType.Contains(type.Name))
-                //{
-                //    string keyString = GetTypeFullName(types[0]);
-                //    string valueString = GetTypeFullName(types[1]);
-                //    string typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                //    if (!GenericTypeDic.ContainsKey(type) && !type.FullName.Contains("System.ValueTuple"))
-                //    {
-                //        GenericTypeDic.TryAdd(type, typeString);
-                //    }
-                //}
-
                 foreach (Type itemType in types)
                 {
                     AddTypeString(itemType, ref deep);
@@ -448,14 +445,16 @@ namespace TouchSocket.Rpc
                 }
 
                 stringBuilder.AppendLine("{");
-                PropertyInfo[] propertyInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty);
-
-                foreach (PropertyInfo itemProperty in propertyInfos)
+                foreach (PropertyInfo itemProperty in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty))
                 {
                     AddTypeString(itemProperty.PropertyType, ref deep);
                     if (PropertyDic.ContainsKey(itemProperty.PropertyType))
                     {
                         stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
+                    }
+                    else if (itemProperty.IsNullableType())
+                    {
+                        stringBuilder.Append($"public {GetTypeFullName(itemProperty)}? {itemProperty.Name}");
                     }
                     else if (itemProperty.PropertyType.IsGenericType)
                     {
@@ -464,7 +463,6 @@ namespace TouchSocket.Rpc
                         {
                             AddTypeString(itemType, ref deep);
                         }
-
                         if (m_listType.Contains(itemProperty.PropertyType.Name))
                         {
                             string typeString = GetTypeFullName(types[0]);
@@ -486,6 +484,45 @@ namespace TouchSocket.Rpc
                     stringBuilder.AppendLine("{get;set;}");
                 }
 
+                foreach (FieldInfo itemField in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                {
+                    AddTypeString(itemField.FieldType, ref deep);
+                    if (PropertyDic.ContainsKey(itemField.FieldType))
+                    {
+                        stringBuilder.Append($"public {itemField.FieldType.Name} {itemField.Name}");
+                    }
+                    else if (itemField.IsNullableType())
+                    {
+                        stringBuilder.Append($"public {GetTypeFullName(itemField)}? {itemField.Name}");
+                    }
+                    else if (itemField.FieldType.IsGenericType)
+                    {
+                        Type[] types = itemField.FieldType.GetGenericArguments();
+                        foreach (Type itemType in types)
+                        {
+                            AddTypeString(itemType, ref deep);
+                        }
+                        if (m_listType.Contains(itemField.FieldType.Name))
+                        {
+                            string typeString = GetTypeFullName(types[0]);
+                            stringBuilder.Append($"public {itemField.FieldType.Name.Replace("`1", string.Empty)}<{typeString}> {itemField.Name}");
+                        }
+                        else if (m_dicType.Contains(itemField.FieldType.Name))
+                        {
+                            string keyString = GetTypeFullName(types[0]);
+                            string valueString = GetTypeFullName(types[1]);
+                            stringBuilder.Append($"public {itemField.FieldType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}> {itemField.Name}");
+                        }
+                    }
+                    else
+                    {
+                        AddTypeString(itemField.FieldType, ref deep);
+                        stringBuilder.Append($"public {GetTypeFullName(itemField.FieldType)} {itemField.Name}");
+                    }
+
+                    stringBuilder.AppendLine(";");
+                }
+
                 stringBuilder.AppendLine("}");
 
                 if (!PropertyDic.ContainsKey(type))
@@ -495,19 +532,6 @@ namespace TouchSocket.Rpc
             }
         }
 
-        //internal void AddTypeString(ParameterInfo  parameterInfo, ref int deep)
-        //{
-        //    if (parameterInfo.ParameterType.FullName.Contains("System.ValueTuple"))
-        //    {
-        //        tupleElementNames = parameterInfo.GetTupleElementNames()?.ToList();
-        //    }
-        //    else
-        //    {
-        //        tupleElementNames = default;
-        //    }
-
-        //    AddTypeString(parameterInfo.ParameterType, ref deep);
-        //}
         private bool AllowGen(Assembly assembly)
         {
             foreach (var item in m_assembly)
