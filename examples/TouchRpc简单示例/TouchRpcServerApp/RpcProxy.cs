@@ -27,6 +27,21 @@ System.Boolean Login(System.String account,System.String password,IInvokeOption 
 Task<System.Boolean> LoginAsync(System.String account,System.String password,IInvokeOption invokeOption = default);
 
 ///<summary>
+///注册
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.Boolean Register(RegisterModel register,IInvokeOption invokeOption = default);
+///<summary>
+///注册
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.Boolean> RegisterAsync(RegisterModel register,IInvokeOption invokeOption = default);
+
+///<summary>
 ///性能测试
 ///</summary>
 /// <exception cref="System.TimeoutException">调用超时</exception>
@@ -84,6 +99,43 @@ throw new RpcException("Rpc无法执行。");
 }
 object[] parameters = new object[]{account,password};
 return Client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.login",invokeOption, parameters);
+}
+
+///<summary>
+///注册
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.Boolean Register(RegisterModel register,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+if (Client.TryCanInvoke?.Invoke(Client)==false)
+{
+throw new RpcException("Rpc无法执行。");
+}
+object[] parameters = new object[]{register};
+System.Boolean returnData=Client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///注册
+///</summary>
+public Task<System.Boolean> RegisterAsync(RegisterModel register,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+if (Client.TryCanInvoke?.Invoke(Client)==false)
+{
+throw new RpcException("Rpc无法执行。");
+}
+object[] parameters = new object[]{register};
+return Client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
 }
 
 ///<summary>
@@ -156,6 +208,35 @@ return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.login",
 }
 
 ///<summary>
+///注册
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.Boolean Register<TClient>(this TClient client,RegisterModel register,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+if (client.TryCanInvoke?.Invoke(client)==false)
+{
+throw new RpcException("Rpc无法执行。");
+}
+object[] parameters = new object[]{register};
+System.Boolean returnData=client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///注册
+///</summary>
+public static Task<System.Boolean> RegisterAsync<TClient>(this TClient client,RegisterModel register,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+if (client.TryCanInvoke?.Invoke(client)==false)
+{
+throw new RpcException("Rpc无法执行。");
+}
+object[] parameters = new object[]{register};
+return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+}
+
+///<summary>
 ///性能测试
 ///</summary>
 /// <exception cref="System.TimeoutException">调用超时</exception>
@@ -185,4 +266,12 @@ return client.InvokeAsync<System.Int32>("touchrpcserverapp.myrpcserver.performan
 }
 
 }
+
+public class RegisterModel
+{
+public System.String Account{get;set;}
+public System.String Password{get;set;}
+{get;set;}
+}
+
 }
