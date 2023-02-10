@@ -6,6 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket" Version="1.2.7" />
+		<PackageReference Include="TouchSocket" Version="1.2.8" />
 	</ItemGroup>
 </Project>
