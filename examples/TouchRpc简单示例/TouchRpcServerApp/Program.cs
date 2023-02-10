@@ -129,6 +129,14 @@ namespace TouchRpcServerApp
             return false;
         }
 
+        [Description("注册")]
+        [TouchRpc]
+        [MyRpcActionFilter]
+        public bool Register(RegisterModel register)
+        {
+            return true;
+        }
+
         [Description("性能测试")]
         [TouchRpc]
         [MyRpcActionFilter]
@@ -136,6 +144,13 @@ namespace TouchRpcServerApp
         {
             return a;
         }
+    }
+
+    public class RegisterModel
+    {
+        public string? Account { get; set; }
+        public string? Password { get; set; }
+        public int? Id { get; set; }
     }
 
     public class MyTouchRpcAttribute : TouchRpcAttribute
