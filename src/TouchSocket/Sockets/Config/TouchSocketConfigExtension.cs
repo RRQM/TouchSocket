@@ -359,9 +359,14 @@ namespace TouchSocket.Sockets
             if (value.IsUri)
             {
                 if (value.Uri.Scheme.Equals("https", StringComparison.CurrentCultureIgnoreCase)
-                    || value.Uri.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase))
+                    || value.Uri.Scheme.Equals("wss", StringComparison.CurrentCultureIgnoreCase)
+                    || value.Uri.Scheme.Equals("ssl", StringComparison.CurrentCultureIgnoreCase)
+                    || value.Uri.Scheme.Equals("tls", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    config.SetClientSslOption(new ClientSslOption() { TargetHost = value.Host, SslProtocols = SslProtocols.Tls12 });
+                    config.SetClientSslOption(new ClientSslOption()
+                    {
+                        TargetHost = value.Host
+                    });
                 }
             }
             return config;
