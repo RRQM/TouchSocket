@@ -22,5 +22,15 @@ namespace TouchSocket.Core
         {
             return ((dynamic)parameter.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
         }
+
+        /// <summary>
+        /// 获取元组的名称列表。
+        /// </summary>
+        /// <param name="memberInfo"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetTupleElementNames(this MemberInfo  memberInfo)
+        {
+            return ((dynamic)memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+        }
     }
 }

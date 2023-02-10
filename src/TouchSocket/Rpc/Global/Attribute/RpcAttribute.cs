@@ -100,11 +100,9 @@ namespace TouchSocket.Rpc
             StringBuilder codeString = new StringBuilder();
 
             string description = GetDescription(methodInstance);
-            bool isOut;
-            bool isRef;
 
             ParameterInfo[] parameters;
-            List<string> parametersStr = GetParameters(methodInstance, out isOut, out isRef, out parameters);
+            List<string> parametersStr = GetParameters(methodInstance, out bool isOut, out bool isRef, out parameters);
             var InterfaceTypes = GetGenericInterfaceTypes();
             if (GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
             {

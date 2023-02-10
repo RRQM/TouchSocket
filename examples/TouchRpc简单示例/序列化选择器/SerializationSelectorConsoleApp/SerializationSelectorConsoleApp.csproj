@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocketPro" Version="1.2.11" />
+		<PackageReference Include="TouchSocketPro" Version="1.2.12" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SerializationSelectorClassLibrary\SerializationSelectorClassLibrary.csproj" />

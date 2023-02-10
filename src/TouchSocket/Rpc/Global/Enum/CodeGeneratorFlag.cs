@@ -21,12 +21,12 @@ namespace TouchSocket.Rpc
     public enum CodeGeneratorFlag
     {
         /// <summary>
-        /// 生成同步代码
+        /// 生成同步代码（源代码生成无效）
         /// </summary>
         Sync = 1,
 
         /// <summary>
-        /// 生成异步代码
+        /// 生成异步代码（源代码生成无效）
         /// </summary>
         Async = 2,
 
@@ -41,17 +41,17 @@ namespace TouchSocket.Rpc
         ExtensionAsync = 8,
 
         /// <summary>
-        /// 包含接口
+        /// 包含接口（源代码生成无效）
         /// </summary>
         IncludeInterface = 16,
 
         /// <summary>
-        /// 包含实例
+        /// 包含实例（源代码生成无效）
         /// </summary>
         IncludeInstance = 32,
 
         /// <summary>
-        /// 包含扩展
+        /// 包含扩展（源代码生成无效）
         /// </summary>
         IncludeExtension = 64
     }
