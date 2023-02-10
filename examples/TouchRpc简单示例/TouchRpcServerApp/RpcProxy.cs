@@ -271,7 +271,7 @@ public class RegisterModel
 {
 public System.String Account{get;set;}
 public System.String Password{get;set;}
-{get;set;}
+public System.Int32? Id{get;set;}
 }
 
 }
