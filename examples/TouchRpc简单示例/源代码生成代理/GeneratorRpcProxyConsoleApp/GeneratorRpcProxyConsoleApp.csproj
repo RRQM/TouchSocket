@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="TouchSocketPro" Version="1.2.13" />
-    <PackageReference Include="TouchSocketPro.CodeAnalyzer" Version="1.2.2">
+    <PackageReference Include="TouchSocketPro.CodeAnalyzer" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
