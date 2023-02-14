@@ -1,5 +1,4 @@
-﻿using RpcClassLibrary.ServerInterface;
-using RpcImplementationClassLibrary;
+﻿using RpcImplementationClassLibrary;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
@@ -18,7 +17,7 @@ namespace RecommendRpcConsoleApp
             }
             catch
             {
-
+                CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
             }
             var service = new TcpTouchRpcService();
             var config = new TouchSocketConfig()//配置

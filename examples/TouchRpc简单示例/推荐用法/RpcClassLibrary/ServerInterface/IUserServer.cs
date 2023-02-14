@@ -10,7 +10,7 @@ namespace RpcClassLibrary.ServerInterface
     /// <summary>
     /// 定义服务接口。
     /// </summary>
-    [GeneratorRpcProxy]
+    [GeneratorRpcProxy(Prefix = "RpcClassLibrary")]
     public interface IUserServer:IRpcServer
     {
         [GeneratorRpcMethod]
