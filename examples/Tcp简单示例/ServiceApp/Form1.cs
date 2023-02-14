@@ -67,6 +67,8 @@ namespace ServiceApp
         private void Service_Received(SocketClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             client.Logger.Info($"从客户端id={client.ID}，ip={client.IP}，port={client.Port}收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
+
+            client.Send("Accepted");
         }
 
         private void button2_Click(object sender, EventArgs e)

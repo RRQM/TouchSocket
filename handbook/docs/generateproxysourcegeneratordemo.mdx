@@ -1,0 +1,106 @@
+---
+id: generateproxysourcegeneratordemo
+title: SG代理推荐写法
+---
+
+## 一、声明接口
+
+在TouchSocketPro中，关于Rpc，我们有更为推荐的写法。详细步骤如下：
+
+（1）新建类库项目，命名为`RpcClassLibrary`。然后在该程序集中，定义服务接口，和接口参数实体类。
+
+```csharp
+/// <summary>
+/// 定义服务接口。
+/// </summary>
+[GeneratorRpcProxy]
+public interface IUserServer:IRpcServer
+{
+    [GeneratorRpcMethod]
+    [TouchRpc]
+    LoginResponse Login(LoginRequest request);
+}
+```
+
+```csharp
+public class LoginRequest:RequestBase
+{
+    public string Account { get; set; }
+    public string Password { get; set; }
+}
+
+public class LoginResponse : ResponseBase
+{
+}
+
+//下面两个是请求和响应的基类，可以根据业务增加其他字段
+public class RequestBase
+{
+}
+
+public class ResponseBase
+{
+    public Result Result { get; set; }
+}
+```
+
+## 二、实现接口
+
+新建类库项目，命名`RpcImplementationClassLibrary`，引用`RpcClassLibrary`项目，然后用于实现接口。
+
+```csharp
+public class UserServer : IUserServer
+{
+    public LoginResponse Login(LoginRequest request)
+    {
+        //返回假逻辑
+        return new LoginResponse() {  Result=Result.Success};
+    }
+}
+```
+
+## 三、服务注册、启动
+
+新建控制台项目，作为服务器，需要同时引用`RpcImplementationClassLibrary`和`RpcClassLibrary`。
+
+如果作为服务器，需要按接口注册服务
+
+```csharp
+var service = new TcpTouchRpcService();
+var config = new TouchSocketConfig()//配置
+       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+           a.AddFileLogger();
+       })
+       .ConfigureRpcStore(a => 
+       {
+           a.RegisterServer<IUserServer, UserServer>();
+       })
+       .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
+
+service.Setup(config)
+    .Start();
+
+service.Logger.Info($"{service.GetType().Name}已启动");
+```
+
+## 四、创建客户端
+
+作为客户端仅引用`RpcClassLibrary`即可。直接调用即可。
+
+```csharp {8}
+TcpTouchRpcClient client = new TcpTouchRpcClient();
+client.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .SetVerifyToken("TouchRpc"));
+client.Connect();
+
+//Loging即为在RpcClassLibrary中自动生成的项目
+var response = client.Login(new RpcClassLibrary.Models.LoginRequest() { Account= "Account",Password= "Account" });
+Console.WriteLine(response.Result);
+```
+
+[推荐写法示例](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/TouchRpc%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B/%E6%8E%A8%E8%8D%90%E7%94%A8%E6%B3%95)
+

@@ -190,13 +190,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TouchRpc工厂示例", "Tou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcFactoryConsoleApp", "examples\TouchRpc简单示例\TouchRpc工厂示例\RpcFactoryConsoleApp\RpcFactoryConsoleApp.csproj", "{7EA90D65-554E-427A-8D1E-24C11A3A605B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "推荐用法", "推荐用法", "{8CFACB33-960A-4BA7-972F-059B81E1A4B2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SG推荐用法", "SG推荐用法", "{8CFACB33-960A-4BA7-972F-059B81E1A4B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcClassLibrary\RpcClassLibrary.csproj", "{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcClassLibrary\RpcClassLibrary.csproj", "{9E48D8F5-6DDC-4590-9EF4-1C5BE9C6FD22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcImplementationClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcImplementationClassLibrary\RpcImplementationClassLibrary.csproj", "{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcImplementationClassLibrary", "examples\TouchRpc简单示例\推荐用法\RpcImplementationClassLibrary\RpcImplementationClassLibrary.csproj", "{D3E53943-70C5-40C2-A76A-DB8FB0B951F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecommendRpcConsoleApp", "examples\TouchRpc简单示例\推荐用法\RecommendRpcConsoleApp\RecommendRpcConsoleApp.csproj", "{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecommendRpcConsoleApp", "examples\TouchRpc简单示例\推荐用法\RecommendRpcConsoleApp\RecommendRpcConsoleApp.csproj", "{211DDA93-B293-44AD-9A9D-FC1617EA6ECD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

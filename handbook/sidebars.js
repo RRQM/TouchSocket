@@ -453,32 +453,59 @@ module.exports = {
     },
     {
       type: "category",
-      label: "11、TouchRpc组件",
+      label: "11、Rpc代理生成",
+      items:
+        [
+          {
+            type: "doc",
+            id: "generateproxydescription",
+            label: "11.1 为什么要生成代理"
+          },
+          {
+            type: "doc",
+            id: "generateproxyfromserver",
+            label: "11.2 从服务端生成代理"
+          },
+          {
+            type: "doc",
+            id: "generateproxyfromsourcegenerator",
+            label: "11.3 从SourceGenerator获取代理"
+          },
+          {
+            type: "doc",
+            id: "generateproxysourcegeneratordemo",
+            label: "11.4 SG代理推荐写法"
+          }
+        ]
+    },
+    {
+      type: "category",
+      label: "12、TouchRpc组件",
       items:
         [
           {
             type: "doc",
             id: "touchrpcdescription",
-            label: "11.1 产品及架构介绍"
+            label: "12.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "createtouchrpcservice",
-            label: "11.2 创建TouchRpc服务器"
+            label: "12.2 创建TouchRpc服务器"
           },
           {
             type: "doc",
             id: "createtouchrpcclient",
-            label: "11.3 创建TouchRpc客户端"
+            label: "12.3 创建TouchRpc客户端"
           },
           {
             type: "doc",
             id: "touchrpcbase",
-            label: "11.4 基础功能"
+            label: "12.4 基础功能"
           },
           {
             type: "category",
-            label: "11.5 Rpc功能",
+            label: "12.5 Rpc功能",
             items:
               [
                 {
@@ -510,17 +537,12 @@ module.exports = {
                   type: "doc",
                   id: "rpcactionfilter",
                   label: "f.Rpc服务AOP"
-                },
-                {
-                  type: "doc",
-                  id: "generateproxy",
-                  label: "f.生成、获取代理"
                 }
               ]
           },
           {
             type: "category",
-            label: "11.6 文件传输",
+            label: "12.6 文件传输",
             items:
               [
                 {
@@ -543,88 +565,88 @@ module.exports = {
           {
             type: "doc",
             id: "remotefilecontrol",
-            label: "11.7 远程文件操作"
+            label: "12.7 远程文件操作"
           },
           {
             type: "doc",
             id: "streamtransfer",
-            label: "11.8 Stream传输"
+            label: "12.8 Stream传输"
           },
           {
             type: "doc",
             id: "remotestreamaccess",
-            label: "11.9 远程流访问"
+            label: "12.9 远程流访问"
           },
           {
             type: "doc",
             id: "eventbus",
-            label: "11.10 EventBus"
+            label: "12.10 EventBus"
           }
         ]
     },
     {
       type: "category",
-      label: "12、WebApi组件",
+      label: "13、WebApi组件",
       items:
         [
           {
             type: "doc",
             id: "webapidescription",
-            label: "12.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
-            id: "webapiservice",
-            label: "12.2 定义、发布、启动服务"
-          },
-          {
-            type: "doc",
-            id: "callwebapi",
-            label: "12.3 发现、调用服务"
-          },
-        ]
-    },
-    {
-      type: "category",
-      label: "13、JsonRpc组件",
-      items:
-        [
-          {
-            type: "doc",
-            id: "jsonrpcdescription",
             label: "13.1 产品及架构介绍"
           },
           {
             type: "doc",
-            id: "jsonrpcservice",
+            id: "webapiservice",
             label: "13.2 定义、发布、启动服务"
           },
           {
             type: "doc",
-            id: "calljsonrpc",
+            id: "callwebapi",
             label: "13.3 发现、调用服务"
           },
         ]
     },
     {
       type: "category",
-      label: "14、XmlRpc组件件",
+      label: "14、JsonRpc组件",
+      items:
+        [
+          {
+            type: "doc",
+            id: "jsonrpcdescription",
+            label: "14.1 产品及架构介绍"
+          },
+          {
+            type: "doc",
+            id: "jsonrpcservice",
+            label: "14.2 定义、发布、启动服务"
+          },
+          {
+            type: "doc",
+            id: "calljsonrpc",
+            label: "14.3 发现、调用服务"
+          },
+        ]
+    },
+    {
+      type: "category",
+      label: "15、XmlRpc组件件",
       items:
         [
           {
             type: "doc",
             id: "xmlrpcdescription",
-            label: "14.1 产品及架构介绍"
+            label: "15.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "xmlrpcservice",
-            label: "14.2 定义、发布、启动服务"
+            label: "15.2 定义、发布、启动服务"
           },
           {
             type: "doc",
             id: "callxmlrpc",
-            label: "14.3 发现、调用服务"
+            label: "15.3 发现、调用服务"
           },
         ]
     }
