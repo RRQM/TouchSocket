@@ -2,6 +2,7 @@
 using RpcImplementationClassLibrary;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
+using TouchSocket.Rpc.Generators;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
@@ -29,7 +30,8 @@ namespace RecommendRpcConsoleApp
                    })
                    .ConfigureRpcStore(a => 
                    {
-                       a.RegisterServer<IUserServer, UserServer>();
+                       //此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+                       a.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
                    })
                    .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
 

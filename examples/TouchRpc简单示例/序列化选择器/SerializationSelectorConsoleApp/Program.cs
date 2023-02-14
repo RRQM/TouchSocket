@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
+using TouchSocket.Rpc.Generators;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
@@ -86,7 +87,7 @@ namespace SerializationSelectorConsoleApp
         }
     }
 
-    [GeneratorRpcProxy("SerializationSelectorConsoleApp.MyRpcServer")]
+    [GeneratorRpcProxy(Prefix = "SerializationSelectorConsoleApp.MyRpcServer")]
     public interface IMyRpcServer
     {
         /// <summary>
