@@ -3,6 +3,7 @@ using TouchSocket.Core;
 using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using TouchSocket.Rpc.Generators;
 
 namespace GeneratorRpcProxyConsoleApp
 {
@@ -69,7 +70,7 @@ namespace GeneratorRpcProxyConsoleApp
     /// GeneratorRpcProxy的标识，表明这个接口应该被生成其他源代码。
     /// ConsoleApp2.MyRpcServer参数是整个rpc调用的前缀，即：除方法名的所有，包括服务的类名。
     /// </summary>
-    [GeneratorRpcProxy("GeneratorRpcProxyConsoleApp.MyRpcServer")]
+    [GeneratorRpcProxy(Prefix = "GeneratorRpcProxyConsoleApp.MyRpcServer")]
     interface Test
     {
         [Description("这是登录方法")]//该作用是生成注释
