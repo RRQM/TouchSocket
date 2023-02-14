@@ -71,7 +71,7 @@ namespace TouchSocket.Http.WebSockets
                 string base64Key;
                 IPHost iPHost = Config.GetValue<IPHost>(TouchSocketConfigExtension.RemoteIPHostProperty);
                 string url = iPHost.IsUri ? iPHost.Uri.PathAndQuery : string.Empty;
-                HttpRequest request = WSTools.GetWSRequest(RemoteIPHost.ToString(), url, this.GetWebSocketVersion(), out base64Key);
+                HttpRequest request = WSTools.GetWSRequest(RemoteIPHost.Host, url, this.GetWebSocketVersion(), out base64Key);
                 OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
                 var response = Request(request, timeout: timeout, token: token);
