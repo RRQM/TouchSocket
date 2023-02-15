@@ -11,14 +11,6 @@ namespace WSVerifyConsoleApp
     {
         static void Main(string[] args)
         {
-            try
-            {
-                Enterprise.ForTest();
-            }
-            catch 
-            {
-
-            }
             WebApiVerify();
             Console.ReadKey();
         }
