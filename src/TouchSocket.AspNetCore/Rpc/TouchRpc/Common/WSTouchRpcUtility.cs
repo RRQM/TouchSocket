@@ -10,9 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Reflection;
+
 namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 {
     internal class WSTouchRpcUtility
     {
+        static WSTouchRpcUtility()
+        {
+        }
     }
 }
