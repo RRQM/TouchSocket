@@ -6,15 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
-    <Reference Include="TouchSocketPro">
-      <HintPath>..\..\..\..\..\TouchSocketPro\TouchSocketPro\bin\Debug\netstandard2.0\TouchSocketPro.dll</HintPath>
-    </Reference>
+    <PackageReference Include="TouchSocket" Version="1.2.12" />
   </ItemGroup>
-
-  <!--<ItemGroup>
-    <PackageReference Include="TouchSocket" Version="1.2.11" />
-  </ItemGroup>-->
 
 </Project>
