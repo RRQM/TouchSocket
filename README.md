@@ -39,7 +39,7 @@
 【企业版】
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/RRQM_Home/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://www.yuque.com/rrqm/touchsocket/80696720a95e415d94c87fa03642513d)|
+|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/RRQM_Home/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://rrqm_home.gitee.io/touchsocket/docs/enterprise/)|
 | [![NuGet version (TouchSocketPro.AspNetCore)](https://img.shields.io/nuget/v/TouchSocketPro.AspNetCore.svg?label=TouchSocketPro.AspNetCore)](https://www.nuget.org/packages/TouchSocketPro.AspNetCore)|[Gitee](https://gitee.com/RRQM_Home/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro) | TouchSocketPro.AspNetCore是适用于AspNetCore的专属版本。|
 
 #### 特别声明
@@ -190,9 +190,6 @@ TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 
 用户自定义不固定包头适配器，主要帮助用户解决具有包头不固定的数据帧信息。例如：最典型的HTTP数据包，其数据头和数据体由“\r\n”隔开，而数据头又因为请求者的请求信息的不同，头部数据也不固定，而数据体的长度，也是由数据头的ContentLength的值显式指定的，所以可以考虑使用CustomUnfixedHeaderDataHandlingAdapter解析，也是仅通过简单的开发，就能实现。
 
-## 🧲应用场景模拟
-[场景入口](https://www.yuque.com/rrqm/touchsocket/wrwx9k)
-
 ***
 
 ## 致谢
@@ -201,4 +198,4 @@ TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 
 ## 支持作者
 
-[支持入口](https://www.yuque.com/rrqm/touchsocket/a5199820843b324f025633fdeee44394)
+[支持入口](https://rrqm_home.gitee.io/touchsocket/docs/donate)
