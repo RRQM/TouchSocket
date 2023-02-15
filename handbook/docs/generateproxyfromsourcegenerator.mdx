@@ -173,6 +173,27 @@ public interface IUserServer:IRpcServer
 
 :::  
 
+#### （8） InheritedInterface
+
+继承接口，标识生成接口代理时，是否依然保持其他接口的继承实现。
+
+例如：下列示例中，A接口继承了IRpcServer（外部接口），而B和接口又继承了A，所以全部设置为true时，在生成接口中，依然会保持整个继承链。
+
+```csharp {1,7}
+[GeneratorRpcProxy(InheritedInterface =true)]
+public interface IA:IRpcServer
+{
+   
+}
+
+[GeneratorRpcProxy(InheritedInterface =true)]
+public interface IB:IA
+{
+   
+}
+
+```
+
 ### 2.2 GeneratorRpcMethodAttribute配置
 
 可配置项：
