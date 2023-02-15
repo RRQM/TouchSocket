@@ -9,8 +9,8 @@
 [![NuGet(TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket/)
 [![NuGet(TouchSocket)](https://img.shields.io/nuget/dt/TouchSocket.svg)](https://www.nuget.org/packages/TouchSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
-[![star](https://gitee.com/dotnetchina/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/stargazers) 
-[![fork](https://gitee.com/dotnetchina/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/members)
+[![star](https://gitee.com/RRQM_Home/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/stargazers) 
+[![fork](https://gitee.com/RRQM_Home/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/dotnetchina/TouchSocket/members)
 <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
 <img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
 </a>
@@ -37,7 +37,7 @@ English | [中文](README.md)
 【Enterprise version】
 | Nuget|Url |Describe|
 |---|---|---|
-|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/dotnetchina/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro)| TouchSocketpro is the enterprise version of TouchSocket, which is based on the original. <br> There are also some corporate versions. For details, please see [Enterprise Edition Related](https://www.yuque.com/rrqm/touchsocket/80696720a95e415d94c87fa03642513d)|
+|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/dotnetchina/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro)| TouchSocketpro is the enterprise version of TouchSocket, which is based on the original. <br> There are also some corporate versions. For details, please see [Enterprise Edition Related](https://rrqm_home.gitee.io/touchsocket/docs/enterprise/)|
 | [![NuGet version (TouchSocketPro.AspNetCore)](https://img.shields.io/nuget/v/TouchSocketPro.AspNetCore.svg?label=TouchSocketPro.AspNetCore)](https://www.nuget.org/packages/TouchSocketPro.AspNetCore)|[Gitee](https://gitee.com/dotnetchina/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro) | TouchSocketpro.aspnetcore is an exclusive version suitable for Aspnetcore.|
 
 ## 🖥Support environment
@@ -161,7 +161,7 @@ In the config plug -in configuration, you must first enable the plug -in, and th
 });
 ```
 
- **【FixedHeaderPackageAdapter包模式】**
+ **【FixedHeaderPackageAdapter Pack】**
 
 This adapter mainly solves the problem of TCP adhesion package. The data format adopts a simple and efficient "Baotou+Data Body" mode. Among them, Baotou supports:
 
@@ -185,9 +185,6 @@ Users customize fixed Baotou adapters mainly help users solve data frame informa
 
 Users customize non -fixed Baotou adapters mainly help users solve the data frame information with non -fixed Baotou. For example: the most typical HTTP packet, the data head and the data body are separated by "\r\n", and the data header is not fixed due to the different request information of the request request, and the length of the data body is not fixed, and the length of the data body is It is also specified by the value display of the data head, so you can consider using the CustomunfixedHeaderDatahandlingAdapter analysis, which can be achieved only through simple development.
 
-## 🧲Application scenario simulation
-[Scene entrance](https://www.yuque.com/rrqm/touchsocket/wrwx9k)
-
 ***
 
 ## Thank you
@@ -196,4 +193,4 @@ Thank you for your support for TouchSocket. If you have any other questions, ple
 
 ## Support author
 
-[Support entrance](https://www.yuque.com/rrqm/touchsocket/a5199820843b324f025633fdeee44394)
+[Support entrance](https://rrqm_home.gitee.io/touchsocket/docs/donate)
