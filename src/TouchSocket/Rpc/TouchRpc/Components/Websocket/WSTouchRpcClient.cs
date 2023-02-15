@@ -147,9 +147,9 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 m_client.SafeDispose();
                 m_client = new ClientWebSocket();
-                await m_client.ConnectAsync(RemoteIPHost.Uri, default);
+                await m_client.ConnectAsync(RemoteIPHost.Uri, default).ConfigureAwait(false);
 
-                _ = BeginReceive(null);
+                BeginReceive();
             }
 
             if (IsHandshaked)
@@ -300,42 +300,48 @@ namespace TouchSocket.Rpc.TouchRpc
             Disconnected?.Invoke(this, e);
         }
 
-        private async Task BeginReceive(ByteBlock byteBlock)
+        private void BeginReceive()
         {
-            try
+            Task.Factory.StartNew(async () =>
             {
-                byteBlock ??= new ByteBlock();
-                var result = await m_client.ReceiveAsync(m_buffer, default);
-                if (result.Count == 0)
+                try
                 {
-                    BreakOut("远程终端主动关闭", false);
+                    ByteBlock byteBlock = null;
+                    int bufferLength = this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty);
+                    while (true)
+                    {
+                        byteBlock ??= new ByteBlock(bufferLength);
+                        var result = await m_client.ReceiveAsync(m_buffer, default);
+                        if (result.Count == 0)
+                        {
+                            BreakOut("远程终端主动关闭", false);
+                            return;
+                        }
+                        LastActiveTime = DateTime.Now;
+                        byteBlock.Write(m_buffer.Array, 0, result.Count);
+                        if (result.EndOfMessage)
+                        {
+                            try
+                            {
+                                m_rpcActor.InputReceivedData(byteBlock);
+                            }
+                            catch
+                            {
+                            }
+                            finally
+                            {
+                                byteBlock.SafeDispose();
+                                byteBlock = default;
+                            }
+                        }
+                    }
+
                 }
-                LastActiveTime = DateTime.Now;
-                byteBlock.Write(m_buffer.Array, 0, result.Count);
-                if (result.EndOfMessage)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        m_rpcActor.InputReceivedData(byteBlock);
-                    }
-                    catch
-                    {
-                    }
-                    finally
-                    {
-                        byteBlock.SafeDispose();
-                    }
-                    await BeginReceive(null);
+                    BreakOut(ex.Message, false);
                 }
-                else
-                {
-                    await BeginReceive(byteBlock);
-                }
-            }
-            catch (Exception ex)
-            {
-                BreakOut(ex.Message, false);
-            }
+            }, TaskCreationOptions.LongRunning);
         }
 
         private void BreakOut(string msg, bool manual)
@@ -568,6 +574,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
             OnReceived(protocol, byteBlock);
         }
+
 
         private void OnRpcActorRouting(RpcActor actor, PackageRouterEventArgs e)
         {

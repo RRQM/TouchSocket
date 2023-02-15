@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+
 namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 {
     /// <summary>
@@ -51,7 +52,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public async Task<Task> Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context)
         {
             if (context.Request.Path.Equals(Url, StringComparison.CurrentCultureIgnoreCase))
             {
@@ -71,11 +72,10 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 {
                     context.Response.StatusCode = 400;
                 }
-                return Task.CompletedTask;
             }
             else
             {
-                return m_next(context);
+                 await m_next(context);
             }
         }
     }

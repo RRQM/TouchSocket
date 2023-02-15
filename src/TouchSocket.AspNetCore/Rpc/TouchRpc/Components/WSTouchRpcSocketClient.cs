@@ -296,12 +296,10 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         internal async void RpcActorSend(ArraySegment<byte>[] transferBytes)
         {
-            using ByteBlock byteBlock = new ByteBlock();
-            foreach (var item in transferBytes)
+            for (int i = 0; i < transferBytes.Length; i++)
             {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
+                await m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, i == transferBytes.Length - 1, CancellationToken.None);
             }
-            await m_client.SendAsync(byteBlock.Buffer, System.Net.WebSockets.WebSocketMessageType.Binary, true, CancellationToken.None);
         }
 
         internal void SetRpcActor(RpcActor rpcActor)
@@ -371,6 +369,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         private async Task BeginReceive()
         {
             ByteBlock byteBlock = null;
+            int bufferLength = this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty);
             try
             {
                 while (true)
@@ -381,10 +380,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                         byteBlock.SafeDispose();
                         break;
                     }
-                    if (byteBlock == null)
-                    {
-                        byteBlock = new ByteBlock();
-                    }
+                    byteBlock ??= new ByteBlock(bufferLength);
                     byteBlock.Write(m_buffer, 0, result.Count);
                     if (result.EndOfMessage)
                     {

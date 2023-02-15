@@ -576,7 +576,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             OnRouting(client, e);
         }
 
-
         private void OnRpcServiceHandshaked(RpcActor actor, VerifyOptionEventArgs e)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
@@ -656,10 +655,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         private void RpcServiceOutputSend(RpcActor actor, ArraySegment<byte>[] arg3)
         {
             WSTouchRpcSocketClient client = (WSTouchRpcSocketClient)actor.Caller;
-            if (!client.CanSend)
-            {
-                return;
-            }
             client.RpcActorSend(arg3);
         }
 
@@ -741,7 +736,6 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <param name="e"></param>
         protected virtual void OnRouting(WSTouchRpcSocketClient client, PackageRouterEventArgs e)
         {
-           
         }
 
         /// <summary>
@@ -784,6 +778,7 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         #endregion 事件
 
         #region 小文件
+
         /// <inheritdoc/>
         public PullSmallFileResult PullSmallFile(string targetId, string path, Metadata metadata = null, int timeout = 5000, CancellationToken token = default)
         {
@@ -835,7 +830,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
                 return Task.FromResult(new Result(ResultCode.Error, TouchSocketStatus.ClientNotFind.GetDescription(targetId)));
             }
         }
-        #endregion
+
+        #endregion 小文件
 
         #region 发送
 
