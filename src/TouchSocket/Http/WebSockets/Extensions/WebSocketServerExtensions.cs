@@ -42,6 +42,11 @@ namespace TouchSocket.Http.WebSockets
                     };
                     client.PluginsManager?.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandshaking), client, args);
 
+                    if (args.Context.Response.Responsed)
+                    {
+                        return false;
+                    }
+
                     if (args.IsPermitOperation)
                     {
                         client.SetDataHandlingAdapter(new WebSocketDataHandlingAdapter());

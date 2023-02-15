@@ -23,21 +23,15 @@ title: 创建WebSocket客户端
 
 ```csharp
 WebSocketClient myWSClient = new WebSocketClient();
-//myWSClient.Received += this.MyWSClient_Received;
-//myWSClient.Handshaked += this.MyWSClient_Handshaked;
-
 myWSClient.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost(this.textBox3.Text)
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
-        a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+        a.AddConsoleLogger();
     }));
 myWSClient.Connect();
-
 myWSClient.Logger.Message("连接成功");
 ```
-
-<a name="xWVU6"></a>
 
 ## 创建WSs客户端
 

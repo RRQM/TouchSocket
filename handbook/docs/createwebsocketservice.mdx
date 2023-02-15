@@ -41,20 +41,39 @@ service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
     .ConfigureContainer(a =>
     {
-        a.SetSingletonLogger<ConsoleLogger>();
+        a.AddConsoleLogger();
     })
     .ConfigurePlugins(a =>
     {
-        a.Add<WebSocketServerPlugin>()//添加WebSocket功能
-               .SetWSUrl("/ws")
-               .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
+        a.UseWebSocket()//添加WebSocket功能
+               .SetWSUrl("/ws");
+        //.SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。下面会用插件，所以我们不使用这种方式
         a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
     }))
     .Start();
 
-Console.WriteLine("Http服务器已启动");
-Console.WriteLine("ws://127.0.0.1:7789/ws");
+service.Logger.Info("Http服务器已启动");
+service.Logger.Info("ws://127.0.0.1:7789/ws");
 
+```
+
+[插件]
+
+```csharp
+class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
+{
+    protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+    {
+        if (e.DataFrame.Opcode == WSDataType.Text)//文本数据
+        {
+            client.Logger.Info($"收到信息：{e.DataFrame.ToText()}");
+        }
+        else if (e.DataFrame.Opcode == WSDataType.Binary)//二进制
+        {
+            byte[] data = e.DataFrame.PayloadData.ToArray();
+        }
+    }
+}
 ```
 
 
@@ -74,7 +93,7 @@ service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
     .ConfigureContainer(a =>
     {
-        a.SetSingletonLogger<ConsoleLogger>();
+         a.AddConsoleLogger();
     })
     .ConfigureRpcStore(a=> 
     {
@@ -82,7 +101,8 @@ service.Setup(new TouchSocketConfig()//加载配置
     })
     .ConfigurePlugins(a =>
     {
-        a.Add<WebApiParserPlugin>();
+        a.UseWebApi();
+        a.UseWebSocket();//不用设置连接url
     }))
     .Start();
 
@@ -106,16 +126,15 @@ public class MyServer : RpcServer
     {
         if (callContext.Caller is HttpSocketClient socketClient)
         {
-            if (socketClient.SwitchProtocolToWebSocket(callContext.Context))
+            if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
             {
-                m_logger.Message("WS通过WebApi连接");
+                m_logger.Info("WS通过WebApi连接");
             }
         }
     }
 }
 ```
 
-<a name="d6n7d"></a>
 
 ## 创建基于Ssl的WebSocket服务
 
@@ -134,7 +153,6 @@ config.UsePlugin()
     });
 ```
 
-<a name="FQrdu"></a>
 
 ## 接收消息
 
@@ -205,8 +223,6 @@ class MyWebSocketServerPlugin: WebSocketPluginBase
     }
 }
 ```
-
-<a name="JKBcN"></a>
 
 ## 回复、响应数据
 

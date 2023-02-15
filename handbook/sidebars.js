@@ -441,13 +441,18 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "websocketverify",
+            label: "10.4 连接验证"
+          },
+          {
+            type: "doc",
             id: "wscommandlineplugin",
-            label: "10.4 WSCommandLinePlugin"
+            label: "10.5 WSCommandLinePlugin"
           },
           {
             type: "doc",
             id: "wsjsonrpc",
-            label: "10.5 基于WS的JsonRpc"
+            label: "10.6 基于WS的JsonRpc"
           },
         ]
     },
