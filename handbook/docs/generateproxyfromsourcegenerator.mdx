@@ -141,10 +141,10 @@ where TClient:IRpcClient
 
 生成标识，可表示是否生成同步代码，或异步，或不生成接口等等。
 
-例如：下列示例，只会生成异步调用，和接口代码。
+例如：下列示例，只会生成**异步扩展**调用，和**异步接口**代码。
 
 ```csharp {1}
-[GeneratorRpcProxy(GeneratorFlag = CodeGeneratorFlag.ExtensionAsync| CodeGeneratorFlag.IncludeInterface)]
+[GeneratorRpcProxy(GeneratorFlag = CodeGeneratorFlag.ExtensionAsync| CodeGeneratorFlag.InterfaceAsync)]
 public interface IUserServer:IRpcServer
 {
     [GeneratorRpcMethod]
