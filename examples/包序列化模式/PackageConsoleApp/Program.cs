@@ -10,17 +10,17 @@ namespace PackageConsoleApp
             myClass.P1 = 1;
             myClass.P2 = "若汝棋茗";
             myClass.P3 = 'a';
-            myClass.P4= 3;
+            myClass.P4 = 3;
 
-            myClass.P5=new List<int> { 1, 2, 3 };
+            myClass.P5 = new List<int> { 1, 2, 3 };
 
-            myClass.P6= new Dictionary<int, MyClassModel>() 
+            myClass.P6 = new Dictionary<int, MyClassModel>()
             {
                 { 1,new MyClassModel(){ P1=DateTime.Now} },
                 { 2,new MyClassModel(){ P1=DateTime.Now} }
             };
 
-            using (ByteBlock byteBlock=new ByteBlock())
+            using (ByteBlock byteBlock = new ByteBlock())
             {
                 myClass.Package(byteBlock);//打包，相当于序列化
 
@@ -30,6 +30,23 @@ namespace PackageConsoleApp
                 myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
             }
         }
+    }
+
+    public class Person : DependencyObject
+    {
+        /// <summary>
+        /// 年龄
+        /// </summary>
+        public int Age { get; set; }//常规属性
+
+
+        public string Name//依赖属性
+        {
+            get { return (string)GetValue(NameProperty); }
+            set { SetValue(NameProperty, value); }
+        }
+        public static readonly DependencyProperty<string> NameProperty =
+            DependencyProperty<string>.Register("Name", typeof(Person), string.Empty);
     }
 
     class MyClass : IPackage
