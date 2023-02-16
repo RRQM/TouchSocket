@@ -23,7 +23,11 @@ invokeOption.FeedbackType = FeedbackType.WaitInvoke;
 string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 ```
 
-***注意：假如IInvokeOption使用的是InvokeOption的话，在new的时候，应该对其他参数也进行设置（因为它是结构体）。***
+:::caution 注意
+
+假如IInvokeOption使用的是InvokeOption的话，在new的时候，应该对其他参数也进行设置（因为它是结构体）。
+
+:::  
 
 ## 二、调用超时设置
 
@@ -61,7 +65,7 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 public class ElapsedTimeRpcServer : ServerProvider
 {
     [Description("测试可取消的调用")]
-    [RRQMRPC(MethodFlags.IncludeCallContext)]
+    [TouchRpc(MethodFlags.IncludeCallContext)]
     public bool DelayInvoke(ICallContext serverCallContext,int tick)//同步服务
     {
         for (int i = 0; i < tick; i++)
@@ -77,3 +81,28 @@ public class ElapsedTimeRpcServer : ServerProvider
     }
 }
 ```
+
+:::tip 提示
+
+当**InvokeOption**不涉及Token赋值时，对象是可以复用的。例如：你可以用一个静态类存贮很多配置，然后直接使用即可。
+
+```csharp {3,10}
+public static class ShareUtility
+{
+    public static InvokeOption Fast_WaitInvoke_10s = new InvokeOption()
+    {
+        FeedbackType = FeedbackType.WaitInvoke,
+        SerializationType = TouchSocket.Core.SerializationType.FastBinary,
+        Timeout = 10 * 1000
+    };
+
+    public static InvokeOption Fast_WaitInvoke_30s = new InvokeOption()
+    {
+        FeedbackType = FeedbackType.WaitInvoke,
+        SerializationType = TouchSocket.Core.SerializationType.FastBinary,
+        Timeout = 30 * 1000
+    };
+}
+```
+
+:::  
