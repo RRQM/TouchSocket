@@ -117,9 +117,15 @@ public class Args
 }
 ```
 
+:::tip 提示
+
+该场景可用于代理其他dll的自定义类型。
+
+:::  
+
 ## 三、代理类型排除
 
-默认情况下，服务中所包含的自定义类型，会被复刻成结构相同的类型。但是有时候，我们希望服务端与客户端公用一个dll，所以就不需要复刻，那么可以排除代理类型。
+默认情况下，与声明服务相同的自定义类型，会被代理复刻成结构相同的类型。但是有时候，我们希望服务端与客户端公用一个dll，所以就不需要复刻，那么可以排除代理类型。
 
 ```csharp
 CodeGenerator.AddIgnoreProxyType(typeof(Program));
@@ -130,3 +136,9 @@ CodeGenerator.AddIgnoreProxyType(typeof(Program));
 ```csharp
 CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
 ```
+
+:::tip 提示
+
+该场景可用于服务端与客户端公用一个实体dll，例如：当使用**MemoryPack**序列化的场景。
+
+:::  
