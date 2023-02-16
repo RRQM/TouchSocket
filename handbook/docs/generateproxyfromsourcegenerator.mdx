@@ -196,6 +196,15 @@ public interface IB:IA
 
 ### 2.2 GeneratorRpcMethodAttribute配置
 
+```csharp {4} 
+[GeneratorRpcProxy(MethodFlags = MethodFlags.IncludeCallContext)]
+public interface IUserServer:IRpcServer
+{
+    [GeneratorRpcMethod(MethodFlags = MethodFlags.IncludeCallContext)]
+    LoginResponse Login(ICallContext callContext,LoginRequest request);
+}
+```
+
 可配置项：
 
 #### （1）GenericConstraintTypes
