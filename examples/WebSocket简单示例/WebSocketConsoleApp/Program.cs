@@ -111,31 +111,74 @@ namespace WebSocketConsoleApp
         }
     }
 
-    public class MyWebSocketPlugin : WebSocketPluginBase
+    public class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
     {
-        protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+        protected override void OnConnected(HttpSocketClient client, TouchSocketEventArgs e)
         {
             Console.WriteLine("TCP连接");
             base.OnConnected(client, e);
         }
 
-        protected override void OnHandshaking(ITcpClientBase client, HttpContextEventArgs e)
+        protected override void OnHandshaking(HttpSocketClient client, HttpContextEventArgs e)
         {
             Console.WriteLine("WebSocket正在连接");
             //e.IsPermitOperation = false;表示拒绝
             base.OnHandshaking(client, e);
         }
 
-        protected override void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
+        protected override void OnHandshaked(HttpSocketClient client, HttpContextEventArgs e)
         {
             Console.WriteLine("WebSocket成功连接");
             base.OnHandshaked(client, e);
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        protected override void OnDisconnected(HttpSocketClient client, DisconnectEventArgs e)
         {
             Console.WriteLine("TCP断开连接");
             base.OnDisconnected(client, e);
+        }
+
+        protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+        {
+            switch (e.DataFrame.Opcode)
+            {
+                case WSDataType.Cont:
+                    client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                    break;
+
+                case WSDataType.Text:
+                    client.Logger.Info(e.DataFrame.ToText());
+                    client.SendWithWS("我已收到");
+                    break;
+
+                case WSDataType.Binary:
+                    if (e.DataFrame.FIN)
+                    {
+                        client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    }
+                    else
+                    {
+                        client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    }
+                    break;
+
+                case WSDataType.Close:
+                    {
+                        client.Logger.Info("远程请求断开");
+                        client.Close("断开");
+                    }
+
+                    break;
+
+                case WSDataType.Ping:
+                    break;
+
+                case WSDataType.Pong:
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
