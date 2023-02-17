@@ -22,6 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class SocketsServiceCollectionExtensions
     {
         #region TcpService
+
         /// <summary>
         /// 添加TcpService服务。
         /// </summary>

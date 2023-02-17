@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -34,9 +35,9 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// <summary>
         /// 转换客户端
         /// </summary>
-        /// <param name="webSocket"></param>
+        /// <param name="context"></param>
         /// <returns></returns>
-        Task SwitchClientAsync(System.Net.WebSockets.WebSocket webSocket);
+        Task SwitchClientAsync(HttpContext  context);
 
         /// <summary>
         /// 重置ID
