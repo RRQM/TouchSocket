@@ -191,6 +191,12 @@ Users customize non -fixed Baotou adapters mainly help users solve the data fram
 
 Thank you for your support for TouchSocket. If you have any other questions, please submit it, or add a group of QQ: 234762506 discussion.
 
+Thanks for the support of the following tools
+
+- [Visual Studio](https://visualstudio.microsoft.com/zh-hans/)
+- [JetBrains](https://www.jetbrains.com/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+
 ## Support author
 
 [Support entrance](https://rrqm_home.gitee.io/touchsocket/docs/donate)
