@@ -56,26 +56,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         {
             if (context.Request.Path.Equals(Url, StringComparison.CurrentCultureIgnoreCase))
             {
-                if (context.WebSockets.IsWebSocketRequest)
-                {
-                    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                    try
-                    {
-                        await m_rpcService.SwitchClientAsync(webSocket);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_logger.LogError(ex.Message);
-                    }
-                }
-                else
-                {
-                    context.Response.StatusCode = 400;
-                }
+                await m_rpcService.SwitchClientAsync(context);
             }
             else
             {
-                 await m_next(context);
+                await m_next(context);
             }
         }
     }

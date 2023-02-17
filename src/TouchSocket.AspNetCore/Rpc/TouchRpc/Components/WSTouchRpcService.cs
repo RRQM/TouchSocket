@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -665,22 +666,36 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
         /// </summary>
         /// <param name="webSocket"></param>
         /// <returns></returns>
-        public async Task SwitchClientAsync(System.Net.WebSockets.WebSocket webSocket)
+        public async Task SwitchClientAsync(HttpContext context)
         {
-            string id = GetDefaultNewID();
-            WSTouchRpcSocketClient client = new WSTouchRpcSocketClient();
-            if (!TryAdd(id, client))
+            try
             {
-                throw new Exception("ID重复");
-            }
-            client.m_service = this;
-            client.m_usePlugin = UsePlugin;
-            CheckService();
+                if (context.WebSockets.IsWebSocketRequest)
+                {
+                    var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                    string id = GetDefaultNewID();
+                    WSTouchRpcSocketClient client = new WSTouchRpcSocketClient();
+                    if (!TryAdd(id, client))
+                    {
+                        throw new Exception("ID重复");
+                    }
+                    client.m_service = this;
+                    client.m_usePlugin = UsePlugin;
+                    CheckService();
 
-            client.SetRpcActor(m_rpcActorGroup.CreateRpcActor(client));
-            client.RpcActor.ID = id;
-            client.m_internalDisconnected = PrivateDisconnected;
-            await client.Start(Config, webSocket);
+                    client.SetRpcActor(m_rpcActorGroup.CreateRpcActor(client));
+                    client.RpcActor.ID = id;
+                    client.m_internalDisconnected = PrivateDisconnected;
+                    await client.Start(Config, webSocket, context);
+                }
+                else
+                {
+                    context.Response.StatusCode = 400;
+                }
+            }
+            catch
+            {
+            }
         }
 
         private void CheckService()

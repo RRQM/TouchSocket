@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -44,6 +45,8 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
 
         /// <inheritdoc/>
         public IContainer Container => Config?.Container;
+
+        public HttpContext HttpContext { get; private set; }
 
         /// <inheritdoc/>
         public string ID => m_rpcActor.ID;
@@ -308,10 +311,11 @@ namespace TouchSocket.Rpc.TouchRpc.AspNetCore
             m_rpcActor.OnResetID = ThisOnResetID;
         }
 
-        internal Task Start(TouchSocketConfig config, System.Net.WebSockets.WebSocket webSocket)
+        internal Task Start(TouchSocketConfig config, WebSocket webSocket, HttpContext context)
         {
             Config = config;
             m_client = webSocket;
+            this.HttpContext = context;
             return BeginReceive();
         }
 
