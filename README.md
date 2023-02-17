@@ -196,6 +196,12 @@ TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 
 谢谢大家对TouchSocket的支持，如果还有其他问题，请提交Issue，或者加群QQ：234762506讨论。
 
+感谢下列工具软件的支持
+
+- [Visual Studio](https://visualstudio.microsoft.com/zh-hans/)
+- [JetBrains](https://www.jetbrains.com/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+
 ## 支持作者
 
 [支持入口](https://rrqm_home.gitee.io/touchsocket/docs/donate)
