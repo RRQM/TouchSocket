@@ -97,6 +97,25 @@ namespace ConsoleApp
             {
                 try
                 {
+                    if (e.Context.Request.TryGetContent(out byte[] bodys))//一次性获取请求体
+                    {
+                        return;
+                    }
+
+                    while (true)//当数据太大时，可持续读取
+                    {
+                        byte[] buffer = new byte[1024 * 64];
+                        int r = e.Context.Request.Read(buffer, 0, buffer.Length);
+                        if (r == 0)
+                        {
+                            return;
+                        }
+
+                        //这里可以一直处理读到的数据。
+                    }
+
+                    //下面逻辑是接收小文件。
+
                     if (e.Context.Request.ContentLen > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
                         e.Context.Response
