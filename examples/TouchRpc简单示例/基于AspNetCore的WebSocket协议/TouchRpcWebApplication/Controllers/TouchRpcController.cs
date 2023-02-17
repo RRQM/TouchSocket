@@ -39,12 +39,13 @@ namespace TouchRpcWebApplication.Controllers
             return code;
         }
 
+        /// <summary>
+        /// 通过WebApi路由的方式，将新连接的ws客户端转为wstouchrpc
+        /// </summary>
         [HttpGet]
         public async void WS()
         {
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-            await m_touchRpcService.SwitchClientAsync(webSocket);
+            await m_touchRpcService.SwitchClientAsync(HttpContext);
         }
     }
 }
