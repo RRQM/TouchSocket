@@ -22,12 +22,12 @@ namespace TouchRpcWebApplication.Controllers
     [Route("[controller]/[action]")]
     public class TouchRpcController : ControllerBase
     {
-        private readonly ILogger<TouchRpcController> _logger;
+        private readonly ILogger<TouchRpcController> m_logger;
         private readonly IWSTouchRpcService m_touchRpcService;
 
         public TouchRpcController(ILogger<TouchRpcController> logger, IWSTouchRpcService touchRpcService)
         {
-            _logger = logger;
+            m_logger = logger;
             this.m_touchRpcService = touchRpcService;
         }
 
