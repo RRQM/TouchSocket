@@ -34,7 +34,6 @@ namespace WebSocketConsoleApp
                     a.UseWebApi();
                 }))
                 .Start();
-
             Console.WriteLine("服务器已启动，可使用下列地址连接");
             Console.WriteLine("ws://127.0.0.1:7789/ws");
             Console.WriteLine("ws://127.0.0.1:7789/MyServer/ConnectWS");
