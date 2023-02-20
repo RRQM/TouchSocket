@@ -270,21 +270,58 @@ service.Setup(new TouchSocketConfig()//加载配置
 
 ## 六、回复、响应数据
 
-要回复Websocket消息，必须使用**HttpSocketClient**对象。关于如何拿到通讯对象，你可以查看 [TcpService](../docs/createtcpservice.mdx)的获取部分。
+要回复Websocket消息，必须使用**HttpSocketClient**对象。
 
-### 6.1 发送文本类消息
+### 6.1 如何获取SocketClient？
+
+#### （1）直接获取所有在线客户端
+
+通过`service.GetClients`方法，获取当前在线的所有客户端。
+
+```csharp
+HttpSocketClient[] socketClients = service.GetClients();
+foreach (var item in socketClients)
+{
+    if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
+    {
+        if (item.ID == "id")//再按指定id发送，或者直接广播发送
+        {
+
+        }
+    }
+}
+```
+
+:::caution 注意
+
+由于HttpSocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用HttpSocketClient.ID，然后再通过服务器查找。
+
+:::  
+
+#### （2）通过ID获取
+
+先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+
+```csharp
+string[] ids = service.GetIDs();
+if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
+{
+}
+```
+
+### 6.2 发送文本类消息
 
 ```csharp
 socketClient.SendWithWS("Text");
 ```
 
-### 6.2 发送二进制消息
+### 6.3 发送二进制消息
 
 ```csharp
 socketClient.SendWithWS(new byte[10]);
 ```
 
-### 6.3 发送分包的二进制
+### 6.4 发送分包的二进制
 
 例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
 
@@ -293,7 +330,7 @@ byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 socketClient.SubSendWithWS(data, 5);
 ```
 
-### 6.4 直接发送自定义构建的数据帧
+### 6.5 直接发送自定义构建的数据帧
 ```csharp
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
