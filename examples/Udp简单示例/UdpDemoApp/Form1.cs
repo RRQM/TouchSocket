@@ -84,12 +84,11 @@ namespace UdpDemoApp
 
         private void button4_Click(object sender, EventArgs e)
         {
-
-
             //调用GetWaitingClient获取到IWaitingClient的对象。
             var waitClient = this.m_udpSession.GetWaitingClient(new WaitingOptions()
             {
                 AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
+                RemoteIPHost = new IPHost(this.textBox3.Text)//表示目的地址
             });
 
             //然后使用SendThenReturn。

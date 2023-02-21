@@ -4,6 +4,6 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="1.2.12" />
+    <PackageReference Include="TouchSocket" Version="1.2.14" />
   </ItemGroup>
 </Project>

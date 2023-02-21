@@ -20,7 +20,7 @@ title: Udp同步请求
 UdpSession udpSession = new UdpSession();
 var config = new TouchSocketConfig()
     .SetBindIPHost(new IPHost(0))//必要设置
-    .SetRemoteIPHost(new IPHost("127.0.0.1:7789"));//必要设置
+    .SetRemoteIPHost(new IPHost("127.0.0.1:7789"));//可以不设置
 
 //载入配置
 udpSession.Setup(config);
@@ -30,8 +30,7 @@ udpSession.Start();
 var waitClient = udpSession.GetWaitingClient(new WaitingOptions()
 {
     AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
-    BreakTrigger = true,//表示当连接断开时，会立即触发
-    ThrowBreakException = true//表示当连接断开时，是否触发异常
+    RemoteIPHost = new IPHost("127.0.0.1:7799")//表示目的地址
 });
 
 //然后使用SendThenReturn。
@@ -45,7 +44,7 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 :::caution 注意
 
-目前Udp的同步请求，仅在作为客户端时适用，且需要设置默认的**SetRemoteIPHost**。
+Udp的同步请求，有两种策略，一种则是在配置中设置**SetRemoteIPHost**，然后在**GetWaitingClient**时则不必再设置RemoteIPHost，这种情况一般适用于客户端。第二种则是不配置**SetRemoteIPHost**，然后在**GetWaitingClient**时设置RemoteIPHost，这种情况适用于服务器。
 
 :::  
 
