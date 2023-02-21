@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : ITcpClientBase
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IClient, IDefaultSender, ISender
         {
             WaitingClient<TClient> waitingClient = new WaitingClient<TClient>(client, waitingOptions);
             return waitingClient;
