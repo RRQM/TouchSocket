@@ -264,13 +264,18 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "udpwaitingclient",
+            label: "7.2 同步请求数据"
+          },
+          {
+            type: "doc",
             id: "udptransmitbigdata",
-            label: "7.2 传输大于64K的数据"
+            label: "7.3 传输大于64K的数据"
           },
           {
             type: "doc",
             id: "udpbroadcast",
-            label: "7.3 组播、广播"
+            label: "7.4 组播、广播"
           },
         ]
     },
