@@ -23,6 +23,7 @@ namespace UdpDemoApp
                 if (byteBlock.Len > 1024)
                 {
                     m_udpSession.Logger.Info($"收到：{byteBlock.Len}长度的数据。");
+                    m_udpSession.Send("收到");
                 }
                 else
                 {
@@ -32,6 +33,7 @@ namespace UdpDemoApp
 
             m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
+                 .SetRemoteIPHost(new IPHost(this.textBox3.Text))
                  .UseBroadcast()
                  .SetUdpDataHandlingAdapter(() =>
                  {
@@ -79,9 +81,28 @@ namespace UdpDemoApp
                 m_udpSession.Logger.Exception(ex);
             }
         }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+
+            //调用GetWaitingClient获取到IWaitingClient的对象。
+            var waitClient = this.m_udpSession.GetWaitingClient(new WaitingOptions()
+            {
+                AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
+            });
+
+            //然后使用SendThenReturn。
+            byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+            ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+            //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+            ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+            IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+        }
     }
 
-    class MyUdpPluginClass:UdpSessionPluginBase
+    class MyUdpPluginClass : UdpSessionPluginBase
     {
 
     }
