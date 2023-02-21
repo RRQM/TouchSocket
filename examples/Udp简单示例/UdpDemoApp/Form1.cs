@@ -95,9 +95,9 @@ namespace UdpDemoApp
             byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
             ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
-            //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-            ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
-            IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+            ////同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+            //ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+            //IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
         }
     }
 
