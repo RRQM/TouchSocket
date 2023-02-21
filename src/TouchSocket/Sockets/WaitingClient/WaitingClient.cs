@@ -18,7 +18,7 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
-    internal class WaitingClient<TClient> : IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISender
+    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISender
     {
         private readonly WaitData<ResponsedData> m_waitData;
 
@@ -74,8 +74,7 @@ namespace TouchSocket.Sockets
                 {
                     breaked = false;
                     m_waitData.Reset();
-
-                    if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
+                    if (WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
                     {
                         tcpClient.Disconnected += this.OnDisconnected;
                     }
@@ -89,13 +88,27 @@ namespace TouchSocket.Sockets
                         Client.OnHandleRawBuffer += OnHandleRawBuffer;
                     }
 
-                    if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
+                    if (WaitingOptions.RemoteIPHost != null && Client is IUdpSession session)
                     {
-                        Client.Send(buffer, offset, length);
+                        if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
+                        {
+                            session.Send(WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                        }
+                        else
+                        {
+                            session.DefaultSend(WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                        }
                     }
                     else
                     {
-                        Client.DefaultSend(buffer, offset, length);
+                        if (WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
+                        {
+                            Client.Send(buffer, offset, length);
+                        }
+                        else
+                        {
+                            Client.DefaultSend(buffer, offset, length);
+                        }
                     }
 
                     m_waitData.SetCancellationToken(token);
@@ -328,6 +341,13 @@ namespace TouchSocket.Sockets
             });
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            this.Client = default;
+            this.m_waitData.SafeDispose();
+            base.Dispose(disposing);
+        }
+
         private void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             breaked = true;
@@ -356,7 +376,6 @@ namespace TouchSocket.Sockets
             {
                 responsedData = new ResponsedData(null, requestInfo);
             }
-
             return !m_waitData.Set(responsedData);
         }
     }

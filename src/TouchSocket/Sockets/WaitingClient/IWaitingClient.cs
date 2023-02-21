@@ -20,19 +20,17 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 等待型客户端。
     /// </summary>
-    public interface IWaitingClient<TClient> : IWaitSender where TClient : IClient, IDefaultSender, ISender
+    public interface IWaitingClient<TClient> : IWaitSender,IDisposable where TClient : IClient, IDefaultSender, ISender
     {
         /// <summary>
         /// 等待设置。
         /// </summary>
-        public WaitingOptions WaitingOptions { get; set; }
+        public WaitingOptions WaitingOptions { get;}
 
         /// <summary>
         /// 客户端终端
         /// </summary>
         TClient Client { get; }
-
-       
 
         /// <summary>
         /// 发送字节流
