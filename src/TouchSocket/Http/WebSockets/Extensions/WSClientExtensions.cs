@@ -57,7 +57,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Ping(this HttpClientBase client)
+        public static bool PingWS(this HttpClientBase client)
         {
             try
             {
@@ -75,7 +75,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Pong(this HttpClientBase client)
+        public static bool PongWS(this HttpClientBase client)
         {
             try
             {
@@ -434,11 +434,11 @@ namespace TouchSocket.Http.WebSockets
         #region 服务器
 
         /// <summary>
-        /// 发送Ping报文。
+        /// 发送WebSocket协议的Ping报文。
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Ping(this HttpSocketClient client)
+        public static bool PingWS(this HttpSocketClient client)
         {
             try
             {
@@ -452,11 +452,11 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <summary>
-        /// 发送Pong报文。
+        /// 发送WebSocket协议的Pong报文。
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
-        public static bool Pong(this HttpSocketClient client)
+        public static bool PongWS(this HttpSocketClient client)
         {
             try
             {
@@ -470,7 +470,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <summary>
-        /// 发送Close报文。
+        /// 发送WebSocket协议的Close报文。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="msg"></param>

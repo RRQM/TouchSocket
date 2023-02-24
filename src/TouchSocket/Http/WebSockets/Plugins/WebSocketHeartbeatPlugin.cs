@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -22,16 +23,23 @@ namespace TouchSocket.Http.WebSockets
     [SingletonPlugin]
     public class WebSocketHeartbeatPlugin : WebSocketPluginBase
     {
-        private readonly int m_timeTick;
+        private TimeSpan m_timeTick=TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// 初始化一个适用于WebSocket的心跳插件
         /// </summary>
-        /// <param name="interval"></param>
-        [DependencyInject(1000 * 5)]
-        public WebSocketHeartbeatPlugin(int interval)
+        public WebSocketHeartbeatPlugin()
         {
-            m_timeTick = interval;
+           
+        }
+
+        /// <summary>
+        /// 设置心跳间隔，默认5秒。
+        /// </summary>
+        /// <param name="timeSpan"></param>
+        public void Tick(TimeSpan timeSpan)
+        {
+            this.m_timeTick = timeSpan;
         }
 
         /// <summary>
@@ -49,8 +57,8 @@ namespace TouchSocket.Http.WebSockets
                 }
                 client.SetValue(WebSocketExtensions.HeartbeatTimerProperty, new Timer((o) =>
                 {
-                    httpClientBase.Ping();
-                }, null, 0, m_timeTick));
+                    httpClientBase.PingWS();
+                }, null, m_timeTick, m_timeTick));
             }
             base.OnHandshaked(client, e);
         }
@@ -63,9 +71,9 @@ namespace TouchSocket.Http.WebSockets
         protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             base.OnDisconnected(client, e);
-            if (client.GetValue<Timer>(WebSocketExtensions.HeartbeatTimerProperty) is Timer timer)
+            if (client.GetValue(WebSocketExtensions.HeartbeatTimerProperty) is Timer timer)
             {
-                timer.Dispose();
+                timer.SafeDispose();
                 client.SetValue(WebSocketExtensions.HeartbeatTimerProperty, null);
             }
         }

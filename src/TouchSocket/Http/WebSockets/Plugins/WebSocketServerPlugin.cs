@@ -54,6 +54,11 @@ namespace TouchSocket.Http.WebSockets
         public bool AutoClose { get; set; } = true;
 
         /// <summary>
+        /// 当收到ping报文时，是否自动回应pong。
+        /// </summary>
+        public bool AutoPong { get; set; } = true;
+
+        /// <summary>
         /// 处理WS数据的回调
         /// </summary>
         public Action<ITcpClientBase, WSDataFrameEventArgs> HandleWSDataFrameCallback { get; set; }
@@ -75,6 +80,16 @@ namespace TouchSocket.Http.WebSockets
         public WebSocketServerPlugin NoAutoClose()
         {
             AutoClose = false;
+            return this;
+        }
+
+        /// <summary>
+        /// 当收到ping报文时，不自动回应pong。
+        /// </summary>
+        /// <returns></returns>
+        public WebSocketServerPlugin NoAutoPong()
+        {
+            AutoPong = false;
             return this;
         }
 
@@ -128,14 +143,18 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         protected virtual void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Close && AutoClose)
+            if (AutoClose&&e.DataFrame.Opcode == WSDataType.Close)
             {
                 string msg = e.DataFrame.PayloadData?.ToString();
                 m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnClosing), client, new MsgEventArgs() { Message = msg });
                 client.Close(msg);
                 return;
             }
-
+            if (AutoPong&& e.DataFrame.Opcode == WSDataType.Ping)
+            {
+                ((HttpSocketClient)client).PongWS();
+                return;
+            }
             if (m_pluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandleWSDataFrame), client, e))
             {
                 return;
