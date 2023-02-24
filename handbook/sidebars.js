@@ -451,13 +451,18 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "websocketheartbeat",
+            label: "10.5 心跳设置"
+          },
+          {
+            type: "doc",
             id: "wscommandlineplugin",
-            label: "10.5 WSCommandLinePlugin"
+            label: "10.6 WSCommandLinePlugin"
           },
           {
             type: "doc",
             id: "wsjsonrpc",
-            label: "10.6 基于WS的JsonRpc"
+            label: "10.7 基于WS的JsonRpc"
           },
         ]
     },

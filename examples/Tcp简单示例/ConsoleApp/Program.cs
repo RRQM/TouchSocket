@@ -12,7 +12,6 @@ namespace ServiceConsoleApp
         {
             var service = CreateService();
             var client = CreateClient();
-
             while (true)
             {
                 client.Send(Console.ReadLine());

@@ -39,6 +39,13 @@ service.Setup(new TouchSocketConfig()//载入配置
     .Start();//启动
 ```
 
+:::caution 注意
+
+该适配器，在发送（Send、SendAsync）数据时，会自动追加分割符，所以不需要手动封装。如果想要发送手动组装的数据，请使用DefaultSend。
+
+:::  
+
+
 :::tip 提示
 
 默认情况下终止因子不会保留在数据中，用户可通过ReserveTerminatorCode属性，设为true，来保留终止因子。
