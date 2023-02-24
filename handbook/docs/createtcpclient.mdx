@@ -213,7 +213,7 @@ public class MyPlugin : TcpPluginBase<TcpClient>
 {
     public MyPlugin()
     {
-        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越小，越在前执行。
+        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
    
     protected override void OnReceivedData(TcpClient client, ReceivedDataEventArgs e)
