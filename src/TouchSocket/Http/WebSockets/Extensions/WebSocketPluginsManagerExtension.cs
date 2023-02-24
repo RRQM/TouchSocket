@@ -32,7 +32,7 @@ namespace TouchSocket.Core
         /// 使用WebSocket心跳插件（仅客户端生效）
         /// </summary>
         /// <returns>插件类型实例</returns>
-        public static WebSocketHeartbeatPlugin UseHeartbeat(this IPluginsManager pluginsManager)
+        public static WebSocketHeartbeatPlugin UseWebSocketHeartbeat(this IPluginsManager pluginsManager)
         {
             return pluginsManager.Add<WebSocketHeartbeatPlugin>();
         }
