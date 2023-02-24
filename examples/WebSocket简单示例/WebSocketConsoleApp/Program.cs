@@ -28,6 +28,7 @@ namespace WebSocketConsoleApp
                 {
                     a.UseWebSocket()//添加WebSocket功能
                            .SetWSUrl("/ws")
+                           .UseAutoPong()//当收到ping报文时自动回应pong
                            .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
                     a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
                     a.Add<MyWSCommandLinePlugin>();

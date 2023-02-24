@@ -20,17 +20,17 @@ namespace WSClientApp
             client.Logger.Info("成功连接");
         }
 
-        private WebSocketClient myWSClient;
+        private WebSocketClient client;
 
         private void button1_Click(object sender, EventArgs e)
         {
-            myWSClient.SafeDispose();
+            client.SafeDispose();
 
-            myWSClient = new WebSocketClient();
-            myWSClient.Received = this.MyWSClient_Received;
-            myWSClient.Handshaked = this.MyWSClient_Handshaked;
+            client = new WebSocketClient();
+            client.Received = this.MyWSClient_Received;
+            client.Handshaked = this.MyWSClient_Handshaked;
 
-            myWSClient.Setup(new TouchSocketConfig()
+            client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(this.textBox3.Text)
                 .UsePlugin()
                 .ConfigureContainer(a =>
@@ -38,12 +38,21 @@ namespace WSClientApp
                     a.AddFileLogger();
                     a.AddEasyLogger(this.ShowMsg);
                 })
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
+                    a.UseWebSocketHeartbeat()//使用心跳插件
+                    .Tick(TimeSpan.FromSeconds(5));//每5秒ping一次。
+
                     a.Add<MyWSClientPlugin>();
                 }));
-            myWSClient.Connect();
-            myWSClient.CloseWithWS("close");
+            client.Connect();
+            client.CloseWithWS("close");
+
+            WSDataFrame dataFrame = new WSDataFrame()
+            {
+                FIN = true,
+                Opcode = WSDataType.Ping
+            }
         }
 
         private void MyWSClient_Received(WebSocketClient client, WSDataFrame dataFrame)
@@ -98,11 +107,11 @@ namespace WSClientApp
         {
             try
             {
-                this.myWSClient.SendWithWS(this.textBox2.Text);
+                this.client.SendWithWS(this.textBox2.Text);
             }
             catch (Exception ex)
             {
-                this.myWSClient.Logger.Exception(ex);
+                this.client.Logger.Exception(ex);
             }
         }
 
@@ -111,16 +120,16 @@ namespace WSClientApp
             byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             try
             {
-                this.myWSClient.SubSendWithWS(data, 5);
+                this.client.SubSendWithWS(data, 5);
             }
             catch (Exception ex)
             {
-                this.myWSClient.Logger.Exception(ex);
+                this.client.Logger.Exception(ex);
             }
         }
     }
 
-    class MyWSClientPlugin:WebSocketPluginBase<WebSocketClient>
+    class MyWSClientPlugin : WebSocketPluginBase<WebSocketClient>
     {
         protected override void OnHandleWSDataFrame(WebSocketClient client, WSDataFrameEventArgs e)
         {

@@ -9,4 +9,94 @@ Websocket拥有自己的心跳数据格式，和响应心跳格式，专业名�
 
 ## 二、心跳配置
 
+#### 2.1 服务器配置
 
+服务器在添加WebSocket功能时，可以直接启用自动回应Ping。
+
+```csharp {17}
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigureRpcStore(a =>
+    {
+        a.RegisterServer<MyServer>();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebSocket()//添加WebSocket功能
+               .SetWSUrl("/ws")
+               .UseAutoPong()//当收到ping报文时自动回应pong
+               .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
+        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+        a.Add<MyWSCommandLinePlugin>();
+        a.UseWebApi();
+    }))
+    .Start();
+```
+
+:::tip 提示
+
+**UseAutoPong**非必须操作，如果不设置的话，自己在插件处理Ping报文也可以。
+
+:::  
+
+#### 2.2 客户端使用心跳插件
+
+```csharp {11-12}
+WebSocketClient client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .UsePlugin()
+    .ConfigureContainer(a =>
+    {
+        a.AddFileLogger();
+    })
+    .ConfigurePlugins(a => 
+    {
+        a.UseWebSocketHeartbeat()//使用心跳插件
+        .Tick(TimeSpan.FromSeconds(5));//每5秒ping一次。
+    }));
+client.Connect();
+```
+
+## 三、直接发送心跳
+
+直接发送心跳，可以直接使用扩展方法。
+```csharp 
+client.PingWS();
+client.PongWS();
+```
+
+或者自己构建数据帧
+```csharp
+WSDataFrame dataFrame = new WSDataFrame()
+{
+    FIN = true,
+    Opcode = WSDataType.Ping
+};
+
+//WSDataFrame dataFrame = new WSDataFrame()
+//{
+//    FIN = true,
+//    Opcode = WSDataType.Pong
+//};
+
+client.Send(dataFrame);
+```
+
+:::caution 注意
+
+自己构建数据帧，还应该设置Make等其他参数。
+
+:::  
+
+:::tip 提示
+
+无论是Ping，还是Pong，服务器和客户端都支持发送和接收。但是一般建议由客户端Ping，服务器只负责Pong即可。
+
+:::  
