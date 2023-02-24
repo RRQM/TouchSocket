@@ -47,12 +47,6 @@ namespace WSClientApp
                 }));
             client.Connect();
             client.CloseWithWS("close");
-
-            WSDataFrame dataFrame = new WSDataFrame()
-            {
-                FIN = true,
-                Opcode = WSDataType.Ping
-            }
         }
 
         private void MyWSClient_Received(WebSocketClient client, WSDataFrame dataFrame)
