@@ -47,6 +47,12 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::caution 注意
 
+该适配器，在发送（Send、SendAsync）数据时，会自动封装数据头，所以不需要手动封装。如果想要发送手动组装的数据，请使用DefaultSend。
+
+:::  
+
+:::caution 注意
+
 接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
 
 :::  

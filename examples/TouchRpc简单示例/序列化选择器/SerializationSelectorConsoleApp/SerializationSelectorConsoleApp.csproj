@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocketPro" Version="1.2.23" />
-		<PackageReference Include="TouchSocketPro.CodeAnalyzer" Version="1.2.8">
+		<PackageReference Include="TouchSocketPro" Version="1.2.26" />
+		<PackageReference Include="TouchSocketPro.CodeAnalyzer" Version="1.2.9">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
