@@ -56,7 +56,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 当收到ping报文时，是否自动回应pong。
         /// </summary>
-        public bool AutoPong { get; set; } = true;
+        public bool AutoPong { get; set; }
 
         /// <summary>
         /// 处理WS数据的回调
@@ -84,10 +84,10 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <summary>
-        /// 当收到ping报文时，不自动回应pong。
+        /// 当收到ping报文时，自动回应pong。
         /// </summary>
         /// <returns></returns>
-        public WebSocketServerPlugin NoAutoPong()
+        public WebSocketServerPlugin UseAutoPong()
         {
             AutoPong = false;
             return this;
