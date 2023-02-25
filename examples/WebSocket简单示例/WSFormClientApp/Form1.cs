@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Http;
