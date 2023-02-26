@@ -196,6 +196,11 @@ static void WSCallback(ITcpClientBase client, WSDataFrameEventArgs e)
     }
 }
 ```
+:::tip 提示
+
+该函数，可能被并发执行的，所以应当做好线程安全。
+
+:::  
 
 ### 5.2 插件接口接收
 
@@ -267,6 +272,12 @@ service.Setup(new TouchSocketConfig()//加载配置
     }))
     .Start();
 ```
+
+:::tip 提示
+
+插件的所有函数，都是可能被并发执行的，所以应当做好线程安全。
+
+:::  
 
 ## 六、回复、响应数据
 
