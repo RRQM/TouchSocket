@@ -31,7 +31,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartSumClient(int count)
         {
-            XRPCClient client = new XRPCClient("localhost", 9090);
+            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
             ITestTaskController testController = client.Create<ITestTaskController>();
 
@@ -60,7 +60,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartGetBytesClient(int count)
         {
-            XRPCClient client = new XRPCClient("localhost", 9090);
+            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
             ITestTaskController testController = client.Create<ITestTaskController>();
 
@@ -90,7 +90,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartBigStringClient(int count)
         {
-            XRPCClient client = new XRPCClient("localhost", 9090);
+            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
             ITestTaskController testController = client.Create<ITestTaskController>();
 
