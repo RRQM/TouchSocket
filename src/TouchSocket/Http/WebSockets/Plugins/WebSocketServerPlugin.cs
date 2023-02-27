@@ -89,7 +89,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public WebSocketServerPlugin UseAutoPong()
         {
-            AutoPong = false;
+            AutoPong = true;
             return this;
         }
 
