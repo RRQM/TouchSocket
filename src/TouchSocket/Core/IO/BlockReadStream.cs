@@ -19,7 +19,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 阻塞式单项读取流。
     /// </summary>
-    public abstract class BlockReadStream : Stream, IWrite
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public abstract partial class BlockReadStream : Stream, IWrite
     {
         private readonly AutoResetEvent m_inputEvent;
         private readonly AutoResetEvent m_readEvent;

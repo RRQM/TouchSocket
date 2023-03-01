@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets
     public abstract class CustomDataHandlingAdapter<TRequest> : DataHandlingAdapter where TRequest : class, IRequestInfo
     {
         /// <summary>
-        /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="ByteBlock.Dispose"/>后，再置空；
+        /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="IDisposable.Dispose"/>后，再置空；
         /// </summary>
         protected ByteBlock TempByteBlock;
 

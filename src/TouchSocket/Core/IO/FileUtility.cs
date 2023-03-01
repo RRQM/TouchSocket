@@ -21,7 +21,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件操作
     /// </summary>
-    public static class FileUtility
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public static partial class FileUtility
     {
         /// <summary>
         /// 获取不重复文件名。

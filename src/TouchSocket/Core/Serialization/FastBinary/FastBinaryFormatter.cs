@@ -14,6 +14,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Reflection;
 using System.Text;
 
@@ -24,6 +25,10 @@ namespace TouchSocket.Core
     /// </summary>
     public static class FastBinaryFormatter
     {
+        static FastBinaryFormatter()
+        {
+            AddFastBinaryConverter<Version, VersionFastBinaryConverter>();
+        }
         private static readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
 
         /// <summary>
@@ -464,7 +469,7 @@ namespace TouchSocket.Core
                 else if (type.IsClass || type.IsStruct())
                 {
                     var serializeObj = GetOrAddInstance(type);
-                    if (serializeObj.Converter!=null)
+                    if (serializeObj.Converter != null)
                     {
                         obj = serializeObj.Converter.Read(datas, offset, len);
                     }

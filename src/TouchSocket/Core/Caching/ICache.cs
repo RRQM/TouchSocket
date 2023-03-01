@@ -18,7 +18,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 缓存键值
     /// </summary>
-    public interface ICache<TKey, TValue>
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial interface ICache<TKey, TValue>
     {
         /// <summary>
         /// 添加缓存。当缓存存在时，不会添加成功。
@@ -26,13 +27,6 @@ namespace TouchSocket.Core
         /// <param name="entity">缓存实体</param>
         /// <exception cref="ArgumentNullException"></exception>
         bool AddCache(ICacheEntry<TKey, TValue> entity);
-
-        /// <summary>
-        /// 添加缓存。当缓存存在时，不会添加成功。
-        /// </summary>
-        /// <param name="entity">缓存实体</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity);
 
         /// <summary>
         /// 清空所有缓存

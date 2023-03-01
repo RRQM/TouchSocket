@@ -20,7 +20,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件存储器。在该存储器中，读写线程安全。
     /// </summary>
-    public class FileStorage
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class FileStorage
     {
         internal volatile int m_reference;
         private readonly ReaderWriterLockSlim m_lockSlim;

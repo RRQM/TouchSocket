@@ -83,6 +83,7 @@ namespace TouchSocket.Rpc.TouchRpc
         {
             base.LoadConfig(config);
             m_rpcActorGroup.Config = config;
+
             if (config.GetValue<RpcStore>(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
             {
                 rpcStore.AddRpcParser(GetType().Name, this);
@@ -485,6 +486,7 @@ namespace TouchSocket.Rpc.TouchRpc
             }
             OnHandshaking(client, e);
         }
+
 
         private void OnRpcServiceReceived(RpcActor actor, short protocol, ByteBlock byteBlock)
         {

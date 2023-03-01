@@ -449,7 +449,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public int UnregisterServer<T>() where T : RpcServer
+        public int UnregisterServer<T>() where T : IRpcServer
         {
             return UnregisterServer(typeof(T));
         }
@@ -564,7 +564,7 @@ namespace TouchSocket.Rpc
                 }
             }
 
-            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
+            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType, rpcServer.GetType());
             foreach (var item in methodInstances)
             {
                 item.IsSingleton = true;
@@ -617,7 +617,7 @@ namespace TouchSocket.Rpc
                 singleton = true;
                 Container.RegisterSingleton(serverFromType, serverToType);
             }
-            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType);
+            MethodInstance[] methodInstances = CodeGenerator.GetMethodInstances(serverFromType, serverToType);
 
             foreach (var item in methodInstances)
             {

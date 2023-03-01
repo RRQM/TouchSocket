@@ -39,7 +39,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            Received?.Invoke(this, byteBlock, requestInfo);
+            this.Received?.Invoke(this, byteBlock, requestInfo);
             base.HandleReceivedData(byteBlock, requestInfo);
         }
     }
@@ -55,21 +55,14 @@ namespace TouchSocket.Sockets
         /// </summary>
         public TcpClientBase()
         {
-            Protocol = Protocol.TCP;
+            this.Protocol = Protocol.TCP;
         }
 
         #region 变量
 
         private DelaySender m_delaySender;
-        private TouchSocketConfig m_config;
-        private DataHandlingAdapter m_adapter;
-        private Socket m_mainSocket;
-        private bool m_online;
-        private ReceiveType m_receiveType;
         private bool m_useDelaySender;
-        private bool m_usePlugin;
         private Stream m_workStream;
-        private IPHost m_remoteIPHost;
 
         #endregion 变量
 
@@ -97,15 +90,15 @@ namespace TouchSocket.Sockets
 
         private void PrivateOnConnected(MsgEventArgs e)
         {
-            if (m_usePlugin)
+            if (this.UsePlugin)
             {
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnected), this, e);
+                this.PluginsManager.Raise<IConnectedPlugin>(nameof(IConnectedPlugin.OnConnected), this, e);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            OnConnected(e);
+            this.OnConnected(e);
         }
 
         /// <summary>
@@ -116,31 +109,31 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                Connected?.Invoke(this, e);
+                this.Connected?.Invoke(this, e);
             }
             catch (System.Exception ex)
             {
-                Logger.Log(LogType.Error, this, $"在事件{nameof(Connected)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
         }
 
         private void PrivateOnConnecting(ConnectingEventArgs e)
         {
-            LastReceivedTime = DateTime.Now;
-            LastSendTime = DateTime.Now;
-            if (CanSetDataHandlingAdapter)
+            this.LastReceivedTime = DateTime.Now;
+            this.LastSendTime = DateTime.Now;
+            if (this.CanSetDataHandlingAdapter)
             {
-                SetDataHandlingAdapter(Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
+                this.SetDataHandlingAdapter(this.Config.GetValue<Func<DataHandlingAdapter>>(TouchSocketConfigExtension.DataHandlingAdapterProperty).Invoke());
             }
-            if (m_usePlugin)
+            if (this.UsePlugin)
             {
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnecting), this, e);
+                this.PluginsManager.Raise<IConnectingPlugin>(nameof(IConnectingPlugin.OnConnecting), this, e);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            OnConnecting(e);
+            this.OnConnecting(e);
         }
 
         /// <summary>
@@ -151,25 +144,21 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                Connecting?.Invoke(this, e);
+                this.Connecting?.Invoke(this, e);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
         }
 
         private void PrivateOnDisconnected(DisconnectEventArgs e)
         {
-            if (m_usePlugin)
+            if (this.UsePlugin && this.PluginsManager.Raise<IDisconnectedPlguin>(nameof(IDisconnectedPlguin.OnDisconnected), this, e))
             {
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
+                return;
             }
-            OnDisconnected(e);
+            this.OnDisconnected(e);
         }
 
         /// <summary>
@@ -180,25 +169,21 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                Disconnected?.Invoke(this, e);
+                this.Disconnected?.Invoke(this, e);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogType.Error, this, $"在事件{nameof(Disconnected)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
         }
 
         private void PrivateOnDisconnecting(DisconnectEventArgs e)
         {
-            if (m_usePlugin)
+            if (this.UsePlugin && this.PluginsManager.Raise<IDisconnectingPlugin>(nameof(IDisconnectingPlugin.OnDisconnecting), this, e))
             {
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnecting), this, e);
-                if (e.Handled)
-                {
-                    return;
-                }
+                return;
             }
-            OnDisconnecting(e);
+            this.OnDisconnecting(e);
         }
 
         /// <summary>
@@ -212,11 +197,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                Disconnecting?.Invoke(this, e);
+                this.Disconnecting?.Invoke(this, e);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogType.Error, this, $"在事件{nameof(Disconnecting)}中发生错误。", ex);
+                this.Logger.Log(LogType.Error, this, $"在事件{nameof(this.Disconnecting)}中发生错误。", ex);
             }
         }
 
@@ -247,7 +232,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IContainer Container => m_config?.Container;
+        public IContainer Container => this.Config?.Container;
 
         /// <summary>
         /// <inheritdoc/>
@@ -257,12 +242,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 客户端配置
         /// </summary>
-        public TouchSocketConfig Config => m_config;
+        public TouchSocketConfig Config { get; private set; }
 
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        public DataHandlingAdapter DataHandlingAdapter => m_adapter;
+        public DataHandlingAdapter DataHandlingAdapter { get; private set; }
 
         /// <summary>
         /// IP地址
@@ -272,22 +257,22 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 主通信器
         /// </summary>
-        public Socket MainSocket => m_mainSocket;
+        public Socket MainSocket { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool CanSend => m_online;
+        public bool CanSend { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool Online => m_online;
+        public bool Online => this.CanSend;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IPluginsManager PluginsManager => m_config?.PluginsManager;
+        public IPluginsManager PluginsManager { get; private set; }
 
         /// <summary>
         /// 端口号
@@ -297,12 +282,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public ReceiveType ReceiveType => m_receiveType;
+        public ReceiveType ReceiveType { get; private set; }
 
         /// <summary>
         /// 是否已启用插件
         /// </summary>
-        public bool UsePlugin => m_usePlugin;
+        public bool UsePlugin { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -317,7 +302,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public IPHost RemoteIPHost => m_remoteIPHost;
+        public IPHost RemoteIPHost { get; private set; }
 
         /// <inheritdoc/>
         public bool IsClient => true;
@@ -331,7 +316,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public virtual void Close()
         {
-            Close($"{nameof(Close)}主动断开");
+            this.Close($"{nameof(Close)}主动断开");
         }
 
         /// <summary>
@@ -340,16 +325,16 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         public virtual void Close(string msg)
         {
-            if (this.m_online)
+            if (this.CanSend)
             {
                 var args = new DisconnectEventArgs(true, msg)
                 {
                     IsPermitOperation = true
                 };
-                PrivateOnDisconnecting(args);
+                this.PrivateOnDisconnecting(args);
                 if (this.DisposedValue || args.IsPermitOperation)
                 {
-                    BreakOut(msg, true);
+                    this.BreakOut(msg, true);
                 }
             }
         }
@@ -358,15 +343,15 @@ namespace TouchSocket.Sockets
         {
             lock (this.SyncRoot)
             {
-                if (m_online)
+                if (this.CanSend)
                 {
-                    m_online = false;
+                    this.CanSend = false;
                     this.TryShutdown();
-                    m_mainSocket.SafeDispose();
-                    m_delaySender.SafeDispose();
-                    m_workStream.SafeDispose();
-                    m_adapter.SafeDispose();
-                    PrivateOnDisconnected(new DisconnectEventArgs(manual, msg));
+                    this.MainSocket.SafeDispose();
+                    this.m_delaySender.SafeDispose();
+                    this.m_workStream.SafeDispose();
+                    this.DataHandlingAdapter.SafeDispose();
+                    this.PrivateOnDisconnected(new DisconnectEventArgs(manual, msg));
                 }
             }
         }
@@ -377,16 +362,16 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if (this.m_online)
+            if (this.CanSend)
             {
                 var args = new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开");
-                PrivateOnDisconnecting(args);
+                this.PrivateOnDisconnecting(args);
             }
-            PluginsManager.Clear();
-            m_config = default;
-            m_adapter.SafeDispose();
-            m_adapter = default;
-            BreakOut($"{nameof(Dispose)}主动断开", true);
+            this.PluginsManager?.Clear();
+            this.Config = default;
+            this.DataHandlingAdapter.SafeDispose();
+            this.DataHandlingAdapter = default;
+            this.BreakOut($"{nameof(Dispose)}主动断开", true);
             base.Dispose(disposing);
         }
 
@@ -402,84 +387,84 @@ namespace TouchSocket.Sockets
         /// <exception cref="TimeoutException"></exception>
         protected void TcpConnect(int timeout)
         {
-            lock (SyncRoot)
+            lock (this.SyncRoot)
             {
-                if (m_online)
+                if (this.CanSend)
                 {
                     return;
                 }
-                if (DisposedValue)
+                if (this.DisposedValue)
                 {
-                    throw new ObjectDisposedException(GetType().FullName);
+                    throw new ObjectDisposedException(this.GetType().FullName);
                 }
-                if (m_config == null)
+                if (this.Config == null)
                 {
                     throw new ArgumentNullException("配置文件不能为空。");
                 }
-                IPHost iPHost = m_config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+                IPHost iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
                 if (iPHost == null)
                 {
                     throw new ArgumentNullException("iPHost不能为空。");
                 }
-                if (m_mainSocket != null)
+                if (this.MainSocket != null)
                 {
-                    m_mainSocket.Dispose();
+                    this.MainSocket.Dispose();
                 }
-                m_mainSocket = CreateSocket(iPHost);
+                this.MainSocket = this.CreateSocket(iPHost);
 
-                ConnectingEventArgs args = new ConnectingEventArgs(m_mainSocket);
-                PrivateOnConnecting(args);
+                ConnectingEventArgs args = new ConnectingEventArgs(this.MainSocket);
+                this.PrivateOnConnecting(args);
                 if (timeout == 5000)
                 {
-                    m_mainSocket.Connect(iPHost.EndPoint);
-                    m_online = true;
-                    LoadSocketAndReadIpPort();
+                    this.MainSocket.Connect(iPHost.EndPoint);
+                    this.CanSend = true;
+                    this.LoadSocketAndReadIpPort();
 
-                    if (m_config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
+                    if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
                     {
-                        m_useDelaySender = true;
-                        m_delaySender.SafeDispose();
-                        m_delaySender = new DelaySender(m_mainSocket, senderOption.QueueLength, OnDelaySenderError)
+                        this.m_useDelaySender = true;
+                        this.m_delaySender.SafeDispose();
+                        this.m_delaySender = new DelaySender(this.MainSocket, senderOption.QueueLength, this.OnDelaySenderError)
                         {
                             DelayLength = senderOption.DelayLength
                         };
                     }
 
-                    BeginReceive();
-                    PrivateOnConnected(new MsgEventArgs("连接成功"));
+                    this.BeginReceive();
+                    this.PrivateOnConnected(new MsgEventArgs("连接成功"));
                 }
                 else
                 {
-                    var result = m_mainSocket.BeginConnect(iPHost.EndPoint, null, null);
+                    var result = this.MainSocket.BeginConnect(iPHost.EndPoint, null, null);
                     if (result.AsyncWaitHandle.WaitOne(timeout))
                     {
-                        if (m_mainSocket.Connected)
+                        if (this.MainSocket.Connected)
                         {
-                            m_mainSocket.EndConnect(result);
-                            m_online = true;
-                            LoadSocketAndReadIpPort();
+                            this.MainSocket.EndConnect(result);
+                            this.CanSend = true;
+                            this.LoadSocketAndReadIpPort();
 
-                            if (m_config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
+                            if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
                             {
-                                m_useDelaySender = true;
-                                m_delaySender.SafeDispose();
-                                m_delaySender = new DelaySender(m_mainSocket, senderOption.QueueLength, OnDelaySenderError)
+                                this.m_useDelaySender = true;
+                                this.m_delaySender.SafeDispose();
+                                this.m_delaySender = new DelaySender(this.MainSocket, senderOption.QueueLength, this.OnDelaySenderError)
                                 {
                                     DelayLength = senderOption.DelayLength
                                 };
                             }
 
-                            BeginReceive();
-                            PrivateOnConnected(new MsgEventArgs("连接成功"));
+                            this.BeginReceive();
+                            this.PrivateOnConnected(new MsgEventArgs("连接成功"));
                             return;
                         }
                         else
                         {
-                            m_mainSocket.SafeDispose();
+                            this.MainSocket.SafeDispose();
                             throw new Exception("异步已完成，但是socket并未在连接状态，可能发生了绑定端口占用的错误。");
                         }
                     }
-                    m_mainSocket.SafeDispose();
+                    this.MainSocket.SafeDispose();
                     throw new TimeoutException();
                 }
             }
@@ -490,7 +475,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public virtual ITcpClient Connect(int timeout = 5000)
         {
-            TcpConnect(timeout);
+            this.TcpConnect(timeout);
             return this;
         }
 
@@ -501,7 +486,7 @@ namespace TouchSocket.Sockets
         {
             return EasyTask.Run(() =>
             {
-                return Connect(timeout);
+                return this.Connect(timeout);
             });
         }
 
@@ -511,11 +496,11 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public Stream GetStream()
         {
-            if (m_workStream == null)
+            if (this.m_workStream == null)
             {
-                m_workStream = new NetworkStream(m_mainSocket, true);
+                this.m_workStream = new NetworkStream(this.MainSocket, true);
             }
-            return m_workStream;
+            return this.m_workStream;
         }
 
         /// <summary>
@@ -524,12 +509,12 @@ namespace TouchSocket.Sockets
         /// <param name="adapter"></param>
         public virtual void SetDataHandlingAdapter(DataHandlingAdapter adapter)
         {
-            if (!CanSetDataHandlingAdapter)
+            if (!this.CanSetDataHandlingAdapter)
             {
                 throw new Exception($"不允许自由调用{nameof(SetDataHandlingAdapter)}进行赋值。");
             }
 
-            SetAdapter(adapter);
+            this.SetAdapter(adapter);
         }
 
         /// <summary>
@@ -541,7 +526,7 @@ namespace TouchSocket.Sockets
         {
             TouchSocketConfig config = new TouchSocketConfig();
             config.SetRemoteIPHost(new IPHost(ipHost));
-            return Setup(config);
+            return this.Setup(config);
         }
 
         /// <summary>
@@ -551,36 +536,38 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public ITcpClient Setup(TouchSocketConfig config)
         {
-            m_config = config;
+            this.Config = config;
+            this.PluginsManager = config.PluginsManager;
+
             if (config.IsUsePlugin)
             {
-                PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
             }
-            LoadConfig(m_config);
-            if (UsePlugin)
+            this.LoadConfig(this.Config);
+            if (this.UsePlugin)
             {
-                PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+                this.PluginsManager.Raise<IConfigPlugin>(nameof(IConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
             }
             return this;
         }
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (OnHandleReceivedData?.Invoke(byteBlock, requestInfo) == false)
+            if (this.OnHandleReceivedData?.Invoke(byteBlock, requestInfo) == false)
             {
                 return;
             }
-            if (m_usePlugin)
+            if (this.UsePlugin)
             {
                 ReceivedDataEventArgs args = new ReceivedDataEventArgs(byteBlock, requestInfo);
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivedData), this, args);
+                this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivedData), this, args);
                 if (args.Handled)
                 {
                     return;
                 }
             }
 
-            HandleReceivedData(byteBlock, requestInfo);
+            this.HandleReceivedData(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -601,10 +588,10 @@ namespace TouchSocket.Sockets
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual bool HandleSendingData(byte[] buffer, int offset, int length)
         {
-            if (m_usePlugin)
+            if (this.UsePlugin)
             {
                 SendingEventArgs args = new SendingEventArgs(buffer, offset, length);
-                PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnSendingData), this, args);
+                this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnSendingData), this, args);
                 if (args.IsPermitOperation)
                 {
                     return true;
@@ -624,14 +611,15 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("配置文件为空");
             }
-            m_remoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            BufferLength = config.GetValue(TouchSocketConfigExtension.BufferLengthProperty);
-            m_receiveType = config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty);
-            m_usePlugin = config.IsUsePlugin;
-            Logger = Container.Resolve<ILog>();
+            this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+            this.BufferLength = config.GetValue(TouchSocketConfigExtension.BufferLengthProperty);
+            this.ReceiveType = config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty);
+            this.UsePlugin = config.IsUsePlugin;
+            this.Logger = this.Container.Resolve<ILog>();
+
             if (config.GetValue(TouchSocketConfigExtension.SslOptionProperty) != null)
             {
-                UseSsl = true;
+                this.UseSsl = true;
             }
         }
 
@@ -641,7 +629,7 @@ namespace TouchSocket.Sockets
         /// <param name="ex"></param>
         protected virtual void OnDelaySenderError(Exception ex)
         {
-            Logger.Log(LogType.Error, this, "发送错误", ex);
+            this.Logger.Log(LogType.Error, this, "发送错误", ex);
         }
 
         /// <summary>
@@ -655,39 +643,39 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(adapter));
             }
 
-            if (Config != null)
+            if (this.Config != null)
             {
-                if (Config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
+                if (this.Config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
                 {
                     adapter.MaxPackageSize = v1;
                 }
-                if (Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty) != TimeSpan.Zero)
+                if (this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty) != TimeSpan.Zero)
                 {
-                    adapter.CacheTimeout = Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty);
+                    adapter.CacheTimeout = this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty);
                 }
-                if (Config.GetValue(TouchSocketConfigExtension.CacheTimeoutEnableProperty) is bool v2)
+                if (this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutEnableProperty) is bool v2)
                 {
                     adapter.CacheTimeoutEnable = v2;
                 }
-                if (Config.GetValue(TouchSocketConfigExtension.UpdateCacheTimeWhenRevProperty) is bool v3)
+                if (this.Config.GetValue(TouchSocketConfigExtension.UpdateCacheTimeWhenRevProperty) is bool v3)
                 {
                     adapter.UpdateCacheTimeWhenRev = v3;
                 }
             }
 
             adapter.OnLoaded(this);
-            adapter.ReceivedCallBack = PrivateHandleReceivedData;
-            adapter.SendCallBack = DefaultSend;
-            m_adapter = adapter;
+            adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
+            adapter.SendCallBack = this.DefaultSend;
+            this.DataHandlingAdapter = adapter;
         }
 
         private void BeginReceive()
         {
-            m_workStream.SafeDispose();
-            if (UseSsl)
+            this.m_workStream.SafeDispose();
+            if (this.UseSsl)
             {
-                ClientSslOption sslOption = (ClientSslOption)m_config.GetValue(TouchSocketConfigExtension.SslOptionProperty);
-                SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(m_mainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(m_mainSocket, false), false);
+                ClientSslOption sslOption = (ClientSslOption)this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty);
+                SslStream sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.MainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.MainSocket, false), false);
                 if (sslOption.ClientCertificates == null)
                 {
                     sslStream.AuthenticateAsClient(sslOption.TargetHost);
@@ -696,25 +684,25 @@ namespace TouchSocket.Sockets
                 {
                     sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
                 }
-                m_workStream = sslStream;
-                if (m_receiveType != ReceiveType.None)
+                this.m_workStream = sslStream;
+                if (this.ReceiveType != ReceiveType.None)
                 {
-                    BeginSsl();
+                    this.BeginSsl();
                 }
             }
             else
             {
-                if (m_receiveType == ReceiveType.Auto)
+                if (this.ReceiveType == ReceiveType.Auto)
                 {
                     SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-                    eventArgs.Completed += EventArgs_Completed;
+                    eventArgs.Completed += this.EventArgs_Completed;
 
-                    ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength);
+                    ByteBlock byteBlock = BytePool.Default.GetByteBlock(this.BufferLength);
                     eventArgs.UserToken = byteBlock;
                     eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Buffer.Length);
-                    if (!m_mainSocket.ReceiveAsync(eventArgs))
+                    if (!this.MainSocket.ReceiveAsync(eventArgs))
                     {
-                        ProcessReceived(eventArgs);
+                        this.ProcessReceived(eventArgs);
                     }
                 }
             }
@@ -722,15 +710,15 @@ namespace TouchSocket.Sockets
 
         private void BeginSsl()
         {
-            ByteBlock byteBlock = new ByteBlock(BufferLength);
+            ByteBlock byteBlock = new ByteBlock(this.BufferLength);
             try
             {
-                m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, EndSsl, byteBlock);
+                this.m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
             }
             catch (Exception ex)
             {
                 byteBlock.Dispose();
-                BreakOut(ex.Message, false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -739,29 +727,29 @@ namespace TouchSocket.Sockets
             ByteBlock byteBlock = (ByteBlock)result.AsyncState;
             try
             {
-                int r = m_workStream.EndRead(result);
+                int r = this.m_workStream.EndRead(result);
                 if (r == 0)
                 {
-                    BreakOut("远程终端主动关闭", false);
+                    this.BreakOut("远程终端主动关闭", false);
                 }
                 byteBlock.SetLength(r);
-                HandleBuffer(byteBlock);
-                BeginSsl();
+                this.HandleBuffer(byteBlock);
+                this.BeginSsl();
             }
             catch (System.Exception ex)
             {
                 byteBlock.Dispose();
-                BreakOut(ex.Message, false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
         private Socket CreateSocket(IPHost iPHost)
         {
             Socket socket = new Socket(iPHost.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.ReceiveBufferSize = BufferLength;
-            socket.SendBufferSize = BufferLength;
+            socket.ReceiveBufferSize = this.BufferLength;
+            socket.SendBufferSize = this.BufferLength;
 #if NET45_OR_GREATER
-            KeepAliveValue keepAliveValue = m_config.GetValue<KeepAliveValue>(TouchSocketConfigExtension.KeepAliveValueProperty);
+            KeepAliveValue keepAliveValue = this.Config.GetValue<KeepAliveValue>(TouchSocketConfigExtension.KeepAliveValueProperty);
             if (keepAliveValue.Enable)
             {
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
@@ -770,7 +758,7 @@ namespace TouchSocket.Sockets
 #else
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                KeepAliveValue keepAliveValue = m_config.GetValue<KeepAliveValue>(TouchSocketConfigExtension.KeepAliveValueProperty);
+                KeepAliveValue keepAliveValue = Config.GetValue<KeepAliveValue>(TouchSocketConfigExtension.KeepAliveValueProperty);
                 if (keepAliveValue.Enable)
                 {
                     socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
@@ -778,14 +766,14 @@ namespace TouchSocket.Sockets
                 }
             }
 #endif
-            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, m_config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
-            if (m_config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty) != null)
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
+            if (this.Config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty) != null)
             {
-                if (m_config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
+                if (this.Config.GetValue<bool>(TouchSocketConfigExtension.ReuseAddressProperty))
                 {
                     socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 }
-                socket.Bind(m_config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty).EndPoint);
+                socket.Bind(this.Config.GetValue<IPHost>(TouchSocketConfigExtension.BindIPHostProperty).EndPoint);
             }
             return socket;
         }
@@ -794,12 +782,12 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                ProcessReceived(e);
+                this.ProcessReceived(e);
             }
             catch (System.Exception ex)
             {
                 e.Dispose();
-                BreakOut(ex.Message, false);
+                this.BreakOut(ex.Message, false);
             }
         }
 
@@ -810,29 +798,29 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                LastReceivedTime = DateTime.Now;
-                if (OnHandleRawBuffer?.Invoke(byteBlock) == false)
+                this.LastReceivedTime = DateTime.Now;
+                if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;
                 }
-                if (DisposedValue)
+                if (this.DisposedValue)
                 {
                     return;
                 }
-                if (UsePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivingData), this, new ByteBlockEventArgs(byteBlock)))
+                if (this.UsePlugin && this.PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnReceivingData), this, new ByteBlockEventArgs(byteBlock)))
                 {
                     return;
                 }
-                if (m_adapter == null)
+                if (this.DataHandlingAdapter == null)
                 {
-                    Logger.Error(this, TouchSocketStatus.NullDataAdapter.GetDescription());
+                    this.Logger.Error(this, TouchSocketStatus.NullDataAdapter.GetDescription());
                     return;
                 }
-                m_adapter.ReceivedInput(byteBlock);
+                this.DataHandlingAdapter.ReceivedInput(byteBlock);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
+                this.Logger.Log(LogType.Error, this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -853,19 +841,19 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public void Send(IRequestInfo requestInfo)
         {
-            if (DisposedValue)
+            if (this.DisposedValue)
             {
                 return;
             }
-            if (m_adapter == null)
+            if (this.DataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
             }
-            if (!m_adapter.CanSendRequestInfo)
+            if (!this.DataHandlingAdapter.CanSendRequestInfo)
             {
                 throw new NotSupportedException($"当前适配器不支持对象发送。");
             }
-            m_adapter.SendInput(requestInfo);
+            this.DataHandlingAdapter.SendInput(requestInfo);
         }
 
         /// <summary>
@@ -879,11 +867,11 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"><inheritdoc/></exception>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            if (m_adapter == null)
+            if (this.DataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
             }
-            m_adapter.SendInput(buffer, offset, length);
+            this.DataHandlingAdapter.SendInput(buffer, offset, length);
         }
 
         /// <summary>
@@ -895,25 +883,25 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"><inheritdoc/></exception>
         public virtual void Send(IList<ArraySegment<byte>> transferBytes)
         {
-            if (m_adapter == null)
+            if (this.DataHandlingAdapter == null)
             {
-                throw new ArgumentNullException(nameof(DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketStatus.NullDataAdapter.GetDescription());
             }
 
-            if (m_adapter.CanSplicingSend)
+            if (this.DataHandlingAdapter.CanSplicingSend)
             {
-                m_adapter.SendInput(transferBytes);
+                this.DataHandlingAdapter.SendInput(transferBytes);
             }
             else
             {
-                ByteBlock byteBlock = BytePool.Default.GetByteBlock(BufferLength);
+                ByteBlock byteBlock = BytePool.Default.GetByteBlock(this.BufferLength);
                 try
                 {
                     foreach (var item in transferBytes)
                     {
                         byteBlock.Write(item.Array, item.Offset, item.Count);
                     }
-                    m_adapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len);
+                    this.DataHandlingAdapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len);
                 }
                 finally
                 {
@@ -939,7 +927,7 @@ namespace TouchSocket.Sockets
         {
             return EasyTask.Run(() =>
              {
-                 Send(buffer, offset, length);
+                 this.Send(buffer, offset, length);
              });
         }
 
@@ -954,7 +942,7 @@ namespace TouchSocket.Sockets
         {
             return EasyTask.Run(() =>
              {
-                 Send(requestInfo);
+                 this.Send(requestInfo);
              });
         }
 
@@ -969,7 +957,7 @@ namespace TouchSocket.Sockets
         {
             return EasyTask.Run(() =>
               {
-                  Send(transferBytes);
+                  this.Send(transferBytes);
               });
         }
 
@@ -986,29 +974,29 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"><inheritdoc/></exception>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
-            if (!m_online)
+            if (!this.CanSend)
             {
                 throw new NotConnectedException(TouchSocketStatus.NotConnected.GetDescription());
             }
-            if (HandleSendingData(buffer, offset, length))
+            if (this.HandleSendingData(buffer, offset, length))
             {
-                if (UseSsl)
+                if (this.UseSsl)
                 {
-                    m_workStream.Write(buffer, offset, length);
+                    this.m_workStream.Write(buffer, offset, length);
                 }
                 else
                 {
-                    if (m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
+                    if (this.m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
                     {
-                        m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                        this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
                     }
                     else
                     {
-                        m_mainSocket.AbsoluteSend(buffer, offset, length);
+                        this.MainSocket.AbsoluteSend(buffer, offset, length);
                     }
                 }
 
-                LastSendTime = DateTime.Now;
+                this.LastSendTime = DateTime.Now;
             }
         }
 
@@ -1025,7 +1013,7 @@ namespace TouchSocket.Sockets
         {
             return EasyTask.Run(() =>
             {
-                DefaultSend(buffer, offset, length);
+                this.DefaultSend(buffer, offset, length);
             });
         }
 
@@ -1033,21 +1021,21 @@ namespace TouchSocket.Sockets
 
         private void LoadSocketAndReadIpPort()
         {
-            if (m_mainSocket == null)
+            if (this.MainSocket == null)
             {
-                IP = null;
-                Port = -1;
+                this.IP = null;
+                this.Port = -1;
                 return;
             }
 
             string ipport;
-            if (m_mainSocket.Connected && m_mainSocket.RemoteEndPoint != null)
+            if (this.MainSocket.Connected && this.MainSocket.RemoteEndPoint != null)
             {
-                ipport = m_mainSocket.RemoteEndPoint.ToString();
+                ipport = this.MainSocket.RemoteEndPoint.ToString();
             }
-            else if (m_mainSocket.IsBound && m_mainSocket.LocalEndPoint != null)
+            else if (this.MainSocket.IsBound && this.MainSocket.LocalEndPoint != null)
             {
-                ipport = m_mainSocket.LocalEndPoint.ToString();
+                ipport = this.MainSocket.LocalEndPoint.ToString();
             }
             else
             {
@@ -1055,13 +1043,13 @@ namespace TouchSocket.Sockets
             }
 
             int r = ipport.LastIndexOf(":");
-            IP = ipport.Substring(0, r);
-            Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
+            this.IP = ipport.Substring(0, r);
+            this.Port = Convert.ToInt32(ipport.Substring(r + 1, ipport.Length - (r + 1)));
         }
 
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
-            if (!m_online)
+            if (!this.CanSend)
             {
                 e.Dispose();
                 return;
@@ -1070,28 +1058,28 @@ namespace TouchSocket.Sockets
             {
                 ByteBlock byteBlock = (ByteBlock)e.UserToken;
                 byteBlock.SetLength(e.BytesTransferred);
-                HandleBuffer(byteBlock);
+                this.HandleBuffer(byteBlock);
                 try
                 {
-                    ByteBlock newByteBlock = BytePool.Default.GetByteBlock(BufferLength);
+                    ByteBlock newByteBlock = BytePool.Default.GetByteBlock(this.BufferLength);
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 
-                    if (!MainSocket.ReceiveAsync(e))
+                    if (!this.MainSocket.ReceiveAsync(e))
                     {
-                        ProcessReceived(e);
+                        this.ProcessReceived(e);
                     }
                 }
                 catch (System.Exception ex)
                 {
                     e.Dispose();
-                    BreakOut(ex.Message, false);
+                    this.BreakOut(ex.Message, false);
                 }
             }
             else
             {
                 e.Dispose();
-                BreakOut("远程终端主动关闭", false);
+                this.BreakOut("远程终端主动关闭", false);
             }
         }
     }

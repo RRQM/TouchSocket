@@ -20,7 +20,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 映射数据
     /// </summary>
-    public static class Mapper
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public static partial class Mapper
     {
         private static readonly ConcurrentDictionary<Type, Dictionary<string, Property>> m_typeToProperty = new ConcurrentDictionary<Type, Dictionary<string, Property>>();
 
@@ -29,10 +30,23 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="source"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
-        public static TTarget Map<TTarget>(this object source) where TTarget : class, new()
+        public static TTarget Map<TTarget>(this object source, MapperOption option = default) where TTarget : class, new()
         {
-            return (TTarget)Map(source, typeof(TTarget));
+            return (TTarget)Map(source, typeof(TTarget), option);
+        }
+
+        /// <summary>
+        /// 简单映射
+        /// </summary>
+        /// <typeparam name="TTarget"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
+        public static TTarget Map<TTarget>(this TTarget source, MapperOption option = default) where TTarget : class, new()
+        {
+            return (TTarget)Map(source, typeof(TTarget), option);
         }
 
         /// <summary>
@@ -41,10 +55,11 @@ namespace TouchSocket.Core
         /// <typeparam name="TSource"></typeparam>
         /// <typeparam name="TTarget"></typeparam>
         /// <param name="source"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
-        public static TTarget Map<TSource, TTarget>(this TSource source) where TTarget : class, new()
+        public static TTarget Map<TSource, TTarget>(this TSource source, MapperOption option = default) where TTarget : class, new()
         {
-            return (TTarget)Map(source, typeof(TTarget));
+            return (TTarget)Map(source, typeof(TTarget), option);
         }
 
         /// <summary>
@@ -52,10 +67,11 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="source"></param>
         /// <param name="targetType"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
-        public static object Map(this object source, Type targetType)
+        public static object Map(this object source, Type targetType, MapperOption option = default)
         {
-            return Map(source, Activator.CreateInstance(targetType));
+            return Map(source, Activator.CreateInstance(targetType), option);
         }
 
         /// <summary>
@@ -63,15 +79,16 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="source"></param>
         /// <param name="target"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
-        public static object Map(this object source, object target)
+        public static object Map(this object source, object target, MapperOption option = default)
         {
             if (source is null)
             {
                 return default;
             }
             var sourceType = source.GetType();
-            if (sourceType.IsPrimitive || sourceType.IsEnum || sourceType == TouchSocket.Core.TouchSocketCoreUtility.stringType)
+            if (sourceType.IsPrimitive || sourceType.IsEnum || sourceType == TouchSocketCoreUtility.stringType)
             {
                 return source;
             }
@@ -96,15 +113,26 @@ namespace TouchSocket.Core
                 }
                 return pairs;
             });
-            foreach (var item in targetPairs)
+
+            foreach (var item in sourcePairs)
             {
-                if (item.Value.CanWrite)
+                if (item.Value.CanRead)
                 {
-                    if (sourcePairs.TryGetValue(item.Key, out Property property))
+                    string pkey = item.Key;
+                    if (option != null && option.MapperProperties != null && option.MapperProperties.ContainsKey(pkey))
                     {
-                        if (property.CanRead)
+                        pkey = option.MapperProperties[pkey];
+                    }
+
+                    if (option?.IgnoreProperties?.Contains(pkey) == true)
+                    {
+                        continue;
+                    }
+                    if (targetPairs.TryGetValue(pkey, out Property property))
+                    {
+                        if (property.CanWrite)
                         {
-                            item.Value.SetValue(target, property.GetValue(source));
+                            property.SetValue(target, item.Value.GetValue(source));
                         }
                     }
                 }
@@ -118,8 +146,9 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="T1"></typeparam>
         /// <param name="list"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
-        public static IEnumerable<T1> MapList<T, T1>(this IEnumerable<T> list) where T : class where T1 : class, new()
+        public static IEnumerable<T1> MapList<T, T1>(this IEnumerable<T> list, MapperOption option = default) where T : class where T1 : class, new()
         {
             if (list is null)
             {
@@ -129,7 +158,7 @@ namespace TouchSocket.Core
             List<T1> result = new List<T1>();
             foreach (var item in list)
             {
-                result.Add(Map<T, T1>(item));
+                result.Add(Map<T, T1>(item, option));
             }
             return result;
         }
@@ -139,9 +168,10 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="T1"></typeparam>
         /// <param name="list"></param>
+        /// <param name="option"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static IEnumerable<T1> MapList<T1>(this IEnumerable<object> list) where T1 : class, new()
+        public static IEnumerable<T1> MapList<T1>(this IEnumerable<object> list, MapperOption option = default) where T1 : class, new()
         {
             if (list is null)
             {
@@ -151,7 +181,7 @@ namespace TouchSocket.Core
             List<T1> result = new List<T1>();
             foreach (var item in list)
             {
-                result.Add(Map<T1>(item));
+                result.Add(Map<T1>(item, option));
             }
             return result;
         }

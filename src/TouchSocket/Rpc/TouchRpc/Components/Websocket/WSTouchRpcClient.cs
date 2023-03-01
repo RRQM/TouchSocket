@@ -23,7 +23,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// WSTouchRpcClient
     /// </summary>
-    public partial class WSTouchRpcClient : DisposableObject, IWSTouchRpcClient, IRpcActor, ISenderBase
+    public partial class WSTouchRpcClient : DisposableObject, IWSTouchRpcClient
     {
         private readonly ActionMap m_actionMap;
         private readonly ArraySegment<byte> m_buffer;
@@ -276,7 +276,7 @@ namespace TouchSocket.Rpc.TouchRpc
             {
                 throw new Exception("配置文件为空");
             }
-            m_remoteIPHost = config.GetValue<IPHost>(Sockets.TouchSocketConfigExtension.RemoteIPHostProperty);
+            m_remoteIPHost = config.GetValue(Sockets.TouchSocketConfigExtension.RemoteIPHostProperty);
             Container = config.Container;
             UsePlugin = config.IsUsePlugin;
             PluginsManager = config.PluginsManager;
@@ -284,7 +284,17 @@ namespace TouchSocket.Rpc.TouchRpc
             m_rpcActor.Logger = Container.Resolve<ILog>();
             m_rpcActor.FileController = Container.GetFileResourceController();
             RootPath = Config.GetValue<string>(TouchRpcConfigExtensions.RootPathProperty);
-            m_rpcActor.SerializationSelector = Config.GetValue<SerializationSelector>(TouchRpcConfigExtensions.SerializationSelectorProperty);
+            m_rpcActor.SerializationSelector = Config.GetValue(TouchRpcConfigExtensions.SerializationSelectorProperty);
+
+            if (config.GetValue(RpcConfigExtensions.RpcStoreProperty) is RpcStore rpcStore)
+            {
+                rpcStore.AddRpcParser(GetType().Name, this);
+            }
+            else
+            {
+                new RpcStore(config.Container).AddRpcParser(GetType().Name, this);
+            }
+
         }
 
         /// <summary>
@@ -293,7 +303,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="e"></param>
         protected virtual void OnDisconnected(DisconnectEventArgs e)
         {
-            if (UsePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
+            if (UsePlugin && PluginsManager.Raise<IDisconnectedPlguin>(nameof(IDisconnectedPlguin.OnDisconnected), this, e))
             {
                 return;
             }
@@ -302,7 +312,7 @@ namespace TouchSocket.Rpc.TouchRpc
 
         private void BeginReceive()
         {
-            Task.Factory.StartNew(async () =>
+            Task.Factory.StartNew(async() => 
             {
                 try
                 {
@@ -341,7 +351,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 {
                     BreakOut(ex.Message, false);
                 }
-            }, TaskCreationOptions.LongRunning);
+            },TaskCreationOptions.LongRunning);
         }
 
         private void BreakOut(string msg, bool manual)
@@ -574,7 +584,6 @@ namespace TouchSocket.Rpc.TouchRpc
 
             OnReceived(protocol, byteBlock);
         }
-
 
         private void OnRpcActorRouting(RpcActor actor, PackageRouterEventArgs e)
         {

@@ -17,7 +17,7 @@ namespace TouchSocket.Rpc.XmlRpc
     /// <summary>
     /// 适用于XmlRpc的标记
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class XmlRpcAttribute : RpcAttribute
     {
         /// <summary>
@@ -36,38 +36,17 @@ namespace TouchSocket.Rpc.XmlRpc
         /// <param name="invokenKey"></param>
         public XmlRpcAttribute(string invokenKey)
         {
-            InvokenKey = invokenKey;
+            InvokeKey = invokenKey;
         }
 
-        /// <summary>
-        /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
-        /// </summary>
-        public bool MethodInvoke { get; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
-        public override Type[] GetGenericInterfaceTypes()
+        public override Type[] GetGenericConstraintTypes()
         {
             return new Type[] { typeof(IXmlRpcClient) };
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="methodInstance"></param>
-        /// <returns></returns>
-        public override string GetInvokenKey(MethodInstance methodInstance)
-        {
-            if (MethodInvoke)
-            {
-                return GetMethodName(methodInstance, false);
-            }
-            else
-            {
-                return base.GetInvokenKey(methodInstance);
-            }
         }
     }
 }

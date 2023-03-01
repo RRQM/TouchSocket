@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     /// 等待处理数据
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class WaitHandlePool<T> : IDisposable where T : IWaitResult
+    public class WaitHandlePool<T> : DisposableObject where T : IWaitResult
     {
         private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
@@ -43,7 +43,7 @@ namespace TouchSocket.Core
         {
             if (waitData.DisposedValue)
             {
-                throw new ObjectDisposedException(nameof(waitData));
+                return;
             }
             if (m_waitDic.TryRemove(waitData.WaitResult.Sign, out _))
             {
@@ -53,21 +53,23 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 释放
+        /// <inheritdoc/>
         /// </summary>
-        public void Dispose()
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
             foreach (var item in m_waitDic.Values)
             {
-                item.Dispose();
+                item.SafeDispose();
             }
             foreach (var item in m_waitQueue)
             {
-                item.Dispose();
+                item.SafeDispose();
             }
             m_waitDic.Clear();
 
             m_waitQueue.Clear();
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -155,8 +157,7 @@ namespace TouchSocket.Core
         /// <param name="sign"></param>
         public void SetRun(long sign)
         {
-            WaitData<T> waitData;
-            if (m_waitDic.TryGetValue(sign, out waitData))
+            if (m_waitDic.TryGetValue(sign, out WaitData<T> waitData))
             {
                 waitData.Set();
             }
@@ -169,8 +170,7 @@ namespace TouchSocket.Core
         /// <param name="waitResult"></param>
         public void SetRun(long sign, T waitResult)
         {
-            WaitData<T> waitData;
-            if (m_waitDic.TryGetValue(sign, out waitData))
+            if (m_waitDic.TryGetValue(sign, out WaitData<T> waitData))
             {
                 waitData.Set(waitResult);
             }

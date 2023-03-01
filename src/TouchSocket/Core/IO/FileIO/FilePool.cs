@@ -23,7 +23,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件池。
     /// </summary>
-    public static class FilePool
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public static partial class FilePool
     {
         private static readonly object m_locker = new object();
 

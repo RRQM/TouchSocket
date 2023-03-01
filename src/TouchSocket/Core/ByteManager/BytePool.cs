@@ -22,7 +22,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 内存池
     /// </summary>
-    public class BytePool
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class BytePool
     {
         private readonly ConcurrentDictionary<long, BytesQueue> bytesDictionary = new ConcurrentDictionary<long, BytesQueue>();
         private readonly Timer m_timer;
@@ -222,6 +223,7 @@ namespace TouchSocket.Core
         /// <param name="byteSize"></param>
         /// <param name="equalSize"></param>
         /// <returns></returns>
+        [IntelligentCoder.AsyncMethodIgnore]
         public ValueByteBlock GetValueByteBlock(int byteSize, bool equalSize)
         {
             return new ValueByteBlock(byteSize, equalSize);
@@ -232,6 +234,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteSize"></param>
         /// <returns></returns>
+        [IntelligentCoder.AsyncMethodIgnore]
         public ValueByteBlock GetValueByteBlock(int byteSize)
         {
             return new ValueByteBlock(byteSize, false);

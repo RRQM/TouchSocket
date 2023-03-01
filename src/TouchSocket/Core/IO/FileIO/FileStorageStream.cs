@@ -17,7 +17,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// FileStorageStream。非线程安全。
     /// </summary>
-    public class FileStorageStream : Stream
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class FileStorageStream : Stream
     {
         private readonly FileStorage m_fileStorage;
         private long m_position;
@@ -73,6 +74,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        [IntelligentCoder.AsyncMethodIgnore]
         public override void Flush()
         {
             m_fileStorage.Flush();

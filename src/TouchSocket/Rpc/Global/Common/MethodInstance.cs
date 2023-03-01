@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using TouchSocket.Core;
@@ -22,6 +23,10 @@ namespace TouchSocket.Rpc
     /// </summary>
     public class MethodInstance : Method
     {
+        private RpcAttribute[] m_rpcAttributes;
+
+        private RpcAttribute[] m_serverRpcAttributes;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -31,14 +36,12 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 服务实例工厂
-        /// </summary>
-        public IRpcServerFactory ServerFactory { get; internal set; }
-
-        /// <summary>
         /// 描述属性
         /// </summary>
-        public string Description { get; internal set; }
+        public string GetDescription()
+        {
+            return this.Info.GetCustomAttribute<DescriptionAttribute>()?.Description;
+        }
 
         /// <summary>
         /// 筛选器
@@ -78,7 +81,31 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// Rpc属性集合
         /// </summary>
-        public RpcAttribute[] RpcAttributes { get; internal set; }
+        public RpcAttribute[] RpcAttributes
+        {
+            get
+            {
+                m_rpcAttributes ??= this.Info.GetCustomAttributes<RpcAttribute>(true).ToArray();
+                return this.m_rpcAttributes;
+            }
+        }
+
+        /// <summary>
+        /// 服务实例工厂
+        /// </summary>
+        public IRpcServerFactory ServerFactory { get; internal set; }
+
+        /// <summary>
+        /// Rpc服务属性集合
+        /// </summary>
+        public RpcAttribute[] ServerRpcAttributes
+        {
+            get
+            {
+                m_serverRpcAttributes ??= this.ServerType.GetCustomAttributes<RpcAttribute>(true).ToArray();
+                return this.m_serverRpcAttributes;
+            }
+        }
 
         /// <summary>
         /// 实例类型
@@ -92,12 +119,12 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public T GetAttribute<T>()
         {
-            object attribute = RpcAttributes.FirstOrDefault((a) => { return typeof(T).IsAssignableFrom(a.GetType()); });
-            if (attribute == null)
+            object attribute = this.GetAttribute(typeof(T));
+            if (attribute != null)
             {
-                return default;
+                return (T)attribute;
             }
-            return (T)attribute;
+            return default;
         }
 
         /// <summary>
@@ -108,11 +135,17 @@ namespace TouchSocket.Rpc
         public object GetAttribute(Type attributeType)
         {
             object attribute = RpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
-            if (attribute == null)
+            if (attribute != null)
             {
-                return default;
+                return attribute;
             }
-            return attribute;
+
+            attribute = ServerRpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
+            if (attribute != null)
+            {
+                return attribute;
+            }
+            return default;
         }
     }
 }

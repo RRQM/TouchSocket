@@ -23,7 +23,7 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public ref struct ValueByteBlock
+    public ref partial struct ValueByteBlock
     {
         private static float m_ratio = 1.5f;
         private readonly bool m_needDis;

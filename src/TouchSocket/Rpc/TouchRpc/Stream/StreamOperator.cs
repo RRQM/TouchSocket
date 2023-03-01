@@ -19,5 +19,6 @@ namespace TouchSocket.Rpc.TouchRpc
     /// </summary>
     public class StreamOperator : FlowOperator
     {
+        
     }
 }

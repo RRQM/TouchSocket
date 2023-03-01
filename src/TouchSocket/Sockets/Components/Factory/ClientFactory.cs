@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -68,10 +69,34 @@ namespace TouchSocket.Sockets
         public abstract Result CheckStatus(bool tryInit = true);
 
         /// <summary>
+        /// 检验主通信状态。最好在每次操作时都调用。
+        /// </summary>
+        /// <param name="tryInit">如果状态异常，是否进行再次初始化</param>
+        /// <returns></returns>
+        public virtual Task<Result> CheckStatusAsync(bool tryInit = true)
+        {
+            return Task.Run(() =>
+              {
+                  return this.CheckStatus(tryInit);
+              });
+        }
+
+        /// <summary>
         /// 清理池中的所有客户端。
         /// </summary>
         /// <returns></returns>
-        public int Clear()
+        public virtual Task<int> ClearAsync()
+        {
+            return Task.Run(() =>
+             {
+                 return this.Clear();
+             });
+        }
+        /// <summary>
+        /// 清理池中的所有客户端。
+        /// </summary>
+        /// <returns></returns>
+        public virtual int Clear()
         {
             int count = 0;
             foreach (var item in this.CreatedClients)
@@ -88,6 +113,19 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         public abstract void DisposeClient(TClient client);
+
+        /// <summary>
+        /// 释放客户端最后的调用。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public virtual Task DisposeClientAsync(TClient client)
+        {
+            return Task.Run(() =>
+             {
+                 this.DisposeClient(client);
+             });
+        }
 
         /// <summary>
         /// 获取空闲可用的客户端数量。
@@ -113,6 +151,19 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         public abstract void ReleaseTransferClient(TClient client);
+
+        /// <summary>
+        /// 释放使用完成的客户端
+        /// </summary>
+        /// <param name="client"></param>
+        /// <returns></returns>
+        public virtual Task ReleaseTransferClientAsync(TClient client)
+        {
+            return Task.Run(() =>
+              {
+                  this.ReleaseTransferClient(client);
+              });
+        }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

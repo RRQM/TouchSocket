@@ -15,7 +15,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// PackageBase包结构数据。
     /// </summary>
-    public abstract class PackageBase : IPackage
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public abstract partial class PackageBase : IPackage
     {
         /// <inheritdoc/>
         public abstract void Package(ByteBlock byteBlock);

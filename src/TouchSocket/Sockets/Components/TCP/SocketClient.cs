@@ -216,7 +216,7 @@ namespace TouchSocket.Sockets
 
         private void PrivateOnDisconnected(DisconnectEventArgs e)
         {
-            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnected), this, e))
+            if (m_usePlugin && PluginsManager.Raise<IDisconnectedPlguin>(nameof(IDisconnectedPlguin.OnDisconnected), this, e))
             {
                 return;
             }
@@ -229,7 +229,7 @@ namespace TouchSocket.Sockets
 
         private void PrivateOnDisconnecting(DisconnectEventArgs e)
         {
-            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnDisconnecting), this, e))
+            if (m_usePlugin && PluginsManager.Raise<IDisconnectingPlugin>(nameof(IDisconnectingPlugin.OnDisconnecting), this, e))
             {
                 return;
             }
@@ -429,7 +429,7 @@ namespace TouchSocket.Sockets
                 };
             }
 
-            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnected), this, e))
+            if (m_usePlugin && PluginsManager.Raise<IConnectedPlugin>(nameof(IConnectedPlugin.OnConnected), this, e))
             {
                 return;
             }
@@ -439,7 +439,7 @@ namespace TouchSocket.Sockets
 
         internal void InternalConnecting(OperationEventArgs e)
         {
-            if (m_usePlugin && PluginsManager.Raise<ITcpPlugin>(nameof(ITcpPlugin.OnConnecting), this, e))
+            if (m_usePlugin && PluginsManager.Raise<IConnectingPlugin>(nameof(IConnectingPlugin.OnConnecting), this, e))
             {
                 return;
             }

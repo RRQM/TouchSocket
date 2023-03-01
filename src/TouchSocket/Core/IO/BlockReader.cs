@@ -18,7 +18,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 阻塞式读取。
     /// </summary>
-    public abstract class BlockReader : DisposableObject
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public abstract partial class BlockReader : DisposableObject
     {
         private byte[] m_buffer;
         private readonly AutoResetEvent m_inputEvent;

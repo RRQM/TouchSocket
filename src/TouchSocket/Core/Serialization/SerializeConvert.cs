@@ -22,7 +22,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 高性能序列化器
     /// </summary>
-    public static class SerializeConvert
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public static partial class SerializeConvert
     {
 #pragma warning disable SYSLIB0011 // 微软觉得不安全，不推荐使用
 

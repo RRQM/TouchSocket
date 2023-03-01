@@ -932,7 +932,7 @@ namespace TouchSocket.Rpc.TouchRpc
                         Send(TouchRpcUtility.P_1200_Invoke_Response, returnByteBlock);
 
                         rpcPackage.SwitchId();
-                        rpcPackage.MethodName = methodName;
+                        rpcPackage.MethodName= methodName;
                         rpcPackage.ParametersBytes = parametersBytes;
                     }
                 }

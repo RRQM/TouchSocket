@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using TouchSocket.Core;
 
@@ -23,7 +22,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc方法属性基类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
     public abstract class RpcAttribute : Attribute
     {
         private readonly Dictionary<Type, string> m_exceptions = new Dictionary<Type, string>();
@@ -40,11 +39,6 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 调用键。
-        /// </summary>
-        public string InvokenKey { get; set; }
-
-        /// <summary>
         /// 类生成器
         /// </summary>
         public ClassCodeGenerator ClassCodeGenerator { get; private set; }
@@ -57,14 +51,29 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 生成代码
         /// </summary>
-        public CodeGeneratorFlag GeneratorFlag { get; protected set; } =
-            CodeGeneratorFlag.Sync | CodeGeneratorFlag.Async | CodeGeneratorFlag.ExtensionSync | CodeGeneratorFlag.ExtensionAsync
-            | CodeGeneratorFlag.IncludeInterface | CodeGeneratorFlag.IncludeInstance | CodeGeneratorFlag.IncludeExtension;
+        public CodeGeneratorFlag GeneratorFlag { get; set; } =
+            CodeGeneratorFlag.InstanceSync | CodeGeneratorFlag.InstanceAsync | CodeGeneratorFlag.ExtensionSync | CodeGeneratorFlag.ExtensionAsync
+            | CodeGeneratorFlag.InterfaceSync | CodeGeneratorFlag.InterfaceAsync;
+
+        /// <summary>
+        /// 生成泛型方法的约束
+        /// </summary>
+        public Type[] GenericConstraintTypes { get; set; } = new Type[] { typeof(IRpcClient) };
+
+        /// <summary>
+        /// 调用键。
+        /// </summary>
+        public string InvokeKey { get; set; }
 
         /// <summary>
         /// 函数标识
         /// </summary>
         public MethodFlags MethodFlags { get; set; }
+
+        /// <summary>
+        /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
+        /// </summary>
+        public bool MethodInvoke { get; set; }
 
         /// <summary>
         /// 重新指定生成的函数名称。可以使用类似“JsonRpc_{0}”的模板格式。
@@ -87,7 +96,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetDescription(MethodInstance methodInstance)
         {
-            return string.IsNullOrEmpty(methodInstance.Description) ? "无注释信息" : methodInstance.Description;
+            return string.IsNullOrEmpty(methodInstance.GetDescription()) ? "无注释信息" : methodInstance.GetDescription();
         }
 
         /// <summary>
@@ -101,9 +110,8 @@ namespace TouchSocket.Rpc
 
             string description = GetDescription(methodInstance);
 
-            ParameterInfo[] parameters;
-            List<string> parametersStr = GetParameters(methodInstance, out bool isOut, out bool isRef, out parameters);
-            var InterfaceTypes = GetGenericInterfaceTypes();
+            List<string> parametersStr = GetParameters(methodInstance, out bool isOut, out bool isRef, out ParameterInfo[] parameters);
+            var InterfaceTypes = GetGenericConstraintTypes();
             if (GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
             {
                 codeString.AppendLine("///<summary>");
@@ -374,9 +382,9 @@ namespace TouchSocket.Rpc
         /// 获取生成的函数泛型限定名称。默认<see cref="IRpcClient"/>
         /// </summary>
         /// <returns></returns>
-        public virtual Type[] GetGenericInterfaceTypes()
+        public virtual Type[] GetGenericConstraintTypes()
         {
-            return new Type[] { typeof(IRpcClient) };
+            return GenericConstraintTypes;
         }
 
         /// <summary>
@@ -393,7 +401,7 @@ namespace TouchSocket.Rpc
             bool isOut;
             bool isRef;
             List<string> parametersStr = GetParameters(methodInstance, out isOut, out isRef, out parameters);
-            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
@@ -551,7 +559,7 @@ namespace TouchSocket.Rpc
             }
 
             //以下生成异步
-            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync) && !isOut && !isRef)//没有out或者ref
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
@@ -653,7 +661,7 @@ namespace TouchSocket.Rpc
             bool isRef = false;
             string description = GetDescription(methodInstance);
             List<string> parameters = GetParameters(methodInstance, out isOut, out isRef, out _);
-            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Sync))
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
@@ -683,7 +691,7 @@ namespace TouchSocket.Rpc
                 codeString.AppendLine(");");
             }
 
-            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.Async) && !isOut && !isRef)//没有out或者ref
+            if (GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync) && !isOut && !isRef)//没有out或者ref
             {
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{description}");
@@ -724,11 +732,18 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetInvokenKey(MethodInstance methodInstance)
         {
-            if (!InvokenKey.IsNullOrEmpty())
+            if (MethodInvoke)
             {
-                return InvokenKey;
+                return GetMethodName(methodInstance, false);
             }
-            return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+            else
+            {
+                if (!InvokeKey.IsNullOrEmpty())
+                {
+                    return InvokeKey;
+                }
+                return $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+            }
         }
 
         /// <summary>
@@ -842,7 +857,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="parameterInfo"></param>
         /// <returns></returns>
-        public virtual string GetProxyParameterName(ParameterInfo  parameterInfo)
+        public virtual string GetProxyParameterName(ParameterInfo parameterInfo)
         {
             return ClassCodeGenerator.GetTypeFullName(parameterInfo);
         }
