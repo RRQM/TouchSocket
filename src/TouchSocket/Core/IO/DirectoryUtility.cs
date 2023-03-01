@@ -18,7 +18,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// DirectoryUtility
     /// </summary>
-    public static class DirectoryUtility
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public static partial class DirectoryUtility
     {
         /// <summary>
         /// 复制文件夹及文件

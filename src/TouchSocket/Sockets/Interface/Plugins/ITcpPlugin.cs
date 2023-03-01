@@ -18,78 +18,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp系插件接口
     /// </summary>
-    public interface ITcpPlugin : IPlugin
+    public interface ITcpPlugin : IPlugin, IConnectingPlugin, IConnectedPlugin, IDisconnectingPlugin, IDisconnectedPlguin
     {
-        /// <summary>
-        /// 客户端连接成功后触发
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        [AsyncRaiser]
-        void OnConnected(ITcpClientBase client, TouchSocketEventArgs e);
-
-        /// <summary>
-        /// 客户端连接成功后触发
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e);
-
-        /// <summary>
-        ///在即将完成连接时触发。
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        [AsyncRaiser]
-        void OnConnecting(ITcpClientBase client, OperationEventArgs e);
-
-        /// <summary>
-        /// 在即将完成连接时触发。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnConnectingAsync(ITcpClientBase client, OperationEventArgs e);
-
-        /// <summary>
-        /// 会话断开后触发
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        [AsyncRaiser]
-        void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e);
-
-        /// <summary>
-        /// 会话断开后触发
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDisconnectedAsync(ITcpClientBase client, DisconnectEventArgs e);
-
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
-        /// </para>
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="e">参数</param>
-        [AsyncRaiser]
-        void OnDisconnecting(ITcpClientBase client, DisconnectEventArgs e);
-
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 当主动调用Close断开时，可通过<see cref="TouchSocketEventArgs.IsPermitOperation"/>终止断开行为。
-        /// </para>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDisconnectingAsync(ITcpClientBase client, DisconnectEventArgs e);
-
         /// <summary>
         /// 当Client的ID被更改后触发
         /// </summary>

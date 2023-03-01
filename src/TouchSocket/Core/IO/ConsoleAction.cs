@@ -19,7 +19,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 控制台行为
     /// </summary>
-    public class ConsoleAction
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class ConsoleAction
     {
         private readonly string helpOrder;
 

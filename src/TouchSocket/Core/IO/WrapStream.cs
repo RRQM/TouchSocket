@@ -17,7 +17,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 包装的流。为避免该流释放时，内部流也会被释放的问题
     /// </summary>
-    public class WrapStream : Stream
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class WrapStream : Stream
     {
         private readonly Stream m_stream;
 
@@ -58,6 +59,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        [IntelligentCoder.AsyncMethodIgnore]
         public override void Flush()
         {
             m_stream.Flush();

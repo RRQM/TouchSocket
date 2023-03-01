@@ -23,11 +23,13 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 生成同步代码（源代码生成无效）
         /// </summary>
+        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
         Sync = 1,
 
         /// <summary>
         /// 生成异步代码（源代码生成无效）
         /// </summary>
+        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
         Async = 2,
 
         /// <summary>
@@ -43,16 +45,39 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 包含接口（源代码生成无效）
         /// </summary>
+        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
         IncludeInterface = 16,
 
         /// <summary>
         /// 包含实例（源代码生成无效）
         /// </summary>
+        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
         IncludeInstance = 32,
 
         /// <summary>
         /// 包含扩展（源代码生成无效）
         /// </summary>
-        IncludeExtension = 64
+        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
+        IncludeExtension = 64,
+
+        /// <summary>
+        /// 生成实例类同步代码（源代码生成无效）
+        /// </summary>
+        InstanceSync = 128,
+
+        /// <summary>
+        /// 生成实例类异步代码（源代码生成无效）
+        /// </summary>
+        InstanceAsync = 256,
+
+        /// <summary>
+        /// 生成接口同步代码
+        /// </summary>
+        InterfaceSync = 512,
+
+        /// <summary>
+        /// 生成接口异步代码
+        /// </summary>
+        InterfaceAsync = 1024,
     }
 }

@@ -17,7 +17,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// TouchRpc方法标记属性类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class TouchRpcAttribute : RpcAttribute
     {
         /// <summary>
@@ -36,29 +36,7 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="invokenKey"></param>
         public TouchRpcAttribute(string invokenKey)
         {
-            InvokenKey = invokenKey;
-        }
-
-        /// <summary>
-        /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
-        /// </summary>
-        public bool MethodInvoke { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="methodInstance"></param>
-        /// <returns></returns>
-        public override string GetInvokenKey(MethodInstance methodInstance)
-        {
-            if (MethodInvoke)
-            {
-                return GetMethodName(methodInstance, false);
-            }
-            else
-            {
-                return base.GetInvokenKey(methodInstance);
-            }
+            InvokeKey = invokenKey;
         }
     }
 }

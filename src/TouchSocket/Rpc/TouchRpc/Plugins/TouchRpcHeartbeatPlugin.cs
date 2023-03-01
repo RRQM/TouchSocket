@@ -81,7 +81,7 @@ namespace TouchSocket.Rpc.TouchRpc
                 m_thread = new Thread(ThreadHeartbeat)
                 {
                     IsBackground = true,
-                    Name = $"HeartbeatThread"
+                    Name = $"{client}HeartbeatThread"
                 };
                 m_thread.Start();
             }

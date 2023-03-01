@@ -4,7 +4,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>1.2.18</Version>
+		<Version>1.3.0</Version>
 		<LangVersion>8.0</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
@@ -91,6 +91,13 @@ This is a lightweight, plug-in - enabled comprehensive network communication lib
 
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="IntelligentCoder" Version="1.0.12">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 
 </Project>

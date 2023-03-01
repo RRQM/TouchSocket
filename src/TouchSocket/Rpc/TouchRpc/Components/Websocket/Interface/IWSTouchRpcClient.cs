@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// IWSTouchRpcClient
     /// </summary>
-    public interface IWSTouchRpcClient : ITouchRpc, IPluginObject, IRpcParser
+    public interface IWSTouchRpcClient : IWSTouchRpcClientBase, IRpcParser
     {
         /// <summary>
         /// 异步连接

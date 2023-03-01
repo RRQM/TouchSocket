@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc.TouchRpc
     /// <summary>
     /// RpcActorBase
     /// </summary>
-    public interface IRpcActorBase
+    public interface IRpcActorBase:IRpcActorSender
     {
         /// <summary>
         /// 日志记录器
@@ -36,23 +36,5 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <param name="timeout"></param>
         /// <returns>如果返回True，则表示一定在线。如果返回false，则不一定代表不在线。</returns>
         bool Ping(int timeout = 5000);
-
-        /// <summary>
-        /// 发送字节
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        void Send(short protocol, byte[] buffer, int offset, int length);
-
-        /// <summary>
-        /// 发送字节
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        Task SendAsync(short protocol, byte[] buffer, int offset, int length);
     }
 }

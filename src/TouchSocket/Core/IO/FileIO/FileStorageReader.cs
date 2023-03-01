@@ -16,7 +16,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件读取器
     /// </summary>
-    public class FileStorageReader : DisposableObject
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class FileStorageReader : DisposableObject
     {
         private FileStorage m_fileStorage;
 

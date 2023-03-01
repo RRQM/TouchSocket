@@ -28,7 +28,7 @@ namespace TouchSocket.Rpc.TouchRpc
         private RpcActor m_rpcActor;
 
         /// <inheritdoc/>
-        public bool IsHandshaked => m_rpcActor == null ? false : m_rpcActor.IsHandshaked;
+        public bool IsHandshaked => m_rpcActor != null && m_rpcActor.IsHandshaked;
 
         /// <inheritdoc/>
         public string RootPath { get => m_rpcActor.RootPath; set => m_rpcActor.RootPath = value; }
@@ -45,12 +45,12 @@ namespace TouchSocket.Rpc.TouchRpc
         /// <summary>
         /// 验证超时时间,默认为3000ms
         /// </summary>
-        public int VerifyTimeout => Config.GetValue<int>(TouchRpcConfigExtensions.VerifyTimeoutProperty);
+        public int VerifyTimeout => Config.GetValue(TouchRpcConfigExtensions.VerifyTimeoutProperty);
 
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken => Config.GetValue<string>(TouchRpcConfigExtensions.VerifyTokenProperty);
+        public string VerifyToken => Config.GetValue(TouchRpcConfigExtensions.VerifyTokenProperty);
 
         /// <inheritdoc/>
         public bool ChannelExisted(int id)

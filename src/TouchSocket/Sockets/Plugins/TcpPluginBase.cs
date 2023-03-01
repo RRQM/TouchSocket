@@ -27,34 +27,44 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class TcpPluginBase<TClient> : PluginBase, ITcpPlugin, IConfigPlugin
     {
-        void ITcpPlugin.OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+        void IConnectedPlugin.OnConnected(object client, TouchSocketEventArgs e)
         {
             OnConnected((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnConnectedAsync(ITcpClientBase client, TouchSocketEventArgs e)
+        Task IConnectedPlugin.OnConnectedAsync(object client, TouchSocketEventArgs e)
         {
             return OnConnectedAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnConnecting(ITcpClientBase client, OperationEventArgs e)
+        void IConnectingPlugin.OnConnecting(object client, OperationEventArgs e)
         {
             OnConnecting((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnConnectingAsync(ITcpClientBase client, OperationEventArgs e)
+        Task IConnectingPlugin.OnConnectingAsync(object client, OperationEventArgs e)
         {
             return OnConnectingAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        void IDisconnectedPlguin.OnDisconnected(object client, DisconnectEventArgs e)
         {
             OnDisconnected((TClient)client, e);
         }
 
-        Task ITcpPlugin.OnDisconnectedAsync(ITcpClientBase client, DisconnectEventArgs e)
+        Task IDisconnectedPlguin.OnDisconnectedAsync(object client, DisconnectEventArgs e)
         {
             return OnDisconnectedAsync((TClient)client, e);
+        }
+
+        void IDisconnectingPlugin.OnDisconnecting(object client, DisconnectEventArgs e)
+        {
+            this.OnDisconnecting((TClient)client, e);
+        }
+
+        Task IDisconnectingPlugin.OnDisconnectingAsync(object client, DisconnectEventArgs e)
+        {
+            return this.OnDisconnectingAsync((TClient)client, e);
         }
 
         void ITcpPlugin.OnIDChanged(ITcpClientBase client, IDChangedEventArgs e)
@@ -117,28 +127,7 @@ namespace TouchSocket.Sockets
             return OnSendingDataAsync((TClient)client, e);
         }
 
-        void ITcpPlugin.OnDisconnecting(ITcpClientBase client, DisconnectEventArgs e)
-        {
-            this.OnDisconnecting((TClient)client,e) ;
-        }
-
-        Task ITcpPlugin.OnDisconnectingAsync(ITcpClientBase client, DisconnectEventArgs e)
-        {
-            return this.OnDisconnectingAsync((TClient)client, e);
-        }
         #region 虚函数实现
-
-        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
-        protected virtual void OnDisconnecting(TClient client, DisconnectEventArgs e)
-        {
-           
-        }
-
-        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
-        protected virtual Task OnDisconnectingAsync(TClient client, DisconnectEventArgs e)
-        {
-            return EasyTask.CompletedTask;
-        }
 
         /// <summary>
         /// 成功建立连接
@@ -196,6 +185,17 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         /// <returns></returns>
         protected virtual Task OnDisconnectedAsync(TClient client, DisconnectEventArgs e)
+        {
+            return EasyTask.CompletedTask;
+        }
+
+        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
+        protected virtual void OnDisconnecting(TClient client, DisconnectEventArgs e)
+        {
+        }
+
+        /// <inheritdoc cref="ITcpClientBase.Disconnecting"/>
+        protected virtual Task OnDisconnectingAsync(TClient client, DisconnectEventArgs e)
         {
             return EasyTask.CompletedTask;
         }

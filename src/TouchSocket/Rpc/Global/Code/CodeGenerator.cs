@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -25,10 +24,11 @@ namespace TouchSocket.Rpc
     /// </summary>
     public static class CodeGenerator
     {
-        internal static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
         internal static readonly List<Assembly> m_assemblies = new List<Assembly>();
         internal static readonly List<Assembly> m_ignoreAssemblies = new List<Assembly>();
         internal static readonly List<Type> m_ignoreTypes = new List<Type>();
+        internal static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
+        private const BindingFlags m_methodFlags = BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public;
 
         /// <summary>
         /// 添加不需要代理的程序集
@@ -255,7 +255,7 @@ namespace TouchSocket.Rpc
         public static ServerCellCode Generator(Type serverType, Type attributeType)
         {
             ServerCellCode serverCellCode = new ServerCellCode();
-            MethodInstance[] methodInstances = GetMethodInstances(serverType);
+            MethodInstance[] methodInstances = GetMethodInstances(serverType, serverType);
 
             List<Assembly> assemblies = new List<Assembly>(m_assemblies);
             assemblies.Add(serverType.Assembly);
@@ -353,15 +353,15 @@ namespace TouchSocket.Rpc
                 rpcAttribute.SetClassCodeGenerator(classCodeGenerator);
                 if (first)
                 {
-                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.IncludeInterface))
+                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InterfaceSync))
                     {
                         serverCellCode.IncludeInterface = true;
                     }
-                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.IncludeInstance))
+                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.InstanceSync))
                     {
                         serverCellCode.IncludeInstance = true;
                     }
-                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.IncludeExtension))
+                    if (rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionAsync) || rpcAttribute.GeneratorFlag.HasFlag(CodeGeneratorFlag.ExtensionSync))
                     {
                         serverCellCode.IncludeExtension = true;
                     }
@@ -385,45 +385,36 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public static MethodInstance[] GetMethodInstances<TServer>() where TServer : IRpcServer
         {
-            return GetMethodInstances(typeof(TServer));
-        }
-
-        /// <summary>
-        /// 生成代理代码
-        /// </summary>
-        /// <param name="namespace"></param>
-        /// <param name="serverTypes"></param>
-        /// <param name="attributeTypes"></param>
-        /// <returns></returns>
-        public static string GetProxyCodes(string @namespace, Type[] serverTypes, Type[] attributeTypes)
-        {
-            List<ServerCellCode> serverCellCodeList = new List<ServerCellCode>();
-            foreach (var item in serverTypes)
-            {
-                foreach (var item1 in attributeTypes)
-                {
-                    serverCellCodeList.Add(Generator(item, item1));
-                }
-            }
-            return ConvertToCode(@namespace, serverCellCodeList.ToArray());
+            return GetMethodInstances(typeof(TServer), typeof(TServer));
         }
 
         /// <summary>
         /// 从类型获取函数实例
         /// </summary>
-        /// <param name="serverType"></param>
+        /// <param name="serverFromType"></param>
+        /// <param name="serverToType"></param>
         /// <returns></returns>
-        public static MethodInstance[] GetMethodInstances(Type serverType)
+        public static MethodInstance[] GetMethodInstances(Type serverFromType, Type serverToType)
         {
-            if (!typeof(IRpcServer).IsAssignableFrom(serverType))
+            if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
             {
                 throw new RpcException($"服务类型必须从{nameof(IRpcServer)}派生。");
             }
+
+            if (!serverFromType.IsAssignableFrom(serverToType))
+            {
+                throw new RpcException($"{serverToType}类型必须从{serverFromType}派生。");
+            }
+
             List<MethodInstance> instances = new List<MethodInstance>();
 
-            MethodInfo[] methodInfos = serverType.GetMethods();
+            var fromMethodInfos = new Dictionary<string, MethodInfo>();
+            GetMethodInfos(serverFromType, ref fromMethodInfos);
 
-            foreach (MethodInfo method in methodInfos)
+            var toMethodInfos = new Dictionary<string, MethodInfo>();
+            GetMethodInfos(serverToType, ref toMethodInfos);
+
+            foreach (MethodInfo method in fromMethodInfos.Values)
             {
                 if (method.IsGenericMethod)
                 {
@@ -432,16 +423,26 @@ namespace TouchSocket.Rpc
                 IEnumerable<RpcAttribute> attributes = method.GetCustomAttributes<RpcAttribute>(true);
                 if (attributes.Count() > 0)
                 {
-                    MethodInstance methodInstance = new MethodInstance(method);
-                    methodInstance.ServerType = serverType;
-                    methodInstance.RpcAttributes = attributes.ToArray();
-                    methodInstance.Description = method.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                    methodInstance.IsEnable = true;
-                    methodInstance.Parameters = method.GetParameters();
+                    MethodInstance methodInstance = new MethodInstance(method)
+                    {
+                        ServerType = serverFromType,
+                        IsEnable = true,
+                        Parameters = method.GetParameters()
+                    };
+                    if (!toMethodInfos.TryGetValue(GetMethodID(method), out var toMethod))
+                    {
+                        throw new InvalidOperationException($"没有找到方法{method.Name}的实现");
+                    }
 
-                    object[] filters = method.GetCustomAttributes(true);
                     List<IRpcActionFilter> actionFilters = new List<IRpcActionFilter>();
-                    foreach (var item in filters)
+                    foreach (var item in method.GetCustomAttributes(true))
+                    {
+                        if (item is IRpcActionFilter filter)
+                        {
+                            actionFilters.Add(filter);
+                        }
+                    }
+                    foreach (var item in toMethod.GetCustomAttributes(true))
                     {
                         if (item is IRpcActionFilter filter)
                         {
@@ -484,6 +485,26 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
+        /// 生成代理代码
+        /// </summary>
+        /// <param name="namespace"></param>
+        /// <param name="serverTypes"></param>
+        /// <param name="attributeTypes"></param>
+        /// <returns></returns>
+        public static string GetProxyCodes(string @namespace, Type[] serverTypes, Type[] attributeTypes)
+        {
+            List<ServerCellCode> serverCellCodeList = new List<ServerCellCode>();
+            foreach (var item in serverTypes)
+            {
+                foreach (var item1 in attributeTypes)
+                {
+                    serverCellCodeList.Add(Generator(item, item1));
+                }
+            }
+            return ConvertToCode(@namespace, serverCellCodeList.ToArray());
+        }
+
+        /// <summary>
         /// 获取类型代理名称
         /// </summary>
         /// <param name="type"></param>
@@ -492,6 +513,36 @@ namespace TouchSocket.Rpc
         public static bool TryGetProxyTypeName(Type type, out string className)
         {
             return m_proxyType.TryGetValue(type, out className);
+        }
+
+        private static string GetMethodID(MethodInfo method)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append(method.Name);
+            foreach (var item in method.GetParameters())
+            {
+                stringBuilder.Append(item.ParameterType.FullName);
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        private static void GetMethodInfos(Type type, ref Dictionary<string, MethodInfo> infos)
+        {
+            if (type.IsInterface)
+            {
+                foreach (var item in type.GetInterfaces())
+                {
+                    GetMethodInfos(item, ref infos);
+                }
+            }
+            foreach (var item in type.GetMethods(m_methodFlags))
+            {
+                if (!infos.ContainsKey(GetMethodID(item)))
+                {
+                    infos.Add(GetMethodID(item), item);
+                }
+            }
         }
     }
 }

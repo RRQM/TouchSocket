@@ -40,7 +40,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         IsPermitOperation = true
                     };
-                    client.PluginsManager?.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandshaking), client, args);
+                    client.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandshaking), client, args);
                     if (args.Context.Response.Responsed)
                     {
                         return false;
@@ -56,7 +56,7 @@ namespace TouchSocket.Http.WebSockets
                             args.Context.Response.Build(byteBlock);
                             client.DefaultSend(byteBlock);
                         }
-                        client.PluginsManager?.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandshaked), client, new HttpContextEventArgs(httpContext));
+                        client.PluginsManager.Raise<IWebSocketPlugin>(nameof(IWebSocketPlugin.OnHandshaked), client, new HttpContextEventArgs(httpContext));
                         return true;
                     }
                     else

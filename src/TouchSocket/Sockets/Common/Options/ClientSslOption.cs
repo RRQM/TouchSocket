@@ -41,15 +41,9 @@ namespace TouchSocket.Sockets
             set => targetHost = value;
         }
 
-        private X509CertificateCollection clientCertificates;
-
         /// <summary>
         /// 验证组合
         /// </summary>
-        public X509CertificateCollection ClientCertificates
-        {
-            get => clientCertificates;
-            set => clientCertificates = value;
-        }
+        public X509CertificateCollection ClientCertificates { get; set; }
     }
 }

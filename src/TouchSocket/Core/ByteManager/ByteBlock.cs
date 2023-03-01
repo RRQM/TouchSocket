@@ -23,7 +23,8 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public sealed class ByteBlock : Stream, IWrite
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public sealed partial class ByteBlock : Stream, IWrite
     {
         private static float m_ratio = 1.5f;
         private readonly bool m_needDis;
@@ -179,6 +180,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 无实际效果
         /// </summary>
+        [IntelligentCoder.AsyncMethodIgnore]
         public override void Flush()
         {
         }

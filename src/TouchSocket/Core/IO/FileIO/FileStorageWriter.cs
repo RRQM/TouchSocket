@@ -16,7 +16,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件写入器。
     /// </summary>
-    public class FileStorageWriter : DisposableObject, IWrite
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public partial class FileStorageWriter : DisposableObject, IWrite
     {
         private readonly FileStorage m_fileStorage;
         private long m_position;

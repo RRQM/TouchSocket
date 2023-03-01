@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     public interface IFastBinaryConverter
     {
         /// <summary>
-        /// 读取
+        /// 读取对象，不需要考虑为null的情况。
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
@@ -27,7 +27,7 @@ namespace TouchSocket.Core
         public object Read(byte[] buffer, int offset, int len);
 
         /// <summary>
-        /// 写入
+        /// 写入对象，不需要考虑为null的情况。
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
@@ -51,14 +51,14 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 写入
+        /// 写入对象，不需要考虑为null的情况。
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="obj"></param>
         protected abstract int Write(ByteBlock byteBlock, T obj);
 
         /// <summary>
-        /// 读取
+        /// 读取对象，不需要考虑为null的情况。
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>

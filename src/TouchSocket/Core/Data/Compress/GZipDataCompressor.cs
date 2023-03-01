@@ -17,7 +17,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// GZip压缩算法的压缩机
     /// </summary>
-    public sealed class GZipDataCompressor : IDataCompressor
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public  sealed partial class GZipDataCompressor : IDataCompressor
     {
         byte[] IDataCompressor.Compress(ArraySegment<byte> data)
         {

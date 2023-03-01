@@ -19,7 +19,7 @@ namespace TouchSocket.Rpc.WebApi
     /// <summary>
     /// WebApiAttribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WebApiAttribute : RpcAttribute
     {
         private readonly HttpMethodType m_method;
@@ -37,7 +37,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
-        public override Type[] GetGenericInterfaceTypes()
+        public override Type[] GetGenericConstraintTypes()
         {
             return new Type[] { typeof(IWebApiClient) };
         }

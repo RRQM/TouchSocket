@@ -62,7 +62,7 @@ namespace TouchSocket.Core
             byteBlock.Write(SourceId);
             byteBlock.Write(TargetId);
         }
-
+        
         /// <summary>
         /// 转换目标和源的id。
         /// </summary>

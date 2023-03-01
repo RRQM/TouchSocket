@@ -17,7 +17,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// 日志基类
     /// </summary>
-    public abstract class LoggerBase : ILog
+    [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
+    public abstract partial class LoggerBase : ILog
     {
         /// <summary>
         /// 全部的日志类型
