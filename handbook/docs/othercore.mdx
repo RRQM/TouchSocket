@@ -28,6 +28,7 @@ bool b = MD5.VerifyMD5Hash("TouchSocket",str);
 ```
 
 ## 四、16进制相关
+
 【将16进制的字符转换为数组】
 ```csharp
  public static byte[] ByHexStringToBytes(this string hexString, string splite = default)
@@ -38,6 +39,7 @@ bool b = MD5.VerifyMD5Hash("TouchSocket",str);
 ```
 
 ## 五、雪花ID生成
+
 雪花ID，会生成long类型的不重复ID。
 ```csharp
 SnowflakeIDGenerator generator = new SnowflakeIDGenerator(4);
@@ -80,3 +82,14 @@ class MyDataCompressor : IDataCompressor
     }
 }
 ```
+
+## 七、短时间戳
+
+一般的，时间可由long类型作为唯一时间戳，但是有时候，我们也需要短类型的时间戳（uint），所以您可以使用**DateTimeExtensions**类实现，或者使用其扩展方法。
+
+```csharp
+uint timestamp= DateTimeExtensions.ConvertTime(DateTime.Now);
+timestamp= DateTime.Now.ConvertTime();//扩展方法
+```
+
+
