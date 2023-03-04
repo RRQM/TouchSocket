@@ -92,4 +92,36 @@ uint timestamp= DateTimeExtensions.ConvertTime(DateTime.Now);
 timestamp= DateTime.Now.ConvertTime();//扩展方法
 ```
 
+## 八、读写锁using
+
+一般的，我们都会使用**ReaderWriterLockSlim**读写锁，进行成对的Enter和Exit。所以我们一般会使用下列代码。
+
+```csharp
+ReaderWriterLockSlim lockSlim   = new ReaderWriterLockSlim();
+try
+{
+    lockSlim.EnterReadLock();
+    //do something
+}
+finally 
+{
+    lockSlim.ExitReadLock();
+}
+```
+
+但是会显得代码非常臃肿。所以我们可以简化使用using实现。
+
+```csharp
+ReaderWriterLockSlim lockSlim   = new ReaderWriterLockSlim();
+
+using (new ReadLock(lockSlim))
+{
+    //do something
+}
+
+using (new WriteLock(lockSlim))
+{
+    //do something
+}
+```
 
