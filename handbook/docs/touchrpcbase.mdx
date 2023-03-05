@@ -61,7 +61,17 @@ internal class MyTouchRpcPlugin : TouchRpcPluginBase
 ### 3.1 使用
 
 使用起来是非常简单的，每个TouchRpc客户端或者TouchRpc服务端，都实现了Send方法接口。
-第一个参数为short类型，使用者可以**约定任意数值**（**不要使用小于0的，因为框架内部在使用**）。
+第一个参数为short类型，使用者可以**约定任意大于0数值**。
+
+```csharp
+client.Send(10,Encoding.UTF8.GetBytes("RRQM"));
+```
+
+:::caution 注意
+
+Protocol不要使用小于0的，因为框架内部在使用
+
+:::  
 
 在**接收方**在OnReceivedProtocolData函数中，已经包含了协议参数，所以直接自行筛选即可。
 
