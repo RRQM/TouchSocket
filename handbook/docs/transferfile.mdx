@@ -121,7 +121,7 @@ var service = new TouchSocketConfig()//配置
     .ConfigurePlugins(a =>
     {
         a.Add<MyPlugin>();
-    })
+    }).UsePlugin() //
     .SetVerifyToken("File")//连接验证口令。
     .BuildWithTcpTouchRpcService();//此处build相当于new TcpTouchRpcService，然后Setup，然后Start。
 service.Logger.Info("服务器成功启动");
