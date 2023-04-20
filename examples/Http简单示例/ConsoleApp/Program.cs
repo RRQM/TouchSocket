@@ -55,6 +55,8 @@ namespace ConsoleApp
                 e.Context.Response.FromText("Success").Answer();//直接回应
                 Console.WriteLine("处理完毕");
                 e.Handled = true;
+
+               
             }
             else if (e.Context.Request.UrlEquals("/file"))
             {
