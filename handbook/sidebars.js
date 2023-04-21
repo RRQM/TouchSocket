@@ -60,44 +60,44 @@ module.exports = {
           label: "3.2 企业版相关"
         },
         {
-          type: "category",
-          label: "3.3 商业项目",
-          items: [
-            {
-              type: "doc",
-              id: "cooperation",
-              label: "a.商业合作"
-            },
-            {
-              type: "doc",
-              id: "wpfuifiletransfer",
-              label: "b.WPF界面、文件传输项目"
-            },
-            {
-              type: "doc",
-              id: "remotemonitoring",
-              label: "c.远程监测、控制项目"
-            },
-            {
-              type: "doc",
-              id: "filesynchronization",
-              label: "d.文件同步系统"
-            },
-            {
-              type: "doc",
-              id: "dataforwarding",
-              label: "e.数据转发项目"
-            },
-            {
-              type: "doc",
-              id: "webdataforwarding",
-              label: "f.Web数据转发Winform项目"
-            },
-          ],
+          // type: "category",
+          // label: "3.3 商业项目",
+          // items: [
+          //   {
+          //     type: "doc",
+          //     id: "cooperation",
+          //     label: "a.商业合作"
+          //   },
+          //   {
+          //     type: "doc",
+          //     id: "wpfuifiletransfer",
+          //     label: "b.WPF界面、文件传输项目"
+          //   },
+          //   {
+          //     type: "doc",
+          //     id: "remotemonitoring",
+          //     label: "c.远程监测、控制项目"
+          //   },
+          //   {
+          //     type: "doc",
+          //     id: "filesynchronization",
+          //     label: "d.文件同步系统"
+          //   },
+          //   {
+          //     type: "doc",
+          //     id: "dataforwarding",
+          //     label: "e.数据转发项目"
+          //   },
+          //   {
+          //     type: "doc",
+          //     id: "webdataforwarding",
+          //     label: "f.Web数据转发Winform项目"
+          //   },
+          //],
         },
         {
           type: "category",
-          label: "3.4 使用者项目",
+          label: "3.3 使用者项目",
           items: [
             {
               type: "doc",
