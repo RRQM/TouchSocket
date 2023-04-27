@@ -39,7 +39,7 @@ namespace TouchSocket.Sockets
             {
                 if (value < 1024)
                 {
-                    value = 1024 * 10;
+                    value = 1024;
                 }
                 m_bufferLength = value;
             }
