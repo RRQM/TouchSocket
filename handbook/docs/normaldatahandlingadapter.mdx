@@ -40,3 +40,14 @@ service.Setup(new TouchSocketConfig()//载入配置
 该适配器，客户端与服务器均适用。
 
 :::  
+
+## 四、可设置参数
+
+|  属性   | 描述  |默认值  |
+|  ----  | ----  |----  |
+| MaxPackageSize  | 适配器能接收的最大数据包长度 |1024\*1024\*1024字节|
+| CanSendRequestInfo  | 是否允许发送IRequestInfo对象 |false|
+| CanSplicingSend  | 拼接发送 |false|
+| CacheTimeoutEnable  | 是否启用缓存超时。 |true|
+| CacheTimeout  | 缓存超时时间。 |1秒|
+| UpdateCacheTimeWhenRev  | 是否在收到数据时，即刷新缓存时间。当设为true时，将弱化CacheTimeout的作用，只要一直有数据，则缓存不会过期。当设为false时，则在CacheTimeout的时效内。必须完成单个缓存的数据 |true|
