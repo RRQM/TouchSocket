@@ -168,9 +168,9 @@ namespace TouchSocket.Rpc.TouchRpc
             return this.PrivateCreateChannel(targetId, true);
         }
 
-        internal void RemoveChannel(int id)
+        internal bool RemoveChannel(int id)
         {
-            m_userChannels.TryRemove(id, out _);
+           return m_userChannels.TryRemove(id, out _);
         }
 
         /// <summary>
