@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -19,9 +21,6 @@ namespace TouchSocket.Core
     [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
     public partial class FileStorageReader : DisposableObject
     {
-        private FileStorage m_fileStorage;
-
-        private long m_position;
 
         /// <summary>
         /// 构造函数
@@ -29,7 +28,7 @@ namespace TouchSocket.Core
         /// <param name="fileStorage"></param>
         public FileStorageReader(FileStorage fileStorage)
         {
-            m_fileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
         }
 
         /// <summary>
@@ -38,31 +37,27 @@ namespace TouchSocket.Core
         ~FileStorageReader()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: false);
+            this.Dispose(disposing: false);
         }
 
         /// <summary>
         /// 文件存储器
         /// </summary>
-        public FileStorage FileStorage => m_fileStorage;
+        public FileStorage FileStorage { get; private set; }
 
         /// <summary>
         /// 游标位置
         /// </summary>
         public int Pos
         {
-            get => (int)m_position;
-            set => m_position = value;
+            get => (int)this.Position;
+            set => this.Position = value;
         }
 
         /// <summary>
         /// 游标位置
         /// </summary>
-        public long Position
-        {
-            get => m_position;
-            set => m_position = value;
-        }
+        public long Position { get; set; }
 
         /// <summary>
         /// 读取数据到缓存区
@@ -73,8 +68,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public int Read(byte[] buffer, int offset, int length)
         {
-            int r = m_fileStorage.Read(m_position, buffer, offset, length);
-            m_position += r;
+            int r = this.FileStorage.Read(this.Position, buffer, offset, length);
+            this.Position += r;
             return r;
         }
 
@@ -84,8 +79,12 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            FilePool.TryReleaseFile(m_fileStorage.Path);
-            m_fileStorage = null;
+            if (this.DisposedValue)
+            {
+                return;
+            }
+            FilePool.TryReleaseFile(this.FileStorage.Path);
+            this.FileStorage = null;
             base.Dispose(disposing);
         }
     }

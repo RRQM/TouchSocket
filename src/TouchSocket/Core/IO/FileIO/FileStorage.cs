@@ -33,18 +33,18 @@ namespace TouchSocket.Core
         /// </summary>
         internal FileStorage(FileInfo fileInfo, FileAccess fileAccess) : this()
         {
-            FileAccess = fileAccess;
-            FileInfo = fileInfo;
-            Path = fileInfo.FullName;
-            m_reference = 0;
-            FileStream = fileAccess == FileAccess.Read ? fileInfo.OpenRead() : fileInfo.OpenWrite();
-            m_lockSlim = new ReaderWriterLockSlim();
+            this.FileAccess = fileAccess;
+            this.FileInfo = fileInfo;
+            this.Path = fileInfo.FullName;
+            this.m_reference = 0;
+            this.FileStream = fileAccess == FileAccess.Read ? fileInfo.OpenRead() : fileInfo.OpenWrite();
+            this.m_lockSlim = new ReaderWriterLockSlim();
         }
 
         private FileStorage()
         {
-            AccessTime = DateTime.Now;
-            AccessTimeout = TimeSpan.FromSeconds(60);
+            this.AccessTime = DateTime.Now;
+            this.AccessTimeout = TimeSpan.FromSeconds(60);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 文件长度
         /// </summary>
-        public long Length => FileStream.Length;
+        public long Length => this.FileStream.Length;
 
         /// <summary>
         /// 文件路径
@@ -91,7 +91,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 引用次数。
         /// </summary>
-        public int Reference => m_reference;
+        public int Reference => this.m_reference;
 
         /// <summary>
         /// 创建一个只读的、已经缓存的文件信息。该操作不会占用文件句柄。
@@ -136,8 +136,8 @@ namespace TouchSocket.Core
         /// </summary>
         public void Flush()
         {
-            AccessTime = DateTime.Now;
-            FileStream.Flush();
+            this.AccessTime = DateTime.Now;
+            this.FileStream.Flush();
         }
 
         /// <summary>
@@ -150,27 +150,27 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public int Read(long stratPos, byte[] buffer, int offset, int length)
         {
-            AccessTime = DateTime.Now;
-            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            this.AccessTime = DateTime.Now;
+            using (var writeLock = new WriteLock(this.m_lockSlim))
             {
-                if (m_disposedValue)
+                if (this.m_disposedValue)
                 {
-                    throw new ObjectDisposedException(GetType().FullName);
+                    throw new ObjectDisposedException(this.GetType().FullName);
                 }
-                if (FileAccess == FileAccess.Write)
+                if (this.FileAccess == FileAccess.Write)
                 {
                     throw new Exception("该流不允许读取。");
                 }
-                if (Cache)
+                if (this.Cache)
                 {
-                    int r = (int)Math.Min(m_fileData.Length - stratPos, length);
-                    Array.Copy(m_fileData, stratPos, buffer, offset, r);
+                    int r = (int)Math.Min(this.m_fileData.Length - stratPos, length);
+                    Array.Copy(this.m_fileData, stratPos, buffer, offset, r);
                     return r;
                 }
                 else
                 {
-                    FileStream.Position = stratPos;
-                    return FileStream.Read(buffer, offset, length);
+                    this.FileStream.Position = stratPos;
+                    return this.FileStream.Read(buffer, offset, length);
                 }
             }
         }
@@ -184,7 +184,7 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public Result TryReleaseFile(int delayTime = 0)
         {
-            return FilePool.TryReleaseFile(Path, delayTime);
+            return FilePool.TryReleaseFile(this.Path, delayTime);
         }
 
         /// <summary>
@@ -196,34 +196,33 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         public void Write(long stratPos, byte[] buffer, int offset, int length)
         {
-            AccessTime = DateTime.Now;
-            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            this.AccessTime = DateTime.Now;
+            using (var writeLock = new WriteLock(this.m_lockSlim))
             {
-                if (m_disposedValue)
+                if (this.m_disposedValue)
                 {
-                    throw new ObjectDisposedException(GetType().FullName);
+                    throw new ObjectDisposedException(this.GetType().FullName);
                 }
-                if (FileAccess == FileAccess.Read)
+                if (this.FileAccess == FileAccess.Read)
                 {
                     throw new Exception("该流不允许写入。");
                 }
-                FileStream.Position = stratPos;
-                FileStream.Write(buffer, offset, length);
-                FileStream.Flush();
+                this.FileStream.Position = stratPos;
+                this.FileStream.Write(buffer, offset, length);
             }
         }
 
         internal void Dispose()
         {
-            if (m_disposedValue)
+            if (this.m_disposedValue)
             {
                 return;
             }
-            using (WriteLock writeLock = new WriteLock(m_lockSlim))
+            using (var writeLock = new WriteLock(this.m_lockSlim))
             {
-                m_disposedValue = true;
-                FileStream.SafeDispose();
-                m_fileData = null;
+                this.m_disposedValue = true;
+                this.FileStream.SafeDispose();
+                this.m_fileData = null;
             }
         }
     }
