@@ -20,7 +20,6 @@ namespace TouchSocket.Core
     [IntelligentCoder.AsyncMethodPoster(Flags = IntelligentCoder.MemberFlags.Public)]
     public partial class FileStorageStream : Stream
     {
-        private readonly FileStorage m_fileStorage;
         private long m_position;
 
         /// <summary>
@@ -29,7 +28,7 @@ namespace TouchSocket.Core
         /// <param name="fileStorage"></param>
         public FileStorageStream(FileStorage fileStorage)
         {
-            m_fileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
         }
 
         /// <summary>
@@ -38,38 +37,38 @@ namespace TouchSocket.Core
         ~FileStorageStream()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: false);
+            this.Dispose(disposing: false);
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanRead => m_fileStorage.FileStream.CanRead;
+        public override bool CanRead => this.FileStorage.FileStream.CanRead;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanSeek => m_fileStorage.FileStream.CanSeek;
+        public override bool CanSeek => this.FileStorage.FileStream.CanSeek;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override bool CanWrite => m_fileStorage.FileStream.CanWrite;
+        public override bool CanWrite => this.FileStorage.FileStream.CanWrite;
 
         /// <summary>
         /// 文件存储器
         /// </summary>
-        public FileStorage FileStorage => m_fileStorage;
+        public FileStorage FileStorage { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override long Length => m_fileStorage.FileStream.Length;
+        public override long Length => this.FileStorage.FileStream.Length;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override long Position { get => m_position; set => m_position = value; }
+        public override long Position { get => this.m_position; set => this.m_position = value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -77,7 +76,7 @@ namespace TouchSocket.Core
         [IntelligentCoder.AsyncMethodIgnore]
         public override void Flush()
         {
-            m_fileStorage.Flush();
+            this.FileStorage.Flush();
         }
 
         /// <summary>
@@ -89,8 +88,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int r = m_fileStorage.Read(m_position, buffer, offset, count);
-            m_position += r;
+            int r = this.FileStorage.Read(this.m_position, buffer, offset, count);
+            this.m_position += r;
             return r;
         }
 
@@ -105,18 +104,18 @@ namespace TouchSocket.Core
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    m_position = offset;
+                    this.m_position = offset;
                     break;
 
                 case SeekOrigin.Current:
-                    m_position += offset;
+                    this.m_position += offset;
                     break;
 
                 case SeekOrigin.End:
-                    m_position = Length + offset;
+                    this.m_position = this.Length + offset;
                     break;
             }
-            return m_position;
+            return this.m_position;
         }
 
         /// <summary>
@@ -125,7 +124,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         public override void SetLength(long value)
         {
-            m_fileStorage.FileStream.SetLength(value);
+            this.FileStorage.FileStream.SetLength(value);
         }
 
         /// <summary>
@@ -136,8 +135,8 @@ namespace TouchSocket.Core
         /// <param name="count"></param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            m_fileStorage.Write(m_position, buffer, offset, count);
-            m_position += count;
+            this.FileStorage.Write(this.m_position, buffer, offset, count);
+            this.m_position += count;
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            FilePool.TryReleaseFile(m_fileStorage.Path);
+            FilePool.TryReleaseFile(this.FileStorage.Path);
             base.Dispose(disposing);
         }
     }

@@ -81,13 +81,17 @@ namespace TouchSocket.Core
             }
             lock (m_locker)
             {
-                if (m_pathStorage.TryGetValue(fileInfo.FullName, out storage))
+                storage = new FileStorage(fileInfo, FileAccess.Read);
+                if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
                 {
+                    Interlocked.Increment(ref storage.m_reference);
                     return storage;
                 }
-                FileStorage fileStorage = new FileStorage(fileInfo, FileAccess.Read);
-                m_pathStorage.TryAdd(fileInfo.FullName, fileStorage);
-                return fileStorage;
+                else
+                {
+                    return GetFileStorageForRead(fileInfo);
+                }
+               
             }
         }
 
@@ -127,13 +131,16 @@ namespace TouchSocket.Core
             }
             lock (m_locker)
             {
-                if (m_pathStorage.TryGetValue(fileInfo.FullName, out storage))
+                storage = new FileStorage(fileInfo, FileAccess.Write);
+                if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
                 {
+                    Interlocked.Increment(ref storage.m_reference);
                     return storage;
                 }
-                FileStorage fileStorage = new FileStorage(fileInfo, FileAccess.Write);
-                m_pathStorage.TryAdd(fileInfo.FullName, fileStorage);
-                return fileStorage;
+                else
+                {
+                    return GetFileStorageForWrite(fileInfo);
+                }
             }
         }
 
@@ -279,8 +286,7 @@ namespace TouchSocket.Core
             path = Path.GetFullPath(path);
             if (m_pathStorage.TryGetValue(path, out FileStorage fileStorage))
             {
-                Interlocked.Decrement(ref fileStorage.m_reference);
-                if (fileStorage.m_reference <= 0)
+                if (Interlocked.Decrement(ref fileStorage.m_reference) <= 0)
                 {
                     if (delayTime > 0)
                     {
@@ -318,15 +324,15 @@ namespace TouchSocket.Core
 
         private static void OnTimer(object state)
         {
-            List<string> keys = new List<string>();
-            foreach (var item in m_pathStorage)
+            var keys = new List<string>();
+            foreach (KeyValuePair<string, FileStorage> item in m_pathStorage)
             {
                 if (DateTime.Now - item.Value.AccessTime > item.Value.AccessTimeout)
                 {
                     keys.Add(item.Key);
                 }
             }
-            foreach (var item in keys)
+            foreach (string item in keys)
             {
                 TryReleaseFile(item);
             }
