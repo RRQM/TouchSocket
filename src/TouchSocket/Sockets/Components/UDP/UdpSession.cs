@@ -458,6 +458,22 @@ namespace TouchSocket.Sockets
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             }
             PreviewBind(socket);
+
+            #region Windows下UDP连接被重置错误10054
+
+#if NET45_OR_GREATER
+            const int SIP_UDP_CONNRESET = -1744830452;
+            socket.IOControl(SIP_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
+#else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                const int SIP_UDP_CONNRESET = -1744830452;
+                socket.IOControl(SIP_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
+            }
+#endif
+
+            #endregion
+
             socket.Bind(iPHost.EndPoint);
 
             m_monitor = new NetworkMonitor(iPHost, socket);
