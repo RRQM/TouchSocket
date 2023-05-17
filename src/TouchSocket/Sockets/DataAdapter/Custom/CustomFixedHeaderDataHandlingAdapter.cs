@@ -57,13 +57,13 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                if (HeaderLength > byteBlock.CanReadLen)
+                if (this.HeaderLength > byteBlock.CanReadLen)
                 {
                     return FilterResult.Cache;
                 }
 
-                TFixedHeaderRequestInfo requestInfo = GetInstance();
-                byteBlock.Read(out byte[] header, HeaderLength);
+                TFixedHeaderRequestInfo requestInfo = this.GetInstance();
+                byteBlock.Read(out byte[] header, this.HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
                     request = requestInfo;

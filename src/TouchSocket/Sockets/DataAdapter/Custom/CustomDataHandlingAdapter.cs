@@ -82,21 +82,21 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            if (m_needReset || CacheTimeoutEnable && DateTime.Now - LastCacheTime > CacheTimeout)
+            if (this.m_needReset || this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
-                Reset();
-                m_needReset = false;
+                this.Reset();
+                this.m_needReset = false;
             }
-            if (TempByteBlock == null)
+            if (this.TempByteBlock == null)
             {
-                Single(byteBlock, false);
+                this.Single(byteBlock, false);
             }
             else
             {
-                TempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                ByteBlock block = TempByteBlock;
-                TempByteBlock = null;
-                Single(block, true);
+                this.TempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
+                ByteBlock block = this.TempByteBlock;
+                this.TempByteBlock = null;
+                this.Single(block, true);
             }
         }
 
@@ -116,7 +116,7 @@ namespace TouchSocket.Sockets
         /// <param name="length">长度</param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            GoSend(buffer, offset, length);
+            this.GoSend(buffer, offset, length);
         }
 
         /// <summary>
@@ -133,10 +133,11 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-            TempByteBlock.SafeDispose();
-            TempByteBlock = null;
-            TempRequest = default;
-            m_needReset = true;
+            this.TempByteBlock.SafeDispose();
+            this.TempByteBlock = null;
+            this.TempRequest = default;
+            this.m_needReset = true;
+            base.Reset();
         }
 
         private void Single(ByteBlock byteBlock, bool temp)
@@ -144,21 +145,21 @@ namespace TouchSocket.Sockets
             byteBlock.Pos = 0;
             while (byteBlock.Pos < byteBlock.Len)
             {
-                if (m_needReset)
+                if (this.m_needReset)
                 {
                     return;
                 }
                 int tempCapacity = 1024 * 64;
-                FilterResult filterResult = Filter(byteBlock, TempRequest != null, ref TempRequest, ref tempCapacity);
+                FilterResult filterResult = this.Filter(byteBlock, this.TempRequest != null, ref this.TempRequest, ref tempCapacity);
                 switch (filterResult)
                 {
                     case FilterResult.Success:
-                        if (OnReceivingSuccess(TempRequest))
+                        if (this.OnReceivingSuccess(this.TempRequest))
                         {
-                            GoReceived(null, TempRequest);
-                            OnReceivedSuccess(TempRequest);
+                            this.GoReceived(null, this.TempRequest);
+                            this.OnReceivedSuccess(this.TempRequest);
                         }
-                        TempRequest = default;
+                        this.TempRequest = default;
                         break;
 
                     case FilterResult.Cache:
@@ -166,31 +167,31 @@ namespace TouchSocket.Sockets
                         {
                             if (temp)
                             {
-                                TempByteBlock = new ByteBlock(tempCapacity);
-                                TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                this.TempByteBlock = new ByteBlock(tempCapacity);
+                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                                 byteBlock.Dispose();
                             }
                             else
                             {
-                                TempByteBlock = new ByteBlock(tempCapacity);
-                                TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                this.TempByteBlock = new ByteBlock(tempCapacity);
+                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                             }
 
-                            if (TempByteBlock.Len > MaxPackageSize)
+                            if (this.TempByteBlock.Len > this.MaxPackageSize)
                             {
-                                OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                                this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
                             }
                         }
-                        if (UpdateCacheTimeWhenRev)
+                        if (this.UpdateCacheTimeWhenRev)
                         {
-                            LastCacheTime = DateTime.Now;
+                            this.LastCacheTime = DateTime.Now;
                         }
                         return;
 
                     case FilterResult.GoOn:
-                        if (UpdateCacheTimeWhenRev)
+                        if (this.UpdateCacheTimeWhenRev)
                         {
-                            LastCacheTime = DateTime.Now;
+                            this.LastCacheTime = DateTime.Now;
                         }
                         break;
                 }

@@ -37,11 +37,11 @@ namespace TouchSocket.Sockets
 
         private DataAdapterTester()
         {
-            asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
-            sendThread = new Thread(BeginSend);
-            sendThread.IsBackground = true;
-            sendThread.Name = "DataAdapterTesterThread";
-            sendThread.Start();
+            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
+            this.sendThread = new Thread(this.BeginSend);
+            this.sendThread.IsBackground = true;
+            this.sendThread.Name = "DataAdapterTesterThread";
+            this.sendThread.Start();
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static DataAdapterTester CreateTester(DataHandlingAdapter adapter, int bufferLength = 1024, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
         {
-            DataAdapterTester tester = new DataAdapterTester();
+            var tester = new DataAdapterTester();
             tester.adapter = adapter;
             tester.bufferLength = bufferLength;
             adapter.SendCallBack = tester.SendCallback;
@@ -67,7 +67,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public void Dispose()
         {
-            dispose = true;
+            this.dispose = true;
         }
 
         /// <summary>
@@ -82,23 +82,23 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
         {
-            count = 0;
+            this.count = 0;
             this.expectedCount = expectedCount;
             this.timeout = timeout;
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
+            this.stopwatch = new Stopwatch();
+            this.stopwatch.Start();
             EasyTask.Run(() =>
             {
                 for (int i = 0; i < testCount; i++)
                 {
-                    adapter.SendInput(buffer, offset, length);
+                    this.adapter.SendInput(buffer, offset, length);
                 }
             });
 
-            if (SpinWait.SpinUntil(() => count == this.expectedCount, this.timeout))
+            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
             {
-                stopwatch.Stop();
-                return stopwatch.Elapsed;
+                this.stopwatch.Stop();
+                return this.stopwatch.Elapsed;
             }
             throw new TimeoutException();
         }
@@ -112,20 +112,20 @@ namespace TouchSocket.Sockets
         /// <param name="timeout">超时</param>
         public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
         {
-            return Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
         }
 
         private void BeginSend()
         {
-            while (!dispose)
+            while (!this.dispose)
             {
-                if (tryGet(out List<ByteBlock> byteBlocks))
+                if (this.tryGet(out List<ByteBlock> byteBlocks))
                 {
-                    foreach (var block in byteBlocks)
+                    foreach (ByteBlock block in byteBlocks)
                     {
                         try
                         {
-                            adapter.ReceivedInput(block);
+                            this.adapter.ReceivedInput(block);
                         }
                         finally
                         {
@@ -142,15 +142,15 @@ namespace TouchSocket.Sockets
 
         private void OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            count++;
-            receivedCallBack?.Invoke(byteBlock, requestInfo);
+            this.count++;
+            this.receivedCallBack?.Invoke(byteBlock, requestInfo);
         }
 
         private void SendCallback(byte[] buffer, int offset, int length)
         {
-            QueueDataBytes asyncByte = new QueueDataBytes(new byte[length], 0, length);
+            var asyncByte = new QueueDataBytes(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
-            asyncBytes.Enqueue(asyncByte);
+            this.asyncBytes.Enqueue(asyncByte);
         }
 
         private bool tryGet(out List<ByteBlock> byteBlocks)
@@ -159,21 +159,21 @@ namespace TouchSocket.Sockets
             ByteBlock block = null;
             while (true)
             {
-                if (asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
+                if (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
                 {
                     if (block == null)
                     {
-                        block = BytePool.Default.GetByteBlock(bufferLength);
+                        block = BytePool.Default.GetByteBlock(this.bufferLength);
                         byteBlocks.Add(block);
                     }
-                    int surLen = bufferLength - block.Pos;
+                    int surLen = this.bufferLength - block.Pos;
                     if (surLen < asyncByte.Length)//不能完成写入
                     {
                         block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);
                         int offset = surLen;
                         while (offset < asyncByte.Length)
                         {
-                            block = Write(asyncByte, ref offset);
+                            block = this.Write(asyncByte, ref offset);
                             byteBlocks.Add(block);
                         }
 
@@ -208,8 +208,8 @@ namespace TouchSocket.Sockets
 
         private ByteBlock Write(QueueDataBytes transferByte, ref int offset)
         {
-            ByteBlock block = BytePool.Default.GetByteBlock(bufferLength, true);
-            int len = Math.Min(transferByte.Length - offset, bufferLength);
+            ByteBlock block = BytePool.Default.GetByteBlock(this.bufferLength, true);
+            int len = Math.Min(transferByte.Length - offset, this.bufferLength);
             block.Write(transferByte.Buffer, offset, len);
             offset += len;
 
@@ -233,10 +233,10 @@ namespace TouchSocket.Sockets
 
         private UdpDataAdapterTester(int multiThread)
         {
-            asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
+            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
             for (int i = 0; i < multiThread; i++)
             {
-                EasyTask.Run(BeginSend);
+                EasyTask.Run(this.BeginSend);
             }
         }
 
@@ -249,7 +249,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
         {
-            UdpDataAdapterTester tester = new UdpDataAdapterTester(multiThread);
+            var tester = new UdpDataAdapterTester(multiThread);
             tester.adapter = adapter;
             adapter.SendCallBack = tester.SendCallback;
             adapter.ReceivedCallBack = tester.OnReceived;
@@ -262,7 +262,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public void Dispose()
         {
-            dispose = true;
+            this.dispose = true;
         }
 
         /// <summary>
@@ -277,22 +277,22 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
         {
-            count = 0;
+            this.count = 0;
             this.expectedCount = expectedCount;
             this.timeout = timeout;
-            stopwatch = new Stopwatch();
-            stopwatch.Start();
+            this.stopwatch = new Stopwatch();
+            this.stopwatch.Start();
             EasyTask.Run(() =>
             {
                 for (int i = 0; i < testCount; i++)
                 {
-                    adapter.SendInput(null, buffer, offset, length);
+                    this.adapter.SendInput(null, buffer, offset, length);
                 }
             });
-            if (SpinWait.SpinUntil(() => count == this.expectedCount, this.timeout))
+            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
             {
-                stopwatch.Stop();
-                return stopwatch.Elapsed;
+                this.stopwatch.Stop();
+                return this.stopwatch.Elapsed;
             }
 
             throw new TimeoutException();
@@ -307,20 +307,20 @@ namespace TouchSocket.Sockets
         /// <param name="timeout">超时</param>
         public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
         {
-            return Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
         }
 
         private void BeginSend()
         {
-            while (!dispose)
+            while (!this.dispose)
             {
-                if (tryGet(out List<ByteBlock> byteBlocks))
+                if (this.tryGet(out List<ByteBlock> byteBlocks))
                 {
-                    foreach (var block in byteBlocks)
+                    foreach (ByteBlock block in byteBlocks)
                     {
                         try
                         {
-                            adapter.ReceivedInput(null, block);
+                            this.adapter.ReceivedInput(null, block);
                         }
                         finally
                         {
@@ -337,24 +337,24 @@ namespace TouchSocket.Sockets
 
         private void OnReceived(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            receivedCallBack?.Invoke(byteBlock, requestInfo);
-            Interlocked.Increment(ref count);
+            this.receivedCallBack?.Invoke(byteBlock, requestInfo);
+            Interlocked.Increment(ref this.count);
         }
 
         private void SendCallback(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            QueueDataBytes asyncByte = new QueueDataBytes(new byte[length], 0, length);
+            var asyncByte = new QueueDataBytes(new byte[length], 0, length);
             Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
-            asyncBytes.Enqueue(asyncByte);
+            this.asyncBytes.Enqueue(asyncByte);
         }
 
         private bool tryGet(out List<ByteBlock> byteBlocks)
         {
             byteBlocks = new List<ByteBlock>();
 
-            while (asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
+            while (this.asyncBytes.TryDequeue(out QueueDataBytes asyncByte))
             {
-                ByteBlock block = new ByteBlock(asyncByte.Length);
+                var block = new ByteBlock(asyncByte.Length);
                 block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
                 byteBlocks.Add(block);
             }

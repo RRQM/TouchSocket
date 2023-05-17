@@ -52,7 +52,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                TUnfixedHeaderRequestInfo requestInfo = GetInstance();
+                TUnfixedHeaderRequestInfo requestInfo = this.GetInstance();
                 if (requestInfo.OnParsingHeader(byteBlock))
                 {
                     request = requestInfo;
