@@ -13,7 +13,7 @@ namespace RpcPerformanceConsoleApp
             NewLifeRpc.StartServer();
             TouchSocketRpc.StartServer();
 
-            int count = 100000;
+            int count = 1000000;
 
             consoleAction.Add("1.1", "BeetleXRpc测试Sum", () => BeetleXRpc.StartSumClient(count));
             consoleAction.Add("1.2", "BeetleXRpc测试GetBytes", () => BeetleXRpc.StartGetBytesClient(count));
