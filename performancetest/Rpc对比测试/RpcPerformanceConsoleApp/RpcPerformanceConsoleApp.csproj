@@ -10,7 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="BeetleX.XRPC" Version="1.2.0.1802" />
 		<PackageReference Include="BeetleX.XRPC.Hosting" Version="1.2.0.1802" />
-		<PackageReference Include="NewLife.Remoting" Version="2.0.2023.203" />
-		<PackageReference Include="TouchSocket" Version="1.2.17" />
+		<PackageReference Include="NewLife.Remoting" Version="2.1.2023.512" />
+		<PackageReference Include="TouchSocket" Version="1.3.4" />
 	</ItemGroup>
 </Project>
