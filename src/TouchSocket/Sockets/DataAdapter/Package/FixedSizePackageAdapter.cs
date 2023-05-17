@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
         /// <param name="fixedSize">数据包的长度</param>
         public FixedSizePackageAdapter(int fixedSize)
         {
-            FixedSize = fixedSize;
+            this.FixedSize = fixedSize;
         }
 
         /// <summary>
@@ -61,39 +61,39 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            if (CacheTimeoutEnable && DateTime.Now - LastCacheTime > CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
-                Reset();
+                this.Reset();
             }
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
-            if (m_tempByteBlock == null)
+            if (this.m_tempByteBlock == null)
             {
-                SplitPackage(buffer, 0, r);
+                this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (m_surPlusLength == r)
+                if (this.m_surPlusLength == r)
                 {
-                    m_tempByteBlock.Write(buffer, 0, m_surPlusLength);
-                    PreviewHandle(m_tempByteBlock);
-                    m_tempByteBlock = null;
-                    m_surPlusLength = 0;
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.m_surPlusLength = 0;
                 }
-                else if (m_surPlusLength < r)
+                else if (this.m_surPlusLength < r)
                 {
-                    m_tempByteBlock.Write(buffer, 0, m_surPlusLength);
-                    PreviewHandle(m_tempByteBlock);
-                    m_tempByteBlock = null;
-                    SplitPackage(buffer, m_surPlusLength, r);
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.SplitPackage(buffer, this.m_surPlusLength, r);
                 }
                 else
                 {
-                    m_tempByteBlock.Write(buffer, 0, r);
-                    m_surPlusLength -= r;
-                    if (UpdateCacheTimeWhenRev)
+                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_surPlusLength -= r;
+                    if (this.UpdateCacheTimeWhenRev)
                     {
-                        LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.Now;
                     }
                 }
             }
@@ -108,21 +108,21 @@ namespace TouchSocket.Sockets
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
             int dataLen = length - offset;
-            if (dataLen > FixedSize)
+            if (dataLen > this.FixedSize)
             {
                 throw new OverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = new ByteBlock(FixedSize);
+            var byteBlock = new ByteBlock(this.FixedSize);
 
             byteBlock.Write(buffer, offset, length);
-            for (int i = (int)byteBlock.Position; i < FixedSize; i++)
+            for (int i = (int)byteBlock.Position; i < this.FixedSize; i++)
             {
                 byteBlock.Buffer[i] = 0;
             }
-            byteBlock.SetLength(FixedSize);
+            byteBlock.SetLength(this.FixedSize);
             try
             {
-                GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {
@@ -137,27 +137,27 @@ namespace TouchSocket.Sockets
         protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
         {
             int length = 0;
-            foreach (var item in transferBytes)
+            foreach (ArraySegment<byte> item in transferBytes)
             {
                 length += item.Count;
             }
 
-            if (length > FixedSize)
+            if (length > this.FixedSize)
             {
                 throw new OverlengthException("发送的数据包长度大于FixedSize");
             }
-            ByteBlock byteBlock = new ByteBlock(FixedSize);
+            var byteBlock = new ByteBlock(this.FixedSize);
 
-            foreach (var item in transferBytes)
+            foreach (ArraySegment<byte> item in transferBytes)
             {
                 byteBlock.Write(item.Array, item.Offset, item.Count);
             }
 
-            Array.Clear(byteBlock.Buffer, byteBlock.Pos, FixedSize);
-            byteBlock.SetLength(FixedSize);
+            Array.Clear(byteBlock.Buffer, byteBlock.Pos, this.FixedSize);
+            byteBlock.SetLength(this.FixedSize);
             try
             {
-                GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {
@@ -179,16 +179,17 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-            m_tempByteBlock.SafeDispose();
-            m_tempByteBlock = null;
-            m_surPlusLength = 0;
+            this.m_tempByteBlock.SafeDispose();
+            this.m_tempByteBlock = null;
+            this.m_surPlusLength = 0;
+            base.Reset();
         }
 
         private void PreviewHandle(ByteBlock byteBlock)
         {
             try
             {
-                GoReceived(byteBlock, null);
+                this.GoReceived(byteBlock, null);
             }
             finally
             {
@@ -200,24 +201,24 @@ namespace TouchSocket.Sockets
         {
             while (index < r)
             {
-                if (r - index >= FixedSize)
+                if (r - index >= this.FixedSize)
                 {
-                    ByteBlock byteBlock = new ByteBlock(FixedSize);
-                    byteBlock.Write(dataBuffer, index, FixedSize);
-                    PreviewHandle(byteBlock);
-                    m_surPlusLength = 0;
+                    var byteBlock = new ByteBlock(this.FixedSize);
+                    byteBlock.Write(dataBuffer, index, this.FixedSize);
+                    this.PreviewHandle(byteBlock);
+                    this.m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    m_tempByteBlock = new ByteBlock(FixedSize);
-                    m_surPlusLength = FixedSize - (r - index);
-                    m_tempByteBlock.Write(dataBuffer, index, r - index);
-                    if (UpdateCacheTimeWhenRev)
+                    this.m_tempByteBlock = new ByteBlock(this.FixedSize);
+                    this.m_surPlusLength = this.FixedSize - (r - index);
+                    this.m_tempByteBlock.Write(dataBuffer, index, r - index);
+                    if (this.UpdateCacheTimeWhenRev)
                     {
-                        LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.Now;
                     }
                 }
-                index += FixedSize;
+                index += this.FixedSize;
             }
         }
     }

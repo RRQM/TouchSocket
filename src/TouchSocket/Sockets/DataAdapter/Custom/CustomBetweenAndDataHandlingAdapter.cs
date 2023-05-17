@@ -53,84 +53,84 @@ namespace TouchSocket.Sockets
                 int pos = byteBlock.Pos;
                 while (true)
                 {
-                    int indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, EndCode);
+                    int indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.EndCode);
                     if (indexEnd == -1)
                     {
                         byteBlock.Pos = pos;
                         return FilterResult.Cache;
                     }
 
-                    len = indexEnd - EndCode.Length - pos + 1;
-                    if (len >= MinSize)
+                    len = indexEnd - this.EndCode.Length - pos + 1;
+                    if (len >= this.MinSize)
                     {
                         break;
                     }
-                    byteBlock.Pos += len + EndCode.Length;
+                    byteBlock.Pos += len + this.EndCode.Length;
                 }
 
                 byteBlock.Pos = pos;
                 request.OnParsingBody(byteBlock.ToArray(pos, len));
                 byteBlock.Pos += len;
 
-                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, EndCode.Length)))
+                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))
                 {
-                    byteBlock.Pos += EndCode.Length;
+                    byteBlock.Pos += this.EndCode.Length;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Pos += EndCode.Length;
+                    byteBlock.Pos += this.EndCode.Length;
                     return FilterResult.GoOn;
                 }
             }
             else
             {
-                TBetweenAndRequestInfo requestInfo = GetInstance();
+                TBetweenAndRequestInfo requestInfo = this.GetInstance();
 
-                int indexStart = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, StartCode);
+                int indexStart = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.StartCode);
                 if (indexStart == -1)
                 {
                     return FilterResult.Cache;
                 }
-                if (!requestInfo.OnParsingStartCode(byteBlock.ToArray(byteBlock.Pos, StartCode.Length)))
+                if (!requestInfo.OnParsingStartCode(byteBlock.ToArray(byteBlock.Pos, this.StartCode.Length)))
                 {
-                    byteBlock.Pos += StartCode.Length;
+                    byteBlock.Pos += this.StartCode.Length;
                     return FilterResult.GoOn;
                 }
-                byteBlock.Pos += StartCode.Length;
+                byteBlock.Pos += this.StartCode.Length;
                 request = requestInfo;
 
                 int len;
                 int pos = byteBlock.Pos;
                 while (true)
                 {
-                    int indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, EndCode);
+                    int indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.EndCode);
                     if (indexEnd == -1)
                     {
                         byteBlock.Pos = pos;
                         return FilterResult.Cache;
                     }
 
-                    len = indexEnd - EndCode.Length - pos + 1;
-                    if (len >= MinSize)
+                    len = indexEnd - this.EndCode.Length - pos + 1;
+                    if (len >= this.MinSize)
                     {
                         break;
                     }
-                    byteBlock.Pos += len + EndCode.Length;
+                    byteBlock.Pos += len + this.EndCode.Length;
                 }
 
                 byteBlock.Pos = pos;
                 request.OnParsingBody(byteBlock.ToArray(pos, len));
                 byteBlock.Pos += len;
 
-                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, EndCode.Length)))
+                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))
                 {
-                    byteBlock.Pos += EndCode.Length;
+                    byteBlock.Pos += this.EndCode.Length;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Pos += EndCode.Length;
+                    byteBlock.Pos += this.EndCode.Length;
                     return FilterResult.GoOn;
                 }
             }

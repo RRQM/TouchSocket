@@ -60,27 +60,27 @@ namespace TouchSocket.Sockets
         {
             if (length > 11)
             {
-                ID = TouchSocketBitConverter.Default.ToInt64(buffer, offset);
-                SN = TouchSocketBitConverter.Default.ToUInt16(buffer, 8 + offset);
-                FIN = buffer[10 + offset].GetBit(7) == 1;
-                if (FIN)
+                this.ID = TouchSocketBitConverter.Default.ToInt64(buffer, offset);
+                this.SN = TouchSocketBitConverter.Default.ToUInt16(buffer, 8 + offset);
+                this.FIN = buffer[10 + offset].GetBit(7) == 1;
+                if (this.FIN)
                 {
                     if (length > 13)
                     {
-                        Data = new byte[length - 13];
+                        this.Data = new byte[length - 13];
                     }
                     else
                     {
-                        Data = new byte[0];
+                        this.Data = new byte[0];
                     }
-                    Crc = new byte[2] { buffer[length - 2], buffer[length - 1] };
+                    this.Crc = new byte[2] { buffer[length - 2], buffer[length - 1] };
                 }
                 else
                 {
-                    Data = new byte[length - 11];
+                    this.Data = new byte[length - 11];
                 }
 
-                Array.Copy(buffer, 11, Data, 0, Data.Length);
+                Array.Copy(buffer, 11, this.Data, 0, this.Data.Length);
                 return true;
             }
             return false;
@@ -108,11 +108,11 @@ namespace TouchSocket.Sockets
         /// <param name="revStore"></param>
         public UdpPackage(long id, int timeout, ConcurrentDictionary<long, UdpPackage> revStore)
         {
-            ID = id;
-            m_frames = new ConcurrentQueue<UdpFrame>();
-            m_timer = new Timer((o) =>
+            this.ID = id;
+            this.m_frames = new ConcurrentQueue<UdpFrame>();
+            this.m_timer = new Timer((o) =>
             {
-                if (revStore.TryRemove(ID, out UdpPackage udpPackage))
+                if (revStore.TryRemove(this.ID, out UdpPackage udpPackage))
                 {
                     udpPackage.m_frames.Clear();
                 }
@@ -122,7 +122,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当前长度
         /// </summary>
-        public int Count => m_count;
+        public int Count => this.m_count;
 
         /// <summary>
         /// Crc
@@ -137,17 +137,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 是否已完成
         /// </summary>
-        public bool IsComplated => TotalCount > 0 ? (TotalCount == m_count ? true : false) : false;
+        public bool IsComplated => this.TotalCount > 0 ? (this.TotalCount == this.m_count ? true : false) : false;
 
         /// <summary>
         /// 当前数据长度
         /// </summary>
-        public int Length => m_length;
+        public int Length => this.m_length;
 
         /// <summary>
         /// MTU
         /// </summary>
-        public int MTU => m_mtu + 11;
+        public int MTU => this.m_mtu + 11;
 
         /// <summary>
         /// 总长度，在收到最后一帧之前，为-1。
@@ -160,19 +160,19 @@ namespace TouchSocket.Sockets
         /// <param name="frame"></param>
         public void Add(UdpFrame frame)
         {
-            Interlocked.Increment(ref m_count);
+            Interlocked.Increment(ref this.m_count);
 
             if (frame.FIN)
             {
-                TotalCount = frame.SN + 1;
-                Crc = frame.Crc;
+                this.TotalCount = frame.SN + 1;
+                this.Crc = frame.Crc;
             }
-            Interlocked.Add(ref m_length, frame.Data.Length);
+            Interlocked.Add(ref this.m_length, frame.Data.Length);
             if (frame.SN == 0)
             {
-                m_mtu = frame.Data.Length;
+                this.m_mtu = frame.Data.Length;
             }
-            m_frames.Enqueue(frame);
+            this.m_frames.Enqueue(frame);
         }
 
         /// <summary>
@@ -182,18 +182,18 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public bool TryGetData(ByteBlock byteBlock)
         {
-            while (m_frames.TryDequeue(out UdpFrame frame))
+            while (this.m_frames.TryDequeue(out UdpFrame frame))
             {
-                byteBlock.Pos = frame.SN * m_mtu;
+                byteBlock.Pos = frame.SN * this.m_mtu;
                 byteBlock.Write(frame.Data);
             }
 
-            if (byteBlock.Len != Length)
+            if (byteBlock.Len != this.Length)
             {
                 return false;
             }
-            var crc = TouchSocket.Core.Crc.Crc16(byteBlock.Buffer, 0, byteBlock.Len);
-            if (crc[0] != Crc[0] || crc[1] != Crc[1])
+            byte[] crc = TouchSocket.Core.Crc.Crc16(byteBlock.Buffer, 0, byteBlock.Len);
+            if (crc[0] != this.Crc[0] || crc[1] != this.Crc[1])
             {
                 return false;
             }
@@ -216,8 +216,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public UdpPackageAdapter()
         {
-            revStore = new ConcurrentDictionary<long, UdpPackage>();
-            m_iDGenerator = new SnowflakeIDGenerator(4);
+            this.revStore = new ConcurrentDictionary<long, UdpPackage>();
+            this.m_iDGenerator = new SnowflakeIDGenerator(4);
         }
 
         /// <summary>
@@ -235,8 +235,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int MTU
         {
-            get => m_mtu + 11;
-            set => m_mtu = value > 11 ? value : 1472;
+            get => this.m_mtu + 11;
+            set => this.m_mtu = value > 11 ? value : 1472;
         }
 
         /// <summary>
@@ -251,26 +251,26 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            UdpFrame udpFrame = new UdpFrame();
+            var udpFrame = new UdpFrame();
             if (udpFrame.Parse(byteBlock.Buffer, 0, byteBlock.Len))
             {
-                UdpPackage udpPackage = revStore.GetOrAdd(udpFrame.ID, (i) => new UdpPackage(i, Timeout, revStore));
+                UdpPackage udpPackage = this.revStore.GetOrAdd(udpFrame.ID, (i) => new UdpPackage(i, this.Timeout, this.revStore));
                 udpPackage.Add(udpFrame);
-                if (udpPackage.Length > MaxPackageSize)
+                if (udpPackage.Length > this.MaxPackageSize)
                 {
-                    revStore.TryRemove(udpPackage.ID, out _);
-                    m_owner?.Logger.Error("数据长度大于设定的最大值。");
+                    this.revStore.TryRemove(udpPackage.ID, out _);
+                    this.m_owner?.Logger.Error("数据长度大于设定的最大值。");
                     return;
                 }
                 if (udpPackage.IsComplated)
                 {
-                    if (revStore.TryRemove(udpPackage.ID, out _))
+                    if (this.revStore.TryRemove(udpPackage.ID, out _))
                     {
-                        using (ByteBlock block = new ByteBlock(udpPackage.Length))
+                        using (var block = new ByteBlock(udpPackage.Length))
                         {
                             if (udpPackage.TryGetData(block))
                             {
-                                GoReceived(remoteEndPoint, block, null);
+                                this.GoReceived(remoteEndPoint, block, null);
                             }
                         }
                     }
@@ -287,20 +287,20 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            if (length > MaxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            long id = m_iDGenerator.NextID();
+            long id = this.m_iDGenerator.NextID();
             int off = 0;
             int surLen = length;
-            int freeRoom = m_mtu - 11;
+            int freeRoom = this.m_mtu - 11;
             ushort sn = 0;
             /*|********|**|*|n|*/
             /*|********|**|*|**|*/
             while (surLen > 0)
             {
-                byte[] data = new byte[m_mtu];
+                byte[] data = new byte[this.m_mtu];
                 Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, data, 0, 8);
                 Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
                 if (surLen > freeRoom)//有余
@@ -308,7 +308,7 @@ namespace TouchSocket.Sockets
                     Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
                     off += freeRoom;
                     surLen -= freeRoom;
-                    GoSend(endPoint, data, 0, m_mtu);
+                    this.GoSend(endPoint, data, 0, this.m_mtu);
                 }
                 else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
                 {
@@ -318,7 +318,7 @@ namespace TouchSocket.Sockets
                     Buffer.BlockCopy(buffer, off, data, 11, surLen);
                     Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
 
-                    GoSend(endPoint, data, 0, surLen + 11 + 2);
+                    this.GoSend(endPoint, data, 0, surLen + 11 + 2);
 
                     off += surLen;
                     surLen -= surLen;
@@ -326,7 +326,7 @@ namespace TouchSocket.Sockets
                 else//结束但不能容纳Crc
                 {
                     Buffer.BlockCopy(buffer, off, data, 11, surLen);
-                    GoSend(endPoint, data, 0, surLen + 11);
+                    this.GoSend(endPoint, data, 0, surLen + 11);
                     off += surLen;
                     surLen -= surLen;
 
@@ -336,7 +336,7 @@ namespace TouchSocket.Sockets
                     byte flag = 0;
                     finData[10] = flag.SetBit(7, 1);
                     Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, finData, 11, 2);
-                    GoSend(endPoint, finData, 0, finData.Length);
+                    this.GoSend(endPoint, finData, 0, finData.Length);
                 }
             }
         }
@@ -349,23 +349,23 @@ namespace TouchSocket.Sockets
         protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             int length = 0;
-            foreach (var item in transferBytes)
+            foreach (ArraySegment<byte> item in transferBytes)
             {
                 length += item.Count;
             }
 
-            if (length > MaxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            using (ByteBlock byteBlock = new ByteBlock(length))
+            using (var byteBlock = new ByteBlock(length))
             {
-                foreach (var item in transferBytes)
+                foreach (ArraySegment<byte> item in transferBytes)
                 {
                     byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
-                PreviewSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+                this.PreviewSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
 

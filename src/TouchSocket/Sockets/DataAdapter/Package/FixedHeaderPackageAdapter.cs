@@ -56,42 +56,42 @@ namespace TouchSocket.Sockets
             byte[] buffer = byteBlock.Buffer;
             int r = byteBlock.Len;
 
-            if (CacheTimeoutEnable && DateTime.Now - LastCacheTime > CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
-                Reset();
+                this.Reset();
             }
 
-            if (m_agreementTempBytes != null)
+            if (this.m_agreementTempBytes != null)
             {
-                SeamPackage(buffer, r);
+                this.SeamPackage(buffer, r);
             }
-            else if (m_tempByteBlock == null)
+            else if (this.m_tempByteBlock == null)
             {
-                SplitPackage(buffer, 0, r);
+                this.SplitPackage(buffer, 0, r);
             }
             else
             {
-                if (m_surPlusLength == r)
+                if (this.m_surPlusLength == r)
                 {
-                    m_tempByteBlock.Write(buffer, 0, m_surPlusLength);
-                    PreviewHandle(m_tempByteBlock);
-                    m_tempByteBlock = null;
-                    m_surPlusLength = 0;
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.m_surPlusLength = 0;
                 }
-                else if (m_surPlusLength < r)
+                else if (this.m_surPlusLength < r)
                 {
-                    m_tempByteBlock.Write(buffer, 0, m_surPlusLength);
-                    PreviewHandle(m_tempByteBlock);
-                    m_tempByteBlock = null;
-                    SplitPackage(buffer, m_surPlusLength, r);
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.SplitPackage(buffer, this.m_surPlusLength, r);
                 }
                 else
                 {
-                    m_tempByteBlock.Write(buffer, 0, r);
-                    m_surPlusLength -= r;
-                    if (UpdateCacheTimeWhenRev)
+                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_surPlusLength -= r;
+                    if (this.UpdateCacheTimeWhenRev)
                     {
-                        LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.Now;
                     }
                 }
             }
@@ -105,12 +105,12 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            if (length < MinPackageSize)
+            if (length < this.MinPackageSize)
             {
                 throw new Exception("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > MaxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -118,7 +118,7 @@ namespace TouchSocket.Sockets
             ByteBlock byteBlock = null;
             byte[] lenBytes = null;
 
-            switch (FixedHeaderType)
+            switch (this.FixedHeaderType)
             {
                 case FixedHeaderType.Byte:
                     {
@@ -147,7 +147,7 @@ namespace TouchSocket.Sockets
             {
                 byteBlock.Write(lenBytes);
                 byteBlock.Write(buffer, offset, length);
-                GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {
@@ -167,17 +167,17 @@ namespace TouchSocket.Sockets
             }
 
             int length = 0;
-            foreach (var item in transferBytes)
+            foreach (ArraySegment<byte> item in transferBytes)
             {
                 length += item.Count;
             }
 
-            if (length < MinPackageSize)
+            if (length < this.MinPackageSize)
             {
                 throw new Exception("发送数据小于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > MaxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
@@ -185,7 +185,7 @@ namespace TouchSocket.Sockets
             ByteBlock byteBlock = null;
             byte[] lenBytes = null;
 
-            switch (FixedHeaderType)
+            switch (this.FixedHeaderType)
             {
                 case FixedHeaderType.Byte:
                     {
@@ -212,11 +212,11 @@ namespace TouchSocket.Sockets
             try
             {
                 byteBlock.Write(lenBytes);
-                foreach (var item in transferBytes)
+                foreach (ArraySegment<byte> item in transferBytes)
                 {
                     byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
-                GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
             finally
             {
@@ -238,17 +238,18 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-            m_agreementTempBytes = null;
-            m_surPlusLength = default;
-            m_tempByteBlock?.Dispose();
-            m_tempByteBlock = null;
+            this.m_agreementTempBytes = null;
+            this.m_surPlusLength = default;
+            this.m_tempByteBlock?.Dispose();
+            this.m_tempByteBlock = null;
+            base.Reset();
         }
 
         private void PreviewHandle(ByteBlock byteBlock)
         {
             try
             {
-                GoReceived(byteBlock, null);
+                this.GoReceived(byteBlock, null);
             }
             finally
             {
@@ -263,12 +264,12 @@ namespace TouchSocket.Sockets
         /// <param name="r"></param>
         private void SeamPackage(byte[] buffer, int r)
         {
-            ByteBlock byteBlock = new ByteBlock(r + m_agreementTempBytes.Length);
-            byteBlock.Write(m_agreementTempBytes);
+            var byteBlock = new ByteBlock(r + this.m_agreementTempBytes.Length);
+            byteBlock.Write(this.m_agreementTempBytes);
             byteBlock.Write(buffer, 0, r);
-            r += m_agreementTempBytes.Length;
-            m_agreementTempBytes = null;
-            SplitPackage(byteBlock.Buffer, 0, r);
+            r += this.m_agreementTempBytes.Length;
+            this.m_agreementTempBytes = null;
+            this.SplitPackage(byteBlock.Buffer, 0, r);
             byteBlock.Dispose();
         }
 
@@ -282,19 +283,19 @@ namespace TouchSocket.Sockets
         {
             while (index < r)
             {
-                if (r - index <= (byte)FixedHeaderType)
+                if (r - index <= (byte)this.FixedHeaderType)
                 {
-                    m_agreementTempBytes = new byte[r - index];
-                    Array.Copy(dataBuffer, index, m_agreementTempBytes, 0, m_agreementTempBytes.Length);
-                    if (UpdateCacheTimeWhenRev)
+                    this.m_agreementTempBytes = new byte[r - index];
+                    Array.Copy(dataBuffer, index, this.m_agreementTempBytes, 0, this.m_agreementTempBytes.Length);
+                    if (this.UpdateCacheTimeWhenRev)
                     {
-                        LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.Now;
                     }
                     return;
                 }
                 int length = 0;
 
-                switch (FixedHeaderType)
+                switch (this.FixedHeaderType)
                 {
                     case FixedHeaderType.Byte:
                         length = dataBuffer[index];
@@ -313,34 +314,34 @@ namespace TouchSocket.Sockets
                 {
                     throw new Exception("接收数据长度错误，已放弃接收");
                 }
-                else if (length < MinPackageSize)
+                else if (length < this.MinPackageSize)
                 {
                     throw new Exception("接收数据长度小于设定值，已放弃接收");
                 }
-                else if (length > MaxPackageSize)
+                else if (length > this.MaxPackageSize)
                 {
                     throw new Exception("接收数据长度大于设定值，已放弃接收");
                 }
 
-                int recedSurPlusLength = r - index - (byte)FixedHeaderType;
+                int recedSurPlusLength = r - index - (byte)this.FixedHeaderType;
                 if (recedSurPlusLength >= length)
                 {
-                    ByteBlock byteBlock = new ByteBlock(length);
-                    byteBlock.Write(dataBuffer, index + (byte)FixedHeaderType, length);
-                    PreviewHandle(byteBlock);
-                    m_surPlusLength = 0;
+                    var byteBlock = new ByteBlock(length);
+                    byteBlock.Write(dataBuffer, index + (byte)this.FixedHeaderType, length);
+                    this.PreviewHandle(byteBlock);
+                    this.m_surPlusLength = 0;
                 }
                 else//半包
                 {
-                    m_tempByteBlock = new ByteBlock(length);
-                    m_surPlusLength = length - recedSurPlusLength;
-                    m_tempByteBlock.Write(dataBuffer, index + (byte)FixedHeaderType, recedSurPlusLength);
-                    if (UpdateCacheTimeWhenRev)
+                    this.m_tempByteBlock = new ByteBlock(length);
+                    this.m_surPlusLength = length - recedSurPlusLength;
+                    this.m_tempByteBlock.Write(dataBuffer, index + (byte)this.FixedHeaderType, recedSurPlusLength);
+                    if (this.UpdateCacheTimeWhenRev)
                     {
-                        LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.Now;
                     }
                 }
-                index += (length + (byte)FixedHeaderType);
+                index += (length + (byte)this.FixedHeaderType);
             }
         }
     }

@@ -216,6 +216,7 @@ namespace TouchSocket.Http.WebSockets
             m_tempByteBlock = null;
             m_dataFrameTemp = null;
             m_surPlusLength = 0;
+            base.Reset();
         }
 
         private void PreviewHandle(WSDataFrame dataFrame)

@@ -21,7 +21,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class DataHandlingAdapter : DisposableObject
     {
-        private ITcpClientBase m_client;
 
         /// <summary>
         /// 最后缓存的时间
@@ -54,11 +53,11 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
         public virtual void OnLoaded(ITcpClientBase client)
         {
-            if (m_client != null)
+            if (this.Client != null)
             {
                 throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
             }
-            m_client = client;
+            this.Client = client;
         }
 
         /// <summary>
@@ -79,7 +78,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public ITcpClientBase Client => m_client;
+        public ITcpClientBase Client { get; private set; }
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -99,11 +98,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                PreviewReceived(byteBlock);
+                this.PreviewReceived(byteBlock);
             }
             catch (Exception ex)
             {
-                OnError(ex.Message);
+                this.OnError(ex.Message);
             }
         }
 
@@ -115,7 +114,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void SendInput(byte[] buffer, int offset, int length)
         {
-            PreviewSend(buffer, offset, length);
+            this.PreviewSend(buffer, offset, length);
         }
 
         /// <summary>
@@ -124,7 +123,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public void SendInput(IList<ArraySegment<byte>> transferBytes)
         {
-            PreviewSend(transferBytes);
+            this.PreviewSend(transferBytes);
         }
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         public void SendInput(IRequestInfo requestInfo)
         {
-            PreviewSend(requestInfo);
+            this.PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -143,7 +142,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析实例传递</param>
         protected void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            ReceivedCallBack.Invoke(byteBlock, requestInfo);
+            this.ReceivedCallBack.Invoke(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -154,7 +153,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         protected void GoSend(byte[] buffer, int offset, int length)
         {
-            SendCallBack.Invoke(buffer, offset, length);
+            this.SendCallBack.Invoke(buffer, offset, length);
         }
 
         /// <summary>
@@ -167,11 +166,11 @@ namespace TouchSocket.Sockets
         {
             if (reset)
             {
-                Reset();
+                this.Reset();
             }
-            if (log && m_client != null && m_client.Logger != null)
+            if (log && this.Client != null && this.Client.Logger != null)
             {
-                m_client.Logger.Error(error);
+                this.Client.Logger.Error(error);
             }
         }
 
@@ -205,7 +204,10 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
-        protected abstract void Reset();
+        protected virtual void Reset()
+        {
+            this.LastCacheTime = DateTime.Now;
+        }
 
         /// <summary>
         /// 该方法被触发时，一般说明<see cref="Client"/>已经断开连接。

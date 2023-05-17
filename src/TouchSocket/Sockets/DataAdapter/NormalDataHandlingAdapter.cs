@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock">数据流</param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            GoReceived(byteBlock, null);
+            this.GoReceived(byteBlock, null);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace TouchSocket.Sockets
         /// <param name="length">长度</param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            GoSend(buffer, offset, length);
+            this.GoSend(buffer, offset, length);
         }
 
         /// <summary>
@@ -74,6 +74,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
+            base.Reset();
         }
     }
 }

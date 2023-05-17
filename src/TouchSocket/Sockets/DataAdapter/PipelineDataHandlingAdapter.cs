@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         protected Pipeline(ITcpClientBase client)
         {
-            Client = client;
+            this.Client = client;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            m_pipeline.SafeDispose();
+            this.m_pipeline.SafeDispose();
             base.Dispose(disposing);
         }
 
@@ -70,19 +70,19 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            if (m_pipeline == null || !m_pipeline.Enable)
+            if (this.m_pipeline == null || !this.m_pipeline.Enable)
             {
-                m_task?.Wait();
-                m_pipeline = new InternalPipeline(Client);
-                m_task = EasyTask.Run(() =>
+                this.m_task?.Wait();
+                this.m_pipeline = new InternalPipeline(this.Client);
+                this.m_task = EasyTask.Run(() =>
                   {
                       try
                       {
-                          GoReceived(default, m_pipeline);
-                          if (m_pipeline.CanReadLen > 0)
+                          this.GoReceived(default, this.m_pipeline);
+                          if (this.m_pipeline.CanReadLen > 0)
                           {
-                              m_buffer = new byte[m_pipeline.CanReadLen];
-                              m_pipeline.Read(m_buffer, 0, m_buffer.Length);
+                              this.m_buffer = new byte[this.m_pipeline.CanReadLen];
+                              this.m_pipeline.Read(this.m_buffer, 0, this.m_buffer.Length);
                           }
                       }
                       catch
@@ -90,16 +90,16 @@ namespace TouchSocket.Sockets
                       }
                       finally
                       {
-                          m_pipeline.SafeDispose();
+                          this.m_pipeline.SafeDispose();
                       }
                   });
             }
-            if (m_buffer != null)
+            if (this.m_buffer != null)
             {
-                m_pipeline.InternalInput(m_buffer, 0, m_buffer.Length);
-                m_buffer = null;
+                this.m_pipeline.InternalInput(this.m_buffer, 0, this.m_buffer.Length);
+                this.m_buffer = null;
             }
-            m_pipeline.InternalInput(byteBlock.Buffer, 0, byteBlock.Len);
+            this.m_pipeline.InternalInput(byteBlock.Buffer, 0, byteBlock.Len);
         }
     }
 
@@ -115,20 +115,20 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         public InternalPipeline(ITcpClientBase client) : base(client)
         {
-            ReadTimeout = 60 * 1000;
+            this.ReadTimeout = 60 * 1000;
         }
 
-        public override bool CanRead => Enable;
+        public override bool CanRead => this.Enable;
 
-        public override bool CanWrite => Client.CanSend;
+        public override bool CanWrite => this.Client.CanSend;
 
         public bool Enable
         {
             get
             {
-                lock (m_locker)
+                lock (this.m_locker)
                 {
-                    return !m_disposedValue;
+                    return !this.m_disposedValue;
                 }
             }
         }
@@ -139,19 +139,19 @@ namespace TouchSocket.Sockets
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            Client.DefaultSend(buffer, offset, count);
+            this.Client.DefaultSend(buffer, offset, count);
         }
 
         internal void InternalInput(byte[] buffer, int offset, int length)
         {
-            Input(buffer, offset, length);
+            this.Input(buffer, offset, length);
         }
 
         protected override void Dispose(bool disposing)
         {
-            lock (m_locker)
+            lock (this.m_locker)
             {
-                m_disposedValue = true;
+                this.m_disposedValue = true;
                 base.Dispose(disposing);
             }
         }

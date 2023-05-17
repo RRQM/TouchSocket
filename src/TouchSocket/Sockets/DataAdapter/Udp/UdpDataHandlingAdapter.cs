@@ -43,7 +43,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 适配器拥有者。
         /// </summary>
-        public IUdpSession Owner => m_owner;
+        public IUdpSession Owner => this.m_owner;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
@@ -64,11 +64,11 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                PreviewReceived(remoteEndPoint, byteBlock);
+                this.PreviewReceived(remoteEndPoint, byteBlock);
             }
             catch (Exception ex)
             {
-                OnError(ex.Message);
+                this.OnError(ex.Message);
             }
         }
 
@@ -78,7 +78,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo"></param>
         public void SendInput(IRequestInfo requestInfo)
         {
-            PreviewSend(requestInfo);
+            this.PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void SendInput(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            PreviewSend(endPoint, buffer, offset, length);
+            this.PreviewSend(endPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            PreviewSend(endPoint, transferBytes);
+            this.PreviewSend(endPoint, transferBytes);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace TouchSocket.Sockets
         /// <param name="requestInfo">以解析实例传递</param>
         protected void GoReceived(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
+            this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         protected void GoSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            SendCallBack.Invoke(endPoint, buffer, offset, length);
+            this.SendCallBack.Invoke(endPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -136,11 +136,11 @@ namespace TouchSocket.Sockets
         {
             if (reset)
             {
-                Reset();
+                this.Reset();
             }
-            if (log && m_owner != null && m_owner.Logger != null)
+            if (log && this.m_owner != null && this.m_owner.Logger != null)
             {
-                m_owner.Logger.Error(error);
+                this.m_owner.Logger.Error(error);
             }
         }
 

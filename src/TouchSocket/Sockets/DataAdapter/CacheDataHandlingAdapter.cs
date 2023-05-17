@@ -33,11 +33,11 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         protected void Cache(byte[] buffer, int offset, int length)
         {
-            m_cacheByteBlock ??= new ByteBlock(length);
-            m_cacheByteBlock.Write(buffer, offset, length);
-            if (UpdateCacheTimeWhenRev)
+            this.m_cacheByteBlock ??= new ByteBlock(length);
+            this.m_cacheByteBlock.Write(buffer, offset, length);
+            if (this.UpdateCacheTimeWhenRev)
             {
-                LastCacheTime = DateTime.Now;
+                this.LastCacheTime = DateTime.Now;
             }
         }
 
@@ -46,8 +46,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override void Reset()
         {
-            m_cacheByteBlock.SafeDispose();
-            m_cacheByteBlock = null;
+            this.m_cacheByteBlock.SafeDispose();
+            this.m_cacheByteBlock = null;
+            base.Reset();
         }
 
         /// <summary>
@@ -58,21 +59,21 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         protected bool TryGetCache(out byte[] buffer)
         {
-            if (m_cacheByteBlock == null)
+            if (this.m_cacheByteBlock == null)
             {
                 buffer = null;
                 return false;
             }
-            if (DateTime.Now - LastCacheTime > CacheTimeout)
+            if (DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
-                m_cacheByteBlock.SafeDispose();
-                m_cacheByteBlock = null;
+                this.m_cacheByteBlock.SafeDispose();
+                this.m_cacheByteBlock = null;
                 buffer = null;
                 return false;
             }
-            buffer = m_cacheByteBlock.ToArray();
-            m_cacheByteBlock.SafeDispose();
-            m_cacheByteBlock = null;
+            buffer = this.m_cacheByteBlock.ToArray();
+            this.m_cacheByteBlock.SafeDispose();
+            this.m_cacheByteBlock = null;
             return true;
         }
 
@@ -83,19 +84,19 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         protected bool TryGetCache(out ByteBlock byteBlock)
         {
-            if (m_cacheByteBlock == null)
+            if (this.m_cacheByteBlock == null)
             {
                 byteBlock = null;
                 return false;
             }
-            if (DateTime.Now - LastCacheTime > CacheTimeout)
+            if (DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
-                m_cacheByteBlock.SafeDispose();
-                m_cacheByteBlock = null;
+                this.m_cacheByteBlock.SafeDispose();
+                this.m_cacheByteBlock = null;
                 byteBlock = null;
                 return false;
             }
-            byteBlock = m_cacheByteBlock;
+            byteBlock = this.m_cacheByteBlock;
             return true;
         }
     }
