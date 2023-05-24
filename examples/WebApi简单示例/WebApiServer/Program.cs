@@ -23,6 +23,7 @@ namespace WebApiServerApp
                })
                .ConfigurePlugins(a =>
                {
+                   a.UseCheckClear();
                    webApiParser = a.UseWebApi();
                    a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                }))
@@ -84,6 +85,10 @@ namespace WebApiServerApp
         [Router("[api]/[action]")]
         public Task<string> PostContent(IWebApiCallContext callContext)
         {
+            if (callContext.Caller is ISocketClient socketClient)
+            {
+                this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
+            }
             if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
             {
                 this.m_logger.Info($"共计：{content.Length}");
