@@ -473,7 +473,6 @@ namespace TouchSocket.Sockets
                 var args = new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开");
                 PrivateOnDisconnecting(args);
             }
-            Config = default;
             m_adapter.SafeDispose();
             m_adapter = default;
             BreakOut($"{nameof(Dispose)}主动断开", true);
