@@ -39,6 +39,26 @@ public class ApiServer : RpcServer
         }
         return Task.FromResult("id不正确。");
     }
+
+    /// <summary>
+    /// 使用调用上下文，获取实际请求体。
+    /// </summary>
+    /// <param name="callContext"></param>
+    [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]//声明包含调用上下文
+    [Router("[api]/[action]")]
+    public Task<string> PostContent(IWebApiCallContext callContext)
+    {
+        if (callContext.Caller is ISocketClient socketClient)
+        {
+            this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
+        }
+        if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
+        {
+            this.m_logger.Info($"共计：{content.Length}");
+        }
+
+        return Task.FromResult("ok");
+    }
 }
 
 public class MyClass
@@ -67,7 +87,8 @@ public class MyClass
     })
     .ConfigurePlugins(a =>
     {
-        a.Add<WebApiParserPlugin>();//添加支持WebApi的插件。此处可能需要using TouchSocket.Core.Plugins;
+        a.UseCheckClear();
+        a.UseWebApi();//启用WebApi
     }))
     .Start();
 
