@@ -184,9 +184,9 @@ namespace TouchSocket.Rpc.WebApi
             {
                 e.Handled = true;
 
-                InvokeResult invokeResult = new InvokeResult();
+                var invokeResult = new InvokeResult();
                 object[] ps = null;
-                WebApiCallContext callContext = new WebApiCallContext()
+                var callContext = new WebApiCallContext()
                 {
                     Caller = client,
                     HttpContext = e.Context,
@@ -235,6 +235,10 @@ namespace TouchSocket.Rpc.WebApi
                         if (index >= 0)
                         {
                             string str = e.Context.Request.GetBody();
+                            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                            {
+                                index++;
+                            }
                             ps[index] = m_converter.ConvertFrom(str, methodInstance.ParameterTypes[index]);
                         }
                     }
