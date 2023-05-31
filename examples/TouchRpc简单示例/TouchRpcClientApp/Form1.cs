@@ -27,7 +27,6 @@ namespace TouchRpcClientApp
             //后续参数为调用参数。
             bool result = client.Invoke<bool>("touchrpcserverapp.myrpcserver.login", InvokeOption.WaitInvoke, textBox1.Text, textBox2.Text);
             MessageBox.Show(result.ToString());
-            
             client.SafeDispose();//client是长连接，可以复用，但在此处使用短连接。
         }
 
