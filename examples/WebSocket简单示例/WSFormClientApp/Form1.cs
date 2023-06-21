@@ -167,5 +167,11 @@ namespace WSClientApp
                     break;
             }
         }
+
+        protected override void OnHandshaking(WebSocketClient client, HttpContextEventArgs e)
+        {
+            e.Context.Request.Headers["cookie"] = "";
+            base.OnHandshaking(client, e);
+        }
     }
 }
