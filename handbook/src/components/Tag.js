@@ -31,7 +31,7 @@ export default function (props) {
     },
     移除: {
       icon: "shanchu",
-      bgColor: "#666",
+      bgColor: "red",
     },
     答疑: {
       icon: "dayi",
