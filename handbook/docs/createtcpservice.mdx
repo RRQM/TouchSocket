@@ -345,6 +345,31 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::  
 
+
+### 8.3 动态添加、移除监听配置
+
+服务器支持在运行时，动态添加，和移除监听配置，这极大的为灵活监听提供了方便，并且还不影响现有连接。可以轻量级的实现Stop操作。
+
+```csharp {5,16}
+TcpService service = new TcpService();
+service.Setup(new TouchSocketConfig())
+    .Start();//启动
+
+service.AddListen(new ListenOption()//在Service运行时，可以调用，直接添加监听
+{
+    IpHost = 7791,
+    Name = "server3",//名称用于区分监听
+    ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+    TcpAdapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
+                                                       //还有其他可配置项，都是单独对当前地址有效。
+});
+
+foreach (var item in service.Monitors)
+{
+    service.RemoveListen(item);//在Service运行时，可以调用，直接移除现有监听
+}
+```
+
 ## 九、接收数据
 
 在TcpService中，接收数据的方式有很多种。多种方式可以组合使用。
