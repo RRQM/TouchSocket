@@ -17,7 +17,7 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 - **多地址监听**（可以一次性监听多个IP及端口）
 - 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
 - 超简单的同步发送、异步发送、接收等操作。
-- 基于委托、插件驱动，让每一步都能执行AOP。
+- 基于委托、[插件](../docs/pluginsmanager.mdx)驱动，让每一步都能执行AOP。
 
 ## 三、产品应用场景
 
@@ -136,18 +136,16 @@ Ssl配置，为Null时则不启用。
 
 ## 六、支持插件
 
-支持**ITcpPlugin**接口，或者继承自**TcpPluginBase**类，重写相应方法即可。
-
 |  插件方法| 功能 |
 | --- | --- |
-| OnConnecting | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
-| OnConnected | 同意连接，且成功启动接收后触发 |
-| OnDisconnecting | 当客户端主动调用Close时触发 |
-| OnDisconnected | 当客户端断开连接后触发 |
-| OnReceivingData | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
-| OnReceivedData | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
-| OnSendingData | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
-| OnIDChanged | 当SocketClient的ID发生改变时触发。 |
+| ITcpConnectingPlugin | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
+| ITcpConnectedPlugin | 同意连接，且成功启动接收后触发 |
+| ITcpDisconnectingPlugin | 当客户端主动调用Close时触发 |
+| ITcpDisconnectedPlugin | 当客户端断开连接后触发 |
+| ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
+| ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
+| ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
+| IIdChangedPlugin | 当SocketClient的ID发生改变时触发。 |
 
 ## 七、创建TcpService
 
@@ -162,39 +160,48 @@ Ssl配置，为Null时则不启用。
 TcpService service = new TcpService();
 service.Connecting = (client, e) => { };//有客户端正在连接
 service.Connected = (client, e) => { };//有客户端成功连接
+service.Disconnecting = (client, e) => { };//有客户端正在断开连接，只有当主动断开时才有效。
 service.Disconnected = (client, e) => { };//有客户端断开连接
 service.Received = (client, byteBlock, requestInfo) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+    client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
     client.Send(mes);//将收到的信息直接返回给发送方
 
     //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
 
-    var ids = service.GetIDs();
+    var ids = service.GetIds();
     foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
     {
-        if (clientId != client.ID)//不给自己发
+        if (clientId != client.Id)//不给自己发
         {
             service.Send(clientId, mes);
         }
     }
 };
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+service.Setup(new TouchSocketConfig()//载入配置
+    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
     })
     .ConfigurePlugins(a =>
     {
+        a.Add<MyServicePluginClass>();
         //a.Add();//此处可以添加插件
     }))
     .Start();//启动
 ```
+
+:::info 温馨提示
+
+Service.Start()方法并不会阻塞当前运行，所以当在控制台运行时，可能需要使用Console.ReadKey()等操作进行阻塞。
+
+:::  
 
 ### 7.2 泛型创建
 
@@ -207,13 +214,15 @@ service.Setup(new TouchSocketConfig()//载入配置
 ```csharp
 public class MySocketClient : SocketClient
 {
-    protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
         string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
+
+        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。
     }
 }
 ```
@@ -229,12 +238,13 @@ public class MyService : TcpService<MySocketClient>
         base.LoadConfig(config);
     }
 
-    protected override void OnConnecting(MySocketClient socketClient, ClientOperationEventArgs e)
+    protected override void OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
+     
+        //e.Id:对新连接的客户端进行ID初始化，默认情况下是按照设定的规则随机分配的。
+        //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
-       
-        //e.ID:对新连接的客户端进行ID初始化，例如可以设置为其IP地址。
         //e.IsPermitOperation:指示是否允许该客户端链接。
         base.OnConnecting(socketClient, e);
     }
@@ -246,15 +256,12 @@ public class MyService : TcpService<MySocketClient>
 
 ```csharp
 MyService service = new MyService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnected = (client, e) => { };//有客户端断开连接
 
 service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .SetListenIPHosts("tcp://127.0.0.1:7789")
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
-        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
     })
     .ConfigurePlugins(a =>
     {
@@ -267,15 +274,12 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 ```csharp
 TcpService<MySocketClient> service = new TcpService<MySocketClient>();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnected = (client, e) => { };//有客户端断开连接
 
 service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .SetListenIPHosts(7789, 7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
-        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
     })
     .ConfigurePlugins(a =>
     {
@@ -290,12 +294,62 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::  
 
+## 八、配置监听
 
-## 八、接收数据
+### 8.1 Config直接配置
+
+服务器在配置监听时，有多种方式实现。其中最简单、最常见的配置方式就是通过Config直接配置。
+
+```csharp
+TcpService service = new TcpService();
+
+service.Setup(new TouchSocketConfig()//载入配置
+    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790))
+    .Start();//启动
+```
+
+### 8.2 直接添加监听配置
+
+直接添加监听配置是更加个性化的监听配置，它可以单独控制指定监听地址的具体配置，例如：是否启用Ssl加密、使用何种适配器等。
+
+```csharp
+TcpService service = new TcpService();
+
+service.Setup(new TouchSocketConfig()//载入配置
+    .SetListenOptions(option =>
+    {
+        option.Add(new ListenOption()
+        {
+            IpHost = "127.0.0.1:7789",
+            Name = "server1",//名称用于区分监听
+            ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+            TcpAdapter = () => new NormalDataHandlingAdapter(),//可以单独对当前地址监听，配置适配器
+            //还有其他可配置项，都是单独对当前地址有效。
+        });
+
+        option.Add(new ListenOption()
+        {
+            IpHost = 7790,
+            Name = "server2",//名称用于区分监听
+            ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+            TcpAdapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
+            //还有其他可配置项，都是单独对当前地址有效。
+        });
+    }))
+    .Start();//启动
+```
+
+:::info 温馨提示
+
+`SetListenIPHosts`可以和`SetListenOptions`可以同时使用，但是需要注意的是，Config的全局配置仅会对`SetListenIPHosts`单独生效的。`SetListenOptions`的地址配置均是单独配置的。
+
+:::  
+
+## 九、接收数据
 
 在TcpService中，接收数据的方式有很多种。多种方式可以组合使用。
 
-### 8.1 Received委托处理
+### 9.1 Received委托处理
 
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
@@ -305,43 +359,41 @@ service.Received = (client, byteBlock, requestInfo) =>
 {
     //从客户端收到信息
     string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+    client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 };
 
 service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+    .SetListenIPHosts("tcp://127.0.0.1:7789",7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
-        a.UseConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
     }))
     .Start();//启动
 ```
 
-### 8.2 重写SocketClient处理
+### 9.2 重写SocketClient处理
 
 正如6.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
 
-### 8.3 插件处理 <Tag>推荐</Tag>
+### 9.3 插件处理 <Tag>推荐</Tag>
 
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
-1. 服务器配置启用插件（UsePlugin）
-2. 新建插件类
-3. 添加插件
-
-代码如下：
-
 （1）声明插件
 
+插件可以先继承`PluginBase`，然后再实现需要的功能插件接口，可以按需选择泛型或者非泛型实现。
+
+如果已经有继承类，直接实现`IPlugin`接口即可。
+
 ```csharp
-public class MyPlugin : TcpPluginBase<SocketClient>
+public class MyPlugin : PluginBase,ITcpReceivedPlugin<SocketClient>
 {
     public MyPlugin()
     {
         this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
-    
-    protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+
+    public void OnTcpReceived(SocketClient client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -349,36 +401,39 @@ public class MyPlugin : TcpPluginBase<SocketClient>
         IRequestInfo requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
-        base.OnReceivedData(client, e);
+    }
+
+    public Task OnTcpReceivedAsync(SocketClient client, ReceivedDataEventArgs e)
+    {
+        return Task.CompletedTask;
     }
 }
 ```
 
 （2）创建使用插件处理的服务器
 
-```csharp
+```csharp {10}
 TcpService service = new TcpService();
 service.Setup(new TouchSocketConfig()
-    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })
-    .UsePlugin()
-    .ConfigureContainer(a=>
+    .SetListenIPHosts(7789)
+    .ConfigureContainer(a =>
     {
-        a.UseConsoleLogger();
+        a.AddConsoleLogger();
     })
-    .ConfigurePlugins(a => 
+    .ConfigurePlugins(a =>
     {
         a.Add<MyPlugin>();
     }))
     .Start();
 ```
 
-## 九、AspNetCore中创建
+## 十、AspNetCore中创建
 
 首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
 
 :::tip 建议
 
-在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也即时一些。
+在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也及时一些。
 
 :::  
 
@@ -424,19 +479,23 @@ public void ConfigureServices(IServiceCollection services)
 {
     var tcpService = services.AddTcpService(config =>
       {
-          config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-          .UsePlugin()
-          .UseAspNetCoreContainer(services)
+          config.SetListenIPHosts(7789)
+          .UseAspNetCoreContainer(services)//使用和Aspnetcore一致的容器，可以做到注册类型的共享
           .ConfigurePlugins(a =>
           {
-              a.Add<MyTcpPlugin>();//此插件就可以处理接收数据
+              a.Add<MyPlugin>();//此插件就可以处理接收数据
           });
       });
 }
-
 ```
 
-然后在任意地方，也可获得服务。
+:::info 温馨提示
+
+UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但是需要注意的是，`IServiceProvider`并不是同一个实例，所以当使用单例注册时，可能无法做到单例共享。解决方法就是将单例类型，使用实例注册。这样就完全可以。其他生命周期不受影响。
+
+:::  
+
+然后在任意地方，也可获得服务。例如：在控制器中
 
 ![image.png](../static/img/docs/createtcpservice-1.png)
 
@@ -447,38 +506,38 @@ public void ConfigureServices(IServiceCollection services)
 :::
 
 
-## 十、发送数据
+## 十一、发送数据
 
 按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SocketClient**的实例，通过**该实例**即可将数据发送至**客户端**。
 
-### 10.1 如何获取SocketClient？
+### 11.1 如何获取SocketClient？
 
 （1）直接获取所有在线客户端
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
 ```csharp
-SocketClient[] socketClients = service.GetClients();
+var socketClients = service.GetClients();
 ```
 
 :::caution 注意
 
-由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.ID，然后再通过服务器查找。
+由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.Id，然后再通过服务器查找。
 
 :::  
 
-（2）通过ID获取
+（2）通过Id获取
 
-先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
 
 ```csharp
-string[] ids = service.GetIDs();
-if (service.TryGetSocketClient(ids[0], out SocketClient socketClient))
+var ids = service.GetIds();
+if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
 {
 }
 ```
 
-### 10.2 发送
+### 11.2 发送
 
 【同步发送】
 
@@ -505,7 +564,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 :::  
 
-### 10.3 通过TcpService发送
+### 11.3 通过TcpService发送
 
 通过ID发送数据。
 
