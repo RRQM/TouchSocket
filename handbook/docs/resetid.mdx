@@ -1,6 +1,6 @@
 ---
 id: resetid
-title: 服务器重置ID
+title: 服务器重置id
 ---
 
 ## 一、说明
@@ -11,7 +11,7 @@ title: 服务器重置ID
 
 默认情况下服务器都会根据**历史连接数量**，为连接的客户端新分配Id。也就是说，第一个连接的，其Id就是1，以此类推。
 
-当然我们可以自由的定义Id策略，只需要在Config配置中，配置[SetGetDefaultNewId](../docs/createtcpservice.mdx#setgetdefaultnewid)，自定义新ID来源即可。要求不和现连接的客户端ID重复。
+当然我们可以自由的定义Id策略，只需要在Config配置中，配置[SetGetDefaultNewId](../docs/createtcpservice.mdx#setgetdefaultnewid)，自定义新id来源即可。要求不和现连接的客户端id重复。
 
 下列示例，就是使用Guid作为初始Id。
 
@@ -20,13 +20,13 @@ var config = new TouchSocketConfig();
 config.SetGetDefaultNewId(()=>Guid.NewGuid().ToString());
 ```
 
-## 三、创建能代表连接的ID
+## 三、创建能代表连接的Id
 
 上述这种Id规范，是与连接信息没有任何关联的，这也就意味着，这种方式是无法关联SocketClient的。
 
-但往往，有时候，我们希望，SocketClient的Id，能一定程度的代表一些信息。例如：以客户端的IP和端口，作为唯一ID。
+但往往，有时候，我们希望，SocketClient的Id，能一定程度的代表一些信息。例如：以客户端的IP和端口，作为唯一id。
 
-那这时候，**服务器**可以订阅**Connecting**，然后，为新连接的SocketClient，设置与之有关联信息的ID。
+那这时候，**服务器**可以订阅**Connecting**，然后，为新连接的SocketClient，设置与之有关联信息的id。
 
 ```csharp
 m_service.Connecting = (client, e) => //有客户端正在连接
@@ -41,9 +41,9 @@ m_service.Connecting = (client, e) => //有客户端正在连接
 
 ::: 
 
-## 四、即时修改ID
+## 四、即时修改id
 
-上述修改Id的方式，应该还不足以应对所有情况。有时候我们希望，在该连接完成，且经过某种验证之后再设置新的ID，那么我们可以通过**ResetId**的方法，来实现需求。
+上述修改Id的方式，应该还不足以应对所有情况。有时候我们希望，在该连接完成，且经过某种验证之后再设置新的id，那么我们可以通过**ResetId**的方法，来实现需求。
 
 ### 4.1 通过Service直接修改
 
