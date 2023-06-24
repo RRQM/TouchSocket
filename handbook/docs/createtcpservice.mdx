@@ -47,25 +47,16 @@ SocketClient在Service里面以字典映射。ID为键，SocketClient本身为�
 3. 该值虽然无上限，但是一般不要超过1Mb，不然不仅没意义，还很浪费
 
 #### SetMaxPackageSize
-
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
 
-#### SetThreadCount
-
-多线程数量。该值在Auto模式下指示线程池的最少线程数量和IO线程数量。
-
-设置建议：
-
-1. 异步处理接收数据，此时线程数量设置为内核线程左右的值即可。
-2. 同步处理接收数据，此时应当考虑两个因素。该操作是否为耗时操作，如果是，则该值在允许范围内，应当设置更可能大的值。如果不是，则设置为内核线程左右的值即可。
-
 #### SetGetDefaultNewID
-
-配置初始ID的分配策略
+配置初始Id的分配策略。
 
 #### SetListenIPHosts
+设置统一的监听IP和端口号组，可以一次性设置多个地址。 
 
-监听IP和端口号组，可以一次性设置多个地址。 
+#### SetListenOptions
+设置独立的监听IP和端口号，可以独立控制当前地址监听的个性化配置。 
 
 #### SetServerName
 服务器标识名称，无实际使用意义。
@@ -80,9 +71,6 @@ Tcp半连接挂起连接队列的最大长度。默认为30
 接收类型。
 - AUTO：自动接收模式。
 - None：不投递IO接收申请，用户可通过GetStream，获取到流以后，自己处理接收。注意：连接端不会感知主动断开。
-
-#### UsePlugin
-是否启用插件。在启用时或许会带来一点点性能损耗，基本上不是千万数据交互根本不值一提。
 
 #### SetServiceSslOption
 Ssl配置，为Null时则不启用。 
@@ -99,36 +87,6 @@ Ssl配置，为Null时则不启用。
 
 #### UseReuseAddress
 启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题。
-
-#### SetRemoteIPHost
-
-链接到的远程IPHost，支持域名。支持类型：
-1. 使用IP&Port，传入形如：127.0.0.1:7789的字符串即可。
-2. 使用域名，必须包含协议类型，形如：http://baidu.com或者https://baidu.com:80
-
-#### SetClientSslOption
-客户端Ssl配置，为Null时则不启用。
-注意，当RemoteIPHost使用https、wss的域名时，该配置会使用系统默认配置生效。
-
-#### SetKeepAliveValue
-为Socket设置的属性。
-注意：该配置仅在window平台生效。
-
-#### SetBindIPHost
-绑定端口。
-- 在UdpSessionBase中表示本地监听地址
-- 在TcpClient中表示固定客户端端口号。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-
-如果一个包大于512kb，则不会延迟，直接发送。
-如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
-
-#### UseNoDelay
-设置Socket的NoDelay属性，默认false。
-
-#### UseBroadcast
-该值指定可以发送或接收广播数据包。
 
 </div>
 </details>
@@ -591,7 +549,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 ### 11.3 通过TcpService发送
 
-通过ID发送数据。
+通过Id发送数据。
 
 ```csharp
 public virtual void Send(string id, ByteBlock byteBlock);
@@ -602,4 +560,9 @@ public virtual Task SendAsync(string id, byte[] buffer, int offset, int length);
 public virtual Task SendAsync(string id, byte[] buffer);
 ```
 
+:::tip 提示
+
+框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+
+:::  
 

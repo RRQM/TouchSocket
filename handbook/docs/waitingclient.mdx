@@ -17,20 +17,23 @@ title: 同步请求
 ### 2.1 以TcpClient为例
 
 ```csharp
-TcpClient m_tcpClient = new TcpClient();
-var config = new TouchSocketConfig();
-config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"));
-
-//载入配置
-m_tcpClient.Setup(config);
-m_tcpClient.Connect();
+TcpClient client = new TcpClient();
+client.Connect("127.0.0.1:7789");
 
 //调用GetWaitingClient获取到IWaitingClient的对象。
-var waitClient = m_tcpClient.GetWaitingClient(new WaitingOptions()
+var waitClient = client.GetWaitingClient(new WaitingOptions()
 {
     AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
     BreakTrigger = true,//表示当连接断开时，会立即触发
     ThrowBreakException = true//表示当连接断开时，是否触发异常
+}, 
+ response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+{
+    if (response.Data.Length==1)
+    {
+        return true;
+    }
+    return false;
 });
 
 //然后使用SendThenReturn。
@@ -54,6 +57,14 @@ service.Received = (client, byteBlock, requestInfo) =>
         AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
         BreakTrigger = true,//表示当连接断开时，会立即触发
         ThrowBreakException = true//表示当连接断开时，是否触发异常
+    }, 
+    response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+    {
+        if (response.Data.Length==1)
+        {
+            return true;
+        }
+        return false;
     });
 
     //然后使用SendThenReturn。
