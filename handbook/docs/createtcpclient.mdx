@@ -3,6 +3,7 @@ id: createtcpclient
 title: 创建TcpClient
 ---
 
+import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
@@ -41,55 +42,13 @@ TcpClient是Tcp系客户端基类，他直接参与tcp的连接、发送、接�
 
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
 
-#### SetThreadCount
-
-多线程数量。该值在Auto模式下指示线程池的最少线程数量和IO线程数量。
-
-设置建议：
-
-1. 异步处理接收数据，此时线程数量设置为内核线程左右的值即可。
-2. 同步处理接收数据，此时应当考虑两个因素。该操作是否为耗时操作，如果是，则该值在允许范围内，应当设置更可能大的值。如果不是，则设置为内核线程左右的值即可。
-
-#### SetGetDefaultNewID
-
-配置初始ID的分配策略
-
-#### SetListenIPHosts
-
-监听IP和端口号组，可以一次性设置多个地址。 
-
-#### SetServerName
-服务器标识名称，无实际使用意义。
-
-#### SetBacklogProperty
-Tcp半连接挂起连接队列的最大长度。默认为30 
-
-#### SetMaxCount
-最大可连接数，默认为10000 
-
 #### SetReceiveType
 接收类型。
 - AUTO：自动接收模式。
 - None：不投递IO接收申请，用户可通过GetStream，获取到流以后，自己处理接收。注意：连接端不会感知主动断开。
 
-#### UsePlugin
-是否启用插件。在启用时或许会带来一点点性能损耗，基本上不是千万数据交互根本不值一提。
-
 #### SetServiceSslOption
 Ssl配置，为Null时则不启用。 
-
-#### UseNoDelay
-设置Socket的NoDelay属性，默认false。 
-
-#### UseDelaySender
-使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用**延迟算法**。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-1. 如果一个包大于512kb，则不会延迟，直接发送。
-2. 如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10**微秒**左右），则会将这两个包压缩为一个包发送。
- 
-#### UseReuseAddress
-启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题。
 
 #### SetRemoteIPHost
 
@@ -121,27 +80,25 @@ Ssl配置，为Null时则不启用。
 #### UseNoDelay
 设置Socket的NoDelay属性，默认false。
 
-#### UseBroadcast
-该值指定可以发送或接收广播数据包。
-
 </div>
 </details>
 
 ## 五、支持插件
 
-支持**ITcpPlugin**接口，或者继承自**TcpPluginBase**类，重写相应方法即可。
-
 |  插件方法| 功能 |
 | --- | --- |
-| OnConnecting | 在Socket完成初始化，但是并未连接时触发。 |
-| OnConnected | 在Socket完成连接，且成功后触发 |
-| OnDisconnecting | 当客户端主动调用Close时触发 |
-| OnDisconnected | 当客户端断开连接后触发 |
-| OnReceivingData | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
-| OnReceivedData | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
-| OnSendingData | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
+| ITcpConnectingPlugin | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
+| ITcpConnectedPlugin | 同意连接，且成功启动接收后触发 |
+| ITcpDisconnectingPlugin | 当客户端主动调用Close时触发 |
+| ITcpDisconnectedPlugin | 当客户端断开连接后触发 |
+| ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
+| ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
+| ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
+| IIdChangedPlugin | 当SocketClient的ID发生改变时触发。 |
 
 ## 六、创建TcpClient
+
+#### 6.1 简单创建
 
 简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
 
@@ -149,24 +106,74 @@ Ssl配置，为Null时则不启用。
 
 ```csharp
 TcpClient tcpClient = new TcpClient();
-tcpClient.Connected += (client, e) => { };//成功连接到服务器
-tcpClient.Disconnected += (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-tcpClient.Received += (client, byteBlock, requestInfo) =>
+tcpClient.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
+tcpClient.Connected = (client, e) => { };//成功连接到服务器
+tcpClient.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
+tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
+tcpClient.Received = (client, byteBlock, requestInfo) =>
 {
-    //从服务器收到信息
+    //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
     string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-    Console.WriteLine($"接收到信息：{mes}");
+    tcpClient.Logger.Info($"客户端接收到信息：{mes}");
 };
 
-//声明配置
-TouchSocketConfig config = new TouchSocketConfig();
-config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-    .UsePlugin();
+//载入配置
+tcpClient.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();//添加一个日志注入
+    }));
+
+tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
+
+//Result result = tcpClient.TryConnect();//或者可以调用TryConnect
+//if (result.IsSuccess())
+//{
+
+//}
+
+tcpClient.Logger.Info("客户端成功连接");
+
+tcpClient.Send("RRQM");
+```
+
+#### 6.2 继承实现
+
+一般继承实现的话，可以从TcpClientBase继承。
+
+```csharp
+class MyTcpClient: TcpClientBase
+{
+    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        //此处逻辑单线程处理。
+
+        //此处处理数据，功能相当于Received委托。
+        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        Console.WriteLine($"已接收到信息：{mes}");
+
+        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。
+    }
+}
+```
+
+```csharp
+MyTcpClient tcpClient = new MyTcpClient();
+tcpClient.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
+tcpClient.Connected = (client, e) => { };//成功连接到服务器
+tcpClient.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
+tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
 
 //载入配置
-tcpClient.Setup(config);
-tcpClient.Connect();
-tcpClient.Send("RRQM");
+tcpClient.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();//添加一个日志注入
+    }));
+
+tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
 ```
 
 ## 七、接收数据
@@ -196,27 +203,25 @@ tcpClient.Setup(config);
 tcpClient.Connect();
 ```
 
-### 7.2 插件处理推荐
+### 7.2 插件处理 <Tag>推荐</Tag>
 
 按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
-1. 服务器配置启用插件（UsePlugin）
-2. 新建插件类
-3. 添加插件
-
-代码如下：
-
 （1）声明插件
 
+插件可以先继承`PluginBase`，然后再实现需要的功能插件接口，可以按需选择泛型或者非泛型实现。
+
+如果已经有继承类，直接实现`IPlugin`接口即可。
+
 ```csharp
-public class MyPlugin : TcpPluginBase<TcpClient>
+public class MyPlugin : PluginBase,ITcpReceivedPlugin<TcpClient>
 {
     public MyPlugin()
     {
         this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
-   
-    protected override void OnReceivedData(TcpClient client, ReceivedDataEventArgs e)
+
+    public void OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -224,7 +229,11 @@ public class MyPlugin : TcpPluginBase<TcpClient>
         IRequestInfo requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
-        base.OnReceivedData(client, e);
+    }
+
+    public Task OnTcpReceivedAsync(TcpClient client, ReceivedDataEventArgs e)
+    {
+       return Task.CompletedTask;
     }
 }
 ```
@@ -234,13 +243,12 @@ public class MyPlugin : TcpPluginBase<TcpClient>
 ```csharp
 TcpClient client = new TcpClient();
 client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-    .UsePlugin()
-    .ConfigureContainer(a=>
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
-    .ConfigurePlugins(a => 
+    .ConfigurePlugins(a =>
     {
         a.Add<MyPlugin>();
     }))
@@ -267,4 +275,10 @@ TcpClient已经内置了三种异步发送方法，直接调用就可以发送�
 public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
 ```
+
+:::tip 提示
+
+框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+
+:::  
 
