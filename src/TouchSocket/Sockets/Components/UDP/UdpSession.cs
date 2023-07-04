@@ -747,6 +747,14 @@ namespace TouchSocket.Sockets
                     Logger.Log(LogType.Error, this, ex.Message, ex);
                 }
             }
+            else
+            {
+                if (e.SocketError != SocketError.Success)
+                {
+                    Logger?.Error(this, $"接收出现错误：{e.SocketError}，错误代码：{(int)e.SocketError}");
+                    e.Dispose();
+                }
+            }
         }
 
         #region DefaultSend
