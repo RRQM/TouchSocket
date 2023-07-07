@@ -442,13 +442,17 @@ namespace TouchSocket.Rpc
                             actionFilters.Add(filter);
                         }
                     }
-                    foreach (var item in toMethod.GetCustomAttributes(true))
+                    if (serverFromType!=serverToType)
                     {
-                        if (item is IRpcActionFilter filter)
+                        foreach (var item in toMethod.GetCustomAttributes(true))
                         {
-                            actionFilters.Add(filter);
+                            if (item is IRpcActionFilter filter)
+                            {
+                                actionFilters.Add(filter);
+                            }
                         }
                     }
+                    
                     if (actionFilters.Count > 0)
                     {
                         methodInstance.Filters = actionFilters.ToArray();
