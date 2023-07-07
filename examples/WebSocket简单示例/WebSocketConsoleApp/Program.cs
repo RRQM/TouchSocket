@@ -54,6 +54,13 @@ namespace WebSocketConsoleApp
                 case WSDataType.Text:
                     Console.WriteLine(e.DataFrame.ToText());
                     ((HttpSocketClient)client).SendWithWS(e.DataFrame.ToText());
+
+                    //using (ByteBlock byteBlock=new ByteBlock(1024*64))//估算一下你的数据大小
+                    //{
+                    //    WSDataFrame dataFrame = new WSDataFrame();
+                    //    dataFrame.BuildResponse(byteBlock);
+                    //    ((HttpSocketClient)client).SendWithWS(byteBlock);
+                    //}
                     break;
 
                 case WSDataType.Binary:
