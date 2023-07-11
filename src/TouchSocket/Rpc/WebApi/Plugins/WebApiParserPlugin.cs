@@ -23,7 +23,6 @@ namespace TouchSocket.Rpc.WebApi
     /// </summary>
     public class WebApiParserPlugin : HttpPluginBase, IRpcParser
     {
-        private readonly ActionMap m_actionMap;
         private readonly StringConverter m_converter;
         private RpcStore m_rpcStore;
 
@@ -32,7 +31,8 @@ namespace TouchSocket.Rpc.WebApi
         /// </summary>
         public WebApiParserPlugin([DependencyParamterInject(true)] RpcStore rpcStore)
         {
-            m_actionMap = new ActionMap();
+            GetRouteMap = new ActionMap();
+            PostRouteMap = new ActionMap();
             m_converter = new StringConverter();
             rpcStore?.AddRpcParser(GetType().Name, this);
         }
@@ -43,9 +43,14 @@ namespace TouchSocket.Rpc.WebApi
         public StringConverter Converter => m_converter;
 
         /// <summary>
-        /// 获取路由映射图
+        /// 获取Get函数路由映射图
         /// </summary>
-        public ActionMap RouteMap => m_actionMap;
+        public ActionMap GetRouteMap { get; private set; }
+
+        /// <summary>
+        /// 获取Post函数路由映射图
+        /// </summary>
+        public ActionMap PostRouteMap { get; private set; }
 
         /// <summary>
         /// 所属服务器
@@ -59,7 +64,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="e"></param>
         protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
+            if (GetRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
             {
                 e.Handled = true;
 
@@ -180,7 +185,7 @@ namespace TouchSocket.Rpc.WebApi
         /// <param name="e"></param>
         protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
         {
-            if (m_actionMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
+            if (PostRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL.ToLower(), out MethodInstance methodInstance))
             {
                 e.Handled = true;
 
@@ -323,7 +328,14 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         foreach (var item in actionUrls)
                         {
-                            m_actionMap.Add(item, methodInstance);
+                            if (attribute.Method == HttpMethodType.GET)
+                            {
+                                this.GetRouteMap.Add(item, methodInstance);
+                            }
+                            else if (attribute.Method == HttpMethodType.POST)
+                            {
+                                this.PostRouteMap.Add(item, methodInstance);
+                            }
                         }
                     }
                 }
@@ -341,7 +353,14 @@ namespace TouchSocket.Rpc.WebApi
                     {
                         foreach (var item in actionUrls)
                         {
-                            m_actionMap.Remove(item);
+                            if (attribute.Method == HttpMethodType.GET)
+                            {
+                                this.GetRouteMap.Remove(item);
+                            }
+                            else if (attribute.Method == HttpMethodType.POST)
+                            {
+                                this.PostRouteMap.Remove(item);
+                            }
                         }
                     }
                 }
