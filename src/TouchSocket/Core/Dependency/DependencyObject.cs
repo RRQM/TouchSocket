@@ -114,7 +114,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
         {
-            m_dp.AddOrUpdate(dp, value, (k, v) => v);
+            m_dp.AddOrUpdate(dp, value, (k, v) => value);
             return this;
         }
 
