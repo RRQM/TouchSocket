@@ -33,6 +33,7 @@ namespace FileServiceConsoleApp
     {
         protected override void OnFileTransfering(TcpTouchRpcSocketClient client, FileOperationEventArgs e)
         {
+            e.IsPermitOperation = true;//每次传输都需要设置true，表示允许传输
             //有可能是上传，也有可能是下载
             client.Logger.Info($"有客户端请求传输文件，ID={client.ID}，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
             base.OnFileTransfering(client, e);
