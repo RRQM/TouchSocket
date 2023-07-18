@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;net7.0</TargetFrameworks>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<SignAssembly>True</SignAssembly>
+		<Version>2.0.0.0-beta</Version>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<LangVersion>8.0</LangVersion>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
+		<PackageTags>message;arraypool;logger;plugin</PackageTags>
+		<Description>这是基于TouchSocket的，实现自主数据的双端可扩展通信协议。能够非常简单的实现跨语言连接等。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageIcon>logo.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<Title>TouchSocket.Smtp</Title>
+		<BaseOutputPath>..\Build</BaseOutputPath>
+		<DocumentationFile></DocumentationFile>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="logo.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="TouchSocket" Version="2.0.0-beta" />
+	  <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta" />
+	  <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta" />
+	  <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta" />
+	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Http\TouchSocket.Http.csproj" />
+	  <ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
+	</ItemGroup>-->
+</Project>

@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static ITcpService AddTcpService<ServiceInterface>(this IServiceCollection service, ITcpService tcpService) where ServiceInterface : ITcpService
         {
-            tcpService.Config.Container.RegisterSingleton<ServiceInterface>(tcpService);
+            tcpService.Container.RegisterSingleton<ServiceInterface>(tcpService);
             return (ServiceInterface)tcpService;
         }
 
@@ -45,8 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static ITcpService AddTcpService<ServiceInterface>(this IServiceCollection service, Action<TouchSocketConfig> configAction) where ServiceInterface : ITcpService
         {
-            var config = new TouchSocketConfig()
-                .UseAspNetCoreContainer(service);
+            TouchSocketConfig config = new TouchSocketConfig();
             configAction?.Invoke(config);
             ITcpService tcpService = new TcpService();
             tcpService.Setup(config)

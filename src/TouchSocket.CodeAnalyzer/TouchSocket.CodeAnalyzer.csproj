@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;</TargetFrameworks>
+		<SignAssembly>True</SignAssembly>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<Version>2.0.0.0-beta</Version>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
+		<PackageTags>rpc,analyzer</PackageTags>
+		<Description>
+			这是可以让TouchSocket.Rpc拥有代码分析功能的库。
+		</Description>
+		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<PackageIcon>logo.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<Title>TouchSocket.CodeAnalyzer</Title>
+		<BaseOutputPath>..\Build</BaseOutputPath>
+		<DocumentationFile></DocumentationFile>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+	</PropertyGroup>
+
+
+	<ItemGroup>
+		<None Include="LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="logo.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<None Include="..\TouchSocket.SourceGenerator.Rpc\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
+		<None Include="..\TouchSocket.SourceGenerator.Rpc\bin\$(Configuration)\netstandard2.0\TouchSocket.SourceGenerator.Rpc.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
+	</ItemGroup>
+</Project>

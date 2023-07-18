@@ -1,76 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>1.3.9</Version>
+		<Version>2.0.0.0-beta</Version>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<LangVersion>8.0</LangVersion>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
-		<PackageTags>tcp,udp,socket,ssl,rpc,http,https,websocket,rpc,xmlrpc,jsonrpc,webapi</PackageTags>
-		<Description>这是一个轻量级的、支持插件的综合网络通信库。基础通信功能包含Tcp、Udp、Ssl、Rpc、Http等。其中http服务器支持WebSocket、静态网页、XmlRpc、WebApi、JsonRpc等扩展插件。和自定义协议的TouchRpc，支持Ssl加密、异步调用、权限管理、错误状态返回、服务回调、分布式调用等。在空载函数执行时，10万次调用仅3.8秒，在不返回状态时，仅0.9秒。
+		<PackageTags>message;arraypool;logger;plugin</PackageTags>
+		<Description>TouchSocket是.Net(包括 C# 、VB.Net、F#)的一个整合性的socket网络通信框架。包含了 tcp、udp、ssl等一系列的通信模块。一键式解决 tcp 黏分包问题，udp大数据包分片组合问题等。使用协议模板，可快速实现「固定包头」、「固定长度」、「区间字符」等一系列的数据报文解析。
 
-This is a lightweight, plug-in - enabled comprehensive network communication library. Basic communication functions include Tcp, Udp, Ssl, Rpc, and Http. HTTP server supports WebSocket, static web page, XmlRpc, WebApi, JsonRpc and other extension plug-ins. And custom protocol TouchRpc, support Ssl encryption, asynchronous call, permission management, error status return, service callback, distributed call, etc. It takes 3.8 seconds for 100,000 calls when the no-load function is executing, and 0.9 seconds when the state is not returned.
-
-说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<Authors>若汝棋茗</Authors>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-		<DocumentationFile>bin\Debug\netstandard2.0\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-		<DocumentationFile>bin\Release\netstandard2.0\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
-		<DocumentationFile>bin\Debug\net45\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<DefineConstants>TRACE;DEBUG</DefineConstants>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Optimize>false</Optimize>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
-		<DocumentationFile>bin\Release\net45\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
-		<DocumentationFile>bin\Debug\net7.0\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
-		<DocumentationFile>bin\Release\net7.0\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-		<DocumentationFile>bin\Debug\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-		<DocumentationFile>bin\Release\netcoreapp3.1\TouchSocket.xml</DocumentationFile>
-		<OutputPath></OutputPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Title>TouchSocket</Title>
+		<BaseOutputPath>..\Build</BaseOutputPath>
+		<DocumentationFile></DocumentationFile>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -79,25 +34,16 @@ This is a lightweight, plug-in - enabled comprehensive network communication lib
 			<PackagePath></PackagePath>
 		</None>
 		<None Include="logo.png">
-		  <Pack>True</Pack>
-		  <PackagePath></PackagePath>
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
-		<Reference Include="System.Web" />
-		<Reference Include="Microsoft.CSharp" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="All" />
-	</ItemGroup>
-
 	<ItemGroup>
-	  <PackageReference Include="IntelligentCoder" Version="1.0.12">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
+	  <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta" />
 	</ItemGroup>
 
+	<!--<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
+	</ItemGroup>-->
 </Project>
