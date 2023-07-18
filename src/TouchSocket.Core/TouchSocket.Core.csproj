@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;net7.0</TargetFrameworks>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<SignAssembly>True</SignAssembly>
+		<Version>2.0.0.0-beta</Version>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<LangVersion>8.0</LangVersion>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
+		<PackageTags>message;arraypool;logger;plugin;3DES;xml;filepool;serialize</PackageTags>
+		<Description>这是为TouchSocket系提供基础服务功能的库，其中包含：内存池、对象池、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、规范日志接口等。
+			
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageIcon>logo.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<Title>TouchSocket.Core</Title>
+		<BaseOutputPath>..\Build</BaseOutputPath>
+		<DocumentationFile></DocumentationFile>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="logo.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<Reference Include="Microsoft.CSharp" />
+		<PackageReference Include="Newtonsoft.Json" Version="3.5.8" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="All" />
+		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
+		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'!='net45'">
+		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+	</ItemGroup>
+</Project>
