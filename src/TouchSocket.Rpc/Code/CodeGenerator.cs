@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -162,7 +162,7 @@ namespace TouchSocket.Rpc
             codeString.AppendLine("using TouchSocket.Core;");
             codeString.AppendLine("using TouchSocket.Sockets;");
             codeString.AppendLine("using TouchSocket.Rpc;");
-            codeString.AppendLine("using TouchSocket.Smtp.Rpc;");
+            codeString.AppendLine("using TouchSocket.Dmtp.Rpc;");
             codeString.AppendLine("using System.Collections.Generic;");
             codeString.AppendLine("using System.Diagnostics;");
             codeString.AppendLine("using System.Text;");

@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -16,14 +16,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Smtp;
+using TouchSocket.Dmtp;
 
-namespace TouchSocket.Smtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// IWebsocketSmtpService服务器接口
+    /// IWebsocketDmtpService服务器接口
     /// </summary>
-    public interface IWebsocketSmtpService : ISmtpService, IPluginObject
+    public interface IWebsocketDmtpService : IDmtpService, IPluginObject
     {
         /// <summary>
         /// 配置项
@@ -48,7 +48,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// 获取所有的客户端
         /// </summary>
         /// <returns></returns>
-        IEnumerable<WebsocketSmtpSocketClient> GetClients();
+        IEnumerable<WebsocketDmtpSocketClient> GetClients();
 
         /// <summary>
         /// 获取所有在线客户端的Id集合。

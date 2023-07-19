@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -20,16 +20,16 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Smtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketSmtpService
+    /// WebsocketDmtpService
     /// </summary>
-    public class WebsocketSmtpService : DisposableObject, IWebsocketSmtpService
+    public class WebsocketDmtpService : DisposableObject, IWebsocketDmtpService
     {
         #region SocketClient
 
-        private readonly ConcurrentDictionary<string, WebsocketSmtpSocketClient> m_socketClients = new ConcurrentDictionary<string, WebsocketSmtpSocketClient>();
+        private readonly ConcurrentDictionary<string, WebsocketDmtpSocketClient> m_socketClients = new ConcurrentDictionary<string, WebsocketDmtpSocketClient>();
 
         /// <summary>
         /// 数量
@@ -41,7 +41,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public WebsocketSmtpSocketClient this[string id]
+        public WebsocketDmtpSocketClient this[string id]
         {
             get
             {
@@ -54,7 +54,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// 获取所有的客户端
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<WebsocketSmtpSocketClient> GetClients()
+        public IEnumerable<WebsocketDmtpSocketClient> GetClients()
         {
             return this.m_socketClients.Values;
         }
@@ -93,7 +93,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// <param name="id"></param>
         /// <param name="socketClient"></param>
         /// <returns></returns>
-        public bool TryGetSocketClient(string id, out WebsocketSmtpSocketClient socketClient)
+        public bool TryGetSocketClient(string id, out WebsocketDmtpSocketClient socketClient)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -104,12 +104,12 @@ namespace TouchSocket.Smtp.AspNetCore
             return this.m_socketClients.TryGetValue(id, out socketClient);
         }
 
-        internal bool TryAdd(string id, WebsocketSmtpSocketClient socketClient)
+        internal bool TryAdd(string id, WebsocketDmtpSocketClient socketClient)
         {
             return this.m_socketClients.TryAdd(id, socketClient);
         }
 
-        internal bool TryRemove(string id, out WebsocketSmtpSocketClient socketClient)
+        internal bool TryRemove(string id, out WebsocketDmtpSocketClient socketClient)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -124,10 +124,10 @@ namespace TouchSocket.Smtp.AspNetCore
         private long m_idCount;
 
         /// <summary>
-        /// 创建一个基于Websocket的Smtp服务器。
+        /// 创建一个基于Websocket的Dmtp服务器。
         /// </summary>
         /// <param name="config"></param>
-        public WebsocketSmtpService(TouchSocketConfig config)
+        public WebsocketDmtpService(TouchSocketConfig config)
         {
             if (config == null)
             {
@@ -142,7 +142,7 @@ namespace TouchSocket.Smtp.AspNetCore
             this.LoadConfig(this.Config);
             this.PluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
 
-            this.VerifyToken = config.GetValue(SmtpConfigExtension.VerifyTokenProperty);
+            this.VerifyToken = config.GetValue(DmtpConfigExtension.VerifyTokenProperty);
 
             if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
             {
@@ -199,7 +199,7 @@ namespace TouchSocket.Smtp.AspNetCore
             {
                 return;
             }
-            if (this.m_socketClients.TryGetValue(oldId, out WebsocketSmtpSocketClient socketClient))
+            if (this.m_socketClients.TryGetValue(oldId, out WebsocketDmtpSocketClient socketClient))
             {
                 socketClient.ResetId(newId);
             }
@@ -220,7 +220,7 @@ namespace TouchSocket.Smtp.AspNetCore
             {
                 var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 var id = this.GetDefaultNewId();
-                var client = new WebsocketSmtpSocketClient();
+                var client = new WebsocketDmtpSocketClient();
                 if (!this.TryAdd(id, client))
                 {
                     throw new Exception("Id重复");
@@ -230,7 +230,7 @@ namespace TouchSocket.Smtp.AspNetCore
                 client.InternalSetContainer(this.Container);
                 client.InternalSetId(id);
                 client.InternalSetPluginsManager(this.PluginsManager);
-                client.SetSmtpActor(this.CreateSmtpActor(client));
+                client.SetDmtpActor(this.CreateDmtpActor(client));
                 await client.Start(webSocket, context);
             }
             else
@@ -289,20 +289,20 @@ namespace TouchSocket.Smtp.AspNetCore
             this.Container = container;
             this.PluginsManager = pluginsManager;
         }
-        private SmtpActor CreateSmtpActor(WebsocketSmtpSocketClient client)
+        private DmtpActor CreateDmtpActor(WebsocketDmtpSocketClient client)
         {
-            return new SmtpActor(true)
+            return new DmtpActor(true)
             {
-                OnFindSmtpActor = this.OnServiceFindSmtpActor,
+                OnFindDmtpActor = this.OnServiceFindDmtpActor,
                 Id = client.Id
             };
         }
 
-        private ISmtpActor OnServiceFindSmtpActor(string id)
+        private IDmtpActor OnServiceFindDmtpActor(string id)
         {
             if (this.TryGetSocketClient(id, out var client))
             {
-                return client.SmtpActor;
+                return client.DmtpActor;
             }
             return null;
         }

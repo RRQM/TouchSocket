@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -19,18 +19,18 @@ using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Smtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketSmtpSocketClient
+    /// WebsocketDmtpSocketClient
     /// </summary>
-    public class WebsocketSmtpSocketClient : DependencyObject, IWebsocketSmtpSocketClient
+    public class WebsocketDmtpSocketClient : DependencyObject, IWebsocketDmtpSocketClient
     {
         private readonly object m_syncRoot = new object();
         private WebSocket m_client;
-        private SmtpActor m_smtpActor;
-        private TcpSmtpAdapter m_smtpAdapter;
-        private WebsocketSmtpService m_service;
+        private DmtpActor m_smtpActor;
+        private TcpDmtpAdapter m_smtpAdapter;
+        private WebsocketDmtpService m_service;
 
         public int BufferLength { get; private set; }
 
@@ -47,7 +47,7 @@ namespace TouchSocket.Smtp.AspNetCore
         public string Id { get; private set; }
 
         /// <inheritdoc/>
-        public bool IsHandshaked => this.SmtpActor.IsHandshaked;
+        public bool IsHandshaked => this.DmtpActor.IsHandshaked;
 
         public DateTime LastReceivedTime { get; private set; }
 
@@ -63,17 +63,17 @@ namespace TouchSocket.Smtp.AspNetCore
         /// <inheritdoc/>
         public IPluginsManager PluginsManager { get; private set; }
 
-        public Protocol Protocol { get; set; } = SmtpUtility.SmtpProtocol;
-        public IWebsocketSmtpService Service { get => m_service; }
+        public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
+        public IWebsocketDmtpService Service { get => m_service; }
 
         /// <inheritdoc/>
-        public ISmtpActor SmtpActor { get => m_smtpActor; }
+        public IDmtpActor DmtpActor { get => m_smtpActor; }
 
         /// <inheritdoc/>
-        public int VerifyTimeout => this.Config.GetValue(SmtpConfigExtension.VerifyTimeoutProperty);
+        public int VerifyTimeout => this.Config.GetValue(DmtpConfigExtension.VerifyTimeoutProperty);
 
         /// <inheritdoc/>
-        public string VerifyToken => this.Config.GetValue(SmtpConfigExtension.VerifyTokenProperty);
+        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty);
 
         /// <summary>
         /// 关闭通信
@@ -97,7 +97,7 @@ namespace TouchSocket.Smtp.AspNetCore
                 return;
             }
 
-            this.SmtpActor.ResetId(newId);
+            this.DmtpActor.ResetId(newId);
             this.DirectResetId(newId);
         }
 
@@ -110,7 +110,7 @@ namespace TouchSocket.Smtp.AspNetCore
         internal void InternalSetConfig(TouchSocketConfig config)
         {
             this.Config = config;
-            this.m_smtpAdapter = new TcpSmtpAdapter()
+            this.m_smtpAdapter = new TcpDmtpAdapter()
             {
                 ReceivedCallBack = PrivateHandleReceivedData,
                 Logger = this.Logger
@@ -137,19 +137,19 @@ namespace TouchSocket.Smtp.AspNetCore
             this.PluginsManager = pluginsManager;
         }
 
-        internal void InternalSetService(WebsocketSmtpService service)
+        internal void InternalSetService(WebsocketDmtpService service)
         {
             this.m_service = service;
         }
 
         #region 内部委托绑定
 
-        private void OnSmtpActorClose(SmtpActor actor, string arg2)
+        private void OnDmtpActorClose(DmtpActor actor, string arg2)
         {
             this.Close(arg2);
         }
 
-        private void OnSmtpActorCreateChannel(SmtpActor actor, CreateChannelEventArgs e)
+        private void OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
             this.OnCreateChannel(e);
             if (e.Handled)
@@ -157,23 +157,23 @@ namespace TouchSocket.Smtp.AspNetCore
                 return;
             }
 
-            this.PluginsManager.Raise(nameof(ISmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            this.PluginsManager.Raise(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
-        private void OnSmtpActorHandshaked(SmtpActor actor, SmtpVerifyEventArgs e)
+        private void OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
         {
             this.OnHandshaked(e);
             if (e.Handled)
             {
                 return;
             }
-            if (this.PluginsManager.Raise(nameof(ISmtpHandshakedPlugin.OnSmtpHandshaked), this, e))
+            if (this.PluginsManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e))
             {
                 return;
             }
         }
 
-        private void OnSmtpActorHandshaking(SmtpActor actor, SmtpVerifyEventArgs e)
+        private void OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
         {
             if (e.Token == this.VerifyToken)
             {
@@ -183,27 +183,27 @@ namespace TouchSocket.Smtp.AspNetCore
             {
                 e.Message = "Token不受理";
             }
-            if (this.PluginsManager.Raise(nameof(ISmtpHandshakingPlugin.OnSmtpHandshaking), this, e))
+            if (this.PluginsManager.Raise(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e))
             {
                 return;
             }
             this.OnHandshaking(e);
         }
 
-        private void OnSmtpActorRouting(SmtpActor actor, PackageRouterEventArgs e)
+        private void OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
         {
             this.OnRouting(e);
             if (e.Handled)
             {
                 return;
             }
-            if (this.PluginsManager.Raise(nameof(ISmtpRoutingPlugin.OnSmtpRouting), this, e))
+            if (this.PluginsManager.Raise(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e))
             {
                 return;
             }
         }
 
-        private void OnSmtpActorSend(SmtpActor actor, ArraySegment<byte>[] transferBytes)
+        private void OnDmtpActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
         {
             for (var i = 0; i < transferBytes.Length; i++)
             {
@@ -238,7 +238,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// 在完成握手连接时
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnHandshaked(SmtpVerifyEventArgs e)
+        protected virtual void OnHandshaked(DmtpVerifyEventArgs e)
         {
         }
 
@@ -246,7 +246,7 @@ namespace TouchSocket.Smtp.AspNetCore
         /// 在验证Token时
         /// </summary>
         /// <param name="e">参数</param>
-        protected virtual void OnHandshaking(SmtpVerifyEventArgs e)
+        protected virtual void OnHandshaking(DmtpVerifyEventArgs e)
         {
         }
 
@@ -260,16 +260,16 @@ namespace TouchSocket.Smtp.AspNetCore
 
         #endregion 事件
 
-        internal void SetSmtpActor(SmtpActor actor)
+        internal void SetDmtpActor(DmtpActor actor)
         {
             actor.OnResetId = this.ThisOnResetId;
-            actor.OutputSend = this.OnSmtpActorSend;
+            actor.OutputSend = this.OnDmtpActorSend;
             actor.Client = this;
-            actor.OnClose = this.OnSmtpActorClose;
-            actor.OnRouting = this.OnSmtpActorRouting;
-            actor.OnHandshaked = this.OnSmtpActorHandshaked;
-            actor.OnHandshaking = this.OnSmtpActorHandshaking;
-            actor.OnCreateChannel = this.OnSmtpActorCreateChannel;
+            actor.OnClose = this.OnDmtpActorClose;
+            actor.OnRouting = this.OnDmtpActorRouting;
+            actor.OnHandshaked = this.OnDmtpActorHandshaked;
+            actor.OnHandshaking = this.OnDmtpActorHandshaking;
+            actor.OnCreateChannel = this.OnDmtpActorCreateChannel;
             actor.Logger = this.Logger;
             this.m_smtpActor = actor;
         }
@@ -361,7 +361,7 @@ namespace TouchSocket.Smtp.AspNetCore
 
                 base.Dispose(true);
                 this.m_client.SafeDispose();
-                this.SmtpActor.SafeDispose();
+                this.DmtpActor.SafeDispose();
 
                 if (this.m_service.TryRemove(this.Id, out _))
                 {
@@ -375,17 +375,17 @@ namespace TouchSocket.Smtp.AspNetCore
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            var message = (SmtpMessage)requestInfo;
+            var message = (DmtpMessage)requestInfo;
             if (!this.m_smtpActor.InputReceivedData(message))
             {
                 if (this.PluginsManager.Enable)
                 {
-                    this.PluginsManager.Raise(nameof(ISmtpReceivedPlugin.OnSmtpReceived), this, new SmtpMessageEventArgs(message));
+                    this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
                 }
             }
         }
 
-        private void ThisOnResetId(SmtpActor actor, WaitSetId waitSetId)
+        private void ThisOnResetId(DmtpActor actor, WaitSetId waitSetId)
         {
             this.DirectResetId(waitSetId.NewId);
         }

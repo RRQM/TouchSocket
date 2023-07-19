@@ -19,13 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.JsonRpc", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc", "src\TouchSocket.Rpc\TouchSocket.Rpc.csproj", "{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Smtp", "src\TouchSocket.Smtp\TouchSocket.Smtp.csproj", "{A17326B9-35FA-4CF7-9173-E8C04D820C74}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator.Rpc", "src\TouchSocket.SourceGenerator.Rpc\TouchSocket.SourceGenerator.Rpc.csproj", "{79A7F310-F5E2-410C-B953-D5A501EE5185}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi", "src\TouchSocket.WebApi\TouchSocket.WebApi.csproj", "{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.XmlRpc", "src\TouchSocket.XmlRpc\TouchSocket.XmlRpc.csproj", "{51400DB7-74C1-45CA-A647-0052D58047E9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Dmtp", "src\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj", "{660C6B92-190A-47FD-8E31-E2A01501C750}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,10 +65,6 @@ Global
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A17326B9-35FA-4CF7-9173-E8C04D820C74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A17326B9-35FA-4CF7-9173-E8C04D820C74}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A17326B9-35FA-4CF7-9173-E8C04D820C74}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A17326B9-35FA-4CF7-9173-E8C04D820C74}.Release|Any CPU.Build.0 = Release|Any CPU
 		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -81,6 +77,10 @@ Global
 		{51400DB7-74C1-45CA-A647-0052D58047E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51400DB7-74C1-45CA-A647-0052D58047E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51400DB7-74C1-45CA-A647-0052D58047E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

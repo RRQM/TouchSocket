@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;</TargetFrameworks>
-		<SignAssembly>True</SignAssembly>
+		<SignAssembly>false</SignAssembly>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<DevelopmentDependency>true</DevelopmentDependency>
-		<Version>2.0.0.0-beta</Version>
+		<AssemblyOriginatorKeyFile>D:\MyStore\13_Doc\Keys\TouchSocketPro.snk</AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta</Version>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
@@ -22,7 +23,7 @@
 		<BaseOutputPath>..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
 		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
-		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+		<PackageOutputPath>..\Build\NugetPackages\TouchSocket.CodeAnalyzer</PackageOutputPath>
 	</PropertyGroup>
 
 

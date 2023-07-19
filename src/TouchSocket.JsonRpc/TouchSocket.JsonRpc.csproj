@@ -2,8 +2,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;netcoreapp3.1;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<SignAssembly>True</SignAssembly>
-		<Version>2.0.0.0-beta</Version>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta</Version>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<LangVersion>8.0</LangVersion>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -27,7 +28,7 @@
 		<BaseOutputPath>..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
 		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
-		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+		<PackageOutputPath>..\Build\NugetPackages\TouchSocket.JsonRpc</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,7 +42,7 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'PackageReference'!='PackageReference'">
 	  <PackageReference Include="TouchSocket" Version="2.0.0-beta" />
 	  <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta" />
 	  <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta" />
@@ -49,7 +50,7 @@
 	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta" />
 	</ItemGroup>
 
-	<!--<ItemGroup>
+	<ItemGroup Condition="'ProjectReference'=='ProjectReference'">
 	  <ProjectReference Include="..\TouchSocket.WebApi\TouchSocket.WebApi.csproj" />
-	</ItemGroup>-->
+	</ItemGroup>
 </Project>

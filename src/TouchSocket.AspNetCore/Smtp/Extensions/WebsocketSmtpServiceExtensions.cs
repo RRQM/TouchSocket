@@ -5,31 +5,31 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
 using TouchSocket.Core;
-using TouchSocket.Smtp.AspNetCore;
+using TouchSocket.Dmtp.AspNetCore;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
-    /// WebsocketSmtpServiceExtensions
+    /// WebsocketDmtpServiceExtensions
     /// </summary>
-    public static class WebsocketSmtpServiceExtensions
+    public static class WebsocketDmtpServiceExtensions
     {
         /// <summary>
-        /// 添加<see cref="WebsocketSmtpService"/>服务。
+        /// 添加<see cref="WebsocketDmtpService"/>服务。
         /// </summary>
         /// <param name="service"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static IServiceCollection AddWebsocketSmtpService(this IServiceCollection service, Func<TouchSocketConfig> config)
+        public static IServiceCollection AddWebsocketDmtpService(this IServiceCollection service, Func<TouchSocketConfig> config)
         {
-            return service.AddSingleton<IWebsocketSmtpService>(new WebsocketSmtpService(config.Invoke()));
+            return service.AddSingleton<IWebsocketDmtpService>(new WebsocketDmtpService(config.Invoke()));
         }
     }
 }
