@@ -495,12 +495,12 @@ module.exports = {
     },
     {
       type: "category",
-      label: "12、TouchRpc组件",
+      label: "12、Dmtp组件",
       items:
         [
           {
             type: "doc",
-            id: "touchrpcdescription",
+            id: "dmtpdescription",
             label: "12.1 产品及架构介绍"
           },
           {
@@ -515,7 +515,7 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "touchrpcbase",
+            id: "dmtpbase",
             label: "12.4 基础功能"
           },
           {

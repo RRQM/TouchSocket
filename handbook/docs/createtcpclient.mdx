@@ -94,7 +94,6 @@ Ssl配置，为Null时则不启用。
 | ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
-| IIdChangedPlugin | 当SocketClient的ID发生改变时触发。 |
 
 ## 六、创建TcpClient
 
@@ -214,14 +213,14 @@ tcpClient.Connect();
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
 ```csharp
-public class MyPlugin : PluginBase,ITcpReceivedPlugin<TcpClient>
+public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
 {
     public MyPlugin()
     {
         this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
 
-    public void OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
+    Task ITcpReceivedPlugin<TcpClient>.OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -229,11 +228,8 @@ public class MyPlugin : PluginBase,ITcpReceivedPlugin<TcpClient>
         IRequestInfo requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
-    }
 
-    public Task OnTcpReceivedAsync(TcpClient client, ReceivedDataEventArgs e)
-    {
-       return Task.CompletedTask;
+        return e.InvokeNext();
     }
 }
 ```
