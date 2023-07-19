@@ -3,72 +3,191 @@ id: pluginsmanager
 title: 插件系统
 ---
 
-## 说明
-插件系统是一组能实现多播订阅的，可中断的触发器。其设计核心来自于Aspnetcore的中间件，它有着和中间件一样的使用体验，同时也有着更高的灵活性和自由度。
+## 一、说明
+插件系统是一组能实现多播订阅的，可中断的触发器，其主要功能就是实现类似事件、委托的通知消息。其设计核心来自于Aspnetcore的中间件，它有着和中间件一样的使用体验，同时也有着更高的灵活性和自由度。
 
-## 产品特点
+## 二、产品特点
 
 - 简单易用。
 - 易扩展。
 
-## 产品应用场景
+## 三、产品应用场景
 
 - 所有可以使用事件。委托的场景。
 
-## 与事件、委托相比
+## 四、与事件、委托相比
 
-#### 优点
+#### 4.1 优点
 
 1. 订阅的时候可以不用知道被订阅方是谁，只需要知道要订阅什么通知即可。
 2. 订阅可以随时中断。例如：当事件多播的时候，即使其中一个订阅方已经处理，触发也不会停止，这样会造成资源浪费。
 3. 订阅回调。例如：第一个订阅方，想知道本次触发的最终结果是否已被处理时，委托则做不到。而插件则可以。
 
-#### 缺点
+#### 4.2 缺点
 
 1. 使用插件会损耗一部分性能。但是一般如果不是千万级别的，不会有明显的差距。
 
-## 插件特性
+## 五、使用
+
+#### 5.1 声明插件接口及事件类
+
+```csharp
+public class MyPluginEventArgs : PluginEventArgs
+{
+    public string Words { get; set; }
+}
+
+/// <summary>
+/// 定义一个插件接口，使其继承<see cref="IPlugin"/>
+/// </summary>
+public interface ISayPlugin : IPlugin
+{
+    /// <summary>
+    /// Say。定义一个插件方法，必须遵循：
+    /// 1.必须是两个参数，第一个参数可以是任意类型，一般表示触发源。第二个参数必须继承<see cref="PluginEventArgs"/>
+    /// 2.返回值必须是Task。
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    Task Say(object sender, MyPluginEventArgs e);
+}
+```
+
+:::caution 注意事项
+
+确定插件唯一的是插件中的`方法名`，所以该方法名应该尽量能确定唯一性。
+
+:::  
+
+:::tip 提示
+
+一个插件接口中，可以声明多个插件方法。但是一般建议只声明一个，这样使用方在实现接口时更加灵活，避免实现多余的接口。
+
+:::  
+
+#### 5.2 实现插件接口
+
+```csharp 
+public class SayHelloPlugin : PluginBase, ISayPlugin
+{
+    public SayHelloPlugin()
+    {
+        Order = 0;//插件的添加顺序，该值越大，越靠前执行。默认都是0
+    }
+    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hello")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+
+public class SayHiPlugin : PluginBase, ISayPlugin
+{
+    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hi")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+public class LastSayPlugin : PluginBase, ISayPlugin
+{
+    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        Console.WriteLine($"您输入的{e.Words}似乎不被任何插件处理");
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::tip 提示
+
+实现的插件，可以继承`PluginBase`，然后实现所需的插件接口，这样能简化实现过程。但是如果该类型已经拥有基类，则直接实现所需插件接口的全部内容即可。
+
+:::  
+
+#### 5.3 触发插件接口
+
+```csharp {11}
+IPluginsManager pluginsManager = new PluginsManager(new Container())
+{
+    Enable = true//必须启用
+};
+
+pluginsManager.Add<SayHelloPlugin>();
+pluginsManager.Add<SayHiPlugin>();
+pluginsManager.Add<LastSayPlugin>();
+
+while (true)
+{
+    Console.WriteLine("请输入hello，或者hi");
+    pluginsManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+    {
+        Words = Console.ReadLine()
+    });
+}
+```
+
+#### 5.4 执行结果
+
+按照上述代码代码逻辑，我们声明了一个名为`ISayPlugin`的插件接口，里面包含一个`Say`的方法。然后分别创建了`SayHelloPlugin`、`SayHiPlugin`、`LastSayPlugin`三个类去实现`ISayPlugin`接口。然后将该三个类都添加至插件管理器中，然后触发`Say`方法。同时传入不同的参数。
+
+当Words=test时，`SayHelloPlugin`和`SayHiPlugin`均不满足处理条件，所以会将数据转至下一个插件，直到`LastSayPlugin`插件。然后当`LastSayPlugin`处理结束以后，处理结果又按照`LastSayPlugin`、`SayHiPlugin`、`SayHelloPlugin`的顺序退出插件。这样，即使`SayHelloPlugin`无法处理该数据，也能得知该数据最终有没有被处理。
+
+当Words=hello时，`SayHelloPlugin`满足处理条件，并且终止插件的继续传递。
+
+```
+请输入hello，或者hi
+test
+SayHelloPlugin------Enter
+SayHiPlugin------Enter
+LastSayPlugin------Enter
+您输入的test似乎不被任何插件处理
+LastSayPlugin------Leave
+SayHiPlugin------Leave
+SayHelloPlugin------Leave
+
+请输入hello，或者hi
+hello
+SayHelloPlugin------Enter
+SayHelloPlugin------Say
+
+请输入hello，或者hi
+hi
+SayHelloPlugin------Enter
+SayHiPlugin------Enter
+SayHiPlugin------Say
+SayHelloPlugin------Leave
+请输入hello，或者hi
+```
+
+## 六、插件特性
 
 【执行顺序】
 每个插件都有一个**Order**属性，该属性表示该插件的执行顺序，数值大，越提前执行（Order在Add之前生效，后续修改无效）。
 
 【中断传递】
-当某个插件在响应时，如果设置e.Handled=true,则该数据将**不会**再触发后续的插件、事件、重写方法。
-
-## 用户自定义插件
-用户通过实现框架预设的插件接口，即可接收相应的触发。每个组件都有详细的插件支持说明。
-
-例如：**ITcpPlugin**、**ITokenPlugin**、**IProtocolPlugin**等。
-
-## 系统自定义插件
-当各位朋友使用TouchSocket封装自己的dll时，可能需要一些定义插件。那么这个需求TouchSocket也能满足大家。
-> 例如：实现基于TCP的特殊信息自定义插件，当收到字母‘A’时，希望触发实现IAPlugin接口插件的GoToA方法。
-
-具体操作如下：
-
-1. 声明IAPlugin接口，继承**IPlugin**。
-2. 声明GoToA接口方法（该方法必须**两个**参数，第一参数无要求，一般为触发主体，第二参数**必须继承**自**TouchSocketEventArgs**）。
-3. 在合适时候，判断当前配置是否支持插件，然后使用服务器或客户端的**PluginsManager**属性调用**Raise**方法，此处的泛型（**IAPlugin**）必须为接口类型。
-
-```csharp
-public interface IAPlugin : IPlugin
-{
-    void GoToA(ITcpClientBase client,TouchSocketEventArgs e);
-}
-```
-
-```csharp
-public class MyTClient : TcpClient
-{
-    protected override void HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-    {
-        if (this.UsePlugin)
-        {
-            if (byteBlock.ToString()=="A")
-            {
-                this.PluginsManager.Raise<IAPlugin>("GoToA",this,new TouchSocketEventArgs());
-            }
-        }
-    }
-}
-```
+当某个插件在响应时，如果设置e.Handled=true，或者没有调用下一个插件，则该数据将**不会**再触发后续的插件。
