@@ -9,7 +9,26 @@ using TouchSocket.Sockets;
 
 namespace TouchSocketExamples.Sockets
 {
-    
+    public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
+    {
+        public MyPlugin()
+        {
+            this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
+        }
+
+
+        Task ITcpReceivedPlugin<TcpClient>.OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
+        {
+            //这里处理数据接收
+            //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+            ByteBlock byteBlock = e.ByteBlock;
+            IRequestInfo requestInfo = e.RequestInfo;
+
+            //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+
+            return e.InvokeNext();
+        }
+    }
     internal static class SimpleTcpDemo
     {
         public static void Start()
