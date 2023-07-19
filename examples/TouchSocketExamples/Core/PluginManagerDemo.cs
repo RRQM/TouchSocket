@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Smtp;
 
 namespace TouchSocketExamplesBeta.Core
 {
@@ -20,11 +21,14 @@ namespace TouchSocketExamplesBeta.Core
             pluginsManager.Add<SayHiPlugin>();
             pluginsManager.Add<LastSayPlugin>();
 
-            Console.WriteLine("请输入Hello，或者Hi");
-            pluginsManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+            while (true)
             {
-                Words = Console.ReadLine()
-            });
+                Console.WriteLine("请输入hello，或者hi");
+                pluginsManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+                {
+                    Words = Console.ReadLine()
+                });
+            }
         }
 
         public class MyPluginEventArgs : PluginEventArgs
@@ -50,10 +54,14 @@ namespace TouchSocketExamplesBeta.Core
 
         public class SayHelloPlugin : PluginBase, ISayPlugin
         {
+            public SayHelloPlugin()
+            {
+                Order = 0;//插件的添加顺序，该值越大，越靠前执行。默认都是0
+            }
             async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
             {
                 Console.WriteLine($"{this.GetType().Name}------Enter");
-                if (e.Words == "Hello")
+                if (e.Words == "hello")
                 {
                     Console.WriteLine($"{this.GetType().Name}------Say");
                     //当满足的时候输出，且不在调用下一个插件。
@@ -72,7 +80,7 @@ namespace TouchSocketExamplesBeta.Core
             async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
             {
                 Console.WriteLine($"{this.GetType().Name}------Enter");
-                if (e.Words == "Hi")
+                if (e.Words == "hi")
                 {
                     Console.WriteLine($"{this.GetType().Name}------Say");
                     //当满足的时候输出，且不在调用下一个插件。
