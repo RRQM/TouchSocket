@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TouchSocket" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.Smtp" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta" />
+    <PackageReference Include="TouchSocketPro.Smtp" Version="2.0.0-beta" />
+  </ItemGroup>
+
+</Project>

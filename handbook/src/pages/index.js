@@ -46,7 +46,7 @@ function Banner() {
             一款简单易用的基础网络通讯组件库。
           </div>
           <div className="TouchSocket-banner-description">
-            两岸猿声啼不住，轻舟已过万重山。
+          三十功名尘与土，八千里路云和月。
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
@@ -54,7 +54,7 @@ function Banner() {
               支持 .NET Framework 4.5及以上， .NET Core3.1及以上，.NET
               Standard2.0及以上
             </li>
-            <li>无依赖</li>
+            <li>极少依赖</li>
             <li>极速上手，极简使用</li>
           </ul>
           <div className="TouchSocket-support-platform">受支持平台：</div>
@@ -104,8 +104,8 @@ service.Received = (client, byteBlock, requestInfo) =>
 };
 
 service.Setup(new TouchSocketConfig()//载入配置
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    .SetListenIPHosts("tcp://127.0.0.1:7788",7789)//同时监听两个地址
+    .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
     })
