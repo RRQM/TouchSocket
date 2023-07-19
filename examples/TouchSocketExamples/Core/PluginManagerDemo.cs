@@ -21,6 +21,17 @@ namespace TouchSocketExamplesBeta.Core
             pluginsManager.Add<SayHiPlugin>();
             pluginsManager.Add<LastSayPlugin>();
 
+            //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
+            pluginsManager.Add(nameof(ISayPlugin.Say), () => 
+            {
+                Console.WriteLine("在Action1中获得");
+            });
+
+            pluginsManager.Add(nameof(ISayPlugin.Say), (MyPluginEventArgs e) =>
+            {
+                Console.WriteLine("在Action2中获得");
+            });
+
             while (true)
             {
                 Console.WriteLine("请输入hello，或者hi");

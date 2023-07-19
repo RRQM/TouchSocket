@@ -145,11 +145,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
     })
     .ConfigurePlugins(a =>
     {
-        a.Add<MyServicePluginClass>();
         //a.Add();//此处可以添加插件
     }))
     .Start();//启动
@@ -180,7 +178,7 @@ public class MySocketClient : SocketClient
         string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
 
-        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。
+        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。但一般建议返回false。
     }
 }
 ```
@@ -369,14 +367,14 @@ service.Setup(new TouchSocketConfig()//载入配置
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
 ```csharp
-public class MyPlugin : PluginBase,ITcpReceivedPlugin<SocketClient>
+public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
     public MyPlugin()
     {
         this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
 
-    public void OnTcpReceived(SocketClient client, ReceivedDataEventArgs e)
+    Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -384,11 +382,8 @@ public class MyPlugin : PluginBase,ITcpReceivedPlugin<SocketClient>
         IRequestInfo requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
-    }
 
-    public Task OnTcpReceivedAsync(SocketClient client, ReceivedDataEventArgs e)
-    {
-        return Task.CompletedTask;
+        return e.InvokeNext();//如果本插件无法处理当前数据，请将数据转至下一个插件。
     }
 }
 ```
@@ -430,7 +425,7 @@ service.Setup(new TouchSocketConfig()
 （1）声明插件
 
 ```csharp
-public class MyTcpPlugin : TcpPluginBase<SocketClient>
+public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
 {
     private ILogger<MyTcpPlugin> m_logger;
 
@@ -439,18 +434,20 @@ public class MyTcpPlugin : TcpPluginBase<SocketClient>
         this.m_logger = logger;
     }
 
-    protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
+    async Task ITcpConnectedPlugin<IClient>.OnTcpConnected(IClient client, ConnectedEventArgs e)
     {
         m_logger.LogInformation("客户端连接");
-        base.OnConnected(client, e);
+        await e.InvokeNext();
     }
 
-    protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+    async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
         ByteBlock byteBlock = e.ByteBlock;
         IRequestInfo requestInfo = e.RequestInfo;
+
+        await e.InvokeNext();
     }
 }
 ```
