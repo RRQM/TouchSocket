@@ -2,8 +2,9 @@
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<SignAssembly>True</SignAssembly>
-		<Version>2.0.0.0-beta</Version>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta.2</Version>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<LangVersion>8.0</LangVersion>
 		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
@@ -11,7 +12,7 @@
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
 		<PackageTags>message;arraypool;logger;plugin</PackageTags>
 		<Description>
-			【免费企业版】这是一个适用于AspNetCore的、轻量级的、支持插件的综合网络通信库。
+			这是一个适用于AspNetCore的、轻量级的、支持插件的综合网络通信库。
 
 			说明文档：http://rrqm_home.gitee.io/touchsocket
 		</Description>
@@ -27,7 +28,7 @@
 		<BaseOutputPath>..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
 		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
-		<PackageOutputPath>..\Build\NugetPackages</PackageOutputPath>
+		<PackageOutputPath>..\Build\NugetPackages\TouchSocket.AspNetCore</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,22 +42,25 @@
 		</None>
 	</ItemGroup>
 
-	<!--<ItemGroup>
+	<ItemGroup Condition="'ProjectReference'=='ProjectReference'">
 	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
-	  <ProjectReference Include="..\TouchSocket.Smtp\TouchSocket.Smtp.csproj" />
+	  <ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
-	</ItemGroup>-->
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.26" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'PackageReference'!='PackageReference'">
 		<PackageReference Include="TouchSocket" Version="2.0.0-beta" />
 		<PackageReference Include="TouchSocket.Core" Version="2.0.0-beta" />
 		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta" />
 		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta" />
 		<PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta" />
-		<PackageReference Include="TouchSocket.Smtp" Version="2.0.0-beta" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.1" />
 	</ItemGroup>
 </Project>

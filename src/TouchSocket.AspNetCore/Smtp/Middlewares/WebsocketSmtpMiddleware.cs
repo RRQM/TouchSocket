@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -15,15 +15,15 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Smtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketSmtpMiddleware中间件
+    /// WebsocketDmtpMiddleware中间件
     /// </summary>
-    public class WebsocketSmtpMiddleware
+    public class WebsocketDmtpMiddleware
     {
         private readonly RequestDelegate m_next;
-        private readonly IWebsocketSmtpService m_websocketSmtpService;
+        private readonly IWebsocketDmtpService m_websocketDmtpService;
         private string m_url = "/websocketsmtp";
 
         /// <summary>
@@ -32,11 +32,11 @@ namespace TouchSocket.Smtp.AspNetCore
         /// <param name="m_url"></param>
         /// <param name="next"></param>
         /// <param name="rpcService"></param>
-        public WebsocketSmtpMiddleware(string m_url, RequestDelegate next, IWebsocketSmtpService rpcService)
+        public WebsocketDmtpMiddleware(string m_url, RequestDelegate next, IWebsocketDmtpService rpcService)
         {
             this.Url = m_url;
             this.m_next = next ?? throw new ArgumentNullException(nameof(next));
-            this.m_websocketSmtpService = rpcService;
+            this.m_websocketDmtpService = rpcService;
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace TouchSocket.Smtp.AspNetCore
         {
             if (context.Request.Path.Equals(this.Url, StringComparison.OrdinalIgnoreCase))
             {
-                await this.m_websocketSmtpService.SwitchClientAsync(context);
+                await this.m_websocketDmtpService.SwitchClientAsync(context);
             }
             else
             {

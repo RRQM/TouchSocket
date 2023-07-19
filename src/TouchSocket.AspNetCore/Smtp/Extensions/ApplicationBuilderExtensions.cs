@@ -5,12 +5,12 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Smtp.AspNetCore;
+using TouchSocket.Dmtp.AspNetCore;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -20,15 +20,15 @@ namespace Microsoft.AspNetCore.Builder
     public static partial class ApplicationBuilderExtensions
     {
         /// <summary>
-        /// 使用基于WebSocket的Smtp服务器。
+        /// 使用基于WebSocket的Dmtp服务器。
         /// <para>启用该功能时，请先启用WebSocket。</para>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseWebsocketSmtp(this IApplicationBuilder builder, string url = "/websocketsmtp")
+        public static IApplicationBuilder UseWebsocketDmtp(this IApplicationBuilder builder, string url = "/websocketsmtp")
         {
-            return builder.UseMiddleware<WebsocketSmtpMiddleware>(url);
+            return builder.UseMiddleware<WebsocketDmtpMiddleware>(url);
         }
     }
 }

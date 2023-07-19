@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -56,19 +56,19 @@ namespace TouchSocket.Resources
         [Description("发生异常，信息：{0}。")]
         Exception,
 
-        #region Smtp
+        #region Dmtp
 
         /// <summary>
-        /// SmtpRpcActor为空，可能需要启用SmtpRpc插件。
+        /// DmtpRpcActor为空，可能需要启用DmtpRpc插件。
         /// </summary>
-        [Description("SmtpRpcActor为空，可能需要启用SmtpRpc插件。")]
-        SmtpRpcActorArgumentNull,
+        [Description("DmtpRpcActor为空，可能需要启用DmtpRpc插件。")]
+        DmtpRpcActorArgumentNull,
 
         /// <summary>
-        /// SmtpFileTransferActor为空，可能需要启用SmtpFileTransfer插件。
+        /// DmtpFileTransferActor为空，可能需要启用DmtpFileTransfer插件。
         /// </summary>
-        [Description("SmtpFileTransferActor为空，可能需要启用SmtpFileTransfer插件。")]
-        SmtpFileTransferActorNull,
+        [Description("DmtpFileTransferActor为空，可能需要启用DmtpFileTransfer插件。")]
+        DmtpFileTransferActorNull,
 
         /// <summary>
         /// RedisActor为空，可能需要启用RedisActor插件。
@@ -89,7 +89,7 @@ namespace TouchSocket.Resources
         RemoteStreamActorNull,
         #endregion
 
-        #region SmtpRpc
+        #region DmtpRpc
 
         /// <summary>
         /// 不允许路由该包，信息：{0}。
@@ -241,7 +241,7 @@ namespace TouchSocket.Resources
         [Description("没有找到任何可用的目标Id。")]
         NotFindAnyTargetId,
 
-        #endregion SmtpRpc
+        #endregion DmtpRpc
 
         #region Core
 

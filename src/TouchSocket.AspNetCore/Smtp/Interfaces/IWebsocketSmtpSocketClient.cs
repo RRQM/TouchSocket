@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace TouchSocket.Smtp.AspNetCore
+namespace TouchSocket.Dmtp.AspNetCore
 {
-    public interface IWebsocketSmtpSocketClient : IWebsocketSmtpClientBase
+    public interface IWebsocketDmtpSocketClient : IWebsocketDmtpClientBase
     {
         /// <summary>
         /// Http上下文
@@ -15,6 +15,6 @@ namespace TouchSocket.Smtp.AspNetCore
         /// <summary>
         /// 包含该客户端的服务器。
         /// </summary>
-        IWebsocketSmtpService Service { get; }
+        IWebsocketDmtpService Service { get; }
     }
 }
