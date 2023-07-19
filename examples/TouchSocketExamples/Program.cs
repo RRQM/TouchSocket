@@ -1,4 +1,5 @@
 ﻿using TouchSocket.Core;
+using TouchSocketExamples.Sockets;
 using TouchSocketExamplesBeta.Core;
 
 namespace TouchSocketExamplesBeta
@@ -7,9 +8,10 @@ namespace TouchSocketExamplesBeta
     {
         static void Main(string[] args)
         {
-            ConsoleAction consoleAction = new ConsoleAction();
+            var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
-            consoleAction.Add("1","插件系统",PluginManagerDemo.Start);
+            consoleAction.Add("1",nameof(PluginManagerDemo),PluginManagerDemo.Start);
+            consoleAction.Add("2",nameof(SimpleTcpDemo), SimpleTcpDemo.Start);
 
             consoleAction.ShowAll();
             while (true)
