@@ -7,11 +7,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0-preview.6.23329.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.3" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.3" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.3" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.3" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.3" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.5" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.5" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.5" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.5" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.5" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.5" />
   </ItemGroup>
 </Project>
