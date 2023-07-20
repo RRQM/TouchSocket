@@ -40,8 +40,6 @@ namespace ClientApp
                 //声明配置
                 TouchSocketConfig config = new TouchSocketConfig();
                 config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                    .UsePlugin()
-                    .SetBufferLength(1024 * 10)
                     .ConfigureContainer(a =>
                     {
                         a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));

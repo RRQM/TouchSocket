@@ -47,18 +47,17 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 
 ### 5.1 基于Tcp协议
 
-这是基于Tcp协议TouchRpc。在可配置TouchRpc的基础之上，还可以配置与[TcpService可配置项](./createtcpservice.mdx#可配置项)相关的配置。
+这是基于Tcp协议Dmtp。在可配置的基础之上，还可以配置与[TcpService可配置项](./createtcpservice.mdx#可配置项)相关的配置。
 
 ```csharp
-var service = new TcpTouchRpcService();
+var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
-       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+       .SetListenIPHosts(7789)
        .ConfigureContainer(a =>
        {
            a.AddConsoleLogger();
-           a.AddFileLogger();
        })
-       .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
+       .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
 
 service.Setup(config)
     .Start();

@@ -10,23 +10,22 @@ namespace BytePoolConsoleApp
             Console.ReadKey();
 
 
-            ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024, equalSize: false);
+            ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);
             byteBlock1.Dispose();
 
-            ByteBlock byteBlock2 = BytePool.Default.GetByteBlock(byteSize: 1024 * 1024, equalSize: false);
+            ByteBlock byteBlock2 = BytePool.Default.GetByteBlock(byteSize: 1024 * 1024);
             byteBlock2.Dispose();
 
             using (ByteBlock byteBlock3 = new ByteBlock())
             {
             }
 
-            BytePool.Default.AddSizeKey(1024 * 1024);
             //BytePool.AutoZero = true;
             for (int i = 0; i < 5; i++)
             {
-                byte[] data = BytePool.Default.GetByteCore(1024 * 10, true);
-                BytePool.Default.Recycle(data);
-                using (ByteBlock byteBlock = new ByteBlock(1024 * 10, true))
+                byte[] data = BytePool.Default.Rent(1024 * 10);
+                BytePool.Default.Return(data);
+                using (ByteBlock byteBlock = new ByteBlock(1024 * 10))
                 {
                     //最重要：千万不要引用byteBlock.Buffer
                     byteBlock.Write(10);
@@ -65,7 +64,7 @@ namespace BytePoolConsoleApp
             {
                 for (int i = 0; i < count; i++)
                 {
-                    ByteBlock byteBlock = new ByteBlock(1024, true);
+                    ByteBlock byteBlock = new ByteBlock(1024);
                     byteBlock.Dispose();
                 }
             });

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -26,8 +27,7 @@ namespace LimitNumberOfConnectionsConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<LimitNumberOfConnectionsPlugin>();
-                })
-                .UsePlugin())
+                }))
                 .Start();//启动
             service.Logger.Info("服务器已启动");
             Console.ReadKey();
@@ -54,7 +54,7 @@ namespace LimitNumberOfConnectionsConsoleApp
         }
     }
 
-    internal class LimitNumberOfConnectionsPlugin : TcpPluginBase
+    internal class LimitNumberOfConnectionsPlugin : PluginBase, ITcpConnectingPlugin<ITcpClientBase>, ITcpDisconnectedPlguin<ITcpClientBase>
     {
         private readonly ConcurrentDictionary<string, Count> m_ipToCount = new ConcurrentDictionary<string, Count>();
 
@@ -76,8 +76,13 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Max { get; }
 
-        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
+
+        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
+            if (client.IsClient)
+            {
+                return e.InvokeNext();
+            }
             Count count = m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
 
             if (count.Increment() > this.Max)
@@ -86,12 +91,13 @@ namespace LimitNumberOfConnectionsConsoleApp
                 e.IsPermitOperation = false;//表示不许连接
                 e.Handled = true;//并且已经处理该消息。
                 this.m_logger.Warning($"IP={client.IP}的客户端，连接数达到设置阈值。已拒绝连接。");
-                return;
+                return Task.CompletedTask;
             }
-            base.OnConnecting(client, e);
+
+            return e.InvokeNext();
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        Task ITcpDisconnectedPlguin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (m_ipToCount.TryGetValue(client.IP, out Count count))
             {
@@ -100,7 +106,8 @@ namespace LimitNumberOfConnectionsConsoleApp
                     m_ipToCount.TryRemove(client.IP, out _);
                 }
             }
-            base.OnDisconnected(client, e);
+
+            return e.InvokeNext();
         }
     }
 }
