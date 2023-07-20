@@ -3,8 +3,10 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using TouchSocket.Core;
-using TouchSocket.Rpc.JsonRpc;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
+using TouchSocket.JsonRpc;
+using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace WinFormsApp
@@ -33,15 +35,19 @@ namespace WinFormsApp
             {
                 try
                 {
-                    HttpTouchRpcClient client = new HttpTouchRpcClient();
+                    HttpDmtpClient client = new HttpDmtpClient();
                     client.Setup(new TouchSocketConfig()
+                        .ConfigurePlugins(a => 
+                        {
+                            a.UseDmtpRpc();
+                        })
                         .SetRemoteIPHost($"{agentService.Address}:{agentService.Port}"));
                     client.Connect();
 
                     //直接调用时，第一个参数为服务名+方法名（必须全小写）
                     //第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。
                     //后续参数为调用参数。
-                    string result = client.Invoke<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
+                    string result = client.GetDmtpRpcActor().InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
                     client.SafeDispose();
                     MessageBox.Show(result);
                 }
@@ -68,7 +74,7 @@ namespace WinFormsApp
                         .SetRemoteIPHost($"http://{agentService.Address}:{agentService.Port}/jsonrpc"));
                     client.Connect();
 
-                    string result = client.Invoke<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
+                    string result = client.InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
                     client.SafeDispose();
                     MessageBox.Show(result);
                 }

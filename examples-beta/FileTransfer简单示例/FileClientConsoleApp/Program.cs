@@ -1,6 +1,5 @@
 ﻿using System;
 using TouchSocket.Core;
-using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
 namespace FileClientConsoleApp

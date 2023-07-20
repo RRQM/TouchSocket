@@ -132,7 +132,7 @@ namespace TouchRpcClientApp
 
         private void button7_Click(object sender, EventArgs e)
         {
-            HttpTouchRpcClient client = new HttpTouchRpcClient();
+            HttpDmtpClient client = new HttpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7790")
                .SetVerifyToken("TouchRpc"));
@@ -148,7 +148,7 @@ namespace TouchRpcClientApp
 
         private void button9_Click(object sender, EventArgs e)
         {
-            HttpTouchRpcClient client = new HttpTouchRpcClient();
+            HttpDmtpClient client = new HttpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7790")
                 .SetVerifyToken("TouchRpc"));
@@ -164,7 +164,7 @@ namespace TouchRpcClientApp
 
         private void button8_Click(object sender, EventArgs e)
         {
-            HttpTouchRpcClient client = new HttpTouchRpcClient();
+            HttpDmtpClient client = new HttpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7790")
                .SetVerifyToken("TouchRpc"));
@@ -178,7 +178,7 @@ namespace TouchRpcClientApp
 
         private void button10_Click(object sender, EventArgs e)
         {
-            HttpTouchRpcClient client = new HttpTouchRpcClient();
+            HttpDmtpClient client = new HttpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7790")
                .SetVerifyToken("TouchRpc"));
