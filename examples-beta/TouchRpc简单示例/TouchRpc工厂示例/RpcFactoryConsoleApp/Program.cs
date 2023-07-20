@@ -44,9 +44,9 @@ namespace RpcFactoryConsoleApp
             return clientFactory;
         }
 
-        private static HttpTouchRpcClientFactory CreateHttpClientFactory()
+        private static HttpDmtpClientFactory CreateHttpClientFactory()
         {
-            var clientFactory = new HttpTouchRpcClientFactory()
+            var clientFactory = new HttpDmtpClientFactory()
             {
                 MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
                 MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。

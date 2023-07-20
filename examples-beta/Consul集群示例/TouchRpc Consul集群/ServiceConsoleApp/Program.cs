@@ -1,14 +1,16 @@
 ﻿using Consul;
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
+using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.JsonRpc;
-using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.WebApi;
-using TouchSocket.Rpc.XmlRpc;
 using TouchSocket.Sockets;
+using TouchSocket.WebApi;
+using TouchSocket.XmlRpc;
 
 namespace ServiceConsoleApp
 {
@@ -22,27 +24,30 @@ namespace ServiceConsoleApp
             //此处直接建立HttpTouchRpcService。
             //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、TouchRpc等等。
             var service = new TouchSocketConfig()
-                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })
-                .ConfigureRpcStore(a =>
-                {
-                    a.RegisterServer<MyServer>();
-                })
                 .ConfigurePlugins(a =>
                 {
+                    a.UseGlobalRpcStore()//配置全局的rpc
+                    .ConfigureRpcStore(a => 
+                    {
+                        a.RegisterServer<MyServer>();
+                    });
+
+                    a.UseDmtpRpc();
+                    a.UseXmlRpc().SetXmlRpcUrl("/xmlrpc");
+                    a.UseJsonRpc().SetJsonRpcUrl("/jsonrpc");
+                    a.UseWebApi();
+
                     a.UseWebSocket()//添加WebSocket功能
                         .SetWSUrl("/ws");
                     a.Add<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
                     a.Add<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
-                    a.Add<XmlRpcParserPlugin>().SetXmlRpcUrl("/xmlrpc");
-                    a.Add<JsonRpcParserPlugin>().SetJsonRpcUrl("/jsonrpc");
-                    a.Add<WebApiParserPlugin>();
                 })
-                .BuildWithHttpTouchRpcService();
+                .BuildWithHttpDmtpService();
 
             service.Logger.Info("Http服务器已启动");
             service.Logger.Info($"WS插件已加载，使用 ws://127.0.0.1:{port}/ws 连接");
@@ -99,7 +104,7 @@ namespace ServiceConsoleApp
         [WebApi(HttpMethodType.GET)]
         [XmlRpc]
         [JsonRpc]
-        [TouchRpc]
+        [DmtpRpc]
         public string SayHello(string name)
         {
             return $"{name},RRQM says hello to you.";
@@ -135,24 +140,21 @@ namespace ServiceConsoleApp
     /// <summary>
     /// WS收到数据等业务。
     /// </summary>
-    internal class MyWebSocketPlug : WebSocketPluginBase
+    internal class MyWebSocketPlug : PluginBase,IWebsocketHandshakedPlugin<IHttpSocketClient>,IWebsocketReceivedPlugin<IHttpSocketClient>
     {
-        protected override void OnHandshaked(ITcpClientBase client, HttpContextEventArgs e)
+        Task IWebsocketHandshakedPlugin<IHttpSocketClient>.OnWebsocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            SocketClient socketClient = (SocketClient)client;
-
-            client.Logger.Info($"WS客户端连接，ID={socketClient.ID}，IPHost={client.IP}:{client.Port}");
-            base.OnHandshaked(client, e);
+            client.Logger.Info($"WS客户端连接，ID={client.Id}，IPHost={client.IP}:{client.Port}");
+            return Task.CompletedTask;
         }
 
-        protected override void OnHandleWSDataFrame(ITcpClientBase client, WSDataFrameEventArgs e)
+        Task IWebsocketReceivedPlugin<IHttpSocketClient>.OnWebsocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
                 client.Logger.Info($"WS Msg={e.DataFrame.ToText()}");
             }
-
-            base.OnHandleWSDataFrame(client, e);
+            return Task.CompletedTask;
         }
     }
 }
