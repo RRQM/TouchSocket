@@ -505,8 +505,8 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createtouchrpcservice",
-            label: "12.2 创建TouchRpc服务器"
+            id: "createdmtpservice",
+            label: "12.2 创建Dmtp服务器"
           },
           {
             type: "doc",
