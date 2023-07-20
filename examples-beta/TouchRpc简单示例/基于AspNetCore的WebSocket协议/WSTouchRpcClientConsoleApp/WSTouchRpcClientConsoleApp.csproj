@@ -7,6 +7,11 @@
     <Compile Include="..\TouchRpcWebApplication\RpcProxy.cs" Link="RpcProxy.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket.AspNetCore" Version="1.3.0" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.3" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.3" />
   </ItemGroup>
 </Project>

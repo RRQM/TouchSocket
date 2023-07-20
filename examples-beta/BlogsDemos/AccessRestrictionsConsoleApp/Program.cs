@@ -17,11 +17,10 @@ namespace AccessRestrictionsConsoleApp
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+                client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
-                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -39,7 +38,7 @@ namespace AccessRestrictionsConsoleApp
         }
     }
 
-    public class AccessRestrictionsPlugin : TcpPluginBase
+    public class AccessRestrictionsPlugin : PluginBase,ITcpConnectingPlugin<ITcpClientBase>
     {
         private readonly IAccessRestrictions accessRestrictions;
 
@@ -47,26 +46,28 @@ namespace AccessRestrictionsConsoleApp
         {
             this.accessRestrictions = accessRestrictions ?? throw new ArgumentNullException(nameof(accessRestrictions));
         }
-        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
+
+        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
-            if (client is ITcpClient)
+            if (client.IsClient)
             {
                 //此处判断，如果该插件被添加在客户端，则不工作。
-                return;
+                return e.InvokeNext();
             }
             if (this.accessRestrictions.ExistsWhiteList(client.IP))
             {
                 //如果存在于白名单，直接返回，允许连接
-                return;
+                return e.InvokeNext();
             }
             if (this.accessRestrictions.ExistsBlackList(client.IP))
             {
                 //如果存在于黑名单，不允许连接
                 e.IsPermitOperation = false;
                 e.Handled = true;//表示此处已经处理OnConnecting消息，其他插件不再路由投递。
-                return;
+                return Task.CompletedTask;
             }
-            base.OnConnecting(client, e);
+
+            return e.InvokeNext();
         }
     }
 

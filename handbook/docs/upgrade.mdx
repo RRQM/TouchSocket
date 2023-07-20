@@ -29,7 +29,13 @@ import Tag from "@site/src/components/Tag.js";
   - &nbsp;<Tag>调整</Tag> TouchSocket所有“ID”属性，改名为“Id”。
   - &nbsp;<Tag>调整</Tag> TouchSocket所有插件的执行顺序，移动至内部重写方法之后。
   - &nbsp;<Tag>调整</Tag> TouchSocket所有`ResetID`改名为`ResetId`。
+  - &nbsp;<Tag>调整</Tag> UseCheckClear中，SetDuration调整名称为SetTick。
+  - &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。
+  - &nbsp;<Tag>调整</Tag> Config配置中，SetDataHandlingAdapter调整为SetTcpDataHandlingAdapter。
+  - &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
   - &nbsp;<Tag>移除</Tag> UsePlugin的显式配置，当调用ConfigurePlugins时，会自动启用。
+  - &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
+  - &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会大大影响内存池的效率。
   - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
 ---
 

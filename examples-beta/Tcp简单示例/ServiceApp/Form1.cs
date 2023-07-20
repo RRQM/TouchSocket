@@ -19,7 +19,7 @@ namespace ServiceApp
         {
             m_service.Connecting = (client, e) =>
             {
-                e.ID = $"{client.IP}:{client.Port}";
+                e.Id = $"{client.IP}:{client.Port}";
             };//有客户端正在连接
             m_service.Connected = this.M_service_Connected;//有客户端连接
             m_service.Disconnected = this.M_service_Disconnected; ;//有客户端断开连接
@@ -48,7 +48,7 @@ namespace ServiceApp
                 {
                     a.UseCheckClear()
                     .SetCheckClearType(CheckClearType.All)
-                    .SetDuration(TimeSpan.FromSeconds(60));
+                    .SetTick(TimeSpan.FromSeconds(60));
                 }))
                 .Start();//启动
             m_service.Logger.Info("服务器成功启动");
@@ -56,17 +56,17 @@ namespace ServiceApp
 
         private void M_service_Disconnected(SocketClient client, DisconnectEventArgs e)
         {
-            this.listBox1.Items.Remove(client.ID);
+            this.listBox1.Items.Remove(client.Id);
         }
 
         private void M_service_Connected(SocketClient client, TouchSocketEventArgs e)
         {
-            this.listBox1.Items.Add(client.ID);
+            this.listBox1.Items.Add(client.Id);
         }
 
         private void Service_Received(SocketClient client, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            client.Logger.Info($"从客户端id={client.ID}，ip={client.IP}，port={client.Port}收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
+            client.Logger.Info($"从客户端id={client.Id}，ip={client.IP}，port={client.Port}收到消息：{Encoding.UTF8.GetString(byteBlock.ToArray())}");//utf8解码。
 
             client.Send("Accepted");
         }
