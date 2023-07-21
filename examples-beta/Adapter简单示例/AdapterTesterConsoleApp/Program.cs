@@ -38,7 +38,7 @@ namespace AdapterTesterConsoleApp
             {
                 bool isSuccess = true;
                 var data = new byte[] { 0, 1, 2, 3, 4 };
-                DataAdapterTester tester = DataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
+                TcpDataAdapterTester tester =TouchSocket.Sockets. TcpDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
                  , bufferLength, (byteBlock, requestInfo) =>
                  {
                      //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
