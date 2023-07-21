@@ -20,7 +20,7 @@ namespace AdapterConsoleApp
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
         /// <returns></returns>
-        protected override FilterResult Filter(ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+        protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
         {
             //以下解析思路为一次性解析，不考虑缓存的临时对象。
 

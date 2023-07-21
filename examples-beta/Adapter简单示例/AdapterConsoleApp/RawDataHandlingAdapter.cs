@@ -8,7 +8,7 @@ namespace AdapterConsoleApp
     /// <summary>
     /// 从原始适配器实现<see href=""="https://www.yuque.com/eo2w71/rrqm/77bcd9c825e08ab9bd0ba5908bc3e515#sGiqF"/>
     /// </summary>
-    internal class RawDataHandlingAdapter : DataHandlingAdapter
+    internal class RawDataHandlingAdapter : TcpDataHandlingAdapter
     {
         /// <summary>
         /// 包剩余长度

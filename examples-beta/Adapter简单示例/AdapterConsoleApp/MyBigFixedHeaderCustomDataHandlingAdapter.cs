@@ -30,7 +30,7 @@ namespace AdapterConsoleApp
     {
         public long BodyLength => throw new NotImplementedException();
 
-        public void OnAppendBody(byte[] buffer, int offset, int length)
+        public void OnAppendBody(byte[] buffer)
         {
             //在这里会一直追加数据体，用户自行实现数据的保存。
         }

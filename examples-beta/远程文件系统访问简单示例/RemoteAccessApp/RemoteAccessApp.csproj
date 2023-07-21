@@ -1,29 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
-		<UseWPF>true</UseWPF>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="Resources\Images\完成.png" />
-		<None Remove="Resources\Images\未完成.png" />
-	</ItemGroup>
-
+  
 	<ItemGroup>
 		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.7" />
 		<PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.7" />
 		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.7" />
 		<PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.7" />
 		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.7" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
 		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.7" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<Resource Include="Resources\Images\完成.png" />
-		<Resource Include="Resources\Images\未完成.png" />
-	</ItemGroup>
-
 </Project>

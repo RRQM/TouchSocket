@@ -24,24 +24,42 @@ import Tag from "@site/src/components/Tag.js";
 
 更新描述：大版本更新。
 
+#### 【TouchSokcet.Core】
+
   - &nbsp;<Tag>优化</Tag> FileLogger支持指定不同目录。
+  - &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。同时e.Handled功能依然有效。
+  - &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
+  - &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
+  - &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会大大影响内存池的效率。
+
+#### 【TouchSokcet.Sokcets】
+
   - &nbsp;<Tag>优化</Tag> IPHost支持从int、string直接隐式转换。
   - &nbsp;<Tag>调整</Tag> TouchSocket所有“ID”属性，改名为“Id”。
   - &nbsp;<Tag>调整</Tag> TouchSocket所有插件的执行顺序，移动至内部重写方法之后。
   - &nbsp;<Tag>调整</Tag> TouchSocket所有`ResetID`改名为`ResetId`。
   - &nbsp;<Tag>调整</Tag> UseCheckClear项，SetDuration调整名称为SetTick。
   - &nbsp;<Tag>调整</Tag> UseCheckClear项，不仅可以适用服务器，客户端也适用。
-  - &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。
   - &nbsp;<Tag>调整</Tag> Config配置中，SetDataHandlingAdapter调整为SetTcpDataHandlingAdapter。
-  - &nbsp;<Tag>调整</Tag> 原TouchRpc中InvokeOption，改名为DmtpInvokeOption。其他Rpc调用时使用InvokeOption即可。
-  - &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
+  - &nbsp;<Tag>调整</Tag> 适配器项，CustomDataHandlingAdapter中的Filter方法中，byteBlock参数使用in修饰。
+  - &nbsp;<Tag>调整</Tag> 适配器项，DataHandlingAdapter改名为TcpDataHandlingAdapter。
+  - &nbsp;<Tag>调整</Tag> 适配器项，DataAdapterTester改名为TcpDataAdapterTester。
   - &nbsp;<Tag>移除</Tag> UsePlugin的显式配置，当调用ConfigurePlugins时，会自动启用。
-  - &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
-  - &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会大大影响内存池的效率。
+
+#### 【TouchSokcet.Http】
+#### 【TouchSokcet.Rpc】
+#### 【TouchSokcet(Pro).Dmtp】
+
+  - &nbsp;<Tag>调整</Tag> 原TouchRpc全系改名为Dmtp。例如：原TcpTouchRpcClient改名为TcpDmtpClient。
+  - &nbsp;<Tag>调整</Tag> 原TouchRpc中InvokeOption，改名为DmtpInvokeOption。InvokeOption依然有效，但是在调用DmtpRpc时，则无法指定序列化方式。所以可能需要使用DmtpInvokeOption。
   - &nbsp;<Tag>移除</Tag> **暂时**移除UdpRpc功能，后续可能考虑添加。
   - &nbsp;<Tag>移除</Tag> **暂时**移除EventBus功能，后续可能考虑添加。
   - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
   - &nbsp;<Tag>新增</Tag> 文件传输项，开放增加SetMaxSpeed功能。
+
+#### 【TouchSokcet.JsonRpc】
+#### 【TouchSokcet.WebApi】
+#### 【TouchSokcet.XmlRpc】
 ---
 
 
