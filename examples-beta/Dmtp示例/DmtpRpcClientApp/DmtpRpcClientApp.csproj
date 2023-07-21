@@ -1,12 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="..\TouchRpcServerApp\RpcProxy.cs" Link="RpcProxy.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="TouchSocket" Version="2.0.0-beta.7" />
     <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.7" />

@@ -2,7 +2,7 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Dmtp.Rpc;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -76,29 +76,21 @@ if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{account,password};
-System.Boolean returnData=Client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.login",invokeOption, parameters);
+System.Boolean returnData=(System.Boolean)Client.Invoke(typeof(System.Boolean),"Login",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///登录
 ///</summary>
-public Task<System.Boolean> LoginAsync(System.String account,System.String password,IInvokeOption invokeOption = default)
+public async Task<System.Boolean> LoginAsync(System.String account,System.String password,IInvokeOption invokeOption = default)
 {
 if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{account,password};
-return Client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.login",invokeOption, parameters);
+return (System.Boolean) await Client.InvokeAsync(typeof(System.Boolean),"Login",invokeOption, parameters);
 }
 
 ///<summary>
@@ -113,29 +105,21 @@ if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{register};
-System.Boolean returnData=Client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+System.Boolean returnData=(System.Boolean)Client.Invoke(typeof(System.Boolean),"Register",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///注册
 ///</summary>
-public Task<System.Boolean> RegisterAsync(RegisterModel register,IInvokeOption invokeOption = default)
+public async Task<System.Boolean> RegisterAsync(RegisterModel register,IInvokeOption invokeOption = default)
 {
 if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{register};
-return Client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+return (System.Boolean) await Client.InvokeAsync(typeof(System.Boolean),"Register",invokeOption, parameters);
 }
 
 ///<summary>
@@ -150,29 +134,21 @@ if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{a};
-System.Int32 returnData=Client.Invoke<System.Int32>("touchrpcserverapp.myrpcserver.performance",invokeOption, parameters);
+System.Int32 returnData=(System.Int32)Client.Invoke(typeof(System.Int32),"Performance",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///性能测试
 ///</summary>
-public Task<System.Int32> PerformanceAsync(System.Int32 a,IInvokeOption invokeOption = default)
+public async Task<System.Int32> PerformanceAsync(System.Int32 a,IInvokeOption invokeOption = default)
 {
 if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-if (Client.TryCanInvoke?.Invoke(Client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{a};
-return Client.InvokeAsync<System.Int32>("touchrpcserverapp.myrpcserver.performance",invokeOption, parameters);
+return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"Performance",invokeOption, parameters);
 }
 
 }
@@ -186,25 +162,17 @@ public static class MyRpcServerExtensions
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.Boolean Login<TClient>(this TClient client,System.String account,System.String password,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{account,password};
-System.Boolean returnData=client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.login",invokeOption, parameters);
+System.Boolean returnData=(System.Boolean)client.Invoke(typeof(System.Boolean),"Login",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///登录
 ///</summary>
-public static Task<System.Boolean> LoginAsync<TClient>(this TClient client,System.String account,System.String password,IInvokeOption invokeOption = default) where TClient:
+public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client,System.String account,System.String password,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{account,password};
-return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.login",invokeOption, parameters);
+return (System.Boolean) await client.InvokeAsync(typeof(System.Boolean),"Login",invokeOption, parameters);
 }
 
 ///<summary>
@@ -215,25 +183,17 @@ return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.login",
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.Boolean Register<TClient>(this TClient client,RegisterModel register,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{register};
-System.Boolean returnData=client.Invoke<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+System.Boolean returnData=(System.Boolean)client.Invoke(typeof(System.Boolean),"Register",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///注册
 ///</summary>
-public static Task<System.Boolean> RegisterAsync<TClient>(this TClient client,RegisterModel register,IInvokeOption invokeOption = default) where TClient:
+public static async Task<System.Boolean> RegisterAsync<TClient>(this TClient client,RegisterModel register,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{register};
-return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.register",invokeOption, parameters);
+return (System.Boolean) await client.InvokeAsync(typeof(System.Boolean),"Register",invokeOption, parameters);
 }
 
 ///<summary>
@@ -244,25 +204,17 @@ return client.InvokeAsync<System.Boolean>("touchrpcserverapp.myrpcserver.registe
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.Int32 Performance<TClient>(this TClient client,System.Int32 a,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{a};
-System.Int32 returnData=client.Invoke<System.Int32>("touchrpcserverapp.myrpcserver.performance",invokeOption, parameters);
+System.Int32 returnData=(System.Int32)client.Invoke(typeof(System.Int32),"Performance",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///性能测试
 ///</summary>
-public static Task<System.Int32> PerformanceAsync<TClient>(this TClient client,System.Int32 a,IInvokeOption invokeOption = default) where TClient:
+public static async Task<System.Int32> PerformanceAsync<TClient>(this TClient client,System.Int32 a,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
-if (client.TryCanInvoke?.Invoke(client)==false)
-{
-throw new RpcException("Rpc无法执行。");
-}
 object[] parameters = new object[]{a};
-return client.InvokeAsync<System.Int32>("touchrpcserverapp.myrpcserver.performance",invokeOption, parameters);
+return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"Performance",invokeOption, parameters);
 }
 
 }
@@ -271,7 +223,7 @@ public class RegisterModel
 {
 public System.String Account{get;set;}
 public System.String Password{get;set;}
-public System.Int32? Id{get;set;}
+public System.Int32 Id{get;set;}
 }
 
 }
