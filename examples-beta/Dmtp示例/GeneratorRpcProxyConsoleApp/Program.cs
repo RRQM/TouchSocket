@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel;
 using TouchSocket.Core;
-using TouchSocket.Rpc.Dmtp;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 using TouchSocket.Rpc.Generators;
+using TouchSocket.Sockets;
 
 namespace GeneratorRpcProxyConsoleApp
 {
@@ -11,15 +12,6 @@ namespace GeneratorRpcProxyConsoleApp
     {
         static void Main(string[] args)
         {
-            try
-            {
-                Enterprise.ForTest();
-            }
-            catch
-            {
-
-
-            }
             //创建服务器
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -27,11 +19,14 @@ namespace GeneratorRpcProxyConsoleApp
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-                       a.AddFileLogger();
                    })
-                   .ConfigureRpcStore(a =>
+                   .ConfigurePlugins(a => 
                    {
-                       a.RegisterServer<MyRpcServer>();
+                       a.UseDmtpRpc()
+                           .ConfigureRpcStore(store =>
+                           {
+                               store.RegisterServer<MyRpcServer>();
+                           });
                    })
                    .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
 
@@ -44,17 +39,22 @@ namespace GeneratorRpcProxyConsoleApp
             TcpDmtpClient client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
+                })
                 .SetVerifyToken("Dmtp"));
             client.Connect();
 
-            Console.WriteLine(client.Login("123", "abc"));//此处的Login方法则是vs源代码自动生成的，可以f12查看。
+            //此处的Login方法则是vs源代码自动生成的，可以f12查看。
+            Console.WriteLine(client.GetDmtpRpcActor().Login("123", "abc"));
             Console.ReadKey();
         }
     }
 
     public class MyRpcServer : RpcServer
     {
-        [Dmtp]
+        [DmtpRpc]
         public bool Login(string account, string password)
         {
             if (account == "123" && password == "abc")
