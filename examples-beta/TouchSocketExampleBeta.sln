@@ -186,6 +186,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientApp", "Dmtp示
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpWebApplication", "Dmtp示例\DmtpWebApplication\DmtpWebApplication.csproj", "{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteStreamConsoleApp", "Dmtp示例\RemoteStreamConsoleApp\RemoteStreamConsoleApp.csproj", "{4019C53F-2185-4ACF-A816-C659607B05E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -396,6 +398,10 @@ Global
 		{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4019C53F-2185-4ACF-A816-C659607B05E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4019C53F-2185-4ACF-A816-C659607B05E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4019C53F-2185-4ACF-A816-C659607B05E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4019C53F-2185-4ACF-A816-C659607B05E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -472,6 +478,7 @@ Global
 		{63EE2247-0A5B-47F9-B8AA-AED5BC8FC873} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
 		{C6AC63B3-23AA-4AC3-9B11-C43B44F6C89A} = {63EE2247-0A5B-47F9-B8AA-AED5BC8FC873}
 		{A10A3EE0-079A-4FB4-82AF-B7D680EE2690} = {5C17B127-95DD-480C-BDCC-7FDF5E645B0C}
+		{4019C53F-2185-4ACF-A816-C659607B05E5} = {B7D7FF93-7003-44AA-A88F-EB192B38C00A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

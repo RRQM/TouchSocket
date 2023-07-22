@@ -22,7 +22,7 @@ namespace RemoteAccessApp
                 .SetVerifyToken("Dmtp")
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger(new EasyLogger(msg =>
+                    a.AddEasyLogger((msg =>
                     {
                         this.listBox1.Items.Insert(0, msg);
                     }));
