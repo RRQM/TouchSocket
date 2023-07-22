@@ -1,11 +1,11 @@
 ﻿using SerializationSelectorClassLibrary;
 using System.ComponentModel;
-using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
-using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Sockets;
+using TouchSocket.Dmtp.Rpc;
+using TouchSocket.Dmtp;
 
 namespace SerializationSelectorConsoleApp
 {
@@ -13,28 +13,19 @@ namespace SerializationSelectorConsoleApp
     {
         static void Main(string[] args)
         {
-            try
-            {
-                Enterprise.ForTest();//下列代码会用到源代码生成，所以启用企业版支持。
-            }
-            catch
-            {
-
-            }
-
             StartServer();
 
             var client = CreateClient();
 
-            InvokeOption invokeOption = new InvokeOption()
+            InvokeOption invokeOption = new DmtpInvokeOption()
             {
                 FeedbackType = FeedbackType.WaitInvoke,
                 SerializationType = (SerializationType)4,
                 Timeout = 1000 * 10
             };
 
-            var msg = client.Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
-            Console.WriteLine(msg);
+            var msg = client.GetDmtpRpcActor().Login(new LoginModel() { Account = "Account", Password = "Password" }, invokeOption);
+            Console.WriteLine("调用成功，结果：" + msg);
             Console.ReadKey();
         }
 
@@ -43,7 +34,11 @@ namespace SerializationSelectorConsoleApp
             TcpDmtpClient client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetSerializationSelector(new MemoryPackSerializationSelector())
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc()
+                        .SetSerializationSelector(new MemoryPackSerializationSelector());
+                })
                 .SetVerifyToken("Dmtp"));
             client.Connect();
             return client;
@@ -54,14 +49,18 @@ namespace SerializationSelectorConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .SetSerializationSelector(new MemoryPackSerializationSelector())
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc()
+                       .ConfigureRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+                       })
+                           .SetSerializationSelector(new MemoryPackSerializationSelector());
+                   })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-                   })
-                   .ConfigureRpcStore(a =>
-                   {
-                       a.RegisterServer<MyRpcServer>();
                    })
                    .SetVerifyToken("Dmtp");
 
@@ -80,7 +79,7 @@ namespace SerializationSelectorConsoleApp
         /// <param name="loginModel"></param>
         /// <returns></returns>
         [Description("登录")]
-        [Dmtp]
+        [DmtpRpc]
         public string Login(LoginModel loginModel)
         {
             return $"{loginModel.Account}-{loginModel.Password}";
