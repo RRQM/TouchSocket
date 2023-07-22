@@ -4,6 +4,7 @@ using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.XmlRpc;
 using TouchSocket.Sockets;
+using TouchSocket.XmlRpc;
 
 namespace XmlRpcServerApp
 {
