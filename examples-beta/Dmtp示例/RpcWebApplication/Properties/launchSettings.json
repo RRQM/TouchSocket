@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "TouchRpcWebApplication": {
+    "DmtpWebApplication": {
       "commandName": "Project",
       "launchBrowser": false,
       "launchUrl": "weatherforecast",

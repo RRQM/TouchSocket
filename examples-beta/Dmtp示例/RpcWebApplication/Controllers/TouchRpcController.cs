@@ -14,18 +14,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net.WebSockets;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc.AspNetCore;
+using TouchSocket.Rpc.Dmtp.AspNetCore;
 
-namespace TouchRpcWebApplication.Controllers
+namespace DmtpWebApplication.Controllers
 {
     [ApiController]
     [Route("[controller]/[action]")]
-    public class TouchRpcController : ControllerBase
+    public class DmtpController : ControllerBase
     {
-        private readonly ILogger<TouchRpcController> m_logger;
-        private readonly IWSTouchRpcService m_touchRpcService;
+        private readonly ILogger<DmtpController> m_logger;
+        private readonly IWSDmtpService m_touchRpcService;
 
-        public TouchRpcController(ILogger<TouchRpcController> logger, IWSTouchRpcService touchRpcService)
+        public DmtpController(ILogger<DmtpController> logger, IWSDmtpService touchRpcService)
         {
             m_logger = logger;
             this.m_touchRpcService = touchRpcService;

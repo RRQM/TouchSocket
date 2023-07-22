@@ -7,7 +7,7 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace TouchRpcClientApp
+namespace DmtpClientApp
 {
     public partial class Form1 : Form
     {

@@ -1,6 +1,6 @@
 ﻿using RRQMProxy;
 using System;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Rpc.XmlRpc;
 
 namespace XmlRpcClientApp

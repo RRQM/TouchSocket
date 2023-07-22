@@ -2,7 +2,7 @@ using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;

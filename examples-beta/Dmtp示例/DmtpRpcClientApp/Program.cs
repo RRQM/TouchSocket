@@ -8,7 +8,7 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-namespace TouchRpcClientApp
+namespace DmtpClientApp
 {
     internal static class Program
     {
@@ -40,7 +40,7 @@ namespace TouchRpcClientApp
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
 #endif
                        });
-                       //a.Add<MyTouchRpcPlugin>();
+                       //a.Add<MyDmtpPlugin>();
                    })
                    .ConfigureContainer(a =>
                    {
@@ -101,11 +101,11 @@ namespace TouchRpcClientApp
         public int Id { get; set; }
     }
 
-    public class MyTouchRpcAttribute : DmtpRpcAttribute
+    public class MyDmtpAttribute : DmtpRpcAttribute
     {
         private readonly string m_route;
 
-        public MyTouchRpcAttribute(string route = default)
+        public MyDmtpAttribute(string route = default)
         {
             this.m_route = route;
         }

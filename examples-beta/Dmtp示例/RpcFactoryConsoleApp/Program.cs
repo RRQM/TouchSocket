@@ -1,5 +1,5 @@
 ﻿using TouchSocket.Core;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Sockets;
 
 namespace RpcFactoryConsoleApp
@@ -14,7 +14,7 @@ namespace RpcFactoryConsoleApp
 
             try
             {
-                //client.Invoke();//这里可以让得到的通讯单体进行业务交流
+               // client.GetDmtpRpcActor().Invoke();//这里可以让得到的通讯单体进行业务交流
             }
             finally
             {
@@ -23,21 +23,29 @@ namespace RpcFactoryConsoleApp
             }
         }
 
-        private static TcpTouchRpcClientFactory CreateTcpClientFactory()
+        private static TcpDmtpClientFactory CreateTcpClientFactory()
         {
-            var clientFactory = new TcpTouchRpcClientFactory()
+            var clientFactory = new TcpDmtpClientFactory()
             {
                 MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
                 MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
                 OnGetTransferConfig = () => //配置辅助通信
                 {
                     return new TouchSocketConfig()
-                       .SetRemoteIPHost("tcp://127.0.0.1:7789");
+                       .SetRemoteIPHost("tcp://127.0.0.1:7789")
+                       .ConfigurePlugins(a =>
+                       {
+                           a.UseDmtpRpc();
+                       });
                 }
             };
 
             clientFactory.MainConfig
-                    .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
+                })
+                .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
 
             //检测主通信器连接，然后如果没有连接，会自动建立连接
             Result result = clientFactory.CheckStatus();

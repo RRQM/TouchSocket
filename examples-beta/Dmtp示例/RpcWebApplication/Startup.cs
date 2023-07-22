@@ -17,12 +17,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.IO;
-using TouchRpcWebApplication.RpcProviders;
+using DmtpWebApplication.RpcProviders;
 using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Rpc;
 
-namespace TouchRpcWebApplication
+namespace DmtpWebApplication
 {
     public class Startup
     {
@@ -36,8 +36,8 @@ namespace TouchRpcWebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //向Asp服务中添加IWSTouchRpcService
-            services.AddWSTouchRpc(new TouchSocketConfig()
+            //向Asp服务中添加IWSDmtpService
+            services.AddWSDmtp(new TouchSocketConfig()
                 .UseAspNetCoreContainer(services)//设置IOC容器
                 .ConfigureRpcStore(a =>
                 {
@@ -71,7 +71,7 @@ namespace TouchRpcWebApplication
             });
 
             app.UseWebSockets();//必须先使用WebSocket
-            app.UseWSTouchRpc("/wstouchrpc");//该操作不会影响原有的WebSocket，只要url不同即可。
+            app.UseWSDmtp("/wstouchrpc");//该操作不会影响原有的WebSocket，只要url不同即可。
 
             app.UseRouting();
 

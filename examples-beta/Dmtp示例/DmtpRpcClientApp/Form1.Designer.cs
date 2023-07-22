@@ -1,5 +1,5 @@
 ﻿
-namespace TouchRpcClientApp
+namespace DmtpClientApp
 {
     partial class Form1
     {

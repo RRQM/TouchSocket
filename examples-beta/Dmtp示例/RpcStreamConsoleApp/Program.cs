@@ -7,62 +7,18 @@ using TouchSocket.Sockets;
 
 namespace RpcStreamConsoleApp
 {
-    public class MyRpcServer : RpcServer
-    {
-        /// <summary>
-        /// "测试ServiceToClient创建通道，从而实现流数据的传输"
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="channelID"></param>
-        [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
-        [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]//此处设置直接使用方法名调用
-        public int RpcPullChannel(ICallContext callContext, int channelID)
-        {
-            var size = 0;
-            var package = 1024 * 1024;
-            if (callContext.Caller is ITcpDmtpSocketClient socketClient)
-            {
-                if (socketClient.TrySubscribeChannel(channelID, out var channel))
-                {
-                    for (var i = 0; i < Program.Count; i++)
-                    {
-                        size += package;
-                        channel.Write(new byte[package]);
-                    }
-                    channel.Complete();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
-                }
-            }
-            return size;
-        }
-
-        /// <summary>
-        /// "测试推送"
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="channelID"></param>
-        [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
-        [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]//此处设置直接使用方法名调用
-        public int RpcPushChannel(ICallContext callContext, int channelID)
-        {
-            var size = 0;
-
-            if (callContext.Caller is TcpDmtpSocketClient socketClient)
-            {
-                if (socketClient.TrySubscribeChannel(channelID, out var channel))
-                {
-                    foreach (var byteBlock in channel)
-                    {
-                        size += byteBlock.Len;
-                    }
-                    Console.WriteLine($"服务器接收结束，状态：{channel.Status}，长度：{size}");
-                }
-            }
-            return size;
-        }
-    }
-
+   
     internal class Program
     {
+        public static int Count { get; set; } = 1000;//测试100Mb数据。
+        private static async Task Main(string[] args)
+        {
+            StartServer();
+            await TestRpcPullChannel();
+            await TestRpcPushChannel();
+            Console.ReadKey();
+        }
+
         private static TcpDmtpClient CreateClient()
         {
             var client = new TcpDmtpClient();
@@ -76,15 +32,6 @@ namespace RpcStreamConsoleApp
                 .SetVerifyToken("Rpc"));
             client.Connect();
             return client;
-        }
-
-        public static int Count { get; set; } = 1000;//测试100Mb数据。
-        private static async Task Main(string[] args)
-        {
-            StartServer();
-            await TestRpcPullChannel();
-            await TestRpcPushChannel();
-            Console.ReadKey();
         }
 
         private static void StartServer()
@@ -166,5 +113,60 @@ namespace RpcStreamConsoleApp
             channel.Dispose();
             Console.WriteLine($"状态：{channel.Status}，result={result}");
         }
+
+        public class MyRpcServer : RpcServer
+        {
+            /// <summary>
+            /// "测试ServiceToClient创建通道，从而实现流数据的传输"
+            /// </summary>
+            /// <param name="callContext"></param>
+            /// <param name="channelID"></param>
+            [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
+            [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]//此处设置直接使用方法名调用
+            public int RpcPullChannel(ICallContext callContext, int channelID)
+            {
+                var size = 0;
+                var package = 1024 * 1024;
+                if (callContext.Caller is ITcpDmtpSocketClient socketClient)
+                {
+                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
+                    {
+                        for (var i = 0; i < Program.Count; i++)
+                        {
+                            size += package;
+                            channel.Write(new byte[package]);
+                        }
+                        channel.Complete();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
+                    }
+                }
+                return size;
+            }
+
+            /// <summary>
+            /// "测试推送"
+            /// </summary>
+            /// <param name="callContext"></param>
+            /// <param name="channelID"></param>
+            [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
+            [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]//此处设置直接使用方法名调用
+            public int RpcPushChannel(ICallContext callContext, int channelID)
+            {
+                var size = 0;
+
+                if (callContext.Caller is TcpDmtpSocketClient socketClient)
+                {
+                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
+                    {
+                        foreach (var byteBlock in channel)
+                        {
+                            size += byteBlock.Len;
+                        }
+                        Console.WriteLine($"服务器接收结束，状态：{channel.Status}，长度：{size}");
+                    }
+                }
+                return size;
+            }
+        }
+
     }
 }
