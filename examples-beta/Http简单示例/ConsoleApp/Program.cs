@@ -16,7 +16,6 @@ namespace ConsoleApp
 
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
-                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
@@ -45,7 +44,7 @@ namespace ConsoleApp
     /// <summary>
     /// 支持GET、Post、Put，Delete，或者其他
     /// </summary>
-    internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
+    internal class MyHttpPlug : PluginBase,IHttpGetPlugin<HttpSocketClient>
     {
         protected override void OnGet(HttpSocketClient client, HttpContextEventArgs e)
         {
