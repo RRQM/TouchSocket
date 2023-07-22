@@ -1,7 +1,8 @@
 ﻿using System;
 using TouchSocket.Core;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc;
 using TouchSocket.Sockets;
 
 namespace ReverseRpcConsoleApp
@@ -11,29 +12,34 @@ namespace ReverseRpcConsoleApp
         private static void Main(string[] args)
         {
             //创建逻辑服务器
-            TcpTouchRpcService tcpTouchRpcService = CreateTcpTouchRpcService(7789);
+            var tcpDmtpService = CreateTcpDmtpService(7789);
 
             //创建逻辑客户端
-            TcpTouchRpcClient client = CreateTcpTouchRpcClient();
+            var client = CreateTcpDmtpClient();
 
-            foreach (var item in tcpTouchRpcService.GetClients())
+            foreach (var item in tcpDmtpService.GetClients())
             {
-                client.Logger.Info(item.Invoke<string>("ReverseRpcConsoleApp.ReverseCallbackServer.SayHello".ToLower(), InvokeOption.WaitInvoke, "张三"));
+                client.Logger.Info(item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三"));
+                client.Logger.Info("调用完成");
             }
 
             Console.ReadKey();
         }
 
-        private static TcpTouchRpcService CreateTcpTouchRpcService(int port)
+        private static TcpDmtpService CreateTcpDmtpService(int port)
         {
-            var service = new TcpTouchRpcService();
+            var service = new TcpDmtpService();
             TouchSocketConfig config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .ConfigureContainer(a =>
                    {
-                       a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
+                       a.AddConsoleLogger();
                    })
-                   .SetVerifyToken("TouchRpc");
+                   .ConfigurePlugins(a => 
+                   {
+                       a.UseDmtpRpc();
+                   })
+                   .SetVerifyToken("Dmtp");
 
             service.Setup(config)
                 .Start();
@@ -42,20 +48,24 @@ namespace ReverseRpcConsoleApp
             return service;
         }
 
-        private static TcpTouchRpcClient CreateTcpTouchRpcClient()
+        private static TcpDmtpClient CreateTcpDmtpClient()
         {
-            TcpTouchRpcClient client = new TcpTouchRpcClient();
+            TcpDmtpClient client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigureContainer(a =>
                 {
-                    a.SetLogger<LoggerGroup<ConsoleLogger, FileLogger>>();//注册一个日志组
+                    a.AddConsoleLogger();
                 })
-                .ConfigureRpcStore(a =>
-                {
-                    a.RegisterServer<ReverseCallbackServer>();
-                })
-                .SetVerifyToken("TouchRpc"));
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc()
+                     .ConfigureRpcStore(store => 
+                     {
+                         store.RegisterServer<ReverseCallbackServer>();
+                     });
+                 })
+                .SetVerifyToken("Dmtp"));
             client.Connect();
 
             return client;
@@ -64,7 +74,7 @@ namespace ReverseRpcConsoleApp
 
     public class ReverseCallbackServer : RpcServer
     {
-        [TouchRpc]
+        [DmtpRpc(MethodInvoke =true)]
         public string SayHello(string name)
         {
             return $"{name},hi";

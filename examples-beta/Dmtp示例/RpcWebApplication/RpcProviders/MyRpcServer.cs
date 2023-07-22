@@ -13,10 +13,10 @@
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc;
-using TouchSocket.Rpc.TouchRpc.AspNetCore;
+using TouchSocket.Rpc.Dmtp;
+using TouchSocket.Rpc.Dmtp.AspNetCore;
 
-namespace TouchRpcWebApplication.RpcProviders
+namespace DmtpWebApplication.RpcProviders
 {
     public class MyRpcServer : RpcServer
     {
@@ -27,13 +27,13 @@ namespace TouchRpcWebApplication.RpcProviders
         /// </summary>
         /// <param name="service"></param>
         /// <param name="logger"></param>
-        public MyRpcServer(IWSTouchRpcService service, ILogger<MyRpcServer> logger)
+        public MyRpcServer(IWSDmtpService service, ILogger<MyRpcServer> logger)
         {
             this.m_logger = logger;
         }
 
         [Description("登录")]
-        [TouchRpc]
+        [Dmtp]
         public bool Login(string account, string password)
         {
             if (account == "123" && password == "abc")
@@ -46,7 +46,7 @@ namespace TouchRpcWebApplication.RpcProviders
         }
 
         [Description("性能测试")]
-        [TouchRpc]
+        [Dmtp]
         public int Performance(int a)
         {
             return a;

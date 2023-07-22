@@ -1,18 +1,18 @@
 ﻿using RpcProxy;
 using System;
 using TouchSocket.Core;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Sockets;
 
-namespace WSTouchRpcClientConsoleApp
+namespace WSDmtpClientConsoleApp
 {
     internal class Program
     {
-        private static WSTouchRpcClient client;
+        private static WSDmtpClient client;
 
         private static void Main(string[] args)
         {
-            client = new WSTouchRpcClient();
+            client = new WSDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:5000/wstouchrpc"));
             client.ConnectAsync();

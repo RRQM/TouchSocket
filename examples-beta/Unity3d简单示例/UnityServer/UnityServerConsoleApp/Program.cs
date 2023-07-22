@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Sockets;
 
 namespace UnityServerConsoleApp
@@ -25,7 +25,7 @@ namespace UnityServerConsoleApp
 
         private static void StartUdpRpc(int port)
         {
-            var service = new UdpTouchRpc();
+            var service = new UdpDmtp();
             TouchSocketConfig config = new TouchSocketConfig()//配置
                    .SetBindIPHost(new IPHost(port))
                    .ConfigureContainer(a =>
@@ -66,7 +66,7 @@ namespace UnityServerConsoleApp
 
         private static void StartTcpRpcService(int port)
         {
-            var service = new TcpTouchRpcService();
+            var service = new TcpDmtpService();
             TouchSocketConfig config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .SetThreadCount(50)
@@ -84,7 +84,7 @@ namespace UnityServerConsoleApp
                    {
                        a.Add<MyTcpRpcPlguin>();
                    })
-                   .SetVerifyToken("TouchRpc");
+                   .SetVerifyToken("Dmtp");
 
             service.Setup(config)
                 .Start();
@@ -119,9 +119,9 @@ namespace UnityServerConsoleApp
         }
     }
 
-    internal class MyTcpRpcPlguin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
+    internal class MyTcpRpcPlguin : DmtpPluginBase<TcpDmtpSocketClient>
     {
-        protected override void OnStreamTransfering(TcpTouchRpcSocketClient client, StreamOperationEventArgs e)
+        protected override void OnStreamTransfering(TcpDmtpSocketClient client, StreamOperationEventArgs e)
         {
             client.Logger.Info($"客户端：{client.GetInfo()}正在传输流....，总长度={e.StreamInfo.Size}");
             foreach (var item in e.Metadata.AllKeys)
@@ -132,7 +132,7 @@ namespace UnityServerConsoleApp
             e.Bucket = new MemoryStream();
         }
 
-        protected override void OnStreamTransfered(TcpTouchRpcSocketClient client, StreamStatusEventArgs e)
+        protected override void OnStreamTransfered(TcpDmtpSocketClient client, StreamStatusEventArgs e)
         {
             client.Logger.Info($"客户端：{client.GetInfo()}流传输结束，状态={e.Result}");
             e.Bucket.SafeDispose();
@@ -177,7 +177,7 @@ namespace UnityServerConsoleApp
         private readonly ILog m_logger;
 
         [Description("登录")]
-        [TouchRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]
+        [Dmtp(true, MethodFlags = MethodFlags.IncludeCallContext)]
         public MyLoginModelResult Login(ICallContext callContext, MyLoginModel model)
         {
             if (model.Account == "123" && model.Password == "abc")
@@ -189,7 +189,7 @@ namespace UnityServerConsoleApp
         }
 
         [Description("性能测试")]
-        [TouchRpc(true)]
+        [Dmtp(true)]
         public int Performance(int i)
         {
             Interlocked.Increment(ref count);

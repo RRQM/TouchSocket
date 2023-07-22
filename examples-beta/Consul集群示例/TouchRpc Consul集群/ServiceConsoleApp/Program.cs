@@ -21,8 +21,8 @@ namespace ServiceConsoleApp
             Console.WriteLine("输入本地监听端口");
             int port = int.Parse(Console.ReadLine());
 
-            //此处直接建立HttpTouchRpcService。
-            //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、TouchRpc等等。
+            //此处直接建立HttpDmtpService。
+            //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、Dmtp等等。
             var service = new TouchSocketConfig()
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .ConfigureContainer(a =>

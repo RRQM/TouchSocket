@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using TouchSocket.Core;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 using TouchSocket.Rpc.Generators;
@@ -21,7 +21,7 @@ namespace GeneratorRpcProxyConsoleApp
 
             }
             //创建服务器
-            var service = new TcpTouchRpcService();
+            var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                    .ConfigureContainer(a =>
@@ -33,7 +33,7 @@ namespace GeneratorRpcProxyConsoleApp
                    {
                        a.RegisterServer<MyRpcServer>();
                    })
-                   .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
+                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
 
             service.Setup(config)
                 .Start();
@@ -41,10 +41,10 @@ namespace GeneratorRpcProxyConsoleApp
             service.Logger.Info($"{service.GetType().Name}已启动");
 
             //创建客户端
-            TcpTouchRpcClient client = new TcpTouchRpcClient();
+            TcpDmtpClient client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("TouchRpc"));
+                .SetVerifyToken("Dmtp"));
             client.Connect();
 
             Console.WriteLine(client.Login("123", "abc"));//此处的Login方法则是vs源代码自动生成的，可以f12查看。
@@ -54,7 +54,7 @@ namespace GeneratorRpcProxyConsoleApp
 
     public class MyRpcServer : RpcServer
     {
-        [TouchRpc]
+        [Dmtp]
         public bool Login(string account, string password)
         {
             if (account == "123" && password == "abc")

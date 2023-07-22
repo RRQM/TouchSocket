@@ -4,7 +4,7 @@ using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
-using TouchSocket.Rpc.TouchRpc;
+using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Sockets;
 
 namespace SerializationSelectorConsoleApp
@@ -38,20 +38,20 @@ namespace SerializationSelectorConsoleApp
             Console.ReadKey();
         }
 
-        static TcpTouchRpcClient CreateClient()
+        static TcpDmtpClient CreateClient()
         {
-            TcpTouchRpcClient client = new TcpTouchRpcClient();
+            TcpDmtpClient client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetSerializationSelector(new MemoryPackSerializationSelector())
-                .SetVerifyToken("TouchRpc"));
+                .SetVerifyToken("Dmtp"));
             client.Connect();
             return client;
         }
 
         static void StartServer()
         {
-            var service = new TcpTouchRpcService();
+            var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                    .SetSerializationSelector(new MemoryPackSerializationSelector())
@@ -63,7 +63,7 @@ namespace SerializationSelectorConsoleApp
                    {
                        a.RegisterServer<MyRpcServer>();
                    })
-                   .SetVerifyToken("TouchRpc");
+                   .SetVerifyToken("Dmtp");
 
             service.Setup(config)
                 .Start();
@@ -80,7 +80,7 @@ namespace SerializationSelectorConsoleApp
         /// <param name="loginModel"></param>
         /// <returns></returns>
         [Description("登录")]
-        [TouchRpc]
+        [Dmtp]
         public string Login(LoginModel loginModel)
         {
             return $"{loginModel.Account}-{loginModel.Password}";

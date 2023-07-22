@@ -13,7 +13,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace TouchRpcWebApplication
+namespace DmtpWebApplication
 {
     public class Program
     {
