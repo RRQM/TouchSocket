@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -23,8 +24,11 @@ namespace ConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<MyHttpPlug>();
-
+                    a.Add<MyHttpPlug1>();
+                    a.Add<MyHttpPlug2>();
+                    a.Add<MyHttpPlug3>();
+                    a.Add<MyHttpPlug4>();
+                   
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
                     //2、处理header为Option的探视跨域请求。
@@ -41,58 +45,9 @@ namespace ConsoleApp
         }
     }
 
-    /// <summary>
-    /// 支持GET、Post、Put，Delete，或者其他
-    /// </summary>
-    internal class MyHttpPlug : PluginBase,IHttpGetPlugin<HttpSocketClient>
+    internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<HttpSocketClient>
     {
-        protected override void OnGet(HttpSocketClient client, HttpContextEventArgs e)
-        {
-            if (e.Context.Request.UrlEquals("/success"))
-            {
-                //直接响应文字
-                e.Context.Response.FromText("Success").Answer();//直接回应
-                Console.WriteLine("处理完毕");
-                e.Handled = true;
-
-               
-            }
-            else if (e.Context.Request.UrlEquals("/file"))
-            {
-                //直接回应文件。
-                e.Context.Response
-                    .SetStatus()//必须要有状态
-                    .FromFile(@"D:\System\Windows.iso", e.Context.Request);
-            }
-            else if (e.Context.Request.UrlEquals("/html"))
-            {
-                //回应html
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine("<!DOCTYPE html>");
-                stringBuilder.AppendLine("<html>");
-                stringBuilder.AppendLine("<head>");
-                stringBuilder.AppendLine("<meta charset=\"utf-8\"/>");
-                stringBuilder.AppendLine("<title>TouchSocket</title>");
-                stringBuilder.AppendLine("</head>");
-                stringBuilder.AppendLine("<body>");
-                stringBuilder.AppendLine("<div id=\"kuang\" style=\"width: 50%;height: 85%;left: 25%;top:15%;position: absolute;\">");
-                stringBuilder.AppendLine("<a id=\"MM\"  style=\"font-size: 30px;font-family: 微软雅黑;width: 100%;\">王二麻子</a>");
-                stringBuilder.AppendLine("<input type=\"text\" id=\"NN\" value=\"\" style=\"font-size: 30px;width:100%;position: relative;top: 30px;\"/>");
-                stringBuilder.AppendLine("<input type=\"button\" id=\"XX\" value=\"我好\" style=\"font-size: 30px;width: 100%;position: relative;top: 60px;\" onclick=\"javascript:jump()\" />");
-                stringBuilder.AppendLine("</div>");
-                stringBuilder.AppendLine("</body>");
-                stringBuilder.AppendLine("</html>");
-
-                e.Context.Response
-                         .SetStatus()//必须要有状态
-                         .SetContentTypeByExtension(".html")
-                         .SetContent(stringBuilder.ToString());
-                e.Context.Response.Answer();
-            }
-            base.OnGet(client, e);
-        }
-
-        protected override void OnPost(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpPostPlugin<HttpSocketClient>.OnHttpPost(HttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/uploadfile"))
             {
@@ -117,13 +72,14 @@ namespace ConsoleApp
 
                     //下面逻辑是接收小文件。
 
-                    if (e.Context.Request.ContentLen > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
+                    if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
                         e.Context.Response
                             .SetStatus("403", "数据过大")
                             .Answer();
                         return;
                     }
+
                     //此操作会先接收全部数据，然后再分割数据。
                     //所以上传文件不宜过大，不然会内存溢出。
                     var multifileCollection = e.Context.Request.GetMultifileCollection();
@@ -146,7 +102,86 @@ namespace ConsoleApp
                     client.Logger.Exception(ex);
                 }
             }
-            base.OnPost(client, e);
+
+            await e.InvokeNext();
+        }
+    }
+    internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    {
+        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/html"))
+            {
+                //回应html
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine("<!DOCTYPE html>");
+                stringBuilder.AppendLine("<html>");
+                stringBuilder.AppendLine("<head>");
+                stringBuilder.AppendLine("<meta charset=\"utf-8\"/>");
+                stringBuilder.AppendLine("<title>TouchSocket</title>");
+                stringBuilder.AppendLine("</head>");
+                stringBuilder.AppendLine("<body>");
+                stringBuilder.AppendLine("<div id=\"kuang\" style=\"width: 50%;height: 85%;left: 25%;top:15%;position: absolute;\">");
+                stringBuilder.AppendLine("<a id=\"MM\"  style=\"font-size: 30px;font-family: 微软雅黑;width: 100%;\">王二麻子</a>");
+                stringBuilder.AppendLine("<input type=\"text\" id=\"NN\" value=\"\" style=\"font-size: 30px;width:100%;position: relative;top: 30px;\"/>");
+                stringBuilder.AppendLine("<input type=\"button\" id=\"XX\" value=\"我好\" style=\"font-size: 30px;width: 100%;position: relative;top: 60px;\" onclick=\"javascript:jump()\" />");
+                stringBuilder.AppendLine("</div>");
+                stringBuilder.AppendLine("</body>");
+                stringBuilder.AppendLine("</html>");
+
+                e.Context.Response
+                         .SetStatus()//必须要有状态
+                         .SetContentTypeByExtension(".html")
+                         .SetContent(stringBuilder.ToString());
+                e.Context.Response.Answer();
+                return;
+            }
+
+            await e.InvokeNext();
+        }
+    }
+    internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    {
+        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/file"))
+            {
+                try
+                {
+                    //直接回应文件。
+                    e.Context.Response
+                        .SetStatus()//必须要有状态
+                        .FromFile(@"D:\System\Windows.iso", e.Context.Request);
+                }
+                catch (Exception ex)
+                {
+                    e.Context.Response.SetStatus("403")
+                        .FromText(ex.Message)
+                        .Answer();
+                }
+                
+                return;
+            }
+
+            await e.InvokeNext();
+        }
+    }
+    /// <summary>
+    /// 支持GET、Post、Put，Delete，或者其他
+    /// </summary>
+    internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    {
+        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/success"))
+            {
+                //直接响应文字
+                e.Context.Response.FromText("Success").Answer();//直接回应
+                Console.WriteLine("处理完毕");
+                return;
+            }
+
+            await e.InvokeNext();
         }
     }
 }

@@ -140,15 +140,15 @@ namespace ServiceConsoleApp
     /// <summary>
     /// WS收到数据等业务。
     /// </summary>
-    internal class MyWebSocketPlug : PluginBase,IWebsocketHandshakedPlugin<IHttpSocketClient>,IWebsocketReceivedPlugin<IHttpSocketClient>
+    internal class MyWebSocketPlug : PluginBase,IWebSocketHandshakedPlugin<IHttpSocketClient>,IWebSocketReceivedPlugin<IHttpSocketClient>
     {
-        Task IWebsocketHandshakedPlugin<IHttpSocketClient>.OnWebsocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        Task IWebSocketHandshakedPlugin<IHttpSocketClient>.OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
         {
             client.Logger.Info($"WS客户端连接，ID={client.Id}，IPHost={client.IP}:{client.Port}");
             return Task.CompletedTask;
         }
 
-        Task IWebsocketReceivedPlugin<IHttpSocketClient>.OnWebsocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
+        Task IWebSocketReceivedPlugin<IHttpSocketClient>.OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {

@@ -1,5 +1,7 @@
 ﻿using RRQMProxy;
 using System;
+using TouchSocket.Rpc;
+using TouchSocket.XmlRpc;
 
 namespace XmlRpcClientApp
 {
@@ -10,7 +12,7 @@ namespace XmlRpcClientApp
             var client = GetXmlRpcClient();
 
             //直接调用
-            int result1 = client.Invoke<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
+            int result1 = client.InvokeT<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
             Console.WriteLine($"直接调用，返回结果:{result1}");
 
             Server server = new Server(client);
