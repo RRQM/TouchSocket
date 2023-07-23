@@ -19,7 +19,7 @@ namespace DmtpWebApplication
             }
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddWebsocketDmtpService(() =>
+            builder.Services.AddWebSocketDmtpService(() =>
             {
                 return new TouchSocketConfig()
                     .SetVerifyToken("Dmtp")
@@ -52,19 +52,19 @@ namespace DmtpWebApplication
 
             var app = builder.Build();
             app.UseWebSockets();
-            app.UseWebsocketDmtp("/WebsocketDmtp");//WebsocketDmtp必须在UseWebSockets之后使用。
+            app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
 
             app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。
 
             _ = app.RunAsync("http://localhost:5174");
 
-            //WebsocketDmtpClient连接
-            var websocketDmtpClient = new WebsocketDmtpClient();
+            //WebSocketDmtpClient连接
+            var websocketDmtpClient = new WebSocketDmtpClient();
             websocketDmtpClient.Setup(new TouchSocketConfig()
                 .SetVerifyToken("Dmtp")
-                .SetRemoteIPHost("ws://localhost:5174/WebsocketDmtp"));
+                .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
             await websocketDmtpClient.ConnectAsync();
-            Console.WriteLine("WebsocketDmtpClient连接成功");
+            Console.WriteLine("WebSocketDmtpClient连接成功");
 
             var httpDmtpClient = new HttpDmtpClient();
             httpDmtpClient.Setup(new TouchSocketConfig()

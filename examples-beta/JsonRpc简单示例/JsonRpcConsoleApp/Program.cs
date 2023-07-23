@@ -33,7 +33,7 @@ namespace JsonRpcConsoleApp
 
             JsonRpcClientInvokeByTcp();
             JsonRpcClientInvokeByHttp();
-            JsonRpcClientInvokeByWebsocket();
+            JsonRpcClientInvokeByWebSocket();
 
             Console.WriteLine("请按任意键退出");
 
@@ -141,31 +141,31 @@ namespace JsonRpcConsoleApp
             Console.WriteLine($"Tcp返回结果:{newObj}");
         }
 
-        private static void JsonRpcClientInvokeByWebsocket()
+        private static void JsonRpcClientInvokeByWebSocket()
         {
             JsonRpcClient jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
                 .SetDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-                .SetJRPT(JRPT.Websocket));
+                .SetJRPT(JRPT.WebSocket));
             jsonRpcClient.Connect();
 
             Console.WriteLine("连接成功");
             string result = jsonRpcClient.TestJsonRpc("RRQM");
-            Console.WriteLine($"Websocket返回结果:{result}");
+            Console.WriteLine($"WebSocket返回结果:{result}");
 
             result = jsonRpcClient.TestJsonRpc1("RRQM");
-            Console.WriteLine($"Websocket返回结果:{result}");
+            Console.WriteLine($"WebSocket返回结果:{result}");
 
             result = jsonRpcClient.TestGetContext("RRQM");
-            Console.WriteLine($"Websocket返回结果:{result}");
+            Console.WriteLine($"WebSocket返回结果:{result}");
 
             JObject obj = new JObject();
             obj.Add("A", "A");
             obj.Add("B", 10);
             obj.Add("C", 100.1);
             JObject newObj = jsonRpcClient.TestJObject(obj);
-            Console.WriteLine($"Websocket返回结果:{newObj}");
+            Console.WriteLine($"WebSocket返回结果:{newObj}");
         }
     }
 

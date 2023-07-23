@@ -46,7 +46,7 @@ namespace PackageConsoleApp
             set { SetValue(NameProperty, value); }
         }
         public static readonly DependencyProperty<string> NameProperty =
-            DependencyProperty<string>.Register("Name", typeof(Person), string.Empty);
+            DependencyProperty<string>.Register("Name",  string.Empty);
     }
 
     class MyClass : IPackage
