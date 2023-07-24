@@ -16,7 +16,7 @@ namespace FileTransferConsoleApp
 
         async Task IDmtpFileTransferingPlugin<ITcpDmtpSocketClient>.OnDmtpFileTransfering(ITcpDmtpSocketClient client, FileTransferingEventArgs e)
         {
-            foreach (string item in e.Metadata.Keys)
+            foreach (var item in e.Metadata.Keys)
             {
                 Console.WriteLine($"Key={item},Value={e.Metadata[item]}");
             }

@@ -42,7 +42,7 @@ namespace JsonRpcConsoleApp
 
         private static void CreateHTTPJsonRpcParser(int port)
         {
-            HttpService service = new HttpService();
+            var service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
                  .SetListenIPHosts(new IPHost[] { new IPHost(port) })
@@ -63,7 +63,7 @@ namespace JsonRpcConsoleApp
 
         private static void CreateTcpJsonRpcParser(int port)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))//使用这个适配器，防止粘包。但是也要求json中没有换行符。
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
@@ -80,26 +80,26 @@ namespace JsonRpcConsoleApp
 
         private static void JsonRpcClientInvokeByHttp()
         {
-            JsonRpcClient jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc")
                 .SetJRPT(JRPT.Http));
             jsonRpcClient.Connect();
             Console.WriteLine("连接成功");
-            string result = jsonRpcClient.TestJsonRpc("RRQM");
+            var result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"Http返回结果:{result}");
 
-            JObject obj = new JObject();
+            var obj = new JObject();
             obj.Add("A", "A");
             obj.Add("B", 10);
             obj.Add("C", 100.1);
-            JObject newObj = jsonRpcClient.TestJObject(obj);
+            var newObj = jsonRpcClient.TestJObject(obj);
             Console.WriteLine($"Http返回结果:{newObj}");
         }
 
         private static void JsonRpcClientInvokeByTcp()
         {
-            JsonRpcClient jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7705")
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
@@ -107,7 +107,7 @@ namespace JsonRpcConsoleApp
             jsonRpcClient.Connect();
 
             Console.WriteLine("连接成功");
-            string result = jsonRpcClient.TestJsonRpc("RRQM");
+            var result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"Tcp返回结果:{result}");
 
             result = jsonRpcClient.TestJsonRpc1("RRQM");
@@ -116,17 +116,17 @@ namespace JsonRpcConsoleApp
             result = jsonRpcClient.TestGetContext("RRQM");
             Console.WriteLine($"Tcp返回结果:{result}");
 
-            JObject obj = new JObject();
+            var obj = new JObject();
             obj.Add("A", "A");
             obj.Add("B", 10);
             obj.Add("C", 100.1);
-            JObject newObj = jsonRpcClient.TestJObject(obj);
+            var newObj = jsonRpcClient.TestJObject(obj);
             Console.WriteLine($"Tcp返回结果:{newObj}");
         }
 
         private static void JsonRpcClientInvokeByWebSocket()
         {
-            JsonRpcClient jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
@@ -134,7 +134,7 @@ namespace JsonRpcConsoleApp
             jsonRpcClient.Connect();
 
             Console.WriteLine("连接成功");
-            string result = jsonRpcClient.TestJsonRpc("RRQM");
+            var result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"WebSocket返回结果:{result}");
 
             result = jsonRpcClient.TestJsonRpc1("RRQM");
@@ -143,11 +143,11 @@ namespace JsonRpcConsoleApp
             result = jsonRpcClient.TestGetContext("RRQM");
             Console.WriteLine($"WebSocket返回结果:{result}");
 
-            JObject obj = new JObject();
+            var obj = new JObject();
             obj.Add("A", "A");
             obj.Add("B", 10);
             obj.Add("C", 100.1);
-            JObject newObj = jsonRpcClient.TestJObject(obj);
+            var newObj = jsonRpcClient.TestJObject(obj);
             Console.WriteLine($"WebSocket返回结果:{newObj}");
         }
     }

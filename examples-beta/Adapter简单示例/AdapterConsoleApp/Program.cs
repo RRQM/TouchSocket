@@ -20,7 +20,7 @@ namespace AdapterConsoleApp
             //● 固定长度数据处理适配器(FixedSizePackageAdapter)
             //● 终止因子分割数据处理适配器(TerminatorPackageAdapter)
 
-            ConsoleAction consoleAction = new ConsoleAction();
+            var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
             consoleAction.Add("0", "启动服务器测试适配器", StartTcpService);
             consoleAction.Add("1", "原始适配器实现demo", TestRawDataHandlingAdapter);
@@ -38,7 +38,7 @@ namespace AdapterConsoleApp
 
         private static void StartTcpService()
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Connected = (client, e) => { };//有客户端连接
             service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Received = (client, byteBlock, requestInfo) =>
@@ -64,16 +64,16 @@ namespace AdapterConsoleApp
 
         private static void TestRawDataHandlingAdapter()
         {
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 var tester = TcpDataAdapterTester.CreateTester(new RawDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
-                using ByteBlock block = new ByteBlock();
+                using var block = new ByteBlock();
                 block.Write((byte)1);//写入数据类型   这里并未写入数据长度，因为这个适配器在发送前会再封装一次。
                 block.Write((byte)1);//写入数据指令
-                byte[] buffer = new byte[100];
+                var buffer = new byte[100];
                 new Random().NextBytes(buffer);
                 block.Write(buffer);//写入数据
-                byte[] data = block.ToArray();
+                var data = block.ToArray();
 
                 // 输出测试时间，用于衡量适配性能.
                 // 测试100次，限时2秒完成
@@ -83,13 +83,13 @@ namespace AdapterConsoleApp
 
         private static void TestSGCCCustomDataHandlingAdapter()
         {
-            string[] lines = File.ReadAllLines("SGCC测试数据.txt");
+            var lines = File.ReadAllLines("SGCC测试数据.txt");
             foreach (var item in lines)
             {
                 var tester = TcpDataAdapterTester.CreateTester(new SGCCCustomDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
-                using ByteBlock block = new ByteBlock();
+                using var block = new ByteBlock();
 
-                byte[] data = item.ByHexStringToBytes(" ");
+                var data = item.ByHexStringToBytes(" ");
                 // 输出测试时间，用于衡量适配性能.
                 // 测试100次，限时2秒完成
                 Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());

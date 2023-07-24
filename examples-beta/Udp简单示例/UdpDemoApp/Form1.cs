@@ -10,7 +10,7 @@ namespace UdpDemoApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
         }
 
@@ -18,26 +18,26 @@ namespace UdpDemoApp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            m_udpSession.Received = (remote, byteBlock, requestInfo) =>
+            this.m_udpSession.Received = (remote, byteBlock, requestInfo) =>
             {
                 if (byteBlock.Len > 1024)
                 {
-                    m_udpSession.Logger.Info($"收到：{byteBlock.Len}长度的数据。");
-                    m_udpSession.Send("收到");
+                    this.m_udpSession.Logger.Info($"收到：{byteBlock.Len}长度的数据。");
+                    this.m_udpSession.Send("收到");
                 }
                 else
                 {
-                    m_udpSession.Logger.Info($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+                    this.m_udpSession.Logger.Info($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
                 }
             };
 
-            m_udpSession.Setup(new TouchSocketConfig()
+            this.m_udpSession.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(this.textBox2.Text))
                  .SetRemoteIPHost(new IPHost(this.textBox3.Text))
                  .UseBroadcast()
                  .SetUdpDataHandlingAdapter(() =>
                  {
-                     if (checkBox1.Checked)
+                     if (this.checkBox1.Checked)
                      {
                          return new UdpPackageAdapter();
                      }
@@ -51,7 +51,7 @@ namespace UdpDemoApp
                      a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                  }))
                  .Start();
-            m_udpSession.Logger.Info("等待接收");
+            this.m_udpSession.Logger.Info("等待接收");
         }
 
         private void ShowMsg(string msg)
@@ -62,23 +62,23 @@ namespace UdpDemoApp
 
         private void button2_Click(object sender, EventArgs e)
         {
-            m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, Encoding.UTF8.GetBytes(this.textBox4.Text));
+            this.m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, Encoding.UTF8.GetBytes(this.textBox4.Text));
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (!checkBox1.Checked)
+            if (!this.checkBox1.Checked)
             {
-                m_udpSession.Logger.Warning("发送大数据时，请使用UdpPackageAdapter适配器");
+                this.m_udpSession.Logger.Warning("发送大数据时，请使用UdpPackageAdapter适配器");
             }
 
             try
             {
-                m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, new byte[1024 * 1024]);
+                this.m_udpSession.Send(new IPHost(this.textBox3.Text).EndPoint, new byte[1024 * 1024]);
             }
             catch (Exception ex)
             {
-                m_udpSession.Logger.Exception(ex);
+                this.m_udpSession.Logger.Exception(ex);
             }
         }
 
@@ -92,8 +92,8 @@ namespace UdpDemoApp
             });
 
             //然后使用SendThenReturn。
-            byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
-            ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+            var returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+            this.ShowMsg($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
             ////同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
             //ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));

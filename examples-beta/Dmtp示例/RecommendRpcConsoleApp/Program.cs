@@ -10,7 +10,7 @@ namespace RecommendRpcConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -18,7 +18,6 @@ namespace RecommendRpcConsoleApp
             }
             catch
             {
-               
             }
             CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
             var service = new TcpDmtpService();
@@ -29,7 +28,7 @@ namespace RecommendRpcConsoleApp
                        a.AddConsoleLogger();
                        a.AddFileLogger();
                    })
-                   .ConfigurePlugins(a => 
+                   .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRpc()
                            .ConfigureRpcStore(store =>
@@ -48,7 +47,7 @@ namespace RecommendRpcConsoleApp
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc();
                 })
@@ -56,7 +55,7 @@ namespace RecommendRpcConsoleApp
             client.Connect();
 
             //Login即为在RpcClassLibrary中自动生成的项目
-            var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account= "Account",Password= "Account" });
+            var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
             Console.WriteLine(response.Result);
             Console.ReadKey();
         }

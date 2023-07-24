@@ -8,7 +8,7 @@ namespace NATServiceConsoleApp
     {
         private static void Main(string[] args)
         {
-            MyNATService service = new MyNATService();
+            var service = new MyNATService();
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
 

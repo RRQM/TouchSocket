@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -22,14 +21,14 @@ namespace ServiceConsoleApp
 
         private static TcpService CreateService()
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Connecting = (client, e) => { };//有客户端正在连接
             service.Connected = (client, e) => { };//有客户端成功连接
             service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
                 client.Send(mes);//将收到的信息直接返回给发送方
@@ -64,13 +63,13 @@ namespace ServiceConsoleApp
 
         private static TcpClient CreateClient()
         {
-            TcpClient tcpClient = new TcpClient();
+            var tcpClient = new TcpClient();
             tcpClient.Connected = (client, e) => { };//成功连接到服务器
             tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
             tcpClient.Received = (client, byteBlock, requestInfo) =>
             {
                 //从服务器收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
             };
 
@@ -93,7 +92,7 @@ namespace ServiceConsoleApp
         }
     }
 
-    class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
+    internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {
         Task IServerStartedPlugin<IService>.OnServerStarted(IService sender, ServiceStateEventArgs e)
         {

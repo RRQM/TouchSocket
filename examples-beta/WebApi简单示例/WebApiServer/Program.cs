@@ -12,7 +12,7 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
-            HttpService service = new HttpService();
+            var service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                .ConfigurePlugins(a =>
@@ -24,7 +24,7 @@ namespace WebApiServerApp
                        store.RegisterServer<Server>();//注册服务
 
                        //下列代码，会生成客户端的调用代码。
-                       string codeString = store.GetProxyCodes("WebApiProxy",typeof(WebApiAttribute));
+                       var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
                    });
 
                    a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
@@ -34,7 +34,6 @@ namespace WebApiServerApp
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
 
-            
             Console.ReadKey();
         }
     }
@@ -90,7 +89,7 @@ namespace WebApiServerApp
             {
                 this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
             }
-            if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
+            if (callContext.HttpContext.Request.TryGetContent(out var content))
             {
                 this.m_logger.Info($"共计：{content.Length}");
             }

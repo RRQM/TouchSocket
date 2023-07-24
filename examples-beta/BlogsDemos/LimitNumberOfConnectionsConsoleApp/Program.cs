@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -17,7 +16,7 @@ namespace LimitNumberOfConnectionsConsoleApp
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>
@@ -40,17 +39,17 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Num
         {
-            get { return num; }
+            get { return this.num; }
         }
 
         public int Decrement()
         {
-            return Interlocked.Decrement(ref num);
+            return Interlocked.Decrement(ref this.num);
         }
 
         public int Increment()
         {
-            return Interlocked.Increment(ref num);
+            return Interlocked.Increment(ref this.num);
         }
     }
 
@@ -76,14 +75,13 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Max { get; }
 
-
         Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
             if (client.IsClient)
             {
                 return e.InvokeNext();
             }
-            Count count = m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
+            var count = this.m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
 
             if (count.Increment() > this.Max)
             {
@@ -99,11 +97,11 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         Task ITcpDisconnectedPlguin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
-            if (m_ipToCount.TryGetValue(client.IP, out Count count))
+            if (this.m_ipToCount.TryGetValue(client.IP, out var count))
             {
                 if (count.Decrement() == 0)
                 {
-                    m_ipToCount.TryRemove(client.IP, out _);
+                    this.m_ipToCount.TryRemove(client.IP, out _);
                 }
             }
 

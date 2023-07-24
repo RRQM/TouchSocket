@@ -56,7 +56,6 @@ namespace DmtpClientApp
         }
     }
 
-
     public class MyRpcServer : TransientRpcServer
     {
         [Description("µÇÂ¼")]

@@ -10,20 +10,20 @@ namespace ServiceApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
             Load += this.Form1_Load;
         }
 
         private void Form1_Load(object sender, EventArgs args)
         {
-            m_service.Connecting = (client, e) =>
+            this.m_service.Connecting = (client, e) =>
             {
                 e.Id = $"{client.IP}:{client.Port}";
             };//有客户端正在连接
-            m_service.Connected = this.M_service_Connected;//有客户端连接
-            m_service.Disconnected = this.M_service_Disconnected; ;//有客户端断开连接
-            m_service.Received = this.Service_Received;
+            this.m_service.Connected = this.M_service_Connected;//有客户端连接
+            this.m_service.Disconnected = this.M_service_Disconnected; ;//有客户端断开连接
+            this.m_service.Received = this.Service_Received;
         }
 
         private void ShowMsg(string msg)
@@ -36,7 +36,7 @@ namespace ServiceApp
 
         private void button1_Click(object sender, EventArgs ergs)
         {
-            m_service.Setup(new TouchSocketConfig()//载入配置
+            this.m_service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .SetMaxCount(1000)
                 .ConfigureContainer(a =>
@@ -51,7 +51,7 @@ namespace ServiceApp
                     .SetTick(TimeSpan.FromSeconds(60));
                 }))
                 .Start();//启动
-            m_service.Logger.Info("服务器成功启动");
+            this.m_service.Logger.Info("服务器成功启动");
         }
 
         private void M_service_Disconnected(SocketClient client, DisconnectEventArgs e)
@@ -75,7 +75,7 @@ namespace ServiceApp
         {
             if (this.listBox1.SelectedItem is string id)
             {
-                this.m_service.Send(id, textBox2.Text);
+                this.m_service.Send(id, this.textBox2.Text);
             }
             else
             {
@@ -86,17 +86,17 @@ namespace ServiceApp
         private void button3_Click(object sender, EventArgs e)
         {
             //先找到与远程TcpClient对应的SocketClient
-            if (this.listBox1.SelectedItem is string id && this.m_service.TryGetSocketClient(id, out SocketClient client))
+            if (this.listBox1.SelectedItem is string id && this.m_service.TryGetSocketClient(id, out var client))
             {
                 try
                 {
                     //然后调用GetWaitingClient获取到IWaitingClient的对象。
-                    byte[] returnData = client.GetWaitingClient(new WaitingOptions()
+                    var returnData = client.GetWaitingClient(new WaitingOptions()
                     {
                         AdapterFilter = AdapterFilter.AllAdapter,//表示数据发送和接收时都会经过适配器
                         BreakTrigger = true,//当Client为Tcp系时。是否在断开连接时立即触发结果。默认会返回null。当ThrowBreakException为true时，会触发异常。
                         ThrowBreakException = true//是否触发异常
-                    }).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
+                    }).SendThenReturn(Encoding.UTF8.GetBytes(this.textBox2.Text));
                     this.m_service.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
                 }
                 catch (TimeoutException)
@@ -117,7 +117,7 @@ namespace ServiceApp
         private void button4_Click(object sender, EventArgs e)
         {
             //先找到与远程TcpClient对应的SocketClient
-            if (this.listBox1.SelectedItem is string id && this.m_service.TryGetSocketClient(id, out SocketClient client))
+            if (this.listBox1.SelectedItem is string id && this.m_service.TryGetSocketClient(id, out var client))
             {
                 client.SafeDispose();
             }

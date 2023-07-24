@@ -23,7 +23,6 @@ namespace UnityServerConsoleApp
             Console.ReadKey();
         }
 
-
         private static void StartUdpService(int port)
         {
             var udpService = new UdpSession();
@@ -48,7 +47,7 @@ namespace UnityServerConsoleApp
         private static void StartTcpRpcService(int port)
         {
             var service = new TcpDmtpService();
-            TouchSocketConfig config = new TouchSocketConfig()//配置
+            var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .SetThreadCount(50)
                    .UseDelaySender()
@@ -79,7 +78,7 @@ namespace UnityServerConsoleApp
 
         private static void StartTcpService(int port)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
@@ -98,7 +97,6 @@ namespace UnityServerConsoleApp
 
     internal class MyTcpRpcPlguin : PluginBase
     {
-
     }
 
     internal class MyPlguin : PluginBase
@@ -129,7 +127,7 @@ namespace UnityServerConsoleApp
         {
             this.m_timer = new Timer((obj) =>
             {
-                logger.Info($"count={count}");
+                logger.Info($"count={this.count}");
             }, null, 0, 1000);
             this.m_logger = logger;
         }
@@ -154,7 +152,7 @@ namespace UnityServerConsoleApp
         [DmtpRpc(true)]
         public int Performance(int i)
         {
-            Interlocked.Increment(ref count);
+            Interlocked.Increment(ref this.count);
             return ++i;
         }
     }

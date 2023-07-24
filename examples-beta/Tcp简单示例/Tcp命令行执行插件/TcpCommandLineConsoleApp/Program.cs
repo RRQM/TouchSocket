@@ -5,18 +5,18 @@ namespace TcpCommandLineConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
 
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }) //同时监听两个地址
                   .SetTcpDataHandlingAdapter(() =>
                   {
-                      //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾 
+                      //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾
                       return new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
                   })
-                  .ConfigureContainer(a => 
+                  .ConfigureContainer(a =>
                   {
                       a.AddConsoleLogger();
                   })
@@ -42,7 +42,7 @@ namespace TcpCommandLineConsoleApp
     /// <summary>
     /// 命令执行插件。方法必须以Command结尾。
     /// </summary>
-    class MyCommandLinePlugin : TcpCommandLinePlugin
+    internal class MyCommandLinePlugin : TcpCommandLinePlugin
     {
         private readonly ILog m_logger;
 
@@ -71,7 +71,7 @@ namespace TcpCommandLineConsoleApp
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public int MULCommand(ISocketClient socketClient,int a, int b)
+        public int MULCommand(ISocketClient socketClient, int a, int b)
         {
             this.m_logger.Info($"{socketClient.IP}:{socketClient.Port}执行{nameof(MULCommand)}");
             return a * b;

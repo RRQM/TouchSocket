@@ -1,5 +1,4 @@
-﻿using log4net;
-using System.Text;
+﻿using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -21,7 +20,7 @@ namespace Log4netConsoleApp
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
                 service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
 
                 client.Send(mes);//将收到的信息直接返回给发送方
@@ -49,9 +48,10 @@ namespace Log4netConsoleApp
 
         public Mylog4netLogger()
         {
-            this. m_logger = log4net.LogManager.GetLogger("Test");
+            this.m_logger = log4net.LogManager.GetLogger("Test");
         }
-        public LogLevel LogLevel { get; set ; }
+
+        public LogLevel LogLevel { get; set; }
 
         public void Log(LogLevel logLevel, object source, string message, Exception exception)
         {
@@ -60,27 +60,27 @@ namespace Log4netConsoleApp
             switch (logLevel)
             {
                 case LogLevel.Trace:
-                    m_logger.Debug(message, exception);
+                    this.m_logger.Debug(message, exception);
                     break;
 
                 case LogLevel.Debug:
-                    m_logger.Debug(message, exception);
+                    this.m_logger.Debug(message, exception);
                     break;
 
                 case LogLevel.Info:
-                    m_logger.Info(message, exception);
+                    this.m_logger.Info(message, exception);
                     break;
 
                 case LogLevel.Warning:
-                    m_logger.Warn(message, exception);
+                    this.m_logger.Warn(message, exception);
                     break;
 
                 case LogLevel.Error:
-                    m_logger.Error(message, exception);
+                    this.m_logger.Error(message, exception);
                     break;
 
                 case LogLevel.Critical:
-                    m_logger.Error(message, exception);
+                    this.m_logger.Error(message, exception);
                     break;
 
                 case LogLevel.None:

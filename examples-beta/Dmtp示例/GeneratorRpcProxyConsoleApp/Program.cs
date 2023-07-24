@@ -10,7 +10,7 @@ namespace GeneratorRpcProxyConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             //创建服务器
             var service = new TcpDmtpService();
@@ -20,7 +20,7 @@ namespace GeneratorRpcProxyConsoleApp
                    {
                        a.AddConsoleLogger();
                    })
-                   .ConfigurePlugins(a => 
+                   .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRpc()
                            .ConfigureRpcStore(store =>
@@ -36,7 +36,7 @@ namespace GeneratorRpcProxyConsoleApp
             service.Logger.Info($"{service.GetType().Name}已启动");
 
             //创建客户端
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigurePlugins(a =>
@@ -71,7 +71,7 @@ namespace GeneratorRpcProxyConsoleApp
     /// ConsoleApp2.MyRpcServer参数是整个rpc调用的前缀，即：除方法名的所有，包括服务的类名。
     /// </summary>
     [GeneratorRpcProxy(Prefix = "GeneratorRpcProxyConsoleApp.MyRpcServer")]
-    interface Test
+    internal interface Test
     {
         [Description("这是登录方法")]//该作用是生成注释
         [GeneratorRpcMethod]//表明该方法应该被代理，也可以通过参数，直接设置调用键

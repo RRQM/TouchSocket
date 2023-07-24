@@ -9,23 +9,22 @@ namespace BytePoolConsoleApp
         {
             Console.ReadKey();
 
-
-            ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);
+            var byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);
             byteBlock1.Dispose();
 
-            ByteBlock byteBlock2 = BytePool.Default.GetByteBlock(byteSize: 1024 * 1024);
+            var byteBlock2 = BytePool.Default.GetByteBlock(byteSize: 1024 * 1024);
             byteBlock2.Dispose();
 
-            using (ByteBlock byteBlock3 = new ByteBlock())
+            using (var byteBlock3 = new ByteBlock())
             {
             }
 
             //BytePool.AutoZero = true;
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
-                byte[] data = BytePool.Default.Rent(1024 * 10);
+                var data = BytePool.Default.Rent(1024 * 10);
                 BytePool.Default.Return(data);
-                using (ByteBlock byteBlock = new ByteBlock(1024 * 10))
+                using (var byteBlock = new ByteBlock(1024 * 10))
                 {
                     //最重要：千万不要引用byteBlock.Buffer
                     byteBlock.Write(10);
@@ -51,20 +50,20 @@ namespace BytePoolConsoleApp
 
         private static void Performance()
         {
-            int count = 1000000;
-            TimeSpan timeSpan1 = TimeMeasurer.Run(() =>
+            var count = 1000000;
+            var timeSpan1 = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
-                    byte[] buffer = new byte[1024];
+                    var buffer = new byte[1024];
                 }
             });
 
-            TimeSpan timeSpan2 = TimeMeasurer.Run(() =>
+            var timeSpan2 = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
-                    ByteBlock byteBlock = new ByteBlock(1024);
+                    var byteBlock = new ByteBlock(1024);
                     byteBlock.Dispose();
                 }
             });

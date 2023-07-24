@@ -26,27 +26,26 @@ namespace AdapterConsoleApp
     public class SGCCRequestInfo : IFixedHeaderRequestInfo
     {
         private byte[] m_sync;
-        private int m_bodyLength;
         private byte[] m_cMDID;
         private byte[] m_sample;
         private byte[] m_cRC16;
 
-        public int BodyLength { get => m_bodyLength; }
+        public int BodyLength { get; private set; }
 
         /// <summary>
         /// 报文头:5AA5
         /// </summary>
-        public byte[] Sync { get => m_sync; set => m_sync = value; }
+        public byte[] Sync { get => this.m_sync; set => this.m_sync = value; }
 
         /// <summary>
         /// 报文长度
         /// </summary>
-        public ushort PacketLength { get => (ushort)(this.m_bodyLength - 3); }
+        public ushort PacketLength { get => (ushort)(this.BodyLength - 3); }
 
         /// <summary>
         /// 状态监测装置ID(17位编码)
         /// </summary>
-        public byte[] CMDID { get => m_cMDID; set => m_cMDID = value; }
+        public byte[] CMDID { get => this.m_cMDID; set => this.m_cMDID = value; }
 
         /// <summary>
         /// 帧类型—参考附表C8-1相关含义
@@ -86,12 +85,12 @@ namespace AdapterConsoleApp
         /// <summary>
         /// 数据区
         /// </summary>
-        public byte[] Sample { get => m_sample; set => m_sample = value; }
+        public byte[] Sample { get => this.m_sample; set => this.m_sample = value; }
 
         /// <summary>
         /// 校验位
         /// </summary>
-        public byte[] CRC16 { get => m_cRC16; }
+        public byte[] CRC16 { get => this.m_cRC16; }
 
         /// <summary>
         /// 报文尾:0x96
@@ -102,16 +101,15 @@ namespace AdapterConsoleApp
         {
             if (header.Length == 30)
             {
-                using (ByteBlock byteBlock = new ByteBlock(header))
+                using (var byteBlock = new ByteBlock(header))
                 {
                     byteBlock.Pos = 0;
-                    byteBlock.Read(out m_sync, 2);
+                    byteBlock.Read(out this.m_sync, 2);
 
-                    byte[] lenBuffer;
-                    byteBlock.Read(out lenBuffer, 2);
+                    byteBlock.Read(out var lenBuffer, 2);
 
-                    this.m_bodyLength = TouchSocketBitConverter.LittleEndian.ToUInt16(lenBuffer, 0) + 3 - 6;//先把crc校验和end都获取。
-                    byteBlock.Read(out m_cMDID, 17);
+                    this.BodyLength = TouchSocketBitConverter.LittleEndian.ToUInt16(lenBuffer, 0) + 3 - 6;//先把crc校验和end都获取。
+                    byteBlock.Read(out this.m_cMDID, 17);
                     this.FrameType = (byte)byteBlock.ReadByte();
                     this.PacketType = (byte)byteBlock.ReadByte();
                     this.FrameNo = (byte)byteBlock.ReadByte();
@@ -130,9 +128,9 @@ namespace AdapterConsoleApp
         {
             if (body.Length == this.BodyLength && body[^1] == 150)
             {
-                using (ByteBlock byteBlock = new ByteBlock(body))
+                using (var byteBlock = new ByteBlock(body))
                 {
-                    byteBlock.Read(out this.m_sample, this.m_bodyLength - 3);
+                    byteBlock.Read(out this.m_sample, this.BodyLength - 3);
                     byteBlock.Read(out this.m_cRC16, 2);
                     this.End = (byte)byteBlock.ReadByte();
                 }

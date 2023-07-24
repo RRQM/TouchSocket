@@ -1,15 +1,14 @@
-﻿using TouchSocket.Core;
-using TouchSocket.Dmtp.RemoteAccess;
+﻿using System.Text;
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Sockets;
 using TouchSocket.Dmtp.RemoteStream;
-using System.Text;
+using TouchSocket.Sockets;
 
 namespace RemoteStreamConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -23,7 +22,7 @@ namespace RemoteStreamConsoleApp
 
             var client = GetTcpDmtpClient();
 
-            Metadata metadata = new Metadata();
+            var metadata = new Metadata();
             metadata.Add("tag", "tag1");
 
             var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(metadata);
@@ -35,9 +34,9 @@ namespace RemoteStreamConsoleApp
             Console.ReadKey();
         }
 
-        static TcpDmtpClient GetTcpDmtpClient()
+        private static TcpDmtpClient GetTcpDmtpClient()
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
                .SetVerifyToken("Dmtp")
@@ -53,7 +52,7 @@ namespace RemoteStreamConsoleApp
             return client;
         }
 
-        static TcpDmtpService GetTcpDmtpService()
+        private static TcpDmtpService GetTcpDmtpService()
         {
             var service = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -71,10 +70,9 @@ namespace RemoteStreamConsoleApp
             service.Logger.Info("服务器成功启动");
             return service;
         }
-
     }
 
-    class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>
+    internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>
     {
         async Task IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>.OnLoadingStream(ITcpDmtpSocketClient client, LoadingStreamEventArgs e)
         {
@@ -90,7 +88,7 @@ namespace RemoteStreamConsoleApp
 
                     client.Logger.Info($"载入的流已被释放，流中信息：{Encoding.UTF8.GetString(stream.ToArray())}");
                 }
-               
+
                 return;
             }
 

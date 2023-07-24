@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using TouchSocket.Core;
@@ -11,7 +10,7 @@ namespace ClientApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
             Load += this.Form1_Load;
         }
@@ -38,7 +37,7 @@ namespace ClientApp
             try
             {
                 //声明配置
-                TouchSocketConfig config = new TouchSocketConfig();
+                var config = new TouchSocketConfig();
                 config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                     .ConfigureContainer(a =>
                     {
@@ -46,25 +45,25 @@ namespace ClientApp
                     })
                     .ConfigurePlugins(a =>
                     {
-                        if (checkBox1.Checked)
+                        if (this.checkBox1.Checked)
                         {
                             a.UseReconnection(5, true, 1000);
                         }
                     });
 
-                m_tcpClient.Connected = (client, e) =>
+                this.m_tcpClient.Connected = (client, e) =>
                 {
                     client.Logger.Info("成功连接");
                 };//成功连接到服务器
-                m_tcpClient.Disconnected = (client, e) =>
+                this.m_tcpClient.Disconnected = (client, e) =>
                 {
                     client.Logger.Info($"断开连接，信息：{e.Message}");
                 };//从服务器断开连接，当连接不成功时不会触发。
-                m_tcpClient.Received = this.TcpClient_Received;
+                this.m_tcpClient.Received = this.TcpClient_Received;
 
                 //载入配置
-                m_tcpClient.Setup(config);
-                m_tcpClient.Connect();
+                this.m_tcpClient.Setup(config);
+                this.m_tcpClient.Connect();
             }
             catch (Exception ex)
             {
@@ -92,10 +91,10 @@ namespace ClientApp
                 //然后使用SendThenReturn。
                 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse
 
-                byte[] returnData = m_tcpClient.GetWaitingClient(new WaitingOptions() 
-                { 
-                    AdapterFilter = AdapterFilter.AllAdapter 
-                }).SendThenReturn(Encoding.UTF8.GetBytes(textBox2.Text));
+                var returnData = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
+                {
+                    AdapterFilter = AdapterFilter.AllAdapter
+                }).SendThenReturn(Encoding.UTF8.GetBytes(this.textBox2.Text));
                 this.m_tcpClient.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
             }
             catch (TimeoutException)
@@ -110,9 +109,9 @@ namespace ClientApp
 
         private void button4_Click(object sender, EventArgs e)
         {
-            m_tcpClient.TryShutdown(System.Net.Sockets.SocketShutdown.Both);
-            m_tcpClient.Close();
-            m_tcpClient.SafeDispose();
+            this.m_tcpClient.TryShutdown(System.Net.Sockets.SocketShutdown.Both);
+            this.m_tcpClient.Close();
+            this.m_tcpClient.SafeDispose();
         }
     }
 }

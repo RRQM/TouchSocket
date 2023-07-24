@@ -19,7 +19,7 @@ namespace ScreenUdpSender
 
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private Thread m_thread;
@@ -28,9 +28,9 @@ namespace ScreenUdpSender
         {
             while (true)
             {
-                byte[] byteArray = ImageToByte(getScreen());
-                using ByteBlock bb = new ByteBlock(byteArray);
-                udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
+                var byteArray = this.ImageToByte(this.getScreen());
+                using var bb = new ByteBlock(byteArray);
+                this.udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
                 Thread.Sleep((int)(1000.0 / (int)this.numericUpDown1.Value));
             }
         }
@@ -63,8 +63,8 @@ namespace ScreenUdpSender
             if (width == -1) width = SystemInformation.VirtualScreen.Width;
             if (height == -1) height = SystemInformation.VirtualScreen.Height;
 
-            Bitmap tmp = new Bitmap(width, height);                 //按指定大小创建位图
-            Graphics g = Graphics.FromImage(tmp);                   //从位图创建Graphics对象
+            var tmp = new Bitmap(width, height);                 //按指定大小创建位图
+            var g = Graphics.FromImage(tmp);                   //从位图创建Graphics对象
             g.CopyFromScreen(x, y, 0, 0, new Size(width, height));  //绘制
 
             // 绘制鼠标
@@ -75,7 +75,7 @@ namespace ScreenUdpSender
                     CURSORINFO pci;
                     pci.cbSize = Marshal.SizeOf(typeof(CURSORINFO));
                     GetCursorInfo(out pci);
-                    System.Windows.Forms.Cursor cur = new System.Windows.Forms.Cursor(pci.hCursor);
+                    var cur = new System.Windows.Forms.Cursor(pci.hCursor);
                     cur.Draw(g, new Rectangle(pci.ptScreenPos.x, pci.ptScreenPos.y, cur.Size.Width, cur.Size.Height));
                 }
                 catch (Exception ex) { }    // 若获取鼠标异常则不显示
@@ -93,11 +93,11 @@ namespace ScreenUdpSender
 
         private byte[] ImageToByte(Image Picture)
         {
-            MemoryStream ms = new MemoryStream();
+            var ms = new MemoryStream();
             if (Picture == null)
                 return new byte[ms.Length];
             Picture.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-            byte[] BPicture = new byte[ms.Length];
+            var BPicture = new byte[ms.Length];
             BPicture = ms.GetBuffer();
             return BPicture;
         }
@@ -106,8 +106,8 @@ namespace ScreenUdpSender
         {
             if (btImage.Length == 0)
                 return null;
-            System.IO.MemoryStream ms = new System.IO.MemoryStream(btImage);
-            System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
+            var ms = new System.IO.MemoryStream(btImage);
+            var image = System.Drawing.Image.FromStream(ms);
             return image;
         }
 
@@ -118,17 +118,17 @@ namespace ScreenUdpSender
             this.button1.Enabled = false;
             try
             {
-                udpSession = new UdpSession();
+                this.udpSession = new UdpSession();
 
-                udpSession.Setup(
+                this.udpSession.Setup(
                 new TouchSocketConfig()
                 .SetBindIPHost(new IPHost(7789))
                 .SetBufferLength(1024 * 64)
                 .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; })
                 ).Start();
-                m_thread = new Thread(Tick);
-                m_thread.IsBackground = true;
-                m_thread.Start();
+                this.m_thread = new Thread(this.Tick);
+                this.m_thread.IsBackground = true;
+                this.m_thread.Start();
             }
             catch (Exception ex)
             {
