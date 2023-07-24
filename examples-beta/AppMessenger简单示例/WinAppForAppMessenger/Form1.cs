@@ -4,7 +4,7 @@ namespace WinAppForAppMessenger
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
     }
 }

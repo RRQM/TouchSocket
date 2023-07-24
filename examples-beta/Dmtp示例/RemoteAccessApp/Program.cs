@@ -11,7 +11,7 @@ namespace RemoteAccessApp
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
@@ -29,7 +29,7 @@ namespace RemoteAccessApp
             Application.Run(new Form1());
         }
 
-        static TcpDmtpService GetTcpDmtpService()
+        private static TcpDmtpService GetTcpDmtpService()
         {
             var service = new TouchSocketConfig()//≈‰÷√
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -48,7 +48,7 @@ namespace RemoteAccessApp
             return service;
         }
 
-        class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>
+        private class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>
         {
             Task IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>.OnRemoteAccessing(ITcpDmtpSocketClient client, RemoteAccessingEventArgs e)
             {

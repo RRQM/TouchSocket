@@ -5,7 +5,7 @@ using TouchSocket.Sockets;
 
 namespace TcpServiceForWebApi.Plugins
 {
-    public class MyTcpPlugin : PluginBase,ITcpConnectedPlugin<ISocketClient>
+    public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>
     {
         private ILogger<MyTcpPlugin> m_logger;
 
@@ -16,7 +16,7 @@ namespace TcpServiceForWebApi.Plugins
 
         public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
         {
-            m_logger.LogInformation("客户端连接");
+            this.m_logger.LogInformation("客户端连接");
             await e.InvokeNext();
         }
     }

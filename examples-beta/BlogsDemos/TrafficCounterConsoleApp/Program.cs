@@ -1,10 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-
-namespace TrafficCounterConsoleApp
+﻿namespace TrafficCounterConsoleApp
 {
     internal class Program
     {
@@ -93,7 +87,6 @@ namespace TrafficCounterConsoleApp
 
     //public static class TrafficCounterEx
     //{
-
     //    public static readonly DependencyProperty<int> SendTrafficCounterProperty =
     //        DependencyProperty<int>.Register("SendTrafficCounter", typeof(TrafficCounterEx), 0);
 

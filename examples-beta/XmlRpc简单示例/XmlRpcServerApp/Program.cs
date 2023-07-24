@@ -12,10 +12,10 @@ namespace XmlRpcServerApp
     {
         private static void Main(string[] args)
         {
-            HttpService service = new HttpService();
+            var service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     a.UseXmlRpc()
                     .SetXmlRpcUrl("/xmlRpc")
@@ -33,11 +33,11 @@ namespace XmlRpcServerApp
         }
     }
 
-    public class MyPlugin : PluginBase,IHttpPostPlugin<IHttpSocketClient>
+    public class MyPlugin : PluginBase, IHttpPostPlugin<IHttpSocketClient>
     {
         public async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            string s = e.Context.Request.GetBody();
+            var s = e.Context.Request.GetBody();
             await e.InvokeNext();
         }
     }

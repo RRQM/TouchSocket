@@ -10,13 +10,13 @@ namespace AccessRestrictionsConsoleApp
         /// 实现黑白名单功能，博客<see href="https://blog.csdn.net/qq_40374647/article/details/128640132"/>
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             };
 
@@ -38,7 +38,7 @@ namespace AccessRestrictionsConsoleApp
         }
     }
 
-    public class AccessRestrictionsPlugin : PluginBase,ITcpConnectingPlugin<ITcpClientBase>
+    public class AccessRestrictionsPlugin : PluginBase, ITcpConnectingPlugin<ITcpClientBase>
     {
         private readonly IAccessRestrictions accessRestrictions;
 
@@ -74,36 +74,40 @@ namespace AccessRestrictionsConsoleApp
     public interface IAccessRestrictions
     {
         bool AddWhiteList(string ip);
+
         bool AddBlackList(string ip);
 
         bool RemoveWhiteList(string ip);
+
         bool RemoveBlackList(string ip);
 
         bool ExistsWhiteList(string ip);
+
         bool ExistsBlackList(string ip);
     }
 
     public class AccessRestrictions : IAccessRestrictions
     {
-        readonly List<string> whiteListIP = new List<string>();
-        readonly List<string> blackListIP = new List<string>();
+        private readonly List<string> whiteListIP = new List<string>();
+        private readonly List<string> blackListIP = new List<string>();
+
         public virtual bool AddBlackList(string ip)
         {
-            if (blackListIP.Contains(ip))
+            if (this.blackListIP.Contains(ip))
             {
                 return true;
             }
-            blackListIP.Add(ip);
+            this.blackListIP.Add(ip);
             return true;
         }
 
         public virtual bool AddWhiteList(string ip)
         {
-            if (whiteListIP.Contains(ip))
+            if (this.whiteListIP.Contains(ip))
             {
                 return true;
             }
-            whiteListIP.Add(ip);
+            this.whiteListIP.Add(ip);
             return true;
         }
 

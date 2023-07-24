@@ -1,17 +1,17 @@
 ﻿using SerializationSelectorClassLibrary;
 using System.ComponentModel;
 using TouchSocket.Core;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Rpc.Generators;
 using TouchSocket.Sockets;
-using TouchSocket.Dmtp.Rpc;
-using TouchSocket.Dmtp;
 
 namespace SerializationSelectorConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             StartServer();
 
@@ -29,9 +29,9 @@ namespace SerializationSelectorConsoleApp
             Console.ReadKey();
         }
 
-        static TcpDmtpClient CreateClient()
+        private static TcpDmtpClient CreateClient()
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigurePlugins(a =>
@@ -44,7 +44,7 @@ namespace SerializationSelectorConsoleApp
             return client;
         }
 
-        static void StartServer()
+        private static void StartServer()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置

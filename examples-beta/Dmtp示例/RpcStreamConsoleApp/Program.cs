@@ -7,10 +7,10 @@ using TouchSocket.Sockets;
 
 namespace RpcStreamConsoleApp
 {
-   
     internal class Program
     {
         public static int Count { get; set; } = 1000;//测试100Mb数据。
+
         private static async Task Main(string[] args)
         {
             StartServer();
@@ -39,7 +39,7 @@ namespace RpcStreamConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .SetBufferLength(1024*1024)
+                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -167,6 +167,5 @@ namespace RpcStreamConsoleApp
                 return size;
             }
         }
-
     }
 }

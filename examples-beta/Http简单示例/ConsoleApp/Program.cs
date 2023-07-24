@@ -28,7 +28,7 @@ namespace ConsoleApp
                     a.Add<MyHttpPlug2>();
                     a.Add<MyHttpPlug3>();
                     a.Add<MyHttpPlug4>();
-                   
+
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
                     //2、处理header为Option的探视跨域请求。
@@ -53,15 +53,15 @@ namespace ConsoleApp
             {
                 try
                 {
-                    if (e.Context.Request.TryGetContent(out byte[] bodys))//一次性获取请求体
+                    if (e.Context.Request.TryGetContent(out var bodys))//一次性获取请求体
                     {
                         return;
                     }
 
                     while (true)//当数据太大时，可持续读取
                     {
-                        byte[] buffer = new byte[1024 * 64];
-                        int r = e.Context.Request.Read(buffer, 0, buffer.Length);
+                        var buffer = new byte[1024 * 64];
+                        var r = e.Context.Request.Read(buffer, 0, buffer.Length);
                         if (r == 0)
                         {
                             return;
@@ -86,7 +86,7 @@ namespace ConsoleApp
 
                     foreach (var item in multifileCollection)
                     {
-                        StringBuilder stringBuilder = new StringBuilder();
+                        var stringBuilder = new StringBuilder();
                         stringBuilder.Append($"文件名={item.FileName}\t");
                         stringBuilder.Append($"数据长度={item.Length}");
                         client.Logger.Info(stringBuilder.ToString());
@@ -106,6 +106,7 @@ namespace ConsoleApp
             await e.InvokeNext();
         }
     }
+
     internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<HttpSocketClient>
     {
         async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
@@ -113,7 +114,7 @@ namespace ConsoleApp
             if (e.Context.Request.UrlEquals("/html"))
             {
                 //回应html
-                StringBuilder stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine("<!DOCTYPE html>");
                 stringBuilder.AppendLine("<html>");
                 stringBuilder.AppendLine("<head>");
@@ -140,6 +141,7 @@ namespace ConsoleApp
             await e.InvokeNext();
         }
     }
+
     internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<HttpSocketClient>
     {
         async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
@@ -159,13 +161,14 @@ namespace ConsoleApp
                         .FromText(ex.Message)
                         .Answer();
                 }
-                
+
                 return;
             }
 
             await e.InvokeNext();
         }
     }
+
     /// <summary>
     /// 支持GET、Post、Put，Delete，或者其他
     /// </summary>

@@ -5,13 +5,13 @@ using TouchSocket.Dmtp.Rpc;
 
 namespace SerializationSelectorClassLibrary
 {
-    public class MemoryPackSerializationSelector:DefaultSerializationSelector
+    public class MemoryPackSerializationSelector : DefaultSerializationSelector
     {
         public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
         {
             if ((byte)serializationType == 4)
             {
-               return MemoryPackSerializer.Serialize(parameter.GetType(),parameter);
+                return MemoryPackSerializer.Serialize(parameter.GetType(), parameter);
             }
             return base.SerializeParameter(serializationType, parameter);
         }
@@ -20,11 +20,11 @@ namespace SerializationSelectorClassLibrary
         {
             if ((byte)serializationType == 4)
             {
-                if (parameterBytes==null)
+                if (parameterBytes == null)
                 {
                     return default;
                 }
-                return MemoryPackSerializer.Deserialize(parameterType,parameterBytes);
+                return MemoryPackSerializer.Deserialize(parameterType, parameterBytes);
             }
             return base.DeserializeParameter(serializationType, parameterBytes, parameterType);
         }

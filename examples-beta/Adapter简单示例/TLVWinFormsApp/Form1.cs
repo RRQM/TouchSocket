@@ -8,7 +8,7 @@ namespace TLVWinFormsApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
         }
 
@@ -22,7 +22,7 @@ namespace TLVWinFormsApp
         private void button1_Click(object sender, EventArgs e)
         {
             //订阅收到消息事件
-            m_tcpService.Received = (client, byteBlock, requestInfo) =>
+            this.m_tcpService.Received = (client, byteBlock, requestInfo) =>
             {
                 if (requestInfo is TLVDataFrame frame)
                 {
@@ -30,7 +30,7 @@ namespace TLVWinFormsApp
                 }
             };
 
-            TouchSocketConfig config = new TouchSocketConfig();
+            var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
@@ -43,18 +43,18 @@ namespace TLVWinFormsApp
                 });
 
             //载入配置
-            m_tcpService.Setup(config);
+            this.m_tcpService.Setup(config);
 
             //启动
-            m_tcpService.Start();
-            m_tcpService.Logger.Info("服务器成功启动。");
+            this.m_tcpService.Start();
+            this.m_tcpService.Logger.Info("服务器成功启动。");
         }
 
         private readonly TcpClient m_client = new TcpClient();
 
         private void button2_Click(object sender, EventArgs e)
         {
-            m_client.Setup(new TouchSocketConfig()
+            this.m_client.Setup(new TouchSocketConfig()
                   .SetMaxPackageSize(1024 * 1024 * 10)
                   .ConfigureContainer(a =>
                   {
@@ -67,9 +67,9 @@ namespace TLVWinFormsApp
                       .SetLengthType(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
                   })
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789")));
-            m_client.Connect();
+            this.m_client.Connect();
 
-            m_client.Logger.Info("连接成功");
+            this.m_client.Logger.Info("连接成功");
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -88,7 +88,7 @@ namespace TLVWinFormsApp
         {
             try
             {
-                m_client.Logger.Info($"ping={this.m_client?.PingWithTLV()}");
+                this.m_client.Logger.Info($"ping={this.m_client?.PingWithTLV()}");
             }
             catch (Exception ex)
             {
@@ -98,7 +98,7 @@ namespace TLVWinFormsApp
 
         private void button5_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < 100; i++)
+            for (var i = 0; i < 100; i++)
             {
                 try
                 {

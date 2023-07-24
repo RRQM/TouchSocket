@@ -1,5 +1,4 @@
 ﻿using MemoryPack;
-using System;
 
 namespace SerializationSelectorClassLibrary
 {

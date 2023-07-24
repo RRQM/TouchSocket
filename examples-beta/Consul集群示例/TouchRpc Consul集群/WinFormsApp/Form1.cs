@@ -15,7 +15,7 @@ namespace WinFormsApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private AgentService[] services;
@@ -25,8 +25,8 @@ namespace WinFormsApp
             var consulClient = new ConsulClient(x => x.Address = new Uri($"http://127.0.0.1:8500"));//请求注册的 Consul 地址
             var ret = await consulClient.Agent.Services();
 
-            services = ret.Response.Values.ToArray();
-            this.listBox1.DataSource = services;
+            this.services = ret.Response.Values.ToArray();
+            this.listBox1.DataSource = this.services;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -35,9 +35,9 @@ namespace WinFormsApp
             {
                 try
                 {
-                    HttpDmtpClient client = new HttpDmtpClient();
+                    var client = new HttpDmtpClient();
                     client.Setup(new TouchSocketConfig()
-                        .ConfigurePlugins(a => 
+                        .ConfigurePlugins(a =>
                         {
                             a.UseDmtpRpc();
                         })
@@ -47,7 +47,7 @@ namespace WinFormsApp
                     //直接调用时，第一个参数为服务名+方法名（必须全小写）
                     //第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。
                     //后续参数为调用参数。
-                    string result = client.GetDmtpRpcActor().InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
+                    var result = client.GetDmtpRpcActor().InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, this.textBox1.Text);
                     client.SafeDispose();
                     MessageBox.Show(result);
                 }
@@ -68,13 +68,13 @@ namespace WinFormsApp
             {
                 try
                 {
-                    JsonRpcClient client = new JsonRpcClient();
+                    var client = new JsonRpcClient();
                     client.Setup(new TouchSocketConfig()
                         .SetJRPT(JRPT.Http)
                         .SetRemoteIPHost($"http://{agentService.Address}:{agentService.Port}/jsonrpc"));
                     client.Connect();
 
-                    string result = client.InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, textBox1.Text);
+                    var result = client.InvokeT<string>("myserver/sayhello", InvokeOption.WaitInvoke, this.textBox1.Text);
                     client.SafeDispose();
                     MessageBox.Show(result);
                 }

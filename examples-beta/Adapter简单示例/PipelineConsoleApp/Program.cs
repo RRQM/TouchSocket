@@ -8,7 +8,7 @@ namespace PipelineConsoleApp
     {
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
 
             service.Received = (client, byteBlock, requestInfo) =>
             {
@@ -21,8 +21,8 @@ namespace PipelineConsoleApp
 
                     while (true)
                     {
-                        byte[] buffer = new byte[1024];
-                        int r = pipeline.Read(buffer);
+                        var buffer = new byte[1024];
+                        var r = pipeline.Read(buffer);
                         var str = Encoding.UTF8.GetString(buffer, 0, r);
                         if (str.Contains("E"))
                         {

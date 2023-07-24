@@ -23,7 +23,7 @@ namespace WebSocketConsoleApp
         /// <summary>
         /// 通过/ws直接连接
         /// </summary>
-        static void ConnectWith_ws()
+        private static void ConnectWith_ws()
         {
             using var client = new WebSocketClient();
             client.Setup(new TouchSocketConfig()
@@ -40,7 +40,7 @@ namespace WebSocketConsoleApp
         /// <summary>
         /// 通过/wsquery，传入参数连接
         /// </summary>
-        static void ConnectWith_wsquery()
+        private static void ConnectWith_wsquery()
         {
             using var client = new WebSocketClient();
             client.Setup(new TouchSocketConfig()
@@ -57,7 +57,7 @@ namespace WebSocketConsoleApp
         /// <summary>
         /// 通过/wsheader,传入header连接
         /// </summary>
-        static void ConnectWith_wsheader()
+        private static void ConnectWith_wsheader()
         {
             using var client = new WebSocketClient();
             client.Setup(new TouchSocketConfig()
@@ -79,7 +79,7 @@ namespace WebSocketConsoleApp
             client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
         }
 
-        static HttpService CreateHttpService()
+        private static HttpService CreateHttpService()
         {
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
@@ -267,14 +267,10 @@ namespace WebSocketConsoleApp
                 {
                     if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
                     {
-                        m_logger.Info("WS通过WebApi连接");
+                        this.m_logger.Info("WS通过WebApi连接");
                     }
                 }
             }
         }
     }
-
-
-
-
 }

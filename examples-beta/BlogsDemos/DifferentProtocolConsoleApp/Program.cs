@@ -1,5 +1,4 @@
-﻿using System.Text;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace DifferentProtocolConsoleApp
@@ -9,9 +8,9 @@ namespace DifferentProtocolConsoleApp
     /// </summary>
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
@@ -36,7 +35,7 @@ namespace DifferentProtocolConsoleApp
     /// <item>7790端口:使用"##"结尾的数据</item>
     /// </list>
     /// </summary>
-    class DifferentProtocolPlugin : PluginBase,ITcpConnectingPlugin<ISocketClient>,ITcpReceivedPlugin<ISocketClient>
+    internal class DifferentProtocolPlugin : PluginBase, ITcpConnectingPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
         Task ITcpConnectingPlugin<ISocketClient>.OnTcpConnecting(ISocketClient client, ConnectingEventArgs e)
         {

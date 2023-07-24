@@ -19,7 +19,7 @@ namespace ServiceConsoleApp
         private static void Main(string[] args)
         {
             Console.WriteLine("输入本地监听端口");
-            int port = int.Parse(Console.ReadLine());
+            var port = int.Parse(Console.ReadLine());
 
             //此处直接建立HttpDmtpService。
             //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、Dmtp等等。
@@ -32,7 +32,7 @@ namespace ServiceConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseGlobalRpcStore()//配置全局的rpc
-                    .ConfigureRpcStore(a => 
+                    .ConfigureRpcStore(a =>
                     {
                         a.RegisterServer<MyServer>();
                     });
@@ -140,7 +140,7 @@ namespace ServiceConsoleApp
     /// <summary>
     /// WS收到数据等业务。
     /// </summary>
-    internal class MyWebSocketPlug : PluginBase,IWebSocketHandshakedPlugin<IHttpSocketClient>,IWebSocketReceivedPlugin<IHttpSocketClient>
+    internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>, IWebSocketReceivedPlugin<IHttpSocketClient>
     {
         Task IWebSocketHandshakedPlugin<IHttpSocketClient>.OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
         {

@@ -7,10 +7,10 @@ namespace UdpBroadcastConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             //创建udpService
-            UdpSession udpService = new UdpSession();
+            var udpService = new UdpSession();
             udpService.Received = (remote, byteBlock, requestInfo) =>
             {
                 Console.WriteLine(byteBlock.ToString());
@@ -24,8 +24,7 @@ namespace UdpBroadcastConsoleApp
             //加入组播组
             //udpService.JoinMulticastGroup(IPAddress.Parse("224.5.6.7"));
 
-
-            UdpSession udpClient = new UdpSession();
+            var udpClient = new UdpSession();
             udpClient.Setup(new TouchSocketConfig()
                 .SetBindIPHost(new IPHost(7788))
                 .UseBroadcast()//该配置在广播时是必须的

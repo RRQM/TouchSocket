@@ -6,7 +6,7 @@ namespace RpcFactoryConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var clientFactory = CreateTcpClientFactory();
 
@@ -14,7 +14,7 @@ namespace RpcFactoryConsoleApp
 
             try
             {
-               // client.GetDmtpRpcActor().Invoke();//这里可以让得到的通讯单体进行业务交流
+                // client.GetDmtpRpcActor().Invoke();//这里可以让得到的通讯单体进行业务交流
             }
             finally
             {
@@ -48,7 +48,7 @@ namespace RpcFactoryConsoleApp
                 .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
 
             //检测主通信器连接，然后如果没有连接，会自动建立连接
-            Result result = clientFactory.CheckStatus();
+            var result = clientFactory.CheckStatus();
             return clientFactory;
         }
 
@@ -69,7 +69,7 @@ namespace RpcFactoryConsoleApp
                     .SetRemoteIPHost("tcp://127.0.0.1:7789");//配置主通信
 
             //检测主通信器连接，然后如果没有连接，会自动建立连接
-            Result result = clientFactory.CheckStatus();
+            var result = clientFactory.CheckStatus();
             return clientFactory;
         }
     }

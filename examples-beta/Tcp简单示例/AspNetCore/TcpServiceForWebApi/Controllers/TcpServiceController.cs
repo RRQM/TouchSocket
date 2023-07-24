@@ -17,7 +17,7 @@ namespace TcpServiceForWebApi.Controllers
 
         public TcpServiceController(ILogger<TcpServiceController> logger, ITcpService tcpService)
         {
-            _logger = logger;
+            this._logger = logger;
             this.m_tcpService = tcpService;
         }
 
@@ -32,7 +32,7 @@ namespace TcpServiceForWebApi.Controllers
         {
             try
             {
-                if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+                if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out var client))
                 {
                     client.Send(msg);
                     return new TcpResult(ResultCode.Success, "success");
@@ -53,9 +53,9 @@ namespace TcpServiceForWebApi.Controllers
         {
             try
             {
-                if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out ISocketClient client))
+                if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out var client))
                 {
-                    var result = client.GetWaitingClient(new WaitingOptions(),data =>
+                    var result = client.GetWaitingClient(new WaitingOptions(), data =>
                     {
                         return true;//此处可以筛选返回数据。
                     }).SendThenReturn(Encoding.UTF8.GetBytes(msg));

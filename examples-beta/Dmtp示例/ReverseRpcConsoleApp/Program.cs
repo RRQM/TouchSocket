@@ -29,13 +29,13 @@ namespace ReverseRpcConsoleApp
         private static TcpDmtpService CreateTcpDmtpService(int port)
         {
             var service = new TcpDmtpService();
-            TouchSocketConfig config = new TouchSocketConfig()//配置
+            var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
                    })
-                   .ConfigurePlugins(a => 
+                   .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRpc();
                    })
@@ -50,7 +50,7 @@ namespace ReverseRpcConsoleApp
 
         private static TcpDmtpClient CreateTcpDmtpClient()
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigureContainer(a =>
@@ -60,7 +60,7 @@ namespace ReverseRpcConsoleApp
                  .ConfigurePlugins(a =>
                  {
                      a.UseDmtpRpc()
-                     .ConfigureRpcStore(store => 
+                     .ConfigureRpcStore(store =>
                      {
                          store.RegisterServer<ReverseCallbackServer>();
                      });
@@ -74,7 +74,7 @@ namespace ReverseRpcConsoleApp
 
     public class ReverseCallbackServer : RpcServer
     {
-        [DmtpRpc(MethodInvoke =true)]
+        [DmtpRpc(MethodInvoke = true)]
         public string SayHello(string name)
         {
             return $"{name},hi";

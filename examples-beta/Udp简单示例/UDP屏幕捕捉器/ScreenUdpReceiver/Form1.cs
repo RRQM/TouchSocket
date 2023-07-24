@@ -15,20 +15,20 @@ namespace ScreenUdpReceiver
 
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             try
             {
-                udpSession = new UdpSession();
+                this.udpSession = new UdpSession();
 
-                udpSession.Received = (endpoint, byteBlock, requestInfo) =>
+                this.udpSession.Received = (endpoint, byteBlock, requestInfo) =>
                 {
-                    pictureBox1.Image = Image.FromStream(byteBlock);
+                    this.pictureBox1.Image = Image.FromStream(byteBlock);
                 };
-                udpSession.Setup(new TouchSocketConfig()
+                this.udpSession.Setup(new TouchSocketConfig()
                .SetBindIPHost(new IPHost("127.0.0.1:7790"))
                .SetBufferLength(1024 * 64)
                .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; })
