@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.WebApi;
 using TouchSocket.Sockets;
+using TouchSocket.WebApi;
 
 namespace WebApiServerApp
 {
@@ -12,19 +12,21 @@ namespace WebApiServerApp
     {
         private static void Main(string[] args)
         {
-            WebApiParserPlugin webApiParser = null;
             HttpService service = new HttpService();
             service.Setup(new TouchSocketConfig()
-               .UsePlugin()
                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-               .ConfigureRpcStore(a =>
-               {
-                   a.RegisterServer<Server>();//注册服务
-               })
                .ConfigurePlugins(a =>
                {
                    a.UseCheckClear();
-                   webApiParser = a.UseWebApi();
+                   a.UseWebApi()
+                   .ConfigureRpcStore(store =>
+                   {
+                       store.RegisterServer<Server>();//注册服务
+
+                       //下列代码，会生成客户端的调用代码。
+                       string codeString = store.GetProxyCodes("WebApiProxy",typeof(WebApiAttribute));
+                   });
+
                    a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                }))
                .Start();
@@ -32,8 +34,7 @@ namespace WebApiServerApp
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
 
-            //下列代码，会生成客户端的调用代码。
-            string codeString = webApiParser.RpcStore.GetProxyCodes("WebApiProxy");
+            
             Console.ReadKey();
         }
     }

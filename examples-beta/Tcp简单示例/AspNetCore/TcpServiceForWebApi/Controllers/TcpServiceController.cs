@@ -24,7 +24,7 @@ namespace TcpServiceForWebApi.Controllers
         [HttpGet]
         public IEnumerable<string> GetAllIds()
         {
-            return this.m_tcpService.GetIDs();
+            return this.m_tcpService.GetIds();
         }
 
         [HttpGet]

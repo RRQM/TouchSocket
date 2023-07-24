@@ -52,8 +52,7 @@ namespace AdapterConsoleApp
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                
-                .SetDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); })
+                .SetTcpDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); })
                 .SetThreadCount(10))
                 .Start();//启动
         }
@@ -67,7 +66,7 @@ namespace AdapterConsoleApp
         {
             for (int i = 0; i < 10; i++)
             {
-                DataAdapterTester tester = DataAdapterTester.CreateTester(new RawDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
+                var tester = TcpDataAdapterTester.CreateTester(new RawDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
                 using ByteBlock block = new ByteBlock();
                 block.Write((byte)1);//写入数据类型   这里并未写入数据长度，因为这个适配器在发送前会再封装一次。
                 block.Write((byte)1);//写入数据指令
@@ -87,7 +86,7 @@ namespace AdapterConsoleApp
             string[] lines = File.ReadAllLines("SGCC测试数据.txt");
             foreach (var item in lines)
             {
-                DataAdapterTester tester = DataAdapterTester.CreateTester(new SGCCCustomDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
+                var tester = TcpDataAdapterTester.CreateTester(new SGCCCustomDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
                 using ByteBlock block = new ByteBlock();
 
                 byte[] data = item.ByHexStringToBytes(" ");

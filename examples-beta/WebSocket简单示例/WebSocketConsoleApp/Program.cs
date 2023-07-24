@@ -139,7 +139,7 @@ namespace WebSocketConsoleApp
                 else
                 {
                     context.Response
-                        .SetStatus("403", "token不正确")
+                        .SetStatus(403, "token不正确")
                         .Answer();
                 }
             }
@@ -152,7 +152,7 @@ namespace WebSocketConsoleApp
                 else
                 {
                     context.Response
-                        .SetStatus("403", "token不正确")
+                        .SetStatus(403, "token不正确")
                         .Answer();
                 }
             }

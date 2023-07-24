@@ -75,7 +75,7 @@ namespace ConsoleApp
                     if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                     {
                         e.Context.Response
-                            .SetStatus("403", "数据过大")
+                            .SetStatus(403, "数据过大")
                             .Answer();
                         return;
                     }
@@ -155,7 +155,7 @@ namespace ConsoleApp
                 }
                 catch (Exception ex)
                 {
-                    e.Context.Response.SetStatus("403")
+                    e.Context.Response.SetStatus(403)
                         .FromText(ex.Message)
                         .Answer();
                 }
