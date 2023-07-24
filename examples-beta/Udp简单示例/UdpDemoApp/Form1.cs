@@ -100,9 +100,4 @@ namespace UdpDemoApp
             //IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
         }
     }
-
-    class MyUdpPluginClass : UdpSessionPluginBase
-    {
-
-    }
 }
