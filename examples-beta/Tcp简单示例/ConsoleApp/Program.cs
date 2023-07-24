@@ -77,6 +77,12 @@ namespace ServiceConsoleApp
             //载入配置
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                .ConfigurePlugins(a =>
+                {
+                    a.UseReconnection()
+                    .SetTick(TimeSpan.FromSeconds(1))
+                    .UsePolling();
+                })
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
@@ -87,7 +93,7 @@ namespace ServiceConsoleApp
         }
     }
 
-    class MyServicePluginClass : PluginBase,IServerStartedPlugin,IServerStopedPlugin
+    class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {
         Task IServerStartedPlugin<IService>.OnServerStarted(IService sender, ServiceStateEventArgs e)
         {
