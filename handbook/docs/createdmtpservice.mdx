@@ -1,8 +1,9 @@
 ---
 id: createdmtpservice
-title: 创建TouchRpc服务器
+title: 创建Dmtp服务器
 ---
 
+import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
@@ -21,10 +22,11 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 <div>
 
 #### SetVerifyTimeout
-设置验证超时时间，默认3000ms。（仅TcpTouchRpc可用） 。
+设置验证超时时间，默认3000ms。（仅Dmtp可用） 。
 
 #### SetVerifyToken
 设置验证口令。 
+
 </div>
 </details>
 
@@ -70,15 +72,14 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 这是基于Http升级协议。在该解析器中，配置设置[HttpService](./createhttpservice.mdx)一致。
 
 ```csharp
-var service = new HttpTouchRpcService();
+var service = new HttpDmtpService();
 TouchSocketConfig config = new TouchSocketConfig()//配置
        .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
        .ConfigureContainer(a =>
        {
            a.AddConsoleLogger();
-           a.AddFileLogger();
        })
-       .SetVerifyToken("TouchRpc");
+       .SetVerifyToken("Dmtp");
 
 service.Setup(config)
     .Start();
@@ -86,84 +87,77 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-### 5.3 基于Udp协议
-
-这是基于UDP协议解析器。在该解析器中，配置设置与[UdpSession](./createudpsession.mdx)一致。因为udp是无连接的，所以不需要SetVerifyToken。
-
-```csharp
-var service = new UdpTouchRpc();
-TouchSocketConfig config = new TouchSocketConfig()//配置
-       .SetBindIPHost(new IPHost(7789))
-       .ConfigureContainer(a =>
-       {
-           a.AddConsoleLogger();
-           a.AddFileLogger();
-       });
-
-service.Setup(config)
-    .Start();
-
-service.Logger.Info($"{service.GetType().Name}已启动");
-```
-
-### 5.4 基于AspNetCore的Websocket协议
+### 5.3 基于AspNetCore的Websocket协议
 
 具体步骤
 
 1. nuget 安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`。
-2. IServiceCollection添加AddWSTouchRpc，并进行相关配置（不用配置端口，会和asp使用同一端口）。
-3. IApplicationBuilder必须先使用UseWebSockets。
-4. IApplicationBuilder调用UseWSTouchRpc，并传入url设置。
+2. `IServiceCollection`添加`AddWebSocketDmtpService`，并进行相关配置（不用配置端口，会和asp使用同一端口）。
+3. `IApplicationBuilder`必须先使用`UseWebSockets`。
+4. `IApplicationBuilder`调用`UseWebSocketDmtp`，并传入url设置。
 
-在ConfigureServices时，添加AddWSTouchRpc，并且配置相关项。
+在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
 ```csharp
-public void ConfigureServices(IServiceCollection services)
+builder.Services.AddWebSocketDmtpService(() =>
 {
-    //向Asp服务中添加IWSTouchRpcService
-    services.AddWSTouchRpc(new TouchSocketConfig()
-        .UseAspNetCoreContainer(services));//设置IOC容器
-
-    services.AddControllers();
-
-    services.AddSwaggerGen(c =>
-    {
-        c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Demo", Version = "v1" });
-    });
-}
+    return new TouchSocketConfig()
+        .SetVerifyToken("Dmtp")
+        .UseAspNetCoreContainer(builder.Services)
+        .ConfigureContainer(a =>
+        {
+            a.AddDmtpRouteService();
+        })
+        .ConfigurePlugins(a =>
+        {
+            //添加插件
+        });
+});
 ```
 
 启用中间件
 
-首先必须启用WebSocket。其次使用UseWSTouchRpc即可。
+首先必须先启用`WebSocket`。其次使用`UseWebSocketDmtp`即可。
 
 ```csharp
- public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
- {
+var app = builder.Build();
+app.UseWebSockets();
+app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
+```
 
-     if (env.IsDevelopment())
-     {
-         app.UseDeveloperExceptionPage();
-     }
+### 5.4 基于AspNetCore的Http协议 <Tag>企业版</Tag>
 
-     // Swagger
-     app.UseSwagger();
-     app.UseSwaggerUI(c =>
-     {
-         c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Demo v1");
-     });
+具体步骤
 
+1. nuget 安装`TouchSocketPro.AspNetCore`。
+2. `IServiceCollection`添加`AddHttpMiddlewareDmtpService`，并进行相关配置（不用配置端口，会和asp使用同一端口）。
+3. `IApplicationBuilder`调用`UseHttpDmtp`。
 
-     app.UseWebSockets();//必须先使用WebSocket
-     app.UseWSTouchRpc("/wstouchrpc");//该操作不会影响原有的WebSocket，只要url不同即可。
+在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
-     app.UseRouting();
+```csharp
+//企业版功能
+builder.Services.AddHttpMiddlewareDmtpService(() =>
+{
+    return new TouchSocketConfig()
+            .SetVerifyToken("Dmtp")
+            .UseAspNetCoreContainer(builder.Services)
+            .ConfigureContainer(a =>
+            {
+                a.AddDmtpRouteService();
+            })
+            .ConfigurePlugins(a =>
+            {
+                //添加插件
+            });
+});
+```
 
-     app.UseAuthorization();
+启用中间件
 
-     app.UseEndpoints(endpoints =>
-     {
-         endpoints.MapControllers();
-     });
- }
+首先必须先启用`WebSocket`。其次使用`UseWebSocketDmtp`即可。
+
+```csharp
+var app = builder.Build();
+app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
 ```
