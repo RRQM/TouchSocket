@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using log4net;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -16,23 +17,18 @@ namespace Log4netConsoleApp
 
         private static TcpService CreateService()
         {
-            TcpService service = new TcpService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
+            var service = new TcpService();
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
                 string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                service.Logger.Info($"服务器已从{client.ID}接收到信息：{mes}");
+                service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
 
                 client.Send(mes);//将收到的信息直接返回给发送方
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                
-                .SetThreadCount(10)
                 .ConfigurePlugins(a =>
                 {
                     //a.Add();//此处可以添加插件
@@ -47,48 +43,49 @@ namespace Log4netConsoleApp
         }
     }
 
-    internal class Mylog4netLogger : ILog
+    internal class Mylog4netLogger : TouchSocket.Core.ILog
     {
-        public LogType LogType { get; set; } = LogType.Trace | LogType.Debug | LogType.Info;//需要什么类型，就叠加
+        private readonly log4net.ILog m_logger;
 
-        void ILog.Log(LogType logType, object source, string message, Exception exception)
+        public Mylog4netLogger()
+        {
+            this. m_logger = log4net.LogManager.GetLogger("Test");
+        }
+        public LogLevel LogLevel { get; set ; }
+
+        public void Log(LogLevel logLevel, object source, string message, Exception exception)
         {
             //此处就是实际的日志输出
 
-            if (this.LogType.HasFlag(logType))
+            switch (logLevel)
             {
-                log4net.ILog log = log4net.LogManager.GetLogger("Test");
+                case LogLevel.Trace:
+                    m_logger.Debug(message, exception);
+                    break;
 
-                switch (logType)
-                {
-                    case LogType.Trace:
-                        log.Debug(message, exception);
-                        break;
+                case LogLevel.Debug:
+                    m_logger.Debug(message, exception);
+                    break;
 
-                    case LogType.Debug:
-                        log.Debug(message, exception);
-                        break;
+                case LogLevel.Info:
+                    m_logger.Info(message, exception);
+                    break;
 
-                    case LogType.Info:
-                        log.Info(message, exception);
-                        break;
+                case LogLevel.Warning:
+                    m_logger.Warn(message, exception);
+                    break;
 
-                    case LogType.Warning:
-                        log.Warn(message, exception);
-                        break;
+                case LogLevel.Error:
+                    m_logger.Error(message, exception);
+                    break;
 
-                    case LogType.Error:
-                        log.Error(message, exception);
-                        break;
+                case LogLevel.Critical:
+                    m_logger.Error(message, exception);
+                    break;
 
-                    case LogType.Critical:
-                        log.Error(message, exception);
-                        break;
-
-                    case LogType.None:
-                    default:
-                        break;
-                }
+                case LogLevel.None:
+                default:
+                    break;
             }
         }
     }

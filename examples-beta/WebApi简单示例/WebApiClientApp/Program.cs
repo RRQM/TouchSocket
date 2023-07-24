@@ -1,6 +1,7 @@
-﻿using RRQMProxy;
-using System;
-using TouchSocket.Rpc.WebApi;
+﻿using System;
+using TouchSocket.Rpc;
+using TouchSocket.WebApi;
+using WebApiProxy;
 
 namespace WebApiClientApp
 {
@@ -10,10 +11,10 @@ namespace WebApiClientApp
         {
             var client = CreateWebApiClient();
 
-            int sum1 = client.Invoke<int>("GET:/Server/Sum?a={0}&b={1}", null, 10, 20);
+            int sum1 = client.InvokeT<int>("GET:/Server/Sum?a={0}&b={1}", null, 10, 20);
             Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-            int sum2 = client.Invoke<int>("POST:/Server/TestPost", null, new MyClass() { A = 10, B = 20 });
+            int sum2 = client.InvokeT<int>("POST:/Server/TestPost", null, new MyClass() { A = 10, B = 20 });
             Console.WriteLine($"Post调用成功，结果：{sum2}");
 
             int sum3 = client.TestPost(new MyClass() { A = 10, B = 20 });

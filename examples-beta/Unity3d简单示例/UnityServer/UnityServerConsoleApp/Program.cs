@@ -4,8 +4,9 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using TouchSocket.Core;
+using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.Dmtp;
 using TouchSocket.Sockets;
 
 namespace UnityServerConsoleApp
@@ -19,33 +20,13 @@ namespace UnityServerConsoleApp
             StartTcpService(7789);
             StartTcpRpcService(7790);
             StartUdpService(7791);
-            StartUdpRpc(7792);
             Console.ReadKey();
         }
 
-        private static void StartUdpRpc(int port)
-        {
-            var service = new UdpDmtp();
-            TouchSocketConfig config = new TouchSocketConfig()//配置
-                   .SetBindIPHost(new IPHost(port))
-                   .ConfigureContainer(a =>
-                   {
-                       a.AddConsoleLogger();//注册一个日志组
-                   })
-                   .ConfigureRpcStore(a =>
-                   {
-                       a.RegisterServer<MyRpcServer>();//注册服务
-                   });
-
-            service.Setup(config)
-                .Start();
-
-            service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
-        }
 
         private static void StartUdpService(int port)
         {
-            UdpSession udpService = new UdpSession();
+            var udpService = new UdpSession();
             udpService.Received = (remote, byteBlock, requestInfo) =>
             {
                 udpService.Send(remote, byteBlock);
@@ -71,17 +52,21 @@ namespace UnityServerConsoleApp
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                    .SetThreadCount(50)
                    .UseDelaySender()
-                   .UsePlugin()
                    .ConfigureContainer(a =>
                    {
-                       a.SetLogger<ConsoleLogger>();//注册一个日志组
-                   })
-                   .ConfigureRpcStore(a =>
-                   {
-                       a.RegisterServer<MyRpcServer>();//注册服务
+                       a.AddConsoleLogger();//注册一个日志组
                    })
                    .ConfigurePlugins(a =>
                    {
+                       a.UseDmtpRpc()
+                       .ConfigureRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+
+                           var code = store.GetProxyCodes("TcpRpcProxy");
+                           File.WriteAllText("TcpRpcProxy.cs", code);
+                       });
+
                        a.Add<MyTcpRpcPlguin>();
                    })
                    .SetVerifyToken("Dmtp");
@@ -90,22 +75,14 @@ namespace UnityServerConsoleApp
                 .Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
-
-            string code = service.RpcStore.GetProxyCodes("TcpRpcProxy");
-            File.WriteAllText("TcpRpcProxy.cs", code);
-
-            //service.RpcStore.ShareProxy(new IPHost(8848));
         }
 
         private static void StartTcpService(int port)
         {
             TcpService service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost(port) })//同时监听两个地址
-                
-                .SetThreadCount(10)
-                .UsePlugin()
-                .SetDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
+                .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyPlguin>();//此处可以添加插件
@@ -119,43 +96,28 @@ namespace UnityServerConsoleApp
         }
     }
 
-    internal class MyTcpRpcPlguin : DmtpPluginBase<TcpDmtpSocketClient>
+    internal class MyTcpRpcPlguin : PluginBase
     {
-        protected override void OnStreamTransfering(TcpDmtpSocketClient client, StreamOperationEventArgs e)
-        {
-            client.Logger.Info($"客户端：{client.GetInfo()}正在传输流....，总长度={e.StreamInfo.Size}");
-            foreach (var item in e.Metadata.AllKeys)
-            {
-                client.Logger.Info($"Key：{item}，Value={e.Metadata[item]}");
-            }
 
-            e.Bucket = new MemoryStream();
-        }
-
-        protected override void OnStreamTransfered(TcpDmtpSocketClient client, StreamStatusEventArgs e)
-        {
-            client.Logger.Info($"客户端：{client.GetInfo()}流传输结束，状态={e.Result}");
-            e.Bucket.SafeDispose();
-        }
     }
 
-    internal class MyPlguin : TcpPluginBase<SocketClient>
+    internal class MyPlguin : PluginBase
     {
-        protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
-        {
-            client.Logger.Info($"客户端{client.GetInfo()}已连接");
-        }
+        //protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
+        //{
+        //    client.Logger.Info($"客户端{client.GetInfo()}已连接");
+        //}
 
-        protected override void OnDisconnected(SocketClient client, DisconnectEventArgs e)
-        {
-            client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
-        }
+        //protected override void OnDisconnected(SocketClient client, DisconnectEventArgs e)
+        //{
+        //    client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
+        //}
 
-        protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
-        {
-            client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
-            client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
-        }
+        //protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
+        //{
+        //    client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
+        //    client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
+        //}
     }
 
     /// <summary>
@@ -177,7 +139,7 @@ namespace UnityServerConsoleApp
         private readonly ILog m_logger;
 
         [Description("登录")]
-        [Dmtp(true, MethodFlags = MethodFlags.IncludeCallContext)]
+        [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]
         public MyLoginModelResult Login(ICallContext callContext, MyLoginModel model)
         {
             if (model.Account == "123" && model.Password == "abc")
@@ -189,7 +151,7 @@ namespace UnityServerConsoleApp
         }
 
         [Description("性能测试")]
-        [Dmtp(true)]
+        [DmtpRpc(true)]
         public int Performance(int i)
         {
             Interlocked.Increment(ref count);

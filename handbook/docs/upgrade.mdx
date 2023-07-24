@@ -28,6 +28,7 @@ import Tag from "@site/src/components/Tag.js";
 
   - &nbsp;<Tag>优化</Tag> FileLogger支持指定不同目录。
   - &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。同时e.Handled功能依然有效。
+  - &nbsp;<Tag>调整</Tag> Log项。LogType调整为LogLevel，并且不需要位运算。直接按日志等级输出。
   - &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
   - &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
   - &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会大大影响内存池的效率。
@@ -47,11 +48,18 @@ import Tag from "@site/src/components/Tag.js";
   - &nbsp;<Tag>移除</Tag> UsePlugin的显式配置，当调用ConfigurePlugins时，会自动启用。
 
 #### 【TouchSokcet.Http】
+
+ - &nbsp;<Tag>调整</Tag> WSCommandLinePlugin改名为WebSocketCommandLinePlugin。
+
 #### 【TouchSokcet.Rpc】
+
+ - &nbsp;<Tag>移除</Tag> 整体功能迁移至TouchSokcet(Pro).Dmtp。
+
 #### 【TouchSokcet(Pro).Dmtp】
 
   - &nbsp;<Tag>调整</Tag> 原TouchRpc全系改名为Dmtp。例如：原TcpTouchRpcClient改名为TcpDmtpClient。
   - &nbsp;<Tag>调整</Tag> 原TouchRpc中InvokeOption，改名为DmtpInvokeOption。InvokeOption依然有效，但是在调用DmtpRpc时，则无法指定序列化方式。所以可能需要使用DmtpInvokeOption。
+  - &nbsp;<Tag>调整</Tag> 原TouchRpc中Invoke直接调用的方式，改为InvokeT。
   - &nbsp;<Tag>移除</Tag> **暂时**移除UdpRpc功能，后续可能考虑添加。
   - &nbsp;<Tag>移除</Tag> **暂时**移除EventBus功能，后续可能考虑添加。
   - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。

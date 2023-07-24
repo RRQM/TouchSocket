@@ -1,179 +1,291 @@
-using System.Threading.Tasks;
+using System;
+using TouchSocket.Core;
+using TouchSocket.Sockets;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.WebApi;
-
-namespace RRQMProxy
+using TouchSocket.Dmtp.Rpc;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
+namespace WebApiProxy
 {
-    public interface IServer : IRemoteServer
+    public interface IServer : TouchSocket.Rpc.IRemoteServer
     {
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         System.Int32 Sum(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
-
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default);
 
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         System.Int32 TestPost(MyClass myClass, IInvokeOption invokeOption = default);
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        Task<System.Int32> TestPostAsync(MyClass myClass, IInvokeOption invokeOption = default);
 
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
-        Task<System.Int32> TestPostAsync(MyClass myClass, IInvokeOption invokeOption = default);
-    }
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        String DownloadFile(System.String id, IInvokeOption invokeOption = default);
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        Task<String> DownloadFileAsync(System.String id, IInvokeOption invokeOption = default);
 
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        String PostContent(IInvokeOption invokeOption = default);
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        Task<String> PostContentAsync(IInvokeOption invokeOption = default);
+
+    }
     public class Server : IServer
     {
         public Server(IRpcClient client)
         {
             this.Client = client;
         }
-
         public IRpcClient Client { get; private set; }
-
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         public System.Int32 Sum(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
-                throw new RpcException("IRpcClientä¸ºç©ºï¼Œè¯·å…ˆåˆå§‹åŒ–æˆ–è€…è¿›è¡Œèµ‹å€¼");
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
             }
             object[] parameters = new object[] { a, b };
-            System.Int32 returnData = Client.Invoke<System.Int32>("GET:/server/sum?a={0}&b={1}", invokeOption, parameters);
+            System.Int32 returnData = (System.Int32)Client.Invoke(typeof(System.Int32), "GET:/server/sumab?a={0}&b={1}", invokeOption, parameters);
             return returnData;
         }
-
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        public Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> SumAsync(System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
-                throw new RpcException("IRpcClientä¸ºç©ºï¼Œè¯·å…ˆåˆå§‹åŒ–æˆ–è€…è¿›è¡Œèµ‹å€¼");
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
             }
             object[] parameters = new object[] { a, b };
-            return Client.InvokeAsync<System.Int32>("GET:/server/sum?a={0}&b={1}", invokeOption, parameters);
+            return (System.Int32)await Client.InvokeAsync(typeof(System.Int32), "GET:/server/sumab?a={0}&b={1}", invokeOption, parameters);
         }
 
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         public System.Int32 TestPost(MyClass myClass, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
-                throw new RpcException("IRpcClientä¸ºç©ºï¼Œè¯·å…ˆåˆå§‹åŒ–æˆ–è€…è¿›è¡Œèµ‹å€¼");
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
             }
             object[] parameters = new object[] { myClass };
-            System.Int32 returnData = Client.Invoke<System.Int32>("POST:/server/testpost", invokeOption, parameters);
+            System.Int32 returnData = (System.Int32)Client.Invoke(typeof(System.Int32), "POST:/server/testpost", invokeOption, parameters);
             return returnData;
         }
-
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        public Task<System.Int32> TestPostAsync(MyClass myClass, IInvokeOption invokeOption = default)
+        public async Task<System.Int32> TestPostAsync(MyClass myClass, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
-                throw new RpcException("IRpcClientä¸ºç©ºï¼Œè¯·å…ˆåˆå§‹åŒ–æˆ–è€…è¿›è¡Œèµ‹å€¼");
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
             }
             object[] parameters = new object[] { myClass };
-            return Client.InvokeAsync<System.Int32>("POST:/server/testpost", invokeOption, parameters);
+            return (System.Int32)await Client.InvokeAsync(typeof(System.Int32), "POST:/server/testpost", invokeOption, parameters);
         }
-    }
 
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        public String DownloadFile(System.String id, IInvokeOption invokeOption = default)
+        {
+            if (Client == null)
+            {
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
+            }
+            object[] parameters = new object[] { id };
+            String returnData = (String)Client.Invoke(typeof(String), "GET:/server/downloadfile?id={1}", invokeOption, parameters);
+            return returnData;
+        }
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        public async Task<String> DownloadFileAsync(System.String id, IInvokeOption invokeOption = default)
+        {
+            if (Client == null)
+            {
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
+            }
+            object[] parameters = new object[] { id };
+            return (String)await Client.InvokeAsync(typeof(String), "GET:/server/downloadfile?id={1}", invokeOption, parameters);
+        }
+
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        public String PostContent(IInvokeOption invokeOption = default)
+        {
+            if (Client == null)
+            {
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
+            }
+            String returnData = (String)Client.Invoke(typeof(String), "POST:/server/postcontent", invokeOption, null);
+            return returnData;
+        }
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        public async Task<String> PostContentAsync(IInvokeOption invokeOption = default)
+        {
+            if (Client == null)
+            {
+                throw new RpcException("IRpcClientÎª¿Õ£¬ÇëÏÈ³õÊ¼»¯»òÕß½øĞĞ¸³Öµ");
+            }
+            return (String)await Client.InvokeAsync(typeof(String), "POST:/server/postcontent", invokeOption, null);
+        }
+
+    }
     public static class ServerExtensions
     {
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         public static System.Int32 Sum<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
-        IWebApiClient
+        TouchSocket.WebApi.IWebApiClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpcæ— æ³•æ‰§è¡Œã€‚");
-            }
             object[] parameters = new object[] { a, b };
-            System.Int32 returnData = client.Invoke<System.Int32>("GET:/server/sum?a={0}&b={1}", invokeOption, parameters);
+            System.Int32 returnData = (System.Int32)client.Invoke(typeof(System.Int32), "GET:/server/sumab?a={0}&b={1}", invokeOption, parameters);
             return returnData;
         }
-
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        public static Task<System.Int32> SumAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
-        IWebApiClient
+        public static async Task<System.Int32> SumAsync<TClient>(this TClient client, System.Int32 a, System.Int32 b, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpcæ— æ³•æ‰§è¡Œã€‚");
-            }
             object[] parameters = new object[] { a, b };
-            return client.InvokeAsync<System.Int32>("GET:/server/sum?a={0}&b={1}", invokeOption, parameters);
+            return (System.Int32)await client.InvokeAsync(typeof(System.Int32), "GET:/server/sumab?a={0}&b={1}", invokeOption, parameters);
         }
 
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        /// <exception cref="System.TimeoutException">è°ƒç”¨è¶…æ—¶</exception>
-        /// <exception cref="RRQMSocket.RPC.RRQMRpcInvokeException">Rpcè°ƒç”¨å¼‚å¸¸</exception>
-        /// <exception cref="RRQMCore.RRQMException">å…¶ä»–å¼‚å¸¸</exception>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
         public static System.Int32 TestPost<TClient>(this TClient client, MyClass myClass, IInvokeOption invokeOption = default) where TClient :
-        IWebApiClient
+        TouchSocket.WebApi.IWebApiClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpcæ— æ³•æ‰§è¡Œã€‚");
-            }
             object[] parameters = new object[] { myClass };
-            System.Int32 returnData = client.Invoke<System.Int32>("POST:/server/testpost", invokeOption, parameters);
+            System.Int32 returnData = (System.Int32)client.Invoke(typeof(System.Int32), "POST:/server/testpost", invokeOption, parameters);
             return returnData;
+        }
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        public static async Task<System.Int32> TestPostAsync<TClient>(this TClient client, MyClass myClass, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
+        {
+            object[] parameters = new object[] { myClass };
+            return (System.Int32)await client.InvokeAsync(typeof(System.Int32), "POST:/server/testpost", invokeOption, parameters);
         }
 
         ///<summary>
-        ///æ— æ³¨é‡Šä¿¡æ¯
+        ///ÎŞ×¢ÊÍĞÅÏ¢
         ///</summary>
-        public static Task<System.Int32> TestPostAsync<TClient>(this TClient client, MyClass myClass, IInvokeOption invokeOption = default) where TClient :
-        IWebApiClient
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        public static String DownloadFile<TClient>(this TClient client, System.String id, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpcæ— æ³•æ‰§è¡Œã€‚");
-            }
-            object[] parameters = new object[] { myClass };
-            return client.InvokeAsync<System.Int32>("POST:/server/testpost", invokeOption, parameters);
+            object[] parameters = new object[] { id };
+            String returnData = (String)client.Invoke(typeof(String), "GET:/server/downloadfile?id={1}", invokeOption, parameters);
+            return returnData;
         }
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        public static async Task<String> DownloadFileAsync<TClient>(this TClient client, System.String id, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
+        {
+            object[] parameters = new object[] { id };
+            return (String)await client.InvokeAsync(typeof(String), "GET:/server/downloadfile?id={1}", invokeOption, parameters);
+        }
+
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        /// <exception cref="System.TimeoutException">µ÷ÓÃ³¬Ê±</exception>
+        /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpcµ÷ÓÃÒì³£</exception>
+        /// <exception cref="System.Exception">ÆäËûÒì³£</exception>
+        public static String PostContent<TClient>(this TClient client, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
+        {
+            String returnData = (String)client.Invoke(typeof(String), "POST:/server/postcontent", invokeOption, null);
+            return returnData;
+        }
+        ///<summary>
+        ///ÎŞ×¢ÊÍĞÅÏ¢
+        ///</summary>
+        public static async Task<String> PostContentAsync<TClient>(this TClient client, IInvokeOption invokeOption = default) where TClient :
+        TouchSocket.WebApi.IWebApiClient
+        {
+            return (String)await client.InvokeAsync(typeof(String), "POST:/server/postcontent", invokeOption, null);
+        }
+
     }
 
     public class MyClass
@@ -181,4 +293,6 @@ namespace RRQMProxy
         public System.Int32 A { get; set; }
         public System.Int32 B { get; set; }
     }
+
 }
+

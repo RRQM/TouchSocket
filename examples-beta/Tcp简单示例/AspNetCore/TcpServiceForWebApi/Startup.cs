@@ -34,7 +34,6 @@ namespace TcpServiceForWebApi
             var tcpService = services.AddTcpService(config =>
               {
                   config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                  .UsePlugin()
                   .UseAspNetCoreContainer(services)
                   .ConfigurePlugins(a =>
                   {

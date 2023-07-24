@@ -4,8 +4,8 @@ using System;
 using System.IO;
 using TouchSocket.Core;
 using TouchSocket.Http;
+using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
-using TouchSocket.Rpc.JsonRpc;
 using TouchSocket.Sockets;
 
 namespace JsonRpcConsoleApp
@@ -45,18 +45,17 @@ namespace JsonRpcConsoleApp
             HttpService service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
-                 .UsePlugin()
                  .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                 .ConfigureRpcStore(a =>//Rpc的配置必须在插件之前。
-                 {
-                     a.RegisterServer<JsonRpcServer>();
-                 })
                  .ConfigurePlugins(a =>
                  {
                      a.UseWebSocket()//启用websocket。
                      .SetWSUrl("/ws");//使用/ws路由连接。
 
-                     a.Add<JsonRpcParserPlugin>()
+                     a.UseJsonRpc()
+                     .ConfigureRpcStore(store =>
+                     {
+                         store.RegisterServer<JsonRpcServer>();
+                     })
                      .SetJsonRpcUrl("/jsonRpc");
                  }))
                 .Start();
@@ -65,32 +64,16 @@ namespace JsonRpcConsoleApp
         private static void CreateTcpJsonRpcParser(int port)
         {
             TcpService service = new TcpService();
-            service.Connecting = (client, e) =>
-            {
-                Console.WriteLine("客户端连接成功");
-                Console.WriteLine(client.ID);
-            };
-            service.Connected = (SocketClient client, TouchSocketEventArgs e) =>
-            {
-                Console.WriteLine(client.ID);
-                Console.WriteLine("客户端连接完成");
-            };
-            service.Disconnected = (client, e) =>
-            {
-                Console.WriteLine("客户端连接断开");
-                Console.WriteLine(client.ID);
-            };
             service.Setup(new TouchSocketConfig()
-                .UsePlugin()
-                .SetDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))//使用这个适配器，防止粘包。但是也要求json中没有换行符。
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))//使用这个适配器，防止粘包。但是也要求json中没有换行符。
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                .ConfigureRpcStore(a =>
-                {
-                    a.RegisterServer<JsonRpcServer>();
-                })
                  .ConfigurePlugins(a =>
                  {
-                     a.Add<JsonRpcParserPlugin>();
+                     a.UseJsonRpc()
+                     .ConfigureRpcStore(store =>
+                     {
+                         store.RegisterServer<JsonRpcServer>();
+                     });
                  }))
                 .Start();
         }
@@ -119,7 +102,7 @@ namespace JsonRpcConsoleApp
             JsonRpcClient jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7705")
-                .SetDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetJRPT(JRPT.Tcp));
             jsonRpcClient.Connect();
 
@@ -146,7 +129,7 @@ namespace JsonRpcConsoleApp
             JsonRpcClient jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
-                .SetDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetJRPT(JRPT.WebSocket));
             jsonRpcClient.Connect();
 

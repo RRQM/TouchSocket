@@ -32,7 +32,6 @@ namespace TLVWinFormsApp
 
             TouchSocketConfig config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                .UsePlugin()
                 .ConfigureContainer(a =>
                 {
                     a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
@@ -56,7 +55,6 @@ namespace TLVWinFormsApp
         private void button2_Click(object sender, EventArgs e)
         {
             m_client.Setup(new TouchSocketConfig()
-                  .UsePlugin()
                   .SetMaxPackageSize(1024 * 1024 * 10)
                   .ConfigureContainer(a =>
                   {
@@ -67,14 +65,6 @@ namespace TLVWinFormsApp
                   {
                       a.Add<TLVPlugin>()//使用插件，相当于自动设置适配器，并且主动回应Ping。
                       .SetLengthType(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
-
-                      a.Add<PollingKeepAlivePlugin<TcpClient>>()
-                      .SetTick(TimeSpan.FromSeconds(1))
-                      .SetActionForCheck((c) =>
-                      {
-                          c.Logger.Info($"自动ping结果：{c.Ping()}");
-                          return true;
-                      });
                   })
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789")));
             m_client.Connect();
@@ -98,7 +88,7 @@ namespace TLVWinFormsApp
         {
             try
             {
-                m_client.Logger.Info($"ping={this.m_client?.Ping()}");
+                m_client.Logger.Info($"ping={this.m_client?.PingWithTLV()}");
             }
             catch (Exception ex)
             {

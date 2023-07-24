@@ -66,7 +66,7 @@ namespace RRQMProxy
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
             object[] parameters = new object[] { a, b };
-            System.Int32 returnData = Client.Invoke<System.Int32>("Sum", invokeOption, parameters);
+            System.Int32 returnData = Client.InvokeT<System.Int32>("Sum", invokeOption, parameters);
             return returnData;
         }
 
@@ -84,7 +84,7 @@ namespace RRQMProxy
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
             object[] parameters = new object[] { a, b };
-            return Client.InvokeAsync<System.Int32>("Sum", invokeOption, parameters);
+            return Client.InvokeTAsync<System.Int32>("Sum", invokeOption, parameters);
         }
 
         ///<summary>
@@ -101,7 +101,7 @@ namespace RRQMProxy
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
             object[] parameters = new object[] { myClass };
-            System.Int32 returnData = Client.Invoke<System.Int32>("TestClass", invokeOption, parameters);
+            System.Int32 returnData = Client.InvokeT<System.Int32>("TestClass", invokeOption, parameters);
             return returnData;
         }
 
@@ -119,7 +119,7 @@ namespace RRQMProxy
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
             object[] parameters = new object[] { myClass };
-            return Client.InvokeAsync<System.Int32>("TestClass", invokeOption, parameters);
+            return Client.InvokeTAsync<System.Int32>("TestClass", invokeOption, parameters);
         }
     }
 
