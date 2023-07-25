@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 using TouchSocket.WebApi;
 using WebApiProxy;
 
@@ -25,10 +28,33 @@ namespace WebApiClientApp
         private static WebApiClient CreateWebApiClient()
         {
             var client = new WebApiClient();
-            client.Setup("127.0.0.1:7789");
+            client.Setup(new TouchSocketConfig()
+                .SetRemoteIPHost("127.0.0.1:7789")
+                .ConfigurePlugins(a => 
+                {
+                    a.Add<MyWebApiPlugin>();
+                }));
             client.Connect();
             Console.WriteLine("连接成功");
             return client;
+        }
+
+        /// <summary>
+        /// 此处可以做WebApi的请求之前和之后的拦截。
+        /// </summary>
+        class MyWebApiPlugin : PluginBase, IWebApiPlugin<WebApiClient>
+        {
+            async Task IWebApiPlugin<WebApiClient>.OnRequest(WebApiClient client, WebApiEventArgs e)
+            {
+                //添加一个header
+                e.Request.Headers.Add("Token","123123");
+                await e.InvokeNext();
+            }
+
+            async Task IWebApiPlugin<WebApiClient>.OnResponse(WebApiClient client, WebApiEventArgs e)
+            {
+                await e.InvokeNext();
+            }
         }
     }
 }
