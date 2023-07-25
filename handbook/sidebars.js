@@ -510,8 +510,8 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createtouchrpcclient",
-            label: "12.3 创建TouchRpc客户端"
+            id: "createdmtplient",
+            label: "12.3 创建Dmtp客户端"
           },
           {
             type: "doc",
