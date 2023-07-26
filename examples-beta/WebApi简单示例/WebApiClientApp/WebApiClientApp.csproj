@@ -4,11 +4,14 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="2.0.0-beta.16" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.16" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.16" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.16" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.16" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.16" />
+    <Compile Include="..\WebApiServer\WebApiProxy.cs" Link="WebApiProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="TouchSocket" Version="2.0.0-beta.17" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.17" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.17" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.17" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.17" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.17" />
   </ItemGroup>
 </Project>

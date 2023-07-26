@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -25,6 +26,7 @@ namespace WebApiServerApp
 
                        //下列代码，会生成客户端的调用代码。
                        var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
+                       File.WriteAllText("../../../WebApiProxy.cs", codeString);
                    });
 
                    a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。

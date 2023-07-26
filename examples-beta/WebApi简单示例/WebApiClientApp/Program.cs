@@ -34,8 +34,8 @@ namespace WebApiClientApp
                 var sum2 = client.InvokeT<int>("POST:/Server/TestPost", null, new MyClass() { A = 10, B = 20 });
                 Console.WriteLine($"Post调用成功，结果：{sum2}");
 
-                //var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 });
-                //Console.WriteLine($"代理调用成功，结果：{sum3}");
+                var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 });
+                Console.WriteLine($"代理调用成功，结果：{sum3}");
             }
 
 
@@ -71,9 +71,9 @@ namespace WebApiClientApp
         /// <summary>
         /// 此处可以做WebApi的请求之前和之后的拦截。
         /// </summary>
-        class MyWebApiPlugin : PluginBase, IWebApiPlugin<IRpcClient>
+        class MyWebApiPlugin : PluginBase, IWebApiPlugin<IWebApiClientBase>
         {
-            async Task IWebApiPlugin<IRpcClient>.OnRequest(IRpcClient client, WebApiEventArgs e)
+            async Task IWebApiPlugin<IWebApiClientBase>.OnRequest(IWebApiClientBase client, WebApiEventArgs e)
             {
                 if (e.IsHttpMessage)//发送的是HttpClient为主题
                 {
@@ -89,7 +89,7 @@ namespace WebApiClientApp
                 await e.InvokeNext();
             }
 
-            async Task IWebApiPlugin<IRpcClient>.OnResponse(IRpcClient client, WebApiEventArgs e)
+            async Task IWebApiPlugin<IWebApiClientBase>.OnResponse(IWebApiClientBase client, WebApiEventArgs e)
             {
                 await e.InvokeNext();
             }
