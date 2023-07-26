@@ -115,7 +115,7 @@ module.exports = {
     },
     {
       type: "doc",
-      id:"startguide",
+      id: "startguide",
       label: "04、入门指南",
     },
     {
@@ -514,9 +514,16 @@ module.exports = {
             label: "12.3 创建Dmtp客户端"
           },
           {
-            type: "doc",
-            id: "dmtpbase",
-            label: "12.4 基础功能"
+            type: "category",
+            label: "12.4 基础功能",
+            items:
+              [
+                {
+                  type: "doc",
+                  id: "dmtpbaseconnection",
+                  label: "a.连接及Id同步"
+                },
+              ]
           },
           {
             type: "category",
