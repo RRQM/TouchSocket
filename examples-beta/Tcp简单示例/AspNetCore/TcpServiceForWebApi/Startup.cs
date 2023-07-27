@@ -22,23 +22,14 @@ namespace TcpServiceForWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            try
-            {
-                //此处是企业版测试授权，在本示例中，除了GetWaitingClient功能，其余的开源包都完全支持。
-                Enterprise.ForTest();
-            }
-            catch
-            {
-            }
-
-            var tcpService = services.AddTcpService(config =>
+            var tcpService = services.AddTcpService(() =>
               {
-                  config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                  .UseAspNetCoreContainer(services)
-                  .ConfigurePlugins(a =>
-                  {
-                      a.Add<MyTcpPlugin>();//此插件就可以处理接收数据
-                  });
+                  return new TouchSocketConfig().SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                   .UseAspNetCoreContainer(services)
+                   .ConfigurePlugins(a =>
+                   {
+                       a.Add<MyTcpPlugin>();//此插件就可以处理接收数据
+                   });
               });
             services.AddControllers();
             services.AddSwaggerGen(c =>
