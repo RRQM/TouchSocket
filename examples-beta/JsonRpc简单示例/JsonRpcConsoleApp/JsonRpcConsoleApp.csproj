@@ -7,11 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="TouchSocket" Version="2.0.0-beta.18" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.18" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.18" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.18" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.18" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.18" />
+    <PackageReference Include="TouchSocket" Version="2.0.0-beta.19" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.19" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.19" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.19" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.19" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.19" />
   </ItemGroup>
 </Project>
