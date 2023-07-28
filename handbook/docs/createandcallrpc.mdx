@@ -18,20 +18,22 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
   - 支持自定义序列化。
   - 支持out，ref关键字。
 
-## 二、定义服务
+## 二、使用Rpc服务
 
-1. 在**被调用**端中新建一个类名为**MyRpcServer**。
+### 2.1 定义服务
+
+1. 在**服务器**端中新建一个类名为**MyRpcServer**。
 2. 继承于RpcServer类、或实现IRpcServer。亦或者将服务器声明为**瞬时生命**的服务，继承TransientRpcServer、或ITransientRpcServer。
-3. 在该类中写**公共方法**，并用**TouchRpc**属性标签标记。
+3. 在该类中写**公共方法**，并用**DmtpRpc**属性标签标记。
 
 ```csharp
 public class MyRpcServer : RpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [TouchRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
-    public bool Login(string account,string password)
+    [DmtpRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    public bool Login(string account, string password)
     {
-        if (account=="123"&&password=="abc")
+        if (account == "123" && password == "abc")
         {
             return true;
         }
@@ -40,13 +42,12 @@ public class MyRpcServer : RpcServer
     }
 }
 ```
-
 
 ```csharp
 public class MyRpcServer : TransientRpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
-    [TouchRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+    [DmtpRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
     public bool Login(string account,string password)
     {
         if (account=="123"&&password=="abc")
@@ -59,26 +60,29 @@ public class MyRpcServer : TransientRpcServer
 }
 ```
 
-:::tip 提示
+:::info 信息
 
-**瞬时生命**的服务，最大的特点就是，每个请求，都会创建一个新的服务类对象。然后可以通过**this.CallContext**直接访问当前的调用上下文。
+`ITransientRpcServer`和`IRpcServer`相比，意为瞬时生命服务，即实现`ITransientRpcServer`的服务，在每次被调用时，都会创建一个新的服务实例。其优点为可以直接通过`this.CallContext`属性获得调用上下文。其缺点则是每次调用时会多消耗一些性能。
 
 :::  
 
+### 2.2 启动Dmtp并注册Rpc服务
 
-## 三、启动Rpc服务器
-
-以下仅示例基于Tcp协议TouchRpc。其他协议的服务器请看[创建TouchRpc服务器](./createdmtpservice.mdx)
+以下仅示例基于Tcp协议Dmtp。其他协议的服务器请看[创建Dmtp服务器](./createdmtpservice.mdx)
 
 ```csharp
-var service =new  TcpTouchRpcService();
-TouchSocketConfig config=  new TouchSocketConfig()//配置
-       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-       .ConfigureRpcStore(a=> 
+var service = new TcpDmtpService();
+var config = new TouchSocketConfig()//配置
+       .SetListenIPHosts(7789)
+       .ConfigurePlugins(a =>
        {
-           a.RegisterServer<MyRpcServer>();//注册服务
+           a.UseDmtpRpc()
+           .ConfigureRpcStore(store =>
+           {
+               store.RegisterServer<MyRpcServer>();//注册服务
+           });
        })
-       .SetVerifyToken("TouchRpc");
+       .SetVerifyToken("Rpc");
 
 service.Setup(config)
     .Start();
@@ -86,30 +90,41 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-## 四、调用Rpc
+### 2.3 调用Rpc
 
-
-### 4.1 直接调用
+#### 2.3.1 直接调用
 
 直接调用，则是不使用**任何代理**，使用**字符串**和**参数**直接Call Rpc，使用比较简单。
 
-下列以TcpTouchRpcClient为例，其他客户端一模一样。
+下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./createdmtpclient.mdx)。
 
 ```csharp
-TcpTouchRpcClient client = new TcpTouchRpcClient();
+var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("TouchRpc"));
+    .ConfigurePlugins(a =>
+    {
+        a.UseDmtpRpc();
+    })
+    .SetVerifyToken("Rpc"));
 client.Connect();
 
-//直接调用时，第一个参数为调用键
-//第二个参数为调用配置参数，可设置调用超时时间，取消调用等功能。示例中使用的预设，实际上可以自行new InvokeOption();
-//后续参数为调用参数。
-//泛型为返回值类型。
-bool result = client.Invoke<bool>("Login", InvokeOption.WaitInvoke, 123, "abc");
+bool result =(bool) client.GetDmtpRpcActor().Invoke(typeof(bool),"Login", InvokeOption.WaitInvoke, "123", "abc");
 ```
 
-## 4.2、代理调用
+:::info 信息
+
+直接调用时，第一个参数为`返回值`类型，当没有返回值时则可以不用。第二个参数为`调用键`，调用键默认情况下为服务类的“`命名空间+类名+方法名`”的`全小写`。但在本案例中直接指定了以“Login”为调用键。第三个参数为`调用配置`参数，可设置调用超时时间，取消调用等功能。示例中使用的预设，实际上可以自行new InvokeOption()。后续参数为`调用参数`。
+
+:::  
+
+或者使用`InvokeT`的扩展方法调用。在有返回值时，可以直接泛型传参。
+
+```csharp
+bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitInvoke, "123", "abc");
+```
+
+#### 2.3.2 代理调用
 
 代理调用的便捷在于，客户端不用再知道哪些服务可调，也不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。
 
@@ -123,14 +138,22 @@ bool result = client.Invoke<bool>("Login", InvokeOption.WaitInvoke, 123, "abc");
 以上示例，会生成下列代理代码。
 
 :::  
+
 【生成的代理】
 
 ```csharp
+using System;
+using TouchSocket.Core;
+using TouchSocket.Sockets;
 using TouchSocket.Rpc;
+using TouchSocket.Dmtp.Rpc;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
 namespace RpcProxy
 {
-    public interface IMyRpcServer : IRemoteServer
+    public interface IMyRpcServer : TouchSocket.Rpc.IRemoteServer
     {
         ///<summary>
         ///登录
@@ -146,7 +169,6 @@ namespace RpcProxy
         /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
         /// <exception cref="System.Exception">其他异常</exception>
         Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default);
-
     }
     public class MyRpcServer : IMyRpcServer
     {
@@ -167,29 +189,21 @@ namespace RpcProxy
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            if (Client.TryCanInvoke?.Invoke(Client) == false)
-            {
-                throw new RpcException("Rpc无法执行。");
-            }
             object[] parameters = new object[] { account, password };
-            System.Boolean returnData = Client.Invoke<System.Boolean>("Login", invokeOption, parameters);
+            System.Boolean returnData = (System.Boolean)Client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
         ///登录
         ///</summary>
-        public Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default)
+        public async Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default)
         {
             if (Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            if (Client.TryCanInvoke?.Invoke(Client) == false)
-            {
-                throw new RpcException("Rpc无法执行。");
-            }
             object[] parameters = new object[] { account, password };
-            return Client.InvokeAsync<System.Boolean>("Login", invokeOption, parameters);
+            return (System.Boolean)await Client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
         }
     }
     public static class MyRpcServerExtensions
@@ -203,46 +217,46 @@ namespace RpcProxy
         public static System.Boolean Login<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpc无法执行。");
-            }
             object[] parameters = new object[] { account, password };
-            System.Boolean returnData = client.Invoke<System.Boolean>("Login", invokeOption, parameters);
+            System.Boolean returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
         ///登录
         ///</summary>
-        public static Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
+        public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            if (client.TryCanInvoke?.Invoke(client) == false)
-            {
-                throw new RpcException("Rpc无法执行。");
-            }
             object[] parameters = new object[] { account, password };
-            return client.InvokeAsync<System.Boolean>("Login", invokeOption, parameters);
+            return (System.Boolean)await client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
         }
     }
 }
-
 ```
 
 使用代理扩展直接调用。
 
 ```csharp
-TcpTouchRpcClient client = new TcpTouchRpcClient();
+var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("TouchRpc"));
+    .ConfigurePlugins(a =>
+    {
+        a.UseDmtpRpc();
+    })
+    .SetVerifyToken("Rpc"));
 client.Connect();
 
-bool result = client.Login(123, "abc");//Login是扩展方法。可能需要额外添加命名空间。
+bool result = client.GetDmtpRpcActor().Login("123", "abc", InvokeOption.WaitInvoke);//Login是生成的代理扩展方法。可能需要额外添加命名空间。
 ```
 
+:::tip 提示
 
-## 五、反向Rpc
+client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作。所以，如果为效率考虑的话，在连接稳定的前提下，可以保存好client.GetDmtpRpcActor()的返回值对象，直接执行Rpc操作。但是需要的注意的是，一旦重新连接，则该对象也需要重新获取。
+
+:::  
+
+## 三、反向Rpc
 
 一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器主动调用客户端，所以需要反向rpc。
 
