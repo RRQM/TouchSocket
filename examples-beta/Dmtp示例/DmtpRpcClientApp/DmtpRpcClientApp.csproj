@@ -4,6 +4,7 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="TouchSocket" Version="2.0.0-beta.19" />
     <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.19" />
