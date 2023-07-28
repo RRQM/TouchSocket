@@ -25,7 +25,6 @@ namespace DmtpClientApp
             //后续参数为调用参数。
             var result = this.client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitInvoke, this.textBox1.Text, this.textBox2.Text);
             MessageBox.Show(result.ToString());
-            this.client.SafeDispose();//client是长连接，可以复用，但在此处使用短连接。
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -34,14 +33,12 @@ namespace DmtpClientApp
 
             //代理调用时，基本和本地调用一样。只是会多一个调用配置参数。
             var result = myRpcServer.Login(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
-            MessageBox.Show(result.ToString());
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             //扩展调用时，首先要保证本地已有代理文件，然后调用和和本地调用一样。只是会多一个调用配置参数。
             var result = this.client.GetDmtpRpcActor().Login(this.textBox1.Text, this.textBox2.Text, InvokeOption.WaitInvoke);
-            MessageBox.Show(result.ToString());
         }
 
         private void Form1_Load(object sender, EventArgs e)
