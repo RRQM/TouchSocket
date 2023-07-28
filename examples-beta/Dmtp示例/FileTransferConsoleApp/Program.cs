@@ -299,6 +299,14 @@ namespace FileTransferConsoleApp
         {
             this.m_logger = logger;
         }
+
+        /// <summary>
+        /// 该方法，会在每个文件被请求（推送）结束时触发。传输不一定成功，具体信息需要从e.Result判断状态。
+        /// 其次，该方法也不一定会被执行，例如：在传输过程中，直接断网，则该方法将不会执行。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
         async Task IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
@@ -306,6 +314,17 @@ namespace FileTransferConsoleApp
             await e.InvokeNext();
         }
 
+
+        /// <summary>
+        /// 该方法，会在每个文件被请求（推送）时第一时间触发。
+        /// 当请求文件时，可以重新指定请求的文件路径，即对e.ResourcePath直接赋值。
+        /// 当推送文件时，可以重新指定保存文件路径，即对e.SavePath直接赋值。
+        /// 
+        /// 注意：当文件夹不存在时，需要手动创建。
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
         async Task IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
         {
             foreach (var item in e.Metadata.Keys)
