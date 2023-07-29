@@ -258,23 +258,23 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 
 ## 三、反向Rpc
 
-一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器主动调用客户端，所以需要反向rpc。
+一般的rpc服务都是客户端发起，服务器响应。但是有时候也需要服务器发起，客户端响应，所以需要反向rpc。
 
-### 5.1 定义、发布反向RPC服务
+### 3.1 定义、发布反向Rpc服务
 
-实际上，所有的Rpc客户端（**TcpTouchRpcClient**、**UdpTouchRpc**（不区分客户端）、**HttpTouchRpcClient**、**WSTouchRpcClient**）也实现了**IRpcParser**接口，这意味着反向RPC其实**也是RPC**，所以，所有操作一模一样。因为当客户端和服务器建立连接以后，就不再区分谁是客户端，谁是服务器了。只关心，**谁能提供服务，谁在调用服务**。
+实际上，Dmtp的全称（Duplex Message Transport Protocol双工消息传输协议），Duplex意为双工，则表明，当Dmtp客户端连接到服务以后，拥有与服务器同等的通讯权限与功能。所以客户端发布Rpc服务的步骤和服务器完全一致。即：当客户端和服务器建立连接以后，就不再区分谁是客户端，谁是服务器了。只关心，**谁能提供服务，谁在调用服务**。
 
 下列就以简单的示例下，由客户端声明服务，服务器调用服务。
 
 具体步骤：
 
-1. 在**客户端项目**中定义服务
-2. 用**TouchRpc**标记
+1. 在**客户端项目**中定义Rpc服务，名为`ReverseCallbackServer`。
+2. 用**DmtpRpc**标记需要公开的公共方法。
 
 ```csharp
 public class ReverseCallbackServer : RpcServer
 {
-    [TouchRpc]
+    [DmtpRpc(true)]//使用方法名作为调用键
     public string SayHello(string name)
     {
         return $"{name},hi";
@@ -282,100 +282,152 @@ public class ReverseCallbackServer : RpcServer
 }
 ```
 
-**【客户端发布服务】**
-发布服务，实际上是让TcpTouchRpcClient也拥有提供RPC的能力。
+**【客户端注册发布服务】**
 
 ```csharp
-TcpTouchRpcClient client = new TcpTouchRpcClient();
+var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
-        a.AddFileLogger();
     })
-    .ConfigureRpcStore(a =>
+    .ConfigurePlugins(a =>
     {
-        a.RegisterServer<ReverseCallbackServer>();
+        a.UseDmtpRpc()
+        .ConfigureRpcStore(store => 
+        {
+            store.RegisterServer<ReverseCallbackServer>();
+        });
     })
-    .SetVerifyToken("TouchRpc"));
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .SetVerifyToken("Rpc"));
 client.Connect();
+client.Logger.Info($"连接成功，Id={client.Id}");
 ```
 
-### 5.2 调用反向RPC
+### 3.2 调用反向Rpc
 
-服务器回调客户端，最终必须通过**服务器辅助类客户端**（ISocketClient的派生类），以TcpTouchRpcService为例，其辅助客户端为TcpTouchRpcSocketClient。
+服务器回调客户端，最终必须通过**服务器辅助类客户端**（`ISocketClient`的派生类），以`TcpDmtpService`为例，其辅助客户端为`TcpDmtpSocketClient`（或其接口：`ITcpDmtpSocketClient`）。
 
-因为，TcpTouchRpcSocketClient已实现IRpcClient接口，意味着，反向RPC也可以使用代理调用。所有用法和RPC一致。
+下列示例以TcpDmtpSocketClient为例，其余一致。
 
-下列示例以TcpTouchRpcSocketClient为例，其余一致。
+
+#### 3.2.1 通过服务器直接获取
+
+可以获取所有`TcpDmtpSocketClient`，进行广播式调用。
+
+```csharp
+foreach (var item in service.GetClients())
+{
+    item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
+}
+```
+
+也可以先筛选Id，然后再调用。
+
+```csharp
+var id = service.GetIds().FirstOrDefault(a => a.Equals("特定id"));
+if (service.TryGetSocketClient(id, out var socketClient))
+{
+    socketClient.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
+}
+```
+
+#### 3.2.2 通过调用上下文获取
+
+例如：下列声明在服务器端的Rpc服务MyRpcServer，使其使用瞬时服务（也可以通过函数注入服务）。
+
+上下文的Caller，即为服务器辅助类终端，进行强转即可。
+
+使用该方式可以实现，当客户端调用服务器的Add接口的时候，服务器又回调客户端的SayHello接口。
+
+```csharp
+class MyRpcServer : TransientRpcServer
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    public int Add(int a, int b)
+    {
+        if (this.CallContext.Caller is ITcpDmtpSocketClient socketClient)
+        {
+            socketClient.GetDmtpRpcActor().InvokeT<string>("SayHello",InvokeOption.WaitInvoke,"张三");
+        }
+        int sum = a + b;
+        return sum;
+    }
+}
+```
 
 :::tip 提示
 
-反向RPC也可以使用代理调用。所有用法和RPC一致。
+反向Rpc也可以使用代理调用。所有用法和常规Rpc一致。
 
 :::  
 
-### 5.2.1 通过服务器直接获取
 
-可以获取所有终端。
+## 四、客户端互Call Rpc
 
-```csharp
-foreach (var item in tcpTouchRpcService.GetClients())
-{
-    client.Logger.Info(item.Invoke<string>("ReverseRpcConsoleApp.ReverseCallbackServer.SayHello".ToLower(), InvokeOption.WaitInvoke, "张三"));
-}
-```
+除了Rpc，反向Rpc，DmtpRpc还支持**客户端**之间互Call Rpc。服务的定义与Rpc一样。
 
-也可以先筛选ID，然后再调用。
+### 4.1 互Call RPC
+
+客户端1调用客户端2的方法，需要知道对方的**Id**。然后和调用Rpc方法一致。然后使用下列函数调用即可。
 
 ```csharp
-string id = tcpTouchRpcService.GetIDs().FirstOrDefault(a => a.Equals("特定id"));
-if (tcpTouchRpcService.TryGetSocketClient(id, out var rpcSocketClient))
-{
-    rpcSocketClient.Invoke<string>("ReverseRpcConsoleApp.ReverseCallbackServer.SayHello".ToLower(), InvokeOption.WaitInvoke, "张三");
-}
+var client1 = GetTcpDmtpClient();
+var client2 = GetTcpDmtpClient();
+
+client1.GetDmtpRpcActor().InvokeT<bool>(client2.Id,"Notice",InvokeOption.WaitInvoke,"Hello");
 ```
 
-#### 5.2.2 通过调用上下文获取
+亦或者
 
-具体步骤
-
-1. 设置调用上下文
-2. 上下文的Caller，即为服务器辅助类终端，进行强转即可。
-
-
-## 六、客户端互Call RPC
-
-除了正向RPC，反向RPC，TouchRpc还支持**客户端**之间互Call RPC。服务的定义与Rpc一样。
-
-### 6.1 互Call RPC
-
-客户端A调用客户端B的方法，需要知道对方的**ID**。和**方法名**。然后使用下列函数调用即可。
+```csharp
+var targetRpcClient = client1.CreateTargetDmtpRpcActor(client2.Id);
+targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
+```
 
 :::tip 提示
 
-互Call RPC也支持调用上下文。
+使用上述的CreateTargetDmtpRpcActor()，获取到的targetRpcClient也能使用代理调用Rpc。
+
+:::  
+
+:::tip 提示
+
+互Call Rpc也支持调用上下文。
 
 :::  
 
 :::caution 服务器注意
 
-客户端互Call的时候，每个请求，都需要服务同意路由，才可以被转发。所以服务器需要做一些允许操作。
+客户端互Call的时候，每个请求，都需要服务支持路由，且同意路由，才可以被转发。所以服务器需要配置路由策略和添加允许转发的插件。
 
 :::  
 
+配置路由。
+
+```csharp {3}
+.ConfigureContainer(a =>
+{
+    a.AddDmtpRouteService();
+    a.AddConsoleLogger();
+})
+```
+
+同意转发路由数据。
 
 ```csharp
-internal class MyTouchRpcPlugin : TouchRpcPluginBase
+internal class MyTouchRpcPlugin : PluginBase,IDmtpRoutingPlugin
 {
-    protected override void OnRouting(ITouchRpc client, PackageRouterEventArgs e)
+    async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
     {
-        if (e.RouterType== RouteType.Rpc)
+        if (e.RouterType == RouteType.Rpc)
         {
             e.IsPermitOperation = true;
+            return;
         }
-        base.OnRouting(client, e);
+
+       await e.InvokeNext();
     }
 }
 ```
