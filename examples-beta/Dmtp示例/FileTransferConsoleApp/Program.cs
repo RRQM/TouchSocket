@@ -5,9 +5,19 @@ using TouchSocket.Sockets;
 
 namespace FileTransferConsoleApp
 {
-    
+
     internal class Program
     {
+        /// <summary>
+        /// 测试文件大小
+        /// </summary>
+        const long FileLength = 1024 * 1024 * 10L;
+
+        /// <summary>
+        /// 传输限速
+        /// </summary>
+        const int MaxSpeed = 1024 * 1024;
+
         private static void Main(string[] args)
         {
             var service = GetTcpDmtpService();
@@ -20,8 +30,8 @@ namespace FileTransferConsoleApp
             //详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
             //所以此处直接使用客户端Id。
 
-            ServicePullFileFromClient(service,client.Id);
-            ServicePushFileFromClient(service,client.Id);
+            ServicePullFileFromClient(service, client.Id);
+            ServicePushFileFromClient(service, client.Id);
             Console.ReadKey();
         }
 
@@ -44,7 +54,7 @@ namespace FileTransferConsoleApp
             {
                 using (var stream = File.OpenWrite(filePath))
                 {
-                    stream.SetLength(1024 * 1024 * 10);
+                    stream.SetLength(FileLength);
                 }
             }
 
@@ -62,7 +72,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(1024 * 1024);//设置最大限速为1Mb。
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -81,6 +91,9 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
             socketClient.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
         }
 
         /// <summary>
@@ -88,9 +101,9 @@ namespace FileTransferConsoleApp
         /// </summary>
         /// <param name="service">服务器</param>
         /// <param name="targetId">服务器要请求的客户端Id</param>
-        static void ServicePullFileFromClient(TcpDmtpService service,string targetId)
+        static void ServicePullFileFromClient(TcpDmtpService service, string targetId)
         {
-            if (!service.TryGetSocketClient(targetId,out var socketClient))
+            if (!service.TryGetSocketClient(targetId, out var socketClient))
             {
                 throw new Exception($"没有找到Id={targetId}的客户端");
             }
@@ -102,7 +115,7 @@ namespace FileTransferConsoleApp
             {
                 using (var stream = File.OpenWrite(filePath))
                 {
-                    stream.SetLength(1024 * 1024 * 10);
+                    stream.SetLength(FileLength);
                 }
             }
 
@@ -120,7 +133,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(1024 * 1024);//设置最大限速为1Mb。
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -139,6 +152,9 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info("从客户端下载文件结束");
             socketClient.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
         }
 
         /// <summary>
@@ -154,7 +170,7 @@ namespace FileTransferConsoleApp
             {
                 using (var stream = File.OpenWrite(filePath))
                 {
-                    stream.SetLength(1024 * 1024 * 10);
+                    stream.SetLength(FileLength);
                 }
             }
 
@@ -172,7 +188,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(1024 * 1024);//设置最大限速为1Mb。
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -191,6 +207,9 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info("从服务器下载文件结束");
             client.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
         }
 
         /// <summary>
@@ -206,7 +225,7 @@ namespace FileTransferConsoleApp
             {
                 using (var stream = File.OpenWrite(filePath))
                 {
-                    stream.SetLength(1024 * 1024 * 10);
+                    stream.SetLength(FileLength);
                 }
             }
 
@@ -224,7 +243,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(1024 * 1024);//设置最大限速为1Mb。
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -243,6 +262,9 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info("上传文件到服务器结束");
             client.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()
@@ -269,12 +291,13 @@ namespace FileTransferConsoleApp
 
         private static TcpDmtpService GetTcpDmtpService()
         {
-            var service = new TouchSocketConfig()//配置
+            var service = new TcpDmtpService();
+
+            var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-                       a.AddFileLogger();
                    })
                    .ConfigurePlugins(a =>
                    {
@@ -282,14 +305,16 @@ namespace FileTransferConsoleApp
                       .SetProtocolFlags(30);//当协议和其他功能插件有冲突的时候，可以考虑重新指定协议，但需要注意的是，必须和客户端一致
                        a.Add<MyPlugin>();
                    })
-                   .SetVerifyToken("File")//连接验证口令。
-                   .BuildWithTcpDmtpService();//此处build相当于new TcpDmtpService，然后Setup，然后Start。
+                   .SetVerifyToken("File");//连接验证口令。
+
+            service.Setup(config)
+                .Start();
             service.Logger.Info("服务器成功启动");
             return service;
         }
     }
 
-   
+
 
     internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin
     {

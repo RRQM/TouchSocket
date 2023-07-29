@@ -569,7 +569,7 @@ module.exports = {
               [
                 {
                   type: "doc",
-                  id: "transferfile",
+                  id: "dmtptransferfile",
                   label: "a.传输文件"
                 },
                 {
