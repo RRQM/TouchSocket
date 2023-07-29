@@ -278,8 +278,7 @@ namespace FileTransferConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpFileTransfer()//必须添加文件传输插件
-                       .SetProtocolFlags(30);//当协议和其他功能插件有冲突的时候，可以考虑重新指定协议，但需要注意的是，必须和服务器一致
+                       a.UseDmtpFileTransfer();//必须添加文件传输插件
 
                        a.Add<MyPlugin>();
                    })
@@ -301,8 +300,7 @@ namespace FileTransferConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpFileTransfer()//必须添加文件传输插件
-                      .SetProtocolFlags(30);//当协议和其他功能插件有冲突的时候，可以考虑重新指定协议，但需要注意的是，必须和客户端一致
+                       a.UseDmtpFileTransfer();//必须添加文件传输插件
                        a.Add<MyPlugin>();
                    })
                    .SetVerifyToken("File");//连接验证口令。
