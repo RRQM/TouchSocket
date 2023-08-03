@@ -11,7 +11,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 测试文件大小
         /// </summary>
-        const long FileLength = 1024 * 1024 * 10L;
+        const long FileLength = 1024 * 1024 * 10;
 
         /// <summary>
         /// 传输限速
@@ -26,9 +26,9 @@ namespace FileTransferConsoleApp
             ClientPullFileFromService(client);
             ClientPushFileFromService(client);
 
-            //此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SocketClient同步Id。
-            //详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
-            //所以此处直接使用客户端Id。
+            ////此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SocketClient同步Id。
+            ////详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
+            ////所以此处直接使用客户端Id。
 
             ServicePullFileFromClient(service, client.Id);
             ServicePushFileFromClient(service, client.Id);
@@ -302,7 +302,7 @@ namespace FileTransferConsoleApp
                    {
                        a.UseDmtpFileTransfer()//必须添加文件传输插件
                        //.SetRootPath("C:\\新建文件夹")//设置RootPath
-                       .SetMaxSmallFileLength(1024*1024);//设置小文件的最大限制长度
+                       .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
                        a.Add<MyPlugin>();
                    })
                    .SetVerifyToken("File");//连接验证口令。
