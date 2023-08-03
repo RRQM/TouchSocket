@@ -11,7 +11,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 测试文件大小
         /// </summary>
-        const long FileLength = 1024 * 1024 * 10;
+        const long FileLength = 1024 * 1024 * 10L;
 
         /// <summary>
         /// 传输限速
@@ -272,6 +272,7 @@ namespace FileTransferConsoleApp
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetVerifyToken("File")
+                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -294,6 +295,7 @@ namespace FileTransferConsoleApp
 
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                   .SetBufferLength(1024*1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
