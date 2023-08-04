@@ -5,7 +5,13 @@ title: 创建TcpService
 
 import Tag from "@site/src/components/Tag.js";
 
+## 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
 ## 一、说明
+
 TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SocketClient**类实例。而**SocketClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
 
 ## 二、特点
