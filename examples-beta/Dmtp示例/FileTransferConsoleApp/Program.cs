@@ -11,12 +11,12 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 测试文件大小
         /// </summary>
-        const long FileLength = 1024 * 1024 * 1024 * 5L;
+        const long FileLength = 1024 * 1024 * 10L;
 
         /// <summary>
         /// 传输限速
         /// </summary>
-        const int MaxSpeed = 1024 * 1024 * 1024;
+        const int MaxSpeed = 1024 * 1024;
 
         private static void Main(string[] args)
         {
