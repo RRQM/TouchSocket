@@ -3,6 +3,12 @@ id: filepool
 title: 文件流池
 ---
 
+## 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+
 ## 一、说明
 
 文件在读，或写的时候，一直都是独占状态。这个问题在不同进程中，似乎是合理的，但是如果在相同进程里，就会显得很呆。例如：我们在下载文件的时候，希望能同一时间多个读取同一个文件。且能有一个闭环的管理。那么，使用FilePool，就显得非常必要了。
