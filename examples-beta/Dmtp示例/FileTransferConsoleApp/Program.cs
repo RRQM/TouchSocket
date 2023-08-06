@@ -23,16 +23,148 @@ namespace FileTransferConsoleApp
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
-            ClientPullFileFromService(client);
-            ClientPushFileFromService(client);
+            var consoleAction = new ConsoleAction();
+            consoleAction.OnException += ConsoleAction_OnException;
+            consoleAction.Add("1", "测试客户端向服务器请求文件", () => { ClientPullFileFromService(client); });
+            consoleAction.Add("2", "测试客户端向服务器推送文件", () => { ClientPushFileFromService(client); });
 
-            ////此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SocketClient同步Id。
-            ////详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
-            ////所以此处直接使用客户端Id。
+            //此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SocketClient同步Id。
+            //详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
+            //所以此处直接使用客户端Id。
+            consoleAction.Add("3", "测试服务器向客户端请求文件", () => { ServicePullFileFromClient(service, client.Id); });
+            consoleAction.Add("4", "测试服务器向客户端推送文件", () => { ServicePushFileFromClient(service, client.Id); });
 
-            ServicePullFileFromClient(service, client.Id);
-            ServicePushFileFromClient(service, client.Id);
-            Console.ReadKey();
+            consoleAction.Add("5", "测试客户端向其他客户端请求文件", () => { ClientPullFileFromClient(); });
+            consoleAction.Add("6", "测试客户端向其他客户端推送文件", () => { ClientPushFileFromClient(); });
+
+            consoleAction.ShowAll();
+
+            while (true) 
+            {
+                if (!consoleAction.Run(Console.ReadLine()))
+                {
+                    consoleAction.ShowAll();
+                }
+            }
+        }
+
+        private static void ConsoleAction_OnException(Exception obj)
+        {
+            Console.WriteLine(obj.Message);
+        }
+
+        /// <summary>
+        /// 客户端向其他客户端推送文件。
+        /// </summary>
+        static void ClientPushFileFromClient()
+        {
+            using var client1 = GetTcpDmtpClient();
+            using var client2 = GetTcpDmtpClient();
+
+            ConsoleLogger.Default.Info("开始从其他客户端下载文件");
+            var filePath = "ClientPushFileFromClient.Test";
+            var saveFilePath = "SaveClientPushFileFromClient.Test";
+            if (!File.Exists(filePath))//创建测试文件
+            {
+                using (var stream = File.OpenWrite(filePath))
+                {
+                    stream.SetLength(FileLength);
+                }
+            }
+
+            var metadata = new Metadata();//传递到服务器的元数据
+            metadata.Add("1", "1");
+            metadata.Add("2", "2");
+
+            var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+            {
+                SavePath = saveFilePath,//客户端本地保存路径
+                ResourcePath = filePath,//请求文件的资源路径
+                Metadata = metadata,//传递到服务器的元数据
+                Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+                TryCount = 10,//当遇到失败时，尝试次数
+                FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
+            };
+
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+
+            //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
+            var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+            {
+                if (fileOperator.Result.ResultCode != ResultCode.Default)
+                {
+                    loop.Dispose();
+                }
+                client1.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+            });
+
+            loopAction.RunAsync();
+
+            //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
+            IResult result = client1.GetDmtpFileTransferActor().PushFile(client2.Id, fileOperator);
+
+            ConsoleLogger.Default.Info("从其他客户端下载文件结束");
+            client1.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
+        }
+
+        /// <summary>
+        /// 客户端从其他客户端下载文件。
+        /// </summary>
+        static void ClientPullFileFromClient()
+        {
+            using var client1 = GetTcpDmtpClient();
+            using var client2 = GetTcpDmtpClient();
+
+            ConsoleLogger.Default.Info("开始从其他客户端下载文件");
+            var filePath = "ClientPullFileFromClient.Test";
+            var saveFilePath = "SaveClientPullFileFromClient.Test";
+            if (!File.Exists(filePath))//创建测试文件
+            {
+                using (var stream = File.OpenWrite(filePath))
+                {
+                    stream.SetLength(FileLength);
+                }
+            }
+
+            var metadata = new Metadata();//传递到服务器的元数据
+            metadata.Add("1", "1");
+            metadata.Add("2", "2");
+
+            var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+            {
+                SavePath = saveFilePath,//客户端本地保存路径
+                ResourcePath = filePath,//请求文件的资源路径
+                Metadata = metadata,//传递到服务器的元数据
+                Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+                TryCount = 10,//当遇到失败时，尝试次数
+                FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
+            };
+
+            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+
+            //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
+            var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+            {
+                if (fileOperator.Result.ResultCode != ResultCode.Default)
+                {
+                    loop.Dispose();
+                }
+                client1.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+            });
+
+            loopAction.RunAsync();
+
+            //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
+            IResult result = client1.GetDmtpFileTransferActor().PullFile(client2.Id, fileOperator);
+
+            ConsoleLogger.Default.Info("从其他客户端下载文件结束");
+            client1.Logger.Info(result.ToString());
+
+            File.Delete(filePath);
+            File.Delete(saveFilePath);
         }
 
         /// <summary>
@@ -86,7 +218,7 @@ namespace FileTransferConsoleApp
 
             loopAction.RunAsync();
 
-            //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
+            //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
             IResult result = socketClient.GetDmtpFileTransferActor().PushFile(fileOperator);
 
             ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
@@ -299,6 +431,8 @@ namespace FileTransferConsoleApp
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
+
+                       a.AddDmtpRouteService();//添加路由策略
                    })
                    .ConfigurePlugins(a =>
                    {
@@ -318,7 +452,7 @@ namespace FileTransferConsoleApp
 
 
 
-    internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin
+    internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin, IDmtpRoutingPlugin
     {
         private readonly ILog m_logger;
 
@@ -337,10 +471,9 @@ namespace FileTransferConsoleApp
         async Task IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
-            m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
+            this.m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
             await e.InvokeNext();
         }
-
 
         /// <summary>
         /// 该方法，会在每个文件被请求（推送）时第一时间触发。
@@ -360,7 +493,15 @@ namespace FileTransferConsoleApp
             }
             e.IsPermitOperation = true;//每次传输都需要设置true，表示允许传输
             //有可能是上传，也有可能是下载
-            m_logger.Info($"请求传输文件，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
+            this.m_logger.Info($"请求传输文件，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
+            await e.InvokeNext();
+        }
+
+        async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+        {
+            e.IsPermitOperation = true;//允许路由
+            this.m_logger.Info($"路由类型：{e.RouterType}");
+
             await e.InvokeNext();
         }
     }

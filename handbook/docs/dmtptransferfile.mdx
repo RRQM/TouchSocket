@@ -5,7 +5,7 @@ title: 传输文件
 
 import Tag from "@site/src/components/Tag.js";
 
-## 定义
+### 定义
 
 命名空间：TouchSocket.Dmtp.FileTransfer <br/>
 程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)
@@ -49,6 +49,25 @@ import Tag from "@site/src/components/Tag.js";
 4. 传输完成或异常。
 5. 响应方**可能**触发**FileTransfered**。
 6. 请求端函数返回，`FileOperator`控制器状态改变。
+
+:::caution 注意
+
+响应方必须在订阅的**OnFileTransfering**函数中，同意每一个传输（e.IsPermitOperation = true），不然会直接拒绝请求。当然如果是有意拒绝，则可以通过e.Message返回拒绝的信息。
+
+:::  
+
+:::caution 注意
+
+响应方订阅的**OnFileTransfered**事件的触发并**不意味着完成传输**，具体结果还要通过**Result**属性值进行判断。
+
+:::  
+
+:::tip 提示
+
+`请求端`返回的**result**，在成功时，可以100%表明传输的文件已在磁盘上。如果想进一步确定文件的准确性，还需要自行再验证MD5或者其他Hash算法。
+
+:::  
+
 
 ### 4.2 传输控制器
 
@@ -113,152 +132,307 @@ string类型的键值对，用于和接收方交互数据。
 
 ## 五、 传输文件
 
-### 5.1 客户端向服务器请求文件
+传输文件功能，是`DmtpFileTransferFeature`功能插件基于Dmtp协议提供的功能。所以，`Dmtp服务器`和`客户端`都必须配置添加该功能插件。即调用`UseDmtpFileTransfer`。
 
-**【服务器代码】**
-
-```csharp
-var service = new TcpDmtpService();
-
-var config = new TouchSocketConfig()//配置
-       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-       .ConfigureContainer(a =>
-       {
-           a.AddConsoleLogger();
-       })
-       .ConfigurePlugins(a =>
-       {
-           a.UseDmtpFileTransfer();//必须添加文件传输插件
-           a.Add<MyPlugin>();
-       })
-       .SetVerifyToken("File");//连接验证口令。
-
-service.Setup(config)
-    .Start();
-service.Logger.Info("服务器成功启动");
+```csharp {3}
+config.ConfigurePlugins(a =>
+{
+    a.UseDmtpFileTransfer()//必须添加文件传输插件
+    //.SetRootPath("C:\\新建文件夹")//设置RootPath
+    .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
+    a.Add<MyPlugin>();
+})
 ```
 
+声明`MyPlugin`插件，是为了方便处理`OnDmtpFileTransfering`和`OnDmtpFileTransfered`函数。
+
 ```csharp
-class MyPlugin : TouchRpcPluginBase<TcpTouchRpcSocketClient>
+internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin
 {
-    protected override void OnFileTransfering(TcpTouchRpcSocketClient client, FileOperationEventArgs e)
-    {
-        e.IsPermitOperation = true;//运行操作
+    private readonly ILog m_logger;
 
+    public MyPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    /// <summary>
+    /// 该方法，会在每个文件被请求（推送）结束时触发。传输不一定成功，具体信息需要从e.Result判断状态。
+    /// 其次，该方法也不一定会被执行，例如：在传输过程中，直接断网，则该方法将不会执行。
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    async Task IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
+    {
+        //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
+        this.m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
+        await e.InvokeNext();
+    }
+
+
+    /// <summary>
+    /// 该方法，会在每个文件被请求（推送）时第一时间触发。
+    /// 当请求文件时，可以重新指定请求的文件路径，即对e.ResourcePath直接赋值。
+    /// 当推送文件时，可以重新指定保存文件路径，即对e.SavePath直接赋值。
+    /// 
+    /// 注意：当文件夹不存在时，需要手动创建。
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    async Task IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
+    {
+        foreach (var item in e.Metadata.Keys)
+        {
+            Console.WriteLine($"Key={item},Value={e.Metadata[item]}");
+        }
+        e.IsPermitOperation = true;//每次传输都需要设置true，表示允许传输
         //有可能是上传，也有可能是下载
-        client.Logger.Info($"有客户端请求传输文件，ID={client.ID}，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
-    }
-
-    protected override void OnFileTransfered(TcpTouchRpcSocketClient client, FileTransferStatusEventArgs e)
-    {
-        //传输结束，但是不一定成功，需要从e.Result判断状态。
-        client.Logger.Info($"客户端传输文件结束，ID={client.ID}，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
-    }
-
-    protected override void OnHandshaked(TcpTouchRpcSocketClient client, VerifyOptionEventArgs e)
-    {
-        client.Logger.Info($"有客户端成功验证，ID={client.ID}");
-    }
-
-    protected override void OnDisconnected(TcpTouchRpcSocketClient client, ClientDisconnectedEventArgs e)
-    {
-        client.Logger.Info($"有客户端断开，ID={client.ID}");
-        base.OnDisconnected(client, e);
+        this.m_logger.Info($"请求传输文件，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
+        await e.InvokeNext();
     }
 }
 ```
 
-:::caution 注意
+### 5.1 客户端向服务器请求文件
 
-响应方必须在订阅的**OnFileTransfering**函数中，同意每一个传输（e.IsPermitOperation = true），不然请求方会直接失败。
 
-:::  
-
-:::caution 注意
-
-响应方订阅的**FileTransfered**事件的触发并**不意味着完成传输**，具体结果还要通过**Result**属性值进行判断。 同时当**Result**为成功时，也有极小的概率失败。总之响应端无法100%得知传输的最终结果。
-
-:::  
-
-【客户端】
+【客户端代码】
 
 ```csharp
-TcpTouchRpcClient client = new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("File")
-    .UsePlugin()
-    .ConfigureContainer(a => 
+var filePath = "ClientPullFileFromService.Test";
+var saveFilePath = "SaveClientPullFileFromService.Test";
+if (!File.Exists(filePath))//创建服务器端的测试文件
+{
+    using (var stream = File.OpenWrite(filePath))
     {
-        a.AddConsoleLogger();
-        a.AddFileLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.UseTouchRpcHeartbeat<TcpTouchRpcClient>();
-    })
-    .BuildWithTcpTouchRpcClient();
+        stream.SetLength(1024*1024*10);
+    }
+}
 
-client.Logger.Info("连接成功");
-
-Metadata metadata = new Metadata();//传递到服务器的元数据
+var metadata = new Metadata();//传递到服务器的元数据
 metadata.Add("1", "1");
 metadata.Add("2", "2");
 
-FileOperator fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
-    Flags = TransferFlags.BreakpointResume,//尝试断点续传，使用断点续传时，会验证MD5值
-    SavePath = $@"Windows.iso",//保存路径
-    ResourcePath = @"D:\System\Windows.iso",//请求路径
-    Metadata= metadata//传递到服务器的元数据
+    SavePath = saveFilePath,//客户端本地保存路径
+    ResourcePath = filePath,//请求文件的资源路径
+    Metadata = metadata,//传递到服务器的元数据
+    Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+    TryCount = 10,//当遇到失败时，尝试次数
+    FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
 };
 
-fileOperator.Timeout = TimeSpan.FromSeconds(60);//当传输大文件，且启用断点续传时，服务器可能会先计算MD5，而延时响应，所以需要设置超时时间。
+fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
 
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
-LoopAction loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
 {
     if (fileOperator.Result.ResultCode != ResultCode.Default)
     {
         loop.Dispose();
     }
-
     client.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
 });
 
 loopAction.RunAsync();
 
-
-
 //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = client.PullFile(fileOperator);
-
-client.Logger.Info(result.ToString());
+IResult result = client.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
-:::tip 提示
-
-请求端返回的**result**，在成功时，可以100%表明传输的文件已在磁盘上。如果想进一步确定文件的准确性，还需要自行再验证MD5或者其他Hash算法。
-
-:::  
-
-<a name="qZvBF"></a>
-
-## 六、客户端之间传输文件
-
-该功能支持客户端之间传输文件，使用方法基本一致，只需要额外增加目标Id即可。
-
-此外，**服务器**也需要同意路由。需要注意的是，使用该方式文件传输时，还会发起通道路由，所以，需要允许的路由应该还额外增加**通道类型**。
+### 5.2 客户端向服务器推送文件
 
 ```csharp
-internal class MyTouchRpcPlugin : TouchRpcPluginBase
+var filePath = "ClientPushFileFromService.Test";
+var saveFilePath = "SaveClientPushFileFromService.Test";
+if (!File.Exists(filePath))//创建客户端的测试文件
 {
-    protected override void OnRouting(ITouchRpc client, PackageRouterEventArgs e)
+    using (var stream = File.OpenWrite(filePath))
     {
-        if (e.RouterType== RouteType.PushFile||e.RouterType== RouteType.PullFile||e.RouterType== RouteType.CreateChannel)
-        {
-            e.IsPermitOperation = true;
-        }
-        base.OnRouting(client, e);
+        stream.SetLength(1024*1024*10);
+    }
+}
+
+var metadata = new Metadata();//传递到服务器的元数据
+metadata.Add("1", "1");
+metadata.Add("2", "2");
+
+var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+{
+    SavePath = saveFilePath,//服务器本地保存路径
+    ResourcePath = filePath,//客户端本地即将上传文件的资源路径
+    Metadata = metadata,//传递到服务器的元数据
+    Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+    TryCount = 10,//当遇到失败时，尝试次数
+    FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
+};
+
+fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+
+//此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
+var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+{
+    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    {
+        loop.Dispose();
+    }
+    client.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+});
+
+loopAction.RunAsync();
+
+//此方法会阻塞，直到传输结束，也可以使用PushFileAsync
+IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
+```
+
+### 5.3 服务器向客户端请求文件
+
+服务器主动向客户端请求文件，必须通过Id，找到其`SocketClient`的派生类。
+
+```csharp
+string targetId="targetId";
+if (!service.TryGetSocketClient(targetId, out var socketClient))
+{
+    throw new Exception($"没有找到Id={targetId}的客户端");
+}
+
+var filePath = "ServicePullFileFromClient.Test";
+var saveFilePath = "SaveServicePullFileFromClient.Test";
+if (!File.Exists(filePath))//创建客户端的测试文件
+{
+    using (var stream = File.OpenWrite(filePath))
+    {
+        stream.SetLength(1024*1024*10);
+    }
+}
+
+var metadata = new Metadata();//传递到客户端的元数据
+metadata.Add("1", "1");
+metadata.Add("2", "2");
+
+var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+{
+    SavePath = saveFilePath,//服务器本地保存路径
+    ResourcePath = filePath,//请求客户端文件的资源路径
+    Metadata = metadata,//传递到客户端的元数据
+    Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+    TryCount = 10,//当遇到失败时，尝试次数
+    FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
+};
+
+fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+
+//此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
+var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+{
+    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    {
+        loop.Dispose();
+    }
+    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+});
+
+loopAction.RunAsync();
+
+//此方法会阻塞，直到传输结束，也可以使用PullFileAsync
+IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+```
+
+### 5.4 服务器向客户端推送文件
+
+服务器主动向客户端推送文件，必须通过Id，找到其`SocketClient`的派生类。
+
+```csharp
+if (!service.TryGetSocketClient(targetId, out var socketClient))
+{
+    throw new Exception($"没有找到Id={targetId}的客户端");
+}
+
+var filePath = "ServicePushFileFromClient.Test";
+var saveFilePath = "SaveServicePushFileFromClient.Test";
+if (!File.Exists(filePath))//创建服务器的测试文件
+{
+    using (var stream = File.OpenWrite(filePath))
+    {
+        stream.SetLength(1024*1024*10);
+    }
+}
+
+var metadata = new Metadata();//传递到客户端的元数据
+metadata.Add("1", "1");
+metadata.Add("2", "2");
+
+var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+{
+    SavePath = saveFilePath,//客户端本地保存路径
+    ResourcePath = filePath,//服务器文件的资源路径
+    Metadata = metadata,//传递到客户端的元数据
+    Timeout = TimeSpan.FromSeconds(60),//传输超时时长
+    TryCount = 10,//当遇到失败时，尝试次数
+    FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
+};
+
+fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+
+//此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
+var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
+{
+    if (fileOperator.Result.ResultCode != ResultCode.Default)
+    {
+        loop.Dispose();
+    }
+    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+});
+
+loopAction.RunAsync();
+
+//此方法会阻塞，直到传输结束，也可以使用PushFileAsync
+IResult result = socketClient.GetDmtpFileTransferActor().PushFile(fileOperator);
+```
+
+### 5.5 客户端之间传输文件
+
+该功能支持客户端之间传输文件，使用方法基本一致，只需要在请求`PullFile`或者`PushFile`时额外增加目标Id即可。
+
+此外，**响应中介（一般是服务器）**需要添加`路由策略`和`同意路由`。
+
+【添加路由策略】
+```csharp{3}
+.ConfigureContainer(a =>
+{
+    a.AddDmtpRouteService();//添加路由策略
+})
+```
+
+【同意路由】
+
+```csharp
+internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
+{
+    private readonly ILog m_logger;
+
+    public MyPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+    {
+        e.IsPermitOperation = true;//允许路由
+        this.m_logger.Info($"路由类型：{e.RouterType}");
+
+        await e.InvokeNext();
     }
 }
 ```
+
+:::caution 注意
+
+如果不添加`DmtpRouteService`策略，将不会转发任何路由请求，即意味着请求会被直接响应。
+
+:::  
+
+其他`PullFile`或者`PushFile`操作均和上述一致。
