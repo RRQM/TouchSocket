@@ -1,4 +1,5 @@
-﻿using TouchSocket.Core;
+﻿using System.ComponentModel;
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
@@ -24,6 +25,10 @@ namespace ConsoleApp2
                        .ConfigureRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
+#if DEBUG
+                           File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
+                           ConsoleLogger.Default.Info("成功生成代理");
+#endif
                        });
 
                        a.Add<MyTouchRpcPlugin>();
@@ -58,12 +63,46 @@ namespace ConsoleApp2
             {
                 this.m_logger = logger;
             }
+
+            /// <summary>
+            /// 将两个数相加
+            /// </summary>
+            /// <param name="a"></param>
+            /// <param name="b"></param>
+            /// <returns></returns>
             [DmtpRpc(true)]//使用函数名直接调用
+            [Description("将两个数相加")]//其作用是生成代理时，作为注释。
             public int Add(int a, int b)
             {
                 this.m_logger.Info("调用Add");
                 int sum = a + b;
                 return sum;
+            }
+
+            /// <summary>
+            /// 测试客户端请求，服务器响应大量流数据
+            /// </summary>
+            /// <param name="callContext"></param>
+            /// <param name="channelID"></param>
+            [Description("测试客户端请求，服务器响应大量流数据")]
+            [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+            public int RpcPullChannel(ICallContext callContext, int channelID)
+            {
+                var size = 0;
+                var package = 1024 * 64;
+                if (callContext.Caller is TcpDmtpSocketClient socketClient)
+                {
+                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
+                    {
+                        for (var i = 0; i < 10; i++)
+                        {
+                            size += package;
+                            channel.Write(new byte[package]);
+                        }
+                        channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+                    }
+                }
+                return size;
             }
         }
 

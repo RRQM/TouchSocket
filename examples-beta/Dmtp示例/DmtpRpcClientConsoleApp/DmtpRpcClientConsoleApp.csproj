@@ -8,6 +8,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\DmtpRpcServerConsoleApp\RpcProxy.cs" Link="RpcProxy.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.126" />
 	</ItemGroup>
 </Project>

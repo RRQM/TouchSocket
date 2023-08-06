@@ -526,63 +526,14 @@ module.exports = {
               ]
           },
           {
-            type: "category",
+            type: "doc",
             label: "12.5 Rpc功能",
-            items:
-              [
-                {
-                  type: "doc",
-                  id: "createandcallrpc",
-                  label: "a.创建、调用rpc服务"
-                },
-                {
-                  type: "doc",
-                  id: "rpcstream",
-                  label: "b.Rpc大数据流式传输"
-                },
-                {
-                  type: "doc",
-                  id: "rpcoption",
-                  label: "c.调用配置"
-                },
-                {
-                  type: "doc",
-                  id: "serializationselector",
-                  label: "d.序列化选择器"
-                },
-                {
-                  type: "doc",
-                  id: "rpcallcontext",
-                  label: "e.调用上下文"
-                },
-                {
-                  type: "doc",
-                  id: "rpcactionfilter",
-                  label: "f.Rpc服务AOP"
-                }
-              ]
+            id: "dmtprpc"
           },
           {
-            type: "category",
+            type: "doc",
             label: "12.6 文件传输",
-            items:
-              [
-                {
-                  type: "doc",
-                  id: "dmtptransferfile",
-                  label: "a.传输文件"
-                },
-                {
-                  type: "doc",
-                  id: "smallfiletransfer",
-                  label: "c.小文件传输"
-                },
-                {
-                  type: "doc",
-                  id: "multithreadingfiletransfer",
-                  label: "c.多线程文件传输"
-                }
-              ]
+            id:"dmtptransferfile"
           },
           {
             type: "doc",
