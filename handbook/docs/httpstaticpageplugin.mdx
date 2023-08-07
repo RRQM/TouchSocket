@@ -16,14 +16,15 @@ title: 静态页面插件
 var service = new HttpService();
 
 var config = new TouchSocketConfig();
-config.UsePlugin()
-    .SetReceiveType(ReceiveType.Auto)
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
     .ConfigurePlugins(a =>
     {
-        a.Add<HttpStaticPagePlugin>().AddFolder("../../../../../api");//添加静态页面文件夹
+        a.UseHttpStaticPage()//添加静态页面文件夹
+        .AddFolder("../../../../../api");
+
     });
 
-service.Setup(config).Start();
+service.Setup(config)
+.Start();
 Console.WriteLine("Http服务器已启动");
 ```

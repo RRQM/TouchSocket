@@ -1,5 +1,5 @@
 ---
-id: createhttpservice
+id: httpservice
 title: 创建HttpService
 ---
 
@@ -43,37 +43,41 @@ title: 创建HttpService
 
 |  插件方法| 功能 |
 | --- | --- |
-| OnDelete | 当收到Delete请求时 |
-| OnGet | 当收到OnGet请求时 |
-| OnPost | 当收到OnPost请求时 |
-| OnPut | 当收到OnPut请求时 |
-| OnReceivedOtherHttpRequest | 当收到OnReceivedOtherHttpRequest请求时 |
+| IHttpDeletePlugin | 当收到Delete请求时 |
+| IHttpGetPlugin | 当收到OnGet请求时 |
+| IHttpPostPlugin | 当收到OnPost请求时 |
+| IHttpPutPlugin | 当收到OnPut请求时 |
+| IHttpPlugin | 当收到所有Http请求时。注意：此插件的执行在`IHttpGetPlugin`，`IHttpPostPlugin`等后面触发|
 
 
-## 六、创建HttpService
+## 六、使用HttpService
 
 HttpService的创建，基本和TcpService一致，也可以通过继承实现，下列仅演示最简单实现。
 
 HttpService的相关事务，会通过**插件**触发。
 
+### 6.1 创建HttpService
+
 ```csharp
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
-    .UsePlugin()
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .ConfigurePlugins(a =>
     {
-        a.Add<MyHttpPlug>();
+        //以下即是插件
+        a.Add<MyHttpPlug1>();
+        a.Add<MyHttpPlug2>();
+        a.Add<MyHttpPlug3>();
+        a.Add<MyHttpPlug4>();
 
         //default插件应该最后添加，其作用是
         //1、为找不到的路由返回404
         //2、处理header为Option的探视跨域请求。
         a.UseDefaultHttpServicePlugin();
-
     }))
     .Start();
 ```
@@ -84,34 +88,69 @@ DefaultHttpServicePlugin插件最好添加在插件中，如果没有添加的�
 
 :::  
 
-在插件中，通过**重写**（或实现）的方式，进入**OnGet**、**OnPost**、**OnDelete**、**OnPut**等函数，即可处理对应请求。
+### 6.2 使用插件处理Get请求
 
 ```csharp
-/// <summary>
-/// 支持GET、Post、Put，Delete，或者其他
-/// </summary>
-internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
+internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 {
-    protected override void OnGet(HttpSocketClient client, HttpContextEventArgs e)
+    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/success"))
         {
             //直接响应文字
             e.Context.Response.FromText("Success").Answer();//直接回应
             Console.WriteLine("处理完毕");
-            e.Handled = true;
+            return;
         }
-        else if (e.Context.Request.UrlEquals("/file"))
+
+        //无法处理，调用下一个插件
+        await e.InvokeNext();
+    }
+}
+```
+
+### 6.3 使用插件处理Get文件请求
+
+```csharp
+internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+{
+    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    {
+        if (e.Context.Request.UrlEquals("/file"))
         {
-            //直接回应文件。
-            e.Context.Response
-                .SetStatus()//必须要有状态
-                .FromFile(@"D:\System\Windows.iso", e.Context.Request);
+            try
+            {
+                //直接回应文件。
+                e.Context.Response
+                    .SetStatus()//必须要有状态
+                    .FromFile(@"D:\System\Windows.iso", e.Context.Request);
+            }
+            catch (Exception ex)
+            {
+                e.Context.Response.SetStatus(403)
+                    .FromText(ex.Message)
+                    .Answer();
+            }
+
+            return;
         }
-        else if (e.Context.Request.UrlEquals("/html"))
+
+        await e.InvokeNext();
+    }
+}
+```
+
+### 6.4 使用插件处理Get页面请求
+
+```csharp
+internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+{
+    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    {
+        if (e.Context.Request.UrlEquals("/html"))
         {
             //回应html
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("<!DOCTYPE html>");
             stringBuilder.AppendLine("<html>");
             stringBuilder.AppendLine("<head>");
@@ -122,7 +161,7 @@ internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
             stringBuilder.AppendLine("<div id=\"kuang\" style=\"width: 50%;height: 85%;left: 25%;top:15%;position: absolute;\">");
             stringBuilder.AppendLine("<a id=\"MM\"  style=\"font-size: 30px;font-family: 微软雅黑;width: 100%;\">王二麻子</a>");
             stringBuilder.AppendLine("<input type=\"text\" id=\"NN\" value=\"\" style=\"font-size: 30px;width:100%;position: relative;top: 30px;\"/>");
-            stringBuilder.AppendLine("<input type=\"button\" id=\"XX\" value=\"我好\" style=\"font-size: 30px;width: 100%;position: relative;top: 60px;\" onclick=\"javascrip
+            stringBuilder.AppendLine("<input type=\"button\" id=\"XX\" value=\"我好\" style=\"font-size: 30px;width: 100%;position: relative;top: 60px;\" onclick=\"javascript:jump()\" />");
             stringBuilder.AppendLine("</div>");
             stringBuilder.AppendLine("</body>");
             stringBuilder.AppendLine("</html>");
@@ -132,25 +171,34 @@ internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
                      .SetContentTypeByExtension(".html")
                      .SetContent(stringBuilder.ToString());
             e.Context.Response.Answer();
+            return;
         }
-        base.OnGet(client, e);
-    }
 
-    protected override void OnPost(HttpSocketClient client, HttpContextEventArgs e)
+        await e.InvokeNext();
+    }
+}
+```
+
+### 6.5 使用插件处理Post文件请求
+
+```csharp
+internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<IHttpSocketClient>
+{
+    async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/uploadfile"))
         {
             try
             {
-                if (e.Context.Request.TryGetContent(out byte[] bodys))//一次性获取请求体
+                if (e.Context.Request.TryGetContent(out var bodys))//一次性获取请求体
                 {
                     return;
                 }
 
                 while (true)//当数据太大时，可持续读取
                 {
-                    byte[] buffer = new byte[1024 * 64];
-                    int r = e.Context.Request.Read(buffer, 0, buffer.Length);
+                    var buffer = new byte[1024 * 64];
+                    var r = e.Context.Request.Read(buffer, 0, buffer.Length);
                     if (r == 0)
                     {
                         return;
@@ -161,20 +209,21 @@ internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
 
                 //下面逻辑是接收小文件。
 
-                if (e.Context.Request.ContentLen > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
+                if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                 {
                     e.Context.Response
-                        .SetStatus("403", "数据过大")
+                        .SetStatus(403, "数据过大")
                         .Answer();
                     return;
                 }
+
                 //此操作会先接收全部数据，然后再分割数据。
                 //所以上传文件不宜过大，不然会内存溢出。
                 var multifileCollection = e.Context.Request.GetMultifileCollection();
 
                 foreach (var item in multifileCollection)
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    var stringBuilder = new StringBuilder();
                     stringBuilder.Append($"文件名={item.FileName}\t");
                     stringBuilder.Append($"数据长度={item.Length}");
                     client.Logger.Info(stringBuilder.ToString());
@@ -190,10 +239,18 @@ internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
                 client.Logger.Exception(ex);
             }
         }
-        base.OnPost(client, e);
+
+        await e.InvokeNext();
     }
 }
 ```
+
+:::tip 提示
+
+该操作支持大型文件，也支持断点续传、支持迅雷加速等。
+
+:::  
+
 
 ## 七、创建加密Ssl的HttpsService
 
@@ -202,7 +259,7 @@ Https服务器，和http服务器几乎一样，只不过增加了一个Ssl的�
 ```csharp
 .SetServiceSslOption(new ServiceSslOption() 
 { 
-    Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), 
+    Certificate = new X509Certificate2("Socket.pfx", "Socket"), 
     SslProtocols = SslProtocols.Tls12 
-}))
+})
 ```

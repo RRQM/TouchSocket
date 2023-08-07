@@ -17,7 +17,7 @@ namespace ConsoleApp
 
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .SetListenIPHosts(7789)
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
@@ -29,14 +29,18 @@ namespace ConsoleApp
                     a.Add<MyHttpPlug3>();
                     a.Add<MyHttpPlug4>();
 
+                    a.UseHttpStaticPage()
+                    .AddFolder("api");//添加静态页面文件夹
+                    
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
                     //2、处理header为Option的探视跨域请求。
                     a.UseDefaultHttpServicePlugin();
                 }))
                 .Start();
-
+            
             Console.WriteLine("Http服务器已启动");
+            Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");
             Console.WriteLine("访问 http://127.0.0.1:7789/success 返回响应");
             Console.WriteLine("访问 http://127.0.0.1:7789/file 响应文件");
             Console.WriteLine("访问 http://127.0.0.1:7789/html 返回html");
@@ -45,9 +49,9 @@ namespace ConsoleApp
         }
     }
 
-    internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<HttpSocketClient>
+    internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<IHttpSocketClient>
     {
-        async Task IHttpPostPlugin<HttpSocketClient>.OnHttpPost(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/uploadfile"))
             {
@@ -107,9 +111,9 @@ namespace ConsoleApp
         }
     }
 
-    internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/html"))
             {
@@ -142,9 +146,9 @@ namespace ConsoleApp
         }
     }
 
-    internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/file"))
             {
@@ -169,12 +173,9 @@ namespace ConsoleApp
         }
     }
 
-    /// <summary>
-    /// 支持GET、Post、Put，Delete，或者其他
-    /// </summary>
-    internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<HttpSocketClient>
+    internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<HttpSocketClient>.OnHttpGet(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/success"))
             {
@@ -184,6 +185,7 @@ namespace ConsoleApp
                 return;
             }
 
+            //无法处理，调用下一个插件
             await e.InvokeNext();
         }
     }
