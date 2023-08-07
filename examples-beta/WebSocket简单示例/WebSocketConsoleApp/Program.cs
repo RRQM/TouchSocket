@@ -83,7 +83,7 @@ namespace WebSocketConsoleApp
         {
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .SetListenIPHosts(7789)
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
@@ -216,6 +216,19 @@ namespace WebSocketConsoleApp
                         break;
                 }
 
+                await e.InvokeNext();
+            }
+        }
+
+        class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+        {
+            async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+            {
+                if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
+                {
+                    bool result = client.SwitchProtocolToWebSocket(e.Context);
+                    return;
+                }
                 await e.InvokeNext();
             }
         }

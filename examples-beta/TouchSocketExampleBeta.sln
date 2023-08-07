@@ -192,6 +192,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcServerConsoleApp", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientConsoleApp", "Dmtp示例\DmtpRpcClientConsoleApp\DmtpRpcClientConsoleApp.csproj", "{473ED8CE-CD62-431B-BCB9-AD23B370EB06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientConsoleApp", "Http简单示例\ClientConsoleApp\ClientConsoleApp.csproj", "{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -410,6 +412,10 @@ Global
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -489,6 +495,7 @@ Global
 		{56D66384-8CA7-4EFC-9F41-F9EE7E445578} = {63EE2247-0A5B-47F9-B8AA-AED5BC8FC873}
 		{31461239-7C3E-4C19-A558-BE59F9384572} = {56D66384-8CA7-4EFC-9F41-F9EE7E445578}
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06} = {56D66384-8CA7-4EFC-9F41-F9EE7E445578}
+		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

@@ -6,11 +6,60 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="2.0.0-beta.126" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.126" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.126" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.126" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.126" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.126" />
+    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.127" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="api\favicon-16x16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\favicon-32x32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\oauth2-redirect.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\openapi.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-bundle.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-bundle.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-es-bundle-core.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-es-bundle-core.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-es-bundle.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-es-bundle.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-standalone-preset.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui-standalone-preset.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui.css.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="api\swagger-ui.js.map">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 ---
-id: createhttpclient
+id: httpclient
 title: 创建HttpClient
 ---
 
@@ -8,33 +8,37 @@ title: 创建HttpClient
 命名空间：TouchSocket.Http <br/>
 程序集：[TouchSocket.Http.dll](https://www.nuget.org/packages/TouchSocket.Http)
 
-## 说明
+## 一、说明
 
-HttpClient是Http客户端类。主要用于请求Http报文。
+HttpClient是Http客户端类。主要用于请求Http报文。与.net的HttpClient不同的是，此处的HttpClient，是基于单个连接的客户端，且有明显的连接、断开连接等动作。
 
 
-## 可配置项
+## 二、可配置项
 
 继承TcpClient
 
 <a name="mMhq1"></a>
 
-## 支持插件接口
+## 三、支持插件接口
 
 支持**ITcpPlugin**接口。
 
 <a name="LAsiE"></a>
 
-## 创建HttpClient
+## 四、使用HttpClient
 
+### 4.1 创建HttpClient
 ```csharp
 HttpClient client = new HttpClient();
 
 client.Setup(new TouchSocketConfig()
-    .UsePlugin()
     .SetRemoteIPHost(new IPHost("http://localhost:7219")))
     .Connect();//先做连接
+```
 
+### 4.2 常规请求
+
+```csharp
 HttpRequest request = new HttpRequest();
 request
     .InitHeaders()
@@ -46,9 +50,33 @@ var respose = client.Request(request, timeout: 1000*10);
 Console.WriteLine(respose.GetBody());
 ```
 
+### 4.3 请求流数据
+
+```csharp
+var request = new HttpRequest();
+request.InitHeaders()
+    .SetUrl("/WeatherForecast")
+    .SetHost(client.RemoteIPHost.Host)
+    .AsGet();
+
+var respose = client.Request(request, timeout: 1000 * 10);
+
+var buffer = new byte[1024 * 64];
+while (true)
+{
+    int r = respose.Read(buffer, 0, buffer.Length);
+    if (r==0)
+    {
+        break;
+    }
+    Console.WriteLine(r);
+}
+Console.WriteLine(respose.GetBody());
+```
+
 <a name="TixmX"></a>
 
-## 创建HttpsClient
+## 五、创建HttpsClient
 
 如果需要连接到Https服务器。则必须手动配置Ssl。示例如下：
 
@@ -67,17 +95,5 @@ SetClientSslOption(new ClientSslOption() { TargetHost = "localhost", SslProtocol
     SslProtocols = SslProtocols.Tls12,
     TargetHost = "127.0.0.1",
     CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-}));
+});
 ```
-
-<a name="mhUPx"></a>
-
-## 主要方法简介
-
-| **方法名** | **功能简介** |
-| --- | --- |
-| Request | 请求Http数据，并等待返回 |
-
-<a name="loqXr"></a>
-
-##

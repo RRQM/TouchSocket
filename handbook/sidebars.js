@@ -404,24 +404,19 @@ module.exports = {
         [
           {
             type: "doc",
-            id: "createhttpservice",
+            id: "httpservice",
             label: "9.1 创建HttpService"
           },
           {
             type: "doc",
-            id: "createhttpclient",
+            id: "httpclient",
             label: "9.2 创建HttpClient"
           },
           {
             type: "doc",
             id: "httpstaticpageplugin",
             label: "9.3 静态页面插件"
-          },
-          {
-            type: "doc",
-            id: "httpfiletransfer",
-            label: "9.4 文件传输"
-          },
+          }
         ]
     },
     {
@@ -436,7 +431,7 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createwebsocketservice",
+            id: "websocketservice",
             label: "10.2 创建WebSocket服务器"
           },
           {
