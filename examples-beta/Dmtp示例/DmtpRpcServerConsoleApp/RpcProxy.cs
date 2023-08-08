@@ -41,6 +41,21 @@ System.Int32 RpcPullChannel(System.Int32 channelID,IInvokeOption invokeOption = 
 /// <exception cref="System.Exception">其他异常</exception>
 Task<System.Int32> RpcPullChannelAsync(System.Int32 channelID,IInvokeOption invokeOption = default);
 
+///<summary>
+///测试客户端推送流数据
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.Int32 RpcPushChannel(System.Int32 channelID,IInvokeOption invokeOption = default);
+///<summary>
+///测试客户端推送流数据
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.Int32> RpcPushChannelAsync(System.Int32 channelID,IInvokeOption invokeOption = default);
+
 }
 public class MyRpcServer :IMyRpcServer
 {
@@ -107,6 +122,35 @@ object[] parameters = new object[]{channelID};
 return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpullchannel",invokeOption, parameters);
 }
 
+///<summary>
+///测试客户端推送流数据
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.Int32 RpcPushChannel(System.Int32 channelID,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{channelID};
+System.Int32 returnData=(System.Int32)Client.Invoke(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpushchannel",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///测试客户端推送流数据
+///</summary>
+public async Task<System.Int32> RpcPushChannelAsync(System.Int32 channelID,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{channelID};
+return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpushchannel",invokeOption, parameters);
+}
+
 }
 public static class MyRpcServerExtensions
 {
@@ -150,6 +194,27 @@ public static async Task<System.Int32> RpcPullChannelAsync<TClient>(this TClient
 TouchSocket.Rpc.IRpcClient{
 object[] parameters = new object[]{channelID};
 return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpullchannel",invokeOption, parameters);
+}
+
+///<summary>
+///测试客户端推送流数据
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.Int32 RpcPushChannel<TClient>(this TClient client,System.Int32 channelID,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{channelID};
+System.Int32 returnData=(System.Int32)client.Invoke(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpushchannel",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///测试客户端推送流数据
+///</summary>
+public static async Task<System.Int32> RpcPushChannelAsync<TClient>(this TClient client,System.Int32 channelID,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{channelID};
+return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"consoleapp2.program+myrpcserver.rpcpushchannel",invokeOption, parameters);
 }
 
 }

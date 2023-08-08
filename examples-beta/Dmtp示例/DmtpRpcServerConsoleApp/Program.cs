@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -100,6 +101,30 @@ namespace ConsoleApp2
                             channel.Write(new byte[package]);
                         }
                         channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+                    }
+                }
+                return size;
+            }
+
+            /// <summary>
+            /// "测试推送"
+            /// </summary>
+            /// <param name="callContext"></param>
+            /// <param name="channelID"></param>
+            [Description("测试客户端推送流数据")]
+            [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+            public int RpcPushChannel(ICallContext callContext, int channelID)
+            {
+                int size = 0;
+
+                if (callContext.Caller is TcpDmtpSocketClient socketClient)
+                {
+                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
+                    {
+                        foreach (var item in channel)
+                        {
+                            size += item.Len;//此处处理流数据
+                        }
                     }
                 }
                 return size;
