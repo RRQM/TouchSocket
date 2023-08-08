@@ -73,7 +73,7 @@ public class MyRpcServer : TransientRpcServer
 
 ### 2.2 启动Dmtp并注册Rpc服务
 
-以下仅示例基于Tcp协议Dmtp。其他协议的服务器请看[创建Dmtp服务器](./createdmtpservice.mdx)
+以下仅示例基于Tcp协议Dmtp。其他协议的服务器请看[创建Dmtp服务器](./dmtpservice.mdx)
 
 ```csharp
 var service = new TcpDmtpService();
@@ -101,7 +101,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 直接调用，则是不使用**任何代理**，使用**字符串**和**参数**直接Call Rpc，使用比较简单。
 
-下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./createdmtpclient.mdx)。
+下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./dmtpclient.mdx)。
 
 ```csharp
 var client = new TcpDmtpClient();

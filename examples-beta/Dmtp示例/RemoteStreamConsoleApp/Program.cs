@@ -78,7 +78,7 @@ namespace RemoteStreamConsoleApp
         {
             if (e.Metadata["tag"] == "tag1")
             {
-                e.IsPermitOperation = true;//需要运行操作
+                e.IsPermitOperation = true;//需要允许操作
 
                 client.Logger.Info("开始载入流");
                 //当请求方请求映射流的时候，会触发此方法。

@@ -25,7 +25,7 @@ namespace RouterPackageConsoleApp
             {
                 using (ByteBlock byteBlock = new ByteBlock(1024*512))
                 {
-                    byteBlock.SetLength(byteBlock.Capacity);
+                    byteBlock.SetLength(byteBlock.Capacity);//此处模拟一个大数据块
                     MyRequestPackage requestPackage = new MyRequestPackage()
                     {
                         ByteBlock = byteBlock,
@@ -89,6 +89,9 @@ namespace RouterPackageConsoleApp
             return service;
         }
 
+        /// <summary>
+        /// 定义请求包
+        /// </summary>
         class MyRequestPackage : DmtpRouterPackage
         {
             /// <summary>
@@ -114,6 +117,9 @@ namespace RouterPackageConsoleApp
             }
         }
 
+        /// <summary>
+        /// 定义响应包
+        /// </summary>
         class MyResponsePackage : DmtpRouterPackage
         {
             /// <summary>
@@ -132,12 +138,13 @@ namespace RouterPackageConsoleApp
             }
             async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
-                m_logger.Info($"收到包请求");
+                //m_logger.Info($"收到包请求");
                 await e.ResponseAsync(new MyResponsePackage()
                 {
                     Message = "Success"
                 });
-                m_logger.Info($"已响应包请求");
+                //m_logger.Info($"已响应包请求");
+
                 //一般在当前插件无法处理时调用下一插件。此处则不应该调用
                 //await e.InvokeNext();
             }
