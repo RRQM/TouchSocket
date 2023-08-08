@@ -1,4 +1,5 @@
 ﻿using RpcProxy;
+using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -18,6 +19,7 @@ namespace ClientConsoleApp
             consoleAction.Add("1", "直接调用Rpc", RunInvokeT);
             consoleAction.Add("2", "客户端互相调用Rpc", RunInvokeT_2C);
             consoleAction.Add("3", "测试客户端请求，服务器响应大量流数据", () => { RunRpcPullChannel(); });
+            consoleAction.Add("4", "测试客户端推送大量流数据", () => { RunRpcPushChannel(); });
 
             consoleAction.ShowAll();
 
@@ -29,6 +31,7 @@ namespace ClientConsoleApp
                 }
             }
         }
+
 
         private static void ConsoleAction_OnException(Exception obj)
         {
@@ -62,7 +65,7 @@ namespace ClientConsoleApp
 
         static async void RunRpcPullChannel()
         {
-            var client = GetTcpDmtpClient();
+            using var client = GetTcpDmtpClient();
             ChannelStatus status = ChannelStatus.Default;
             int size = 0;
             var channel = client.CreateChannel();//创建通道
@@ -81,6 +84,30 @@ namespace ClientConsoleApp
             await task;//等待异步接收完成
             Console.WriteLine($"状态：{status}，size={size}");
         }
+
+        private static async void RunRpcPushChannel()
+        {
+            using var client = GetTcpDmtpClient();
+            ChannelStatus status = ChannelStatus.Default;
+            int size = 0;
+            int package = 1024;
+            var channel = client.CreateChannel();//创建通道
+            Task task = Task.Run(() =>//这里必须用异步
+            {
+                for (int i = 0; i < 1024; i++)
+                {
+                    size += package;
+                    channel.Write(new byte[package]);
+                }
+                channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+
+                status = channel.Status;
+            });
+            int result = client.GetDmtpRpcActor().RpcPushChannel(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
+            await task;//等待异步接收完成
+            Console.WriteLine($"状态：{status}，result={result}");
+        }
+
 
         static TcpDmtpClient GetTcpDmtpClient()
         {
