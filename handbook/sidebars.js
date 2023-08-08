@@ -436,7 +436,7 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createwebsocketclient",
+            id: "websocketclient",
             label: "10.3 创建WebSocket客户端"
           },
           {
@@ -500,12 +500,12 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createdmtpservice",
+            id: "dmtpservice",
             label: "12.2 创建Dmtp服务器"
           },
           {
             type: "doc",
-            id: "createdmtplient",
+            id: "dmtplient",
             label: "12.3 创建Dmtp客户端"
           },
           {
@@ -537,18 +537,13 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "streamtransfer",
-            label: "12.8 Stream传输"
+            id: "dmtpremotestream",
+            label: "12.8 远程流映射"
           },
           {
             type: "doc",
-            id: "remotestreamaccess",
-            label: "12.9 远程流访问"
-          },
-          {
-            type: "doc",
-            id: "eventbus",
-            label: "12.10 EventBus"
+            id: "dmtprouterpackage",
+            label: "12.9 路由包传输"
           }
         ]
     },
