@@ -192,7 +192,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcServerConsoleApp", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientConsoleApp", "Dmtp示例\DmtpRpcClientConsoleApp\DmtpRpcClientConsoleApp.csproj", "{473ED8CE-CD62-431B-BCB9-AD23B370EB06}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientConsoleApp", "Http简单示例\ClientConsoleApp\ClientConsoleApp.csproj", "{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientConsoleApp", "Http简单示例\ClientConsoleApp\ClientConsoleApp.csproj", "{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "路由包示例", "路由包示例", "{F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouterPackageConsoleApp", "Dmtp示例\路由包示例\RouterPackageConsoleApp\RouterPackageConsoleApp.csproj", "{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -416,6 +420,10 @@ Global
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -496,6 +504,8 @@ Global
 		{31461239-7C3E-4C19-A558-BE59F9384572} = {56D66384-8CA7-4EFC-9F41-F9EE7E445578}
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06} = {56D66384-8CA7-4EFC-9F41-F9EE7E445578}
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
+		{F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
+		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9} = {F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
