@@ -19,7 +19,6 @@ import Tag from "@site/src/components/Tag.js";
 使用断线重连非常简单，仅一行代码完成。
 
 ```csharp
-.UsePlugin()
 .ConfigurePlugins(a=> 
 {
    a.UseReconnection(5, true, 1000);//如需永远尝试连接，tryCount设置为-1即可。
@@ -36,24 +35,30 @@ import Tag from "@site/src/components/Tag.js";
 :::  
 
 
-## 三、使用PollingKeepAlive插件 <Tag>企业版</Tag>
+## 三、使用Polling轮询连接插件
 
-企业版使用断线重连，在兼容上述方法的同时，还支持一种无人值守的连接方式，即轮询式连接，使用也非常简单，仅一行代码完成。
+使用Polling断线重连，是一种无人值守的连接方式，即轮询式连接，使用也非常简单，仅一行代码完成。
 
 ```csharp
-.UsePlugin()
 .ConfigurePlugins(a=> 
 {
-   a.Add<PollingKeepAlivePlugin<TcpClient>>()
-                        .SetTick(1000);//每秒检查
+   a.UseReconnection()
+    .SetTick(TimeSpan.FromSeconds(1))
+    .UsePolling();
+
 });
 ```
 
 :::caution 注意
 
-**PollingKeepAlive断线重连，必须满足以下几个要求：**
+**Polling重连，必须满足以下几个要求：**
 
-1. 不要和UseReconnection一同使用
-2. 必须有显式的断开信息，也就是说，直接拔网线的话，不会立即生效，会等tcp保活到期后再生效。
+1. 必须有显式的断开信息，也就是说，直接拔网线的话，不会立即生效，会等tcp保活到期后再生效。
+
+:::  
+
+:::tip 提示
+
+UseReconnection插件，可以通过设置SetActionForCheck，自己规定检查活性的方法。默认情况下，只会检验Online属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
 
 :::  
