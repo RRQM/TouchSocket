@@ -198,6 +198,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "路由包示例", "路由�
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RouterPackageConsoleApp", "Dmtp\RouterPackageConsoleApp\RouterPackageConsoleApp.csproj", "{26D104F9-F08A-47FC-B11B-74B0650FD11F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redis", "Redis", "{EB91C76E-79F5-4D1E-9EFF-A64E9621E92F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DmtpRedisConsoleApp", "Dmtp\DmtpRedisConsoleApp\DmtpRedisConsoleApp.csproj", "{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -424,6 +428,10 @@ Global
 		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -506,6 +514,8 @@ Global
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
 		{26D104F9-F08A-47FC-B11B-74B0650FD11F} = {F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}
+		{EB91C76E-79F5-4D1E-9EFF-A64E9621E92F} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
+		{2A3D3A7F-16F3-4B7E-8B16-B72B005FA18B} = {EB91C76E-79F5-4D1E-9EFF-A64E9621E92F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

@@ -544,6 +544,11 @@ module.exports = {
             type: "doc",
             id: "dmtprouterpackage",
             label: "12.9 路由包传输"
+          },
+          {
+            type: "doc",
+            id: "dmtpredis",
+            label: "12.10 Redis缓存"
           }
         ]
     },
