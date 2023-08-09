@@ -152,51 +152,51 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "远程流映射", "远程�
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dmtp示例", "Dmtp示例", "{BF701694-E1CE-4FD1-97BA-DA832F6F3D45}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTransferConsoleApp", "Dmtp示例\FileTransferConsoleApp\FileTransferConsoleApp.csproj", "{0D5E94AD-2311-4430-92FA-02BF01267BF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTransferConsoleApp", "Dmtp\FileTransferConsoleApp\FileTransferConsoleApp.csproj", "{0D5E94AD-2311-4430-92FA-02BF01267BF3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcStreamConsoleApp", "Dmtp示例\RpcStreamConsoleApp\RpcStreamConsoleApp.csproj", "{995A7CF5-FE4A-4CC1-ACF3-FABD03A94F69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcStreamConsoleApp", "Dmtp\RpcStreamConsoleApp\RpcStreamConsoleApp.csproj", "{995A7CF5-FE4A-4CC1-ACF3-FABD03A94F69}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecommendRpcConsoleApp", "Dmtp示例\RecommendRpcConsoleApp\RecommendRpcConsoleApp.csproj", "{D9CC341C-4A32-4D91-BD8F-D23663F89347}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecommendRpcConsoleApp", "Dmtp\RecommendRpcConsoleApp\RecommendRpcConsoleApp.csproj", "{D9CC341C-4A32-4D91-BD8F-D23663F89347}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcClassLibrary", "Dmtp示例\RpcClassLibrary\RpcClassLibrary.csproj", "{D24F093F-20B5-43F3-A84F-B6E92C9A7000}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcClassLibrary", "Dmtp\RpcClassLibrary\RpcClassLibrary.csproj", "{D24F093F-20B5-43F3-A84F-B6E92C9A7000}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcImplementationClassLibrary", "Dmtp示例\RpcImplementationClassLibrary\RpcImplementationClassLibrary.csproj", "{ADBD41EE-24F8-45BE-BCD1-DFFCE200D3F2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcImplementationClassLibrary", "Dmtp\RpcImplementationClassLibrary\RpcImplementationClassLibrary.csproj", "{ADBD41EE-24F8-45BE-BCD1-DFFCE200D3F2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcFactoryConsoleApp", "Dmtp示例\RpcFactoryConsoleApp\RpcFactoryConsoleApp.csproj", "{02A6E867-4133-413C-9909-A8F1890D9A66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcFactoryConsoleApp", "Dmtp\RpcFactoryConsoleApp\RpcFactoryConsoleApp.csproj", "{02A6E867-4133-413C-9909-A8F1890D9A66}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReverseRpcConsoleApp", "Dmtp示例\ReverseRpcConsoleApp\ReverseRpcConsoleApp.csproj", "{DCA6E3FE-3342-4F49-B3BA-5F658DCC76D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReverseRpcConsoleApp", "Dmtp\ReverseRpcConsoleApp\ReverseRpcConsoleApp.csproj", "{DCA6E3FE-3342-4F49-B3BA-5F658DCC76D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationSelectorClassLibrary", "Dmtp示例\SerializationSelectorClassLibrary\SerializationSelectorClassLibrary.csproj", "{6A6D3355-18D7-4E66-96C2-85864540BF5C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationSelectorClassLibrary", "Dmtp\SerializationSelectorClassLibrary\SerializationSelectorClassLibrary.csproj", "{6A6D3355-18D7-4E66-96C2-85864540BF5C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationSelectorConsoleApp", "Dmtp示例\SerializationSelectorConsoleApp\SerializationSelectorConsoleApp.csproj", "{5D0EC23C-2C3D-4E93-90CA-05DE3CDE9687}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializationSelectorConsoleApp", "Dmtp\SerializationSelectorConsoleApp\SerializationSelectorConsoleApp.csproj", "{5D0EC23C-2C3D-4E93-90CA-05DE3CDE9687}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneratorRpcProxyConsoleApp", "Dmtp示例\GeneratorRpcProxyConsoleApp\GeneratorRpcProxyConsoleApp.csproj", "{1C273ECE-5749-486C-BF89-BA27F83DA864}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeneratorRpcProxyConsoleApp", "Dmtp\GeneratorRpcProxyConsoleApp\GeneratorRpcProxyConsoleApp.csproj", "{1C273ECE-5749-486C-BF89-BA27F83DA864}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteAccessApp", "Dmtp示例\RemoteAccessApp\RemoteAccessApp.csproj", "{2A13D301-4DFB-4B0E-8388-B68E33518FF2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteAccessApp", "Dmtp\RemoteAccessApp\RemoteAccessApp.csproj", "{2A13D301-4DFB-4B0E-8388-B68E33518FF2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DmtpRpc", "DmtpRpc", "{63EE2247-0A5B-47F9-B8AA-AED5BC8FC873}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientApp", "Dmtp示例\DmtpRpcClientApp\DmtpRpcClientApp.csproj", "{C6AC63B3-23AA-4AC3-9B11-C43B44F6C89A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientApp", "Dmtp\DmtpRpcClientApp\DmtpRpcClientApp.csproj", "{C6AC63B3-23AA-4AC3-9B11-C43B44F6C89A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpWebApplication", "Dmtp示例\DmtpWebApplication\DmtpWebApplication.csproj", "{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpWebApplication", "Dmtp\DmtpWebApplication\DmtpWebApplication.csproj", "{A10A3EE0-079A-4FB4-82AF-B7D680EE2690}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteStreamConsoleApp", "Dmtp示例\RemoteStreamConsoleApp\RemoteStreamConsoleApp.csproj", "{4019C53F-2185-4ACF-A816-C659607B05E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemoteStreamConsoleApp", "Dmtp\RemoteStreamConsoleApp\RemoteStreamConsoleApp.csproj", "{4019C53F-2185-4ACF-A816-C659607B05E5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dmtp", "Dmtp", "{57B547B6-D725-4C3E-82A7-39ED03BD438B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpConsoleApp", "Dmtp示例\DmtpConsoleApp\DmtpConsoleApp.csproj", "{44AE2CE8-5EE2-42F6-A1CA-E562EC697445}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpConsoleApp", "Dmtp\DmtpConsoleApp\DmtpConsoleApp.csproj", "{44AE2CE8-5EE2-42F6-A1CA-E562EC697445}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "控制台", "控制台", "{56D66384-8CA7-4EFC-9F41-F9EE7E445578}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcServerConsoleApp", "Dmtp示例\DmtpRpcServerConsoleApp\DmtpRpcServerConsoleApp.csproj", "{31461239-7C3E-4C19-A558-BE59F9384572}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcServerConsoleApp", "Dmtp\DmtpRpcServerConsoleApp\DmtpRpcServerConsoleApp.csproj", "{31461239-7C3E-4C19-A558-BE59F9384572}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientConsoleApp", "Dmtp示例\DmtpRpcClientConsoleApp\DmtpRpcClientConsoleApp.csproj", "{473ED8CE-CD62-431B-BCB9-AD23B370EB06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcClientConsoleApp", "Dmtp\DmtpRpcClientConsoleApp\DmtpRpcClientConsoleApp.csproj", "{473ED8CE-CD62-431B-BCB9-AD23B370EB06}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientConsoleApp", "Http简单示例\ClientConsoleApp\ClientConsoleApp.csproj", "{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "路由包示例", "路由包示例", "{F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouterPackageConsoleApp", "Dmtp示例\路由包示例\RouterPackageConsoleApp\RouterPackageConsoleApp.csproj", "{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RouterPackageConsoleApp", "Dmtp\RouterPackageConsoleApp\RouterPackageConsoleApp.csproj", "{26D104F9-F08A-47FC-B11B-74B0650FD11F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -420,10 +420,10 @@ Global
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26D104F9-F08A-47FC-B11B-74B0650FD11F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -505,7 +505,7 @@ Global
 		{473ED8CE-CD62-431B-BCB9-AD23B370EB06} = {56D66384-8CA7-4EFC-9F41-F9EE7E445578}
 		{EFD9B749-BDF3-4440-B89C-2EBC0B44F53F} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
-		{BF0F5A91-F0F0-4597-8CE7-140748A64CA9} = {F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}
+		{26D104F9-F08A-47FC-B11B-74B0650FD11F} = {F0624F02-43C5-4BAF-B6E8-54EDB5B9EED7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
