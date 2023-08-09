@@ -597,26 +597,9 @@ module.exports = {
         ]
     },
     {
-      type: "category",
-      label: "15、XmlRpc组件件",
-      items:
-        [
-          {
-            type: "doc",
-            id: "xmlrpcdescription",
-            label: "15.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
-            id: "xmlrpcservice",
-            label: "15.2 定义、发布、启动服务"
-          },
-          {
-            type: "doc",
-            id: "callxmlrpc",
-            label: "15.3 发现、调用服务"
-          },
-        ]
+      type: "doc",
+      label: "15、XmlRpc组件",
+      id: "xmlrpc"
     }
   ]
 };

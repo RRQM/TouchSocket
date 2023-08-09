@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.IO;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -15,6 +15,10 @@ namespace XmlRpcServerApp
             var service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a => 
+                {
+                    a.AddConsoleLogger();
+                })
                 .ConfigurePlugins(a =>
                 {
                     a.UseXmlRpc()
@@ -22,35 +26,31 @@ namespace XmlRpcServerApp
                     .ConfigureRpcStore(store =>
                     {
                         store.RegisterServer<XmlServer>();
+
+#if DEBUG
+                        File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(XmlRpcAttribute) }));
+                        ConsoleLogger.Default.Info("成功生成代理");
+#endif
                     });
-                    a.Add<MyPlugin>();
                 })
-                .SetListenIPHosts(new IPHost[] { new IPHost(7706) }))
+                .SetListenIPHosts(7789))
                 .Start();
 
-            Console.WriteLine("服务器已启动");
+            service.Logger.Info("服务器已启动");
             Console.ReadKey();
         }
     }
 
-    public class MyPlugin : PluginBase, IHttpPostPlugin<IHttpSocketClient>
-    {
-        public async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
-        {
-            var s = e.Context.Request.GetBody();
-            await e.InvokeNext();
-        }
-    }
-
+   
     public class XmlServer : RpcServer
     {
-        [XmlRpc]
+        [XmlRpc(true)]
         public int Sum(int a, int b)
         {
             return a + b;
         }
 
-        [XmlRpc]
+        [XmlRpc(true)]
         public int TestClass(MyClass myClass)
         {
             return myClass.A + myClass.B;

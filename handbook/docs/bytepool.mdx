@@ -15,7 +15,7 @@ title: 内存池
 
 ## 二、功能
 
-内存池（BytePool）是解决创建大量字节数组消耗的最有力手段，其实质相当于微软的ArrayPool。但是比ArrayPool更加易用，且功能更加强大。
+内存池（BytePool）是解决创建大量字节数组消耗的最有力手段，其实质完全借鉴了微软的ArrayPool。而且在此基础上做了更多的优化。
 
 内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。`ByteBlock`是继承自Stream的类，拥有和MemoryStream一样的功能和内存回收管理的增强功能。所以如果有MemoryStream的使用需求的话，就可以完全让ByteBlock替代。而`ValueByteBlock`是`ByteBlock`的值类型（ref struct），其功能除了不继承Stream以外，和`ByteBlock`一模一样。且为值类型，创建开销更小。
 
@@ -24,22 +24,21 @@ title: 内存池
 `BytePool`在默认情况提供了一个`Default`的默认实例，当然您可以新建只属于自己的`BytePool`。
 
 ```csharp
-BytePool bytePool = new BytePool();
-BytePool defaultBytePool = BytePool.Default;
+BytePool bytePool = new BytePool();//new一个新的
+
+BytePool defaultBytePool = BytePool.Default;//使用默认的
 ```
 
 `ByteBlock`可通过BytePool实例创建，也可以直接new对象，后者使用的是默认内存池实例提供支持。
 
 - byteSize：用于申请的最小字节尺寸。例如：当申请100长度时，可能会得到100，1000，甚至更大尺寸的内存，但绝不会小于100.
-- equalSize：强制请求的尺寸和得到的尺寸是一致的。一般不建议设置该值。
 
 ```csharp
-ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024, equalSize: false);//从默认内存池获得
+ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);//从默认内存池获得
 byteBlock1.Dispose();
 
 BytePool bytePool = new BytePool();
-ByteBlock byteBlock2 = bytePool.GetByteBlock(byteSize: 1024 * 1024, equalSize: false);//从指定内存池获得
-byteBlock2.Dispose(bytePool);//释放到指定内存池
+ByteBlock byteBlock2 = bytePool.GetByteBlock(byteSize: 1024 * 1024);//从指定内存池获得
 
 using (ByteBlock byteBlock3 = new ByteBlock())//通过using创建及释放时，均在默认内存池
 {
@@ -142,3 +141,6 @@ public class MyTClient : TcpClient
 ByteBlock在设置SetHolding(false)后，不需要再调用Dispose。
 
 :::  
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/Core/BytePoolConsoleApp)
