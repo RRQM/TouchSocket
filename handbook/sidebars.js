@@ -553,26 +553,9 @@ module.exports = {
         ]
     },
     {
-      type: "category",
+      type: "doc",
       label: "13、WebApi组件",
-      items:
-        [
-          {
-            type: "doc",
-            id: "webapidescription",
-            label: "13.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
-            id: "webapiservice",
-            label: "13.2 定义、发布、启动服务"
-          },
-          {
-            type: "doc",
-            id: "callwebapi",
-            label: "13.3 发现、调用服务"
-          },
-        ]
+      id: "webapi"
     },
     {
       type: "category",
