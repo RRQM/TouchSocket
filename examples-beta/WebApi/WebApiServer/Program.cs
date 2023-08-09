@@ -19,32 +19,36 @@ namespace WebApiServerApp
                .ConfigurePlugins(a =>
                {
                    a.UseCheckClear();
+
                    a.UseWebApi()
                    .ConfigureRpcStore(store =>
                    {
-                       store.RegisterServer<Server>();//注册服务
+                       store.RegisterServer<ApiServer>();//注册服务
 
+#if DEBUG
                        //下列代码，会生成客户端的调用代码。
                        var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
                        File.WriteAllText("../../../WebApiProxy.cs", codeString);
+#endif
                    });
 
-                   a.UseDefaultHttpServicePlugin();//此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+                   //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+                   a.UseDefaultHttpServicePlugin();
                }))
                .Start();
 
             Console.WriteLine("以下连接用于测试webApi");
-            Console.WriteLine($"使用：http://127.0.0.1:7789/Server/Sum?a=10&b=20");
+            Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 
             Console.ReadKey();
         }
     }
 
-    public class Server : RpcServer
+    public class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
 
-        public Server(ILog logger)
+        public ApiServer(ILog logger)
         {
             this.m_logger = logger;
         }
