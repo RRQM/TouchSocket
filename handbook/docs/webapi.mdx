@@ -24,12 +24,19 @@ WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统�
 
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记，如果方法有**重载**，需要重新指定**函数键**。
 
-- 支持代理生成**注释**。
-
 ```csharp
 public class ApiServer : RpcServer
 {
+    private readonly ILog m_logger;
+
+    public ApiServer(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    [Origin(AllowOrigin = "*")]//跨域设置
     [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
+    [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
     [WebApi(HttpMethodType.GET)]
     public int Sum(int a, int b)
     {
@@ -61,7 +68,7 @@ public class ApiServer : RpcServer
     /// 使用调用上下文，获取实际请求体。
     /// </summary>
     /// <param name="callContext"></param>
-    [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]//声明包含调用上下文
+    [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]
     [Router("[api]/[action]")]
     public Task<string> PostContent(IWebApiCallContext callContext)
     {
@@ -69,7 +76,7 @@ public class ApiServer : RpcServer
         {
             this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
         }
-        if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
+        if (callContext.HttpContext.Request.TryGetContent(out var content))
         {
             this.m_logger.Info($"共计：{content.Length}");
         }
@@ -85,38 +92,41 @@ public class MyClass
 }
 ```
 
-<a name="lHhEB"></a>
-
-## 创建简单服务器
+## 四、启动服务器
 
 ```csharp
- HttpService service = new HttpService();
- service.Setup(new TouchSocketConfig()
-    .UsePlugin()
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-    .ConfigureContainer(a =>
-    {
-        a.SetSingletonLogger<ConsoleLogger>();//注册一个日志
-    })
-    .ConfigureRpcStore(a =>
-    {
-        a.RegisterServer<ApiServer>();//注册服务
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.UseCheckClear();
-        a.UseWebApi();//启用WebApi
-    }))
-    .Start();
+ var service = new HttpService();
+service.Setup(new TouchSocketConfig()
+   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+   .ConfigurePlugins(a =>
+   {
+       a.UseCheckClear();
 
- Console.WriteLine("以下连接用于测试webApi");
- Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
+       a.UseWebApi()
+       .ConfigureRpcStore(store =>
+       {
+           store.RegisterServer<ApiServer>();//注册服务
 
- Console.ReadKey();
+
+           //下列代码，会生成客户端的调用代码。
+           var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
+           File.WriteAllText("../../../WebApiProxy.cs", codeString);
+
+       });
+
+       //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+       a.UseDefaultHttpServicePlugin();
+   }))
+   .Start();
+
+Console.WriteLine("以下连接用于测试webApi");
+Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 ```
 
 
-## 直接调用
+## 五、调用服务
+
+### 5.1 直接调用
 
 直接调用，则是不使用**任何代理**，直接Call RPC，使用比较简单，**浏览器**也能直接调用实现。
 
@@ -126,8 +136,9 @@ public class MyClass
 http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20
 ```
 
-【HttpClient调用】
-WebApi的客户端和大家所**熟识**的有一些差距，TouchSocket的WebApi使用的是**先连接**，**后请求**的逻辑。请求时，先标记**GET/POST**的函数。如果是**GET**，则必须**留空URL**，如果是**POST**，则只写URL即可。
+### 5.2 内置HttpClient调用
+
+内置WebApi的客户端和大家所**熟识**的有一些差距，TouchSocket的WebApi使用的是**先连接**，**后请求**的逻辑。请求时，先标记**GET/POST**的函数。如果是**GET**，则必须**留空URL**，如果是**POST**，则只写URL即可。
 
 ```csharp
 private static WebApiClient CreateWebApiClient()
@@ -143,14 +154,14 @@ private static WebApiClient CreateWebApiClient()
 ```scheme
 var client = CreateWebApiClient();
 
-int sum1 = client.Invoke<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
+int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-int sum2 = client.Invoke<int>("POST:/ApiServer/TestPost", null, new MyClass() { A = 10, B = 20 });
+int sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", null, new MyClass() { A = 10, B = 20 });
 Console.WriteLine($"Post调用成功，结果：{sum2}");
 ```
 
-<a name="rrWhi"></a>
+
 
 ## 代理调用RPC
 
@@ -169,4 +180,6 @@ Console.WriteLine($"Post调用成功，结果：{sum2}");
 int sum3 = client.TestPost(new MyClass() { A = 10, B = 20 });
 Console.WriteLine($"代理调用成功，结果：{sum3}");
 ```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/WebApi)
 

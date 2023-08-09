@@ -564,7 +564,7 @@ module.exports = {
         [
           {
             type: "doc",
-            id: "jsonrpcdescription",
+            id: "jsonrpc",
             label: "14.1 产品及架构介绍"
           },
           {
