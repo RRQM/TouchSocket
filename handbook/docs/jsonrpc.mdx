@@ -10,11 +10,10 @@ title: 产品及架构介绍
 
 ## 一、说明
 
-JsonRpc是**通用**的RPC规范，与**编程语言无关、操作系统无关**。详细说明请参阅[JsonRpc 2.0 官方文档](https://www.jsonrpc.org/specification)，在TouchSocket中封装了**前后端**，使其使用更加方便、高效。
+JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关**。详细说明请参阅[JsonRpc 2.0 官方文档](https://www.jsonrpc.org/specification)，在TouchSocket中封装了**前后端**，使其使用更加方便、高效。
 
 目前支持Tcp、Http、Websocket三种协议调用。
 
-<a name="C6IwW"></a>
 
 ## 二、特点：
 
@@ -25,32 +24,14 @@ JsonRpc是**通用**的RPC规范，与**编程语言无关、操作系统无关*
 - 支持js、Android等调用。
 
 
-## 一、定义服务
+## 三、定义服务
 
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**JsonRpc**属性标签标记，如果方法有**重载**，需要重新指定**函数键**。
 
-- 支持代理生成**注释**。
 
 ```csharp
 public class JsonRpcServer : RpcServer
 {
-    [JsonRpc]
-    public string TestJsonRpc(string str)
-    {
-        return "TouchSocket" + str;
-    }
-
-    /// <summary>
-    /// 当标记为true时直接使用方法名称
-    /// </summary>
-    /// <param name="str"></param>
-    /// <returns></returns>
-    [JsonRpc(true)]
-    public string TestJsonRpc1(string str)
-    {
-        return "TouchSocket" + str;
-    }
-
     /// <summary>
     /// 使用调用上下文。
     /// 可以从上下文获取调用的SocketClient。从而获得IP和Port等相关信息。
@@ -61,28 +42,23 @@ public class JsonRpcServer : RpcServer
     [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext)]
     public string TestGetContext(ICallContext callContext, string str)
     {
-        if (callContext.Caller is HttpSocketClient)
+        if (callContext.Caller is IHttpSocketClient socketClient)
         {
             Console.WriteLine("HTTP请求");
-            var client = callContext.Caller as HttpSocketClient;
+            var client = callContext.Caller as IHttpSocketClient;
             var ip = client.IP;
             var port = client.Port;
             Console.WriteLine($"HTTP请求{ip}:{port}");
-
         }
-
-        if (callContext.Caller is SocketClient)
+        else if (callContext.Caller is ISocketClient)
         {
             Console.WriteLine("Tcp请求");
-            var client = callContext.Caller as SocketClient;
+            var client = callContext.Caller as ISocketClient;
             var ip = client.IP;
             var port = client.Port;
-
-            client.Send(Encoding.UTF8.GetBytes("Hello Word"));
             Console.WriteLine($"Tcp请求{ip}:{port}");
-
         }
-        return "TouchSocket" + str;
+        return "RRQM" + str;
     }
 
     [JsonRpc]
@@ -90,41 +66,49 @@ public class JsonRpcServer : RpcServer
     {
         return obj;
     }
+
+    [JsonRpc]
+    public string TestJsonRpc(string str)
+    {
+        return "RRQM" + str;
+    }
 }
 ```
 
-<a name="ai1L7"></a>
 
-## 二、使用Tcp创建服务解析器
+## 四、启动服务器
 
-服务解析器是实际的服务接收、触发、调用、反馈的实际载体，通俗来说就是**通信服务器**。
+JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
 
-当**JsonRpcParserPlugin**插件添加在**TcpService**服务器时，会使用**TCP**协议。此时的调用，会根据适配器类型，决定是否需要有调用结束标识，一般以\r\n结尾。
+### 4.1 以Tcp为基础协议
+
+当以Tcp为基础协议时，支持Tcp的任何操作。包括但不限于`设置适配器`等。
+
+下列代码创建的就是一个最普通Tcp协议下的JsonRpc服务器。该服务支持任何未处理的Tcp协议的JsonRpc数据包调用。
 
 ```csharp
-TcpService service = new TcpService();
+var service = new TcpService();
 service.Setup(new TouchSocketConfig()
-    .UsePlugin()
-    .ConfigureRpcStore(a =>
-    {
-        a.RegisterServer<JsonRpcServer>();//配置RpcStore必须在最前面。
-    })
-    .ConfigurePlugins(a =>
-    {
-         a.Add<JsonRpcParserPlugin>();//tcp中路由路径无效
-    })
-    .SetDataHandlingAdapter(() =>
-    {
-        return new NormalDataHandlingAdapter();
-        //return new TerminatorPackageAdapter("\r\n");使用该适配器时，调用方必须在最后追加相应的结束调用符。
-    })
-    .SetListenIPHosts(new IPHost[] { new IPHost(7705) }))
+    .SetListenIPHosts(7705)
+     .ConfigurePlugins(a =>
+     {
+         a.UseJsonRpc()
+         .ConfigureRpcStore(store =>
+         {
+             store.RegisterServer<JsonRpcServer>();
+         });
+     }))
     .Start();
 ```
 
-<a name="X5yn3"></a>
+:::caution 注意
 
-## 三、使用Http或Websocket创建服务解析器
+因为上述服务器中没有使用任何适配器，所以在实际使用中，可能会发生数据包粘包、分包等问题。所以不建议直接使用。要想投入生产使用，最简单也建议使用`.SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))`换行符分割等适配器。
+
+:::  
+
+
+### 4.2 使用Http或Websocket创建服务解析器
 
 当**JsonRpcParserPlugin**插件添加在**HttpService**服务器时，会使用**Http、Websocket**协议。
 

@@ -28,14 +28,8 @@ namespace JsonRpcConsoleApp
 
             Console.WriteLine("代理文件已经写入到当前项目。");
 
-            CreateTcpJsonRpcParser(7705);
+            CreateTcpJsonRpcService();
             CreateHTTPJsonRpcParser(7706);
-
-            JsonRpcClientInvokeByTcp();
-            JsonRpcClientInvokeByHttp();
-            JsonRpcClientInvokeByWebSocket();
-
-            Console.WriteLine("请按任意键退出");
 
             Console.ReadKey();
         }
@@ -61,12 +55,12 @@ namespace JsonRpcConsoleApp
                 .Start();
         }
 
-        private static void CreateTcpJsonRpcParser(int port)
+        private static void CreateTcpJsonRpcService()
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))//使用这个适配器，防止粘包。但是也要求json中没有换行符。
-                .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                .SetListenIPHosts(7705)
                  .ConfigurePlugins(a =>
                  {
                      a.UseJsonRpc()
@@ -78,80 +72,10 @@ namespace JsonRpcConsoleApp
                 .Start();
         }
 
-        private static void JsonRpcClientInvokeByHttp()
-        {
-            var jsonRpcClient = new JsonRpcClient();
-            jsonRpcClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc")
-                .SetJRPT(JRPT.Http));
-            jsonRpcClient.Connect();
-            Console.WriteLine("连接成功");
-            var result = jsonRpcClient.TestJsonRpc("RRQM");
-            Console.WriteLine($"Http返回结果:{result}");
-
-            var obj = new JObject();
-            obj.Add("A", "A");
-            obj.Add("B", 10);
-            obj.Add("C", 100.1);
-            var newObj = jsonRpcClient.TestJObject(obj);
-            Console.WriteLine($"Http返回结果:{newObj}");
-        }
-
-        private static void JsonRpcClientInvokeByTcp()
-        {
-            var jsonRpcClient = new JsonRpcClient();
-            jsonRpcClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7705")
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-                .SetJRPT(JRPT.Tcp));
-            jsonRpcClient.Connect();
-
-            Console.WriteLine("连接成功");
-            var result = jsonRpcClient.TestJsonRpc("RRQM");
-            Console.WriteLine($"Tcp返回结果:{result}");
-
-            result = jsonRpcClient.TestJsonRpc1("RRQM");
-            Console.WriteLine($"Tcp返回结果:{result}");
-
-            result = jsonRpcClient.TestGetContext("RRQM");
-            Console.WriteLine($"Tcp返回结果:{result}");
-
-            var obj = new JObject();
-            obj.Add("A", "A");
-            obj.Add("B", 10);
-            obj.Add("C", 100.1);
-            var newObj = jsonRpcClient.TestJObject(obj);
-            Console.WriteLine($"Tcp返回结果:{newObj}");
-        }
-
-        private static void JsonRpcClientInvokeByWebSocket()
-        {
-            var jsonRpcClient = new JsonRpcClient();
-            jsonRpcClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
-                .SetJRPT(JRPT.WebSocket));
-            jsonRpcClient.Connect();
-
-            Console.WriteLine("连接成功");
-            var result = jsonRpcClient.TestJsonRpc("RRQM");
-            Console.WriteLine($"WebSocket返回结果:{result}");
-
-            result = jsonRpcClient.TestJsonRpc1("RRQM");
-            Console.WriteLine($"WebSocket返回结果:{result}");
-
-            result = jsonRpcClient.TestGetContext("RRQM");
-            Console.WriteLine($"WebSocket返回结果:{result}");
-
-            var obj = new JObject();
-            obj.Add("A", "A");
-            obj.Add("B", 10);
-            obj.Add("C", 100.1);
-            var newObj = jsonRpcClient.TestJObject(obj);
-            Console.WriteLine($"WebSocket返回结果:{newObj}");
-        }
+        
     }
 
-    public class JsonRpcServer : TransientRpcServer
+    public class JsonRpcServer : RpcServer
     {
         /// <summary>
         /// 使用调用上下文。
@@ -163,18 +87,18 @@ namespace JsonRpcConsoleApp
         [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext)]
         public string TestGetContext(ICallContext callContext, string str)
         {
-            if (callContext.Caller is HttpSocketClient socketClient)
+            if (callContext.Caller is IHttpSocketClient socketClient)
             {
                 Console.WriteLine("HTTP请求");
-                var client = callContext.Caller as HttpSocketClient;
+                var client = callContext.Caller as IHttpSocketClient;
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"HTTP请求{ip}:{port}");
             }
-            else if (callContext.Caller is SocketClient)
+            else if (callContext.Caller is ISocketClient)
             {
                 Console.WriteLine("Tcp请求");
-                var client = callContext.Caller as SocketClient;
+                var client = callContext.Caller as ISocketClient;
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"Tcp请求{ip}:{port}");
@@ -191,20 +115,6 @@ namespace JsonRpcConsoleApp
         [JsonRpc]
         public string TestJsonRpc(string str)
         {
-            return "RRQM" + str;
-        }
-
-        /// <summary>
-        /// 当标记为true时直接使用方法名称
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        [JsonRpc(true)]
-        public string TestJsonRpc1(string str)
-        {
-            if (this.CallContext is IJsonRpcCallContext context)
-            {
-            }
             return "RRQM" + str;
         }
     }

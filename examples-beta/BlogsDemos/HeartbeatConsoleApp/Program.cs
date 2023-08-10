@@ -195,7 +195,7 @@ namespace HeartbeatConsoleApp
         }
     }
 
-    internal class HeartbeatAndReceivePlugin : PluginBase,ITcpConnectedPlugin<ITcpClientBase>,ITcpDisconnectedPlguin<ITcpClientBase>,ITcpReceivedPlugin<ITcpClientBase>
+    internal class HeartbeatAndReceivePlugin : PluginBase,ITcpConnectedPlugin<ITcpClientBase>,ITcpDisconnectedPlugin<ITcpClientBase>,ITcpReceivedPlugin<ITcpClientBase>
     {
         private readonly int m_timeTick;
         private readonly ILog logger;
@@ -227,7 +227,7 @@ namespace HeartbeatConsoleApp
             await e.InvokeNext();
         }
 
-        async Task ITcpDisconnectedPlguin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        async Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
             {
