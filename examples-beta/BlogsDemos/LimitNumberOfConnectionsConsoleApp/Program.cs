@@ -53,7 +53,7 @@ namespace LimitNumberOfConnectionsConsoleApp
         }
     }
 
-    internal class LimitNumberOfConnectionsPlugin : PluginBase, ITcpConnectingPlugin<ITcpClientBase>, ITcpDisconnectedPlguin<ITcpClientBase>
+    internal class LimitNumberOfConnectionsPlugin : PluginBase, ITcpConnectingPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>
     {
         private readonly ConcurrentDictionary<string, Count> m_ipToCount = new ConcurrentDictionary<string, Count>();
 
@@ -95,7 +95,7 @@ namespace LimitNumberOfConnectionsConsoleApp
             return e.InvokeNext();
         }
 
-        Task ITcpDisconnectedPlguin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (this.m_ipToCount.TryGetValue(client.IP, out var count))
             {

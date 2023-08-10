@@ -102,8 +102,14 @@ import Tag from "@site/src/components/Tag.js";
 
 :::  
 
-#### （3）Flags
-可通过叠加位域的形式，尝试断点续传。
+#### （3）ResourceInfo
+已存在的资源信息，当上个传输失败时，可以保存其ResourceInfo，然后重新传输时赋值，即可尝试断点续传。
+
+:::caution 注意
+
+当执行续传时，本次传输与前次传输间隔时间不应该超过响应默认值（60秒）。
+
+:::  
 
 #### （4）CompletedLength
 已完成流长度。
