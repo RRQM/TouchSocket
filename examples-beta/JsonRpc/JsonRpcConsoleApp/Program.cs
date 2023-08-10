@@ -129,7 +129,6 @@ namespace JsonRpcConsoleApp
             var jsonRpcClient = new JsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetJRPT(JRPT.WebSocket));
             jsonRpcClient.Connect();
 
