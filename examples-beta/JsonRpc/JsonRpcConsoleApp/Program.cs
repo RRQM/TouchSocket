@@ -16,7 +16,7 @@ namespace JsonRpcConsoleApp
         //2.JSONRPC 服务端和客户端的创建
         //3.服务端进行主动通知客户端
         //4.客户端处理服务端推送的自定义消息处理
-        //5.[JsonRpc(true)]特性使用 标记为true 表示直接使用方法名称，否则使用明明空间+类名+方法名 全小写
+        //5.[JsonRpc(true)]特性使用 标记为true 表示直接使用方法名称，否则使用命名空间+类名+方法名 全小写
         //6.RPC上下文获取。通过上下文进行自定义消息推送
         private static void Main(string[] args)
         {
@@ -26,20 +26,20 @@ namespace JsonRpcConsoleApp
             File.WriteAllText("../../../JsonRpcProxy.cs", CodeGenerator.GetProxyCodes("JsonRpcProxy",
                 new Type[] { typeof(JsonRpcServer) }, new Type[] { typeof(JsonRpcAttribute) }));
 
-            Console.WriteLine("代理文件已经写入到当前项目。");
+            ConsoleLogger.Default.Info("代理文件已经写入到当前项目。");
 
             CreateTcpJsonRpcService();
-            CreateHTTPJsonRpcParser(7706);
+            CreateHTTPJsonRpcParser();
 
             Console.ReadKey();
         }
 
-        private static void CreateHTTPJsonRpcParser(int port)
+        private static void CreateHTTPJsonRpcParser()
         {
             var service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
-                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                 .SetListenIPHosts(7706)
                  .ConfigurePlugins(a =>
                  {
                      a.UseWebSocket()//启用websocket。
@@ -53,6 +53,9 @@ namespace JsonRpcConsoleApp
                      .SetJsonRpcUrl("/jsonRpc");
                  }))
                 .Start();
+
+            ConsoleLogger.Default.Info($"Http服务器已启动");
+            ConsoleLogger.Default.Info($"Http服务器已启动");
         }
 
         private static void CreateTcpJsonRpcService()
