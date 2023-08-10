@@ -558,26 +558,9 @@ module.exports = {
       id: "webapi"
     },
     {
-      type: "category",
+      type: "doc",
       label: "14、JsonRpc组件",
-      items:
-        [
-          {
-            type: "doc",
-            id: "jsonrpc",
-            label: "14.1 产品及架构介绍"
-          },
-          {
-            type: "doc",
-            id: "jsonrpcservice",
-            label: "14.2 定义、发布、启动服务"
-          },
-          {
-            type: "doc",
-            id: "calljsonrpc",
-            label: "14.3 发现、调用服务"
-          },
-        ]
+      id: "jsonrpc"
     },
     {
       type: "doc",

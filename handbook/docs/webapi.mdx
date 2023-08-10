@@ -151,7 +151,7 @@ private static WebApiClient CreateWebApiClient()
 }
 ```
 
-```scheme
+```csharp
 var client = CreateWebApiClient();
 
 int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
@@ -161,25 +161,37 @@ int sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", null, new MyClass() {
 Console.WriteLine($"Post调用成功，结果：{sum2}");
 ```
 
+### 5.3 Dotnet自带HttpClient调用
 
-
-## 代理调用RPC
-
-代理调用的便捷在于，不用再纠结调用的参数类型正不正确，因为这些，代理工具都会替你做好。 <a name="AbsXl"></a>
-
-### 如何生成获取代理文件？
-
-[获取代理文件详情](https://www.yuque.com/eo2w71/rrqm/a13509bfc3581f4576861b690b4a809a) <a name="jsQUz"></a>
-
-### 调用
-
-当代理被客户端获取以后，客户端项目中会多出一个**RRQMProxy**的文件（或者如果是服务器生成的本地代理，则需要复制到客户端项目中），在该文件中，则包含了所有的**代理方法**和**代理类**，可直接由代理类发起调用。
-
+Dotnet自带HttpClient则是通过连接池的方式访问。详情看[HttpClient](https://learn.microsoft.com/zh-cn/dotnet/api/system.net.http.httpclient)
 
 ```csharp
-int sum3 = client.TestPost(new MyClass() { A = 10, B = 20 });
-Console.WriteLine($"代理调用成功，结果：{sum3}");
+private static WebApiClientSlim CreateWebApiClientSlim()
+{
+    var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
+    client.Setup(new TouchSocketConfig()
+        .SetRemoteIPHost("http://127.0.0.1:7789")
+        .ConfigurePlugins(a =>
+        {
+        }));
+    return client;
+}
 ```
+```csharp
+var client = CreateWebApiClientSlim();
+
+int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
+Console.WriteLine($"Get调用成功，结果：{sum1}");
+
+int sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", null, new MyClass() { A = 10, B = 20 });
+Console.WriteLine($"Post调用成功，结果：{sum2}");
+```
+
+:::info 备注
+
+按照微软建议，HttpClient应该保证整个程序中单实例使用，所以可以在`WebApiClientSlim`构造函数中传入已存在的对象。
+
+:::  
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/WebApi)
 

@@ -15,7 +15,7 @@ namespace WebApiServerApp
         {
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()
-               .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+               .SetListenIPHosts(7789)
                .ConfigurePlugins(a =>
                {
                    a.UseCheckClear();
