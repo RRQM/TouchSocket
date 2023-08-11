@@ -45,7 +45,7 @@ namespace JsonRpcConsoleApp
                      a.UseWebSocket()//启用websocket。
                      .SetWSUrl("/ws");//使用/ws路由连接。
 
-                     a.UseJsonRpc()
+                     a.UseHttpJsonRpc()
                      .ConfigureRpcStore(store =>
                      {
                          store.RegisterServer<JsonRpcServer>();
@@ -66,7 +66,7 @@ namespace JsonRpcConsoleApp
                 .SetListenIPHosts(7705)
                  .ConfigurePlugins(a =>
                  {
-                     a.UseJsonRpc()
+                     a.UseTcpJsonRpc()
                      .ConfigureRpcStore(store =>
                      {
                          store.RegisterServer<JsonRpcServer>();

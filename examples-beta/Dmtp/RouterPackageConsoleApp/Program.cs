@@ -23,20 +23,21 @@ namespace RouterPackageConsoleApp
 
             for (int i = 0; i < 100000; i++)
             {
-                using (ByteBlock byteBlock = new ByteBlock(1024*512))
+                using (ByteBlock byteBlock = new ByteBlock(1024 * 512))
                 {
-                    byteBlock.SetLength(byteBlock.Capacity);//此处模拟一个大数据块
+                    //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
+                    byteBlock.SetLength(byteBlock.Capacity);
                     MyRequestPackage requestPackage = new MyRequestPackage()
                     {
                         ByteBlock = byteBlock,
-                        Metadata = new Metadata() { { "a", "a" } }
+                        Metadata = new Metadata() { { "a", "a" } }//传递一个元数据，用于传递一些字符串信息
                     };
                     var response = client.GetDmtpRouterPackageActor().Request<MyResponsePackage>(requestPackage);
 
                     client.Logger.Info(response.Message);
                 }
             }
-            
+
 
             Console.ReadKey();
         }
@@ -138,12 +139,18 @@ namespace RouterPackageConsoleApp
             }
             async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
-                //m_logger.Info($"收到包请求");
+                m_logger.Info($"收到包请求");
+               
+                /*此处即可以获取到请求的包*/
+                var response = e.ReadRouterPackage<MyRequestPackage>();
+                response.ByteBlock.SafeDispose();//将使用完成的内存池回收。
+                /*此处即可以获取到请求的包*/
+
                 await e.ResponseAsync(new MyResponsePackage()
                 {
                     Message = "Success"
                 });
-                //m_logger.Info($"已响应包请求");
+                m_logger.Info($"已响应包请求");
 
                 //一般在当前插件无法处理时调用下一插件。此处则不应该调用
                 //await e.InvokeNext();
