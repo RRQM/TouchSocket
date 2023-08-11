@@ -15,10 +15,9 @@ namespace JsonRpcClientConsoleApp
 
         private static void JsonRpcClientInvokeByHttp()
         {
-            var jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new HttpJsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc")
-                .SetJRPT(JRPT.Http));
+                .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
             jsonRpcClient.Connect();
             Console.WriteLine("连接成功");
             var result = jsonRpcClient.TestJsonRpc("RRQM");
@@ -34,18 +33,17 @@ namespace JsonRpcClientConsoleApp
 
         private static void JsonRpcClientInvokeByTcp()
         {
-            var jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new TcpJsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7705")
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-                .SetJRPT(JRPT.Tcp));
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
             jsonRpcClient.Connect();
 
             Console.WriteLine("连接成功");
             var result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"Tcp返回结果:{result}");
 
-            result = jsonRpcClient.TestJsonRpc1("RRQM");
+            result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"Tcp返回结果:{result}");
 
             result = jsonRpcClient.TestGetContext("RRQM");
@@ -61,17 +59,16 @@ namespace JsonRpcClientConsoleApp
 
         private static void JsonRpcClientInvokeByWebSocket()
         {
-            var jsonRpcClient = new JsonRpcClient();
+            var jsonRpcClient = new WebSocketJsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("ws://127.0.0.1:7706/ws")//此url就是能连接到websocket的路径。
-                .SetJRPT(JRPT.WebSocket));
+                .SetRemoteIPHost("ws://127.0.0.1:7706/ws"));//此url就是能连接到websocket的路径。
             jsonRpcClient.Connect();
 
             Console.WriteLine("连接成功");
             var result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"WebSocket返回结果:{result}");
 
-            result = jsonRpcClient.TestJsonRpc1("RRQM");
+            result = jsonRpcClient.TestJsonRpc("RRQM");
             Console.WriteLine($"WebSocket返回结果:{result}");
 
             result = jsonRpcClient.TestGetContext("RRQM");

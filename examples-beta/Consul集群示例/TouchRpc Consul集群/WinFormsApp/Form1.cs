@@ -68,9 +68,8 @@ namespace WinFormsApp
             {
                 try
                 {
-                    var client = new JsonRpcClient();
+                    var client = new HttpJsonRpcClient();
                     client.Setup(new TouchSocketConfig()
-                        .SetJRPT(JRPT.Http)
                         .SetRemoteIPHost($"http://{agentService.Address}:{agentService.Port}/jsonrpc"));
                     client.Connect();
 

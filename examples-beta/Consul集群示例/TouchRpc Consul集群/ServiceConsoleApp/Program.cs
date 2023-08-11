@@ -39,7 +39,6 @@ namespace ServiceConsoleApp
 
                     a.UseDmtpRpc();
                     a.UseXmlRpc().SetXmlRpcUrl("/xmlrpc");
-                    a.UseJsonRpc().SetJsonRpcUrl("/jsonrpc");
                     a.UseWebApi();
 
                     a.UseWebSocket()//添加WebSocket功能
