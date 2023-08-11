@@ -17,6 +17,9 @@ namespace WebSocketConsoleApp
             ConnectWith_ws();
             ConnectWith_wsquery();
             ConnectWith_wsheader();
+
+            ConnectWith_Post_ws();
+
             Console.ReadKey();
         }
 
@@ -79,6 +82,31 @@ namespace WebSocketConsoleApp
             client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
         }
 
+        /// <summary>
+        /// 使用Post方式连接
+        /// </summary>
+        private static void ConnectWith_Post_ws()
+        {
+            using var client = new WebSocketClient();
+            client.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+                    {
+                        e.Context.Request.Method=HttpMethod.Post;//将请求方法改为Post
+                        await e.InvokeNext();
+                    });
+                })
+                .SetRemoteIPHost("ws://127.0.0.1:7789/postws"));
+            client.Connect();
+
+            client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
+        }
+
         private static HttpService CreateHttpService()
         {
             var service = new HttpService();
@@ -126,6 +154,16 @@ namespace WebSocketConsoleApp
             {
                 return false;
             }
+
+            //使用Post连接
+            if (context.Request.Method== HttpMethod.Post)
+            {
+                if (context.Request.UrlEquals("/postws"))
+                {
+                    return true;
+                }
+            }
+
             if (context.Request.UrlEquals("/ws"))//以此连接，则直接可以连接
             {
                 return true;
