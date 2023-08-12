@@ -50,34 +50,34 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="TouchSocket, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.2.0.0-beta.132\lib\net45\TouchSocket.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.2.0.0-beta.134\lib\net45\TouchSocket.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.Core.2.0.0-beta.132\lib\net45\TouchSocket.Core.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.Core.2.0.0-beta.134\lib\net45\TouchSocket.Core.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.Dmtp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.Dmtp.2.0.0-beta.132\lib\net45\TouchSocket.Dmtp.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.Dmtp.2.0.0-beta.134\lib\net45\TouchSocket.Dmtp.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.Http.2.0.0-beta.132\lib\net45\TouchSocket.Http.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.Http.2.0.0-beta.134\lib\net45\TouchSocket.Http.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.JsonRpc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.JsonRpc.2.0.0-beta.132\lib\net45\TouchSocket.JsonRpc.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.JsonRpc.2.0.0-beta.134\lib\net45\TouchSocket.JsonRpc.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.Rpc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.Rpc.2.0.0-beta.132\lib\net45\TouchSocket.Rpc.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.Rpc.2.0.0-beta.134\lib\net45\TouchSocket.Rpc.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.WebApi, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.WebApi.2.0.0-beta.132\lib\net45\TouchSocket.WebApi.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.WebApi.2.0.0-beta.134\lib\net45\TouchSocket.WebApi.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocket.XmlRpc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocket.XmlRpc.2.0.0-beta.132\lib\net45\TouchSocket.XmlRpc.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocket.XmlRpc.2.0.0-beta.134\lib\net45\TouchSocket.XmlRpc.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocketPro, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocketPro.2.0.0-beta.132\lib\net45\TouchSocketPro.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocketPro.2.0.0-beta.134\lib\net45\TouchSocketPro.dll</HintPath>
     </Reference>
     <Reference Include="TouchSocketPro.Dmtp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=e66400a0f8ce7abb, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TouchSocketPro.Dmtp.2.0.0-beta.132\lib\net45\TouchSocketPro.Dmtp.dll</HintPath>
+      <HintPath>..\..\packages\TouchSocketPro.Dmtp.2.0.0-beta.134\lib\net45\TouchSocketPro.Dmtp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
