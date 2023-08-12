@@ -19,27 +19,61 @@ namespace RouterPackageConsoleApp
                 ConsoleLogger.Default.Info(ex.Message);
             }
             var service = GetTcpDmtpService();
-            var client = GetTcpDmtpClient();
 
-            for (int i = 0; i < 100000; i++)
+
+            var consoleAction = new ConsoleAction();
+            consoleAction.OnException += ConsoleAction_OnException;
+
+            consoleAction.Add("1", "测试自定义数据包", RequestMyResponsePackage);
+            consoleAction.Add("2", "测试返回Result", RequestResult);
+
+            consoleAction.ShowAll();
+            consoleAction.RunCommandLine();
+        }
+
+        private static void RequestResult()
+        {
+            using var client = GetTcpDmtpClient();
+            using (var byteBlock = new ByteBlock(1024 * 512))
             {
-                using (ByteBlock byteBlock = new ByteBlock(1024 * 512))
+                //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
+                byteBlock.SetLength(byteBlock.Capacity);
+                var requestPackage = new MyRequestPackage()
                 {
-                    //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
-                    byteBlock.SetLength(byteBlock.Capacity);
-                    MyRequestPackage requestPackage = new MyRequestPackage()
-                    {
-                        ByteBlock = byteBlock,
-                        Metadata = new Metadata() { { "a", "a" } }//传递一个元数据，用于传递一些字符串信息
-                    };
-                    var response = client.GetDmtpRouterPackageActor().Request<MyResponsePackage>(requestPackage);
+                    ByteBlock = byteBlock,
+                    Metadata = new Metadata() { { "b", "b" } }//传递一个元数据，用于传递一些字符串信息
+                };
 
-                    client.Logger.Info(response.Message);
-                }
+                //发起请求，然后等待一个自定义的响应包。
+                var response = client.GetDmtpRouterPackageActor().Request(requestPackage);
+
+                client.Logger.Info($"自定义响应成功，{response}");
             }
+        }
 
+        private static void RequestMyResponsePackage()
+        {
+            using var client = GetTcpDmtpClient();
+            using (var byteBlock = new ByteBlock(1024 * 512))
+            {
+                //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
+                byteBlock.SetLength(byteBlock.Capacity);
+                var requestPackage = new MyRequestPackage()
+                {
+                    ByteBlock = byteBlock,
+                    Metadata = new Metadata() { { "a", "a" } }//传递一个元数据，用于传递一些字符串信息
+                };
 
-            Console.ReadKey();
+                //发起请求，然后等待一个自定义的响应包。
+                var response = client.GetDmtpRouterPackageActor().Request<MyResponsePackage>(requestPackage);
+
+                client.Logger.Info($"自定义响应成功，{response.Message}");
+            }
+        }
+
+        private static void ConsoleAction_OnException(Exception obj)
+        {
+            Console.WriteLine(obj.Message);
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()
@@ -79,7 +113,9 @@ namespace RouterPackageConsoleApp
                    {
                        a.UseDmtpRouterPackage();//添加路由包功能插件
 
-                       a.Add<MyPlugin>();
+                       a.Add<MyPlugin1>();
+                       a.Add<MyPlugin2>();
+
                        a.UseAutoBufferLength();
                    })
                    .SetVerifyToken("Dmtp");//连接验证口令。
@@ -129,31 +165,64 @@ namespace RouterPackageConsoleApp
             public override int PackageSize => 1024;
         }
 
-        class MyPlugin : PluginBase, IDmtpRouterPackagePlugin
+        class MyPlugin1 : PluginBase, IDmtpRouterPackagePlugin
         {
             private readonly ILog m_logger;
 
-            public MyPlugin(ILog logger)
+            public MyPlugin1(ILog logger)
             {
                 this.m_logger = logger;
             }
             async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
-                m_logger.Info($"收到包请求");
-               
-                /*此处即可以获取到请求的包*/
-                var response = e.ReadRouterPackage<MyRequestPackage>();
-                response.ByteBlock.SafeDispose();//将使用完成的内存池回收。
-                /*此处即可以获取到请求的包*/
-
-                await e.ResponseAsync(new MyResponsePackage()
+                if (e.Metadata?["a"] == "a")
                 {
-                    Message = "Success"
-                });
-                m_logger.Info($"已响应包请求");
+                    this.m_logger.Info($"收到包请求");
 
-                //一般在当前插件无法处理时调用下一插件。此处则不应该调用
-                //await e.InvokeNext();
+                    /*此处即可以获取到请求的包*/
+                    var response = e.ReadRouterPackage<MyRequestPackage>();
+                    response.ByteBlock.SafeDispose();//将使用完成的内存池回收。
+                    /*此处即可以获取到请求的包*/
+
+                    await e.ResponseAsync(new MyResponsePackage()
+                    {
+                        Message = "Success"
+                    });
+                    this.m_logger.Info($"已响应包请求");
+                }
+
+
+                //一般在当前插件无法处理时调用下一插件。
+                await e.InvokeNext();
+            }
+        }
+
+        class MyPlugin2 : PluginBase, IDmtpRouterPackagePlugin
+        {
+            private readonly ILog m_logger;
+
+            public MyPlugin2(ILog logger)
+            {
+                this.m_logger = logger;
+            }
+            async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
+            {
+                if (e.Metadata?["b"] == "b")
+                {
+                    this.m_logger.Info($"收到包请求");
+
+                    /*此处即可以获取到请求的包*/
+                    var response = e.ReadRouterPackage<MyRequestPackage>();
+                    response.ByteBlock.SafeDispose();//将使用完成的内存池回收。
+                    /*此处即可以获取到请求的包*/
+
+                    e.ResponseSuccess();
+                    this.m_logger.Info($"已响应包请求");
+                }
+
+
+                //一般在当前插件无法处理时调用下一插件。
+                await e.InvokeNext();
             }
         }
     }
