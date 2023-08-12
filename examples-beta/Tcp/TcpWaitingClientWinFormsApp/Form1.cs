@@ -8,7 +8,7 @@ namespace TcpWaitingClientWinFormsApp
     {
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         TcpClient m_tcpClient;
@@ -28,7 +28,7 @@ namespace TcpWaitingClientWinFormsApp
                 this.m_tcpClient.Setup(new TouchSocketConfig()
                     .SetRemoteIPHost(this.textBox1.Text));
 
-                m_tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
+                this.m_tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
             }
             catch (Exception ex)
             {
@@ -40,7 +40,7 @@ namespace TcpWaitingClientWinFormsApp
         {
             try
             {
-                IsConnected();
+                this.IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
                     AdapterFilter = AdapterFilter.AllAdapter,
@@ -64,7 +64,7 @@ namespace TcpWaitingClientWinFormsApp
         {
             try
             {
-                IsConnected();
+                this.IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
                     AdapterFilter = AdapterFilter.AllAdapter,
