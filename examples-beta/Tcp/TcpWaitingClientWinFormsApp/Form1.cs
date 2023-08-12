@@ -13,10 +13,14 @@ namespace TcpWaitingClientWinFormsApp
 
         TcpClient m_tcpClient;
 
-        private void button1_Click(object sender, EventArgs e)
+        private void IsConnected()
         {
             try
             {
+                if (this.m_tcpClient?.Online == true)
+                {
+                    return;
+                }
                 this.m_tcpClient.SafeDispose();
                 this.m_tcpClient = new TcpClient();
 
@@ -25,8 +29,6 @@ namespace TcpWaitingClientWinFormsApp
                     .SetRemoteIPHost(this.textBox1.Text));
 
                 m_tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
-
-                MessageBox.Show("连接成功");
             }
             catch (Exception ex)
             {
@@ -38,6 +40,7 @@ namespace TcpWaitingClientWinFormsApp
         {
             try
             {
+                IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
                     AdapterFilter = AdapterFilter.AllAdapter,
@@ -61,6 +64,7 @@ namespace TcpWaitingClientWinFormsApp
         {
             try
             {
+                IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
                     AdapterFilter = AdapterFilter.AllAdapter,

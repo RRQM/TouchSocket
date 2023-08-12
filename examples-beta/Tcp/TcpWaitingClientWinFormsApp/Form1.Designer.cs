@@ -30,18 +30,19 @@
         {
             label1 = new Label();
             textBox1 = new TextBox();
-            button1 = new Button();
             textBox2 = new TextBox();
             button2 = new Button();
             button3 = new Button();
             textBox3 = new TextBox();
             textBox4 = new TextBox();
+            groupBox1 = new GroupBox();
+            groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(52, 51);
+            label1.Location = new Point(19, 34);
             label1.Name = "label1";
             label1.Size = new Size(62, 31);
             label1.TabIndex = 0;
@@ -49,25 +50,15 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(120, 48);
+            textBox1.Location = new Point(87, 31);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(290, 38);
+            textBox1.Size = new Size(485, 38);
             textBox1.TabIndex = 1;
             textBox1.Text = "tcp://127.0.0.1:7789";
             // 
-            // button1
-            // 
-            button1.Location = new Point(439, 43);
-            button1.Name = "button1";
-            button1.Size = new Size(150, 46);
-            button1.TabIndex = 2;
-            button1.Text = "连接";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += this.button1_Click;
-            // 
             // textBox2
             // 
-            textBox2.Location = new Point(52, 128);
+            textBox2.Location = new Point(23, 42);
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(358, 38);
             textBox2.TabIndex = 3;
@@ -75,7 +66,7 @@
             // 
             // button2
             // 
-            button2.Location = new Point(439, 123);
+            button2.Location = new Point(410, 37);
             button2.Name = "button2";
             button2.Size = new Size(150, 46);
             button2.TabIndex = 4;
@@ -85,7 +76,7 @@
             // 
             // button3
             // 
-            button3.Location = new Point(636, 204);
+            button3.Location = new Point(607, 118);
             button3.Name = "button3";
             button3.Size = new Size(327, 46);
             button3.TabIndex = 6;
@@ -95,7 +86,7 @@
             // 
             // textBox3
             // 
-            textBox3.Location = new Point(52, 209);
+            textBox3.Location = new Point(23, 123);
             textBox3.Name = "textBox3";
             textBox3.Size = new Size(358, 38);
             textBox3.TabIndex = 5;
@@ -103,27 +94,38 @@
             // 
             // textBox4
             // 
-            textBox4.Location = new Point(439, 209);
+            textBox4.Location = new Point(410, 123);
             textBox4.Name = "textBox4";
             textBox4.Size = new Size(150, 38);
             textBox4.TabIndex = 7;
             textBox4.Text = "Socket";
             // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(button3);
+            groupBox1.Controls.Add(textBox4);
+            groupBox1.Controls.Add(textBox2);
+            groupBox1.Controls.Add(button2);
+            groupBox1.Controls.Add(textBox3);
+            groupBox1.Location = new Point(12, 102);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(949, 183);
+            groupBox1.TabIndex = 8;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "异步同步请求";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new SizeF(14F, 31F);
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(1017, 556);
-            this.Controls.Add(textBox4);
-            this.Controls.Add(button3);
-            this.Controls.Add(textBox3);
-            this.Controls.Add(button2);
-            this.Controls.Add(textBox2);
-            this.Controls.Add(button1);
+            this.ClientSize = new Size(976, 325);
+            this.Controls.Add(groupBox1);
             this.Controls.Add(textBox1);
             this.Controls.Add(label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
         }
@@ -132,11 +134,11 @@
 
         private Label label1;
         private TextBox textBox1;
-        private Button button1;
         private TextBox textBox2;
         private Button button2;
         private Button button3;
         private TextBox textBox3;
         private TextBox textBox4;
+        private GroupBox groupBox1;
     }
 }

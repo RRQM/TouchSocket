@@ -217,7 +217,7 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "waitingclient",
+            id: "tcpwaitingclient",
             label: "6.4 同步请求"
           },
           {

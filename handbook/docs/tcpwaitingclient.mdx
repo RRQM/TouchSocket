@@ -1,5 +1,5 @@
 ---
-id: waitingclient
+id: tcpwaitingclient
 title: 同步请求
 ---
 
@@ -23,7 +23,7 @@ title: 同步请求
 
 ```csharp
 TcpClient client = new TcpClient();
-client.Connect("127.0.0.1:7789");
+client.Connect("tcp://127.0.0.1:7789");
 
 //调用GetWaitingClient获取到IWaitingClient的对象。
 var waitClient = client.GetWaitingClient(new WaitingOptions()
@@ -100,15 +100,11 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 :::  
 
-:::tip 提示
-
-实际上上述行为，只要实现IClient, IDefaultSender, ISend三个接口的类均可以使用。
-
-:::  
-
 :::danger 注意事项
 
 1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
-2. 发送采用Lock锁，一个事务没结束，另一个请求也发不出去。
+2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
 
 :::
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/Tcp/TcpWaitingClientWinFormsApp)
