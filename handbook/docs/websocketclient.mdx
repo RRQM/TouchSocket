@@ -3,6 +3,8 @@ id: websocketclient
 title: 创建WebSocket客户端
 ---
 
+import Tag from "@site/src/components/Tag.js";
+
 ### 定义
 
 命名空间：TouchSocket.Http.WebSockets <br/>
@@ -14,37 +16,32 @@ title: 创建WebSocket客户端
 
 ## 二、支持插件接口
 
-支持**ITcpPlugin、IWebSocketPlugin**
-
-声明自定义实例类，然后实现**IWebSocketPlugin**接口，即可实现下列事务的触发。或者继承自**WebSocketPluginBase**类，重写相应方法即可。
-
 |  插件方法| 功能 |
 | --- | --- |
-| OnHandshaking | 当发送握手请求之前 |
-| OnHandshaked | 当收成功的握手响应之后 |
-| OnHandleWSDataFrame | 当收到Websocket的数据报文 |
-| OnClosing | 当收到关闭请求时 |
+| IWebSocketHandshakingPlugin | 当收到握手请求之前，可以进行连接验证等 |
+| IWebSocketHandshakedPlugin | 当成功握手响应之后 |
+| IWebSocketReceivedPlugin | 当收到Websocket的数据报文 |
+| IWebSocketClosingPlugin | 当收到关闭请求时，如果对方直接断开连接，此方法则不会触发，届时可以考虑使用ITcpDisconnectedPlugin |
 
-
-## 三、创建WS客户端
+## 三、创建客户端
 
 ### 3.1 创建常规客户端
 
 ```csharp
-WebSocketClient myWSClient = new WebSocketClient();
-myWSClient.Setup(new TouchSocketConfig()
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     }));
-myWSClient.Connect();
-myWSClient.Logger.Message("连接成功");
+client.Connect();
+client.Logger.Info("连接成功");
 ```
 
 ### 3.2 创建WSs客户端
 
-**当需要连接到由证书机构颁发的网址（例如：小程序、物联网等）时，仅需要设置url即可。**
+**当需要连接到由证书机构颁发的网址（例如：小程序、物联网等）时，仅需要设置带有`wss`的url即可。**
 
 ```csharp
 wss://127.0.0.1:7789/ws
@@ -53,9 +50,9 @@ wss://127.0.0.1:7789/ws
 **当连接自定义证书的Ssl：wss://127.0.0.1:7789/ws**
 
 ```csharp
-WebSocketClient myWSClient = new WebSocketClient();
+var client = new WebSocketClient();
 
-myWSClient.Setup(new TouchSocketConfig()
+client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
     .SetClientSslOption(
     new ClientSslOption()
@@ -72,7 +69,7 @@ Console.WriteLine("连接成功");
 
 :::caution 注意
 
-当使用域名连接时，TargetHost为域名，例如连接到IPHost("ws://baidu.com")时，TargetHost应当填写：baidu.com
+当使用域名连接时，TargetHost为域名，例如连接到IPHost("wss://baidu.com")时，TargetHost应当填写：baidu.com
 
 :::  
 
@@ -84,25 +81,16 @@ Console.WriteLine("连接成功");
 ### 4.1 发送文本类消息
 
 ```csharp
-myWSClient.SendWithWS("Text");
+client.SendWithWS("Text");
 ```
 
 ### 4.2 发送二进制消息
 
 ```csharp
-myWSClient.SendWithWS(new byte[10]);
+client.SendWithWS(new byte[10]);
 ```
 
-### 4.3 发送分包的二进制
-
-例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
-
-```csharp
-byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-myWSClient.SubSendWithWS(data, 5);
-```
-
-### 4.4 直接发送自定义构建的数据帧
+### 4.3 直接发送自定义构建的数据帧
 ```csharp
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
@@ -154,23 +142,41 @@ client.Received = (c, e) =>
     };
 ```
 
-### 5.2 使用插件实现。
+### 5.2 使用插件实现 <Tag>推荐</Tag>
 
 【定义插件】
 ```csharp
-class MyWSClientPlugin:WebSocketPluginBase<WebSocketClient>
+public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin,IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
 {
-    protected override void OnHandleWSDataFrame(WebSocketClient client, WSDataFrameEventArgs e)
+    async Task IWebSocketHandshakingPlugin<IHttpClientBase>.OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
+    {
+        client.Logger.Info("WebSocket正在连接");
+        await e.InvokeNext();
+    }
+
+    async Task IWebSocketHandshakedPlugin<IHttpClientBase>.OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+    {
+        client.Logger.Info("WebSocket成功连接");
+        await e.InvokeNext();
+    }
+
+    async Task IWebSocketReceivedPlugin<IHttpClientBase>.OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)
         {
             case WSDataType.Cont:
                 client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
-                break;
+
+                return;
 
             case WSDataType.Text:
                 client.Logger.Info(e.DataFrame.ToText());
-                break;
+
+                if (!client.IsClient)
+                {
+                    client.SendWithWS("我已收到");
+                }
+                return;
 
             case WSDataType.Binary:
                 if (e.DataFrame.FIN)
@@ -181,15 +187,14 @@ class MyWSClientPlugin:WebSocketPluginBase<WebSocketClient>
                 {
                     client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
                 }
-                break;
+                return;
 
             case WSDataType.Close:
                 {
                     client.Logger.Info("远程请求断开");
                     client.Close("断开");
                 }
-
-                break;
+                return;
 
             case WSDataType.Ping:
                 break;
@@ -200,27 +205,46 @@ class MyWSClientPlugin:WebSocketPluginBase<WebSocketClient>
             default:
                 break;
         }
+
+        await e.InvokeNext();
     }
 }
 ```
 
 【使用】
 
-```csharp {11}
-WebSocketClientmyWSClient = new WebSocketClient();
-myWSClient.Setup(new TouchSocketConfig()
+```csharp {10}
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
-    .UsePlugin()
     .ConfigureContainer(a =>
     {
-        a.AddFileLogger();
+        a.AddConsoleLogger();
     })
     .ConfigurePlugins(a => 
     {
-        a.Add<MyWSClientPlugin>();
+        a.Add<MyWebSocketPlugin>();
     }));
-myWSClient.Connect();
+client.Connect();
 ```
+
+
+## 六、其他操作
+
+### 6.1 Ping机制
+
+WebSocket有自己的Ping、Pong机制。所以直接调用已有方法即可。
+
+```csharp
+client.PingWS();
+client.PongWS();
+```
+
+:::tip 建议
+
+WebSocket是双向通讯，所以支持客户端和服务器双向操作Ping和Pong报文。但是一般来说都是客户端执行Ping，服务器回应Pong。
+
+:::  
 
 ## 六、关闭连接
 
@@ -229,3 +253,5 @@ myWSClient.Connect();
 ```csharp
 myWSClient.CloseWithWS("close");
 ```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/WebSocket/WebSocketConsoleApp)

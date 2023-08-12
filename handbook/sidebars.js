@@ -207,7 +207,7 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "createtcpservice",
+            id: "tcpservice",
             label: "6.2 创建TcpService"
           },
           {
@@ -441,24 +441,14 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "websocketverify",
-            label: "10.4 连接验证"
-          },
-          {
-            type: "doc",
             id: "websocketheartbeat",
-            label: "10.5 心跳设置"
+            label: "10.4 心跳设置"
           },
           {
             type: "doc",
             id: "wscommandlineplugin",
-            label: "10.6 WSCommandLinePlugin"
-          },
-          {
-            type: "doc",
-            id: "wsjsonrpc",
-            label: "10.7 基于WS的JsonRpc"
-          },
+            label: "10.5 快捷事务命令行"
+          }
         ]
     },
     {

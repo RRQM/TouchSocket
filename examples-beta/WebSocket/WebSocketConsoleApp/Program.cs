@@ -1,4 +1,10 @@
 ﻿using System;
+using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -14,13 +20,61 @@ namespace WebSocketConsoleApp
         private static void Main(string[] args)
         {
             var service = CreateHttpService();
-            ConnectWith_ws();
-            ConnectWith_wsquery();
-            ConnectWith_wsheader();
 
-            ConnectWith_Post_ws();
+            var consoleAction = new ConsoleAction();
+            consoleAction.OnException += ConsoleAction_OnException;
 
-            Console.ReadKey();
+            consoleAction.Add("1", "使用/ws直接连接", ConnectWith_ws);
+            consoleAction.Add("2", "使用/ws和query参数连接", ConnectWith_wsquery);
+            consoleAction.Add("3", "使用/ws和header参数连接", ConnectWith_wsheader);
+            consoleAction.Add("4", "使用post方式连接", ConnectWith_Post_ws);
+            consoleAction.Add("5", "发送字符串", SendText);
+            consoleAction.Add("6", "调用Add", SendAdd);
+
+            consoleAction.ShowAll();
+            consoleAction.RunCommandLine();
+
+        }
+
+        private static async void SendAdd()
+        {
+            var client = new WebSocketClient();
+            client.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
+                    {
+                        client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
+                        await e.InvokeNext();
+                    });
+                })
+                .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+            client.Connect();
+
+            client.SendWithWS("Add 10 20");
+            await Task.Delay(1000);
+
+        }
+        private static void SendText()
+        {
+            var client = new WebSocketClient();
+            client.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+            client.Connect();
+            client.SendWithWS("hello");
+        }
+
+        private static void ConsoleAction_OnException(Exception obj)
+        {
+            Console.WriteLine(obj.Message);
         }
 
         /// <summary>
@@ -97,7 +151,7 @@ namespace WebSocketConsoleApp
                 {
                     a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
                     {
-                        e.Context.Request.Method=HttpMethod.Post;//将请求方法改为Post
+                        e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
                         await e.InvokeNext();
                     });
                 })
@@ -123,8 +177,9 @@ namespace WebSocketConsoleApp
                            .SetVerifyConnection(VerifyConnection)
                            .UseAutoPong();//当收到ping报文时自动回应pong
 
-                    a.Add<MyWebSocketPlugin<IHttpSocketClient>>();
-                    a.Add<MyWSCommandLinePlugin>();
+                    a.Add<MyWSCommandLinePlugin>(); 
+                    a.Add<MyWebSocketPlugin>();
+
                     a.UseWebApi()
                     .ConfigureRpcStore(store =>
                     {
@@ -156,7 +211,7 @@ namespace WebSocketConsoleApp
             }
 
             //使用Post连接
-            if (context.Request.Method== HttpMethod.Post)
+            if (context.Request.Method == HttpMethod.Post)
             {
                 if (context.Request.UrlEquals("/postws"))
                 {
@@ -197,22 +252,22 @@ namespace WebSocketConsoleApp
             return false;
         }
 
-        public class MyWebSocketPlugin<TSocketClient> : PluginBase, IWebSocketHandshakingPlugin<TSocketClient>,
-            IWebSocketHandshakedPlugin<TSocketClient>, IWebSocketReceivedPlugin<TSocketClient> where TSocketClient : IHttpSocketClient
+
+        public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
         {
-            async Task IWebSocketHandshakingPlugin<TSocketClient>.OnWebSocketHandshaking(TSocketClient client, HttpContextEventArgs e)
+            async Task IWebSocketHandshakingPlugin<IHttpClientBase>.OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
             {
                 client.Logger.Info("WebSocket正在连接");
                 await e.InvokeNext();
             }
 
-            async Task IWebSocketHandshakedPlugin<TSocketClient>.OnWebSocketHandshaked(TSocketClient client, HttpContextEventArgs e)
+            async Task IWebSocketHandshakedPlugin<IHttpClientBase>.OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
             {
                 client.Logger.Info("WebSocket成功连接");
                 await e.InvokeNext();
             }
 
-            async Task IWebSocketReceivedPlugin<TSocketClient>.OnWebSocketReceived(TSocketClient client, WSDataFrameEventArgs e)
+            async Task IWebSocketReceivedPlugin<IHttpClientBase>.OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
             {
                 switch (e.DataFrame.Opcode)
                 {
@@ -223,7 +278,11 @@ namespace WebSocketConsoleApp
 
                     case WSDataType.Text:
                         client.Logger.Info(e.DataFrame.ToText());
-                        client.SendWithWS("我已收到");
+
+                        if (!client.IsClient)
+                        {
+                            client.SendWithWS("我已收到");
+                        }
                         return;
 
                     case WSDataType.Binary:
@@ -273,7 +332,7 @@ namespace WebSocketConsoleApp
 
         /// <summary>
         /// 命令行插件。
-        /// 声明的方法必须以"Command"结尾，支持json字符串，参数之间空格隔开。
+        /// 声明的方法必须为公开实例方法、以"Command"结尾，且支持json字符串，参数之间空格隔开。
         /// </summary>
         public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
         {
@@ -281,12 +340,13 @@ namespace WebSocketConsoleApp
             {
             }
 
-            public int AddCommand(IHttpClientBase client, int a, int b)
+            public int AddCommand(int a, int b)
             {
                 return a + b;
             }
 
-            public SumClass SumCommand(SumClass sumClass)
+            //当第一个参数，直接或间接实现ITcpClientBase接口时，会收集到当前请求的客户端，从而可以获取IP等。
+            public SumClass SumCommand(IHttpClientBase client, SumClass sumClass)
             {
                 sumClass.Sum = sumClass.A + sumClass.B;
                 return sumClass;

@@ -18,28 +18,19 @@ Websocket拥有自己的心跳数据格式，和响应心跳格式，专业名�
 
 服务器在添加WebSocket功能时，可以直接启用自动回应Ping。
 
-```csharp {17}
+```csharp {12}
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
-    .UsePlugin()
-    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
-    })
-    .ConfigureRpcStore(a =>
-    {
-        a.RegisterServer<MyServer>();
     })
     .ConfigurePlugins(a =>
     {
         a.UseWebSocket()//添加WebSocket功能
                .SetWSUrl("/ws")
-               .UseAutoPong()//当收到ping报文时自动回应pong
-               .SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。
-        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
-        a.Add<MyWSCommandLinePlugin>();
-        a.UseWebApi();
+               .UseAutoPong();//当收到ping报文时自动回应pong
     }))
     .Start();
 ```
@@ -52,19 +43,18 @@ service.Setup(new TouchSocketConfig()//加载配置
 
 #### 2.2 客户端使用心跳插件
 
-```csharp {11-12}
-WebSocketClient client = new WebSocketClient();
+```csharp {10-11}
+var client = new WebSocketClient();
 client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .UsePlugin()
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
         a.AddFileLogger();
     })
-    .ConfigurePlugins(a => 
+    .ConfigurePlugins(a =>
     {
         a.UseWebSocketHeartbeat()//使用心跳插件
-        .Tick(TimeSpan.FromSeconds(5));//每5秒ping一次。
+        .SetTick(TimeSpan.FromSeconds(1));//每5秒ping一次。
     }));
 client.Connect();
 ```
@@ -105,3 +95,5 @@ client.Send(dataFrame);
 无论是Ping，还是Pong，服务器和客户端都支持发送和接收。但是一般建议由客户端Ping，服务器只负责Pong即可。
 
 :::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-beta/WebSocket/WebSocketConsoleApp)
