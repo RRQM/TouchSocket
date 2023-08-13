@@ -1,12 +1,5 @@
-using System;
-using TouchSocket.Core;
-using TouchSocket.Sockets;
-using TouchSocket.Rpc;
-using TouchSocket.Dmtp.Rpc;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Rpc;
 namespace RpcProxy
 {
     public interface IMyRpcServer : TouchSocket.Rpc.IRemoteServer
@@ -72,12 +65,12 @@ namespace RpcProxy
         /// <exception cref="System.Exception">其他异常</exception>
         public System.Boolean Login(System.String account, System.String password, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { account, password };
-            System.Boolean returnData = (System.Boolean)Client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
+            var parameters = new object[] { account, password };
+            var returnData = (System.Boolean)this.Client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -85,12 +78,12 @@ namespace RpcProxy
         ///</summary>
         public async Task<System.Boolean> LoginAsync(System.String account, System.String password, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { account, password };
-            return (System.Boolean)await Client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
+            var parameters = new object[] { account, password };
+            return (System.Boolean)await this.Client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
         }
 
         ///<summary>
@@ -101,12 +94,12 @@ namespace RpcProxy
         /// <exception cref="System.Exception">其他异常</exception>
         public System.Boolean Register(RegisterModel register, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { register };
-            System.Boolean returnData = (System.Boolean)Client.Invoke(typeof(System.Boolean), "Register", invokeOption, parameters);
+            var parameters = new object[] { register };
+            var returnData = (System.Boolean)this.Client.Invoke(typeof(System.Boolean), "Register", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -114,12 +107,12 @@ namespace RpcProxy
         ///</summary>
         public async Task<System.Boolean> RegisterAsync(RegisterModel register, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { register };
-            return (System.Boolean)await Client.InvokeAsync(typeof(System.Boolean), "Register", invokeOption, parameters);
+            var parameters = new object[] { register };
+            return (System.Boolean)await this.Client.InvokeAsync(typeof(System.Boolean), "Register", invokeOption, parameters);
         }
 
         ///<summary>
@@ -130,12 +123,12 @@ namespace RpcProxy
         /// <exception cref="System.Exception">其他异常</exception>
         public System.Int32 Performance(System.Int32 a, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { a };
-            System.Int32 returnData = (System.Int32)Client.Invoke(typeof(System.Int32), "Performance", invokeOption, parameters);
+            var parameters = new object[] { a };
+            var returnData = (System.Int32)this.Client.Invoke(typeof(System.Int32), "Performance", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -143,12 +136,12 @@ namespace RpcProxy
         ///</summary>
         public async Task<System.Int32> PerformanceAsync(System.Int32 a, IInvokeOption invokeOption = default)
         {
-            if (Client == null)
+            if (this.Client == null)
             {
                 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
             }
-            object[] parameters = new object[] { a };
-            return (System.Int32)await Client.InvokeAsync(typeof(System.Int32), "Performance", invokeOption, parameters);
+            var parameters = new object[] { a };
+            return (System.Int32)await this.Client.InvokeAsync(typeof(System.Int32), "Performance", invokeOption, parameters);
         }
 
     }
@@ -163,8 +156,8 @@ namespace RpcProxy
         public static System.Boolean Login<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { account, password };
-            System.Boolean returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
+            var parameters = new object[] { account, password };
+            var returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Login", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -173,7 +166,7 @@ namespace RpcProxy
         public static async Task<System.Boolean> LoginAsync<TClient>(this TClient client, System.String account, System.String password, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { account, password };
+            var parameters = new object[] { account, password };
             return (System.Boolean)await client.InvokeAsync(typeof(System.Boolean), "Login", invokeOption, parameters);
         }
 
@@ -186,8 +179,8 @@ namespace RpcProxy
         public static System.Boolean Register<TClient>(this TClient client, RegisterModel register, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { register };
-            System.Boolean returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Register", invokeOption, parameters);
+            var parameters = new object[] { register };
+            var returnData = (System.Boolean)client.Invoke(typeof(System.Boolean), "Register", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -196,7 +189,7 @@ namespace RpcProxy
         public static async Task<System.Boolean> RegisterAsync<TClient>(this TClient client, RegisterModel register, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { register };
+            var parameters = new object[] { register };
             return (System.Boolean)await client.InvokeAsync(typeof(System.Boolean), "Register", invokeOption, parameters);
         }
 
@@ -209,8 +202,8 @@ namespace RpcProxy
         public static System.Int32 Performance<TClient>(this TClient client, System.Int32 a, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { a };
-            System.Int32 returnData = (System.Int32)client.Invoke(typeof(System.Int32), "Performance", invokeOption, parameters);
+            var parameters = new object[] { a };
+            var returnData = (System.Int32)client.Invoke(typeof(System.Int32), "Performance", invokeOption, parameters);
             return returnData;
         }
         ///<summary>
@@ -219,7 +212,7 @@ namespace RpcProxy
         public static async Task<System.Int32> PerformanceAsync<TClient>(this TClient client, System.Int32 a, IInvokeOption invokeOption = default) where TClient :
         TouchSocket.Rpc.IRpcClient
         {
-            object[] parameters = new object[] { a };
+            var parameters = new object[] { a };
             return (System.Int32)await client.InvokeAsync(typeof(System.Int32), "Performance", invokeOption, parameters);
         }
 

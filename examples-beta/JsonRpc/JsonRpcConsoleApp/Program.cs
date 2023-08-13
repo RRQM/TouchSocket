@@ -1,4 +1,3 @@
-using JsonRpcProxy;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -75,7 +74,7 @@ namespace JsonRpcConsoleApp
                 .Start();
         }
 
-        
+
     }
 
     public class JsonRpcServer : RpcServer

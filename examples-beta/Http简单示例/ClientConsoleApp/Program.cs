@@ -37,8 +37,8 @@ namespace ClientConsoleApp
                 var buffer = new byte[1024 * 64];
                 while (true)
                 {
-                    int r = respose.Read(buffer, 0, buffer.Length);
-                    if (r==0)
+                    var r = respose.Read(buffer, 0, buffer.Length);
+                    if (r == 0)
                     {
                         break;
                     }

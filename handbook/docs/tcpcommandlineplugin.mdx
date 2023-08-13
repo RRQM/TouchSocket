@@ -76,7 +76,6 @@ config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(
           //return new TerminatorPackageAdapter(1024, "\r\n");//命令行中使用\r\n结尾 
           return new NormalDataHandlingAdapter();//亦或者省略\r\n，但此时调用方不能高速调用，会粘包
       })
-      .UsePlugin()
       .ConfigureContainer(a => 
       {
           a.AddConsoleLogger();
@@ -108,7 +107,7 @@ service.Logger.Info("使用：“Exc”测试异常");
 
 :::tip 提示
 
-调用的参数也支持自定义实体类，届时蚕食使用Json数据格式即可。
+调用的参数也支持自定义实体类，届时参数使用Json数据格式即可。
 
 :::  
 

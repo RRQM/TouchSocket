@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Net.Sockets;
-using System.Net.WebSockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -177,7 +171,7 @@ namespace WebSocketConsoleApp
                            .SetVerifyConnection(VerifyConnection)
                            .UseAutoPong();//当收到ping报文时自动回应pong
 
-                    a.Add<MyWSCommandLinePlugin>(); 
+                    a.Add<MyWSCommandLinePlugin>();
                     a.Add<MyWebSocketPlugin>();
 
                     a.UseWebApi()
@@ -323,7 +317,7 @@ namespace WebSocketConsoleApp
             {
                 if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
                 {
-                    bool result = client.SwitchProtocolToWebSocket(e.Context);
+                    var result = client.SwitchProtocolToWebSocket(e.Context);
                     return;
                 }
                 await e.InvokeNext();

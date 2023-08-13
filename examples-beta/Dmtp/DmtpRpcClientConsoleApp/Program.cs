@@ -1,5 +1,4 @@
 ﻿using RpcProxy;
-using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -13,7 +12,7 @@ namespace ClientConsoleApp
         static void Main(string[] args)
         {
 
-            ConsoleAction consoleAction = new ConsoleAction();
+            var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
 
             consoleAction.Add("1", "直接调用Rpc", RunInvokeT);
@@ -59,17 +58,17 @@ namespace ClientConsoleApp
         static void RunInvokeT()
         {
             var client = GetTcpDmtpClient();
-            int sum = client.GetDmtpRpcActor().InvokeT<int>("Add", DmtpInvokeOption.WaitInvoke, 10, 20);
+            var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", DmtpInvokeOption.WaitInvoke, 10, 20);
             client.Logger.Info($"调用Add方法成功，结果：{sum}");
         }
 
         static async void RunRpcPullChannel()
         {
             using var client = GetTcpDmtpClient();
-            ChannelStatus status = ChannelStatus.Default;
-            int size = 0;
+            var status = ChannelStatus.Default;
+            var size = 0;
             var channel = client.CreateChannel();//创建通道
-            Task task = Task.Run(() =>//这里必须用异步
+            var task = Task.Run(() =>//这里必须用异步
             {
                 using (channel)
                 {
@@ -80,7 +79,7 @@ namespace ClientConsoleApp
                     status = channel.Status;//最后状态
                 }
             });
-            int result = client.GetDmtpRpcActor().RpcPullChannel(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
+            var result = client.GetDmtpRpcActor().RpcPullChannel(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
             await task;//等待异步接收完成
             Console.WriteLine($"状态：{status}，size={size}");
         }
@@ -88,13 +87,13 @@ namespace ClientConsoleApp
         private static async void RunRpcPushChannel()
         {
             using var client = GetTcpDmtpClient();
-            ChannelStatus status = ChannelStatus.Default;
-            int size = 0;
-            int package = 1024;
+            var status = ChannelStatus.Default;
+            var size = 0;
+            var package = 1024;
             var channel = client.CreateChannel();//创建通道
-            Task task = Task.Run(() =>//这里必须用异步
+            var task = Task.Run(() =>//这里必须用异步
             {
-                for (int i = 0; i < 1024; i++)
+                for (var i = 0; i < 1024; i++)
                 {
                     size += package;
                     channel.Write(new byte[package]);
@@ -103,7 +102,7 @@ namespace ClientConsoleApp
 
                 status = channel.Status;
             });
-            int result = client.GetDmtpRpcActor().RpcPushChannel(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
+            var result = client.GetDmtpRpcActor().RpcPushChannel(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
             await task;//等待异步接收完成
             Console.WriteLine($"状态：{status}，result={result}");
         }
