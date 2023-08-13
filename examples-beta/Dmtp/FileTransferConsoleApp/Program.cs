@@ -61,7 +61,7 @@ namespace FileTransferConsoleApp
         static void MultithreadingClientPushFileFromService()
         {
             using var clientFactory = CreateClientFactory();
-            Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
+            var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
 
             if (!resultCon.IsSuccess())
             {
@@ -123,7 +123,7 @@ namespace FileTransferConsoleApp
         static void MultithreadingClientPullFileFromService()
         {
             using var clientFactory = CreateClientFactory();
-            Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
+            var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
             if (!resultCon.IsSuccess())
             {
                 //没有连接
@@ -235,8 +235,8 @@ namespace FileTransferConsoleApp
             metadata.Add("2", "2");
 
             //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-            PullSmallFileResult result = client.GetDmtpFileTransferActor().PullSmallFile(filePath, metadata);
-            byte[] data = result.Value;//此处即是下载的小文件的实际数据
+            var result = client.GetDmtpFileTransferActor().PullSmallFile(filePath, metadata);
+            var data = result.Value;//此处即是下载的小文件的实际数据
             result.Save(saveFilePath, overwrite: true);//将数据保存到指定路径。
 
             ConsoleLogger.Default.Info("从服务器下载小文件结束");

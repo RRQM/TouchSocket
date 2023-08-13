@@ -65,7 +65,7 @@ namespace DmtpConsoleApp
         {
             using var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .ConfigureContainer(a => 
+                .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })

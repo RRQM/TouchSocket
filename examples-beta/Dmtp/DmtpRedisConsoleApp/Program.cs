@@ -19,7 +19,7 @@ namespace DmtpRedisConsoleApp
             var result = redis.Set("1", "1");
             client.Logger.Info($"Set result={result}");
             client.Logger.Info($"ContainsCache result={redis.ContainsCache("1")}");
-           
+
             //执行Get
             var result1 = redis.Get<string>("1");
             client.Logger.Info($"Get result={result}");

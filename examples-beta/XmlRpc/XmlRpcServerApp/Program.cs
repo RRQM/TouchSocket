@@ -15,7 +15,7 @@ namespace XmlRpcServerApp
             var service = new HttpService();
 
             service.Setup(new TouchSocketConfig()
-                .ConfigureContainer(a => 
+                .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })
@@ -41,7 +41,7 @@ namespace XmlRpcServerApp
         }
     }
 
-   
+
     public class XmlServer : RpcServer
     {
         [XmlRpc(true)]

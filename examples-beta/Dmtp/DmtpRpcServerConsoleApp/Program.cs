@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -45,10 +44,10 @@ namespace ConsoleApp2
             service.Logger.Info($"输入客户端Id，空格输入消息，将通知客户端方法");
             while (true)
             {
-                string str = Console.ReadLine();
+                var str = Console.ReadLine();
                 if (service.TryGetSocketClient(str.Split(' ')[0], out var socketClient))
                 {
-                    bool result = socketClient.GetDmtpRpcActor().InvokeT<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
+                    var result = socketClient.GetDmtpRpcActor().InvokeT<bool>("Notice", DmtpInvokeOption.WaitInvoke, str.Split(' ')[1]);
 
                     service.Logger.Info($"调用结果{result}");
                 }
@@ -76,7 +75,7 @@ namespace ConsoleApp2
             public int Add(int a, int b)
             {
                 this.m_logger.Info("调用Add");
-                int sum = a + b;
+                var sum = a + b;
                 return sum;
             }
 
@@ -115,7 +114,7 @@ namespace ConsoleApp2
             [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
             public int RpcPushChannel(ICallContext callContext, int channelID)
             {
-                int size = 0;
+                var size = 0;
 
                 if (callContext.Caller is TcpDmtpSocketClient socketClient)
                 {
@@ -131,7 +130,7 @@ namespace ConsoleApp2
             }
         }
 
-        internal class MyTouchRpcPlugin : PluginBase,IDmtpRoutingPlugin
+        internal class MyTouchRpcPlugin : PluginBase, IDmtpRoutingPlugin
         {
             async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
             {
@@ -141,7 +140,7 @@ namespace ConsoleApp2
                     return;
                 }
 
-               await e.InvokeNext();
+                await e.InvokeNext();
             }
         }
     }

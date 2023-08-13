@@ -16,10 +16,10 @@ namespace HeartbeatConsoleApp
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            ConsoleAction consoleAction = new ConsoleAction();
+            var consoleAction = new ConsoleAction();
 
             //服务器
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                     .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                     .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
@@ -35,7 +35,7 @@ namespace HeartbeatConsoleApp
             service.Logger.Info("服务器成功启动");
 
             //客户端
-            TcpClient tcpClient = new TcpClient();
+            var tcpClient = new TcpClient();
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
@@ -128,15 +128,15 @@ namespace HeartbeatConsoleApp
         {
             byteBlock.Write((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
             byteBlock.Write((byte)this.DataType);
-            if (Data != null)
+            if (this.Data != null)
             {
-                byteBlock.Write(Data);
+                byteBlock.Write(this.Data);
             }
         }
 
         public byte[] PackageAsBytes()
         {
-            using ByteBlock byteBlock = new ByteBlock();
+            using var byteBlock = new ByteBlock();
             this.Package(byteBlock);
             return byteBlock.ToArray();
         }
@@ -195,7 +195,7 @@ namespace HeartbeatConsoleApp
         }
     }
 
-    internal class HeartbeatAndReceivePlugin : PluginBase,ITcpConnectedPlugin<ITcpClientBase>,ITcpDisconnectedPlugin<ITcpClientBase>,ITcpReceivedPlugin<ITcpClientBase>
+    internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>, ITcpReceivedPlugin<ITcpClientBase>
     {
         private readonly int m_timeTick;
         private readonly ILog logger;
@@ -223,7 +223,7 @@ namespace HeartbeatConsoleApp
             client.SetValue(DependencyExtensions.HeartbeatTimerProperty, new Timer((o) =>
             {
                 client.Ping();
-            }, null, 0, m_timeTick));
+            }, null, 0, this.m_timeTick));
             await e.InvokeNext();
         }
 

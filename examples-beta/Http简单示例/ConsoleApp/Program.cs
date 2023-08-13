@@ -31,14 +31,14 @@ namespace ConsoleApp
 
                     a.UseHttpStaticPage()
                     .AddFolder("api");//添加静态页面文件夹
-                    
+
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
                     //2、处理header为Option的探视跨域请求。
                     a.UseDefaultHttpServicePlugin();
                 }))
                 .Start();
-            
+
             Console.WriteLine("Http服务器已启动");
             Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");
             Console.WriteLine("访问 http://127.0.0.1:7789/success 返回响应");
