@@ -108,6 +108,11 @@ module.exports = {
               type: "doc",
               id: "engineertoolbox",
               label: "b.工程师软件工具箱"
+            },
+            {
+              type: "doc",
+              id: "thingsgateway",
+              label: "c.ThingsGateway"
             }
           ],
         }
@@ -399,6 +404,16 @@ module.exports = {
                   type: "doc",
                   id: "stategridtransmission",
                   label: "b.国网输电i1标准版"
+                },
+                {
+                  type: "doc",
+                  id: "adaptermodbus",
+                  label: "c.Modbus系列"
+                },
+                {
+                  type: "doc",
+                  id: "adaptersiemenss7",
+                  label: "d.西门子S7"
                 },
               ]
           },
