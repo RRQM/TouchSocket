@@ -51,8 +51,7 @@ function Banner() {
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
             <li>
-              支持 .NET Framework 4.5及以上， .NET Core3.1及以上，.NET
-              Standard2.0及以上
+              支持 .NET Framework 4.5及以上，.NET Standard2.0及以上
             </li>
             <li>极少依赖</li>
             <li>极速上手，极简使用</li>
@@ -144,7 +143,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#723cff" }}>1000 +</div>
+            <div style={{ color: "#723cff" }}>2000 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Stars</span>
           </div>
         </div>
@@ -156,7 +155,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#3fbbfe" }}>400 +</div>
+            <div style={{ color: "#3fbbfe" }}>600 +</div>
             <span className={isDarkTheme ? " dark" : ""}>Forks</span>
           </div>
         </div>
@@ -168,7 +167,7 @@ function Gitee() {
             className={"TouchSocket-log-jiao" + (isDarkTheme ? " dark" : "")}
           ></div>
           <div className="TouchSocket-log-number">
-            <div style={{ color: "#1fd898" }}>106,125</div>
+            <div style={{ color: "#1fd898" }}>202,125</div>
             <span className={isDarkTheme ? " dark" : ""}>Downloads</span>
           </div>
         </div>
