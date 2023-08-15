@@ -194,7 +194,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpCommandLineConsoleApp", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "同步请求", "同步请求", "{50312210-D0AC-4E25-B819-BE2F1CC70581}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpWaitingClientWinFormsApp", "Tcp\TcpWaitingClientWinFormsApp\TcpWaitingClientWinFormsApp.csproj", "{DF384D76-50A5-4D7B-A1D2-15CA00B844D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpWaitingClientWinFormsApp", "Tcp\TcpWaitingClientWinFormsApp\TcpWaitingClientWinFormsApp.csproj", "{DF384D76-50A5-4D7B-A1D2-15CA00B844D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "压力测试", "压力测试", "{5C6A3CBC-083F-4719-88BA-9D3AFDAAF85C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpStressTestingConsoleApp", "Tcp\TcpStressTestingConsoleApp\TcpStressTestingConsoleApp.csproj", "{4EEA3283-8C99-49C5-8F2C-CC88D1201E76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpStressTestingClientConsoleApp", "Tcp\TcpStressTestingClientConsoleApp\TcpStressTestingClientConsoleApp.csproj", "{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -426,6 +432,14 @@ Global
 		{DF384D76-50A5-4D7B-A1D2-15CA00B844D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF384D76-50A5-4D7B-A1D2-15CA00B844D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF384D76-50A5-4D7B-A1D2-15CA00B844D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EEA3283-8C99-49C5-8F2C-CC88D1201E76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EEA3283-8C99-49C5-8F2C-CC88D1201E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EEA3283-8C99-49C5-8F2C-CC88D1201E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EEA3283-8C99-49C5-8F2C-CC88D1201E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -511,6 +525,9 @@ Global
 		{01EB9E70-4A13-41E3-8609-8DFD9C2BC0A4} = {5B8D8451-E920-42E5-9F6A-D6D1238A24B4}
 		{50312210-D0AC-4E25-B819-BE2F1CC70581} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 		{DF384D76-50A5-4D7B-A1D2-15CA00B844D4} = {50312210-D0AC-4E25-B819-BE2F1CC70581}
+		{5C6A3CBC-083F-4719-88BA-9D3AFDAAF85C} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
+		{4EEA3283-8C99-49C5-8F2C-CC88D1201E76} = {5C6A3CBC-083F-4719-88BA-9D3AFDAAF85C}
+		{3F02AA78-9BE6-4F42-91B0-DB50FFE0350F} = {5C6A3CBC-083F-4719-88BA-9D3AFDAAF85C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
