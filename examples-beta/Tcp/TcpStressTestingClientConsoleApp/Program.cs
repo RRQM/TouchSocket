@@ -5,7 +5,7 @@ namespace TcpStressTestingClientConsoleApp
 {
     internal class Program
     {
-        public const int Count = 100000;
+        public const int Count = 1000;
         public const int DataLength = 2000;
         static async Task Main(string[] args)
         {
@@ -40,9 +40,13 @@ namespace TcpStressTestingClientConsoleApp
                         }
                     }
                 }
+                catch  (Exception ex)
+                {
+                    ConsoleLogger.Default.Error(ex.Message);
+                }
                 finally
                 {
-                    ConsoleLogger.Default.Error("退出");
+                    ConsoleLogger.Default.Info("退出");
                 }
             }, TaskCreationOptions.LongRunning);
 
