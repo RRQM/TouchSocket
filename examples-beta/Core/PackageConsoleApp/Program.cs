@@ -58,7 +58,7 @@ namespace PackageConsoleApp
         public List<int> P5 { get; set; }
         public Dictionary<int, MyClassModel> P6 { get; set; }
 
-        public void Package(ByteBlock byteBlock)
+        public void Package(in ByteBlock byteBlock)
         {
             //基础类型直接写入。
             byteBlock.Write(this.P1);
@@ -96,7 +96,7 @@ namespace PackageConsoleApp
             }
         }
 
-        public void Unpackage(ByteBlock byteBlock)
+        public void Unpackage(in ByteBlock byteBlock)
         {
             //基础类型按序读取。
             this.P1 = byteBlock.ReadInt32();
@@ -134,12 +134,12 @@ namespace PackageConsoleApp
     {
         public DateTime P1 { get; set; }
 
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             byteBlock.Write(this.P1);
         }
 
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             this.P1 = byteBlock.ReadDateTime();
         }

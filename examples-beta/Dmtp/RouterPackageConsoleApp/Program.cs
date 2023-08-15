@@ -141,13 +141,13 @@ namespace RouterPackageConsoleApp
             /// </summary>
             public ByteBlock ByteBlock { get; set; }
 
-            public override void PackageBody(ByteBlock byteBlock)
+            public override void PackageBody(in ByteBlock byteBlock)
             {
                 base.PackageBody(byteBlock);
                 byteBlock.WriteByteBlock(this.ByteBlock);
             }
 
-            public override void UnpackageBody(ByteBlock byteBlock)
+            public override void UnpackageBody(in ByteBlock byteBlock)
             {
                 base.UnpackageBody(byteBlock);
                 this.ByteBlock = byteBlock.ReadByteBlock();
