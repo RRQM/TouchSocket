@@ -8,7 +8,7 @@ namespace PipelineConsoleApp
     {
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
 
             service.Received = (client, byteBlock, requestInfo) =>
             {
@@ -21,8 +21,8 @@ namespace PipelineConsoleApp
 
                     while (true)
                     {
-                        byte[] buffer = new byte[1024];
-                        int r = pipeline.Read(buffer);
+                        var buffer = new byte[1024];
+                        var r = pipeline.Read(buffer);
                         var str = Encoding.UTF8.GetString(buffer, 0, r);
                         if (str.Contains("E"))
                         {
@@ -39,7 +39,7 @@ namespace PipelineConsoleApp
             //声明配置
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .SetDataHandlingAdapter(() => new PipelineDataHandlingAdapter());//配置适配器为Pipeline
+                .SetTcpDataHandlingAdapter(() => new PipelineDataHandlingAdapter());//配置适配器为Pipeline
 
             //载入配置
             service.Setup(config);

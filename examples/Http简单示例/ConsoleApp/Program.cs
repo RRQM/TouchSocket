@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -16,15 +17,20 @@ namespace ConsoleApp
 
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()//加载配置
-                .UsePlugin()
-                .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                .SetListenIPHosts(7789)
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<MyHttpPlug>();
+                    a.Add<MyHttpPlug1>();
+                    a.Add<MyHttpPlug2>();
+                    a.Add<MyHttpPlug3>();
+                    a.Add<MyHttpPlug4>();
+
+                    a.UseHttpStaticPage()
+                    .AddFolder("api");//添加静态页面文件夹
 
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
@@ -34,6 +40,7 @@ namespace ConsoleApp
                 .Start();
 
             Console.WriteLine("Http服务器已启动");
+            Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");
             Console.WriteLine("访问 http://127.0.0.1:7789/success 返回响应");
             Console.WriteLine("访问 http://127.0.0.1:7789/file 响应文件");
             Console.WriteLine("访问 http://127.0.0.1:7789/html 返回html");
@@ -42,33 +49,76 @@ namespace ConsoleApp
         }
     }
 
-    /// <summary>
-    /// 支持GET、Post、Put，Delete，或者其他
-    /// </summary>
-    internal class MyHttpPlug : HttpPluginBase<HttpSocketClient>
+    internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<IHttpSocketClient>
     {
-        protected override void OnGet(HttpSocketClient client, HttpContextEventArgs e)
+        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.UrlEquals("/success"))
+            if (e.Context.Request.UrlEquals("/uploadfile"))
             {
-                //直接响应文字
-                e.Context.Response.FromText("Success").Answer();//直接回应
-                Console.WriteLine("处理完毕");
-                e.Handled = true;
+                try
+                {
+                    if (e.Context.Request.TryGetContent(out var bodys))//一次性获取请求体
+                    {
+                        return;
+                    }
 
-               
+                    while (true)//当数据太大时，可持续读取
+                    {
+                        var buffer = new byte[1024 * 64];
+                        var r = e.Context.Request.Read(buffer, 0, buffer.Length);
+                        if (r == 0)
+                        {
+                            return;
+                        }
+
+                        //这里可以一直处理读到的数据。
+                    }
+
+                    //下面逻辑是接收小文件。
+
+                    if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
+                    {
+                        e.Context.Response
+                            .SetStatus(403, "数据过大")
+                            .Answer();
+                        return;
+                    }
+
+                    //此操作会先接收全部数据，然后再分割数据。
+                    //所以上传文件不宜过大，不然会内存溢出。
+                    var multifileCollection = e.Context.Request.GetMultifileCollection();
+
+                    foreach (var item in multifileCollection)
+                    {
+                        var stringBuilder = new StringBuilder();
+                        stringBuilder.Append($"文件名={item.FileName}\t");
+                        stringBuilder.Append($"数据长度={item.Length}");
+                        client.Logger.Info(stringBuilder.ToString());
+                    }
+
+                    e.Context.Response
+                            .SetStatus()
+                            .FromText("Ok")
+                            .Answer();
+                }
+                catch (Exception ex)
+                {
+                    client.Logger.Exception(ex);
+                }
             }
-            else if (e.Context.Request.UrlEquals("/file"))
-            {
-                //直接回应文件。
-                e.Context.Response
-                    .SetStatus()//必须要有状态
-                    .FromFile(@"D:\System\Windows.iso", e.Context.Request);
-            }
-            else if (e.Context.Request.UrlEquals("/html"))
+
+            await e.InvokeNext();
+        }
+    }
+
+    internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+    {
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/html"))
             {
                 //回应html
-                StringBuilder stringBuilder = new StringBuilder();
+                var stringBuilder = new StringBuilder();
                 stringBuilder.AppendLine("<!DOCTYPE html>");
                 stringBuilder.AppendLine("<html>");
                 stringBuilder.AppendLine("<head>");
@@ -89,65 +139,54 @@ namespace ConsoleApp
                          .SetContentTypeByExtension(".html")
                          .SetContent(stringBuilder.ToString());
                 e.Context.Response.Answer();
+                return;
             }
-            base.OnGet(client, e);
-        }
 
-        protected override void OnPost(HttpSocketClient client, HttpContextEventArgs e)
+            await e.InvokeNext();
+        }
+    }
+
+    internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+    {
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.UrlEquals("/uploadfile"))
+            if (e.Context.Request.UrlEquals("/file"))
             {
                 try
                 {
-                    if (e.Context.Request.TryGetContent(out byte[] bodys))//一次性获取请求体
-                    {
-                        return;
-                    }
-
-                    while (true)//当数据太大时，可持续读取
-                    {
-                        byte[] buffer = new byte[1024 * 64];
-                        int r = e.Context.Request.Read(buffer, 0, buffer.Length);
-                        if (r == 0)
-                        {
-                            return;
-                        }
-
-                        //这里可以一直处理读到的数据。
-                    }
-
-                    //下面逻辑是接收小文件。
-
-                    if (e.Context.Request.ContentLen > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
-                    {
-                        e.Context.Response
-                            .SetStatus("403", "数据过大")
-                            .Answer();
-                        return;
-                    }
-                    //此操作会先接收全部数据，然后再分割数据。
-                    //所以上传文件不宜过大，不然会内存溢出。
-                    var multifileCollection = e.Context.Request.GetMultifileCollection();
-
-                    foreach (var item in multifileCollection)
-                    {
-                        StringBuilder stringBuilder = new StringBuilder();
-                        stringBuilder.Append($"文件名={item.FileName}\t");
-                        stringBuilder.Append($"数据长度={item.Length}");
-                        client.Logger.Info(stringBuilder.ToString());
-                    }
-
+                    //直接回应文件。
                     e.Context.Response
-                            .SetStatus()
-                            .FromText("Ok")
-                            .Answer();
+                        .SetStatus()//必须要有状态
+                        .FromFile(@"D:\System\Windows.iso", e.Context.Request);
                 }
                 catch (Exception ex)
                 {
-                    client.Logger.Exception(ex);
+                    e.Context.Response.SetStatus(403)
+                        .FromText(ex.Message)
+                        .Answer();
                 }
+
+                return;
             }
-            base.OnPost(client, e);
+
+            await e.InvokeNext();
+        }
+    }
+
+    internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+    {
+        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/success"))
+            {
+                //直接响应文字
+                e.Context.Response.FromText("Success").Answer();//直接回应
+                Console.WriteLine("处理完毕");
+                return;
+            }
+
+            //无法处理，调用下一个插件
+            await e.InvokeNext();
         }
     }
 }

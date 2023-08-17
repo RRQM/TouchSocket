@@ -10,7 +10,7 @@ namespace ConsulConsoleApp
     {
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Connecting = (client, e) =>
             {
                 service.Logger.Info("Connecting");
@@ -20,8 +20,8 @@ namespace ConsulConsoleApp
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
                 //client.Send(mes);//将收到的信息直接返回给发送方
             };

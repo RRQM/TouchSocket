@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -16,7 +16,7 @@ namespace LimitNumberOfConnectionsConsoleApp
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>
@@ -26,8 +26,7 @@ namespace LimitNumberOfConnectionsConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<LimitNumberOfConnectionsPlugin>();
-                })
-                .UsePlugin())
+                }))
                 .Start();//启动
             service.Logger.Info("服务器已启动");
             Console.ReadKey();
@@ -40,21 +39,21 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Num
         {
-            get { return num; }
+            get { return this.num; }
         }
 
         public int Decrement()
         {
-            return Interlocked.Decrement(ref num);
+            return Interlocked.Decrement(ref this.num);
         }
 
         public int Increment()
         {
-            return Interlocked.Increment(ref num);
+            return Interlocked.Increment(ref this.num);
         }
     }
 
-    internal class LimitNumberOfConnectionsPlugin : TcpPluginBase
+    internal class LimitNumberOfConnectionsPlugin : PluginBase, ITcpConnectingPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>
     {
         private readonly ConcurrentDictionary<string, Count> m_ipToCount = new ConcurrentDictionary<string, Count>();
 
@@ -76,9 +75,13 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Max { get; }
 
-        protected override void OnConnecting(ITcpClientBase client, OperationEventArgs e)
+        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
-            Count count = m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
+            if (client.IsClient)
+            {
+                return e.InvokeNext();
+            }
+            var count = this.m_ipToCount.GetOrAdd(client.IP, (s) => { return new Count(); });
 
             if (count.Increment() > this.Max)
             {
@@ -86,21 +89,23 @@ namespace LimitNumberOfConnectionsConsoleApp
                 e.IsPermitOperation = false;//表示不许连接
                 e.Handled = true;//并且已经处理该消息。
                 this.m_logger.Warning($"IP={client.IP}的客户端，连接数达到设置阈值。已拒绝连接。");
-                return;
+                return Task.CompletedTask;
             }
-            base.OnConnecting(client, e);
+
+            return e.InvokeNext();
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
-            if (m_ipToCount.TryGetValue(client.IP, out Count count))
+            if (this.m_ipToCount.TryGetValue(client.IP, out var count))
             {
                 if (count.Decrement() == 0)
                 {
-                    m_ipToCount.TryRemove(client.IP, out _);
+                    this.m_ipToCount.TryRemove(client.IP, out _);
                 }
             }
-            base.OnDisconnected(client, e);
+
+            return e.InvokeNext();
         }
     }
 }

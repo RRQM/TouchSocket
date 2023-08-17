@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -14,22 +15,21 @@ namespace ThrottlingConsoleApp
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-                client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
-                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .ConfigureContainer(a => 
+                .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     a.Add<MyThrottlingPlugin>();
                 }))
@@ -45,7 +45,7 @@ namespace ThrottlingConsoleApp
     internal static class DependencyExtensions
     {
         public static readonly DependencyProperty<FlowGate> FlowGateProperty =
-            DependencyProperty<FlowGate>.Register("FlowGate", typeof(DependencyExtensions), null);
+            DependencyProperty<FlowGate>.Register("FlowGate", null);
 
         public static void InitFlowGate(this IDependencyObject dependencyObject, int max)
         {
@@ -58,7 +58,7 @@ namespace ThrottlingConsoleApp
         }
     }
 
-    public class MyThrottlingPlugin : TcpPluginBase
+    public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpReceivingPlugin
     {
         private readonly int m_max;
 
@@ -69,16 +69,16 @@ namespace ThrottlingConsoleApp
             this.Order = int.MaxValue;//提升优先级
         }
 
-        protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+        Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {
             client.InitFlowGate(this.m_max);//初始化流量计数器。
-            base.OnConnected(client, e);
+            return e.InvokeNext();
         }
 
-        protected override void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+        async Task ITcpReceivingPlugin<ITcpClientBase>.OnTcpReceiving(ITcpClientBase client, ByteBlockEventArgs e)
         {
-            client.GetFlowGate().AddCheckWait(e.ByteBlock.Len);
-            base.OnReceivingData(client, e);
+            await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Len);
+            await e.InvokeNext();
         }
     }
 }
