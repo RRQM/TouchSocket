@@ -1,5 +1,4 @@
-﻿using System.Text;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace DifferentProtocolConsoleApp
@@ -9,11 +8,10 @@ namespace DifferentProtocolConsoleApp
     /// </summary>
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
-                .UsePlugin()
                 .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -37,9 +35,9 @@ namespace DifferentProtocolConsoleApp
     /// <item>7790端口:使用"##"结尾的数据</item>
     /// </list>
     /// </summary>
-    class DifferentProtocolPlugin : TcpPluginBase<ISocketClient>
+    internal class DifferentProtocolPlugin : PluginBase, ITcpConnectingPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
-        protected override void OnConnecting(ISocketClient client, OperationEventArgs e)
+        Task ITcpConnectingPlugin<ISocketClient>.OnTcpConnecting(ISocketClient client, ConnectingEventArgs e)
         {
             if (client.ServicePort == 7789)
             {
@@ -49,15 +47,15 @@ namespace DifferentProtocolConsoleApp
             {
                 client.SetDataHandlingAdapter(new TerminatorPackageAdapter("##"));
             }
-            base.OnConnecting(client, e);
+            return e.InvokeNext();
         }
 
-        protected override void OnReceivedData(ISocketClient client, ReceivedDataEventArgs e)
+        Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
             //如果是自定义适配器，此处解析时，可以判断e.RequestInfo的类型
 
             client.Logger.Info($"{client.GetInfo()}收到数据，服务器端口：{client.ServicePort},数据：{e.ByteBlock}");
-            base.OnReceivedData(client, e);
+            return e.InvokeNext();
         }
     }
 }

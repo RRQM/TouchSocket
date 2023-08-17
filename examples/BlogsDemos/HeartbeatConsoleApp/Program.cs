@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -15,14 +16,13 @@ namespace HeartbeatConsoleApp
         /// <param name="args"></param>
         private static void Main(string[] args)
         {
-            ConsoleAction consoleAction = new ConsoleAction();
+            var consoleAction = new ConsoleAction();
 
             //服务器
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
                     .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                    .UsePlugin()
-                    .SetDataHandlingAdapter(()=>new MyFixedHeaderDataHandlingAdapter())
+                    .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
                     .ConfigureContainer(a =>
                     {
                         a.AddConsoleLogger();
@@ -35,11 +35,10 @@ namespace HeartbeatConsoleApp
             service.Logger.Info("服务器成功启动");
 
             //客户端
-            TcpClient tcpClient = new TcpClient();
+            var tcpClient = new TcpClient();
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .UsePlugin()
-                .SetDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
+                .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
@@ -129,15 +128,15 @@ namespace HeartbeatConsoleApp
         {
             byteBlock.Write((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
             byteBlock.Write((byte)this.DataType);
-            if (Data != null)
+            if (this.Data != null)
             {
-                byteBlock.Write(Data);
+                byteBlock.Write(this.Data);
             }
         }
 
         public byte[] PackageAsBytes()
         {
-            using ByteBlock byteBlock = new ByteBlock();
+            using var byteBlock = new ByteBlock();
             this.Package(byteBlock);
             return byteBlock.ToArray();
         }
@@ -163,7 +162,7 @@ namespace HeartbeatConsoleApp
     internal static class DependencyExtensions
     {
         public static readonly DependencyProperty<Timer> HeartbeatTimerProperty =
-            DependencyProperty<Timer>.Register("HeartbeatTimer", typeof(DependencyExtensions), null);
+            DependencyProperty<Timer>.Register("HeartbeatTimer", null);
 
         public static bool Ping<TClient>(this TClient client) where TClient : ITcpClientBase
         {
@@ -196,7 +195,7 @@ namespace HeartbeatConsoleApp
         }
     }
 
-    internal class HeartbeatAndReceivePlugin : TcpPluginBase
+    internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>, ITcpReceivedPlugin<ITcpClientBase>
     {
         private readonly int m_timeTick;
         private readonly ILog logger;
@@ -208,7 +207,8 @@ namespace HeartbeatConsoleApp
             this.logger = logger;
         }
 
-        protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+
+        async Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {
             if (client is ISocketClient)
             {
@@ -221,24 +221,24 @@ namespace HeartbeatConsoleApp
             }
 
             client.SetValue(DependencyExtensions.HeartbeatTimerProperty, new Timer((o) =>
-             {
-                 client.Ping();
-             }, null, 0, m_timeTick));
-
-            base.OnConnected(client, e);
+            {
+                client.Ping();
+            }, null, 0, this.m_timeTick));
+            await e.InvokeNext();
         }
 
-        protected override void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        async Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
-            base.OnDisconnected(client, e);
             if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
             {
                 timer.Dispose();
                 client.SetValue(DependencyExtensions.HeartbeatTimerProperty, null);
             }
+
+            await e.InvokeNext();
         }
 
-        protected override void OnReceivedData(ITcpClientBase client, ReceivedDataEventArgs e)
+        async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             if (e.RequestInfo is MyRequestInfo myRequest)
             {
@@ -248,7 +248,7 @@ namespace HeartbeatConsoleApp
                     client.Pong();
                 }
             }
-            base.OnReceivedData(client, e);
+            await e.InvokeNext();
         }
     }
 }

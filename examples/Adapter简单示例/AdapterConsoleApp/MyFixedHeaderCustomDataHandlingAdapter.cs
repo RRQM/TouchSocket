@@ -36,51 +36,31 @@ namespace AdapterConsoleApp
 
     public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
     {
-        private int bodyLength;
-
         /// <summary>
         /// 接口实现，标识数据长度
         /// </summary>
-        public int BodyLength
-        {
-            get { return bodyLength; }
-        }
-
-        private byte dataType;
+        public int BodyLength { get; private set; }
 
         /// <summary>
         /// 自定义属性，标识数据类型
         /// </summary>
-        public byte DataType
-        {
-            get { return dataType; }
-        }
-
-        private byte orderType;
+        public byte DataType { get; private set; }
 
         /// <summary>
         /// 自定义属性，标识指令类型
         /// </summary>
-        public byte OrderType
-        {
-            get { return orderType; }
-        }
-
-        private byte[] body;
+        public byte OrderType { get; private set; }
 
         /// <summary>
         /// 自定义属性，标识实际数据
         /// </summary>
-        public byte[] Body
-        {
-            get { return body; }
-        }
+        public byte[] Body { get; private set; }
 
         public bool OnParsingBody(byte[] body)
         {
-            if (body.Length == this.bodyLength)
+            if (body.Length == this.BodyLength)
             {
-                this.body = body;
+                this.Body = body;
                 return true;
             }
             return false;
@@ -89,9 +69,9 @@ namespace AdapterConsoleApp
         public bool OnParsingHeader(byte[] header)
         {
             //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-            this.bodyLength = header[0] - 2;
-            this.dataType = header[1];
-            this.orderType = header[2];
+            this.BodyLength = header[0] - 2;
+            this.DataType = header[1];
+            this.OrderType = header[2];
             return true;
         }
     }

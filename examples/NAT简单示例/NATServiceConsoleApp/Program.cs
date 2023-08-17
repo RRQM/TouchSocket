@@ -8,7 +8,7 @@ namespace NATServiceConsoleApp
     {
         private static void Main(string[] args)
         {
-            MyNATService service = new MyNATService();
+            var service = new MyNATService();
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
 
@@ -21,10 +21,9 @@ namespace NATServiceConsoleApp
 
     internal class MyNATService : NATService
     {
-        protected override void OnConnected(NATSocketClient socketClient, TouchSocketEventArgs e)
+        protected override void OnConnected(NATSocketClient socketClient, ConnectedEventArgs e)
         {
             base.OnConnected(socketClient, e);
-
             try
             {
                 //此处模拟的是只要连接到NAT服务器，就转发。
@@ -33,10 +32,6 @@ namespace NATServiceConsoleApp
                     .SetRemoteIPHost("127.0.0.1:7789")
                     .ConfigurePlugins(a =>
                     {
-                        //在企业版中，使用以下任意方式，可实现转发客户端的断线重连。
-                        a.Add<PollingKeepAlivePlugin<TcpClient>>()
-                        .SetTick(TimeSpan.FromSeconds(1));//每秒检查
-                        //a.UseReconnection();
                     }));
             }
             catch (Exception ex)

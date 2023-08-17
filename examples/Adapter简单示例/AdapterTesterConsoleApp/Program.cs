@@ -1,14 +1,13 @@
-﻿using System.Text;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace AdapterTesterConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            ConsoleAction action = new ConsoleAction();
+            var action = new ConsoleAction();
             action.OnException += Action_OnException;
             action.Add("1", "测试Tcp适配器", TcpDataAdapterTester);
 
@@ -24,7 +23,7 @@ namespace AdapterTesterConsoleApp
             Console.WriteLine(obj.Message);
         }
 
-        static void TcpDataAdapterTester()
+        private static void TcpDataAdapterTester()
         {
             //Tcp适配器测试
             //bufferLength的作用是模拟tcp接收缓存区，例如：
@@ -34,15 +33,15 @@ namespace AdapterTesterConsoleApp
             //该模式能很好的模拟网络很差的环境。
             //当bufferLength=8时，会先接收{0,1,2,3,4,0,1,2}，然后适配器判断解析前五字节，然后缓存后三字节，然后再接收下一个续包，直到解析结束。
 
-            for (int bufferLength = 1; bufferLength < 1024 * 10; bufferLength += 1024)
+            for (var bufferLength = 1; bufferLength < 1024 * 10; bufferLength += 1024)
             {
-                bool isSuccess = true;
+                var isSuccess = true;
                 var data = new byte[] { 0, 1, 2, 3, 4 };
-                DataAdapterTester tester = DataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
+                var tester = TouchSocket.Sockets.TcpDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
                  , bufferLength, (byteBlock, requestInfo) =>
                  {
                      //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
-                     if (byteBlock.Len!=5||(!byteBlock.ToArray().SequenceEqual(data)))
+                     if (byteBlock.Len != 5 || (!byteBlock.ToArray().SequenceEqual(data)))
                      {
                          isSuccess = false;
                      }

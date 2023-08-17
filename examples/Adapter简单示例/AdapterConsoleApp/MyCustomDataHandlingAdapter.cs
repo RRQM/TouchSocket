@@ -20,7 +20,7 @@ namespace AdapterConsoleApp
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
         /// <returns></returns>
-        protected override FilterResult Filter(ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+        protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
         {
             //以下解析思路为一次性解析，不考虑缓存的临时对象。
 
@@ -29,15 +29,15 @@ namespace AdapterConsoleApp
                 return FilterResult.Cache;//当头部都无法解析时，直接缓存
             }
 
-            int pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
+            var pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
 
-            MyRequestInfo myRequestInfo = new MyRequestInfo();
+            var myRequestInfo = new MyRequestInfo();
 
-            byteBlock.Read(out byte[] header, 3);//填充header
+            byteBlock.Read(out var header, 3);//填充header
 
             //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
             //所有只需呀再读取header[0]-2个长度即可。
-            byte bodyLength = (byte)(header[0] - 2);
+            var bodyLength = (byte)(header[0] - 2);
 
             if (bodyLength > byteBlock.CanReadLen)
             {
@@ -47,7 +47,7 @@ namespace AdapterConsoleApp
             }
             else
             {
-                byteBlock.Read(out byte[] body, bodyLength);//填充body
+                byteBlock.Read(out var body, bodyLength);//填充body
 
                 myRequestInfo.Header = header;
                 myRequestInfo.DataType = header[1];
