@@ -23,6 +23,9 @@ namespace TouchSocket.Dmtp.Rpc
     /// </summary>
     public sealed class DmtpRpcPackage : WaitRouterPackage
     {
+        /// <inheritdoc/>
+        protected override bool IncludedRouter => true;
+
         /// <summary>
         /// 反馈类型
         /// </summary>
@@ -54,7 +57,7 @@ namespace TouchSocket.Dmtp.Rpc
         public SerializationType SerializationType { get; private set; }
 
         /// <inheritdoc/>
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.Write((byte)this.SerializationType);
@@ -78,7 +81,7 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
             this.SerializationType = (SerializationType)byteBlock.ReadByte();

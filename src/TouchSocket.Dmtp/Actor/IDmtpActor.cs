@@ -17,6 +17,11 @@ namespace TouchSocket.Dmtp
         bool AllowRoute { get; }
 
         /// <summary>
+        /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
+        /// </summary>
+        bool IsReliable { get;}
+
+        /// <summary>
         /// 包含当前功能件的宿主通讯端。
         /// </summary>
         IDmtpActorObject Client { get; }

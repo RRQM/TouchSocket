@@ -184,7 +184,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static IContainer RegisterSingleton(this IContainer container,Type fromType, Func<IContainer, object> func, string key = "")
+        public static IContainer RegisterSingleton(this IContainer container, Type fromType, Func<IContainer, object> func, string key = "")
         {
             container.Register(new DependencyDescriptor(fromType, Lifetime.Singleton)
             {

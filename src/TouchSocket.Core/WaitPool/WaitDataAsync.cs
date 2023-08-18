@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +12,6 @@ namespace TouchSocket.Core
     {
         private readonly AsyncAutoResetEvent m_asyncWaitHandle;
         private volatile WaitDataStatus m_status;
-        private T m_waitResult;
 
         /// <summary>
         /// 构造函数
@@ -26,10 +22,10 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public WaitDataStatus Status { get => m_status; }
+        public WaitDataStatus Status { get => this.m_status; }
 
         /// <inheritdoc/>
-        public T WaitResult { get => m_waitResult; }
+        public T WaitResult { get; private set; }
 
         /// <inheritdoc/>
         public void Cancel()
@@ -42,7 +38,7 @@ namespace TouchSocket.Core
         public void Reset()
         {
             this.m_status = WaitDataStatus.Default;
-            this.m_waitResult = default;
+            this.WaitResult = default;
             this.m_asyncWaitHandle.Reset();
         }
 
@@ -56,7 +52,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public bool Set(T waitResult)
         {
-            this.m_waitResult = waitResult;
+            this.WaitResult = waitResult;
             this.m_status = WaitDataStatus.SetRunning;
             return this.m_asyncWaitHandle.Set();
         }
@@ -73,10 +69,10 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public void SetResult(T result)
         {
-            this.m_waitResult = result;
+            this.WaitResult = result;
         }
 
-        
+
         /// <summary>
         /// 等待指定时间
         /// </summary>
@@ -105,7 +101,7 @@ namespace TouchSocket.Core
         protected override void Dispose(bool disposing)
         {
             this.m_status = WaitDataStatus.Disposed;
-            this.m_waitResult = default;
+            this.WaitResult = default;
             this.m_asyncWaitHandle.SafeDispose();
             base.Dispose(disposing);
         }

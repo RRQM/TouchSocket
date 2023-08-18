@@ -23,13 +23,13 @@ namespace TouchSocket.Core
 
         static BytePool()
         {
-            Default = new BytePool();
+            Default=new BytePool();
         }
 
         /// <summary>
         /// 内存池
         /// </summary>
-        public BytePool() : this(1024 * 1024 * 20, 100)
+        public BytePool() : this(1024 * 1024 * 10, 100)
         {
         }
 
@@ -51,7 +51,16 @@ namespace TouchSocket.Core
         /// <summary>
         /// 默认的内存池实例
         /// </summary>
-        public static BytePool Default { get; }
+        public static BytePool Default { get; private set; }
+
+        /// <summary>
+        /// 设置默认内存池实例。
+        /// </summary>
+        /// <param name="bytePool"></param>
+        public static void SetDefault(BytePool bytePool)
+        {
+            Default = bytePool;
+        }
 
         /// <summary>
         /// 回收内存时，自动归零

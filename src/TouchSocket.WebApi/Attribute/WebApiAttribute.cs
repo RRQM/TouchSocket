@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TouchSocket.Http;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
@@ -24,7 +23,6 @@ namespace TouchSocket.WebApi
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WebApiAttribute : RpcAttribute
     {
-
         /// <summary>
         /// 构造函数。
         /// </summary>
@@ -35,18 +33,18 @@ namespace TouchSocket.WebApi
         }
 
         /// <summary>
+        /// 函数类型。
+        /// </summary>
+        public HttpMethodType Method { get; private set; }
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <returns></returns>
         public override Type[] GetGenericConstraintTypes()
         {
-            return new Type[] { typeof(IWebApiClient) };
+            return new Type[] { typeof(IWebApiClientBase) };
         }
-
-        /// <summary>
-        /// 函数类型。
-        /// </summary>
-        public HttpMethodType Method { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>

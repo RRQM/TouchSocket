@@ -257,7 +257,7 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(option.IpHost));
             }
 
-            var socket = new Socket(option.IpHost.EndPoint.AddressFamily,SocketType.Stream, ProtocolType.Tcp);
+            var socket = new Socket(option.IpHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             if (option.ReuseAddress)
             {
@@ -360,7 +360,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override IService Setup(TouchSocketConfig config)
         {
-           
+
             if (config == null)
             {
                 throw new ArgumentNullException(nameof(config));
@@ -656,7 +656,7 @@ namespace TouchSocket.Sockets
                     var socket = e.AcceptSocket;
                     if (this.SocketClients.Count < this.m_maxCount)
                     {
-                        this.OnClientSocketInit(socket, (TcpNetworkMonitor)e.UserToken);
+                        Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                     }
                     else
                     {
@@ -681,8 +681,12 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void OnClientSocketInit(Socket socket, TcpNetworkMonitor monitor)
+        private void OnClientSocketInit(object obj)
         {
+            var tuple = (Tuple<Socket, TcpNetworkMonitor>)obj;
+            var socket = tuple.Item1;
+            var monitor = tuple.Item2;
+
             try
             {
                 if (monitor.Options.NoDelay)
@@ -697,10 +701,10 @@ namespace TouchSocket.Sockets
                 client.InternalSetConfig(this.m_config);
                 client.InternalSetContainer(this.m_container);
                 client.InternalSetService(this);
-                client.InternalSetReceiveType(monitor.Options.ReceiveType);
+                client.InternalSetListenOption(monitor.Options);
                 client.InternalSetSocket(socket);
                 client.InternalSetPluginsManager(this.m_pluginsManager);
-                client.SetBufferLength(monitor.Options.BufferLength);
+
                 if (client.CanSetDataHandlingAdapter)
                 {
                     client.SetDataHandlingAdapter(monitor.Options.TcpAdapter.Invoke());

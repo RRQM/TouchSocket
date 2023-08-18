@@ -224,7 +224,7 @@ namespace TouchSocket.Core
         /// <param name="source"></param>
         /// <param name="msg"></param>
         /// <param name="ex"></param>
-        public static void Exception(this ILog logger, object source,string msg, Exception ex)
+        public static void Exception(this ILog logger, object source, string msg, Exception ex)
         {
             logger.Log(LogLevel.Error, source, msg, ex);
         }

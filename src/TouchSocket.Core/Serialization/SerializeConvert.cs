@@ -34,7 +34,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="obj">数据对象</param>
         /// <returns></returns>
-        public static byte[] BinarySerialize(object obj)
+        public static byte[] BinarySerialize(in object obj)
         {
             using (var serializeStream = new MemoryStream())
             {
@@ -49,7 +49,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="obj">数据对象</param>
         /// <param name="path">路径</param>
-        public static void BinarySerializeToFile(object obj, string path)
+        public static void BinarySerializeToFile(in object obj, string path)
         {
             using (var serializeStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
@@ -64,7 +64,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="obj"></param>
-        public static void BinarySerialize(Stream stream, object obj)
+        public static void BinarySerialize(Stream stream, in object obj)
         {
             var bf = new BinaryFormatter();
             bf.Serialize(stream, obj);
@@ -186,7 +186,7 @@ namespace TouchSocket.Core
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static void FastBinarySerialize<T>(ByteBlock stream, T obj)
+        public static void FastBinarySerialize<T>(ByteBlock stream,in T obj)
         {
             FastBinaryFormatter.Serialize(stream, obj);
         }
@@ -196,7 +196,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static byte[] FastBinarySerialize<T>(T obj)
+        public static byte[] FastBinarySerialize<T>(in T obj)
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -398,7 +398,7 @@ namespace TouchSocket.Core
             }
 
 #if NETCOREAPP3_1_OR_GREATER
-            return  System.Text.Json.JsonSerializer.Serialize(item);
+            return System.Text.Json.JsonSerializer.Serialize(item);
 #else
             return Newtonsoft.Json.JsonConvert.SerializeObject(item);
 #endif
@@ -418,7 +418,7 @@ namespace TouchSocket.Core
             }
 
 #if NETCOREAPP3_1_OR_GREATER
-            return System.Text.Json.JsonSerializer.Deserialize(json,type);
+            return System.Text.Json.JsonSerializer.Deserialize(json, type);
 #else
             return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
 #endif

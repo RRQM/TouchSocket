@@ -39,9 +39,9 @@ namespace TouchSocket.WebApi
         #region RPC调用
 
         ///<inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            var strs = method.Split(':');
+            var strs = invokeKey.Split(':');
             if (strs.Length != 2)
             {
                 throw new RpcException("不是有效的url请求。");
@@ -79,18 +79,22 @@ namespace TouchSocket.WebApi
                     break;
             }
 
+            this.PluginsManager.Raise(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
+
             var response = this.RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
+
+            this.PluginsManager.Raise(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
 
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
                 return default;
             }
 
-            if (response.StatusCode == "200")
+            if (response.StatusCode == 200)
             {
                 return this.StringConverter.ConvertFrom(response.GetBody(), returnType);
             }
-            else if (response.StatusCode == "422")
+            else if (response.StatusCode == 422)
             {
                 throw new RpcException(response.GetBody().FromJson<ActionResult>().Message);
             }
@@ -101,9 +105,9 @@ namespace TouchSocket.WebApi
         }
 
         ///<inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
-            var strs = method.Split(':');
+            var strs = invokeKey.Split(':');
             if (strs.Length != 2)
             {
                 throw new RpcException("不是有效的url请求。");
@@ -140,17 +144,21 @@ namespace TouchSocket.WebApi
                 default:
                     break;
             }
+
+            this.PluginsManager.Raise(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
             var response = this.RequestContent(request, false, invokeOption.Timeout, invokeOption.Token);
+            this.PluginsManager.Raise(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
+
             if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
             {
                 return;
             }
 
-            if (response.StatusCode == "200")
+            if (response.StatusCode == 200)
             {
                 return;
             }
-            else if (response.StatusCode == "422")
+            else if (response.StatusCode == 422)
             {
                 throw new RpcException(response.GetBody().FromJson<ActionResult>().Message);
             }
@@ -161,32 +169,32 @@ namespace TouchSocket.WebApi
         }
 
         ///<inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
+        public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.Invoke(method, invokeOption, ref parameters, null);
+            this.Invoke(invokeKey, invokeOption, ref parameters, null);
         }
 
         ///<inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
+        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return this.Invoke(returnType, method, invokeOption, ref parameters, null);
+            return this.Invoke(returnType, invokeKey, invokeOption, ref parameters, null);
         }
 
         ///<inheritdoc/>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        public Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
             return Task.Run(() =>
             {
-                this.Invoke(method, invokeOption, parameters);
+                this.Invoke(invokeKey, invokeOption, parameters);
             });
         }
 
         ///<inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
+        public Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
             return Task.Run(() =>
             {
-                return this.Invoke(returnType, method, invokeOption, parameters);
+                return this.Invoke(returnType, invokeKey, invokeOption, parameters);
             });
         }
 

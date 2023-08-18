@@ -24,6 +24,7 @@ namespace TouchSocket.XmlRpc
     /// <summary>
     /// XmlRpc解析器
     /// </summary>
+    [PluginOption(Singleton = true, NotRegister = false)]
     public class XmlRpcParserPlugin : PluginBase, IRpcParser, IHttpPostPlugin
     {
         private string m_xmlRpcUrl = "/xmlrpc";
@@ -181,7 +182,7 @@ namespace TouchSocket.XmlRpc
                 }
                 else
                 {
-                    httpResponse.StatusCode = "201";
+                    httpResponse.StatusCode = 201;
                     httpResponse.StatusMessage = invokeResult.Message;
                 }
                 try

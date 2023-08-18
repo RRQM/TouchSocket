@@ -22,15 +22,15 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketDmtpSocketClient
+    /// WebSocketDmtpSocketClient
     /// </summary>
-    public class WebsocketDmtpSocketClient : DependencyObject, IWebsocketDmtpSocketClient
+    public class WebSocketDmtpSocketClient : DependencyObject, IWebSocketDmtpSocketClient
     {
         private readonly object m_syncRoot = new object();
         private WebSocket m_client;
         private DmtpActor m_smtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
-        private WebsocketDmtpService m_service;
+        private WebSocketDmtpService m_service;
 
         public int BufferLength { get; private set; }
 
@@ -64,10 +64,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         public IPluginsManager PluginsManager { get; private set; }
 
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
-        public IWebsocketDmtpService Service { get => m_service; }
+        public IWebSocketDmtpService Service { get => this.m_service; }
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => m_smtpActor; }
+        public IDmtpActor DmtpActor { get => this.m_smtpActor; }
 
         /// <inheritdoc/>
         public int VerifyTimeout => this.Config.GetValue(DmtpConfigExtension.VerifyTimeoutProperty);
@@ -118,7 +118,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
             this.m_smtpAdapter.Config(config);
 
-            this.SetBufferLength(this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) ?? 1024 * 64) ;
+            this.SetBufferLength(this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) ?? 1024 * 64);
         }
 
         internal void InternalSetContainer(IContainer container)
@@ -137,7 +137,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.PluginsManager = pluginsManager;
         }
 
-        internal void InternalSetService(WebsocketDmtpService service)
+        internal void InternalSetService(WebSocketDmtpService service)
         {
             this.m_service = service;
         }
@@ -282,9 +282,9 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 while (true)
                 {
-                    using (var byteBlock=new ByteBlock(this.BufferLength))
+                    using (var byteBlock = new ByteBlock(this.BufferLength))
                     {
-                        var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer,0,byteBlock.Capacity), default);
+                        var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer, 0, byteBlock.Capacity), default);
                         if (result.Count == 0)
                         {
                             break;
@@ -367,7 +367,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 {
                     if (this.PluginsManager.Enable)
                     {
-                        this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlguin.OnTcpDisconnected), this, new DisconnectEventArgs(manual, msg));
+                        this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, new DisconnectEventArgs(manual, msg));
                     }
                 }
             }

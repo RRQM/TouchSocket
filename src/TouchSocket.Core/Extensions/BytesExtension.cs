@@ -61,6 +61,10 @@ namespace TouchSocket.Core
                 else
                 {
                     hitLength = 0;
+                    if (srcByteArray[i] == subByteArray[hitLength])
+                    {
+                        hitLength++;
+                    }
                 }
 
                 if (hitLength == subByteArray.Length)
@@ -102,6 +106,10 @@ namespace TouchSocket.Core
                 else
                 {
                     hitLength = 0;
+                    if (srcByteArray[i] == subByteArray[hitLength])
+                    {
+                        hitLength++;
+                    }
                 }
 
                 if (hitLength == subByteArray.Length)

@@ -17,7 +17,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// ITcpDmtpService
     /// </summary>
-    public interface ITcpDmtpService : ITcpService,IDmtpService
+    public interface ITcpDmtpService : ITcpService, IDmtpService
     {
     }
 }

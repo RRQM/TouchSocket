@@ -40,16 +40,14 @@ namespace TouchSocket.Sockets
 
         private int m_bufferRate = 1;
         private DelaySender m_delaySender;
-        private bool m_useDelaySender;
         private Stream m_workStream;
-        private bool m_online;
 
         #endregion 变量
 
         #region 属性
 
         /// <inheritdoc/>
-        public bool CanSend => this.m_online;
+        public bool CanSend => this.Online;
 
         /// <inheritdoc/>
         public virtual bool CanSetDataHandlingAdapter => true;
@@ -76,7 +74,7 @@ namespace TouchSocket.Sockets
         public Socket MainSocket { get; private set; }
 
         /// <inheritdoc/>
-        public bool Online { get => this.m_online;}
+        public bool Online { get; private set; }
 
         /// <inheritdoc/>
         public IPluginsManager PluginsManager { get; private set; }
@@ -86,6 +84,9 @@ namespace TouchSocket.Sockets
 
         /// <inheritdoc/>
         public Protocol Protocol { get; set; }
+
+        /// <inheritdoc/>
+        public ListenOption ListenOption { get; private set; }
 
         /// <inheritdoc/>
         public ReceiveType ReceiveType { get; private set; }
@@ -155,7 +156,7 @@ namespace TouchSocket.Sockets
 
         internal void InternalConnected(ConnectedEventArgs e)
         {
-            this.m_online = true;
+            this.Online = true;
 
             this.OnConnected(e);
 
@@ -163,15 +164,7 @@ namespace TouchSocket.Sockets
             {
                 return;
             }
-            if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
-            {
-                this.m_useDelaySender = true;
-                this.m_delaySender.SafeDispose();
-                this.m_delaySender = new DelaySender(this.MainSocket, senderOption.QueueLength, this.OnDelaySenderError)
-                {
-                    DelayLength = senderOption.DelayLength
-                };
-            }
+           
 
             if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e))
             {
@@ -220,9 +213,11 @@ namespace TouchSocket.Sockets
             this.PluginsManager = pluginsManager;
         }
 
-        internal void InternalSetReceiveType(ReceiveType receiveType)
+        internal void InternalSetListenOption(ListenOption option)
         {
-            this.ReceiveType = receiveType;
+            this.ListenOption = option;
+            this.ReceiveType = option.ReceiveType;
+            this.SetBufferLength(option.BufferLength);
         }
 
         internal void InternalSetService(TcpServiceBase serviceBase)
@@ -237,6 +232,11 @@ namespace TouchSocket.Sockets
             this.Port = mainSocket.RemoteEndPoint.GetPort();
             this.ServiceIP = mainSocket.LocalEndPoint.GetIP();
             this.ServicePort = mainSocket.LocalEndPoint.GetPort();
+
+            if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
+            {
+                this.m_delaySender = new DelaySender(this.MainSocket, senderOption, this.OnDelaySenderError);
+            }
         }
 
         #endregion Internal
@@ -318,7 +318,7 @@ namespace TouchSocket.Sockets
                 return;
             }
 
-            if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpDisconnectedPlguin.OnTcpDisconnected), this, e))
+            if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
             {
                 return;
             }
@@ -346,13 +346,14 @@ namespace TouchSocket.Sockets
 
         #endregion 事件&委托
 
-       
+
         /// <inheritdoc/>
         public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
         {
+
             lock (this.SyncRoot)
             {
-                if (this.m_online)
+                if (this.Online)
                 {
                     this.MainSocket.TryClose();
                     this.PrivateOnDisconnecting(new DisconnectEventArgs(true, msg));
@@ -444,7 +445,7 @@ namespace TouchSocket.Sockets
         {
             lock (this.SyncRoot)
             {
-                if (this.m_online)
+                if (this.Online)
                 {
                     this.PrivateOnDisconnecting(new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
                 }
@@ -544,16 +545,16 @@ namespace TouchSocket.Sockets
             {
                 if (this.GetSocketCliectCollection().TryRemove(this.Id, out _))
                 {
-                    if (this.m_online)
+                    if (this.Online)
                     {
-                        this.m_online = false;
+                        this.Online = false;
                         this.MainSocket.SafeDispose();
                         this.m_delaySender.SafeDispose();
                         this.DataHandlingAdapter.SafeDispose();
                         this.PrivateOnDisconnected(new DisconnectEventArgs(manual, msg));
                     }
                 }
-                
+
                 base.Dispose(true);
             }
         }
@@ -711,7 +712,7 @@ namespace TouchSocket.Sockets
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
             if (!this.CanSend)
-            {
+            {   
                 throw new NotConnectedException(TouchSocketResource.NotConnected.GetDescription());
             }
             if (this.HandleSendingData(buffer, offset, length))
@@ -722,9 +723,9 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    if (this.m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
+                    if (this.m_delaySender!=null && length < this.m_delaySender.DelayLength)
                     {
-                        this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                        this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
                     }
                     else
                     {

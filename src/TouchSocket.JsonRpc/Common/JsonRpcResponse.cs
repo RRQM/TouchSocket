@@ -47,7 +47,7 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// error
         /// </summary>
-        public error error;
+        public JsonRpcError error;
 
         /// <summary>
         /// id

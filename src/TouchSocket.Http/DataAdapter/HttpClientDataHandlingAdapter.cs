@@ -113,10 +113,10 @@ namespace TouchSocket.Http
 
         private Task RunGoReceived(HttpResponse response)
         {
-           return Task.Run(() => 
-            {
-                this.GoReceived(null, response);
-            });
+            return Task.Run(() =>
+             {
+                 this.GoReceived(null, response);
+             });
         }
 
         /// <inheritdoc/>

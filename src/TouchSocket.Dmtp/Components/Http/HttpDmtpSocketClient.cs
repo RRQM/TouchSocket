@@ -133,7 +133,7 @@ namespace TouchSocket.Dmtp
                 request.SafeDispose();
 
                 this.SetRpcActor(this.m_internalOnRpcActorInit.Invoke());
-                this.DefaultSend(new HttpResponse().SetStatus("101", "Switching Protocols").BuildAsBytes());
+                this.DefaultSend(new HttpResponse().SetStatus(101, "Switching Protocols").BuildAsBytes());
                 return;
             }
             base.OnReceivedHttpRequest(request);

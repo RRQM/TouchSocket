@@ -16,13 +16,14 @@ namespace TouchSocket.Dmtp.FileTransfer
 {
     internal class WaitSmallFilePackage : WaitRouterPackage
     {
+        protected override bool IncludedRouter => true;
         public byte[] Data { get; set; }
         public RemoteFileInfo FileInfo { get; set; }
         public int Len { get; set; }
         public Metadata Metadata { get; set; }
         public string Path { get; set; }
 
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.Write(this.Path);
@@ -31,7 +32,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             byteBlock.WriteBytesPackage(this.Data, 0, this.Len);
         }
 
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
             this.Path = byteBlock.ReadString();

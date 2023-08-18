@@ -31,8 +31,8 @@ namespace TouchSocket.Http
     public class HttpClientBase : TcpClientBase, IHttpClient
     {
         private readonly object m_requestLocker = new object();
-        private bool m_getContent;
         private readonly WaitData<HttpResponse> m_waitData;
+        private bool m_getContent;
 
         /// <summary>
         /// 构造函数
@@ -40,6 +40,69 @@ namespace TouchSocket.Http
         public HttpClientBase()
         {
             this.m_waitData = new WaitData<HttpResponse>();
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public override ITcpClient Connect(int timeout = 5000)
+        {
+            if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
+            {
+                var proxyHost = httpProxy.Host;
+                var credential = httpProxy.Credential;
+                var remoteHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+                try
+                {
+                    this.Config.SetRemoteIPHost(proxyHost);
+                    base.Connect(timeout);
+                    var request = new HttpRequest();
+                    request.InitHeaders()
+                        .SetHost(remoteHost.Host)
+                        .SetUrl(remoteHost.Host, true)
+                        .AsMethod("CONNECT");
+                    var response = this.Request(request, timeout: timeout);
+                    if (response.IsProxyAuthenticationRequired)
+                    {
+                        if (credential is null)
+                        {
+                            throw new Exception("未指定代理的凭据。");
+                        }
+                        var authHeader = response.Headers.Get(HttpHeaders.ProxyAuthenticate);
+                        if (authHeader.IsNullOrEmpty())
+                        {
+                            throw new Exception("未指定代理身份验证质询。");
+                        }
+
+                        var ares = new AuthenticationChallenge(authHeader, credential);
+
+                        request.Headers.Add(HttpHeaders.ProxyAuthorization, ares.ToString());
+                        if (response.CloseConnection)
+                        {
+                            base.Close("代理要求关闭连接，随后重写连接。");
+                            base.Connect(timeout);
+                        }
+
+                        response = this.Request(request, timeout: timeout);
+                    }
+
+                    if (response.StatusCode != 200)
+                    {
+                        throw new Exception(response.StatusMessage);
+                    }
+                }
+                finally
+                {
+                    this.Config.SetRemoteIPHost(remoteHost);
+                }
+            }
+            else
+            {
+                base.Connect(timeout);
+            }
+            return this;
         }
 
         /// <summary>
@@ -140,69 +203,6 @@ namespace TouchSocket.Http
         {
             this.m_waitData?.Dispose();
             base.Dispose(disposing);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public override ITcpClient Connect(int timeout = 5000)
-        {
-            if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
-            {
-                var proxyHost = httpProxy.Host;
-                var credential = httpProxy.Credential;
-                var remoteHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-                try
-                {
-                    this.Config.SetRemoteIPHost(proxyHost);
-                    base.Connect(timeout);
-                    var request = new HttpRequest();
-                    request.InitHeaders()
-                        .SetHost(remoteHost.Host)
-                        .SetUrl(remoteHost.Host, true)
-                        .AsMethod("CONNECT");
-                    var response = this.Request(request, timeout: timeout);
-                    if (response.IsProxyAuthenticationRequired)
-                    {
-                        if (credential is null)
-                        {
-                            throw new Exception("未指定代理的凭据。");
-                        }
-                        var authHeader = response.Headers.Get(HttpHeaders.ProxyAuthenticate);
-                        if (authHeader.IsNullOrEmpty())
-                        {
-                            throw new Exception("未指定代理身份验证质询。");
-                        }
-
-                        var ares = new AuthenticationChallenge(authHeader, credential);
-
-                        request.Headers.Add(HttpHeaders.ProxyAuthorization, ares.ToString());
-                        if (response.CloseConnection)
-                        {
-                            base.Close("代理要求关闭连接，随后重写连接。");
-                            base.Connect(timeout);
-                        }
-
-                        response = this.Request(request, timeout: timeout);
-                    }
-
-                    if (response.StatusCode != "200")
-                    {
-                        throw new Exception(response.StatusMessage);
-                    }
-                }
-                finally
-                {
-                    this.Config.SetRemoteIPHost(remoteHost);
-                }
-            }
-            else
-            {
-                base.Connect(timeout);
-            }
-            return this;
         }
 
         /// <summary>

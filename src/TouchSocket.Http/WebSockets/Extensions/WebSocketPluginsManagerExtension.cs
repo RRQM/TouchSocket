@@ -33,10 +33,9 @@ namespace TouchSocket.Core
         /// 使用WebSocket心跳插件，客户端、服务器均有效。但是一般建议客户端使用即可。
         /// </summary>
         /// <returns>插件类型实例</returns>
-        public static WebSocketHeartbeatPlugin<TClient> UseWebSocketHeartbeat<TClient>(this IPluginsManager pluginsManager) where TClient : IHttpClientBase
+        public static WebSocketHeartbeatPlugin UseWebSocketHeartbeat(this IPluginsManager pluginsManager)
         {
-            var heartbeatPlugin = new WebSocketHeartbeatPlugin<TClient>();
-
+            var heartbeatPlugin = new WebSocketHeartbeatPlugin();
             pluginsManager.Add(heartbeatPlugin);
             return heartbeatPlugin;
         }

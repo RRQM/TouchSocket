@@ -51,53 +51,18 @@ namespace TouchSocket.Sockets
         public CheckClearType CheckClearType { get; set; } = CheckClearType.All;
 
         /// <summary>
-        /// 获取或设置清理无数据交互的Client，默认60秒。
-        /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
-
-        /// <summary>
         /// 当因为超出时间限定而关闭。
         /// </summary>
         public Action<TClient, CheckClearType> OnClose { get; set; }
 
-       
         /// <summary>
-        /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
-        /// 则只检验发送方向是否有数据流动。没有的话则会断开连接。
+        /// 获取或设置清理无数据交互的Client，默认60秒。
         /// </summary>
-        /// <param name="clearType"></param>
-        /// <returns></returns>
-        public CheckClearPlugin<TClient> SetCheckClearType(CheckClearType clearType)
-        {
-            this.CheckClearType = clearType;
-            return this;
-        }
-
-        /// <summary>
-        /// 设置清理无数据交互的Client，默认60秒。
-        /// </summary>
-        /// <param name="timeSpan"></param>
-        /// <returns></returns>
-        public CheckClearPlugin<TClient> SetTick(TimeSpan timeSpan)
-        {
-            this.Tick = timeSpan;
-            return this;
-        }
-
-        /// <summary>
-        /// 当因为超出时间限定而关闭。
-        /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public CheckClearPlugin<TClient> SetOnClose(Action<TClient, CheckClearType> action)
-        {
-            this.OnClose = action;
-            return this;
-        }
+        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
         Task ITcpConnectedPlugin<TClient>.OnTcpConnected(TClient client, ConnectedEventArgs e)
         {
-            Task.Run(async() => 
+            Task.Run(async () =>
             {
                 while (true)
                 {
@@ -130,7 +95,41 @@ namespace TouchSocket.Sockets
                 }
             });
 
-           return e.InvokeNext();
+            return e.InvokeNext();
+        }
+
+        /// <summary>
+        /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
+        /// 则只检验发送方向是否有数据流动。没有的话则会断开连接。
+        /// </summary>
+        /// <param name="clearType"></param>
+        /// <returns></returns>
+        public CheckClearPlugin<TClient> SetCheckClearType(CheckClearType clearType)
+        {
+            this.CheckClearType = clearType;
+            return this;
+        }
+
+        /// <summary>
+        /// 当因为超出时间限定而关闭。
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public CheckClearPlugin<TClient> SetOnClose(Action<TClient, CheckClearType> action)
+        {
+            this.OnClose = action;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置清理无数据交互的Client，默认60秒。
+        /// </summary>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
+        public CheckClearPlugin<TClient> SetTick(TimeSpan timeSpan)
+        {
+            this.Tick = timeSpan;
+            return this;
         }
     }
 }

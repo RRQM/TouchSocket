@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 #if NETCOREAPP3_1_OR_GREATER
 using System.Numerics;
@@ -38,7 +35,7 @@ namespace TouchSocket.Core
         /// <param name="maxArraysPerBucket"></param>
         public ArrayPool(int maxArrayLength, int maxArraysPerBucket)
         {
-            const int MinimumArrayLength = 16, MaximumArrayLength = 1024 * 1024 * 1024;
+            const int MinimumArrayLength = 16, MaximumArrayLength = int.MaxValue;
             if (maxArrayLength > MaximumArrayLength)
             {
                 maxArrayLength = MaximumArrayLength;
@@ -48,15 +45,24 @@ namespace TouchSocket.Core
                 maxArrayLength = MinimumArrayLength;
             }
 
+            var capacity = 0L;
             var poolId = this.Id;
             var maxBuckets = SelectBucketIndex(maxArrayLength);
             var buckets = new Bucket[maxBuckets + 1];
             for (var i = 0; i < buckets.Length; i++)
             {
                 buckets[i] = new Bucket(GetMaxSizeForBucket(i), maxArraysPerBucket, poolId);
+                long num = GetMaxSizeForBucket(i) * maxArraysPerBucket;
+                capacity += num;
             }
             this.m_buckets = buckets;
+            this.Capacity = capacity;
         }
+
+        /// <summary>
+        /// 对象池的最大容量。
+        /// </summary>
+        public long Capacity { get; private set; }
 
         /// <summary>
         /// 清理池中所有对象。
@@ -76,7 +82,7 @@ namespace TouchSocket.Core
         public long GetPoolSize()
         {
             long size = 0;
-            foreach (var item in m_buckets)
+            foreach (var item in this.m_buckets)
             {
                 size += item.Size;
             }
@@ -120,7 +126,7 @@ namespace TouchSocket.Core
                         return buffer;
                     }
                 }
-                while (++i < this.m_buckets.Length && i != index + MaxBucketsToTry);
+                while (++i < this.m_buckets.Length && i != index + this.MaxBucketsToTry);
 
                 buffer = new T[this.m_buckets[index].m_bufferLength];
             }
@@ -231,7 +237,7 @@ namespace TouchSocket.Core
                     {
                         this.m_lock.Enter(ref lockTaken);
 
-                        int count = 0;
+                        var count = 0;
                         foreach (var item in this.m_buffers)
                         {
                             if (item != null)

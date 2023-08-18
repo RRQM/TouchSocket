@@ -43,5 +43,13 @@ namespace TouchSocket.Sockets
         /// 接收此客户端的服务器端口
         /// </summary>
         int ServicePort { get; }
+
+        /// <summary>
+        /// 监听配置。
+        /// <para>
+        /// 注意：一般情况下不要随意修改该值。
+        /// </para>
+        /// </summary>
+        ListenOption ListenOption { get; }
     }
 }

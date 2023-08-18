@@ -85,7 +85,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 一个Ping探测路由包
         /// </summary>
-        public static  readonly RouteType Ping = new RouteType("Ping");
+        public static readonly RouteType Ping = new RouteType("Ping");
 
         /// <summary>
         /// 创建通道路由包。

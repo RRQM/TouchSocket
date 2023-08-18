@@ -24,8 +24,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ITcpDisconnectingPlugin
     /// </summary>
-    public interface ITcpDisconnectingPlugin: ITcpDisconnectingPlugin<IClient>
-    { 
-    
+    public interface ITcpDisconnectingPlugin : ITcpDisconnectingPlugin<IClient>
+    {
+
     }
 }

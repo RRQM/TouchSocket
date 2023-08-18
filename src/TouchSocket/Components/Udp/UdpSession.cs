@@ -467,7 +467,7 @@ namespace TouchSocket.Sockets
         {
             var threadCount = this.Config.GetValue(TouchSocketConfigExtension.ThreadCountProperty);
             threadCount = threadCount < 0 ? 1 : threadCount;
-            var socket = new Socket( SocketType.Dgram, ProtocolType.Udp)
+            var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
             {
                 ReceiveBufferSize = BufferLength,
                 SendBufferSize = BufferLength,
@@ -521,24 +521,24 @@ namespace TouchSocket.Sockets
 #else
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                         {
-                            for (int i = 0; i < threadCount; i++)
+                            for (var i = 0; i < threadCount; i++)
                             {
-                                SocketAsyncEventArgs eventArg = new SocketAsyncEventArgs();
-                                m_socketAsyncs.Add(eventArg);
-                                eventArg.Completed += IO_Completed;
-                                ByteBlock byteBlock = new ByteBlock(BufferLength);
+                                var eventArg = new SocketAsyncEventArgs();
+                                this.m_socketAsyncs.Add(eventArg);
+                                eventArg.Completed += this.IO_Completed;
+                                var byteBlock = new ByteBlock(this.BufferLength);
                                 eventArg.UserToken = byteBlock;
                                 eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                                 eventArg.RemoteEndPoint = iPHost.EndPoint;
                                 if (!socket.ReceiveFromAsync(eventArg))
                                 {
-                                    ProcessReceive(socket, eventArg);
+                                    this.ProcessReceive(socket, eventArg);
                                 }
                             }
                         }
                         else
                         {
-                            Thread thread = new Thread(Received);
+                            var thread = new Thread(this.Received);
                             thread.IsBackground = true;
                             thread.Start();
                         }
@@ -557,7 +557,7 @@ namespace TouchSocket.Sockets
                 var byteBlock = new ByteBlock();
                 try
                 {
-                    EndPoint endPoint = this.Monitor.IPHost.EndPoint;
+                    var endPoint = this.Monitor.IPHost.EndPoint;
                     var r = this.Monitor.Socket.ReceiveFrom(byteBlock.Buffer, ref endPoint);
                     byteBlock.SetLength(r);
                     this.HandleBuffer(endPoint, byteBlock);

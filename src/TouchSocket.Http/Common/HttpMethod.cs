@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {
@@ -20,7 +15,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// Get
         /// </summary>
-        public static readonly HttpMethod Get= new HttpMethod("get");
+        public static readonly HttpMethod Get = new HttpMethod("get");
 
         /// <summary>
         /// Post
@@ -65,7 +60,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return  this.m_value.GetHashCode();
+            return this.m_value.GetHashCode();
         }
 
         /// <summary>
@@ -86,7 +81,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static bool operator ==(HttpMethod a, HttpMethod b)
         {
-            return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value)|| string.Equals(a.m_value, b.m_value, StringComparison.OrdinalIgnoreCase);
+            return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value) || string.Equals(a.m_value, b.m_value, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

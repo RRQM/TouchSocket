@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
+
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
@@ -21,40 +23,25 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// jsonrpc
         /// </summary>
-        public string jsonrpc { get; set; }
+        [JsonProperty("jsonrpc")]
+        public string Jsonrpc { get; set; }
 
         /// <summary>
         /// result
         /// </summary>
-        public object result { get; set; }
+        [JsonProperty("result")]
+        public object Result { get; set; }
 
         /// <summary>
         /// error
         /// </summary>
-        public error error { get; set; }
+        [JsonProperty("error")]
+        public JsonRpcError Error { get; set; }
 
         /// <summary>
         /// id
         /// </summary>
-        public string id { get; set; }
-    }
-
-    /// <summary>
-    /// 错误
-    /// </summary>
-#pragma warning disable IdE1006 // 命名样式
-
-    public class error
-#pragma warning restore IdE1006 // 命名样式
-    {
-        /// <summary>
-        /// code
-        /// </summary>
-        public int code { get; set; }
-
-        /// <summary>
-        /// message
-        /// </summary>
-        public string message { get; set; }
+        [JsonProperty("id")]
+        public string Id { get; set; }
     }
 }

@@ -23,13 +23,13 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketDmtpService
+    /// WebSocketDmtpService
     /// </summary>
-    public class WebsocketDmtpService : DisposableObject, IWebsocketDmtpService
+    public class WebSocketDmtpService : DisposableObject, IWebSocketDmtpService
     {
         #region SocketClient
 
-        private readonly ConcurrentDictionary<string, WebsocketDmtpSocketClient> m_socketClients = new ConcurrentDictionary<string, WebsocketDmtpSocketClient>();
+        private readonly ConcurrentDictionary<string, WebSocketDmtpSocketClient> m_socketClients = new ConcurrentDictionary<string, WebSocketDmtpSocketClient>();
 
         /// <summary>
         /// 数量
@@ -41,7 +41,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public WebsocketDmtpSocketClient this[string id]
+        public WebSocketDmtpSocketClient this[string id]
         {
             get
             {
@@ -54,7 +54,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// 获取所有的客户端
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<WebsocketDmtpSocketClient> GetClients()
+        public IEnumerable<WebSocketDmtpSocketClient> GetClients()
         {
             return this.m_socketClients.Values;
         }
@@ -93,7 +93,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <param name="id"></param>
         /// <param name="socketClient"></param>
         /// <returns></returns>
-        public bool TryGetSocketClient(string id, out WebsocketDmtpSocketClient socketClient)
+        public bool TryGetSocketClient(string id, out WebSocketDmtpSocketClient socketClient)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -104,12 +104,12 @@ namespace TouchSocket.Dmtp.AspNetCore
             return this.m_socketClients.TryGetValue(id, out socketClient);
         }
 
-        internal bool TryAdd(string id, WebsocketDmtpSocketClient socketClient)
+        internal bool TryAdd(string id, WebSocketDmtpSocketClient socketClient)
         {
             return this.m_socketClients.TryAdd(id, socketClient);
         }
 
-        internal bool TryRemove(string id, out WebsocketDmtpSocketClient socketClient)
+        internal bool TryRemove(string id, out WebSocketDmtpSocketClient socketClient)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -124,10 +124,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         private long m_idCount;
 
         /// <summary>
-        /// 创建一个基于Websocket的Dmtp服务器。
+        /// 创建一个基于WebSocket的Dmtp服务器。
         /// </summary>
         /// <param name="config"></param>
-        public WebsocketDmtpService(TouchSocketConfig config)
+        public WebSocketDmtpService(TouchSocketConfig config)
         {
             if (config == null)
             {
@@ -199,7 +199,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            if (this.m_socketClients.TryGetValue(oldId, out WebsocketDmtpSocketClient socketClient))
+            if (this.m_socketClients.TryGetValue(oldId, out var socketClient))
             {
                 socketClient.ResetId(newId);
             }
@@ -220,7 +220,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 var webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 var id = this.GetDefaultNewId();
-                var client = new WebsocketDmtpSocketClient();
+                var client = new WebSocketDmtpSocketClient();
                 if (!this.TryAdd(id, client))
                 {
                     throw new Exception("Id重复");
@@ -289,7 +289,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.Container = container;
             this.PluginsManager = pluginsManager;
         }
-        private DmtpActor CreateDmtpActor(WebsocketDmtpSocketClient client)
+        private DmtpActor CreateDmtpActor(WebSocketDmtpSocketClient client)
         {
             return new DmtpActor(true)
             {

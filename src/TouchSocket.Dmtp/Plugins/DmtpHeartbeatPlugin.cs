@@ -13,6 +13,7 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
@@ -20,44 +21,11 @@ namespace TouchSocket.Dmtp
     /// 基于Dmtp的心跳插件。服务器和客户端均适用
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = true)]
-    public class DmtpHeartbeatPlugin<TClient> : PluginBase, IDmtpHandshakedPlugin<TClient> where TClient : IDmtpActorObject
+    public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
     {
-        /// <summary>
-        /// 最大失败次数，默认3。
-        /// </summary>
-        public int MaxFailCount { get; set; } = 3;
-
-        /// <summary>
-        /// 心跳间隔。默认3秒。
-        /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(3);
-
-
-        /// <summary>
-        /// 最大失败次数，默认3。
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public DmtpHeartbeatPlugin<TClient> SetMaxFailCount(int value)
+        Task IDmtpHandshakedPlugin<IDmtpActorObject>.OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            this.MaxFailCount = value;
-            return this;
-        }
-
-        /// <summary>
-        /// 心跳间隔。默认3秒。
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public DmtpHeartbeatPlugin<TClient> SetTick(TimeSpan value)
-        {
-            this.Tick = value;
-            return this;
-        }
-
-        Task IDmtpHandshakedPlugin<TClient>.OnDmtpHandshaked(TClient client, DmtpVerifyEventArgs e)
-        {
-            Task.Run(async() => 
+            Task.Run(async () =>
             {
                 var failedCount = 0;
                 while (true)

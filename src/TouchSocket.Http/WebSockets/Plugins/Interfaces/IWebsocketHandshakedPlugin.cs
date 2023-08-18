@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
-    /// IWebsocketHandshakedPlugin
+    /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebsocketHandshakedPlugin<in TClient> : IPlugin where TClient : IHttpClientBase
+    public interface IWebSocketHandshakedPlugin<in TClient> : IPlugin where TClient : IHttpClientBase
     {
         /// <summary>
         /// 表示完成握手后。
@@ -18,14 +14,14 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnWebsocketHandshaked(TClient client, HttpContextEventArgs e);
+        Task OnWebSocketHandshaked(TClient client, HttpContextEventArgs e);
     }
 
     /// <summary>
-    /// IWebsocketHandshakedPlugin
+    /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebsocketHandshakedPlugin : IWebsocketHandshakedPlugin<IHttpClientBase>
-    { 
-    
+    public interface IWebSocketHandshakedPlugin : IWebSocketHandshakedPlugin<IHttpClientBase>
+    {
+
     }
 }

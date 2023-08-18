@@ -86,7 +86,7 @@ namespace TouchSocket.Core
         /// <param name="pluginsManager"></param>
         /// <param name="name"></param>
         /// <param name="action"></param>
-        public static void Add<T>(this IPluginsManager pluginsManager, string name, Action<T> action)where T : class
+        public static void Add<T>(this IPluginsManager pluginsManager, string name, Action<T> action) where T : class
         {
             if (typeof(PluginEventArgs).IsAssignableFrom(typeof(T)))
             {
@@ -106,7 +106,7 @@ namespace TouchSocket.Core
                 }
                 pluginsManager.Add(name, newFunc);
             }
-            
+
         }
 
         /// <summary>

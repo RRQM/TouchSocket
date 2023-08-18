@@ -4,9 +4,9 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IWebsocketDmtpClientBase
+    /// IWebSocketDmtpClientBase
     /// </summary>
-    public interface IWebsocketDmtpClientBase : IClient, IPluginObject, IDmtpActorObject
+    public interface IWebSocketDmtpClientBase : IClient, IPluginObject, IDmtpActorObject
     {
         /// <summary>
         /// 客户端的Id

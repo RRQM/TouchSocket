@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -10,7 +6,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IServerStartedPlugin
     /// </summary>
-    public interface IServerStartedPlugin<in TServer>:IPlugin where TServer : IService
+    public interface IServerStartedPlugin<in TServer> : IPlugin where TServer : IService
     {
 
         /// <summary>
@@ -28,8 +24,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IServerStartedPlugin
     /// </summary>
-    public interface IServerStartedPlugin: IServerStartedPlugin<IService>
-    { 
-    
+    public interface IServerStartedPlugin : IServerStartedPlugin<IService>
+    {
+
     }
 }

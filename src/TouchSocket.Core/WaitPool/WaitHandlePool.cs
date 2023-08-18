@@ -64,7 +64,7 @@ namespace TouchSocket.Core
         /// <param name="waitData"></param>
         public void Destroy(WaitData<T> waitData)
         {
-            if (waitData.WaitResult==null)
+            if (waitData.WaitResult == null)
             {
                 return;
             }

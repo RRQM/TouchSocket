@@ -22,13 +22,13 @@ namespace TouchSocket.Core
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        void Package(ByteBlock byteBlock);
+        void Package(in ByteBlock byteBlock);
 
         /// <summary>
         /// 解包。
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        void Unpackage(ByteBlock byteBlock);
+        void Unpackage(in ByteBlock byteBlock);
     }
 }

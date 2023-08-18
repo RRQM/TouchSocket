@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http
@@ -61,7 +56,7 @@ namespace TouchSocket.Http
 
         public new void Add(string key, string value)
         {
-            if (key == null) 
+            if (key == null)
             {
                 return;
             }

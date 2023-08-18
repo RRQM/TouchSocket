@@ -50,17 +50,17 @@ namespace TouchSocket.Dmtp
 
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(id,metadata);
+            return client.DmtpActor.CreateChannel(id, metadata);
         }
 
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(targetId, id,metadata);
+            return client.DmtpActor.CreateChannel(targetId, id, metadata);
         }
 
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(targetId,metadata);
+            return client.DmtpActor.CreateChannel(targetId, metadata);
         }
 
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, Metadata metadata = default)
@@ -70,17 +70,17 @@ namespace TouchSocket.Dmtp
 
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannelAsync(id,metadata);
+            return client.DmtpActor.CreateChannelAsync(id, metadata);
         }
 
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannelAsync(targetId, id,metadata);
+            return client.DmtpActor.CreateChannelAsync(targetId, id, metadata);
         }
 
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannelAsync(targetId,metadata);
+            return client.DmtpActor.CreateChannelAsync(targetId, metadata);
         }
 
         public static bool TrySubscribeChannel(this IDmtpActorObject client, int id, out IDmtpChannel channel)
@@ -403,7 +403,7 @@ namespace TouchSocket.Dmtp
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, byte[] buffer,int offset,int length)
+        public static void Send(this IDmtpActorObject client, ushort protocol, byte[] buffer, int offset, int length)
         {
             client.DmtpActor.Send(protocol, buffer, offset, length);
         }

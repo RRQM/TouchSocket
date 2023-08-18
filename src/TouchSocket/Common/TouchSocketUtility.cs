@@ -97,9 +97,9 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        /// 大数据边界
-        /// </summary>
-        public const int BigDataBoundary = 1024 * 64;
+        ///// <summary>
+        ///// 大数据边界
+        ///// </summary>
+        //public const int BigDataBoundary = 1024 * 64;
     }
 }

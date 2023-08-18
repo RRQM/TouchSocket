@@ -1,0 +1,40 @@
+﻿<Project>
+	<PropertyGroup>
+		<ApplicationIcon>logo.ico</ApplicationIcon>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta.140</Version>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<LangVersion>8.0</LangVersion>
+		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+		<Company>若汝棋茗</Company>
+		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
+		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
+		<PackageIconUrl></PackageIconUrl>
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageIcon>logo.png</PackageIcon>
+		<Authors>若汝棋茗</Authors>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<BaseOutputPath>..\..\Build</BaseOutputPath>
+		<DocumentationFile></DocumentationFile>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<None Include="LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="logo.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>

@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
+
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
@@ -21,11 +23,13 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// parameters
         /// </summary>
-        public object[] parameters;
+        [JsonProperty("parameters")]
+        public object[] Parameters { get; set; }
 
         /// <summary>
         /// needResponse
         /// </summary>
-        public bool needResponse;
+        [JsonProperty("needResponse")]
+        public bool NeedResponse { get; set; }
     }
 }

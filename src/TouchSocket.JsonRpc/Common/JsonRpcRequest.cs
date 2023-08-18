@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
+
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
@@ -21,21 +23,25 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// jsonrpc
         /// </summary>
-        public string jsonrpc = "2.0";
+        [JsonProperty("jsonrpc")]
+        public string Jsonrpc = "2.0";
 
         /// <summary>
         /// method
         /// </summary>
-        public string method;
+        [JsonProperty("method")]
+        public string Method;
 
         /// <summary>
         /// @params
         /// </summary>
-        public object @params;
+        [JsonProperty("params")]
+        public object Params;
 
         /// <summary>
         /// id
         /// </summary>
-        public string id;
+        [JsonProperty("id")]
+        public string Id;
     }
 }

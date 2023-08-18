@@ -523,7 +523,7 @@ namespace TouchSocket.Core
 
                 if (lend > int.MaxValue)
                 {
-                    lend = Math.Min(need+1024*1024*100, int.MaxValue);
+                    lend = Math.Min(need + 1024 * 1024 * 100, int.MaxValue);
                 }
 
                 this.SetCapacity((int)lend, true);
@@ -668,6 +668,7 @@ namespace TouchSocket.Core
             }
             var byteBlock = new ByteBlock(len);
             byteBlock.Write(this.Buffer, pos, len);
+            this.m_position += len;
             return byteBlock;
         }
 

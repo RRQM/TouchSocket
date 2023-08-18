@@ -46,7 +46,7 @@ namespace TouchSocket.Sockets
                     var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLen);
                     try
                     {
-                        var bytes = byteBlock.ToArray(byteBlock.Pos,r);
+                        var bytes = byteBlock.ToArray(byteBlock.Pos, r);
                         request.OnAppendBody(bytes);
                         this.m_surLen -= r;
                         byteBlock.Pos += r;

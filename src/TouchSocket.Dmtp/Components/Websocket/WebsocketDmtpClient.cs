@@ -20,9 +20,9 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// WebsocketDmtpClient
+    /// WebSocketDmtpClient
     /// </summary>
-    public class WebsocketDmtpClient : BaseSocket, IWebsocketDmtpClient
+    public class WebSocketDmtpClient : BaseSocket, IWebSocketDmtpClient
     {
         #region 字段
 
@@ -49,7 +49,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 断开连接
         /// </summary>
-        public DisconnectEventHandler<WebsocketDmtpClient> Disconnected { get; set; }
+        public DisconnectEventHandler<WebSocketDmtpClient> Disconnected { get; set; }
 
         /// <inheritdoc/>
         public string Id => this.DmtpActor.Id;
@@ -69,7 +69,7 @@ namespace TouchSocket.Dmtp
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
 
-        public DateTime LastReceivedTime { get;private set; }
+        public DateTime LastReceivedTime { get; private set; }
 
         public DateTime LastSendTime { get; private set; }
 
@@ -91,7 +91,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            m_cancellationTokenSource = new CancellationTokenSource();
+            this.m_cancellationTokenSource = new CancellationTokenSource();
             if (this.m_client == null || this.m_client.State != WebSocketState.Open)
             {
                 this.m_client.SafeDispose();
@@ -115,7 +115,7 @@ namespace TouchSocket.Dmtp
                 {
                     ReceivedCallBack = PrivateHandleReceivedData
                 };
-                _=this.BeginReceive();
+                _ = this.BeginReceive();
             }
 
             this.m_smtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
@@ -147,7 +147,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="ipHost"></param>
         /// <returns></returns>
-        public IWebsocketDmtpClient Setup(string ipHost)
+        public IWebSocketDmtpClient Setup(string ipHost)
         {
             var config = new TouchSocketConfig();
             config.SetRemoteIPHost(new IPHost(ipHost));
@@ -159,7 +159,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="config"></param>
         /// <exception cref="Exception"></exception>
-        public IWebsocketDmtpClient Setup(TouchSocketConfig config)
+        public IWebSocketDmtpClient Setup(TouchSocketConfig config)
         {
             if (config == null)
             {
@@ -216,7 +216,7 @@ namespace TouchSocket.Dmtp
         /// <param name="e"></param>
         protected virtual void OnDisconnected(DisconnectEventArgs e)
         {
-            if (this.PluginsManager.Raise(nameof(ITcpDisconnectedPlguin.OnTcpDisconnected), this, e))
+            if (this.PluginsManager.Raise(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
             {
                 return;
             }
@@ -258,7 +258,7 @@ namespace TouchSocket.Dmtp
                 if (this.IsHandshaked)
                 {
                     this.IsHandshaked = false;
-                    m_cancellationTokenSource?.Cancel();
+                    this.m_cancellationTokenSource?.Cancel();
                     this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None);
                     this.m_client.SafeDispose();
                     this.DmtpActor.SafeDispose();

@@ -26,14 +26,14 @@ namespace TouchSocket.Dmtp.FileTransfer
         public long Position { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             base.Package(byteBlock);
             byteBlock.Write(this.Position);
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             base.Unpackage(byteBlock);
             this.Position = byteBlock.ReadInt64();

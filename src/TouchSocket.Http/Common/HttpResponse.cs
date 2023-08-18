@@ -98,7 +98,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                return this.StatusCode == "407";
+                return this.StatusCode == 407;
             }
         }
 
@@ -109,7 +109,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                return this.StatusCode == "301" || this.StatusCode == "302";
+                return this.StatusCode == 301 || this.StatusCode == 302;
             }
         }
 
@@ -121,7 +121,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 状态码，默认200
         /// </summary>
-        public string StatusCode { get; set; } = "200";
+        public int StatusCode { get; set; } = 200;
 
         /// <summary>
         /// 状态消息，默认Success
@@ -344,13 +344,14 @@ namespace TouchSocket.Http
                 var ps = first[0].Split('/');
                 if (ps.Length == 2)
                 {
-                    this.Protocols =new Protocol(ps[0]) ;
+                    this.Protocols = new Protocol(ps[0]);
                     this.ProtocolVersion = ps[1];
                 }
             }
             if (first.Length > 1)
             {
-                this.StatusCode = first[1];
+                int.TryParse(first[1], out var code);
+                this.StatusCode = code;
             }
             var msg = string.Empty;
             for (var i = 2; i < first.Length; i++)

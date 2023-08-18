@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using System.ComponentModel;
-
 namespace TouchSocket.Resources
 {
     /// <summary>
@@ -20,6 +18,6 @@ namespace TouchSocket.Resources
     /// </summary>
     public enum TouchSocketXmlRpcResource : byte
     {
-        
+
     }
 }

@@ -49,14 +49,14 @@ namespace TouchSocket.Core
             {
                 throw new NotSupportedException("不支持无限枚举。");
             }
-            m_current = range.Start.Value - 1;
-            m_end = range.End.Value;
+            this.m_current = range.Start.Value - 1;
+            this.m_end = range.End.Value;
         }
 
         /// <summary>
         /// Current
         /// </summary>
-        public int Current => m_current;
+        public int Current => this.m_current;
 
         /// <summary>
         /// MoveNext
@@ -64,8 +64,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool MoveNext()
         {
-            m_current++;
-            return m_current <= m_end;
+            this.m_current++;
+            return this.m_current <= this.m_end;
         }
     }
 #endif

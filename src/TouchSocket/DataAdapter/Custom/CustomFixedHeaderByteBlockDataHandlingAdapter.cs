@@ -71,7 +71,7 @@ namespace TouchSocket.Sockets
                     request = requestInfo;
                     if (requestInfo.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                     {
-                        tempCapacity= requestInfo.BodyLength+this.HeaderLength;
+                        tempCapacity = requestInfo.BodyLength + this.HeaderLength;
                         return FilterResult.Cache;
                     }
 

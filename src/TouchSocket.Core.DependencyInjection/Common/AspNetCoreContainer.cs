@@ -89,8 +89,8 @@ namespace TouchSocket.Core.AspNetCore
             {
                 fromType = fromType.GetGenericTypeDefinition();
             }
-            ServiceDescriptor[] array = this.m_services.ToArray();
-            foreach (ServiceDescriptor item in array)
+            var array = this.m_services.ToArray();
+            foreach (var item in array)
             {
                 if (item.ServiceType == fromType)
                 {
@@ -154,8 +154,8 @@ namespace TouchSocket.Core.AspNetCore
         /// <param name="key"></param>
         public void Unregister(DependencyDescriptor descriptor, string key = "")
         {
-            ServiceDescriptor[] array = this.m_services.ToArray();
-            foreach (ServiceDescriptor item in array)
+            var array = this.m_services.ToArray();
+            foreach (var item in array)
             {
                 if (item.ServiceType == descriptor.FromType)
                 {

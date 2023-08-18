@@ -1,6 +1,5 @@
 ﻿using System;
 using TouchSocket.Core;
-using TouchSocket.Dmtp;
 
 namespace TouchSocket.Dmtp
 {
@@ -10,7 +9,7 @@ namespace TouchSocket.Dmtp
     public static class DmtpRouteServiceExtension
     {
         /// <summary>
-        /// 添加基于Tcp服务器的Dmtp路由服务。
+        /// 添加Dmtp路由服务。
         /// </summary>
         /// <param name="container"></param>
         public static void AddDmtpRouteService(this IContainer container)

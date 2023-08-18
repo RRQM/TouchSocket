@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System.Collections.Generic;
-using System.Threading;
 
 namespace TouchSocket.Core
 {
@@ -21,7 +20,6 @@ namespace TouchSocket.Core
     /// </summary>
     public class DependencyObject : DisposableObject, IDependencyObject
     {
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         private readonly Dictionary<int, object> m_dp = new Dictionary<int, object>();
 
         /// <inheritdoc/>

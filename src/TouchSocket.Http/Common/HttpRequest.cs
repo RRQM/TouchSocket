@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,9 +28,9 @@ namespace TouchSocket.Http
         private bool m_canRead;
         private ITcpClientBase m_client;
         private byte[] m_content;
-        private NameValueCollection m_forms;
-        private NameValueCollection m_params;
-        private NameValueCollection m_query;
+        private InternalHttpParams m_forms;
+        private InternalHttpParams m_params;
+        private InternalHttpParams m_query;
         private bool m_sentHeader;
         private int m_sentLength;
 
@@ -82,17 +81,17 @@ namespace TouchSocket.Http
         /// <summary>
         /// 表单数据
         /// </summary>
-        public NameValueCollection Forms
+        public IHttpParams Forms
         {
             get
             {
                 if (this.ContentType == @"application/x-www-form-urlencoded")
                 {
-                    this.m_forms ??= this.GetParameters(this.GetBody());
+                    this.m_forms ??= GetParameters(this.GetBody());
                     return this.m_forms;
                 }
 
-                return this.m_forms ??= new NameValueCollection();
+                return this.m_forms ??= new InternalHttpParams();
             }
         }
 
@@ -115,11 +114,11 @@ namespace TouchSocket.Http
         /// <summary>
         /// Body参数
         /// </summary>
-        public NameValueCollection Params
+        public IHttpParams Params
         {
             get
             {
-                this.m_params ??= new NameValueCollection();
+                this.m_params ??= new InternalHttpParams();
                 return this.m_params;
             }
         }
@@ -127,11 +126,11 @@ namespace TouchSocket.Http
         /// <summary>
         /// url参数
         /// </summary>
-        public NameValueCollection Query
+        public IHttpParams Query
         {
             get
             {
-                this.m_query ??= new NameValueCollection();
+                this.m_query ??= new InternalHttpParams();
                 return this.m_query;
             }
         }
@@ -305,7 +304,7 @@ namespace TouchSocket.Http
         protected override void LoadHeaderProterties()
         {
             var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
-            if (first.Length > 0) this.Method =new HttpMethod(first[0].Trim());
+            if (first.Length > 0) this.Method = new HttpMethod(first[0].Trim());
             if (first.Length > 1)
             {
                 this.SetUrl(Uri.UnescapeDataString(first[1]));
@@ -315,7 +314,7 @@ namespace TouchSocket.Http
                 var ps = first[2].Split('/');
                 if (ps.Length == 2)
                 {
-                    this.Protocols =new Protocol(ps[0]) ;
+                    this.Protocols = new Protocol(ps[0]);
                     this.ProtocolVersion = ps[1];
                 }
             }
@@ -348,14 +347,14 @@ namespace TouchSocket.Http
                 {
                     var urlBuilder = new StringBuilder();
                     urlBuilder.Append(this.RelativeURL);
-                    urlBuilder.Append("?");
+                    urlBuilder.Append('?');
                     var i = 0;
-                    foreach (var item in this.m_query.AllKeys)
+                    foreach (var item in this.m_query.Keys)
                     {
                         urlBuilder.Append($"{item}={this.m_query[item]}");
                         if (++i < this.m_query.Count)
                         {
-                            urlBuilder.Append("&");
+                            urlBuilder.Append('&');
                         }
                     }
                     url = urlBuilder.ToString();
@@ -370,7 +369,7 @@ namespace TouchSocket.Http
             {
                 stringBuilder.Append($"{this.Method} {url} HTTP/{this.ProtocolVersion}\r\n");
             }
-           
+
             foreach (var headerkey in this.Headers.Keys)
             {
                 stringBuilder.Append($"{headerkey}: ");
@@ -381,7 +380,7 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        private NameValueCollection GetParameters(string row)
+        private static InternalHttpParams GetParameters(string row)
         {
             if (string.IsNullOrEmpty(row))
             {
@@ -393,7 +392,7 @@ namespace TouchSocket.Http
                 return null;
             }
 
-            var pairs = new NameValueCollection();
+            var pairs = new InternalHttpParams();
             foreach (var item in kvs)
             {
                 var kv = item.SplitFirst('=');
@@ -417,7 +416,7 @@ namespace TouchSocket.Http
                 }
                 if (urls.Length > 1)
                 {
-                    this.m_query = this.GetParameters(urls[1]);
+                    this.m_query = GetParameters(urls[1]);
                 }
             }
             else

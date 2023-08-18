@@ -11,19 +11,18 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// WebsocketDmtpMiddleware中间件
+    /// WebSocketDmtpMiddleware中间件
     /// </summary>
-    public class WebsocketDmtpMiddleware
+    public class WebSocketDmtpMiddleware
     {
         private readonly RequestDelegate m_next;
-        private readonly IWebsocketDmtpService m_websocketDmtpService;
+        private readonly IWebSocketDmtpService m_websocketDmtpService;
         private string m_url = "/websocketsmtp";
 
         /// <summary>
@@ -32,7 +31,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <param name="m_url"></param>
         /// <param name="next"></param>
         /// <param name="rpcService"></param>
-        public WebsocketDmtpMiddleware(string m_url, RequestDelegate next, IWebsocketDmtpService rpcService)
+        public WebSocketDmtpMiddleware(string m_url, RequestDelegate next, IWebSocketDmtpService rpcService)
         {
             this.Url = m_url;
             this.m_next = next ?? throw new ArgumentNullException(nameof(next));
@@ -42,10 +41,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <summary>
         /// Url
         /// </summary>
-        public string Url 
-        { 
-            get => this.m_url; 
-            set => this.m_url = string.IsNullOrEmpty(value) ? "/websocketsmtp" : value; }
+        public string Url
+        {
+            get => this.m_url;
+            set => this.m_url = string.IsNullOrEmpty(value) ? "/websocketsmtp" : value;
+        }
 
         /// <summary>
         /// <inheritdoc/>

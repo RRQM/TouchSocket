@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.Collections.Specialized;
+using System.Collections.Generic;
 
 namespace TouchSocket.Core
 {
@@ -18,8 +18,25 @@ namespace TouchSocket.Core
     /// 元数据键值对。
     /// </summary>
     [FastConverter(typeof(MetadataFastBinaryConverter))]
-    public class Metadata : NameValueCollection, IPackage
+    public class Metadata : Dictionary<string, string>, IPackage
     {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public new string this[string key]
+        {
+            get
+            {
+                if (this.TryGetValue(key, out var value))
+                {
+                    return value;
+                }
+                return null;
+            }
+        }
+
         /// <summary>
         /// 添加。如果键存在，将被覆盖。
         /// </summary>
@@ -35,10 +52,10 @@ namespace TouchSocket.Core
         /// 打包
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Package(ByteBlock byteBlock)
+        public void Package(in ByteBlock byteBlock)
         {
             byteBlock.Write(this.Count);
-            foreach (var item in this.AllKeys)
+            foreach (var item in this.Keys)
             {
                 byteBlock.Write(item);
                 byteBlock.Write(this[item]);
@@ -49,7 +66,7 @@ namespace TouchSocket.Core
         /// 解包
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Unpackage(ByteBlock byteBlock)
+        public void Unpackage(in ByteBlock byteBlock)
         {
             var count = byteBlock.ReadInt32();
             for (var i = 0; i < count; i++)

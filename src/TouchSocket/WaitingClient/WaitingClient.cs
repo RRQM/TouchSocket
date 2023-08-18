@@ -118,7 +118,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                m_semaphoreSlim.Wait();
+                this.m_semaphoreSlim.Wait();
                 this.m_breaked = false;
                 this.Reset();
                 if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
@@ -178,7 +178,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                m_semaphoreSlim.Release();
+                this.m_semaphoreSlim.Release();
                 if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
                 {
                     tcpClient.Disconnected -= this.OnDisconnected;
@@ -213,7 +213,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                m_semaphoreSlim.Wait();
+                await this.m_semaphoreSlim.WaitAsync();
                 this.m_breaked = false;
                 this.Reset();
                 if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
@@ -273,7 +273,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                m_semaphoreSlim.Release();
+                this.m_semaphoreSlim.Release();
                 if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
                 {
                     tcpClient.Disconnected -= this.OnDisconnected;

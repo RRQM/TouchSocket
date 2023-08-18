@@ -20,12 +20,12 @@ namespace TouchSocket.Core
     public abstract class LoggerBase : ILog
     {
         /// <inheritdoc/>
-        public LogLevel LogLevel { get; set; }= LogLevel.Debug;
+        public LogLevel LogLevel { get; set; } = LogLevel.Debug;
 
         /// <inheritdoc/>
         public void Log(LogLevel logLevel, object source, string message, Exception exception)
         {
-            if (logLevel<this.LogLevel)
+            if (logLevel < this.LogLevel)
             {
                 return;
             }

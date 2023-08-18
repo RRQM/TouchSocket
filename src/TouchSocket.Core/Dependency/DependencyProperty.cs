@@ -81,7 +81,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static DependencyProperty<TValue> Register(string propertyName, TValue value)
         {
-            var dp = new DependencyProperty<TValue>(propertyName,value);
+            var dp = new DependencyProperty<TValue>(propertyName, value);
             return dp;
         }
 

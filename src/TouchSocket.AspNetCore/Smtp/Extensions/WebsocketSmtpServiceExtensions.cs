@@ -17,19 +17,19 @@ using TouchSocket.Dmtp.AspNetCore;
 namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
-    /// WebsocketDmtpServiceExtensions
+    /// WebSocketDmtpServiceExtensions
     /// </summary>
-    public static class WebsocketDmtpServiceExtensions
+    public static class WebSocketDmtpServiceExtensions
     {
         /// <summary>
-        /// 添加<see cref="WebsocketDmtpService"/>服务。
+        /// 添加<see cref="WebSocketDmtpService"/>服务。
         /// </summary>
         /// <param name="service"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static IServiceCollection AddWebsocketDmtpService(this IServiceCollection service, Func<TouchSocketConfig> config)
+        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection service, Func<TouchSocketConfig> config)
         {
-            return service.AddSingleton<IWebsocketDmtpService>(new WebsocketDmtpService(config.Invoke()));
+            return service.AddSingleton<IWebSocketDmtpService>(new WebSocketDmtpService(config.Invoke()));
         }
     }
 }

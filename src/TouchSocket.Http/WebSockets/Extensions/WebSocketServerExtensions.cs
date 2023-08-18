@@ -40,7 +40,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         IsPermitOperation = true
                     };
-                    client.PluginsManager.Raise(nameof(IWebsocketHandshakingPlugin.OnWebsocketHandshaking), client, args);
+                    client.PluginsManager.Raise(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), client, args);
                     if (args.Context.Response.Responsed)
                     {
                         return false;
@@ -56,12 +56,12 @@ namespace TouchSocket.Http.WebSockets
                             args.Context.Response.Build(byteBlock);
                             client.DefaultSend(byteBlock);
                         }
-                        client.PluginsManager.Raise(nameof(IWebsocketHandshakedPlugin.OnWebsocketHandshaked), client, new HttpContextEventArgs(httpContext));
+                        client.PluginsManager.Raise(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext));
                         return true;
                     }
                     else
                     {
-                        args.Context.Response.SetStatus("403", "Forbidden");
+                        args.Context.Response.SetStatus(403, "Forbidden");
                         using (var byteBlock = new ByteBlock())
                         {
                             args.Context.Response.Build(byteBlock);

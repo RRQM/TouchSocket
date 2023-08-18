@@ -83,16 +83,31 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public WaitHandlePool<IWaitResult> WaitHandlePool { get; private set; }
 
+        /// <inheritdoc/>
+        public bool IsReliable { get; }
+
         #endregion 属性
 
         /// <summary>
-        /// 构造函数
+        /// 创建一个Dmtp协议的最基础功能件
         /// </summary>
-        public DmtpActor(bool allowRoute)
+        /// <param name="allowRoute">是否允许路由</param>
+        /// <param name="isReliable">是不是基于可靠协议运行的</param>
+        public DmtpActor(bool allowRoute,bool isReliable)
         {
             this.WaitHandlePool = new WaitHandlePool<IWaitResult>();
             this.AllowRoute = allowRoute;
             this.LastActiveTime = DateTime.Now;
+            this.IsReliable = isReliable;
+        }
+
+        /// <summary>
+        /// 创建一个可靠协议的Dmtp协议的最基础功能件
+        /// </summary>
+        /// <param name="allowRoute"></param>
+        public DmtpActor(bool allowRoute):this(allowRoute,true)
+        {
+          
         }
 
         /// <inheritdoc/>
@@ -639,7 +654,7 @@ namespace TouchSocket.Dmtp
                     }
                 default:
                     {
-                        if (message.ProtocolFlags<20)
+                        if (message.ProtocolFlags < 20)
                         {
                             return true;
                         }

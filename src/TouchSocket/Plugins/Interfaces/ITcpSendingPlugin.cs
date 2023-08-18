@@ -32,8 +32,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ITcpSendingPlugin
     /// </summary>
-    public interface ITcpSendingPlugin: ITcpSendingPlugin<ITcpClientBase>
-    { 
-    
+    public interface ITcpSendingPlugin : ITcpSendingPlugin<ITcpClientBase>
+    {
+
     }
 }

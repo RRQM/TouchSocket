@@ -18,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// IJsonRpcClient
     /// </summary>
-    public interface IJsonRpcClient : ITcpClient, IRpcClient
+    public interface IJsonRpcClient : IRpcClient
     {
     }
 }

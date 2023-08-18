@@ -49,6 +49,7 @@ namespace TouchSocket.Resources
         /// </summary>
         [Description("发生异常，信息：{0}。")]
         Exception,
+
         /// <summary>
         /// 不允许路由该包，信息：{0}。
         /// </summary>
@@ -121,8 +122,6 @@ namespace TouchSocket.Resources
         [Description("路径‘{0}’对应的流文件，仍然被‘{1}’对象应用。")]
         StreamReferencing,
 
-        
-
         /// <summary>
         /// 从‘{0}’路径加载流异常，信息：‘{1}’。
         /// </summary>
@@ -193,6 +192,12 @@ namespace TouchSocket.Resources
         /// 没有找到任何可用的目标Id。
         /// </summary>
         [Description("没有找到任何可用的目标Id。")]
-        NotFindAnyTargetId
+        NotFindAnyTargetId,
+
+        /// <summary>
+        /// 响应方不支持路由操作。
+        /// </summary>
+        [Description("响应方不支持路由操作。")]
+        RoutingNotSupported,
     }
 }

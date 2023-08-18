@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// 文件资源控制器。
     /// </summary>
-    public interface IFileResourceController:IDisposable
+    public interface IFileResourceController : IDisposable
     {
         /// <summary>
         /// 文件资源字典，在该字典中存着正在传输，或者传输异常的资源。
