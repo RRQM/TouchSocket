@@ -13,12 +13,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp.Rpc
 {
@@ -27,7 +25,6 @@ namespace TouchSocket.Dmtp.Rpc
     /// </summary>
     public class DmtpRpcActor : ConcurrentDictionary<long, DmtpRpcCallContext>, IDmtpRpcActor
     {
-       
         /// <summary>
         /// 创建一个DmtpRpcActor
         /// </summary>
@@ -36,6 +33,9 @@ namespace TouchSocket.Dmtp.Rpc
         {
             this.DmtpActor = smtpActor;
         }
+
+        /// <inheritdoc/>
+        public IDmtpActor DmtpActor { get; }
 
         /// <summary>
         /// 获取调用的函数
@@ -48,14 +48,12 @@ namespace TouchSocket.Dmtp.Rpc
         /// <inheritdoc/>
         public SerializationSelector SerializationSelector { get; set; }
 
-        /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get; }
         #region 字段
 
         private ushort m_cancelInvoke;
         private ushort m_invoke_Request;
         private ushort m_invoke_Response;
-        
+
         #endregion 字段
 
         /// <summary>
@@ -66,14 +64,14 @@ namespace TouchSocket.Dmtp.Rpc
         public bool InputReceivedData(DmtpMessage message)
         {
             var byteBlock = message.BodyByteBlock;
-            
+
             if (message.ProtocolFlags == this.m_invoke_Request)
             {
                 try
                 {
                     var rpcPackage = new DmtpRpcPackage();
                     rpcPackage.UnpackageRouter(byteBlock);
-                    if (this.DmtpActor.AllowRoute && rpcPackage.Route)
+                    if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
                         if (this.DmtpActor.TryRoute(RouteType.Rpc, rpcPackage))
                         {
@@ -84,13 +82,11 @@ namespace TouchSocket.Dmtp.Rpc
                             }
                             else
                             {
-                                rpcPackage.UnpackageBody(byteBlock);
                                 rpcPackage.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                             }
                         }
                         else
                         {
-                            rpcPackage.UnpackageBody(byteBlock);
                             rpcPackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                         }
 
@@ -104,7 +100,6 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         rpcPackage.UnpackageBody(byteBlock);
                         Task.Factory.StartNew(this.InvokeThis, rpcPackage);
-                        //this.InvokeThis(rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -280,7 +275,7 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult =RpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult = RpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)
@@ -419,7 +414,7 @@ namespace TouchSocket.Dmtp.Rpc
                     case FeedbackType.OnlySend:
                         {
                             this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitSend:
                         {
@@ -435,7 +430,7 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
@@ -471,10 +466,10 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
                     default:
-                        return default;
+                        return returnType.GetDefault();
                 }
             }
             finally
@@ -712,7 +707,7 @@ namespace TouchSocket.Dmtp.Rpc
                     case FeedbackType.OnlySend:
                         {
                             this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitSend:
                         {
@@ -724,7 +719,7 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
@@ -742,11 +737,11 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
 
                     default:
-                        return default;
+                        return returnType.GetDefault();
                 }
             }
             finally
@@ -757,21 +752,178 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public async Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            var rpcPackage = new DmtpRpcPackage
             {
-                this.Invoke(invokeKey, invokeOption, parameters);
-            });
+                MethodName = invokeKey,
+                SourceId = this.DmtpActor.Id
+            };
+
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+            var byteBlock = new ByteBlock();
+            if (invokeOption == default)
+            {
+                invokeOption = DmtpInvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.Token.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+            }
+
+            try
+            {
+                rpcPackage.LoadInvokeOption(invokeOption);
+                if (parameters != null)
+                {
+                    var datas = new List<byte[]>();
+                    foreach (var parameter in parameters)
+                    {
+                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+                    }
+                    rpcPackage.ParametersBytes = datas;
+                }
+
+                rpcPackage.Package(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                        }
+                        break;
+
+                    case FeedbackType.WaitSend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    break;
+
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                                        resultContext.ThrowStatus();
+                                        break;
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            finally
+            {
+                this.DmtpActor.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
         }
 
         /// <inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public async Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            var rpcPackage = new DmtpRpcPackage
             {
-                return this.Invoke(returnType,invokeKey, invokeOption, parameters);
-            });
+                MethodName = invokeKey,
+                SourceId = this.DmtpActor.Id
+            };
+
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+            var byteBlock = new ByteBlock();
+            if (invokeOption == default)
+            {
+                invokeOption = DmtpInvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.Token.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+            }
+
+            try
+            {
+                rpcPackage.LoadInvokeOption(invokeOption);
+                if (parameters != null)
+                {
+                    var datas = new List<byte[]>();
+                    foreach (var parameter in parameters)
+                    {
+                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+                    }
+                    rpcPackage.ParametersBytes = datas;
+                }
+
+                rpcPackage.Package(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            return returnType.GetDefault();
+                        }
+                    case FeedbackType.WaitSend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            return returnType.GetDefault();
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                                        resultContext.ThrowStatus();
+                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            return returnType.GetDefault();
+                        }
+
+                    default:
+                        return returnType.GetDefault();
+                }
+            }
+            finally
+            {
+                this.DmtpActor.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
         }
 
         #endregion Rpc
@@ -791,7 +943,7 @@ namespace TouchSocket.Dmtp.Rpc
                 throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
             }
 
-            if (this.DmtpActor.AllowRoute&& this.TryFindDmtpRpcActor(targetId, out var actor))
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var actor))
             {
                 actor.Invoke(invokeKey, invokeOption, parameters);
                 return;
@@ -898,9 +1050,9 @@ namespace TouchSocket.Dmtp.Rpc
                 throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
             }
 
-            if (this.DmtpActor.AllowRoute&& this.TryFindDmtpRpcActor(targetId, out var rpcActor))
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var rpcActor))
             {
-                return rpcActor.Invoke(returnType,invokeKey, invokeOption, parameters);
+                return rpcActor.Invoke(returnType, invokeKey, invokeOption, parameters);
             }
 
             var rpcPackage = new DmtpRpcPackage
@@ -944,7 +1096,7 @@ namespace TouchSocket.Dmtp.Rpc
                     case FeedbackType.OnlySend:
                         {
                             this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitSend:
                         {
@@ -956,7 +1108,7 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
@@ -974,11 +1126,11 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
 
                     default:
-                        return default;
+                        return returnType.GetDefault();
                 }
             }
             finally
@@ -1001,7 +1153,7 @@ namespace TouchSocket.Dmtp.Rpc
                 throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
             }
 
-            if (this.DmtpActor.AllowRoute&& this.TryFindDmtpRpcActor(targetId, out var rpcActor))
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var rpcActor))
             {
                 rpcActor.Invoke(invokeKey, invokeOption, ref parameters, types);
                 return;
@@ -1100,7 +1252,7 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public object Invoke(Type returnType,string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
         {
             if (string.IsNullOrEmpty(targetId))
             {
@@ -1112,9 +1264,9 @@ namespace TouchSocket.Dmtp.Rpc
                 throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
             }
 
-            if (this.DmtpActor.AllowRoute&& this.TryFindDmtpRpcActor(targetId, out var rpcActor))
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var rpcActor))
             {
-                return rpcActor.Invoke(returnType,invokeKey, invokeOption, ref parameters, types);
+                return rpcActor.Invoke(returnType, invokeKey, invokeOption, ref parameters, types);
             }
 
             var rpcPackage = new DmtpRpcPackage
@@ -1154,7 +1306,7 @@ namespace TouchSocket.Dmtp.Rpc
                     case FeedbackType.OnlySend:
                         {
                             this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitSend:
                         {
@@ -1166,7 +1318,7 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
@@ -1195,11 +1347,11 @@ namespace TouchSocket.Dmtp.Rpc
                                         throw new TimeoutException("等待结果超时");
                                     }
                             }
-                            return default;
+                            return returnType.GetDefault();
                         }
 
                     default:
-                        return default;
+                        return returnType.GetDefault();
                 }
             }
             finally
@@ -1210,21 +1362,213 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public async Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            if (string.IsNullOrEmpty(targetId))
             {
-                this.Invoke(targetId, invokeKey, invokeOption, parameters);
-            });
+                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+            }
+
+            if (string.IsNullOrEmpty(invokeKey))
+            {
+                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+            }
+
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var actor))
+            {
+                await actor.InvokeAsync(invokeKey, invokeOption, parameters);
+                return;
+            }
+
+            var rpcPackage = new DmtpRpcPackage
+            {
+                MethodName = invokeKey,
+                Route = true,
+                TargetId = targetId,
+                SourceId = this.DmtpActor.Id,
+            };
+
+            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
+            var byteBlock = new ByteBlock();
+            if (invokeOption == default)
+            {
+                invokeOption = DmtpInvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.Token.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+            }
+
+            try
+            {
+                rpcPackage.LoadInvokeOption(invokeOption);
+                if (parameters != null)
+                {
+                    var datas = new List<byte[]>();
+                    foreach (var parameter in parameters)
+                    {
+                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+                    }
+                    rpcPackage.ParametersBytes = datas;
+                }
+
+                rpcPackage.Package(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                        }
+                        break;
+
+                    case FeedbackType.WaitSend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    break;
+
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                                        resultContext.ThrowStatus();
+                                        break;
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            finally
+            {
+                this.DmtpActor.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
         }
 
         /// <inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public async Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return Task.Run(() =>
+            if (string.IsNullOrEmpty(targetId))
             {
-                return this.Invoke(returnType,targetId, invokeKey, invokeOption, parameters);
-            });
+                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+            }
+
+            if (string.IsNullOrEmpty(invokeKey))
+            {
+                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+            }
+
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var rpcActor))
+            {
+                return await rpcActor.InvokeAsync(returnType, invokeKey, invokeOption, parameters);
+            }
+
+            var rpcPackage = new DmtpRpcPackage
+            {
+                MethodName = invokeKey,
+                TargetId = targetId,
+                SourceId = this.DmtpActor.Id,
+                Route = true
+            };
+
+            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
+            var byteBlock = new ByteBlock();
+            if (invokeOption == default)
+            {
+                invokeOption = DmtpInvokeOption.WaitInvoke;
+            }
+
+            if (invokeOption.Token.CanBeCanceled)
+            {
+                waitData.SetCancellationToken(invokeOption.Token);
+                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+            }
+
+            try
+            {
+                rpcPackage.LoadInvokeOption(invokeOption);
+                if (parameters != null)
+                {
+                    var datas = new List<byte[]>();
+                    foreach (var parameter in parameters)
+                    {
+                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+                    }
+                    rpcPackage.ParametersBytes = datas;
+                }
+
+                rpcPackage.Package(byteBlock);
+
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            return returnType.GetDefault();
+                        }
+                    case FeedbackType.WaitSend:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            return returnType.GetDefault();
+                        }
+                    case FeedbackType.WaitInvoke:
+                        {
+                            this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                                        resultContext.ThrowStatus();
+                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    {
+                                        throw new TimeoutException("等待结果超时");
+                                    }
+                            }
+                            return returnType.GetDefault();
+                        }
+
+                    default:
+                        return returnType.GetDefault();
+                }
+            }
+            finally
+            {
+                this.DmtpActor.WaitHandlePool.Destroy(waitData);
+                byteBlock.Dispose();
+            }
         }
 
         #endregion IdRpc

@@ -6,7 +6,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有完成连接动作的插件接口
     /// </summary>
-    public interface ITcpConnectedPlugin<in TClient> : IPlugin where TClient: IClient
+    public interface ITcpConnectedPlugin<in TClient> : IPlugin where TClient : IClient
     {
         /// <summary>
         /// 客户端连接成功后触发
@@ -20,8 +20,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ITcpConnectedPlugin
     /// </summary>
-    public interface ITcpConnectedPlugin: ITcpConnectedPlugin<IClient>
-    { 
-    
+    public interface ITcpConnectedPlugin : ITcpConnectedPlugin<IClient>
+    {
+
     }
 }

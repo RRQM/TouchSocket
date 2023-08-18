@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 
 namespace TouchSocket.Sockets
 {
@@ -55,7 +54,7 @@ namespace TouchSocket.Sockets
         /// <param name="port"></param>
         public IPHost(int port) : this($"0.0.0.0:{port}")
         {
-            
+
         }
 
         /// <summary>
@@ -63,7 +62,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param>
-        public IPHost(IPAddress address,int port) : this($"{address}:{port}")
+        public IPHost(IPAddress address, int port) : this($"{address}:{port}")
         {
         }
 

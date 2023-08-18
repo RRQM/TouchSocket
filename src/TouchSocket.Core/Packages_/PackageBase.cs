@@ -10,18 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
     /// PackageBase包结构数据。
     /// </summary>
-
+    [Serializable]
     public abstract partial class PackageBase : IPackage
     {
         /// <inheritdoc/>
-        public abstract void Package(ByteBlock byteBlock);
+        public abstract void Package(in ByteBlock byteBlock);
 
         /// <inheritdoc/>
-        public abstract void Unpackage(ByteBlock byteBlock);
+        public abstract void Unpackage(in ByteBlock byteBlock);
     }
 }

@@ -47,7 +47,7 @@ namespace TouchSocket.Rpc
         /// <exception cref="RpcInvokeException">Rpc异常</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>服务器返回结果</returns>
-        object Invoke(Type returnType,string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
         /// Rpc调用

@@ -22,6 +22,17 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// </summary>
     public interface IDmtpFileTransferActor : IActor
     {
+        /// <summary>
+        /// 文件传输的根路径
+        /// </summary>
+        string RootPath { get; set; }
+
+        /// <summary>
+        /// 允许传输的小文件的最大长度。默认1024*1024字节。
+        /// <para>注意，当调整该值时，应该和对端保持一致。</para>
+        /// </summary>
+        int MaxSmallFileLength { get; set; }
+
         #region Id小文件
 
         /// <summary>
@@ -103,7 +114,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        Result PushSmallFile( string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        Result PushSmallFile(string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 推送小文件。默认设置1024*1024字节大小。
@@ -114,7 +125,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        Task<Result> PushSmallFileAsync( string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        Task<Result> PushSmallFileAsync(string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         #endregion 小文件
 

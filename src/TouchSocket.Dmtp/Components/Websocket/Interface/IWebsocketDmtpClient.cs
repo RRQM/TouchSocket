@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IWebsocketDmtpClient
+    /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebsocketDmtpClient : IWebsocketDmtpClientBase
+    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase
     {
         /// <summary>
         /// 异步连接

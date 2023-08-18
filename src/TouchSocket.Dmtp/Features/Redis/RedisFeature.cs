@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.Redis
         /// </summary>
         public RedisFeature()
         {
-            SetProtocolFlags(25);
+            this.SetProtocolFlags(25);
         }
 
         /// <summary>

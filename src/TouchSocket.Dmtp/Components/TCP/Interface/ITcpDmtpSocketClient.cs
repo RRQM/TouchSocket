@@ -11,13 +11,15 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using TouchSocket.Sockets;
+
 namespace TouchSocket.Dmtp
 {
 
     /// <summary>
     /// ITcpDmtpSocketClient
     /// </summary>
-    public interface ITcpDmtpSocketClient : ITcpDmtpClientBase
+    public interface ITcpDmtpSocketClient : ITcpDmtpClientBase, ISocketClient
     {
     }
 }

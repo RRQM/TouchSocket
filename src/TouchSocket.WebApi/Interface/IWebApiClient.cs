@@ -12,14 +12,13 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Http;
-using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
 {
     /// <summary>
     /// IWebApiClient
     /// </summary>
-    public interface IWebApiClient : IRpcClient, IHttpClient
+    public interface IWebApiClient : IWebApiClientBase, IHttpClient
     {
     }
 }

@@ -23,20 +23,53 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public byte Status { get; set; }
 
+        /// <summary>
+        /// 是否将<see cref="Sign"/>和<see cref="Status"/>等参数放置在Router中。
+        /// </summary>
+        protected virtual bool IncludedRouter { get; }
+
         /// <inheritdoc/>
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
-            byteBlock.Write(this.Sign);
-            byteBlock.Write(this.Status);
+            if (!this.IncludedRouter)
+            {
+                byteBlock.Write(this.Sign);
+                byteBlock.Write(this.Status);
+            }
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void PackageRouter(in ByteBlock byteBlock)
+        {
+            base.PackageRouter(byteBlock);
+            if (this.IncludedRouter)
+            {
+                byteBlock.Write(this.Sign);
+                byteBlock.Write(this.Status);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
-            this.Sign = byteBlock.ReadInt64();
-            this.Status = (byte)byteBlock.ReadByte();
+            if (!this.IncludedRouter)
+            {
+                this.Sign = byteBlock.ReadInt64();
+                this.Status = (byte)byteBlock.ReadByte();
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void UnpackageRouter(in ByteBlock byteBlock)
+        {
+            base.UnpackageRouter(byteBlock);
+            if (this.IncludedRouter)
+            {
+                this.Sign = byteBlock.ReadInt64();
+                this.Status = (byte)byteBlock.ReadByte();
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public bool Random { get; set; }
 
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.Write(this.Random);
@@ -42,7 +42,7 @@ namespace TouchSocket.Dmtp
             byteBlock.WritePackage(this.Metadata);
         }
 
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
             this.Random = byteBlock.ReadBoolean();

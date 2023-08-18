@@ -63,7 +63,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock">流</param>
         /// <param name="graph">对象</param>
-        public static void Serialize<T>(ByteBlock byteBlock, T graph)
+        public static void Serialize<T>(ByteBlock byteBlock, in T graph)
         {
             byteBlock.Pos = 1;
             SerializeObject(byteBlock, graph);
@@ -113,7 +113,7 @@ namespace TouchSocket.Core
             return len;
         }
 
-        private static int SerializeDictionary(ByteBlock stream, IEnumerable param)
+        private static int SerializeDictionary(in ByteBlock stream, in IEnumerable param)
         {
             var len = 0;
             if (param != null)
@@ -123,12 +123,14 @@ namespace TouchSocket.Core
                 len += 4;
                 uint paramLen = 0;
 
+#pragma warning disable IDE0007 // 使用隐式类型
                 foreach (dynamic item in param)
                 {
                     len += SerializeObject(stream, item.Key);
                     len += SerializeObject(stream, item.Value);
                     paramLen++;
                 }
+#pragma warning restore IDE0007 // 使用隐式类型
                 var newPosition = stream.Pos;
                 stream.Pos = oldPosition;
                 stream.Write(TouchSocketBitConverter.Default.GetBytes(paramLen));
@@ -137,7 +139,7 @@ namespace TouchSocket.Core
             return len;
         }
 
-        private static int SerializeIListOrArray(ByteBlock stream, IEnumerable param)
+        private static int SerializeIListOrArray(in ByteBlock stream, in IEnumerable param)
         {
             var len = 0;
             if (param != null)
@@ -160,7 +162,7 @@ namespace TouchSocket.Core
             return len;
         }
 
-        private static int SerializeObject<T>(ByteBlock byteBlock, T graph)
+        private static int SerializeObject<T>(in ByteBlock byteBlock, in T graph)
         {
             var len = 0;
             byte[] data = null;
@@ -264,11 +266,21 @@ namespace TouchSocket.Core
                                 }
                                 else
                                 {
-                                    data = enumValType == TouchSocketCoreUtility.shortType
-                                        ? TouchSocketBitConverter.Default.GetBytes(Convert.ToInt16(graph))
-                                        : enumValType == TouchSocketCoreUtility.intType
-                                                                            ? TouchSocketBitConverter.Default.GetBytes(Convert.ToInt32(graph))
-                                                                            : TouchSocketBitConverter.Default.GetBytes(Convert.ToInt64(graph));
+                                    if (enumValType == TouchSocketCoreUtility.shortType)
+                                    {
+                                        data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt16(graph));
+                                    }
+                                    else
+                                    {
+                                        if (enumValType == TouchSocketCoreUtility.intType)
+                                        {
+                                            data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt32(graph));
+                                        }
+                                        else
+                                        {
+                                            data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt64(graph));
+                                        }
+                                    }
                                 }
                                 break;
                             }

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using TouchSocket.Rpc;
 using TouchSocket.WebApi;
 
 namespace TouchSocket.JsonRpc
@@ -17,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// IJsonRpcCallContext
     /// </summary>
-    public interface IJsonRpcCallContext : IHttpCallContext
+    public interface IJsonRpcCallContext:ICallContext
     {
         /// <summary>
         /// Json字符串
@@ -28,10 +29,5 @@ namespace TouchSocket.JsonRpc
         /// JsonRpc数据包
         /// </summary>
         public JsonRpcContext JsonRpcContext { get; }
-
-        /// <summary>
-        /// 表明当前的调用协议。
-        /// </summary>
-        JRPT JRPT { get; }
     }
 }

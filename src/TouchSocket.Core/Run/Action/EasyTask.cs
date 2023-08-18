@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -27,7 +24,7 @@ namespace TouchSocket.Core
             InitCompletedTask();
         }
 
-       
+
         /// <summary>
         /// 已完成的Task
         /// </summary>

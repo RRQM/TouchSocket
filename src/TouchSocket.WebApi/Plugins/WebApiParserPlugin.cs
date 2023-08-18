@@ -23,6 +23,7 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// WebApi解析器
     /// </summary>
+    [PluginOption(Singleton = true, NotRegister = false)]
     public class WebApiParserPlugin : PluginBase, IRpcParser, IHttpGetPlugin, IHttpPostPlugin
     {
         /// <summary>
@@ -144,20 +145,20 @@ namespace TouchSocket.WebApi
                     case InvokeStatus.UnFound:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("404");
+                            httpResponse.FromJson(jsonString).SetStatus(404);
                             break;
                         }
                     case InvokeStatus.UnEnable:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("405");
+                            httpResponse.FromJson(jsonString).SetStatus(405);
                             break;
                         }
                     case InvokeStatus.InvocationException:
                     case InvokeStatus.Exception:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("422");
+                            httpResponse.FromJson(jsonString).SetStatus(422);
                             break;
                         }
                 }
@@ -273,20 +274,20 @@ namespace TouchSocket.WebApi
                     case InvokeStatus.UnFound:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("404", invokeResult.Status.ToString());
+                            httpResponse.FromJson(jsonString).SetStatus(404, invokeResult.Status.ToString());
                             break;
                         }
                     case InvokeStatus.UnEnable:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("405", invokeResult.Status.ToString());
+                            httpResponse.FromJson(jsonString).SetStatus(405, invokeResult.Status.ToString());
                             break;
                         }
                     case InvokeStatus.InvocationException:
                     case InvokeStatus.Exception:
                         {
                             var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus("422", invokeResult.Status.ToString());
+                            httpResponse.FromJson(jsonString).SetStatus(422, invokeResult.Status.ToString());
                             break;
                         }
                 }

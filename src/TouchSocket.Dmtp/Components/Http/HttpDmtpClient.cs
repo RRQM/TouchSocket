@@ -62,12 +62,12 @@ namespace TouchSocket.Dmtp
 
                 request.AsMethod(DmtpUtility.Dmtp);
                 var response = this.RequestContent(request);
-                if (response.StatusCode == "101")
+                if (response.StatusCode == 101)
                 {
                     this.SwitchProtocolToDmtp();
                     this.m_smtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
                         this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
-                        timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty),CancellationToken.None);
+                        timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
                     return this;
                 }
                 else

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
@@ -17,7 +18,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// FileSectionResult
     /// </summary>
-    public class FileSectionResult : ResultBase
+    public class FileSectionResult : ResultBase, IDisposable
     {
         /// <summary>
         /// FileSectionResult
@@ -25,7 +26,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="resultCode"></param>
         /// <param name="value"></param>
         /// <param name="fileSection"></param>
-        public FileSectionResult(ResultCode resultCode, byte[] value, FileSection fileSection) : base(resultCode)
+        public FileSectionResult(ResultCode resultCode, ArraySegment<byte> value, FileSection fileSection) : base(resultCode)
         {
             this.Value = value;
             this.FileSection = fileSection;
@@ -38,7 +39,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="message"></param>
         /// <param name="value"></param>
         /// <param name="fileSection"></param>
-        public FileSectionResult(ResultCode resultCode, string message, byte[] value, FileSection fileSection) : base(resultCode, message)
+        public FileSectionResult(ResultCode resultCode, string message, ArraySegment<byte> value, FileSection fileSection) : base(resultCode, message)
         {
             this.Value = value;
             this.FileSection = fileSection;
@@ -52,6 +53,18 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 实际数据
         /// </summary>
-        public byte[] Value { get; private set; }
+        public ArraySegment<byte> Value { get; private set; }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Dispose()
+        {
+            if (this.Value.Count > 0)
+            {
+                BytePool.Default.Return(this.Value.Array);
+            }
+        }
     }
 }

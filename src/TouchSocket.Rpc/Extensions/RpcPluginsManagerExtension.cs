@@ -27,7 +27,7 @@ namespace TouchSocket.Core
         /// <param name="pluginsManager"></param>
         public static GlobalRpcStorePlugin UseGlobalRpcStore(this IPluginsManager pluginsManager)
         {
-           return pluginsManager.Add<GlobalRpcStorePlugin>();
+            return pluginsManager.Add<GlobalRpcStorePlugin>();
         }
 
         /// <summary>
@@ -36,9 +36,9 @@ namespace TouchSocket.Core
         /// <param name="pluginsManager"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public static GlobalRpcStorePlugin UseGlobalRpcStore(this IPluginsManager pluginsManager,Action<RpcStore> action)
+        public static GlobalRpcStorePlugin UseGlobalRpcStore(this IPluginsManager pluginsManager, Action<RpcStore> action)
         {
-            var plugin= pluginsManager.Add<GlobalRpcStorePlugin>();
+            var plugin = pluginsManager.Add<GlobalRpcStorePlugin>();
             plugin.ConfigureRpcStore(action);
             return plugin;
         }

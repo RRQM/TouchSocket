@@ -7,7 +7,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IServerStopedPlugin
     /// </summary>
-    public interface IServerStopedPlugin<in TServer> : IPlugin where TServer:IService
+    public interface IServerStopedPlugin<in TServer> : IPlugin where TServer : IService
     {
         /// <summary>
         /// 当服务器调用<see cref="IService.Stop"/>或者<see cref="IDisposable.Dispose"/>时
@@ -20,8 +20,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IServerStopedPlugin
     /// </summary>
-    public interface IServerStopedPlugin: IServerStopedPlugin<IService>
-    { 
-    
+    public interface IServerStopedPlugin : IServerStopedPlugin<IService>
+    {
+
     }
 }

@@ -12,18 +12,16 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.AspNetCore.Http;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Dmtp;
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
-    /// IWebsocketDmtpService服务器接口
+    /// IWebSocketDmtpService服务器接口
     /// </summary>
-    public interface IWebsocketDmtpService : IDmtpService, IPluginObject
+    public interface IWebSocketDmtpService : IDmtpService, IPluginObject
     {
         /// <summary>
         /// 配置项
@@ -48,7 +46,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// 获取所有的客户端
         /// </summary>
         /// <returns></returns>
-        IEnumerable<WebsocketDmtpSocketClient> GetClients();
+        IEnumerable<WebSocketDmtpSocketClient> GetClients();
 
         /// <summary>
         /// 获取所有在线客户端的Id集合。

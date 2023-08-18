@@ -13,10 +13,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,14 +60,10 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
-
         private DelaySender m_delaySender;
-        private bool m_useDelaySender;
         private Stream m_workStream;
         private int m_bufferRate = 1;
         private volatile bool m_online;
-        private Socket m_mainSocket;
-
         #endregion 变量
 
         #region 事件
@@ -152,7 +146,7 @@ namespace TouchSocket.Sockets
             {
                 return;
             }
-            this.PluginsManager.Raise(nameof(ITcpDisconnectedPlguin.OnTcpDisconnected), this, e);
+            this.PluginsManager.Raise(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e);
         }
 
         /// <summary>
@@ -232,7 +226,7 @@ namespace TouchSocket.Sockets
         public string IP { get; private set; }
 
         /// <inheritdoc/>
-        public Socket MainSocket { get => this.m_mainSocket; }
+        public Socket MainSocket { get; private set; }
 
         /// <inheritdoc/>
         public bool Online { get => this.m_online; }
@@ -352,13 +346,12 @@ namespace TouchSocket.Sockets
                 }
                 if (this.Config == null)
                 {
-                    throw new ArgumentNullException("配置文件不能为空。");
+                    throw new ArgumentNullException(nameof(this.Config),"配置文件不能为空。");
                 }
-                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException("iPHost不能为空。");
+                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException(nameof(IPHost),"iPHost不能为空。");
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
-                var args = new ConnectingEventArgs(this.MainSocket);
-                this.PrivateOnConnecting(args);
+                this.PrivateOnConnecting(new ConnectingEventArgs(this.MainSocket));
                 if (timeout == 5000)
                 {
                     socket.Connect(iPHost.Host, iPHost.Port);
@@ -380,43 +373,53 @@ namespace TouchSocket.Sockets
                 this.SetSocket(socket);
                 this.BeginReceive();
                 this.PrivateOnConnected(new ConnectedEventArgs());
-
-                //;
-                //var result = this.MainSocket.BeginConnect(iPHost.Host, iPHost.Port, null, null);
-                //if (result.AsyncWaitHandle.WaitOne(timeout))
-                //{
-                //    result.
-                //    if (this.MainSocket.Connected)
-                //    {
-                //        this.MainSocket.EndConnect(result);
-                //        this.m_online = true;
-                //        this.LoadSocketAndReadIpPort();
-
-                //        if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
-                //        {
-                //            this.m_useDelaySender = true;
-                //            this.m_delaySender.SafeDispose();
-                //            this.m_delaySender = new DelaySender(this.MainSocket, senderOption.QueueLength, this.OnDelaySenderError)
-                //            {
-                //                DelayLength = senderOption.DelayLength
-                //            };
-                //        }
-
-                //        this.BeginReceive();
-                //        //this.PrivateOnConnected(new ConnectedEventArgs());
-                //        Task.Factory.StartNew(this.PrivateOnConnected, new ConnectedEventArgs());
-                //        return;
-                //    }
-                //    else
-                //    {
-                //        this.MainSocket.SafeDispose();
-                //        throw new Exception("异步已完成，但是socket并未在连接状态，可能发生了绑定端口占用的错误。");
-                //    }
-                //}
-                //this.MainSocket.SafeDispose();
-                //throw new TimeoutException();
             }
         }
+
+        //protected Task TcpConnectAsync(int timeout)
+        //{
+        //    lock (this.SyncRoot)
+        //    {
+        //        if (this.m_online)
+        //        {
+        //            return;
+        //        }
+        //        if (this.DisposedValue)
+        //        {
+        //            throw new ObjectDisposedException(this.GetType().FullName);
+        //        }
+        //        if (this.Config == null)
+        //        {
+        //            throw new ArgumentNullException("配置文件不能为空。");
+        //        }
+        //        var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException("iPHost不能为空。");
+        //        this.MainSocket.SafeDispose();
+        //        var socket = this.CreateSocket(iPHost);
+        //        var args = new ConnectingEventArgs(this.MainSocket);
+        //        this.PrivateOnConnecting(args);
+        //        if (timeout == 5000)
+        //        {
+        //            socket.Connect(iPHost.Host, iPHost.Port);
+        //        }
+        //        else
+        //        {
+        //            var task = Task.Run(() =>
+        //            {
+        //                socket.Connect(iPHost.Host, iPHost.Port);
+        //            });
+        //            task.ConfigureAwait(false);
+        //            if (!task.Wait(timeout))
+        //            {
+        //                socket.SafeDispose();
+        //                throw new TimeoutException();
+        //            }
+        //        }
+        //        this.m_online = true;
+        //        this.SetSocket(socket);
+        //        this.BeginReceive();
+        //        this.PrivateOnConnected(new ConnectedEventArgs());
+        //    }
+        //}
 
         /// <inheritdoc/>
         public virtual ITcpClient Connect(int timeout = 5000)
@@ -698,12 +701,25 @@ namespace TouchSocket.Sockets
 
         private Socket CreateSocket(IPHost iPHost)
         {
-            var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            Socket socket;
+            if (iPHost.HostNameType == UriHostNameType.Dns)
             {
-                ReceiveBufferSize = this.BufferLength,
-                SendBufferSize = this.BufferLength,
-                SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
-            };
+                socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
+                {
+                    ReceiveBufferSize = this.BufferLength,
+                    SendBufferSize = this.BufferLength,
+                    SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
+                };
+            }
+            else
+            {
+                socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+                {
+                    ReceiveBufferSize = this.BufferLength,
+                    SendBufferSize = this.BufferLength,
+                    SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
+                };
+            }
 
 #if NET45_OR_GREATER
             var keepAliveValue = this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty);
@@ -715,7 +731,7 @@ namespace TouchSocket.Sockets
 #else
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var keepAliveValue = Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty);
+                var keepAliveValue = this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty);
                 if (keepAliveValue.Enable)
                 {
                     socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
@@ -944,9 +960,9 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    if (this.m_useDelaySender && length < TouchSocketUtility.BigDataBoundary)
+                    if (this.m_delaySender!=null && length < m_delaySender.DelayLength)
                     {
-                        this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                        this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
                     }
                     else
                     {
@@ -988,7 +1004,12 @@ namespace TouchSocket.Sockets
 
             this.IP = socket.RemoteEndPoint.GetIP();
             this.Port = socket.RemoteEndPoint.GetPort();
-            this.m_mainSocket = socket;
+            this.MainSocket = socket;
+            var delaySenderOption = this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty);
+            if (delaySenderOption != null)
+            {
+                this.m_delaySender = new DelaySender(socket, delaySenderOption, this.OnDelaySenderError);
+            }
         }
 
         private void ProcessReceived(SocketAsyncEventArgs e)

@@ -26,7 +26,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 最后一次递增时间
         /// </summary>
-        public DateTime LastIncrement { get => m_lastIncrement;}
+        public DateTime LastIncrement { get => this.m_lastIncrement; }
 
         /// <summary>
         /// 计数周期
@@ -43,7 +43,7 @@ namespace TouchSocket.Core
             bool isPeriod;
             if (DateTime.Now - this.LastIncrement > this.Period)
             {
-                Interlocked.Exchange(ref this.m_count,0);
+                Interlocked.Exchange(ref this.m_count, 0);
                 isPeriod = false;
                 this.m_lastIncrement = DateTime.Now;
             }

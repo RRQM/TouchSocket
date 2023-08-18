@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc
@@ -48,7 +47,7 @@ namespace TouchSocket.Rpc
         /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
-        Task<object> InvokeAsync(Type returnType,string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
         /// 调用对应Id的客户端Rpc
@@ -76,7 +75,7 @@ namespace TouchSocket.Rpc
         /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
-        object Invoke(Type returnType,string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
         /// <summary>
         /// 调用对应Id的客户端Rpc

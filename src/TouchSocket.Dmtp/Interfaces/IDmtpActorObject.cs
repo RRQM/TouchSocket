@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace TouchSocket.Dmtp
+﻿namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// 定义包含<see cref="TouchSocket.Dmtp.DmtpActor"/>成员的接口对象。

@@ -24,7 +24,7 @@ namespace TouchSocket.Rpc
         /// 服务映射图
         /// </summary>
         /// <param name="ignoreCase"></param>
-        public ActionMap(bool ignoreCase):base(ignoreCase?StringComparer.OrdinalIgnoreCase: StringComparer.Ordinal)
+        public ActionMap(bool ignoreCase) : base(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
         {
 
         }

@@ -30,11 +30,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         public TouchRpcFileInfo FileInfo { get; set; }
 
         /// <summary>
-        /// 传输标识
-        /// </summary>
-        public TransferFlags Flags { get; set; }
-
-        /// <summary>
         /// 存放路径，
         /// 可输入绝对路径，也可以输入相对路径。
         /// 但是必须包含文件名及扩展名。
@@ -52,23 +47,21 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         public int EventHashCode { get; set; }
 
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.WritePackage(this.Metadata);
             byteBlock.WritePackage(this.FileInfo);
-            byteBlock.Write((byte)this.Flags);
             byteBlock.Write(this.SavePath);
             byteBlock.Write(this.ResourcePath);
             byteBlock.Write(this.EventHashCode);
         }
 
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
             this.Metadata = byteBlock.ReadPackage<Metadata>();
             this.FileInfo = byteBlock.ReadPackage<TouchRpcFileInfo>();
-            this.Flags = (TransferFlags)byteBlock.ReadByte();
             this.SavePath = byteBlock.ReadString();
             this.ResourcePath = byteBlock.ReadString();
             this.EventHashCode = byteBlock.ReadInt32();

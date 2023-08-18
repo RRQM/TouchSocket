@@ -157,7 +157,7 @@ namespace TouchSocket.Http.WebSockets
             if (this.AutoClose && e.DataFrame.Opcode == WSDataType.Close)
             {
                 var msg = e.DataFrame.PayloadData?.ToString();
-                this.m_pluginsManager.Raise(nameof(IWebsocketClosingPlugin.OnWebsocketClosing), client, new MsgPermitEventArgs() { Message = msg });
+                this.m_pluginsManager.Raise(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), client, new MsgPermitEventArgs() { Message = msg });
                 client.Close(msg);
                 return;
             }
@@ -167,7 +167,7 @@ namespace TouchSocket.Http.WebSockets
                 return;
             }
 
-            this.m_pluginsManager.Raise(nameof(IWebsocketReceivedPlugin.OnWebsocketReceived), client, e);
+            this.m_pluginsManager.Raise(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), client, e);
         }
 
         private bool ThisVerifyConnection(IHttpSocketClient client, HttpContext context)

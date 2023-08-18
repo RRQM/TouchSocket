@@ -21,7 +21,7 @@ namespace TouchSocket.Dmtp.Redis
         public TimeSpan? timeSpan;
         public RedisPackageType packageType;
 
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             base.Package(byteBlock);
             byteBlock.Write(this.key);
@@ -37,7 +37,7 @@ namespace TouchSocket.Dmtp.Redis
             }
         }
 
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             base.Unpackage(byteBlock);
             this.key = byteBlock.ReadString();

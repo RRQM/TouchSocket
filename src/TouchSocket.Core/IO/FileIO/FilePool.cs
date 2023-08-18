@@ -14,7 +14,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
@@ -35,7 +34,7 @@ namespace TouchSocket.Core
 
         static FilePool()
         {
-            m_timer = new Timer(OnTimer, null, 1000*60, 1000 * 60);
+            m_timer = new Timer(OnTimer, null, 1000 * 60, 1000 * 60);
         }
 
         /// <summary>
@@ -261,7 +260,7 @@ namespace TouchSocket.Core
 
         private static void DelayRunReleaseFile(string path, int time)
         {
-            Task.Run(async() => 
+            Task.Run(async () =>
             {
                 await Task.Delay(time);
                 if (GetReferenceCount(path) == 0)

@@ -45,7 +45,7 @@ namespace TouchSocket.XmlRpc
                         return default;
                     }
 
-                    if (response.StatusCode != "200")
+                    if (response.StatusCode != 200)
                     {
                         throw new Exception(response.StatusMessage);
                     }
@@ -78,7 +78,7 @@ namespace TouchSocket.XmlRpc
                     {
                         return;
                     }
-                    if (response.StatusCode != "200")
+                    if (response.StatusCode != 200)
                     {
                         throw new Exception(response.StatusMessage);
                     }

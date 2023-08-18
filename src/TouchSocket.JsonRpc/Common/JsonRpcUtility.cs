@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Sockets;
+﻿using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
@@ -13,9 +8,9 @@ namespace TouchSocket.JsonRpc
     public static class JsonRpcUtility
     {
         /// <summary>
-        /// JsonRpc
+        /// TcpJsonRpc
         /// </summary>
-        public static Protocol JsonRpc { get; private set; } = new Protocol("JsonRpc");
+        public static Protocol TcpJsonRpc { get; private set; } = new Protocol("TcpJsonRpc");
 
     }
 }

@@ -25,27 +25,11 @@ namespace TouchSocket.Dmtp
         /// 默认心跳每3秒进行一次。最大失败3次即判定为断开连接。
         /// </para>
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
         /// <param name="pluginsManager"></param>
         /// <returns></returns>
-        public static DmtpHeartbeatPlugin<TClient> UseDmtpHeartbeat<TClient>(this IPluginsManager pluginsManager) where TClient : IDmtpActorObject
+        public static DmtpHeartbeatPlugin UseDmtpHeartbeat(this IPluginsManager pluginsManager)
         {
-            var heartbeat = new DmtpHeartbeatPlugin<TClient>();
-            pluginsManager.Add(heartbeat);
-            return heartbeat;
-        }
-
-        /// <summary>
-        /// DmtpRpc心跳。客户端、服务器均，但是一般建议仅客户端使用即可。
-        /// <para>
-        /// 默认心跳每3秒进行一次。最大失败3次即判定为断开连接。
-        /// </para>
-        /// </summary>
-        /// <param name="pluginsManager"></param>
-        /// <returns></returns>
-        public static DmtpHeartbeatPlugin<IDmtpActorObject> UseDmtpHeartbeat(this IPluginsManager pluginsManager)
-        {
-            var heartbeat = new DmtpHeartbeatPlugin<IDmtpActorObject>();
+            var heartbeat = new DmtpHeartbeatPlugin();
             pluginsManager.Add(heartbeat);
             return heartbeat;
         }

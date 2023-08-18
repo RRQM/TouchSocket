@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 注入容器接口
     /// </summary>
-    public interface IContainer :IEnumerable<DependencyDescriptor>
+    public interface IContainer : IEnumerable<DependencyDescriptor>
     {
         /// <summary>
         /// 创建目标类型的对应实例。

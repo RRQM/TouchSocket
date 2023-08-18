@@ -10,9 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
@@ -20,29 +20,14 @@ namespace TouchSocket.Http.WebSockets
     /// 初始化一个适用于WebSocket的心跳插件
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = true)]
-    public class WebSocketHeartbeatPlugin<TClient> : PluginBase, IWebsocketHandshakedPlugin<TClient> where TClient : IHttpClientBase
+    public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
     {
-        /// <summary>
-        /// 心跳频率
-        /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(5);
-
-
-        /// <summary>
-        /// 设置心跳间隔，默认5秒。
-        /// </summary>
-        /// <param name="timeSpan"></param>
-        public WebSocketHeartbeatPlugin<TClient> SetTick(TimeSpan timeSpan)
-        {
-            this.Tick = timeSpan;
-            return this;
-        }
-
         /// <inheritdoc/>
-        public Task OnWebsocketHandshaked(TClient client, HttpContextEventArgs e)
+        Task IWebSocketHandshakedPlugin<IHttpClientBase>.OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
         {
-            Task.Run(async() => 
+            Task.Run(async () =>
             {
+                var failedCount = 0;
                 while (true)
                 {
                     await Task.Delay(this.Tick);
@@ -50,13 +35,19 @@ namespace TouchSocket.Http.WebSockets
                     {
                         return;
                     }
-                    if (client is IHttpClient httpClient)
+
+                    try
                     {
-                        httpClient.PingWS();
+                        client.PingWS();
+                        failedCount = 0;
                     }
-                    else if (client is IHttpSocketClient httpSocketClient)
+                    catch
                     {
-                        httpSocketClient.PingWS();
+                        failedCount++;
+                    }
+                    if (failedCount > this.MaxFailCount) 
+                    {
+                        client.CloseWithWS("自动心跳失败次数达到最大，已断开连接。");
                     }
                 }
             });

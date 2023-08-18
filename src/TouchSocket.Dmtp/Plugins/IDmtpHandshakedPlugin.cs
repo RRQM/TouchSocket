@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -11,7 +7,7 @@ namespace TouchSocket.Dmtp
     /// IDmtpHandshakedPlugin
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpHandshakedPlugin<in TClient>:IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpHandshakedPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
     {
         /// <summary>
         /// 在完成握手连接时。
@@ -25,8 +21,8 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IDmtpHandshakedPlugin
     /// </summary>
-    public interface IDmtpHandshakedPlugin: IDmtpHandshakedPlugin<IDmtpActorObject>
-    { 
-    
+    public interface IDmtpHandshakedPlugin : IDmtpHandshakedPlugin<IDmtpActorObject>
+    {
+
     }
 }

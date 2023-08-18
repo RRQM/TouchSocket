@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TouchSocket.Core
+﻿namespace TouchSocket.Core
 {
     /// <summary>
     /// MsgEventArgs
     /// </summary>
-    public class MsgEventArgs: PluginEventArgs
+    public class MsgEventArgs : PluginEventArgs
     {
         /// <summary>
         ///  构造函数

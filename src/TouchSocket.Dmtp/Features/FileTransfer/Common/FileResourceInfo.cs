@@ -88,7 +88,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             byteBlock.Write(this.ResourceHandle);
             byteBlock.WritePackage(this.FileInfo);
@@ -113,7 +113,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             this.ResourceHandle = byteBlock.ReadInt32();
             this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();

@@ -32,7 +32,7 @@ namespace TouchSocket.Core
         protected override int Write(ByteBlock byteBlock, Metadata obj)
         {
             var pos = byteBlock.Pos;
-            foreach (var item in obj.AllKeys)
+            foreach (var item in obj.Keys)
             {
                 byteBlock.Write(item);
                 byteBlock.Write(obj[item]);

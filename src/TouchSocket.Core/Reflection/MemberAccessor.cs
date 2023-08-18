@@ -118,7 +118,7 @@ namespace TouchSocket.Core
                 catch
                 {
                 }
-               
+
             }
             foreach (var propertyInfo in this.OnGetProperties.Invoke(this.Type))
             {

@@ -98,7 +98,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static bool operator ==(Protocol a, Protocol b)
         {
-            return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value)|| string.Equals(a.m_value, b.m_value);
+            return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value) || string.Equals(a.m_value, b.m_value);
         }
 
         /// <summary>

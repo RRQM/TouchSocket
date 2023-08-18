@@ -77,16 +77,26 @@ namespace TouchSocket.Http
                 }
                 return 0;
             }
-            set 
+            set
             {
-                this.m_headers.Add(HttpHeaders.ContentLength,value.ToString());
+                this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
             }
         }
 
         /// <summary>
         /// 内容类型
         /// </summary>
-        public string ContentType { get; set; }
+        public string ContentType
+        {
+            get
+            {
+                return this.m_headers.Get(HttpHeaders.ContentType);
+            }
+            set
+            {
+                this.m_headers.Add(HttpHeaders.ContentType, value);
+            }
+        }
 
         /// <summary>
         /// 传递标识
@@ -233,8 +243,6 @@ namespace TouchSocket.Http
                     this.Headers.Add(key, kv[1]);
                 }
             }
-
-            this.ContentType = this.Headers.Get(HttpHeaders.ContentType);
         }
     }
 }

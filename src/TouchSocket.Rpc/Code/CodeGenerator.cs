@@ -162,7 +162,6 @@ namespace TouchSocket.Rpc
             codeString.AppendLine("using TouchSocket.Core;");
             codeString.AppendLine("using TouchSocket.Sockets;");
             codeString.AppendLine("using TouchSocket.Rpc;");
-            codeString.AppendLine("using TouchSocket.Dmtp.Rpc;");
             codeString.AppendLine("using System.Collections.Generic;");
             codeString.AppendLine("using System.Diagnostics;");
             codeString.AppendLine("using System.Text;");

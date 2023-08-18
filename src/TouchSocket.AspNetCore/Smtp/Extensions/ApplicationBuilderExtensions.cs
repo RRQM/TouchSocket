@@ -26,9 +26,9 @@ namespace Microsoft.AspNetCore.Builder
         /// <param name="builder"></param>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseWebsocketDmtp(this IApplicationBuilder builder, string url = "/websocketsmtp")
+        public static IApplicationBuilder UseWebSocketDmtp(this IApplicationBuilder builder, string url = "/websocketsmtp")
         {
-            return builder.UseMiddleware<WebsocketDmtpMiddleware>(url);
+            return builder.UseMiddleware<WebSocketDmtpMiddleware>(url);
         }
     }
 }

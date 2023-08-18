@@ -183,7 +183,7 @@ namespace TouchSocket.Http.WebSockets
                 return false;
             }
 
-            response.StatusCode = "101";
+            response.StatusCode = 101;
             response.StatusMessage = "switching protocols";
             response.Headers.Add(HttpHeaders.Connection, "upgrade");
             response.Headers.Add(HttpHeaders.Upgrade, "websocket");

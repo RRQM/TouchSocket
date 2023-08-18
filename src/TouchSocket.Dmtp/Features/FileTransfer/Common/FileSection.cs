@@ -45,7 +45,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public int Length { get; internal set; }
 
         /// <inheritdoc/>
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             byteBlock.Write((byte)this.Status);
             byteBlock.Write(this.ResourceHandle);
@@ -55,7 +55,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             this.Status = (FileSectionStatus)byteBlock.ReadByte();
             this.ResourceHandle = byteBlock.ReadInt32();

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.IO;
 using System.Text;
 
 namespace TouchSocket.Core
@@ -30,6 +31,24 @@ namespace TouchSocket.Core
             using (var md5 = System.Security.Cryptography.MD5.Create())
             {
                 var data = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
+                var length = data.Length;
+                for (var i = 0; i < length; i++)
+                    sb.Append(data[i].ToString("X2"));
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 从流中获取MD5值。
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static string GetMD5Hash(Stream stream)
+        {
+            var sb = new StringBuilder();
+            using (var crypto = System.Security.Cryptography.MD5.Create())
+            {
+                var data = crypto.ComputeHash(stream);
                 var length = data.Length;
                 for (var i = 0; i < length; i++)
                     sb.Append(data[i].ToString("X2"));
@@ -78,5 +97,7 @@ namespace TouchSocket.Core
             var hashOfInput = GetMD5Hash(str);
             return hashOfInput.CompareTo(hash) == 0;
         }
+
+
     }
 }

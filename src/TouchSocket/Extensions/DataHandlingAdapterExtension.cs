@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -19,7 +15,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="adapter"></param>
         /// <param name="config"></param>
-        public static void Config(this TcpDataHandlingAdapter adapter,TouchSocketConfig config)
+        public static void Config(this TcpDataHandlingAdapter adapter, TouchSocketConfig config)
         {
             if (config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
             {

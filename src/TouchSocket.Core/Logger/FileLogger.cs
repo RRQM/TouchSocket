@@ -46,7 +46,7 @@ namespace TouchSocket.Core
         ~FileLogger()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: false);
+            this.Dispose(disposing: false);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace TouchSocket.Core
         public void Dispose()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            Dispose(disposing: true);
+            this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
@@ -70,7 +70,7 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!m_disposedValue)
+            if (!this.m_disposedValue)
             {
                 if (disposing)
                 {
@@ -78,7 +78,7 @@ namespace TouchSocket.Core
                 }
 
                 this.m_writer?.Dispose();
-                m_disposedValue = true;
+                this.m_disposedValue = true;
             }
         }
 
@@ -115,7 +115,7 @@ namespace TouchSocket.Core
             {
                 lock (this.m_lock)
                 {
-                    if (this.m_writer == null||this.m_writer.DisposedValue)
+                    if (this.m_writer == null || this.m_writer.DisposedValue)
                     {
                         var dir = Path.Combine(this.m_rootPath, DateTime.Now.ToString("[yyyy-MM-dd]"));
                         if (!Directory.Exists(dir))

@@ -46,13 +46,6 @@ namespace TouchSocket.Core
     public class Method
     {
         /// <summary>
-        /// FastInvokeHandler
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="paramters"></param>
-        /// <returns></returns>
-        public delegate object FastInvokeHandler(object target, object[] paramters);
-        /// <summary>
         /// 方法执行委托
         /// </summary>
         private readonly FastInvokeHandler m_invoker;
@@ -105,6 +98,14 @@ namespace TouchSocket.Core
                 this.ReturnType = method.ReturnType;
             }
         }
+
+        /// <summary>
+        /// FastInvokeHandler
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="paramters"></param>
+        /// <returns></returns>
+        public delegate object FastInvokeHandler(object target, object[] paramters);
 
         /// <summary>
         /// 是否具有返回值。当返回值为Task时，也会认为没有返回值。
@@ -327,59 +328,78 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 生成方法的调用委托
-        /// </summary>
-        /// <param name="method">方法成员信息</param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <returns></returns>
-        private Func<object, object[], object> CreateInvoker(MethodInfo method)
+        private static void EmitBoxIfNeeded(ILGenerator il, System.Type type)
         {
-            var instance = Expression.Parameter(typeof(object), "instance");
-            var parameters = Expression.Parameter(typeof(object[]), "parameters");
-
-            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
-            var parametersCast = method.GetParameters().Select((p, i) =>
+            if (type.IsValueType)
             {
-                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
-                return Expression.Convert(parameter, p.ParameterType);
-            });
-
-            var body = Expression.Call(instanceCast, method, parametersCast);
-
-            if (method.ReturnType == typeof(Task))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.Task;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+                il.Emit(OpCodes.Box, type);
             }
-            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+        }
+
+        private static void EmitCastToReference(ILGenerator il, System.Type type)
+        {
+            if (type.IsValueType)
             {
-                this.TaskType = TaskReturnType.TaskObject;
-                this.HasReturn = true;
-                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType == typeof(void))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.None;
-                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
-                return (_instance, _parameters) =>
-                {
-                    action.Invoke(_instance, _parameters);
-                    return null;
-                };
+                il.Emit(OpCodes.Unbox_Any, type);
             }
             else
             {
-                this.HasReturn = true;
-                this.TaskType = TaskReturnType.None;
-                this.ReturnType = method.ReturnType;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+                il.Emit(OpCodes.Castclass, type);
+            }
+        }
+
+        private static void EmitFastInt(ILGenerator il, int value)
+        {
+            switch (value)
+            {
+                case -1:
+                    il.Emit(OpCodes.Ldc_I4_M1);
+                    return;
+
+                case 0:
+                    il.Emit(OpCodes.Ldc_I4_0);
+                    return;
+
+                case 1:
+                    il.Emit(OpCodes.Ldc_I4_1);
+                    return;
+
+                case 2:
+                    il.Emit(OpCodes.Ldc_I4_2);
+                    return;
+
+                case 3:
+                    il.Emit(OpCodes.Ldc_I4_3);
+                    return;
+
+                case 4:
+                    il.Emit(OpCodes.Ldc_I4_4);
+                    return;
+
+                case 5:
+                    il.Emit(OpCodes.Ldc_I4_5);
+                    return;
+
+                case 6:
+                    il.Emit(OpCodes.Ldc_I4_6);
+                    return;
+
+                case 7:
+                    il.Emit(OpCodes.Ldc_I4_7);
+                    return;
+
+                case 8:
+                    il.Emit(OpCodes.Ldc_I4_8);
+                    return;
+            }
+
+            if (value > -129 && value < 128)
+            {
+                il.Emit(OpCodes.Ldc_I4_S, (SByte)value);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldc_I4, value);
             }
         }
 
@@ -393,7 +413,6 @@ namespace TouchSocket.Core
             for (var i = 0; i < paramTypes.Length; i++)
             {
                 paramTypes[i] = ps[i].ParameterType.IsByRef ? ps[i].ParameterType.GetElementType() : ps[i].ParameterType;
-
             }
             var locals = new LocalBuilder[paramTypes.Length];
 
@@ -447,69 +466,59 @@ namespace TouchSocket.Core
             return invoder;
         }
 
-        private static void EmitCastToReference(ILGenerator il, System.Type type)
+        /// <summary>
+        /// 生成方法的调用委托
+        /// </summary>
+        /// <param name="method">方法成员信息</param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        private Func<object, object[], object> CreateInvoker(MethodInfo method)
         {
-            if (type.IsValueType)
+            var instance = Expression.Parameter(typeof(object), "instance");
+            var parameters = Expression.Parameter(typeof(object[]), "parameters");
+
+            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
+            var parametersCast = method.GetParameters().Select((p, i) =>
             {
-                il.Emit(OpCodes.Unbox_Any, type);
+                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
+                return Expression.Convert(parameter, p.ParameterType);
+            });
+
+            var body = Expression.Call(instanceCast, method, parametersCast);
+
+            if (method.ReturnType == typeof(Task))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.Task;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                this.TaskType = TaskReturnType.TaskObject;
+                this.HasReturn = true;
+                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType == typeof(void))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.None;
+                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
+                return (_instance, _parameters) =>
+                {
+                    action.Invoke(_instance, _parameters);
+                    return null;
+                };
             }
             else
             {
-                il.Emit(OpCodes.Castclass, type);
-            }
-        }
-
-        private static void EmitBoxIfNeeded(ILGenerator il, System.Type type)
-        {
-            if (type.IsValueType)
-            {
-                il.Emit(OpCodes.Box, type);
-            }
-        }
-
-        private static void EmitFastInt(ILGenerator il, int value)
-        {
-            switch (value)
-            {
-                case -1:
-                    il.Emit(OpCodes.Ldc_I4_M1);
-                    return;
-                case 0:
-                    il.Emit(OpCodes.Ldc_I4_0);
-                    return;
-                case 1:
-                    il.Emit(OpCodes.Ldc_I4_1);
-                    return;
-                case 2:
-                    il.Emit(OpCodes.Ldc_I4_2);
-                    return;
-                case 3:
-                    il.Emit(OpCodes.Ldc_I4_3);
-                    return;
-                case 4:
-                    il.Emit(OpCodes.Ldc_I4_4);
-                    return;
-                case 5:
-                    il.Emit(OpCodes.Ldc_I4_5);
-                    return;
-                case 6:
-                    il.Emit(OpCodes.Ldc_I4_6);
-                    return;
-                case 7:
-                    il.Emit(OpCodes.Ldc_I4_7);
-                    return;
-                case 8:
-                    il.Emit(OpCodes.Ldc_I4_8);
-                    return;
-            }
-
-            if (value > -129 && value < 128)
-            {
-                il.Emit(OpCodes.Ldc_I4_S, (SByte)value);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldc_I4, value);
+                this.HasReturn = true;
+                this.TaskType = TaskReturnType.None;
+                this.ReturnType = method.ReturnType;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
             }
         }
     }

@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {
     /// <summary>
     /// IHttpPostPlugin
     /// </summary>
-    public interface IHttpPostPlugin<in TClient> : IPlugin where TClient: IHttpSocketClient
+    public interface IHttpPostPlugin<in TClient> : IPlugin where TClient : IHttpSocketClient
     {
         /// <summary>
         /// 在收到Post时
@@ -25,8 +20,8 @@ namespace TouchSocket.Http
     /// <summary>
     /// IHttpPostPlugin
     /// </summary>
-    public interface IHttpPostPlugin: IHttpPostPlugin<IHttpSocketClient>
-    { 
-    
+    public interface IHttpPostPlugin : IHttpPostPlugin<IHttpSocketClient>
+    {
+
     }
 }

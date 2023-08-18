@@ -19,12 +19,12 @@ namespace TouchSocket.Dmtp.Rpc
     {
         public long Sign { get; set; }
 
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             byteBlock.Write(this.Sign);
         }
 
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             this.Sign = byteBlock.ReadInt64();
         }

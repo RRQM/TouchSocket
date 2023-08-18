@@ -62,7 +62,7 @@ namespace TouchSocket.Core
                         {
                             if (item.GetType().FullName == plugin.GetType().FullName)
                             {
-                                return;
+                                throw new Exception($"{plugin.GetType().FullName}类型的插件为单例类型，且已经注册。");
                             }
                         }
                     }
@@ -105,6 +105,20 @@ namespace TouchSocket.Core
 
         object IPluginsManager.Add(Type pluginType)
         {
+            if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
+            {
+                if (optionAttribute.Singleton)
+                {
+                    foreach (var item in this.m_plugins)
+                    {
+                        if (item.GetType().FullName == pluginType.FullName)
+                        {
+                            return item;
+                        }
+                    }
+                }
+            }
+
             var plugin = (IPlugin)this.m_container.ResolveWithoutRoot(pluginType);
             ((IPluginsManager)this).Add(plugin);
             return plugin;

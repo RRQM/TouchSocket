@@ -11,13 +11,13 @@
         public string Message { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             byteBlock.Write(this.Message);
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             this.Message = byteBlock.ReadString();
         }

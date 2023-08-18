@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -39,17 +38,17 @@ namespace TouchSocket.Dmtp
             return this.Data == null ? 1024 : this.Data.Len + 1024;
         }
 
-        public override void PackageBody(ByteBlock byteBlock)
+        public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.Write(this.RunNow);
             byteBlock.Write((byte)this.DataType);
             byteBlock.Write(this.ChannelId);
-            
+
             byteBlock.WriteByteBlock(this.Data);
         }
 
-        public override void UnpackageBody(ByteBlock byteBlock)
+        public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);
             this.RunNow = byteBlock.ReadBoolean();

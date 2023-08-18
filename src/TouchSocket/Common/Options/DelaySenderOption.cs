@@ -19,13 +19,13 @@ namespace TouchSocket.Sockets
     public class DelaySenderOption
     {
         /// <summary>
-        /// 延迟队列最大尺寸，默认1024*1024*10字节。
+        /// 延迟队列最大尺寸，默认1024*1024字节。
         /// </summary>
-        public int QueueLength { get; set; } = 1024 * 1024 * 10;
+        public int QueueLength { get; set; } = 1024 * 1024;
 
         /// <summary>
-        /// 延迟包最大尺寸，默认1024*512字节。
+        /// 延迟包最大尺寸，默认1024*64字节。
         /// </summary>
-        public int DelayLength { get; set; } = 1024 * 512;
+        public int DelayLength { get; set; } = 1024 * 64;
     }
 }

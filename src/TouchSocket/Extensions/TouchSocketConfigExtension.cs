@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -301,7 +300,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static TouchSocketConfig UseUdpReceive(this TouchSocketConfig config)
         {
-           return SetBindIPHost(config,0);
+            return SetBindIPHost(config, 0);
         }
 
         /// <summary>
@@ -527,7 +526,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient :ITcpClient,new ()
+        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ITcpClient, new()
         {
             var client = new TClient();
             client.Setup(config);
@@ -551,9 +550,9 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildService<TService>(this TouchSocketConfig config) where TService : ITcpService ,new ()
+        public static TService BuildService<TService>(this TouchSocketConfig config) where TService : ITcpService, new()
         {
-            var service =new TService();
+            var service = new TService();
             service.Setup(config);
             service.Start();
             return service;

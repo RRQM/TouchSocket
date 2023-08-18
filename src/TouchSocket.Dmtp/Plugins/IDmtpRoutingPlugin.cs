@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -11,7 +7,7 @@ namespace TouchSocket.Dmtp
     /// IDmtpRoutingPlugin
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpRoutingPlugin<in TClient>:IPlugin where TClient: IDmtpActorObject
+    public interface IDmtpRoutingPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
     {
         /// <summary>
         /// 当需要转发路由包时

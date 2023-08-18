@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {
@@ -36,7 +35,7 @@ namespace TouchSocket.Http
     /// IHttpPlugin
     /// </summary>
     public interface IHttpPlugin : IHttpPlugin<IHttpSocketClient>
-    { 
-    
+    {
+
     }
 }

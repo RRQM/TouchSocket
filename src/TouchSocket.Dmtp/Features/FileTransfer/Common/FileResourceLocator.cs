@@ -156,11 +156,16 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     return new FileSectionResult(ResultCode.Error, "数据块不一致。", default, fileSection);
                 }
-                var buffer = new byte[fileSection.Length];
-                var r = this.FileStorage.Read(oldFileSection.Offset, buffer, 0, buffer.Length);
-                return r != fileSection.Length
-                    ? new FileSectionResult(ResultCode.Error, "读取长度不一致。", default, fileSection)
-                    : new FileSectionResult(ResultCode.Success, buffer, fileSection);
+                var buffer = BytePool.Default.Rent(fileSection.Length);
+                var r = this.FileStorage.Read(oldFileSection.Offset, buffer, 0, fileSection.Length);
+                if (r != fileSection.Length)
+                {
+                    return new FileSectionResult(ResultCode.Error, "读取长度不一致。", default, fileSection);
+                }
+                else
+                {
+                    return new FileSectionResult(ResultCode.Success, new ArraySegment<byte>(buffer, 0, r), fileSection);
+                }
             }
             catch (Exception ex)
             {
@@ -236,7 +241,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="fileSection"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Result WriteFileSection(FileSection fileSection, byte[] value)
+        public Result WriteFileSection(FileSection fileSection, ArraySegment<byte> value)
         {
             try
             {
@@ -254,7 +259,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
                 var srcFileSection = this.FileResourceInfo.FileSections[fileSection.Index];
 
-                if (value.Length != fileSection.Length)
+                if (value.Count != fileSection.Length)
                 {
                     fileSection.Status = FileSectionStatus.Fail;
                     return new Result(ResultCode.Error, "实际数据长度与期望长度不一致。");
@@ -264,7 +269,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     return new Result(ResultCode.Error, "数据块不一致。");
                 }
-                this.FileStorage.Write(srcFileSection.Offset, value, 0, value.Length);
+                this.FileStorage.Write(srcFileSection.Offset, value.Array, value.Offset, value.Count);
                 fileSection.Status = FileSectionStatus.Finished;
                 srcFileSection.Status = FileSectionStatus.Finished;
                 return Result.Success;
@@ -283,11 +288,21 @@ namespace TouchSocket.Dmtp.FileTransfer
         public Result WriteFileSection(FileSectionResult fileSectionResult)
         {
             this.LastActiveTime = DateTime.Now;
-            return this.FileAccess != FileAccess.Write
-                ? new Result(ResultCode.Error, "该定位器是只读的。")
-                : !fileSectionResult.IsSuccess()
-                ? new Result(fileSectionResult)
-                : this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value);
+            if (this.FileAccess != FileAccess.Write)
+            {
+                return new Result(ResultCode.Error, "该定位器是只读的。");
+            }
+            else
+            {
+                if (!fileSectionResult.IsSuccess())
+                {
+                    return new Result(fileSectionResult);
+                }
+                else
+                {
+                    return this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value);
+                }
+            }
         }
 
         /// <summary>

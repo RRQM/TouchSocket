@@ -1,0 +1,96 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket", "TouchSocket\TouchSocket.csproj", "{37BF3CB2-9003-465D-A936-7373301FDA5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.AspNetCore", "TouchSocket.AspNetCore\TouchSocket.AspNetCore.csproj", "{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.CodeAnalyzer", "TouchSocket.CodeAnalyzer\TouchSocket.CodeAnalyzer.csproj", "{C489C644-2662-49BF-A9F1-C9631E4770AE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core", "TouchSocket.Core\TouchSocket.Core.csproj", "{0E789C43-A0CA-4EBD-B7E9-E085AD5CFD41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Core.DependencyInjection", "TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj", "{0CB42715-7C9C-4683-8A59-5472FF44A458}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Http", "TouchSocket.Http\TouchSocket.Http.csproj", "{80374769-93F5-49B9-A95E-7E0D3BEBDE45}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.JsonRpc", "TouchSocket.JsonRpc\TouchSocket.JsonRpc.csproj", "{5D01F692-E379-457B-B669-AE1740C2D112}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc", "TouchSocket.Rpc\TouchSocket.Rpc.csproj", "{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator.Rpc", "TouchSocket.SourceGenerator.Rpc\TouchSocket.SourceGenerator.Rpc.csproj", "{79A7F310-F5E2-410C-B953-D5A501EE5185}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi", "TouchSocket.WebApi\TouchSocket.WebApi.csproj", "{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.XmlRpc", "TouchSocket.XmlRpc\TouchSocket.XmlRpc.csproj", "{51400DB7-74C1-45CA-A647-0052D58047E9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Dmtp", "TouchSocket.Dmtp\TouchSocket.Dmtp.csproj", "{660C6B92-190A-47FD-8E31-E2A01501C750}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案", "解决方案", "{05D0081C-1A4E-49C0-ADF0-C501CC454639}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{37BF3CB2-9003-465D-A936-7373301FDA5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37BF3CB2-9003-465D-A936-7373301FDA5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37BF3CB2-9003-465D-A936-7373301FDA5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37BF3CB2-9003-465D-A936-7373301FDA5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E00016F-41A4-40BC-AF9C-DA3B0FA4F81A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C489C644-2662-49BF-A9F1-C9631E4770AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C489C644-2662-49BF-A9F1-C9631E4770AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C489C644-2662-49BF-A9F1-C9631E4770AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C489C644-2662-49BF-A9F1-C9631E4770AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E789C43-A0CA-4EBD-B7E9-E085AD5CFD41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E789C43-A0CA-4EBD-B7E9-E085AD5CFD41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E789C43-A0CA-4EBD-B7E9-E085AD5CFD41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E789C43-A0CA-4EBD-B7E9-E085AD5CFD41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CB42715-7C9C-4683-8A59-5472FF44A458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CB42715-7C9C-4683-8A59-5472FF44A458}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CB42715-7C9C-4683-8A59-5472FF44A458}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CB42715-7C9C-4683-8A59-5472FF44A458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80374769-93F5-49B9-A95E-7E0D3BEBDE45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80374769-93F5-49B9-A95E-7E0D3BEBDE45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80374769-93F5-49B9-A95E-7E0D3BEBDE45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80374769-93F5-49B9-A95E-7E0D3BEBDE45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D01F692-E379-457B-B669-AE1740C2D112}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D01F692-E379-457B-B669-AE1740C2D112}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D01F692-E379-457B-B669-AE1740C2D112}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D01F692-E379-457B-B669-AE1740C2D112}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51400DB7-74C1-45CA-A647-0052D58047E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51400DB7-74C1-45CA-A647-0052D58047E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51400DB7-74C1-45CA-A647-0052D58047E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51400DB7-74C1-45CA-A647-0052D58047E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
+	EndGlobalSection
+EndGlobal

@@ -54,7 +54,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public string MD5 { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             base.Package(byteBlock);
             byteBlock.Write(this.MD5);
@@ -62,7 +62,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             base.Unpackage(byteBlock);
             this.MD5 = byteBlock.ReadString();

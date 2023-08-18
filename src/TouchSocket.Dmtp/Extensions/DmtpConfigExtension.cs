@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net.Sockets;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
@@ -92,7 +90,28 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient,new ()
+
+        /* 项目“TouchSocket.Dmtp (net7.0)”的未合并的更改
+        在此之前:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient,new ()
+        在此之后:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient, new()
+        */
+
+        /* 项目“TouchSocket.Dmtp (net45)”的未合并的更改
+        在此之前:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient,new ()
+        在此之后:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient, new()
+        */
+
+        /* 项目“TouchSocket.Dmtp (net6.0)”的未合并的更改
+        在此之前:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient,new ()
+        在此之后:
+                public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config)where TClient : ITcpDmtpClient, new()
+        */
+        public static TClient BuildWithTcpDmtpClient<TClient>(this TouchSocketConfig config) where TClient : ITcpDmtpClient, new()
         {
             return config.BuildClient<TClient>();
         }
@@ -113,7 +132,28 @@ namespace TouchSocket.Dmtp
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService,new ()
+
+        /* 项目“TouchSocket.Dmtp (net7.0)”的未合并的更改
+        在此之前:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService,new ()
+        在此之后:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService, new()
+        */
+
+        /* 项目“TouchSocket.Dmtp (net45)”的未合并的更改
+        在此之前:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService,new ()
+        在此之后:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService, new()
+        */
+
+        /* 项目“TouchSocket.Dmtp (net6.0)”的未合并的更改
+        在此之前:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService,new ()
+        在此之后:
+                public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService, new()
+        */
+        public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService, new()
         {
             return config.BuildService<TService>();
         }
@@ -138,7 +178,7 @@ namespace TouchSocket.Dmtp
         /// <typeparam name="TClient"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildWithHttpDmtpClient<TClient>(this TouchSocketConfig config) where TClient : IHttpDmtpClient,new ()
+        public static TClient BuildWithHttpDmtpClient<TClient>(this TouchSocketConfig config) where TClient : IHttpDmtpClient, new()
         {
             return config.BuildClient<TClient>();
         }
@@ -159,7 +199,7 @@ namespace TouchSocket.Dmtp
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildWithHttpDmtpService<TService>(this TouchSocketConfig config) where TService : IHttpDmtpService,new ()
+        public static TService BuildWithHttpDmtpService<TService>(this TouchSocketConfig config) where TService : IHttpDmtpService, new()
         {
             return config.BuildService<TService>();
         }

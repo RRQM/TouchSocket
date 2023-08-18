@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -10,16 +6,51 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// HeartbeatPlugin
     /// </summary>
-    public abstract class HeartbeatPlugin<TClient>:PluginBase
+    public abstract class HeartbeatPlugin : PluginBase
     {
         /// <summary>
-        /// 获取或设置清理无数据交互的Client，默认60秒。
+        /// 最大失败次数，默认3。
         /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
+        public int MaxFailCount { get; set; } = 3;
 
-        protected void BeginHeartbeat()
-        { 
-       
+        /// <summary>
+        /// 心跳间隔。默认3秒。
+        /// </summary>
+        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(3);
+
+    }
+
+    /// <summary>
+    /// HeartbeatPluginExtension
+    /// </summary>
+    public static class HeartbeatPluginExtension
+    {
+        /// <summary>
+        /// 设置心跳间隔。默认3秒。
+        /// </summary>
+        /// <typeparam name="THeartbeatPlugin"></typeparam>
+        /// <param name="heartbeatPlugin"></param>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
+        public static THeartbeatPlugin SetTick<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin, TimeSpan timeSpan) 
+            where THeartbeatPlugin : HeartbeatPlugin
+        {
+            heartbeatPlugin.Tick = timeSpan;
+            return heartbeatPlugin;
+        }
+
+        /// <summary>
+        /// 设置最大失败次数，默认3。
+        /// </summary>
+        /// <typeparam name="THeartbeatPlugin"></typeparam>
+        /// <param name="heartbeatPlugin"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static THeartbeatPlugin SetMaxFailCount<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin,int value)
+             where THeartbeatPlugin : HeartbeatPlugin
+        {
+            heartbeatPlugin.MaxFailCount = value;
+            return heartbeatPlugin;
         }
     }
 }

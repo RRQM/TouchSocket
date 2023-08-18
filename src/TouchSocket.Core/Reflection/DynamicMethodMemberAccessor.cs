@@ -11,17 +11,15 @@ namespace TouchSocket.Core
     {
         private readonly ConcurrentDictionary<Type, IMemberAccessor> m_classAccessors = new ConcurrentDictionary<Type, IMemberAccessor>();
 
-        private static DynamicMethodMemberAccessor m_default;
-
         static DynamicMethodMemberAccessor()
         {
-            m_default = new DynamicMethodMemberAccessor();
+            Default = new DynamicMethodMemberAccessor();
         }
 
         /// <summary>
         /// DynamicMethodMemberAccessor的默认实例。
         /// </summary>
-        public static DynamicMethodMemberAccessor Default { get => m_default; }
+        public static DynamicMethodMemberAccessor Default { get; private set; }
 
         /// <summary>
         /// 获取字段
@@ -62,7 +60,7 @@ namespace TouchSocket.Core
                 }
                 memberAccessor.Build();
                 classAccessor = memberAccessor;
-                m_classAccessors.TryAdd(typekey, classAccessor);
+                this.m_classAccessors.TryAdd(typekey, classAccessor);
             }
             return classAccessor;
         }

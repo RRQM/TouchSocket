@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TouchSocket.Dmtp
 {
-    internal class ProtocolSecureService: IProtocolSecureService
+    internal class ProtocolSecureService : IProtocolSecureService
     {
-        readonly Dictionary<ushort, string> m_dic=new Dictionary<ushort, string>();
-        public void RegisterProtocol(ushort protocol,string description)
-        { 
-        
+        readonly Dictionary<ushort, string> m_dic = new Dictionary<ushort, string>();
+        public void RegisterProtocol(ushort protocol, string description)
+        {
+
         }
     }
 }

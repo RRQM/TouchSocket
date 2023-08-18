@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System.ComponentModel;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -33,8 +32,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 当配置Config完成时触发。
     /// </summary>
-    public interface ILoadedConfigPlugin:ILoadedConfigPlugin<object>
-    { 
-    
+    public interface ILoadedConfigPlugin : ILoadedConfigPlugin<object>
+    {
+
     }
 }

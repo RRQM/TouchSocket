@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="oldId"></param>
         /// <param name="newId"></param>
-        public IdChangedEventArgs(string oldId, string newId) 
+        public IdChangedEventArgs(string oldId, string newId)
         {
             this.OldId = oldId;
             this.NewId = newId;

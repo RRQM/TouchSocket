@@ -20,11 +20,18 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             this.m_fileResourceController = container.TryResolve<IFileResourceController>() ?? new FileResourceController();
             this.m_pluginsManager = pluginsManager;
+            this.MaxSmallFileLength = 1024 * 1024;
             this.SetProtocolFlags(30);
         }
 
+        /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
+        public int MaxSmallFileLength { get; set; }
+
         /// <inheritdoc/>
         public ushort ReserveProtocolSize => 20;
+
+        /// <inheritdoc cref="IDmtpFileTransferActor.RootPath"/>
+        public string RootPath { get; set; }
 
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
@@ -35,9 +42,10 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 FileController = m_fileResourceController,
                 OnFileTransfering = OnFileTransfering,
-                OnFileTransfered = OnFileTransfered
+                OnFileTransfered = OnFileTransfered,
+                RootPath = this.RootPath,
+                MaxSmallFileLength = this.MaxSmallFileLength
             };
-
             smtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpFileTransferActor(smtpFileTransferActor);
 
@@ -58,6 +66,13 @@ namespace TouchSocket.Dmtp.FileTransfer
             return e.InvokeNext();
         }
 
+        /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
+        public DmtpFileTransferFeature SetMaxSmallFileLength(int maxSmallFileLength)
+        {
+            this.MaxSmallFileLength = maxSmallFileLength;
+            return this;
+        }
+
         /// <summary>
         /// 设置<see cref="DmtpFileTransferFeature"/>的起始协议。
         /// <para>
@@ -72,12 +87,19 @@ namespace TouchSocket.Dmtp.FileTransfer
             return this;
         }
 
-        private void OnFileTransfered(IDmtpActor actor, FileTransferStatusEventArgs e)
+        /// <inheritdoc cref="IDmtpFileTransferActor.RootPath"/>
+        public DmtpFileTransferFeature SetRootPath(string rootPath)
+        {
+            this.RootPath = rootPath;
+            return this;
+        }
+
+        private void OnFileTransfered(IDmtpActor actor, FileTransferedEventArgs e)
         {
             this.m_pluginsManager.Raise(nameof(IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered), actor.Client, e);
         }
 
-        private void OnFileTransfering(IDmtpActor actor, FileOperationEventArgs e)
+        private void OnFileTransfering(IDmtpActor actor, FileTransferingEventArgs e)
         {
             this.m_pluginsManager.Raise(nameof(IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering), actor.Client, e);
         }

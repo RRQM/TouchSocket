@@ -33,20 +33,21 @@ namespace TouchSocket.Sockets
         /// 延迟发送器
         /// </summary>
         /// <param name="socket"></param>
-        /// <param name="queueLength"></param>
         /// <param name="onError"></param>
-        public DelaySender(Socket socket, int queueLength, Action<Exception> onError)
+        /// <param name="delaySenderOption"></param>
+        public DelaySender(Socket socket,  DelaySenderOption delaySenderOption, Action<Exception> onError)
         {
+            this.DelayLength=delaySenderOption.DelayLength;
             this.m_socket = socket;
             this.m_onError = onError;
-            this.m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(queueLength);
+            this.m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(delaySenderOption.QueueLength);
             this.m_lockSlim = new ReaderWriterLockSlim();
         }
 
         /// <summary>
-        /// 延迟包最大尺寸，默认1024*512字节。
+        /// 延迟包最大尺寸。
         /// </summary>
-        public int DelayLength { get; set; } = 1024 * 512;
+        public int DelayLength { get;private set; }
 
         /// <summary>
         /// 是否处于发送状态

@@ -148,7 +148,6 @@ namespace TouchSocket.Http
         public static T SetContentTypeByExtension<T>(this T httpBase, string extension) where T : HttpBase
         {
             var type = HttpTools.GetContentTypeFromExtension(extension);
-            httpBase.Headers.Add(HttpHeaders.ContentType.GetDescription(), type);
             httpBase.ContentType = type;
             return httpBase;
         }
@@ -378,7 +377,7 @@ namespace TouchSocket.Http
         /// <param name="status"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static TResponse SetStatus<TResponse>(this TResponse response, string status = "200", string msg = "Success") where TResponse : HttpResponse
+        public static TResponse SetStatus<TResponse>(this TResponse response, int status = 200, string msg = "Success") where TResponse : HttpResponse
         {
             response.StatusCode = status;
             response.StatusMessage = msg;
@@ -395,7 +394,7 @@ namespace TouchSocket.Http
         public static TResponse UrlNotFind<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
             response.SetContent("<html><body><h1>404 -RRQM Not Found</h1></body></html>");
-            response.StatusCode = "404";
+            response.StatusCode = 404;
             response.ContentType = "text/html;charset=utf-8";
             return response;
         }
@@ -424,7 +423,7 @@ namespace TouchSocket.Http
                 var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
                 response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
                 response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
-                  
+
                 if (response.CanWrite)
                 {
                     HttpRange httpRange;
@@ -446,7 +445,7 @@ namespace TouchSocket.Http
                         else
                         {
                             response.SetContentLength(httpRange.Length)
-                                .SetStatus("206", "Partial Content");
+                                .SetStatus(206, "Partial Content");
                             response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, reader.FileStorage.FileInfo.Length));
                         }
                     }
@@ -543,7 +542,7 @@ namespace TouchSocket.Http
                         else
                         {
                             context.Response.SetContentLength(httpRange.Length)
-                                .SetStatus("206", "Partial Content");
+                                .SetStatus(206, "Partial Content");
                             context.Response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, reader.FileStorage.FileInfo.Length));
                         }
                     }

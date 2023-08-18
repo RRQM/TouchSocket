@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Rpc;
@@ -26,9 +25,9 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="client"></param>
         /// <param name="targetId"></param>
-        public static IRpcClient CreateIdRpcClient(this IDmtpActorObject client, string targetId)
+        public static IRpcClient CreateTargetDmtpRpcActor(this IDmtpActorObject client, string targetId)
         {
-            return new ITargetDmtpRpcActor(targetId, client.GetDmtpRpcActor());
+            return new TargetDmtpRpcActor(targetId, client.GetDmtpRpcActor());
         }
 
         /// <summary>
@@ -63,7 +62,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="client"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static TDmtpRpcActor GetDmtpRpcActor<TDmtpRpcActor>(this IDmtpActorObject client)where TDmtpRpcActor : IDmtpRpcActor
+        public static TDmtpRpcActor GetDmtpRpcActor<TDmtpRpcActor>(this IDmtpActorObject client) where TDmtpRpcActor : IDmtpRpcActor
         {
             var smtpRpcActor = client.DmtpActor.GetDmtpRpcActor();
             if (smtpRpcActor is null)
@@ -100,7 +99,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="pluginsManager"></param>
         /// <returns></returns>
-        public static DmtpRpcFeature UseDmtpRpc<TDmtpRpcFeature>(this IPluginsManager pluginsManager)where TDmtpRpcFeature: DmtpRpcFeature
+        public static DmtpRpcFeature UseDmtpRpc<TDmtpRpcFeature>(this IPluginsManager pluginsManager) where TDmtpRpcFeature : DmtpRpcFeature
         {
             return pluginsManager.Add<TDmtpRpcFeature>();
         }

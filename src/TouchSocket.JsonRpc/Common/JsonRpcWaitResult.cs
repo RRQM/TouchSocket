@@ -16,8 +16,8 @@ namespace TouchSocket.JsonRpc
 {
     internal class JsonRpcWaitResult : WaitResult
     {
-        internal object Return;
+        public object Return;
 
-        internal error error;
+        public JsonRpcError Error;
     }
 }

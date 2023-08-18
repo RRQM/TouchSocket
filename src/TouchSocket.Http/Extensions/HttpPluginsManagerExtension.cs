@@ -27,6 +27,16 @@ namespace TouchSocket.Core
         public static DefaultHttpServicePlugin UseDefaultHttpServicePlugin(this IPluginsManager pluginsManager)
         {
             return pluginsManager.Add<DefaultHttpServicePlugin>();
+        } 
+        
+        /// <summary>
+        /// 使用Http静态页面。
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        /// <returns></returns>
+        public static HttpStaticPagePlugin UseHttpStaticPage(this IPluginsManager pluginsManager)
+        {
+            return pluginsManager.Add<HttpStaticPagePlugin>();
         }
     }
 }

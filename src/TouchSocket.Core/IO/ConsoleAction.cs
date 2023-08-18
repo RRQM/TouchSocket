@@ -20,8 +20,33 @@ namespace TouchSocket.Core
     /// 控制台行为
     /// </summary>
 
-    public partial class ConsoleAction
+    internal struct VAction
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="description"></param>
+        /// <param name="fullOrder"></param>
+        public VAction(string description, string fullOrder, Action action)
+        {
+            this.FullOrder = fullOrder;
+            this.Action = action ?? throw new ArgumentNullException(nameof(action));
+            this.Description = description ?? throw new ArgumentNullException(nameof(description));
+        }
+
+        public Action Action { get; }
+
+        public string Description { get; }
+        public string FullOrder { get; }
+    }
+
+    /// <summary>
+    /// 控制台行为
+    /// </summary>
+    public class ConsoleAction
+    {
+        private readonly Dictionary<string, VAction> m_actions = new Dictionary<string, VAction>();
 
         /// <summary>
         /// 构造函数
@@ -54,34 +79,14 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 显示所有注册指令
+        /// 执行异常
         /// </summary>
-        public void ShowAll()
-        {
-            var max = this.actions.Values.Max(a => a.FullOrder.Length) + 8;
-
-            var s = new List<string>();
-            foreach (var item in this.actions)
-            {
-                if (!s.Contains(item.Value.FullOrder.ToLower()))
-                {
-                    s.Add(item.Value.FullOrder.ToLower());
-                    Console.Write($"[{item.Value.FullOrder}]");
-                    for (var i = 0; i < max - item.Value.FullOrder.Length; i++)
-                    {
-                        Console.Write("-");
-                    }
-                    Console.WriteLine(item.Value.Description);
-                }
-            }
-        }
+        public event Action<Exception> OnException;
 
         /// <summary>
         /// 帮助信息指令
         /// </summary>
         public string HelpOrder { get; private set; }
-
-        private readonly Dictionary<string, VAction> actions = new Dictionary<string, VAction>();
 
         /// <summary>
         /// 添加
@@ -94,14 +99,24 @@ namespace TouchSocket.Core
             var orders = order.ToLower().Split('|');
             foreach (var item in orders)
             {
-                this.actions.Add(item, new VAction(description, order, action));
+                this.m_actions.Add(item, new VAction(description, order, action));
             }
         }
 
         /// <summary>
-        /// 执行异常
+        /// 运行
         /// </summary>
-        public event Action<Exception> OnException;
+        public void RunCommandLine()
+        {
+            while (true)
+            {
+                var str=Console.ReadLine();
+                if (!this.Run(str))
+                {
+                    Console.WriteLine($"没有这个指令。");
+                }
+            }
+        }
 
         /// <summary>
         /// 执行，返回值仅表示是否有这个指令，异常获取请使用<see cref="OnException"/>
@@ -110,7 +125,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool Run(string order)
         {
-            if (this.actions.TryGetValue(order.ToLower(), out var vAction))
+            if (this.m_actions.TryGetValue(order.ToLower(), out var vAction))
             {
                 try
                 {
@@ -127,27 +142,28 @@ namespace TouchSocket.Core
                 return false;
             }
         }
-    }
-
-    internal struct VAction
-    {
-        public Action Action { get; }
-
-        public string FullOrder { get; }
 
         /// <summary>
-        /// 构造函数
+        /// 显示所有注册指令
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="description"></param>
-        /// <param name="fullOrder"></param>
-        public VAction(string description, string fullOrder, Action action)
+        public void ShowAll()
         {
-            this.FullOrder = fullOrder;
-            this.Action = action ?? throw new ArgumentNullException(nameof(action));
-            this.Description = description ?? throw new ArgumentNullException(nameof(description));
-        }
+            var max = this.m_actions.Values.Max(a => a.FullOrder.Length) + 8;
 
-        public string Description { get; }
+            var s = new List<string>();
+            foreach (var item in this.m_actions)
+            {
+                if (!s.Contains(item.Value.FullOrder.ToLower()))
+                {
+                    s.Add(item.Value.FullOrder.ToLower());
+                    Console.Write($"[{item.Value.FullOrder}]");
+                    for (var i = 0; i < max - item.Value.FullOrder.Length; i++)
+                    {
+                        Console.Write("-");
+                    }
+                    Console.WriteLine(item.Value.Description);
+                }
+            }
+        }
     }
 }
