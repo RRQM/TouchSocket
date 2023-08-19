@@ -115,16 +115,16 @@ namespace ServiceConsoleApp
             //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
 
             //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
-            //var ids = client.Service.GetIds();
-            //foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
-            //{
-            //    if (clientId != client.Id)//不给自己发
-            //    {
-            //        await client.Service.SendAsync(clientId, mes);
-            //    }
-            //}
+            var ids = client.Service.GetIds();
+            foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+            {
+                if (clientId != client.Id)//不给自己发
+                {
+                    await client.Service.SendAsync(clientId, mes);
+                }
+            }
 
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
         }
     }
 
