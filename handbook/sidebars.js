@@ -289,6 +289,11 @@ module.exports = {
             id: "namedpipeservice",
             label: "8.2 创建NamedPipeService"
           },
+          {
+            type: "doc",
+            id: "namedpipeclient",
+            label: "8.2 创建NamedPipeClient"
+          },
         ]
     },
     {

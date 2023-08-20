@@ -7,11 +7,10 @@ namespace NamedPipeServiceConsoleApp
 {
     internal class Program
     {
+
         static void Main(string[] args)
         {
-            //var service = CreateService();
-
-
+            var service = CreateService();
 
             Console.ReadKey();
         }
@@ -31,7 +30,14 @@ namespace NamedPipeServiceConsoleApp
                     {
                         Adapter = () => new NormalDataHandlingAdapter(),
                         BufferLength = 1024 * 64,
-                        Name = "TouchSocketPipe2"
+                        Name = "TouchSocketPipe2"//管道名称
+                    });
+
+                    list.Add(new NamedPipeListenOption()
+                    {
+                        Adapter = () => new NormalDataHandlingAdapter(),
+                        BufferLength = 1024 * 64,
+                        Name = "TouchSocketPipe3"//管道名称
                     });
                 })
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
