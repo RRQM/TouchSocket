@@ -1,4 +1,5 @@
-﻿using TouchSocket.Sockets;
+﻿using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
