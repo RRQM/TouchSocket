@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
