@@ -1,0 +1,260 @@
+---
+id: namedpipeclient
+title: 创建NamedPipeClient
+---
+
+
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.NamedPipe <br/>
+程序集：[TouchSocket.NamedPipe.dll](https://www.nuget.org/packages/TouchSocket.NamedPipe)
+
+
+## 一、说明
+
+NamedPipeClient是命名管道系客户端基类，他直接参与管道的连接、发送、接收、处理、断开等，他的业务与服务器的**NamedPipeSocketClient**是一一对应的。
+
+## 二、特点
+
+- 简单易用。
+- 内存池支持
+- 高性能
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(即适用于Tcp的一切适配器)等。
+- 超简单的同步发送、异步发送、接收等操作。
+- 基于委托、插件驱动，让每一步都能执行AOP。
+
+## 三、产品应用场景
+
+- 所有本机IPC(进程通讯)基础使用场景：可跨平台、跨语言使用。
+
+## 四、可配置项
+
+<details>
+<summary>可配置项</summary>
+<div>
+
+#### SetBufferLength
+
+发送、接收缓存容量（单位：byte），默认1024×64。设置建议：
+
+1. 如果数据包较小，建议10k左右的值。更加节约内存。
+2. 如果数据包较大，例如文件传输等，建议64k，甚至更大的值。
+3. 该值虽然无上限，但是一般不要超过1Mb，不然不仅没意义，还很浪费
+
+#### SetMaxPackageSize
+
+数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
+
+#### SetPipeName
+设置管道名称。 
+
+#### UseDelaySender（暂未实现）
+使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用延迟算法。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
+
+使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
+
+如果一个包大于512kb，则不会延迟，直接发送。
+如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
+
+</div>
+</details>
+
+## 五、支持插件
+
+|  插件方法| 功能 |
+| --- | --- |
+| INamedPipeConnectingPlugin | 此时管道实际上已经完成连接，但是并没有启动接收，然后触发。 |
+| INamedPipeConnectedPlugin | 同意连接，且成功启动接收后触发 |
+| INamedPipeDisconnectingPlugin | 当客户端主动调用Close时触发 |
+| INamedPipeDisconnectedPlugin | 当客户端断开连接后触发 |
+| INamedPipeReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
+| INamedPipeReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
+| INamedPipeSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
+
+## 六、创建NamedPipeClient
+
+#### 6.1 简单创建
+
+简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
+
+代码如下：
+
+```csharp
+var client = new NamedPipeClient();
+client.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建管道，但是还未建立连接
+client.Connected = (client, e) => { };//成功连接到服务器
+client.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
+client.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
+client.Received = (client, byteBlock, requestInfo) =>
+{
+    //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    client.Logger.Info($"客户端接收到信息：{mes}");
+};
+
+//载入配置
+client.Setup(new TouchSocketConfig()
+    .SetPipeName("TouchSocketPipe")//设置命名管道名称
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();//添加一个日志注入
+    }));
+
+client.Connect();//调用连接，当连接不成功时，会抛出异常。
+
+//Result result = tcpClient.TryConnect();//或者可以调用TryConnect
+//if (result.IsSuccess())
+//{
+
+//}
+
+client.Logger.Info("客户端成功连接");
+
+client.Send("RRQM");
+```
+
+#### 6.2 继承实现
+
+一般继承实现的话，可以从NamedPipeClientBase继承。
+
+```csharp
+class MyNamedPipeClient: NamedPipeClientBase
+{
+    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        //此处逻辑单线程处理。
+
+        //此处处理数据，功能相当于Received委托。
+        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        Console.WriteLine($"已接收到信息：{mes}");
+
+        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。
+    }
+}
+```
+
+```csharp
+var client = new MyNamedPipeClient();
+client.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
+client.Connected = (client, e) => { };//成功连接到服务器
+client.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
+client.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
+
+//载入配置
+client.Setup(new TouchSocketConfig()
+    .SetPipeName("TouchSocketPipe")//设置命名管道名称
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();//添加一个日志注入
+    }));
+
+client.Connect();//调用连接，当连接不成功时，会抛出异常。
+```
+
+## 七、接收数据
+
+在NamedPipeClient中，接收数据的方式有很多种。多种方式可以组合使用。
+
+### 7.1 Received委托处理
+
+当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+
+```csharp
+var client = new NamedPipe();
+client.Received = (client, byteBlock, requestInfo) =>
+{
+    //从服务器收到信息
+    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    Console.WriteLine($"接收到信息：{mes}");
+};
+
+//声明配置
+TouchSocketConfig config = new TouchSocketConfig();
+config.
+SetPipeName("TouchSocketPipe");//设置命名管道名称
+
+//载入配置
+tcpClient.Setup(config);
+tcpClient.Connect();
+```
+
+### 7.2 插件处理 <Tag>推荐</Tag>
+
+按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
+
+（1）声明插件
+
+插件可以先继承`PluginBase`，然后再实现需要的功能插件接口，可以按需选择泛型或者非泛型实现。
+
+如果已经有继承类，直接实现`IPlugin`接口即可。
+
+```csharp
+public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
+{
+    public MyPlugin()
+    {
+        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
+    }
+
+    async Task INamedPipeReceivedPlugin<INamedPipeClientBase>.OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
+    {
+        //这里处理数据接收
+        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+        ByteBlock byteBlock = e.ByteBlock;
+        IRequestInfo requestInfo = e.RequestInfo;
+
+        //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+
+        await e.InvokeNext();
+    }
+}
+```
+
+（2）创建使用插件处理的客户端
+
+```csharp
+var client = new NamedPipeClient();
+client.Setup(new TouchSocketConfig()
+    .SetPipeName("TouchSocketPipe")//设置命名管道名称
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.Add<MyPlugin>();
+    }))
+    .Connect();
+```
+
+## 八、发送数据
+
+【同步发送】
+
+NamedPipeClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
+
+```csharp
+public virtual void Send(byte[] buffer);
+public virtual void Send(ByteBlock byteBlock);
+public virtual void Send(byte[] buffer, int offset, int length);
+```
+
+【异步发送】
+
+TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
+
+```csharp
+public virtual Task SendAsync(byte[] buffer);
+public virtual Task SendAsync(byte[] buffer, int offset, int length);
+```
+
+:::tip 提示
+
+框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+
+::: 
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/NamedPipe)
