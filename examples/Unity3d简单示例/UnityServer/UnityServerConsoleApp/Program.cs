@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -49,8 +50,6 @@ namespace UnityServerConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                   .SetThreadCount(50)
-                   .UseDelaySender()
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();//注册一个日志组
@@ -61,9 +60,11 @@ namespace UnityServerConsoleApp
                        .ConfigureRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
+#if DEBUG
+                           var code = store.GetProxyCodes("UnityRpcProxy", typeof(DmtpRpcAttribute));
+                           File.WriteAllText("../../../UnityRpcProxy.cs", code);
+#endif
 
-                           var code = store.GetProxyCodes("TcpRpcProxy");
-                           File.WriteAllText("TcpRpcProxy.cs", code);
                        });
 
                        a.Add<MyTcpRpcPlguin>();
@@ -99,23 +100,27 @@ namespace UnityServerConsoleApp
     {
     }
 
-    internal class MyPlguin : PluginBase
+    internal class MyPlguin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>,ITcpReceivedPlugin<ISocketClient>
     {
-        //protected override void OnConnected(SocketClient client, TouchSocketEventArgs e)
-        //{
-        //    client.Logger.Info($"客户端{client.GetInfo()}已连接");
-        //}
+  
+        async Task ITcpConnectedPlugin<ISocketClient>.OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
+        {
+            client.Logger.Info($"客户端{client.GetInfo()}已连接");
+            await e.InvokeNext();
+        }
 
-        //protected override void OnDisconnected(SocketClient client, DisconnectEventArgs e)
-        //{
-        //    client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
-        //}
+        async Task ITcpDisconnectedPlugin<ISocketClient>.OnTcpDisconnected(ISocketClient client, DisconnectEventArgs e)
+        {
+            client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
+            await e.InvokeNext();
+        }
 
-        //protected override void OnReceivedData(SocketClient client, ReceivedDataEventArgs e)
-        //{
-        //    client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
-        //    client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
-        //}
+        async Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        {
+            client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
+            client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
+            await e.InvokeNext();
+        }
     }
 
     /// <summary>
