@@ -28,12 +28,13 @@ namespace JsonRpcConsoleApp
             ConsoleLogger.Default.Info("代理文件已经写入到当前项目。");
 
             CreateTcpJsonRpcService();
-            CreateHTTPJsonRpcParser();
+            CreateHttpJsonRpcService();
+            CreateWebSocketJsonRpcService();
 
             Console.ReadKey();
         }
 
-        private static void CreateHTTPJsonRpcParser()
+        private static void CreateHttpJsonRpcService()
         {
             var service = new HttpService();
 
@@ -41,9 +42,6 @@ namespace JsonRpcConsoleApp
                  .SetListenIPHosts(7706)
                  .ConfigurePlugins(a =>
                  {
-                     a.UseWebSocket()//启用websocket。
-                     .SetWSUrl("/ws");//使用/ws路由连接。
-
                      a.UseHttpJsonRpc()
                      .ConfigureRpcStore(store =>
                      {
@@ -54,7 +52,34 @@ namespace JsonRpcConsoleApp
                 .Start();
 
             ConsoleLogger.Default.Info($"Http服务器已启动");
-            ConsoleLogger.Default.Info($"Http服务器已启动");
+        }
+
+        private static void CreateWebSocketJsonRpcService()
+        {
+            var service = new HttpService();
+
+            service.Setup(new TouchSocketConfig()
+                 .SetListenIPHosts(7707)
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseWebSocket()
+                     .SetWSUrl("/ws");
+
+                     a.UseWebSocketJsonRpc()
+                     .SetAllowJsonRpc((socketClient, context) =>
+                     {
+                         //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                         //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+                         return true;
+                     })
+                     .ConfigureRpcStore(store =>
+                     {
+                         store.RegisterServer<JsonRpcServer>();
+                     });
+                 }))
+                .Start();
+
+            ConsoleLogger.Default.Info($"WebSocket服务器已启动");
         }
 
         private static void CreateTcpJsonRpcService()
@@ -63,14 +88,20 @@ namespace JsonRpcConsoleApp
             service.Setup(new TouchSocketConfig()
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetListenIPHosts(7705)
-                 .ConfigurePlugins(a =>
-                 {
-                     a.UseTcpJsonRpc()
-                     .ConfigureRpcStore(store =>
-                     {
-                         store.RegisterServer<JsonRpcServer>();
-                     });
-                 }))
+                .ConfigurePlugins(a =>
+                {
+                    /*
+                     使用tcp服务器的时候，默认情况下会把所有连接的协议都转换为JsonRpcUtility.TcpJsonRpc。
+                     这样所有的数据都会被尝试解释为JsonRpc。
+                     如果不需要该功能，可以调用NoSwitchProtocol()。
+                     */
+                    a.UseTcpJsonRpc()
+                    //.NoSwitchProtocol()
+                    .ConfigureRpcStore(store =>
+                    {
+                        store.RegisterServer<JsonRpcServer>();
+                    });
+                }))
                 .Start();
         }
 
@@ -86,16 +117,27 @@ namespace JsonRpcConsoleApp
         /// <param name="callContext"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-        [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+        [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext,MethodInvoke =true)]
         public string TestGetContext(ICallContext callContext, string str)
         {
             if (callContext.Caller is IHttpSocketClient socketClient)
             {
-                Console.WriteLine("HTTP请求");
-                var client = callContext.Caller as IHttpSocketClient;
-                var ip = client.IP;
-                var port = client.Port;
-                Console.WriteLine($"HTTP请求{ip}:{port}");
+                if (socketClient.Protocol == Protocol.WebSocket)
+                {
+                    Console.WriteLine("WebSocket请求");
+                    var client = callContext.Caller as IHttpSocketClient;
+                    var ip = client.IP;
+                    var port = client.Port;
+                    Console.WriteLine($"WebSocket请求{ip}:{port}");
+                }
+                else
+                {
+                    Console.WriteLine("HTTP请求");
+                    var client = callContext.Caller as IHttpSocketClient;
+                    var ip = client.IP;
+                    var port = client.Port;
+                    Console.WriteLine($"HTTP请求{ip}:{port}");
+                }
             }
             else if (callContext.Caller is ISocketClient)
             {
@@ -108,13 +150,13 @@ namespace JsonRpcConsoleApp
             return "RRQM" + str;
         }
 
-        [JsonRpc]
+        [JsonRpc(MethodInvoke = true)]
         public JObject TestJObject(JObject obj)
         {
             return obj;
         }
 
-        [JsonRpc]
+        [JsonRpc(MethodInvoke = true)]
         public string TestJsonRpc(string str)
         {
             return "RRQM" + str;

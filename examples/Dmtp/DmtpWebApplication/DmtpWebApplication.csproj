@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.144" />
-    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.144" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.145" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.145" />
   </ItemGroup>
 
 </Project>
