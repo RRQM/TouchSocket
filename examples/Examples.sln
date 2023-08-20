@@ -204,9 +204,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpClientConsoleApp", "Htt
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NamedPipe", "NamedPipe", "{5126C261-9A81-4FBC-8653-7710C1D1D735}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeServiceConsoleApp", "NamedPipe\NamedPipeServiceConsoleApp\NamedPipeServiceConsoleApp.csproj", "{E7FE662C-24E4-4915-9847-26AB4038540D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NamedPipeServiceConsoleApp", "NamedPipe\NamedPipeServiceConsoleApp\NamedPipeServiceConsoleApp.csproj", "{E7FE662C-24E4-4915-9847-26AB4038540D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeClientConsoleApp", "NamedPipe\NamedPipeClientConsoleApp\NamedPipeClientConsoleApp.csproj", "{89C3B730-4024-4C76-8CB0-FAA8BF0945B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NamedPipeClientConsoleApp", "NamedPipe\NamedPipeClientConsoleApp\NamedPipeClientConsoleApp.csproj", "{89C3B730-4024-4C76-8CB0-FAA8BF0945B9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "压力测试", "压力测试", "{3CD1A21A-1864-46A7-8975-AC442014BA2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeStressTestingConsoleApp", "NamedPipe\NamedPipeStressTestingConsoleApp\NamedPipeStressTestingConsoleApp.csproj", "{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -454,6 +458,10 @@ Global
 		{89C3B730-4024-4C76-8CB0-FAA8BF0945B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89C3B730-4024-4C76-8CB0-FAA8BF0945B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89C3B730-4024-4C76-8CB0-FAA8BF0945B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -544,6 +552,8 @@ Global
 		{9F96589A-C7F8-4E33-BD6E-3BDA40205D07} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{E7FE662C-24E4-4915-9847-26AB4038540D} = {5126C261-9A81-4FBC-8653-7710C1D1D735}
 		{89C3B730-4024-4C76-8CB0-FAA8BF0945B9} = {5126C261-9A81-4FBC-8653-7710C1D1D735}
+		{3CD1A21A-1864-46A7-8975-AC442014BA2A} = {5126C261-9A81-4FBC-8653-7710C1D1D735}
+		{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4} = {3CD1A21A-1864-46A7-8975-AC442014BA2A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
