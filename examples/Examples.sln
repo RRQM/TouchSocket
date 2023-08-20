@@ -106,7 +106,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SG推荐用法", "SG推荐�
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "远程流映射", "远程流映射", "{B7D7FF93-7003-44AA-A88F-EB192B38C00A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dmtp示例", "Dmtp示例", "{BF701694-E1CE-4FD1-97BA-DA832F6F3D45}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dmtp", "Dmtp", "{BF701694-E1CE-4FD1-97BA-DA832F6F3D45}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileTransferConsoleApp", "Dmtp\FileTransferConsoleApp\FileTransferConsoleApp.csproj", "{0D5E94AD-2311-4430-92FA-02BF01267BF3}"
 EndProject
@@ -210,7 +210,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NamedPipeClientConsoleApp",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "压力测试", "压力测试", "{3CD1A21A-1864-46A7-8975-AC442014BA2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeStressTestingConsoleApp", "NamedPipe\NamedPipeStressTestingConsoleApp\NamedPipeStressTestingConsoleApp.csproj", "{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NamedPipeStressTestingConsoleApp", "NamedPipe\NamedPipeStressTestingConsoleApp\NamedPipeStressTestingConsoleApp.csproj", "{3D1B69AB-810E-4DC7-96CF-F958EECAC6C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

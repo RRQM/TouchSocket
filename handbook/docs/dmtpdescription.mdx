@@ -58,11 +58,12 @@ Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于
 2. 服务器之间集群。
 3. 扩展微服务，此时可以使用反向Rpc实现。
 
-*实际上Dmtp有四个版本，分别为：*
+*实际上目前Dmtp有五个版本，分别为：*
 
 | **类型** | **特性** |
 | --- | --- |
 | **Tcp版** | 基于TCP协议，连接性能最好，执行效率最高，支持Dmtp所有功能。 |
+| **NamedPipe版** | 基于命名管道，流速性能最好，比Tcp版多出3倍。响应效率一般，是Tcp版的一半，是进程通讯的最佳选择。支持Dmtp所有功能。 |
 | **Http版** | 基于Http握手连接，数据交互仍然使用TCP。连接性能一般，但兼容性强，支持JsonRpc，WebApi，XmlRpc，WebSocket等一系列Http组件，且执行效率和TCP版一样高，支持Dmtp所有功能。 |
 | **WebSocket版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的是WebSocket，所有效率只有Tcp版的80%。支持Dmtp所有功能 |
 | **Http中间件版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的Http自升级协议，所有效率介于WebSocket与Tcp版之间。支持Dmtp所有功能 |

@@ -8,7 +8,8 @@ import Tag from "@site/src/components/Tag.js";
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
-程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)
+程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)<br/>
+程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Tag>企业版</Tag>
 
 ## 一、说明
 
@@ -164,9 +165,29 @@ builder.Services.AddHttpMiddlewareDmtpService(() =>
 
 启用中间件
 
-首先必须先启用`WebSocket`。其次使用`UseWebSocketDmtp`即可。
+使用`UseWebSocketDmtp`即可。
 
 ```csharp
 var app = builder.Build();
 app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
+```
+
+### 5.5 基于NamedPipe协议 <Tag>企业版</Tag>
+
+这是基于管道的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
+
+```csharp
+var service = new NamedPipeDmtpService();
+var config = new TouchSocketConfig()//配置
+       .SetPipeName("TouchSocketPipe")//设置管道名称
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+       })
+       .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+
+service.Setup(config)
+    .Start();
+
+service.Logger.Info($"{service.GetType().Name}已启动");
 ```

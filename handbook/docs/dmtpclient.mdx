@@ -8,7 +8,8 @@ import Tag from "@site/src/components/Tag.js";
 ### 定义
 
 命名空间：TouchSocket.Dmtp <br/>
-程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)
+程序集：[TouchSocket.Dmtp.dll](https://www.nuget.org/packages/TouchSocket.Dmtp)<br/>
+程序集：[TouchSocketPro.Dmtp.dll](https://www.nuget.org/packages/TouchSocketPro.Dmtp) <Tag>企业版</Tag>
 
 ## 一、说明
 
@@ -144,3 +145,15 @@ finally
 TouchRpcClient工厂只实现了IRpcClient和多线程文件传输的接口，所以和其他客户端相比，本身不具备其他的功能。但是可以通过单个通讯器进行其他业务的交互。
 
 :::  
+
+### 4.5 NamedPipeDmtpClient
+
+`NamedPipeDmtpClient`对应`NamedPipeDmtpService`服务器。基本创建如下，支持[创建NamedPipeClient](./namedpipeclient.mdx)的所有配置。
+
+```csharp
+var client = new NamedPipeDmtpClient();
+client.Setup(new TouchSocketConfig()
+      .SetPipeName("TouchSocketPipe")//设置管道名称
+      .SetVerifyToken("Dmtp"));
+client.Connect();
+```

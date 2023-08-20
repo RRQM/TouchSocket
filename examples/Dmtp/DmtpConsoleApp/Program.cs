@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
+using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
 namespace DmtpConsoleApp
@@ -9,7 +10,7 @@ namespace DmtpConsoleApp
     {
         static async Task Main(string[] args)
         {
-            var service = CreateService();
+            var service = CreateTcpDmtpService();
             Connect_1();
             await Connect_2();
 
@@ -78,7 +79,7 @@ namespace DmtpConsoleApp
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
         }
 
-        static TcpDmtpService CreateService()
+        static TcpDmtpService CreateTcpDmtpService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
