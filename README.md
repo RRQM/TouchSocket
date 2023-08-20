@@ -84,7 +84,7 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 - [CSDN博客主页](https://blog.csdn.net/qq_40374647)
 - [哔哩哔哩视频](https://space.bilibili.com/94253567)
 - [源代码仓库主页](https://gitee.com/RRQM_Home) 
-- 交流QQ群：234762506
+- 交流QQ群：[234762506](https://jq.qq.com/?_wv=1027&k=gN7UL4fw)
 
 ## 🌟说明文档
 - [ 文档首页 ](http://rrqm_home.gitee.io/touchsocket)
@@ -194,7 +194,7 @@ TouchSocketBitConverter.DefaultEndianType = EndianType.Little;
 
 ## 致谢
 
-谢谢大家对TouchSocket的支持，如果还有其他问题，请提交Issue，或者加群QQ：234762506讨论。
+谢谢大家对TouchSocket的支持，如果还有其他问题，请提交Issue，或者加群QQ：[234762506](https://jq.qq.com/?_wv=1027&k=gN7UL4fw)讨论。
 
 感谢下列工具软件的支持
 
