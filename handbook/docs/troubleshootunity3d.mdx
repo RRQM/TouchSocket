@@ -34,3 +34,10 @@ title: Unity3D相关
 GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
 ```
 
+## 【问】程序集用于Unity 3D时，Json序列化有问题？
+
+### 【解决】
+这是因为unity中不支持代码生成的Json序列化，所以必须用IL2cpp版的json。下面提供该版本。
+
+[IL2cpp版Newtonsoft.Json](../static/files/Newtonsoft.Json.dll)
+
