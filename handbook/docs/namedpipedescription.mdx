@@ -20,3 +20,13 @@ title: 命名管道描述
 命名管道的客户端可以是本地进程（本地访问：\.\pipe\PipeName）或者是远程进程（访问远程：\ServerName\pipe\PipeName）。
 
 命名管道使用比匿名管道灵活，服务端、客户端可以是任意进程，匿名管道一般情况下用于父子进程通讯。
+
+
+## 二、性能测试
+
+
+如下图，创建了一个命名管道服务器和一个客户端，进行简单的接收，流速达到了6.5Gb/s，效率大概是tcp的三倍。且无任何GC。
+
+<img src={require('../static/img/docs/namedpipeservice-2.gif').default}/>
+
+[性能测试Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/NamedPipe/NamedPipeStressTestingConsoleApp)
