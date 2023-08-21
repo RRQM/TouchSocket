@@ -119,6 +119,7 @@ namespace ClientConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc()
+                    .SetCreateDmtpRpcActor((actor)=>new MyDmtpRpcActor(actor))
                     .ConfigureRpcStore(store =>
                     {
                         store.RegisterServer<MyClientRpcServer>();
@@ -127,8 +128,29 @@ namespace ClientConsoleApp
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetVerifyToken("Dmtp"));
             client.Connect();
+
+            IRpcClient1 rpcClient1= client.GetDmtpRpcActor<IRpcClient1>();
+            IRpcClient2 rpcClient2= client.GetDmtpRpcActor<IRpcClient2>();
+
             client.Logger.Info($"连接成功，Id={client.Id}");
             return client;
+        }
+
+        interface IRpcClient1:IDmtpRpcActor
+        {
+
+        }
+
+        interface IRpcClient2 : IDmtpRpcActor
+        {
+
+        }
+
+        class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
+        {
+            public MyDmtpRpcActor(IDmtpActor smtpActor) : base(smtpActor)
+            {
+            }
         }
 
         class MyClientRpcServer : RpcServer

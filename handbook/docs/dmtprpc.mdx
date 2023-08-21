@@ -580,4 +580,59 @@ await task;//等待异步接收完成
 Console.WriteLine($"状态：{status}，result={result}");
 ```
 
+## 六、限制代理接口
 
+默认情况下，代理生成的接口，是面向`IRpcClient`的，即：面向所有`Rpc终端`。但是有时候我们希望不同的终端，只能调用不同的方法。甚至有时候希望，不同的终端可以重载方法。所以如果不对生成的接口做限制，就可能发生下图问题。
+
+<img src={require("../static/img/docs/dmtprpc-1.png").default} />
+
+关于代理代码生成接口限制，请看[服务代理生成](../docs/generateproxyfromserver.mdx)或者[源服务代理生成](../docs/generateproxyfromsourcegenerator.mdx)
+
+接下来就讲讲客户端如何实现接口限制。
+
+首先按需求，声明多个继承`IDmtpRpcActor`的接口，此处有`IRpcClient1`与`IRpcClient2`两个。
+
+然后新建类，命名为`MyDmtpRpcActor`，继承`DmtpRpcActor`，然后分别实现`IRpcClient1`与`IRpcClient2`两个接口。
+
+```csharp
+interface IRpcClient1:IDmtpRpcActor
+{
+
+}
+
+interface IRpcClient2 : IDmtpRpcActor
+{
+
+}
+
+class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
+{
+    public MyDmtpRpcActor(IDmtpActor smtpActor) : base(smtpActor)
+    {
+    }
+}
+```
+
+然后在`UseDmtpRpc`时，设置`SetCreateDmtpRpcActor`，这样获得的实际实例则会是`MyDmtpRpcActor`类型。
+
+```csharp {6}
+var client = new TcpDmtpClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigurePlugins(a =>
+    {
+        a.UseDmtpRpc()
+        .SetCreateDmtpRpcActor((actor)=>new MyDmtpRpcActor(actor));
+    })
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .SetVerifyToken("Dmtp"));
+client.Connect();
+```
+
+最后在获得RpcActor时，就可以按接口获取。然后配合服务器代码接口约束，就可以实现我们所期望的功能。
+
+```csharp
+IRpcClient1 rpcClient1= client.GetDmtpRpcActor<IRpcClient1>();
+IRpcClient2 rpcClient2= client.GetDmtpRpcActor<IRpcClient2>();
+```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpRpcServerConsoleApp)

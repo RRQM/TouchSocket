@@ -148,3 +148,66 @@ CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
 该场景可用于服务端与客户端公用一个实体dll，例如：当使用**MemoryPack**序列化的场景。
 
 :::  
+
+
+## 四、代理生成配置
+
+代理生成配置，可以配置生成的代理。具体操作都是声明自定义特性，然后重写，或者属性配置等。
+
+### 4.1 重写GetGenericConstraintTypes
+
+泛型约束类型。用于约束生成代理的泛型类型，从而让生成的扩展方法只能让特定的类型执行。默认情况下只会约束**IRpcClient**接口。
+
+例如：
+
+```csharp
+class MyRpcAttribute : RpcAttribute
+{
+    public override Type[] GetGenericConstraintTypes()
+    {
+        return new Type[] { typeof(IRpcClient) };
+    }
+}
+```
+
+结果：
+
+```csharp {2}
+public static LoginResponse Login<TClient>(this TClient client,LoginRequest request,IInvokeOption invokeOption = default) 
+where TClient:IRpcClient
+{
+    object[] parameters = new object[]{request};
+    RpcClassLibrary.Models.LoginResponse returnData=client.InvokeT<RpcClassLibrary.Models.LoginResponse>("Login",invokeOption, parameters);
+    return returnData;
+}
+```
+
+:::caution 注意
+
+泛型约束的总和，必须直接或间接实现**IRpcClient**接口。
+
+:::  
+
+### 4.2 属性GeneratorFlag
+
+生成标识，可表示是否生成同步代码，或异步，或不生成接口等等。
+
+例如：下列示例，只会生成**异步扩展**调用，和**异步接口**代码。
+
+```csharp
+class MyRpcAttribute : RpcAttribute
+{
+    public MyRpcAttribute()
+    {
+        this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;     
+    }
+}
+```
+
+### 4.3 重写GetDescription
+
+获取生成方法的注释。
+
+### 4.4 其他
+
+其他配置请在代码中自行探索。
