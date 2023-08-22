@@ -40,7 +40,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 数据处理适配器
         /// </summary>
-        TcpDataHandlingAdapter DataHandlingAdapter { get; }
+        SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
 
         /// <summary>
         /// 断开连接
@@ -107,6 +107,6 @@ namespace TouchSocket.Sockets
         /// 设置数据处理适配器
         /// </summary>
         /// <param name="adapter"></param>
-        void SetDataHandlingAdapter(TcpDataHandlingAdapter adapter);
+        void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter);
     }
 }

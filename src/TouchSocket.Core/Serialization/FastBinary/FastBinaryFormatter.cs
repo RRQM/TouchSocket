@@ -124,10 +124,10 @@ namespace TouchSocket.Core
                 uint paramLen = 0;
 
 #pragma warning disable IDE0007 // 使用隐式类型
-                foreach (dynamic item in param)
+                foreach (object item in param)
                 {
-                    len += SerializeObject(stream, item.Key);
-                    len += SerializeObject(stream, item.Value);
+                    len += SerializeObject(stream, DynamicMethodMemberAccessor.Default.GetValue(item,"Key"));
+                    len += SerializeObject(stream, DynamicMethodMemberAccessor.Default.GetValue(item, "Value"));
                     paramLen++;
                 }
 #pragma warning restore IDE0007 // 使用隐式类型

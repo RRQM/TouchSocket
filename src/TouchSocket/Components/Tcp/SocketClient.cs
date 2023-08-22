@@ -33,7 +33,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public SocketClient()
         {
-            this.Protocol = Protocol.TCP;
+            this.Protocol = Protocol.Tcp;
         }
 
         #region 变量
@@ -59,7 +59,7 @@ namespace TouchSocket.Sockets
         public IContainer Container { get; private set; }
 
         /// <inheritdoc/>
-        public TcpDataHandlingAdapter DataHandlingAdapter { get; private set; }
+        public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
 
         /// <inheritdoc/>
         public string Id { get; private set; }
@@ -123,7 +123,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (this.ReceiveType == ReceiveType.Auto)
+                if (this.ReceiveType == ReceiveType.Iocp)
                 {
                     var eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += this.EventArgs_Completed;
@@ -148,7 +148,7 @@ namespace TouchSocket.Sockets
             sslStream.AuthenticateAsServer(sslOption.Certificate, sslOption.ClientCertificateRequired, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
             this.m_workStream = sslStream;
             this.UseSsl = true;
-            if (this.ReceiveType == ReceiveType.Auto)
+            if (this.ReceiveType == ReceiveType.Iocp)
             {
                 this.BeginSsl();
             }
@@ -382,7 +382,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public virtual void SetDataHandlingAdapter(TcpDataHandlingAdapter adapter)
+        public virtual void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter)
         {
             this.ThrowIfDisposed();
             if (!this.CanSetDataHandlingAdapter)
@@ -488,7 +488,7 @@ namespace TouchSocket.Sockets
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
         /// <param name="adapter"></param>
-        protected void SetAdapter(TcpDataHandlingAdapter adapter)
+        protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
         {
             if (adapter is null)
             {
@@ -497,22 +497,7 @@ namespace TouchSocket.Sockets
 
             if (this.Config != null)
             {
-                if (this.Config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
-                {
-                    adapter.MaxPackageSize = v1;
-                }
-                if (this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty) != TimeSpan.Zero)
-                {
-                    adapter.CacheTimeout = this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutProperty);
-                }
-                if (this.Config.GetValue(TouchSocketConfigExtension.CacheTimeoutEnableProperty) is bool v2)
-                {
-                    adapter.CacheTimeoutEnable = v2;
-                }
-                if (this.Config.GetValue(TouchSocketConfigExtension.UpdateCacheTimeWhenRevProperty) is bool v3)
-                {
-                    adapter.UpdateCacheTimeWhenRev = v3;
-                }
+                adapter.Config(this.Config);
             }
 
             adapter.Logger = this.Logger;

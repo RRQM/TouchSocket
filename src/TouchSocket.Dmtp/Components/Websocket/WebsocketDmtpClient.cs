@@ -65,12 +65,24 @@ namespace TouchSocket.Dmtp
 
         /// <inheritdoc/>
         public IDmtpActor DmtpActor { get => this.m_smtpActor; }
+
+        /// <summary>
+        /// 未实现
+        /// </summary>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <summary>
+        /// 未实现
+        /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <inheritdoc/>
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
 
+        /// <inheritdoc/>
         public DateTime LastReceivedTime { get; private set; }
 
+        /// <inheritdoc/>
         public DateTime LastSendTime { get; private set; }
 
         /// <summary>
@@ -100,11 +112,11 @@ namespace TouchSocket.Dmtp
 
                 this.m_smtpActor = new DmtpActor(false)
                 {
-                    OutputSend = OnDmtpActorSend,
-                    OnRouting = OnDmtpActorRouting,
+                    OutputSend = this.OnDmtpActorSend,
+                    OnRouting = this.OnDmtpActorRouting,
                     OnHandshaking = this.OnDmtpActorHandshaking,
-                    OnHandshaked = OnDmtpActorHandshaked,
-                    OnClose = OnDmtpActorClose,
+                    OnHandshaked = this.OnDmtpActorHandshaked,
+                    OnClose = this.OnDmtpActorClose,
                     Logger = this.Logger,
                     Client = this,
                     OnFindDmtpActor = this.m_findDmtpActor,
@@ -113,7 +125,7 @@ namespace TouchSocket.Dmtp
 
                 this.m_smtpAdapter = new TcpDmtpAdapter()
                 {
-                    ReceivedCallBack = PrivateHandleReceivedData
+                    ReceivedCallBack = this.PrivateHandleReceivedData
                 };
                 _ = this.BeginReceive();
             }

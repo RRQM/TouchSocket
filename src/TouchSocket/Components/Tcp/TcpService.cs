@@ -54,49 +54,31 @@ namespace TouchSocket.Sockets
 
         #region 属性
 
-        /// <summary>
-        /// 获取服务器配置
-        /// </summary>
+        /// <inheritdoc/>
         public override TouchSocketConfig Config => this.m_config;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override IContainer Container => this.m_container;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override Func<string> GetDefaultNewId => this.m_getDefaultNewId;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override int MaxCount => this.m_maxCount;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override IEnumerable<TcpNetworkMonitor> Monitors => this.m_monitors.ToArray();
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override IPluginsManager PluginsManager => this.m_pluginsManager;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override ServerState ServerState => this.m_serverState;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override ISocketClientCollection SocketClients => this.m_socketClients;
 
         #endregion 属性
@@ -281,9 +263,7 @@ namespace TouchSocket.Sockets
             this.m_monitors.Add(networkMonitor);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override void Clear()
         {
             foreach (var item in this.GetIds())
@@ -370,12 +350,11 @@ namespace TouchSocket.Sockets
 
             this.BuildConfig(config);
 
-            this.PluginsManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
+            this.m_pluginsManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
             this.LoadConfig(this.m_config);
-            this.PluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+            this.m_pluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
 
             this.Logger ??= this.m_container.Resolve<ILog>();
-            this.Container.RegisterTransient<TClient>();
             return this;
         }
 
@@ -469,14 +448,14 @@ namespace TouchSocket.Sockets
                 }
                 this.m_serverState = ServerState.Running;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                this.m_pluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
                 return this;
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
+                this.m_pluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
                 throw;
             }
         }
@@ -499,7 +478,7 @@ namespace TouchSocket.Sockets
             this.m_serverState = ServerState.Stopped;
             if (this.PluginsManager.Enable)
             {
-                this.PluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+                this.m_pluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
             }
             return this;
         }
@@ -541,7 +520,7 @@ namespace TouchSocket.Sockets
                 this.m_serverState = ServerState.Disposed;
                 if (this.PluginsManager.Enable)
                 {
-                    this.PluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+                    this.m_pluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
                 }
                 this.PluginsManager.SafeDispose();
             }
@@ -552,7 +531,7 @@ namespace TouchSocket.Sockets
         /// 初始化客户端实例。
         /// </summary>
         /// <returns></returns>
-        protected virtual TClient GetClientInstence()
+        protected virtual TClient GetClientInstence(Socket socket, TcpNetworkMonitor monitor)
         {
             return new TClient();
         }
@@ -689,25 +668,25 @@ namespace TouchSocket.Sockets
 
             try
             {
-                if (monitor.Options.NoDelay)
+                if (monitor.Option.NoDelay!=null)
                 {
-                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
+                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, monitor.Option.NoDelay);
                 }
-                socket.ReceiveBufferSize = monitor.Options.BufferLength;
-                socket.SendBufferSize = monitor.Options.BufferLength;
-                socket.SendTimeout = monitor.Options.SendTimeout;
+                socket.ReceiveBufferSize = monitor.Option.BufferLength;
+                socket.SendBufferSize = monitor.Option.BufferLength;
+                socket.SendTimeout = monitor.Option.SendTimeout;
 
-                var client = this.GetClientInstence();
+                var client = this.GetClientInstence(socket,monitor);
                 client.InternalSetConfig(this.m_config);
                 client.InternalSetContainer(this.m_container);
                 client.InternalSetService(this);
-                client.InternalSetListenOption(monitor.Options);
+                client.InternalSetListenOption(monitor.Option);
                 client.InternalSetSocket(socket);
                 client.InternalSetPluginsManager(this.m_pluginsManager);
 
                 if (client.CanSetDataHandlingAdapter)
                 {
-                    client.SetDataHandlingAdapter(monitor.Options.TcpAdapter.Invoke());
+                    client.SetDataHandlingAdapter(monitor.Option.TcpAdapter.Invoke());
                 }
                 client.InternalInitialized();
 
@@ -728,11 +707,11 @@ namespace TouchSocket.Sockets
                     {
                         client.InternalConnected(new ConnectedEventArgs());
 
-                        if (monitor.Options.UseSsl)
+                        if (monitor.Option.UseSsl)
                         {
                             try
                             {
-                                client.BeginReceiveSsl(monitor.Options.ServiceSslOption);
+                                client.BeginReceiveSsl(monitor.Option.ServiceSslOption);
                             }
                             catch (Exception ex)
                             {

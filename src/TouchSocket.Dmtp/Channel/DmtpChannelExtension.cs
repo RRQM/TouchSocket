@@ -2,11 +2,15 @@
 
 namespace TouchSocket.Dmtp
 {
+    /// <summary>
+    /// DmtpChannelExtension
+    /// </summary>
     public static class DmtpChannelExtension
     {
         /// <summary>
         /// 写入通道
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         public static void Write(this IDmtpChannel channel, byte[] data)
         {
@@ -16,6 +20,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 写入通道
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         public static Task WriteAsync(this IDmtpChannel channel, byte[] data)
         {
@@ -25,6 +30,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 尝试写入。
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
@@ -48,6 +54,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 尝试写入
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         /// <returns></returns>
         public static bool TryWrite(this IDmtpChannel channel, byte[] data)
@@ -58,6 +65,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 异步尝试写入
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
@@ -81,6 +89,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 异步尝试写入
         /// </summary>
+        /// <param name="channel"></param>
         /// <param name="data"></param>
         /// <returns></returns>
         public static Task<bool> TryWriteAsync(this IDmtpChannel channel, byte[] data)

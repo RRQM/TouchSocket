@@ -636,11 +636,7 @@ namespace TouchSocket.SourceGenerator.Rpc
             return codeString.ToString();
         }
 
-        /// <summary>
-        /// 查找接口类型及其继承的接口的所有方法
-        /// </summary>
-        /// <param name="httpApi">接口</param>
-        /// <returns></returns>
+      
         private IEnumerable<IMethodSymbol> FindApiMethods()
         {
             return this.m_rpcApi

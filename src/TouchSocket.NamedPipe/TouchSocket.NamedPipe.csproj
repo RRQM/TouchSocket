@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Pipeline;NamedPipe</PackageTags>
+		<Description>这是一个基于命名管道的网络通信框架，它可以让您以使用tcp的体验使用管道。目前支持服务器、多客户端模式，并且适用Tcp的所有适配器。一键式解决黏分包问题。使用协议模板，可快速实现「固定包头」、「固定长度」、「区间字符」等一系列的数据报文解析。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+		<Title>TouchSocket</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.NamedPipe</PackageOutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+</Project>

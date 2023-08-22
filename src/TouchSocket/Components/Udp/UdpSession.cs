@@ -57,7 +57,7 @@ namespace TouchSocket.Sockets
         public UdpSessionBase()
         {
             this.m_socketAsyncs = new ConcurrentList<SocketAsyncEventArgs>();
-            this.Protocol = Protocol.UDP;
+            this.Protocol = Protocol.Udp;
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.Monitor = new UdpNetworkMonitor(null, socket);
         }
@@ -451,7 +451,7 @@ namespace TouchSocket.Sockets
 
             if (this.Config != null)
             {
-                if (this.Config.GetValue(TouchSocketConfigExtension.MaxPackageSizeProperty) is int v1)
+                if (this.Config.GetValue(DataHandlingAdapterExtension.MaxPackageSizeProperty) is int v1)
                 {
                     adapter.MaxPackageSize = v1;
                 }
@@ -501,7 +501,7 @@ namespace TouchSocket.Sockets
 
             switch (this.Config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty))
             {
-                case ReceiveType.Auto:
+                case ReceiveType.Iocp:
                     {
 #if NET45_OR_GREATER||NET5_0_OR_GREATER
                         for (var i = 0; i < threadCount; i++)

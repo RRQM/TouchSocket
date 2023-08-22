@@ -1,4 +1,5 @@
 ﻿using System;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -30,7 +31,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 接收类型
         /// </summary>
-        public ReceiveType ReceiveType { get; set; } = ReceiveType.Auto;
+        public ReceiveType ReceiveType { get; set; } = ReceiveType.Iocp;
 
         /// <summary>
         /// 是否使用地址复用
@@ -45,7 +46,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 禁用延迟发送
         /// </summary>
-        public bool NoDelay { get; set; }
+        public bool? NoDelay { get; set; }
 
         /// <summary>
         /// 是否使用ssl加密
@@ -60,7 +61,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置Tcp适配器
         /// </summary>
-        public Func<TcpDataHandlingAdapter> TcpAdapter { get; set; } =
+        public Func<SingleStreamDataHandlingAdapter> TcpAdapter { get; set; } =
             () => new NormalDataHandlingAdapter();
     }
 }

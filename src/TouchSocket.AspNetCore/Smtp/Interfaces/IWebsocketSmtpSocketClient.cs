@@ -2,6 +2,9 @@
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
+    /// <summary>
+    /// 基于WebSocket协议的Dmtp服务器辅助客户端。
+    /// </summary>
     public interface IWebSocketDmtpSocketClient : IWebSocketDmtpClientBase
     {
         /// <summary>

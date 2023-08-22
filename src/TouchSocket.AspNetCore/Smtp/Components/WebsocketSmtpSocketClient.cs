@@ -32,6 +32,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         private TcpDmtpAdapter m_smtpAdapter;
         private WebSocketDmtpService m_service;
 
+        /// <inheritdoc/>
         public int BufferLength { get; private set; }
 
         /// <inheritdoc/>
@@ -49,21 +50,32 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <inheritdoc/>
         public bool IsHandshaked => this.DmtpActor.IsHandshaked;
 
+        /// <inheritdoc/>
         public DateTime LastReceivedTime { get; private set; }
 
+        /// <inheritdoc/>
         public DateTime LastSendTime { get; private set; }
 
         /// <inheritdoc/>
         public ILog Logger { get; set; }
 
+        /// <summary>
+        /// 未实现
+        /// </summary>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        /// <summary>
+        /// 未实现
+        /// </summary>
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public IPluginsManager PluginsManager { get; private set; }
 
+        /// <inheritdoc/>
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
+
+        /// <inheritdoc/>
         public IWebSocketDmtpService Service { get => this.m_service; }
 
         /// <inheritdoc/>
@@ -101,6 +113,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.DirectResetId(newId);
         }
 
+        /// <inheritdoc/>
         public int SetBufferLength(int value)
         {
             this.BufferLength = value;

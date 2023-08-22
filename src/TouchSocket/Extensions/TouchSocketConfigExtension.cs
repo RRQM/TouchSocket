@@ -45,15 +45,15 @@ namespace TouchSocket.Sockets
         /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<TcpDataHandlingAdapter>> TcpDataHandlingAdapterProperty = DependencyProperty<Func<TcpDataHandlingAdapter>>.Register("TcpDataHandlingAdapter", () => { return new NormalDataHandlingAdapter(); });
+        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("TcpDataHandlingAdapter", () => { return new NormalDataHandlingAdapter(); });
 
         /// <summary>
-        /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
-        /// <para><see cref="ReceiveType.Auto"/>为自动接收数据，然后主动触发。</para>
+        /// 接收类型，默认为<see cref="ReceiveType.Iocp"/>
+        /// <para><see cref="ReceiveType.Iocp"/>为自动接收数据，然后主动触发。</para>
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// 所需类型<see cref="TouchSocket.Sockets. ReceiveType"/>
         /// </summary>
-        public static readonly DependencyProperty<ReceiveType> ReceiveTypeProperty = DependencyProperty<ReceiveType>.Register("ReceiveType", ReceiveType.Auto);
+        public static readonly DependencyProperty<ReceiveType> ReceiveTypeProperty = DependencyProperty<ReceiveType>.Register("ReceiveType", ReceiveType.Iocp);
 
         /// <summary>
         /// 数据处理适配器，默认为获取<see cref="UdpDataHandlingAdapter"/>
@@ -95,15 +95,15 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig SetTcpDataHandlingAdapter(this TouchSocketConfig config, Func<TcpDataHandlingAdapter> value)
+        public static TouchSocketConfig SetTcpDataHandlingAdapter(this TouchSocketConfig config, Func<SingleStreamDataHandlingAdapter> value)
         {
             config.SetValue(TcpDataHandlingAdapterProperty, value);
             return config;
         }
 
         /// <summary>
-        /// 接收类型，默认为<see cref="ReceiveType.Auto"/>
-        /// <para><see cref="ReceiveType.Auto"/>为自动接收数据，然后主动触发。</para>
+        /// 接收类型，默认为<see cref="ReceiveType.Iocp"/>
+        /// <para><see cref="ReceiveType.Iocp"/>为自动接收数据，然后主动触发。</para>
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// </summary>
         /// <param name="config"></param>
@@ -170,78 +170,6 @@ namespace TouchSocket.Sockets
 
         #endregion ServiceBase
 
-        #region 适配器配置
-
-        /// <summary>
-        /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.CacheTimeout"/>
-        /// </summary>
-        public static readonly DependencyProperty<bool?> CacheTimeoutEnableProperty = DependencyProperty<bool?>.Register("CacheTimeoutEnable", null);
-
-        /// <summary>
-        /// 适配器数据包缓存时长。默认为缺省（<see cref="TimeSpan.Zero"/>）。当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.CacheTimeout"/>
-        /// </summary>
-        public static readonly DependencyProperty<TimeSpan> CacheTimeoutProperty = DependencyProperty<TimeSpan>.Register("CacheTimeout", TimeSpan.Zero);
-
-        /// <summary>
-        /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.MaxPackageSize"/>
-        /// </summary>
-        public static readonly DependencyProperty<int?> MaxPackageSizeProperty = DependencyProperty<int?>.Register("MaxPackageSize", null);
-
-        /// <summary>
-        /// 适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.UpdateCacheTimeWhenRev"/>
-        /// </summary>
-        public static readonly DependencyProperty<bool?> UpdateCacheTimeWhenRevProperty = DependencyProperty<bool?>.Register("UpdateCacheTimeWhenRev", null);
-
-        /// <summary>
-        /// 适配器数据包缓存时长。默认为缺省（<see cref="TimeSpan.Zero"/>）。当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.CacheTimeout"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetCacheTimeout(this TouchSocketConfig config, TimeSpan value)
-        {
-            config.SetValue(CacheTimeoutProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 适配器数据包缓存启用。默认为缺省（null），如果有正常值会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.CacheTimeoutEnable"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetCacheTimeoutEnable(this TouchSocketConfig config, bool value)
-        {
-            config.SetValue(CacheTimeoutEnableProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 适配器数据包最大值。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.MaxPackageSize"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetMaxPackageSize(this TouchSocketConfig config, int value)
-        {
-            config.SetValue(MaxPackageSizeProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 适配器数据包缓存策略。默认缺省（null），当该值有效时会在设置适配器时，直接作用于<see cref="TcpDataHandlingAdapter.UpdateCacheTimeWhenRev"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig SetUpdateCacheTimeWhenRev(this TouchSocketConfig config, bool value)
-        {
-            config.SetValue(UpdateCacheTimeWhenRevProperty, value);
-            return config;
-        }
-
-        #endregion 适配器配置
-
         #region TcpClient
 
         /// <summary>
@@ -260,13 +188,13 @@ namespace TouchSocket.Sockets
         /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = DependencyProperty<KeepAliveValue>.Register("KeepAliveValue", new KeepAliveValue());
+        public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = DependencyProperty<KeepAliveValue>.Register("KeepAliveValue", default);
 
         /// <summary>
         /// 设置Socket不使用Delay算法，
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty<bool> NoDelayProperty = DependencyProperty<bool>.Register("NoDelay", false);
+        public static readonly DependencyProperty<bool?> NoDelayProperty = DependencyProperty<bool?>.Register("NoDelay", null);
 
         /// <summary>
         /// 远程目标地址，所需类型<see cref="IPHost"/>
@@ -368,13 +296,14 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 设置Socket的NoDelay属性，默认false。
+        /// 设置Socket的NoDelay属性，默认不做处理。
         /// </summary>
         /// <param name="config"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig UseNoDelay(this TouchSocketConfig config)
+        public static TouchSocketConfig SetNoDelay(this TouchSocketConfig config,bool value)
         {
-            config.SetValue(NoDelayProperty, true);
+            config.SetValue(NoDelayProperty, value);
             return config;
         }
 

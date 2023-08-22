@@ -20,7 +20,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocket适配器
     /// </summary>
-    public class WebSocketDataHandlingAdapter : TcpDataHandlingAdapter
+    public class WebSocketDataHandlingAdapter : SingleStreamDataHandlingAdapter
     {
         private WSDataFrame m_dataFrameTemp;
 
