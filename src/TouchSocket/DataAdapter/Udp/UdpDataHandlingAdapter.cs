@@ -21,43 +21,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Udp数据处理适配器
     /// </summary>
-    public abstract class UdpDataHandlingAdapter
+    public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     {
-        /// <summary>
-        /// 是否允许发送<see cref="IRequestInfo"/>对象。
-        /// </summary>
-        public abstract bool CanSendRequestInfo { get; }
-
-        /// <summary>
-        /// 日志记录器。
-        /// </summary>
-        public ILog Logger { get; set; }
-
-
-        /// <summary>
-        /// 拼接发送
-        /// </summary>
-        public abstract bool CanSplicingSend { get; }
-
-        /// <summary>
-        /// 获取或设置适配器能接收的最大数据包长度。默认1024*1024 Byte。
-        /// </summary>
-        public int MaxPackageSize { get; set; } = 1024 * 1024;
-
-        /// <summary>
-        /// 当适配器在被第一次加载时调用。
-        /// </summary>
-        /// <param name="owner"></param>
-        /// <exception cref="Exception">此适配器已被其他终端使用，请重新创建对象。</exception>
-        public virtual void OnLoaded(object owner)
-        {
-            if (this.Owner != null)
-            {
-                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
-            }
-            this.Owner = owner;
-        }
-
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
         /// </summary>
@@ -67,11 +32,6 @@ namespace TouchSocket.Sockets
         /// 当接收数据处理完成后，回调该函数执行发送
         /// </summary>
         public Action<EndPoint, byte[], int, int> SendCallBack { get; set; }
-
-        /// <summary>
-        /// 适配器所有者
-        /// </summary>
-        public object Owner { get; private set; }
 
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
@@ -88,15 +48,6 @@ namespace TouchSocket.Sockets
             {
                 this.OnError(ex.Message);
             }
-        }
-
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        public void SendInput(IRequestInfo requestInfo)
-        {
-            this.PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -145,35 +96,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 在解析时发生错误。
-        /// </summary>
-        /// <param name="error">错误异常</param>
-        /// <param name="reset">是否调用<see cref="Reset"/></param>
-        /// <param name="log">是否记录日志</param>
-        protected virtual void OnError(string error, bool reset = true, bool log = true)
-        {
-            if (reset)
-            {
-                this.Reset();
-            }
-            if (log)
-            {
-                this.Logger?.Error(error);
-            }
-        }
-
-        /// <summary>
         /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(EndPoint,ByteBlock, IRequestInfo)"/>处理数据
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
         protected abstract void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock);
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        protected abstract void PreviewSend(IRequestInfo requestInfo);
 
         /// <summary>
         /// 当发送数据前预先处理数据
@@ -191,10 +118,5 @@ namespace TouchSocket.Sockets
         /// <param name="endPoint"></param>
         /// <param name="transferBytes">代发送数据组合</param>
         protected abstract void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
-
-        /// <summary>
-        /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
-        /// </summary>
-        protected abstract void Reset();
     }
 }

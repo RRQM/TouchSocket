@@ -37,11 +37,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 是否启用保活。默认为True。
-        /// </summary>
-        public bool Enable { get; set; } = true;
-
-        /// <summary>
         /// 发送间隔，默认20*1000ms
         /// </summary>
         public uint Interval { get; set; } = 20 * 1000;

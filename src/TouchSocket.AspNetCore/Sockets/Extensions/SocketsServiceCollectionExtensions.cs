@@ -99,6 +99,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <typeparam name="TUdpSession">注册服务的接口</typeparam>
         /// <param name="service"></param>
+        /// <param name="configFunc"></param>
         /// <returns></returns>
         public static TUdpSession AddUdpSession<TUdpSession>(this IServiceCollection service, Func<TouchSocketConfig> configFunc) where TUdpSession : class, IUdpSession, new()
         {

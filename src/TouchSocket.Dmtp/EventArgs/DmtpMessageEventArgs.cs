@@ -16,6 +16,9 @@ namespace TouchSocket.Dmtp
             this.DmtpMessage = message;
         }
 
+        /// <summary>
+        /// Dmtp消息
+        /// </summary>
         public DmtpMessage DmtpMessage { get; }
     }
 }

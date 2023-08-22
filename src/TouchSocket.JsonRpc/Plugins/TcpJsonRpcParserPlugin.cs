@@ -34,9 +34,9 @@ namespace TouchSocket.JsonRpc
             return this;
         }
 
-        Task ITcpConnectingPlugin<IClient>.OnTcpConnecting(IClient client, ConnectingEventArgs e)
+        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
-            if (this.AutoSwitch && client.Protocol == Protocol.TCP)
+            if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
             {
                 client.Protocol = JsonRpcUtility.TcpJsonRpc;
             }

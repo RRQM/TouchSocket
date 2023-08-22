@@ -54,7 +54,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 释放资源
+        /// 释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
         /// </summary>
         public void Dispose()
         {

@@ -37,12 +37,17 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// TCP协议
         /// </summary>
-        public static readonly Protocol TCP = new Protocol("tcp");
+        public static readonly Protocol Tcp = new Protocol("tcp");
+
+        /// <summary>
+        /// 命名管道
+        /// </summary>
+        public static readonly Protocol NamedPipe = new Protocol("namedpipe");
 
         /// <summary>
         /// UDP协议
         /// </summary>
-        public static readonly Protocol UDP = new Protocol("udp");
+        public static readonly Protocol Udp = new Protocol("udp");
 
         /// <summary>
         /// 获取WebSocket协议

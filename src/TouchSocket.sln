@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案", "解决方�
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.NamedPipe", "TouchSocket.NamedPipe\TouchSocket.NamedPipe.csproj", "{B08988EC-33F6-488E-868B-E36AADDDE456}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,10 @@ Global
 		{660C6B92-190A-47FD-8E31-E2A01501C750}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{660C6B92-190A-47FD-8E31-E2A01501C750}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B08988EC-33F6-488E-868B-E36AADDDE456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B08988EC-33F6-488E-868B-E36AADDDE456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B08988EC-33F6-488E-868B-E36AADDDE456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B08988EC-33F6-488E-868B-E36AADDDE456}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

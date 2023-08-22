@@ -33,7 +33,7 @@ namespace TouchSocket.Core
         public string TargetId { get; set; }
 
         /// <summary>
-        /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter(ByteBlock)"/>，然后<see cref="PackageBody(ByteBlock)"/>
+        /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter(in ByteBlock)"/>，然后<see cref="PackageBody(in ByteBlock)"/>
         /// </summary>
         /// <param name="byteBlock"></param>
         public sealed override void Package(in ByteBlock byteBlock)

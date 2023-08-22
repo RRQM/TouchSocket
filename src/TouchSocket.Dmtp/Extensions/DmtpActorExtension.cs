@@ -38,51 +38,61 @@ namespace TouchSocket.Dmtp
 
         #region IDmtpChannel
 
+        /// <inheritdoc cref="IDmtpActor.ChannelExisted(int)"/>
         public static bool ChannelExisted(this IDmtpActorObject client, int id)
         {
             return client.DmtpActor.ChannelExisted(id);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannel(Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannel(metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannel(int, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannel(id, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannel(string, int, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannel(targetId, id, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannel(string, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannel(targetId, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannelAsync(metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata)"/>
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, int id, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannelAsync(id, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata)"/>
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannelAsync(targetId, id, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata)"/>
         public static Task<IDmtpChannel> CreateChannelAsync(this IDmtpActorObject client, string targetId, Metadata metadata = default)
         {
             return client.DmtpActor.CreateChannelAsync(targetId, metadata);
         }
 
+        /// <inheritdoc cref="IDmtpActor.TrySubscribeChannel(int, out IDmtpChannel)"/>
         public static bool TrySubscribeChannel(this IDmtpActorObject client, int id, out IDmtpChannel channel)
         {
             return client.DmtpActor.TrySubscribeChannel(id, out channel);

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Net.Sockets;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -19,13 +20,11 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class NATService : TcpService<NATSocketClient>
     {
-        /// <summary>
+       
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        protected override NATSocketClient GetClientInstence()
+        protected override NATSocketClient GetClientInstence(Socket socket, TcpNetworkMonitor monitor)
         {
-            var client = base.GetClientInstence();
+            var client = base.GetClientInstence(socket,monitor);
             client.m_internalDis = this.OnTargetClientDisconnected;
             client.m_internalTargetClientRev = this.OnTargetClientReceived;
             return client;

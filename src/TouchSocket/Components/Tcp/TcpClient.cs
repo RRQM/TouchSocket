@@ -56,7 +56,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public TcpClientBase()
         {
-            this.Protocol = Protocol.TCP;
+            this.Protocol = Protocol.Tcp;
         }
 
         #region 变量
@@ -220,7 +220,7 @@ namespace TouchSocket.Sockets
         public TouchSocketConfig Config { get; private set; }
 
         /// <inheritdoc/>
-        public TcpDataHandlingAdapter DataHandlingAdapter { get; private set; }
+        public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
 
         /// <inheritdoc/>
         public string IP { get; private set; }
@@ -346,12 +346,12 @@ namespace TouchSocket.Sockets
                 }
                 if (this.Config == null)
                 {
-                    throw new ArgumentNullException(nameof(this.Config),"配置文件不能为空。");
+                    throw new ArgumentNullException(nameof(this.Config), "配置文件不能为空。");
                 }
-                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException(nameof(IPHost),"iPHost不能为空。");
+                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException(nameof(IPHost), "iPHost不能为空。");
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
-                this.PrivateOnConnecting(new ConnectingEventArgs(this.MainSocket));
+                this.PrivateOnConnecting(new ConnectingEventArgs(socket));
                 if (timeout == 5000)
                 {
                     socket.Connect(iPHost.Host, iPHost.Port);
@@ -447,7 +447,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public virtual void SetDataHandlingAdapter(TcpDataHandlingAdapter adapter)
+        public virtual void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter)
         {
             if (!this.CanSetDataHandlingAdapter)
             {
@@ -602,7 +602,7 @@ namespace TouchSocket.Sockets
         /// 设置适配器，该方法不会检验<see cref="CanSetDataHandlingAdapter"/>的值。
         /// </summary>
         /// <param name="adapter"></param>
-        protected void SetAdapter(TcpDataHandlingAdapter adapter)
+        protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
         {
             this.ThrowIfDisposed();
             if (adapter is null)
@@ -648,7 +648,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-                if (this.ReceiveType == ReceiveType.Auto)
+                if (this.ReceiveType == ReceiveType.Iocp)
                 {
                     var eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += this.EventArgs_Completed;
@@ -660,6 +660,39 @@ namespace TouchSocket.Sockets
                     {
                         this.ProcessReceived(eventArgs);
                     }
+                }
+                else if (this.ReceiveType == ReceiveType.Bio)
+                {
+                    new Thread(BeginBio)
+                    {
+                        IsBackground = true
+                    }
+                    .Start() ;
+                }
+            }
+        }
+
+        private void BeginBio()
+        {
+            while (true)
+            {
+                var byteBlock = new ByteBlock(this.BufferLength);
+                try
+                {
+                    var r = this.MainSocket.Receive(byteBlock.Buffer);
+                    if (r == 0)
+                    {
+                        this.BreakOut("远程终端主动关闭");
+                        return;
+                    }
+
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    this.BreakOut(ex.Message);
+                    return;
                 }
             }
         }
@@ -720,26 +753,27 @@ namespace TouchSocket.Sockets
                     SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
                 };
             }
-
-#if NET45_OR_GREATER
-            var keepAliveValue = this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty);
-            if (keepAliveValue.Enable)
+            if (this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty) is KeepAliveValue keepAliveValue)
             {
+#if NET45_OR_GREATER
+
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
                 socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);
-            }
 #else
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                var keepAliveValue = this.Config.GetValue(TouchSocketConfigExtension.KeepAliveValueProperty);
-                if (keepAliveValue.Enable)
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
                     socket.IOControl(IOControlCode.KeepAliveValues, keepAliveValue.KeepAliveTime, null);
                 }
-            }
 #endif
-            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, this.Config.GetValue<bool>(TouchSocketConfigExtension.NoDelayProperty));
+            }
+
+            var noDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty);
+            if (noDelay != null)
+            {
+                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay);
+            }
+
             if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) != null)
             {
                 if (this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty))
@@ -960,7 +994,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    if (this.m_delaySender!=null && length < m_delaySender.DelayLength)
+                    if (this.m_delaySender != null && length < m_delaySender.DelayLength)
                     {
                         this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
                     }

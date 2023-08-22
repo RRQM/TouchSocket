@@ -56,9 +56,23 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         /// <param name="allowJsonRpc"></param>
         /// <returns></returns>
-        public WebSocketJsonRpcParserPlugin SetAllowSwitchProtocol(Func<IHttpSocketClient, HttpContext, Task<bool>> allowJsonRpc)
+        public WebSocketJsonRpcParserPlugin SetAllowJsonRpc(Func<IHttpSocketClient, HttpContext, Task<bool>> allowJsonRpc)
         {
             this.AllowJsonRpc = allowJsonRpc;
+            return this;
+        }
+
+        /// <summary>
+        /// 经过判断是否标识当前的客户端为JsonRpc
+        /// </summary>
+        /// <param name="allowJsonRpc"></param>
+        /// <returns></returns>
+        public WebSocketJsonRpcParserPlugin SetAllowJsonRpc(Func<IHttpSocketClient, HttpContext, bool> allowJsonRpc)
+        {
+            this.AllowJsonRpc = (client, context) =>
+            {
+                return Task.FromResult(allowJsonRpc(client, context));
+            };
             return this;
         }
 

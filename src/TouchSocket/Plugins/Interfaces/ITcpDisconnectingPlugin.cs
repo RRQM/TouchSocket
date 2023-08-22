@@ -6,7 +6,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    public interface ITcpDisconnectingPlugin<in TClient> : IPlugin where TClient : IClient
+    public interface ITcpDisconnectingPlugin<in TClient> : IPlugin where TClient : ITcpClientBase
     {
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ITcpDisconnectingPlugin
     /// </summary>
-    public interface ITcpDisconnectingPlugin : ITcpDisconnectingPlugin<IClient>
+    public interface ITcpDisconnectingPlugin : ITcpDisconnectingPlugin<ITcpClientBase>
     {
 
     }
