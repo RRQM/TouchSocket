@@ -21,11 +21,13 @@ namespace AccessRestrictionsConsoleApp
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+                .SetListenIPHosts("tcp://127.0.0.1:7789",7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                    a.RegisterSingleton<IAccessRestrictions, AccessRestrictions>();//注册访问限制实例，AccessRestrictions可自行实现，例如连接数据库做持久化等。
+
+                    //注册访问限制实例，AccessRestrictions可自行实现，例如连接数据库做持久化等。
+                    a.RegisterSingleton<IAccessRestrictions, AccessRestrictions>();
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -88,49 +90,49 @@ namespace AccessRestrictionsConsoleApp
 
     public class AccessRestrictions : IAccessRestrictions
     {
-        private readonly List<string> whiteListIP = new List<string>();
-        private readonly List<string> blackListIP = new List<string>();
+        private readonly List<string> m_whiteListIP = new List<string>();
+        private readonly List<string> m_blackListIP = new List<string>();
 
         public virtual bool AddBlackList(string ip)
         {
-            if (this.blackListIP.Contains(ip))
+            if (this.m_blackListIP.Contains(ip))
             {
                 return true;
             }
-            this.blackListIP.Add(ip);
+            this.m_blackListIP.Add(ip);
             return true;
         }
 
         public virtual bool AddWhiteList(string ip)
         {
-            if (this.whiteListIP.Contains(ip))
+            if (this.m_whiteListIP.Contains(ip))
             {
                 return true;
             }
-            this.whiteListIP.Add(ip);
+            this.m_whiteListIP.Add(ip);
             return true;
         }
 
         public virtual bool ExistsBlackList(string ip)
         {
             //实际上此处也可以用正则表达式
-            return this.blackListIP.Contains(ip);
+            return this.m_blackListIP.Contains(ip);
         }
 
         public virtual bool ExistsWhiteList(string ip)
         {
             //实际上此处也可以用正则表达式
-            return this.whiteListIP.Contains(ip);
+            return this.m_whiteListIP.Contains(ip);
         }
 
         public virtual bool RemoveBlackList(string ip)
         {
-            return this.blackListIP.Remove(ip);
+            return this.m_blackListIP.Remove(ip);
         }
 
         public virtual bool RemoveWhiteList(string ip)
         {
-            return this.whiteListIP.Remove(ip);
+            return this.m_whiteListIP.Remove(ip);
         }
     }
 }
