@@ -527,7 +527,7 @@ if (service.TryGetSocketClient(ids.First(), out var socketClient))
 
 【同步发送】
 
-SocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
+NamedPipeSocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 ```csharp
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
@@ -536,7 +536,7 @@ public virtual void Send(byte[] buffer, int offset, int length);
 
 【异步发送】
 
-TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
+NamedPipeClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
 
 ```csharp
 public virtual Task SendAsync(byte[] buffer);
@@ -550,7 +550,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 :::  
 
-### 11.3 通过TcpService发送
+### 11.3 通过NamedPipeService发送
 
 通过Id发送数据。
 
