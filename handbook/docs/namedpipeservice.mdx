@@ -245,7 +245,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 服务器在配置监听时，有多种方式实现。其中最简单、最常见的配置方式就是通过Config直接配置。
 
 ```csharp
-TcpService service = new TcpService();
+var service = new NamedPipeService();
 
 service.Setup(new TouchSocketConfig()//载入配置
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
