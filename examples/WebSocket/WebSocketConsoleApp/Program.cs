@@ -13,8 +13,6 @@ namespace WebSocketConsoleApp
     {
         private static void Main(string[] args)
         {
-            var service = CreateHttpService();
-
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
 
@@ -26,6 +24,9 @@ namespace WebSocketConsoleApp
             consoleAction.Add("6", "调用Add", SendAdd);
 
             consoleAction.ShowAll();
+
+            var service = CreateHttpService();
+
             consoleAction.RunCommandLine();
 
         }
