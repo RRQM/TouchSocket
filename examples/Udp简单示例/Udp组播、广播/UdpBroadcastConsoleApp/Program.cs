@@ -22,7 +22,7 @@ namespace UdpBroadcastConsoleApp
                 .Start();
 
             //加入组播组
-            //udpService.JoinMulticastGroup(IPAddress.Parse("224.5.6.7"));
+            udpService.JoinMulticastGroup(IPAddress.Parse("224.5.6.7"));
 
             var udpClient = new UdpSession();
             udpClient.Setup(new TouchSocketConfig()

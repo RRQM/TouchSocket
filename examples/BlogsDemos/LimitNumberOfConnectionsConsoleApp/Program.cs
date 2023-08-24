@@ -35,21 +35,21 @@ namespace LimitNumberOfConnectionsConsoleApp
 
     internal class Count
     {
-        private int num;
+        private int m_num;
 
         public int Num
         {
-            get { return this.num; }
+            get { return this.m_num; }
         }
 
         public int Decrement()
         {
-            return Interlocked.Decrement(ref this.num);
+            return Interlocked.Decrement(ref this.m_num);
         }
 
         public int Increment()
         {
-            return Interlocked.Increment(ref this.num);
+            return Interlocked.Increment(ref this.m_num);
         }
     }
 
