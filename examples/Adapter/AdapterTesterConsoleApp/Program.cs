@@ -12,10 +12,7 @@ namespace AdapterTesterConsoleApp
             action.Add("1", "测试Tcp适配器", TcpDataAdapterTester);
 
             action.ShowAll();
-            while (true)
-            {
-                action.Run(Console.ReadLine());
-            }
+            action.RunCommandLine();
         }
 
         private static void Action_OnException(Exception obj)

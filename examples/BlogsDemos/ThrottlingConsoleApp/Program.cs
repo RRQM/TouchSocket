@@ -54,11 +54,11 @@ namespace ThrottlingConsoleApp
 
         public static FlowGate GetFlowGate(this IDependencyObject dependencyObject)
         {
-            return dependencyObject.GetValue<FlowGate>(FlowGateProperty);
+            return dependencyObject.GetValue(FlowGateProperty);
         }
     }
 
-    public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpReceivingPlugin
+    public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivingPlugin
     {
         private readonly int m_max;
 
