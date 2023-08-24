@@ -11,13 +11,13 @@ namespace DmtpChannelConsoleApp
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
-            int count = 1024;
+            var count = 1024 * 20;
 
             using (var channel = client.CreateChannel())
             {
                 ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
-                byte[] bytes = new byte[1024 * 1024];
-                for (int i = 0; i < count; i++)
+                var bytes = new byte[1024 * 512];
+                for (var i = 0; i < count; i++)
                 {
                     channel.Write(bytes);
                 }
@@ -33,7 +33,8 @@ namespace DmtpChannelConsoleApp
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetVerifyToken("File")
-                   .SetBufferLength(1024 * 1024 * 2)
+                   .SetSendTimeout(0)
+                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -54,12 +55,11 @@ namespace DmtpChannelConsoleApp
 
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
-                   .SetBufferLength(1024 * 1024 * 2)
+                   .SetSendTimeout(0)
+                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-
-                       a.AddDmtpRouteService();//添加路由策略
                    })
                    .ConfigurePlugins(a =>
                    {
@@ -89,14 +89,14 @@ namespace DmtpChannelConsoleApp
                 using (channel)
                 {
                     long count = 0;
-                    m_logger.Info("通道开始接收");
+                    this.m_logger.Info("通道开始接收");
                     foreach (var byteBlock in channel)
                     {
                         //这里处理数据
                         count += byteBlock.Len;
                     }
 
-                    m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count}字节");
+                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count}字节");
                 }
             }
 
