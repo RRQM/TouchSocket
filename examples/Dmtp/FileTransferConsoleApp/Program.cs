@@ -634,6 +634,7 @@ namespace FileTransferConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
+                       a.UseAutoBufferLength();
                        a.UseDmtpFileTransfer()//必须添加文件传输插件
                        //.SetRootPath("C:\\新建文件夹")//设置RootPath
                        .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
