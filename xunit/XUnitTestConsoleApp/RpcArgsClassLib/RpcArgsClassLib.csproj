@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.149" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.149" />
+  </ItemGroup>
+
+</Project>
