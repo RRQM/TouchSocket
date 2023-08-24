@@ -7,6 +7,6 @@
     <Compile Include="..\WebApiServer\WebApiProxy.cs" Link="WebApiProxy.cs" />
   </ItemGroup>
   <ItemGroup>
-	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.148" />
+	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.149" />
   </ItemGroup>
 </Project>

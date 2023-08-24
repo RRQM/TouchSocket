@@ -73,24 +73,125 @@ Console.WriteLine("连接成功");
 
 :::  
 
+## 四、连接服务器
 
-## 四、发送数据
+WebSocketClient可以使用默认配置直接连接到服务器，同时也支持使用多种方法定义连接。
+
+### 4.1 直接连接
+
+使用url直接建立连接，这一般是服务器也只是普通的ws服务器的情况下。
+
+```csharp
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+client.Connect();
+
+client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
+```
+
+### 4.2 带Query参数连接
+
+带Query参数连接，实际上还是通过url直接连接。
+
+```csharp
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7789/wsquery?token=123456"));
+client.Connect();
+
+client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功");
+
+```
+
+### 4.3 使用特定Header连接
+
+一般的，当某些服务器安全级别较高时，可能会定制特定的header用于验证连接。
+
+```csharp
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+        {
+            e.Context.Request.Headers.Add("token", "123456");
+            await e.InvokeNext();
+        });
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7789/wsheader"));
+client.Connect();
+
+client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
+```
+
+:::tip 提示
+
+实际上OnWebSocketHandshaking就是插件委托，也可以自己封装到插件使用。
+
+:::  
+
+### 4.4 使用Post方式连接
+
+WebSocket默认情况下是基于GET方式连接的，但是在一些更特殊的情况下，需要以POST，甚至其他方式连接，那么可以使用以下方式实现。
+
+```csharp
+using var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+        {
+            e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
+            await e.InvokeNext();
+        });
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7789/postws"));
+client.Connect();
+
+client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
+```
+
+:::tip 提示
+
+使用此方式时，基本上就能完全定制请求连接了。比如一些Cookie等。
+
+:::  
+
+
+## 五、发送数据
 
 因为客户端是从**HttpClientBase**派生，则可以直接使用**扩展方法**，进行发送。
 
-### 4.1 发送文本类消息
+### 5.1 发送文本类消息
 
 ```csharp
 client.SendWithWS("Text");
 ```
 
-### 4.2 发送二进制消息
+### 5.2 发送二进制消息
 
 ```csharp
 client.SendWithWS(new byte[10]);
 ```
 
-### 4.3 直接发送自定义构建的数据帧
+### 5.3 直接发送自定义构建的数据帧
 ```csharp
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
@@ -115,9 +216,9 @@ Websocket的所有发送，都是形如**SendWithWS**的扩展方法。不可直
 
 :::  
 
-## 五、接收数据
+## 六、接收数据
 
-### 5.1 订阅Received事件实现
+### 6.1 订阅Received事件实现
 
 ```csharp
 client.Received = (c, e) =>
@@ -142,7 +243,7 @@ client.Received = (c, e) =>
     };
 ```
 
-### 5.2 使用插件实现 <Tag>推荐</Tag>
+### 6.2 使用插件实现 <Tag>推荐</Tag>
 
 【定义插件】
 ```csharp
@@ -229,9 +330,9 @@ client.Connect();
 ```
 
 
-## 六、其他操作
+## 七、其他操作
 
-### 6.1 Ping机制
+### 7.1 Ping机制
 
 WebSocket有自己的Ping、Pong机制。所以直接调用已有方法即可。
 
@@ -246,7 +347,7 @@ WebSocket是双向通讯，所以支持客户端和服务器双向操作Ping和P
 
 :::  
 
-## 六、关闭连接
+## 八、关闭连接
 
 关闭Websocket，应该发送关闭报文。
 
