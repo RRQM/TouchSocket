@@ -40,7 +40,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XmlRpc", "XmlRpc", "{94F467
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBus简单示例(暂时移除)", "EventBus简单示例(暂时移除)", "{5E9585EE-934F-41B4-9ECA-FB0C55A155EF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileTransfer简单示例", "FileTransfer简单示例", "{24212B0A-8DAA-4AC3-BB5D-F3AC485EABA4}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileTransfer", "FileTransfer", "{24212B0A-8DAA-4AC3-BB5D-F3AC485EABA4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "基于AspNetCore的WebSocket协议", "基于AspNetCore的WebSocket协议", "{5C17B127-95DD-480C-BDCC-7FDF5E645B0C}"
 EndProject

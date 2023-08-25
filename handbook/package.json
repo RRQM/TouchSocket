@@ -1,6 +1,6 @@
 {
   "name": "touchsocket",
-  "version": "v1.2",
+  "version": "v2.0-beta",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
