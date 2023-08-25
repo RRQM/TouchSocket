@@ -11,7 +11,6 @@ namespace ClientConsoleApp
     {
         static void Main(string[] args)
         {
-
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
 
