@@ -3,6 +3,20 @@ id: troubleshootunity3d
 title: Unity3D相关
 ---
 
+## 【问】TouchSocket系列是否能用于Unity3D？
+
+TouchSocket系列是否能用于Unity3D
+
+### 【解决】
+
+可以的，TouchSocket是基于Net45和.netstandard2.0的，且没有任何其他运行时，是100%基于C#开发的，所以可以直接用于unity。
+
+但是由于TouchSocket全系都是基于Socket构建的，所以目前无法用于WebGL。除此之外，支持window、android、ios、linux等平台。
+
+目前**实测**支持Il2cpp编译，支持HybridCLR热更新。
+
+TouchSocket提供一个简单的示例demo，包含一个服务器和unity包。以供大家下载试用。 [TouchSocket For Unity](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Unity3d)
+
 ## 【问】程序集用于Unity 3D时，有莫名其妙的异常？
 
 【描述】

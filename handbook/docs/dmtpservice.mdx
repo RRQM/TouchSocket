@@ -57,9 +57,9 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 ## 五、创建服务器
 
 
-### 5.1 基于Tcp协议
+### 5.1 TcpDmtpService
 
-这是基于Tcp协议Dmtp。在可配置的基础之上，还可以配置与[TcpService可配置项](./tcpservice.mdx)相关的配置。
+`TcpDmtpService`是基于`Tcp`协议的Dmtp。在可配置的基础之上，还可以配置与[TcpService可配置项](./tcpservice.mdx)相关的配置。
 
 ```csharp
 var service = new TcpDmtpService();
@@ -77,9 +77,35 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-### 5.2 基于Http协议
+### 5.2 UdpDmtp
 
-这是基于Http升级协议。在该解析器中，配置设置[HttpService](./httpservice.mdx)一致。
+`UdpDmtp`是基于`Udp`协议Dmtp。在可配置的基础之上，还可以配置与[UdpSession可配置项](./udpsession.mdx)相关的配置。
+
+```csharp
+var udpDmtp = new UdpDmtp();
+
+var config = new TouchSocketConfig();
+config.SetBindIPHost(new IPHost(7789))
+     .SetContainer(GetContainer())
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();
+     });
+
+udpDmtp.Setup(config);
+
+udpDmtp.Start();
+```
+
+:::info 备注
+
+`UdpDmtp`作为服务器的时候，需要设定`SetBindIPHost`。
+
+:::  
+
+### 5.3 HttpDmtpService
+
+`HttpDmtpService`是基于`Http`升级协议。在该解析器中，配置设置[HttpService](./httpservice.mdx)一致。
 
 ```csharp
 var service = new HttpDmtpService();
@@ -97,7 +123,7 @@ service.Setup(config)
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
 
-### 5.3 基于AspNetCore的Websocket协议
+### 5.4 基于AspNetCore的Websocket协议
 
 具体步骤
 
@@ -135,7 +161,7 @@ app.UseWebSockets();
 app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
 ```
 
-### 5.4 基于AspNetCore的Http协议 <Tag>企业版</Tag>
+### 5.5 基于AspNetCore的Http协议 <Tag>企业版</Tag>
 
 具体步骤
 
@@ -172,9 +198,9 @@ var app = builder.Build();
 app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
 ```
 
-### 5.5 基于NamedPipe协议 <Tag>企业版</Tag>
+### 5.6 基于NamedPipe协议 <Tag>企业版</Tag>
 
-这是基于管道的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
+这是基于`NamedPipe`的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
 
 ```csharp
 var service = new NamedPipeDmtpService();

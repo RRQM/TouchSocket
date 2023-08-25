@@ -55,7 +55,7 @@ namespace XUnitTestConsoleApp
             CreateHttpService(7801);
 
             CreateTcpDmtp(7794);
-            CreateUdpRpcParser(7797);
+            CreateUdpDmtp(7797);
             CreateTcpJsonRpcParser(7803);
 
             CreateTLVTcpService(7805);
@@ -416,7 +416,7 @@ namespace XUnitTestConsoleApp
             Console.WriteLine($"TLVTcpService已启动,端口：{port}");
         }
 
-        private static void CreateUdpRpcParser(int port)
+        private static void CreateUdpDmtp(int port)
         {
             var udpDmtp = new UdpDmtp();
 
