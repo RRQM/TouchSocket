@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using static System.Net.WebRequestMethods;
 
 namespace HttpPerformanceConsoleApp
 {
@@ -53,6 +55,20 @@ namespace HttpPerformanceConsoleApp
 
             app.RunAsync("http://127.0.0.1:7789");
             ConsoleLogger.Default.Info("Aspnet已启动，请求连接：http://127.0.0.1:7789/ApiServer/Add?a=10&b=20");
+        }
+    }
+
+    class MyClass:HttpSocketClient
+    {
+        protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            var httpResponse = new HttpResponse(this);
+            httpResponse.SetStatus();
+            httpResponse.FromJson("30");
+
+            this.Send(httpResponse.BuildAsBytes());
+            this.Close();
+            return true;
         }
     }
 }

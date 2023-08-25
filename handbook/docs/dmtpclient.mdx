@@ -71,7 +71,33 @@ client.Setup(new TouchSocketConfig()
 client.Connect();
 ```
 
-### 4.2 HttpDmtpClient
+### 4.2 UdpDmtp
+
+`UdpDmtp`对应`UdpDmtp`服务器，即`UdpDmtp`即是服务器，又是客户端。基本创建如下，支持[创建UdpSession](./udpsession.mdx)的所有配置。
+
+```csharp {1,4-6,11} showLineNumbers
+var client = new UdpDmtp();
+
+ client.Setup(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7797")
+     .UseUdpReceive()
+     .SetVerifyToken("123RPC")
+     .ConfigureContainer(a =>
+     {
+     })
+     .ConfigurePlugins(a =>
+     {
+     }));
+ client.Start();
+```
+
+:::info 备注
+
+`UdpDmtp`作为客户端时，需要设定默认的`SetRemoteIPHost`，同时需要主动`UseUdpReceive`，以开启udp接收。如果需要固定监听端口，可使用`SetBindIPHost`。
+
+:::  
+
+### 4.3 HttpDmtpClient
 
 `HttpDmtpClient`对应`HttpDmtpService`，或者`HttpMiddlewareDmtpService`服务器。基本创建如下，支持[创建HttpClient](./httpclient.mdx)的所有配置。
 
@@ -83,7 +109,7 @@ client.Setup(new TouchSocketConfig()
 client.Connect();
 ```
 
-### 4.3 WebSocketDmtpClient
+### 4.4 WebSocketDmtpClient
 
 ```csharp
 var websocketDmtpClient = new WebSocketDmtpClient();
@@ -94,7 +120,7 @@ await websocketDmtpClient.ConnectAsync();
 ```
 
 
-### 4.4 DmtpClient工厂 <Tag>企业版</Tag>
+### 4.5 DmtpClient工厂 <Tag>企业版</Tag>
 
 DmtpClient工厂工作模式是一种，由单个主通讯连接和多个传输通讯连接组成的连接池。默认提供了两种类型的客户端工厂，分别为`TcpDmtpClientFactory`，`HttpDmtpClientFactory`。两者工作流程及配置基本相同，下面以`TcpDmtpClientFactory`为例。
 
@@ -146,7 +172,7 @@ TouchRpcClient工厂只实现了IRpcClient和多线程文件传输的接口，�
 
 :::  
 
-### 4.5 NamedPipeDmtpClient
+### 4.6 NamedPipeDmtpClient
 
 `NamedPipeDmtpClient`对应`NamedPipeDmtpService`服务器。基本创建如下，支持[创建NamedPipeClient](./namedpipeclient.mdx)的所有配置。
 
