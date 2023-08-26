@@ -94,7 +94,7 @@ namespace FileTransferConsoleApp
                 MultithreadingCount = 10//多线程数量
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -155,7 +155,7 @@ namespace FileTransferConsoleApp
                 MultithreadingCount = 10//多线程数量
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -284,7 +284,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -341,7 +341,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -402,7 +402,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -463,7 +463,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -518,7 +518,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -573,7 +573,7 @@ namespace FileTransferConsoleApp
                 FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
             };
 
-            fileOperator.SetMaxSpeed(MaxSpeed);//设置最大限速为1Mb。
+            fileOperator.MaxSpeed = MaxSpeed;//设置最大限速。
 
             //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
             var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
