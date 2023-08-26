@@ -11,13 +11,15 @@ namespace UdpBroadcastConsoleApp
         {
             //创建udpService
             var udpService = new UdpSession();
-            udpService.Received = (remote, byteBlock, requestInfo) =>
-            {
-                Console.WriteLine(byteBlock.ToString());
-            };
             udpService.Setup(new TouchSocketConfig()
                 .SetBindIPHost(new IPHost(7789))
                 .UseBroadcast()
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyPluginClass1>();
+                    a.Add<MyPluginClass2>();
+                    a.Add<MyPluginClass3>();
+                })
                 .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()))
                 .Start();
 
@@ -26,6 +28,7 @@ namespace UdpBroadcastConsoleApp
 
             var udpClient = new UdpSession();
             udpClient.Setup(new TouchSocketConfig()
+                //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
                 .SetBindIPHost(new IPHost(7788))
                 .UseBroadcast()//该配置在广播时是必须的
                 .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()))
@@ -35,7 +38,54 @@ namespace UdpBroadcastConsoleApp
             {
                 udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
                 udpClient.Send(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
+
+                udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("hello"));
+                udpClient.Send(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("hi"));
                 Thread.Sleep(1000);
+            }
+        }
+
+        class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
+        {
+            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            {
+                var msg = e.ByteBlock.ToString();
+                if (msg == "hello")
+                {
+                    Console.WriteLine("已处理Hello");
+                }
+                else
+                {
+                    //如果判断逻辑发现此处无法处理，即可转到下一个插件
+                    await e.InvokeNext();
+                }
+            }
+        }
+
+        class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
+        {
+            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            {
+                var msg = e.ByteBlock.ToString();
+                if (msg == "hi")
+                {
+                    Console.WriteLine("已处理Hi");
+                }
+                else
+                {
+                    //如果判断逻辑发现此处无法处理，即可转到下一个插件
+                    await e.InvokeNext();
+                }
+            }
+        }
+
+        class MyPluginClass3 : PluginBase, IUdpReceivedPlugin
+        {
+            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            {
+                var msg = e.ByteBlock.ToString();
+                Console.WriteLine(msg);
+                await Task.CompletedTask;
             }
         }
     }

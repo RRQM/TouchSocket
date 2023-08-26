@@ -19,7 +19,7 @@ TouchSocket可通过简单设置，实现该功能。
 
 ```csharp
 UdpSession udpSession = new UdpSession();
-udpSession.Received += (endpoint, byteBlock, requestInfo) =>
+udpSession.Received = (endpoint, byteBlock, requestInfo) =>
 {
 
 };
