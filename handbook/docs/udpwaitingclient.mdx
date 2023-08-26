@@ -22,9 +22,9 @@ title: Udp同步请求
 ### 2.1 以UdpSession为例
 
 ```csharp
-UdpSession udpSession = new UdpSession();
+var udpSession = new UdpSession();
 var config = new TouchSocketConfig()
-    .SetBindIPHost(new IPHost(0))//必要设置
+    .UseUdpReceive()//必要设置
     .SetRemoteIPHost(new IPHost("127.0.0.1:7789"));//可以不设置
 
 //载入配置

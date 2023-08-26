@@ -3,6 +3,8 @@ id: udpsession
 title: 创建UdpSession
 ---
 
+import Tag from "@site/src/components/Tag.js";
+
 ### 定义
 
 命名空间：TouchSocket.Sockets <br/>
@@ -27,30 +29,131 @@ UDP组件是基于UDP协议的最基础组件，其功能简单，易用。它�
 
 ## 四、支持插件接口
 
-声明自定义实例类，然后实现**IUdpSessionPlugin**接口，即可实现下列事务的触发。或者继承自**UdpSessionPluginBase**类，重写相应方法即可。
-
 |  插件方法| 功能 |
 | --- | --- |
-| OnReceivedData | 在收到数据时触发 |
+| IUdpReceivedPlugin | 在收到数据时触发 |
 
-## 四、使用UdpSession
+## 五、使用UdpSession
+
+### 5.1 作为服务器使用
 
 ```csharp
-UdpSession udpSession = new UdpSession();
-udpSession.Received += (remote, byteBlock,requestInfo) =>
+var udpService = new UdpSession();
+udpService.Received = (remote, byteBlock, requestInfo) =>
 {
-    udpSession.Send(remote, byteBlock);
-    Console.WriteLine($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+    Console.WriteLine(byteBlock.ToString());
 };
-udpSession.Setup(new TouchSocketConfig()
-     .SetBindIPHost(new IPHost(7789)))
-     .Start();
+udpService.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7789)))
+    .Start();
 Console.WriteLine("等待接收");
 
 ```
+
+### 5.2 作为客户端使用
+
+```csharp
+var udpClient = new UdpSession();
+udpClient.Setup(new TouchSocketConfig()
+    //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
+    .SetBindIPHost(new IPHost(7788)))
+    .Start();
+```
+
 :::caution 注意
 
 1. 即使不监听地址，Setup和Start都是必须要的。
-2. 当udp作为客户端时，Config如果不设置SetBindIPHost，将不会接收，如果不知道绑定那个端口，可以直接绑定0端口，这样，就会使用系统空闲的一个端口了。
+2. 当udp作为客户端时，Config如果不设置SetBindIPHost，将不会接收，如果不知道绑定那个端口，可以直接绑定0端口(或者使用UseUdpReceive)，这样，就会使用系统空闲的一个端口了。
 
 :::  
+
+## 六、发送数据
+
+框架内置很多发送发送。但是大致可分为两种。一种是带参数`EndPoint`，和一种不带的。
+
+带`EndPoint`，即表示可以发送到任意终结点。
+
+```csharp
+public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
+```
+
+不带`EndPoint`，即表示直接发送到默认（通过`SetRemoteIPHost`设置）的终结点。这一般在Udp作为客户端时是有用的。
+
+```csharp
+public virtual void Send(byte[] buffer, int offset, int length)
+```
+
+## 七、接收数据
+
+### 7.1 委托接收
+
+委托接收，则是直接订阅Received即可。
+
+```csharp {1}
+var udpService = new UdpSession();
+udpService.Received = (remote, byteBlock, requestInfo) =>
+{
+    Console.WriteLine(byteBlock.ToString());
+};
+udpService.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7789)))
+    .Start();
+```
+
+### 7.2 插件接收 <Tag>推荐</Tag>
+
+使用插件接收，可以很好的分离业务。
+
+声明插件
+
+```csharp
+class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
+{
+    async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+    {
+        var msg = e.ByteBlock.ToString();
+        if (msg == "hello")
+        {
+            Console.WriteLine("已处理Hello");
+        }
+        else
+        {
+            //如果判断逻辑发现此处无法处理，即可转到下一个插件
+            await e.InvokeNext();
+        }
+    }
+}
+
+class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
+{
+    async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+    {
+        var msg = e.ByteBlock.ToString();
+        if (msg == "hi")
+        {
+            Console.WriteLine("已处理Hi");
+        }
+        else
+        {
+            //如果判断逻辑发现此处无法处理，即可转到下一个插件
+            await e.InvokeNext();
+        }
+    }
+}
+```
+
+使用插件
+
+```csharp {6-7}
+var udpService = new UdpSession();
+udpService.Setup(new TouchSocketConfig()
+    .SetBindIPHost(new IPHost(7789))
+    .ConfigurePlugins(a =>
+    {
+        a.Add<MyPluginClass1>();
+        a.Add<MyPluginClass2>();
+    }))
+    .Start();
+```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Udp)
