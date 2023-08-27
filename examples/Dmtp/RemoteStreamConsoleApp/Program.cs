@@ -74,7 +74,7 @@ namespace RemoteStreamConsoleApp
 
     internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>
     {
-        async Task IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>.OnLoadingStream(ITcpDmtpSocketClient client, LoadingStreamEventArgs e)
+        public async Task OnLoadingStream(ITcpDmtpSocketClient client, LoadingStreamEventArgs e)
         {
             if (e.Metadata["tag"] == "tag1")
             {

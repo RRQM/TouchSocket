@@ -422,9 +422,9 @@ targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
 同意转发路由数据。
 
 ```csharp
-internal class MyTouchRpcPlugin : PluginBase,IDmtpRoutingPlugin
+internal class MyPlugin : PluginBase,IDmtpRoutingPlugin
 {
-    async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+    public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
     {
         if (e.RouterType == RouteType.Rpc)
         {

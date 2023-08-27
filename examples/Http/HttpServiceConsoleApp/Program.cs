@@ -51,7 +51,7 @@ namespace ConsoleApp
 
     internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<IHttpSocketClient>
     {
-        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/uploadfile"))
             {
@@ -113,7 +113,7 @@ namespace ConsoleApp
 
     internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/html"))
             {
@@ -148,7 +148,7 @@ namespace ConsoleApp
 
     internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/file"))
             {
@@ -175,7 +175,7 @@ namespace ConsoleApp
 
     internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
     {
-        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/success"))
             {

@@ -100,22 +100,22 @@ namespace UnityServerConsoleApp
     {
     }
 
-    internal class MyPlguin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>,ITcpReceivedPlugin<ISocketClient>
+    internal class MyPlguin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
-  
-        async Task ITcpConnectedPlugin<ISocketClient>.OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
+
+        public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已连接");
             await e.InvokeNext();
         }
 
-        async Task ITcpDisconnectedPlugin<ISocketClient>.OnTcpDisconnected(ISocketClient client, DisconnectEventArgs e)
+        public async Task OnTcpDisconnected(ISocketClient client, DisconnectEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
             await e.InvokeNext();
         }
 
-        async Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
             client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
             client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");

@@ -80,7 +80,7 @@ namespace DmtpChannelConsoleApp
         {
             this.m_logger = logger;
         }
-        async Task IDmtpCreateChannelPlugin<IDmtpActorObject>.OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
+        public async Task OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
         {
             if (client.TrySubscribeChannel(e.ChannelId, out var channel))
             {
@@ -94,7 +94,7 @@ namespace DmtpChannelConsoleApp
                         count += byteBlock.Len;
                     }
 
-                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count/(1048576.0):0.00}Mb字节");
+                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count / (1048576.0):0.00}Mb字节");
                 }
             }
 

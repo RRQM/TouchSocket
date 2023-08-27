@@ -132,7 +132,7 @@ namespace ConsoleApp2
 
         internal class MyTouchRpcPlugin : PluginBase, IDmtpRoutingPlugin
         {
-            async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+            public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
             {
                 if (e.RouterType == RouteType.Rpc)
                 {

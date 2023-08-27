@@ -238,7 +238,7 @@ namespace HeartbeatConsoleApp
             await e.InvokeNext();
         }
 
-        async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             if (e.RequestInfo is MyRequestInfo myRequest)
             {

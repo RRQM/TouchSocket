@@ -78,7 +78,7 @@ namespace ServiceConsoleApp
 
     internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {
-        Task IServerStartedPlugin<IService>.OnServerStarted(IService sender, ServiceStateEventArgs e)
+        public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
         {
             if (sender is ITcpService service)
             {
@@ -98,7 +98,7 @@ namespace ServiceConsoleApp
             return e.InvokeNext();
         }
 
-        Task IServerStopedPlugin<IService>.OnServerStoped(IService sender, ServiceStateEventArgs e)
+        public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
         {
             Console.WriteLine("服务已停止");
             return e.InvokeNext();
@@ -107,7 +107,7 @@ namespace ServiceConsoleApp
 
     class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
     {
-        async Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
             //从客户端收到信息
             var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
@@ -147,7 +147,7 @@ namespace ServiceConsoleApp
             this.m_logger = logger;
         }
 
-        async Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
             try
             {
