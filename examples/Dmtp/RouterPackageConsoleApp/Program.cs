@@ -169,7 +169,7 @@ namespace RouterPackageConsoleApp
             {
                 this.m_logger = logger;
             }
-            async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
+            public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
                 if (e.Metadata?["a"] == "a")
                 {
@@ -201,7 +201,7 @@ namespace RouterPackageConsoleApp
             {
                 this.m_logger = logger;
             }
-            async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
+            public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
                 if (e.Metadata?["b"] == "b")
                 {

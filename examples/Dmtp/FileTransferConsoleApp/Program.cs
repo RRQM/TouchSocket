@@ -708,7 +708,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        async Task IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
+        public async Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
             this.m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
@@ -725,7 +725,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        async Task IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
+        public async Task OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
         {
             foreach (var item in e.Metadata.Keys)
             {
@@ -737,7 +737,7 @@ namespace FileTransferConsoleApp
             await e.InvokeNext();
         }
 
-        async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+        public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
         {
             e.IsPermitOperation = true;//允许路由
             this.m_logger.Info($"路由类型：{e.RouterType}");

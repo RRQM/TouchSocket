@@ -80,7 +80,7 @@ namespace WebApiClientApp
         /// </summary>
         class MyWebApiPlugin : PluginBase, IWebApiPlugin<IWebApiClientBase>
         {
-            async Task IWebApiPlugin<IWebApiClientBase>.OnRequest(IWebApiClientBase client, WebApiEventArgs e)
+            public async Task OnRequest(IWebApiClientBase client, WebApiEventArgs e)
             {
                 if (e.IsHttpMessage)//发送的是System.Net.Http.HttpClient为通讯主体
                 {
@@ -96,7 +96,7 @@ namespace WebApiClientApp
                 await e.InvokeNext();
             }
 
-            async Task IWebApiPlugin<IWebApiClientBase>.OnResponse(IWebApiClientBase client, WebApiEventArgs e)
+            public async Task OnResponse(IWebApiClientBase client, WebApiEventArgs e)
             {
                 await e.InvokeNext();
             }

@@ -47,7 +47,7 @@ namespace UdpBroadcastConsoleApp
 
         class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
         {
-            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {
                 var msg = e.ByteBlock.ToString();
                 if (msg == "hello")
@@ -64,7 +64,7 @@ namespace UdpBroadcastConsoleApp
 
         class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
         {
-            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {
                 var msg = e.ByteBlock.ToString();
                 if (msg == "hi")
@@ -81,7 +81,7 @@ namespace UdpBroadcastConsoleApp
 
         class MyPluginClass3 : PluginBase, IUdpReceivedPlugin
         {
-            async Task IUdpReceivedPlugin<IUdpSession>.OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+            public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {
                 var msg = e.ByteBlock.ToString();
                 Console.WriteLine(msg);

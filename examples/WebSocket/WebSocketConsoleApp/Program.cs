@@ -250,19 +250,19 @@ namespace WebSocketConsoleApp
 
         public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
         {
-            async Task IWebSocketHandshakingPlugin<IHttpClientBase>.OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
+            public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
             {
                 client.Logger.Info("WebSocket正在连接");
                 await e.InvokeNext();
             }
 
-            async Task IWebSocketHandshakedPlugin<IHttpClientBase>.OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+            public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
             {
                 client.Logger.Info("WebSocket成功连接");
                 await e.InvokeNext();
             }
 
-            async Task IWebSocketReceivedPlugin<IHttpClientBase>.OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+            public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
             {
                 switch (e.DataFrame.Opcode)
                 {
@@ -314,7 +314,7 @@ namespace WebSocketConsoleApp
 
         class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
         {
-            async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+            public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
             {
                 if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
                 {

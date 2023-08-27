@@ -55,6 +55,7 @@ namespace HttpPerformanceConsoleApp
            
             app.RunAsync("http://127.0.0.1:7789");
             ConsoleLogger.Default.Info("Aspnet已启动，请求连接：http://127.0.0.1:7789/ApiServer/Add?a=10&b=20");
+            
         }
     }
 

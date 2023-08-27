@@ -105,7 +105,7 @@ namespace DmtpConsoleApp
 
     internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
     {
-        async Task IDmtpHandshakingPlugin<IDmtpActorObject>.OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             if (e.Metadata["a"] != "a")
             {

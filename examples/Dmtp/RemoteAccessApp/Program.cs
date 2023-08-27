@@ -50,7 +50,7 @@ namespace RemoteAccessApp
 
         private class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>
         {
-            Task IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>.OnRemoteAccessing(ITcpDmtpSocketClient client, RemoteAccessingEventArgs e)
+            public Task OnRemoteAccessing(ITcpDmtpSocketClient client, RemoteAccessingEventArgs e)
             {
                 Console.WriteLine($"有客户端正在请求远程操作");
                 Console.WriteLine($"类型：{e.AccessType}，模式：{e.AccessMode}");

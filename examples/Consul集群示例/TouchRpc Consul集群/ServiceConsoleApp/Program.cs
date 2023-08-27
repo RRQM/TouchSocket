@@ -141,13 +141,13 @@ namespace ServiceConsoleApp
     /// </summary>
     internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>, IWebSocketReceivedPlugin<IHttpSocketClient>
     {
-        Task IWebSocketHandshakedPlugin<IHttpSocketClient>.OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        public Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
         {
             client.Logger.Info($"WS客户端连接，ID={client.Id}，IPHost={client.IP}:{client.Port}");
             return Task.CompletedTask;
         }
 
-        Task IWebSocketReceivedPlugin<IHttpSocketClient>.OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
+        public Task OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
