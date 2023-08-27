@@ -380,7 +380,7 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin
         this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
     }
 
-    Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+    public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -440,13 +440,13 @@ public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
         this.m_logger = logger;
     }
 
-    async Task ITcpConnectedPlugin<IClient>.OnTcpConnected(IClient client, ConnectedEventArgs e)
+    public async Task OnTcpConnected(IClient client, ConnectedEventArgs e)
     {
         m_logger.LogInformation("客户端连接");
         await e.InvokeNext();
     }
 
-    async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。

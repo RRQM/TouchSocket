@@ -69,13 +69,13 @@ namespace ThrottlingConsoleApp
             this.Order = int.MaxValue;//提升优先级
         }
 
-        Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+        public Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {
             client.InitFlowGate(this.m_max);//初始化流量计数器。
             return e.InvokeNext();
         }
 
-        async Task ITcpReceivingPlugin<ITcpClientBase>.OnTcpReceiving(ITcpClientBase client, ByteBlockEventArgs e)
+        public async Task OnTcpReceiving(ITcpClientBase client, ByteBlockEventArgs e)
         {
             await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Len);
             await e.InvokeNext();

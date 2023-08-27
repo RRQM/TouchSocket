@@ -108,7 +108,7 @@ class MyPlugin : PluginBase, IDmtpRouterPackagePlugin
     {
         this.m_logger = logger;
     }
-    async Task IDmtpRouterPackagePlugin<IDmtpActorObject>.OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
+    public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
     {
         //m_logger.Info($"收到包请求");
         await e.ResponseAsync(new MyResponsePackage()

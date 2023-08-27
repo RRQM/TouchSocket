@@ -37,7 +37,7 @@ namespace DifferentProtocolConsoleApp
     /// </summary>
     internal class DifferentProtocolPlugin : PluginBase, ITcpConnectingPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
-        Task ITcpConnectingPlugin<ISocketClient>.OnTcpConnecting(ISocketClient client, ConnectingEventArgs e)
+        public Task OnTcpConnecting(ISocketClient client, ConnectingEventArgs e)
         {
             if (client.ServicePort == 7789)
             {
@@ -50,7 +50,7 @@ namespace DifferentProtocolConsoleApp
             return e.InvokeNext();
         }
 
-        Task ITcpReceivedPlugin<ISocketClient>.OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        public Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
             //如果是自定义适配器，此处解析时，可以判断e.RequestInfo的类型
 
