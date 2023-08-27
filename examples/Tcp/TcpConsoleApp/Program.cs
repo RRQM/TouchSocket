@@ -80,6 +80,13 @@ namespace ServiceConsoleApp
     {
         Task IServerStartedPlugin<IService>.OnServerStarted(IService sender, ServiceStateEventArgs e)
         {
+            if (sender is ITcpService service)
+            {
+                foreach (var item in service.Monitors)
+                {
+                    ConsoleLogger.Default.Info($"iphost={item.Option.IpHost}");
+                }
+            }
             if (e.ServerState == ServerState.Running)
             {
                 ConsoleLogger.Default.Info($"服务器成功启动");

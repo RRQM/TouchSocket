@@ -11,12 +11,12 @@ namespace DmtpChannelConsoleApp
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
-            var count = 1024 * 20;
+            var count = 1024 * 20;//测试20Gb数据
 
             using (var channel = client.CreateChannel())
             {
                 ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
-                var bytes = new byte[1024 * 512];
+                var bytes = new byte[1024 * 1024];
                 for (var i = 0; i < count; i++)
                 {
                     channel.Write(bytes);
@@ -34,7 +34,6 @@ namespace DmtpChannelConsoleApp
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetVerifyToken("File")
                    .SetSendTimeout(0)
-                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -56,7 +55,6 @@ namespace DmtpChannelConsoleApp
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
                    .SetSendTimeout(0)
-                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -96,7 +94,7 @@ namespace DmtpChannelConsoleApp
                         count += byteBlock.Len;
                     }
 
-                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count}字节");
+                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count/(1048576.0):0.00}Mb字节");
                 }
             }
 
