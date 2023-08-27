@@ -88,8 +88,6 @@ namespace RouterPackageConsoleApp
                    .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRouterPackage();//添加路由包功能插件
-
-                       a.UseAutoBufferLength();
                    })
                    .BuildWithTcpDmtpClient();
 
@@ -115,8 +113,6 @@ namespace RouterPackageConsoleApp
 
                        a.Add<MyPlugin1>();
                        a.Add<MyPlugin2>();
-
-                       a.UseAutoBufferLength();
                    })
                    .SetVerifyToken("Dmtp");//连接验证口令。
 

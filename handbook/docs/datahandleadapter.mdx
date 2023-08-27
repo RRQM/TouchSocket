@@ -200,7 +200,7 @@ public class MySocketClient : SimpleSocketClient
 {
     public void Up_Go_Send(byte[] data)
     {
-        ByteBlock byteBlock = new ByteBlock(this.BufferLength);//内存池实现，可以直接new byte[].
+        ByteBlock byteBlock = new ByteBlock();//内存池实现，可以直接new byte[].
         byteBlock.Write((byte)1);
         byteBlock.Write((byte)1);
         byteBlock.Write(data);
@@ -215,7 +215,7 @@ public class MySocketClient : SimpleSocketClient
     }
     public void Down_Go_Send(byte[] data)
     {
-        ByteBlock byteBlock = new ByteBlock(this.BufferLength);//内存池实现，可以直接new byte[].
+        ByteBlock byteBlock = new ByteBlock();//内存池实现，可以直接new byte[].
         byteBlock.Write((byte)0);
         byteBlock.Write((byte)1);
         byteBlock.Write(data);
@@ -230,7 +230,7 @@ public class MySocketClient : SimpleSocketClient
     }
     public void Up_Hold_Send(byte[] data)
     {
-        ByteBlock byteBlock = new ByteBlock(this.BufferLength);//内存池实现，可以直接new byte[].
+        ByteBlock byteBlock = new ByteBlock();//内存池实现，可以直接new byte[].
         byteBlock.Write((byte)1);
         byteBlock.Write((byte)0);
         byteBlock.Write(data);
@@ -245,7 +245,7 @@ public class MySocketClient : SimpleSocketClient
     }
     public void Down_Hold_Send(byte[] data)
     {
-        ByteBlock byteBlock = new ByteBlock(this.BufferLength);//内存池实现，可以直接new byte[].
+        ByteBlock byteBlock = new ByteBlock();//内存池实现，可以直接new byte[].
         byteBlock.Write((byte)0);
         byteBlock.Write((byte)0);
         byteBlock.Write(data);

@@ -29,14 +29,12 @@ namespace NamedPipeServiceConsoleApp
                     list.Add(new NamedPipeListenOption()
                     {
                         Adapter = () => new NormalDataHandlingAdapter(),
-                        BufferLength = 1024 * 64,
                         Name = "TouchSocketPipe2"//管道名称
                     });
 
                     list.Add(new NamedPipeListenOption()
                     {
                         Adapter = () => new NormalDataHandlingAdapter(),
-                        BufferLength = 1024 * 64,
                         Name = "TouchSocketPipe3"//管道名称
                     });
                 })

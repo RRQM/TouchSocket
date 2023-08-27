@@ -502,7 +502,6 @@ var clientFactory = new TcpDmtpClientFactory()
         return new TouchSocketConfig()
         .SetRemoteIPHost("127.0.0.1:7789")
         .SetVerifyToken("File")
-        .SetBufferLength(1024 * 1024)
         .ConfigurePlugins(a =>
         {
             a.UseDmtpFileTransfer();
@@ -512,7 +511,6 @@ var clientFactory = new TcpDmtpClientFactory()
 clientFactory.MainConfig//配置主通信
              .SetRemoteIPHost("127.0.0.1:7789")
              .SetVerifyToken("File")
-             .SetBufferLength(1024 * 1024)
              .ConfigurePlugins(a =>
              {
                  a.UseDmtpFileTransfer();

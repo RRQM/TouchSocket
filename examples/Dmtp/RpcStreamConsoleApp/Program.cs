@@ -24,7 +24,6 @@ namespace RpcStreamConsoleApp
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetBufferLength(1024 * 1024)
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc();
@@ -39,7 +38,6 @@ namespace RpcStreamConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();

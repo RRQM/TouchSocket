@@ -7,7 +7,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket" Version="2.0.0-beta.154" />
+		<PackageReference Include="TouchSocket" Version="2.0.0-beta.155" />
 	</ItemGroup>
 	<!--<ItemGroup>
 	  <Reference Include="Newtonsoft.Json">

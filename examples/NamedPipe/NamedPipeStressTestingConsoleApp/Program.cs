@@ -60,7 +60,6 @@ namespace NamedPipeStressTestingConsoleApp
             };
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetPipeName("TouchSocketPipe")//设置命名管道名称
-                .SetBufferLength(1024*1024)
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）

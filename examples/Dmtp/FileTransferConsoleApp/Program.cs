@@ -602,7 +602,6 @@ namespace FileTransferConsoleApp
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetVerifyToken("File")
-                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -625,7 +624,6 @@ namespace FileTransferConsoleApp
 
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .SetBufferLength(1024 * 1024)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -634,7 +632,6 @@ namespace FileTransferConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseAutoBufferLength();
                        a.UseDmtpFileTransfer()//必须添加文件传输插件
                        //.SetRootPath("C:\\新建文件夹")//设置RootPath
                        .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
@@ -667,7 +664,6 @@ namespace FileTransferConsoleApp
                     return new TouchSocketConfig()
                     .SetRemoteIPHost("127.0.0.1:7789")
                     .SetVerifyToken("File")
-                    .SetBufferLength(1024 * 1024)
                     .ConfigurePlugins(a =>
                     {
                         a.UseDmtpFileTransfer();
@@ -677,7 +673,6 @@ namespace FileTransferConsoleApp
             clientFactory.MainConfig//配置主通信
                          .SetRemoteIPHost("127.0.0.1:7789")
                          .SetVerifyToken("File")
-                         .SetBufferLength(1024 * 1024)
                          .ConfigurePlugins(a =>
                          {
                              a.UseDmtpFileTransfer();

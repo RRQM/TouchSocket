@@ -36,14 +36,6 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 <summary>可配置项</summary>
 <div>
 
-#### SetBufferLength
-
-发送、接收缓存容量（单位：byte），默认1024×64。设置建议：
-
-1. 如果数据包较小，建议10k左右的值。更加节约内存。
-2. 如果数据包较大，例如文件传输等，建议64k，甚至更大的值。
-3. 该值虽然无上限，但是一般不要超过1Mb，不然不仅没意义，还很浪费
-
 #### SetMaxPackageSize
 
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 

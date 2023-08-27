@@ -123,7 +123,6 @@ namespace ScreenUdpSender
                 this.udpSession.Setup(
                 new TouchSocketConfig()
                 .SetBindIPHost(new IPHost(7789))
-                .SetBufferLength(1024 * 64)
                 .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; })
                 ).Start();
                 this.m_thread = new Thread(this.Tick);
