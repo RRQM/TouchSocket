@@ -370,19 +370,19 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisco
         this.m_logger = logger;
     }
 
-    async Task INamedPipeConnectedPlugin<INamedPipeClientBase>.OnNamedPipeConnected(INamedPipeClientBase client, ConnectedEventArgs e)
+    public async Task OnNamedPipeConnected(INamedPipeClientBase client, ConnectedEventArgs e)
     {
         m_logger.Info("Connected");
         await e.InvokeNext();
     }
 
-    async Task INamedPipeDisconnectedPlugin<INamedPipeClientBase>.OnNamedPipeDisconnected(INamedPipeClientBase client, DisconnectEventArgs e)
+    public async Task OnNamedPipeDisconnected(INamedPipeClientBase client, DisconnectEventArgs e)
     {
         m_logger.Info("Disconnected");
         await e.InvokeNext();
     }
 
-    async Task INamedPipeReceivedPlugin<INamedPipeClientBase>.OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
+    public async Task OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
     {
         m_logger.Info(e.ByteBlock.ToString());
         client.Send(e.ByteBlock);
@@ -437,19 +437,19 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisco
         this.m_logger = logger;
     }
 
-    async Task INamedPipeConnectedPlugin<INamedPipeClientBase>.OnNamedPipeConnected(INamedPipeClientBase client, ConnectedEventArgs e)
+    public async Task OnNamedPipeConnected(INamedPipeClientBase client, ConnectedEventArgs e)
     {
         m_logger.Info("Connected");
         await e.InvokeNext();
     }
 
-    async Task INamedPipeDisconnectedPlugin<INamedPipeClientBase>.OnNamedPipeDisconnected(INamedPipeClientBase client, DisconnectEventArgs e)
+    public async Task OnNamedPipeDisconnected(INamedPipeClientBase client, DisconnectEventArgs e)
     {
         m_logger.Info("Disconnected");
         await e.InvokeNext();
     }
 
-    async Task INamedPipeReceivedPlugin<INamedPipeClientBase>.OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
+     public async Task OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
     {
         m_logger.Info(e.ByteBlock.ToString());
         client.Send(e.ByteBlock);

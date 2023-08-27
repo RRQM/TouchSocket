@@ -75,63 +75,69 @@ public interface ISayPlugin : IPlugin
 #### 5.2 实现插件接口
 
 ```csharp 
-public class SayHelloPlugin : PluginBase, ISayPlugin
-{
-    public SayHelloPlugin()
-    {
-        Order = 0;//插件的添加顺序，该值越大，越靠前执行。默认都是0
-    }
-    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
-    {
-        Console.WriteLine($"{this.GetType().Name}------Enter");
-        if (e.Words == "hello")
-        {
-            Console.WriteLine($"{this.GetType().Name}------Say");
-            //当满足的时候输出，且不在调用下一个插件。
+ public class SayHelloPlugin : PluginBase, ISayPlugin
+ {
+     public SayHelloPlugin()
+     {
+         Order = 0;//插件的添加顺序，该值越大，越靠前执行。默认都是0
+     }
+     public async Task Say(object sender, MyPluginEventArgs e)
+     {
+         Console.WriteLine($"{this.GetType().Name}------Enter");
+         if (e.Words == "hello")
+         {
+             Console.WriteLine($"{this.GetType().Name}------Say");
+             //当满足的时候输出，且不在调用下一个插件。
 
-            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-            e.Handled = true;
-            return;
-        }
-        await e.InvokeNext();
-        Console.WriteLine($"{this.GetType().Name}------Leave");
-    }
-}
+             //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+             e.Handled = true;
+             return;
+         }
+         await e.InvokeNext();
+         Console.WriteLine($"{this.GetType().Name}------Leave");
+     }
+ }
 
-public class SayHiPlugin : PluginBase, ISayPlugin
-{
-    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
-    {
-        Console.WriteLine($"{this.GetType().Name}------Enter");
-        if (e.Words == "hi")
-        {
-            Console.WriteLine($"{this.GetType().Name}------Say");
-            //当满足的时候输出，且不在调用下一个插件。
+ public class SayHiPlugin : PluginBase, ISayPlugin
+ {
+     public async Task Say(object sender, MyPluginEventArgs e)
+     {
+         Console.WriteLine($"{this.GetType().Name}------Enter");
+         if (e.Words == "hi")
+         {
+             Console.WriteLine($"{this.GetType().Name}------Say");
+             //当满足的时候输出，且不在调用下一个插件。
 
-            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
-            e.Handled = true;
-            return;
-        }
+             //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+             e.Handled = true;
+             return;
+         }
 
-        await e.InvokeNext();
-        Console.WriteLine($"{this.GetType().Name}------Leave");
-    }
-}
-public class LastSayPlugin : PluginBase, ISayPlugin
-{
-    async Task ISayPlugin.Say(object sender, MyPluginEventArgs e)
-    {
-        Console.WriteLine($"{this.GetType().Name}------Enter");
-        Console.WriteLine($"您输入的{e.Words}似乎不被任何插件处理");
-        await e.InvokeNext();
-        Console.WriteLine($"{this.GetType().Name}------Leave");
-    }
-}
+         await e.InvokeNext();
+         Console.WriteLine($"{this.GetType().Name}------Leave");
+     }
+ }
+ public class LastSayPlugin : PluginBase, ISayPlugin
+ {
+     public async Task Say(object sender, MyPluginEventArgs e)
+     {
+         Console.WriteLine($"{this.GetType().Name}------Enter");
+         Console.WriteLine($"您输入的{e.Words}似乎不被任何插件处理");
+         await e.InvokeNext();
+         Console.WriteLine($"{this.GetType().Name}------Leave");
+     }
+ }
 ```
 
 :::tip 提示
 
 实现的插件，可以继承`PluginBase`，然后实现所需的插件接口，这样能简化实现过程。但是如果该类型已经拥有基类，则直接实现所需插件接口的全部内容即可。
+
+:::  
+
+:::caution 注意事项
+
+插件实现的方法，一般建议是常规实现，如果是显式接口实现，则**可能**在net framework架构上不可用。
 
 :::  
 
@@ -153,9 +159,10 @@ pluginsManager.Add(nameof(ISayPlugin.Say), () =>
     Console.WriteLine("在Action1中获得");
 });
 
-pluginsManager.Add(nameof(ISayPlugin.Say), (MyPluginEventArgs e) =>
+pluginsManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
 {
     Console.WriteLine("在Action2中获得");
+    await e.InvokeNext();
 });
 
 while (true)
@@ -167,6 +174,12 @@ while (true)
     });
 }
 ```
+
+:::tip 提示
+
+使用委托订阅插件时，如果订阅时，不包含`PluginEventArgs`，即不用显式`e.InvokeNext`。如果包含，则需要显式`e.InvokeNext`。
+
+:::  
 
 #### 5.4 执行结果
 

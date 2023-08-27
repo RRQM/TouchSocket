@@ -93,7 +93,7 @@ DefaultHttpServicePlugin插件最好添加在插件中，如果没有添加的�
 ```csharp
 internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 {
-    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/success"))
         {
@@ -114,7 +114,7 @@ internal class MyHttpPlug1 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 ```csharp
 internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 {
-    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/file"))
         {
@@ -145,7 +145,7 @@ internal class MyHttpPlug2 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 ```csharp
 internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 {
-    async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/html"))
         {
@@ -184,7 +184,7 @@ internal class MyHttpPlug3 : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 ```csharp
 internal class MyHttpPlug4 : PluginBase, IHttpPostPlugin<IHttpSocketClient>
 {
-    async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/uploadfile"))
         {

@@ -75,7 +75,7 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         public int Max { get; }
 
-        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
+        public Task OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
             if (client.IsClient)
             {
@@ -95,7 +95,7 @@ namespace LimitNumberOfConnectionsConsoleApp
             return e.InvokeNext();
         }
 
-        Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        public Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (this.m_ipToCount.TryGetValue(client.IP, out var count))
             {

@@ -208,7 +208,7 @@ namespace HeartbeatConsoleApp
         }
 
 
-        async Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+        public async Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {
             if (client is ISocketClient)
             {
@@ -227,7 +227,7 @@ namespace HeartbeatConsoleApp
             await e.InvokeNext();
         }
 
-        async Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
             {
