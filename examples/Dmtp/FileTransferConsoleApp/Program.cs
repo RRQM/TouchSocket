@@ -711,7 +711,14 @@ namespace FileTransferConsoleApp
         public async Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
-            this.m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
+            if (e.TransferType.IsPull())
+            {
+                this.m_logger.Info($"结束Pull文件，类型={e.TransferType}，文件名={e.ResourcePath}，结果={e.Result}");
+            }
+            else
+            {
+                this.m_logger.Info($"结束Push文件，类型={e.TransferType}，文件名={e.ResourcePath}，结果={e.Result}");
+            }
             await e.InvokeNext();
         }
 
@@ -733,7 +740,15 @@ namespace FileTransferConsoleApp
             }
             e.IsPermitOperation = true;//每次传输都需要设置true，表示允许传输
             //有可能是上传，也有可能是下载
-            this.m_logger.Info($"请求传输文件，请求类型={e.TransferType}，请求文件名={e.ResourcePath}");
+
+            if (e.TransferType.IsPull())
+            {
+                this.m_logger.Info($"请求Pull文件，类型={e.TransferType}，文件名={e.ResourcePath}");
+            }
+            else
+            {
+                this.m_logger.Info($"请求Push文件，类型={e.TransferType}，文件名={e.ResourcePath}");
+            }
             await e.InvokeNext();
         }
 
