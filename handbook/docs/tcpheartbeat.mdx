@@ -172,7 +172,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
     }
 
 
-    async Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+    public async Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
     {
         if (client is ISocketClient)
         {
@@ -191,7 +191,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
         await e.InvokeNext();
     }
 
-    async Task ITcpDisconnectedPlugin<ITcpClientBase>.OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+    public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
     {
         if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
         {
@@ -202,7 +202,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
         await e.InvokeNext();
     }
 
-    async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         if (e.RequestInfo is MyRequestInfo myRequest)
         {
