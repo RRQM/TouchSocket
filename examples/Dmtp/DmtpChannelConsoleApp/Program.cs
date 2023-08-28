@@ -12,7 +12,7 @@ namespace DmtpChannelConsoleApp
             var client = GetTcpDmtpClient();
 
             var count = 1024 * 20;//测试20Gb数据
-
+            
             using (var channel = client.CreateChannel())
             {
                 ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
@@ -25,7 +25,13 @@ namespace DmtpChannelConsoleApp
                 ConsoleLogger.Default.Info("通道写入结束");
             }
 
-            Console.ReadKey();
+            while (true)
+            {
+                BytePool.Default.Clear();
+                GC.Collect();
+                Console.ReadKey();
+            }
+            
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()

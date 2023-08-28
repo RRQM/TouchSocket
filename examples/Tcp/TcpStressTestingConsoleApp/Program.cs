@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Channels;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -6,46 +7,102 @@ namespace TcpStressTestingConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        public const int Count = 10;
+        public const int DataLength = 2000;
+
+        private static bool m_start = false;
+
+        static async Task Main(string[] args)
         {
+            m_channel = Channel.CreateUnbounded<ByteBlock>(new UnboundedChannelOptions()
+            {
+                SingleReader = false,
+                SingleWriter = false,
+            });
+
+
+
             //BytePool.SetDefault(new BytePool(1024*1024,100));
             Console.WriteLine($"当前内存池容量：{BytePool.Default.Capacity / (1048576.0):0.00}Mb");
             var service = GetTcpService();
 
-            //for (int i = 0; i < 10; i++)
-            //{
-            //    ProcessStartInfo info = new ProcessStartInfo()
-            //    {
-            //        UseShellExecute = false,
-            //        FileName = Path.GetFullPath("TcpStressTestingClientConsoleApp.exe")
-            //    };
-            //    Process.Start(info);
-            //}
+            for (int i = 0; i < 5; i++)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (await m_channel.Reader.WaitToReadAsync())
+                        {
+                            if (m_channel.Reader.TryRead(out var byteBlock))
+                            {
+                                foreach (var id in service.GetIds())
+                                {
+                                    if (service.TryGetSocketClient(id, out var socketClient))
+                                    {
+                                        try
+                                        {
+                                            socketClient.Send(byteBlock);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            ConsoleLogger.Default.Error(ex.Message);
+                                        }
+                                    }
+                                }
 
-            Console.ReadKey();
+                                byteBlock.SetHolding(false);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                    ConsoleLogger.Default.Info("群发线程退出");
+                });
+            }
+
+
+            Console.WriteLine($"即将测试1000个客户端，每个客户端广播{Count}条数据");
+            List<Task> tasks = new List<Task>();
+            for (int i = 0; i < 10; i++)
+            {
+                tasks.Add(RunGroup(100));
+            }
+
+            await Task.Delay(1000);//等一下，确定全都连接
+
+            Stopwatch sw = Stopwatch.StartNew();
+            m_start = true;
+            await Task.WhenAll(tasks);
+            sw.Stop();
+            Console.WriteLine($"测试结束，耗时：{sw.Elapsed}");
+
+            while (true)
+            {
+                Console.WriteLine($"当前内存池长度：{BytePool.Default.GetPoolSize()}");
+                BytePool.Default.Clear();
+                GC.Collect();
+                Console.ReadKey();
+            }
+
         }
 
-
+        static Channel<ByteBlock> m_channel;
 
         static TcpService GetTcpService()
         {
             TcpService service = new TcpService();
             service.Received = (client, byteBlock, requestInfo) =>
             {
-                ////var bytes = byteBlock.ToArray();
-                //foreach (var id in client.GetOtherIds())
-                //{
-                //    if (service.TryGetSocketClient(id, out var socketClient))
-                //    {
-                //        socketClient.Send(byteBlock);
-                //    }
-                //}
-
-                client.Send(byteBlock);
+                byteBlock.SetHolding(true);
+                m_channel.Writer.WriteAsync(byteBlock);
+                //client.Send(byteBlock);
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
-                .UseDelaySender()
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -53,13 +110,82 @@ namespace TcpStressTestingConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    //a.UseAutoBufferLength()
-                    //.SetMin(1024);
-                    //a.Add();//此处可以添加插件
                 }))
                 .Start();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }
+
+        static async Task RunGroup(int count)
+        {
+            await await Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    var bytes = new byte[DataLength];
+                    List<TcpClient> clients = new List<TcpClient>();
+                    for (int i = 0; i < count; i++)
+                    {
+                        var client = GetTcpClient();
+                        clients.Add(client);
+                    }
+
+                    while (!m_start)
+                    {
+                        await Task.Delay(100);
+                    }
+                    for (int i = 0; i < Count; i++)
+                    {
+                        foreach (var item in clients)
+                        {
+                            try
+                            {
+                                await item.SendAsync(bytes);
+                                await Task.Delay(10);
+                            }
+                            catch (Exception ex)
+                            {
+                                ConsoleLogger.Default.Error(ex.Message);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ConsoleLogger.Default.Error(ex.Message);
+                }
+                finally
+                {
+                    ConsoleLogger.Default.Info("退出");
+                }
+            }, TaskCreationOptions.LongRunning);
+
+        }
+
+        static TcpClient GetTcpClient()
+        {
+            TcpClient tcpClient = new TcpClient();
+            tcpClient.Received = (client, byteBlock, requestInfo) =>
+            {
+                //客户端接收
+            };
+
+            //载入配置
+            tcpClient.Setup(new TouchSocketConfig()
+                .SetRemoteIPHost("127.0.0.1:7789")
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();//添加一个日志注入
+                })
+                .ConfigurePlugins(a =>
+                {
+                })
+                );
+
+            tcpClient.Connect(1000 * 30);//调用连接，当连接不成功时，会抛出异常。
+            //tcpClient.Logger.Info("客户端成功连接");
+            return tcpClient;
+        }
+
     }
 }
