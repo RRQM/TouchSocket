@@ -19,13 +19,15 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 - 简单易用。
 - IOCP多线程。
 - 内存池支持
-- 高性能（实测服务器单客户端单线程，每秒可接收200w条8字节的信息，接收数据流量可达2.5GB/s）。
+- 高性能（实测服务器单客户端单线程，每秒可接收200w条8字节的信息，接收数据流量可达3GB/s）。
 - **多地址监听**（可以一次性监听多个IP及端口）
 - 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
 - 超简单的同步发送、异步发送、接收等操作。
 - 基于委托、[插件](../docs/pluginsmanager.mdx)驱动，让每一步都能执行AOP。
 
 ### 2.1 吞吐量性能测试
+
+如下图所示，使用最简单数据接收，不做任何处理。数据吞吐量可达3Gb。 [测试Demo示例](https://gitee.com/RRQM_Home/TouchSocket/tree/master/performancetest/Tcp/TcpFlowStressTestingConsoleApp)
 
 <img src={require('../static/img/docs/tcpservice-1.gif').default} />
 
