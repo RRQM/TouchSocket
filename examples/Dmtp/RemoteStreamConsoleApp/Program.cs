@@ -22,13 +22,29 @@ namespace RemoteStreamConsoleApp
 
             var client = GetTcpDmtpClient();
 
+            //元数据可以传递一些字符串数据
             var metadata = new Metadata();
             metadata.Add("tag", "tag1");
 
             var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(metadata);
 
             client.Logger.Info("已经成功载入流，请输入任意字符");
+
+            //可以持续写入流，但在此处只写入了一次
             remoteStream.Write(Encoding.UTF8.GetBytes(Console.ReadLine()));
+
+            //可以使用下列代码完成持续读流
+            //while (true)
+            //{
+            //    byte[] buffer = new byte[1024*64];
+            //    int r = remoteStream.Read(buffer);
+            //    if (r==0)
+            //    {
+            //        break;
+            //    }
+            //}
+
+            //使用完在此处直接释放
             //remoteStream.Close();
             remoteStream.Dispose();
 
@@ -87,6 +103,7 @@ namespace RemoteStreamConsoleApp
 
                 client.Logger.Info("开始载入流");
                 //当请求方请求映射流的时候，会触发此方法。
+                //此处加载的是一个内存流，实际上只要是Stream，都可以，例如：FileStream
                 using (var stream = new MemoryStream())
                 {
                     await e.WaitingLoadStreamAsync(stream, TimeSpan.FromSeconds(60));
