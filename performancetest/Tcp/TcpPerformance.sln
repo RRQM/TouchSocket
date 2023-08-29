@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpStressTestingConsoleApp"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpFlowStressTestingConsoleApp", "TcpFlowStressTestingConsoleApp\TcpFlowStressTestingConsoleApp.csproj", "{77D2FA9E-E523-4419-9CD5-A6153A985F07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpConnectStressTestingConsoleApp", "TcpConnectStressTestingConsoleApp\TcpConnectStressTestingConsoleApp.csproj", "{43A99AD1-20E8-41F5-AB01-BD0688EF417A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{77D2FA9E-E523-4419-9CD5-A6153A985F07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77D2FA9E-E523-4419-9CD5-A6153A985F07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77D2FA9E-E523-4419-9CD5-A6153A985F07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43A99AD1-20E8-41F5-AB01-BD0688EF417A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43A99AD1-20E8-41F5-AB01-BD0688EF417A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43A99AD1-20E8-41F5-AB01-BD0688EF417A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43A99AD1-20E8-41F5-AB01-BD0688EF417A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
