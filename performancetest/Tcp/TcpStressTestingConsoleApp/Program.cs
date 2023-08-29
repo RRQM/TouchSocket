@@ -26,7 +26,7 @@ namespace TcpStressTestingConsoleApp
             Console.WriteLine($"当前内存池容量：{BytePool.Default.Capacity / (1048576.0):0.00}Mb");
             var service = GetTcpService();
 
-            for (int i = 0; i < 5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 _ = Task.Run(async () =>
                 {
@@ -66,15 +66,15 @@ namespace TcpStressTestingConsoleApp
 
 
             Console.WriteLine($"即将测试1000个客户端，每个客户端广播{Count}条数据");
-            List<Task> tasks = new List<Task>();
-            for (int i = 0; i < 10; i++)
+            var tasks = new List<Task>();
+            for (var i = 0; i < 10; i++)
             {
                 tasks.Add(RunGroup(100));
             }
 
             await Task.Delay(1000);//等一下，确定全都连接
 
-            Stopwatch sw = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
             m_start = true;
             await Task.WhenAll(tasks);
             sw.Stop();
@@ -94,7 +94,7 @@ namespace TcpStressTestingConsoleApp
 
         static TcpService GetTcpService()
         {
-            TcpService service = new TcpService();
+            var service = new TcpService();
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 byteBlock.SetHolding(true);
@@ -123,8 +123,8 @@ namespace TcpStressTestingConsoleApp
                 try
                 {
                     var bytes = new byte[DataLength];
-                    List<TcpClient> clients = new List<TcpClient>();
-                    for (int i = 0; i < count; i++)
+                    var clients = new List<TcpClient>();
+                    for (var i = 0; i < count; i++)
                     {
                         var client = GetTcpClient();
                         clients.Add(client);
@@ -134,7 +134,7 @@ namespace TcpStressTestingConsoleApp
                     {
                         await Task.Delay(100);
                     }
-                    for (int i = 0; i < Count; i++)
+                    for (var i = 0; i < Count; i++)
                     {
                         foreach (var item in clients)
                         {
@@ -164,7 +164,7 @@ namespace TcpStressTestingConsoleApp
 
         static TcpClient GetTcpClient()
         {
-            TcpClient tcpClient = new TcpClient();
+            var tcpClient = new TcpClient();
             tcpClient.Received = (client, byteBlock, requestInfo) =>
             {
                 //客户端接收
