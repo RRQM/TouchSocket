@@ -31,7 +31,12 @@ namespace RemoteStreamConsoleApp
             remoteStream.Write(Encoding.UTF8.GetBytes(Console.ReadLine()));
             //remoteStream.Close();
             remoteStream.Dispose();
-            Console.ReadKey();
+
+            while (true)
+            {
+                Console.ReadKey();
+            }
+            
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()
