@@ -1,12 +1,7 @@
 ﻿using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace RpcPerformanceConsoleApp
@@ -40,9 +35,9 @@ namespace RpcPerformanceConsoleApp
 
             var rs = client.Invoke<Int32>("Test/Sum", new { a = 10, b = 20 });//先试调一下，保证已经建立了完整的连接
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     var rs = client.Invoke<Int32>("Test/Sum", new { a = i, b = i });
                     if (rs != i + i)
@@ -70,9 +65,9 @@ namespace RpcPerformanceConsoleApp
 
             var rs = client.Invoke<byte[]>("Test/GetBytes", new { a = 10 });//先试调一下，保证已经建立了完整的连接
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 1; i < count; i++)
+                for (var i = 1; i < count; i++)
                 {
                     var rs = client.Invoke<byte[]>("Test/GetBytes", new { a = i });//测试10k数据
                     if (rs.Length != i)
@@ -99,9 +94,9 @@ namespace RpcPerformanceConsoleApp
 
 
             var rs = client.Invoke<string>("Test/GetBigString");//先试调一下，保证已经建立了完整的连接
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     var rs = client.Invoke<string>("Test/GetBigString");
                     if (i % 1000 == 0)

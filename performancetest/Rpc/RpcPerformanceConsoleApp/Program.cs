@@ -6,14 +6,14 @@ namespace RpcPerformanceConsoleApp
     {
         static void Main(string[] args)
         {
-            ConsoleAction consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
+            var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
             consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
 
             BeetleXRpc.StartServer();
             NewLifeRpc.StartServer();
             TouchSocketRpc.StartServer();
 
-            int count = 1000000;
+            var count = 100000;
 
             consoleAction.Add("1.1", "BeetleXRpc测试Sum", () => BeetleXRpc.StartSumClient(count));
             consoleAction.Add("1.2", "BeetleXRpc测试GetBytes", () => BeetleXRpc.StartGetBytesClient(count));

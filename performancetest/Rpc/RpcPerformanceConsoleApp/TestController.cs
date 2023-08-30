@@ -37,8 +37,8 @@ namespace RpcPerformanceConsoleApp
         [DmtpRpc(true)]
         public Task<string> GetBigString()
         {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < 10; i++)
+            var stringBuilder = new StringBuilder();
+            for (var i = 0; i < 10; i++)
             {
                 stringBuilder.Append("RRQM");
             }
@@ -61,8 +61,8 @@ namespace RpcPerformanceConsoleApp
         [DmtpRpc(true)]
         public string GetBigString()
         {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < 10; i++)
+            var stringBuilder = new StringBuilder();
+            for (var i = 0; i < 10; i++)
             {
                 stringBuilder.Append("RRQM");
             }
