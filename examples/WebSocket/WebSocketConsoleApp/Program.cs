@@ -312,15 +312,19 @@ namespace WebSocketConsoleApp
             }
         }
 
-        class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+        class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSocketClient>
         {
-            public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+            public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
             {
-                if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
+                if (e.Context.Request.IsGet())
                 {
-                    var result = client.SwitchProtocolToWebSocket(e.Context);
-                    return;
+                    if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
+                    {
+                        var result = client.SwitchProtocolToWebSocket(e.Context);
+                        return;
+                    }
                 }
+
                 await e.InvokeNext();
             }
         }
