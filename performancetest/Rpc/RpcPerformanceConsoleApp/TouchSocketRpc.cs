@@ -1,5 +1,4 @@
-﻿using System.IO;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
@@ -21,7 +20,7 @@ namespace RpcPerformanceConsoleApp
                    .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRpc()
-                       .ConfigureRpcStore(store => 
+                       .ConfigureRpcStore(store =>
                        {
                            store.RegisterServer<TestController>();
                        });
@@ -36,7 +35,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartSumClient(int count)
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .ConfigurePlugins(a =>
                 {
@@ -46,10 +45,10 @@ namespace RpcPerformanceConsoleApp
                 .SetVerifyToken("TouchRpc"));
             client.Connect();
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-               var actor= client.GetDmtpRpcActor();
-                for (int i = 0; i < count; i++)
+                var actor = client.GetDmtpRpcActor();
+                for (var i = 0; i < count; i++)
                 {
                     var rs = actor.InvokeT<Int32>("Sum", InvokeOption.WaitInvoke, i, i);
                     if (rs != i + i)
@@ -67,7 +66,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartGetBytesClient(int count)
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .ConfigurePlugins(a =>
                 {
@@ -77,10 +76,10 @@ namespace RpcPerformanceConsoleApp
                 .SetVerifyToken("TouchRpc"));
             client.Connect();
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
                 var actor = client.GetDmtpRpcActor();
-                for (int i = 1; i < count; i++)
+                for (var i = 1; i < count; i++)
                 {
                     var rs = actor.InvokeT<byte[]>("GetBytes", InvokeOption.WaitInvoke, i);//测试10k数据
                     if (rs.Length != i)
@@ -98,7 +97,7 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartBigStringClient(int count)
         {
-            TcpDmtpClient client = new TcpDmtpClient();
+            var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .ConfigurePlugins(a =>
                 {
@@ -109,10 +108,10 @@ namespace RpcPerformanceConsoleApp
             client.Connect();
 
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
                 var actor = client.GetDmtpRpcActor();
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     var rs = actor.InvokeT<string>("GetBigString", InvokeOption.WaitInvoke);
                     if (i % 1000 == 0)

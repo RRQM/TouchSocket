@@ -2,11 +2,6 @@
 using BeetleX.XRPC.Hosting;
 using BeetleX.XRPC.Packets;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace RpcPerformanceConsoleApp
@@ -31,16 +26,16 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartSumClient(int count)
         {
-            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
+            var client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
-            ITestTaskController testController = client.Create<ITestTaskController>();
+            var testController = client.Create<ITestTaskController>();
 
             var rs = testController.Sum(10, 20);//试调一次，保持在线
             rs.Wait();
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     var rs = testController.Sum(i, i);
                     rs.Wait();
@@ -60,16 +55,16 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartGetBytesClient(int count)
         {
-            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
+            var client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
-            ITestTaskController testController = client.Create<ITestTaskController>();
+            var testController = client.Create<ITestTaskController>();
 
             var rs = testController.GetBytes(10);//试调一次，保持在线
             rs.Wait();
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 1; i < count; i++)
+                for (var i = 1; i < count; i++)
                 {
                     var rs = testController.GetBytes(i);//测试10k数据
                     rs.Wait();
@@ -90,13 +85,13 @@ namespace RpcPerformanceConsoleApp
 
         public static void StartBigStringClient(int count)
         {
-            XRPCClient client = new XRPCClient("127.0.0.1", 9090);
+            var client = new XRPCClient("127.0.0.1", 9090);
             client.Options.ParameterFormater = new MsgPacket();//default messagepack
-            ITestTaskController testController = client.Create<ITestTaskController>();
+            var testController = client.Create<ITestTaskController>();
 
-            TimeSpan timeSpan = TimeMeasurer.Run(() =>
+            var timeSpan = TimeMeasurer.Run(() =>
             {
-                for (int i = 0; i < count; i++)
+                for (var i = 0; i < count; i++)
                 {
                     var rs = testController.GetBigString();
 
