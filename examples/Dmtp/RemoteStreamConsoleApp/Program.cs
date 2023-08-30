@@ -68,6 +68,10 @@ namespace RemoteStreamConsoleApp
                .ConfigurePlugins(a =>
                {
                    a.UseDmtpRemoteStream();
+
+                   a.UseDmtpHeartbeat()//使用Dmtp心跳
+                   .SetTick(TimeSpan.FromSeconds(3))
+                   .SetMaxFailCount(3);
                }));
             client.Connect();
             return client;
