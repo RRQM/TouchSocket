@@ -390,7 +390,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public static string ToJson(this object item)
+        public static string ToJsonString(this object item)
         {
             if (NewtonsoftJsonFirst)
             {
@@ -410,7 +410,7 @@ namespace TouchSocket.Core
         /// <param name="json"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object FromJson(this string json, Type type)
+        public static object FromJsonString(this string json, Type type)
         {
             if (NewtonsoftJsonFirst)
             {
@@ -430,9 +430,9 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="json"></param>
         /// <returns></returns>
-        public static T FromJson<T>(this string json)
+        public static T FromJsonString<T>(this string json)
         {
-            return (T)FromJson(json, typeof(T));
+            return (T)FromJsonString(json, typeof(T));
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] JsonSerializeToBytes(object obj)
         {
-            return ToJson(obj).ToUTF8Bytes();
+            return ToJsonString(obj).ToUTF8Bytes();
         }
 
         /// <summary>
@@ -479,7 +479,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object JsonDeserializeFromBytes(byte[] datas, Type type)
         {
-            return FromJson(Encoding.UTF8.GetString(datas), type);
+            return FromJsonString(Encoding.UTF8.GetString(datas), type);
         }
 
         /// <summary>
@@ -490,7 +490,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T JsonDeserializeFromString<T>(string json)
         {
-            return FromJson<T>(json);
+            return FromJsonString<T>(json);
         }
 
         /// <summary>

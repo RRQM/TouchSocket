@@ -8,7 +8,7 @@ namespace TouchSocket.JsonRpc
     /// HttpJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPostPlugin
+    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
     {
         private string m_jsonRpcUrl = "/jsonrpc";
 
@@ -29,17 +29,19 @@ namespace TouchSocket.JsonRpc
             set => this.m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
-        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
+            if (e.Context.Request.Method == HttpMethod.Post)
             {
-                e.Handled = true;
-                this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
+                if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
+                {
+                    e.Handled = true;
+                    this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
+                    return;
+                }
             }
-            else
-            {
-                await e.InvokeNext();
-            }
+            await e.InvokeNext();
         }
 
         /// <summary>
@@ -79,7 +81,7 @@ namespace TouchSocket.JsonRpc
                     }
 
                     var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
-                    httpResponse.FromJson(jobject.ToJson());
+                    httpResponse.FromJson(jobject.ToJsonString());
                     httpResponse.Answer();
                 }
             }

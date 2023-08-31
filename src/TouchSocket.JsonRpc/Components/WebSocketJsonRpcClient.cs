@@ -32,7 +32,7 @@ namespace TouchSocket.JsonRpc
                 Params = parameters,
                 Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null
             };
-            this.SendWithWS(jsonRpcRequest.ToJson());
+            this.SendWithWS(jsonRpcRequest.ToJsonString());
             switch (invokeOption.FeedbackType)
             {
                 case FeedbackType.OnlySend:
@@ -68,7 +68,7 @@ namespace TouchSocket.JsonRpc
                             }
                             else
                             {
-                                return resultContext.Return.ToJson().FromJson(returnType);
+                                return resultContext.Return.ToJsonString().FromJsonString(returnType);
                             }
                         }
                     }
@@ -95,7 +95,7 @@ namespace TouchSocket.JsonRpc
             };
 
             jsonRpcRequest.Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null;
-            this.SendWithWS(jsonRpcRequest.ToJson());
+            this.SendWithWS(jsonRpcRequest.ToJsonString());
             switch (invokeOption.FeedbackType)
             {
                 case FeedbackType.OnlySend:
@@ -155,7 +155,7 @@ namespace TouchSocket.JsonRpc
             };
 
             jsonRpcRequest.Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null;
-            this.SendWithWS(jsonRpcRequest.ToJson());
+            this.SendWithWS(jsonRpcRequest.ToJsonString());
             switch (invokeOption.FeedbackType)
             {
                 case FeedbackType.OnlySend:
@@ -202,7 +202,7 @@ namespace TouchSocket.JsonRpc
                 Params = parameters,
                 Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null
             };
-            this.SendWithWS(jsonRpcRequest.ToJson());
+            this.SendWithWS(jsonRpcRequest.ToJsonString());
             switch (invokeOption.FeedbackType)
             {
                 case FeedbackType.OnlySend:
@@ -238,7 +238,7 @@ namespace TouchSocket.JsonRpc
                             }
                             else
                             {
-                                return resultContext.Return.ToJson().FromJson(returnType);
+                                return resultContext.Return.ToJsonString().FromJsonString(returnType);
                             }
                         }
                     }
@@ -265,7 +265,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (jsonString.Contains("error") || jsonString.Contains("result"))
                 {
-                    var responseContext = jsonString.FromJson<JsonResponseContext>();
+                    var responseContext = jsonString.FromJsonString<JsonResponseContext>();
                     if (responseContext != null && !responseContext.Id.IsNullOrEmpty())
                     {
                         var waitContext = new JsonRpcWaitResult

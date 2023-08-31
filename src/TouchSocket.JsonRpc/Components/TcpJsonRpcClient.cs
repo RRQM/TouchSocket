@@ -73,7 +73,7 @@ namespace TouchSocket.JsonRpc
                             }
                             else
                             {
-                                return resultContext.Return.ToJson().FromJson(returnType);
+                                return resultContext.Return.ToJsonString().FromJsonString(returnType);
                             }
                         }
                     }
@@ -264,7 +264,7 @@ namespace TouchSocket.JsonRpc
                             }
                             else
                             {
-                                return resultContext.Return.ToJson().FromJson(returnType);
+                                return resultContext.Return.ToJsonString().FromJsonString(returnType);
                             }
                         }
                     }
@@ -298,7 +298,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (jsonString.Contains("error") || jsonString.Contains("result"))
                 {
-                    var responseContext = jsonString.FromJson<JsonResponseContext>();
+                    var responseContext = jsonString.FromJsonString<JsonResponseContext>();
                     if (responseContext != null && !responseContext.Id.IsNullOrEmpty())
                     {
                         var waitContext = new JsonRpcWaitResult

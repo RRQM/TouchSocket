@@ -45,7 +45,8 @@ namespace TouchSocket.Dmtp.Redis
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
 
-        Task IDmtpHandshakedPlugin<IDmtpActorObject>.OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             var smtpRedisActor = new DmtpRedisActor(client.DmtpActor)
             {
@@ -59,7 +60,8 @@ namespace TouchSocket.Dmtp.Redis
             return e.InvokeNext();
         }
 
-        Task IDmtpReceivedPlugin<IDmtpActorObject>.OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpRedisActor() is DmtpRedisActor redisClient)
             {

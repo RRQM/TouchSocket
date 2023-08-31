@@ -172,13 +172,13 @@ namespace TouchSocket.Dmtp
                 this.m_allowRoute = true;
                 this.m_findDmtpActor = this.Container.Resolve<IDmtpRouteService>().FindDmtpActor;
             }
-            this.m_smtpActor = new DmtpActor(this.m_allowRoute)
+            this.m_smtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
-                OutputSend = DmtpActorSend,
-                OnRouting = OnDmtpActorRouting,
+                OutputSend = this.DmtpActorSend,
+                OnRouting = this.OnDmtpActorRouting,
                 OnHandshaking = this.OnDmtpActorHandshaking,
-                OnHandshaked = OnDmtpActorHandshaked,
-                OnClose = OnDmtpActorClose,
+                OnHandshaked = this.OnDmtpActorHandshaked,
+                OnClose = this.OnDmtpActorClose,
                 Logger = this.Logger,
                 Client = this,
                 OnFindDmtpActor = this.m_findDmtpActor,
@@ -213,11 +213,15 @@ namespace TouchSocket.Dmtp
 
         private void OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
         {
+            this.OnHandshaked(e);
+            if (e.Handled)
+            {
+                return;
+            }
             if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e))
             {
                 return;
             }
-            this.OnHandshaked(e);
         }
 
         private void OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)

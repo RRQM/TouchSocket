@@ -60,7 +60,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
-        Task ITcpConnectedPlugin<TClient>.OnTcpConnected(TClient client, ConnectedEventArgs e)
+        /// <inheritdoc/>
+        public Task OnTcpConnected(TClient client, ConnectedEventArgs e)
         {
             Task.Run(async () =>
             {
@@ -97,6 +98,7 @@ namespace TouchSocket.Sockets
 
             return e.InvokeNext();
         }
+
 
         /// <summary>
         /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，

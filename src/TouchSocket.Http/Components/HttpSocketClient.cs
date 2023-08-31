@@ -28,21 +28,14 @@ namespace TouchSocket.Http
             this.Protocol = Protocol.Http;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
         protected override void OnConnecting(ConnectingEventArgs e)
         {
             this.SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
             base.OnConnecting(e);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
         protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (requestInfo is HttpRequest request)
@@ -58,36 +51,12 @@ namespace TouchSocket.Http
         /// </summary>
         protected virtual void OnReceivedHttpRequest(HttpRequest request)
         {
-            var e = new HttpContextEventArgs(new HttpContext(request));
+            if (this.PluginsManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest))>0)
+            {
+                var e = new HttpContextEventArgs(new HttpContext(request));
 
-            switch (request.Method.ToString())
-            {
-                case "GET":
-                    {
-                        this.PluginsManager.Raise(nameof(IHttpGetPlugin.OnHttpGet), this, e);
-                        break;
-                    }
-                case "POST":
-                    {
-                        this.PluginsManager.Raise(nameof(IHttpPostPlugin.OnHttpPost), this, e);
-                        break;
-                    }
-                case "PUT":
-                    {
-                        this.PluginsManager.Raise(nameof(IHttpPutPlugin.OnHttpPut), this, e);
-                        break;
-                    }
-                case "DELETE":
-                    {
-                        this.PluginsManager.Raise(nameof(IHttpDeletePlugin.OnHttpDelete), this, e);
-                        break;
-                    }
+                this.PluginsManager.Raise(nameof(IHttpPlugin.OnHttpRequest), this, e);
             }
-            if (e.Handled)
-            {
-                return;
-            }
-            this.PluginsManager.Raise(nameof(IHttpPlugin.OnHttpRequest), this, e);
         }
     }
 }

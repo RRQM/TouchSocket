@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -490,5 +491,45 @@ namespace TouchSocket.Core
         }
 
         #endregion long
+
+        #region decimal
+
+        /// <summary>
+        /// 转换为指定端16字节
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public byte[] GetBytes(decimal value)
+        {
+            var bytes = DecimalConver.ToBytes(value);
+            if (!this.IsSameOfSet())
+            {
+                Array.Reverse(bytes);
+            }
+            return bytes;
+        }
+
+        /// <summary>
+        ///  转换为指定端模式的<see cref="decimal"/>数据。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public decimal ToDecimal(byte[] buffer, int offset)
+        {
+            var bytes = new byte[16];
+            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
+            if (this.IsSameOfSet())
+            {
+                return DecimalConver.FromBytes(bytes);
+            }
+            else
+            {
+                Array.Reverse(bytes);
+                return DecimalConver.FromBytes(bytes);
+            }
+        }
+
+        #endregion decimal
     }
 }

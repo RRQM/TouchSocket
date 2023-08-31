@@ -22,6 +22,7 @@ namespace TouchSocket.Core
     /// </summary>
     public abstract class AppConfigBase
     {
+        private static readonly Dictionary<Type, object> m_list = new Dictionary<Type, object>();
         private readonly string m_fullPath;
 
         /// <summary>
@@ -39,29 +40,41 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 保存配置
+        /// 获取默认配置。
         /// </summary>
-        /// <param name="overwrite"></param>
-        /// <param name="msg"></param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool Save(bool overwrite, out string msg)
+        public static T GetDefault<T>() where T : AppConfigBase, new()
         {
-            if (overwrite == false && File.Exists(this.m_fullPath))
+            var type = typeof(T);
+            if (m_list.TryGetValue(type, out var value))
             {
-                msg = null;
-                return true;
+                return (T)value;
             }
-            try
+            var _default = ((T)Activator.CreateInstance(typeof(T)));
+            _default.Load(out _);
+            m_list.Add(type, _default);
+            return _default;
+        }
+
+        /// <summary>
+        /// 获取默认配置，每次调用该方法时，都会重新加载配置。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetNewDefault<T>() where T : AppConfigBase, new()
+        {
+            var _default = ((T)Activator.CreateInstance(typeof(T)));
+            _default.Load(out _);
+            if (m_list.ContainsKey(_default.GetType()))
             {
-                File.WriteAllText(this.m_fullPath, this.ToJson());
-                msg = null;
-                return true;
+                m_list[_default.GetType()] = _default;
             }
-            catch (Exception ex)
+            else
             {
-                msg = ex.Message;
-                return false;
+                m_list.Add(_default.GetType(), _default);
             }
+            return _default;
         }
 
         /// <summary>
@@ -77,7 +90,7 @@ namespace TouchSocket.Core
                 {
                     this.Save(false, out _);
                 }
-                var obj = File.ReadAllText(this.m_fullPath).FromJson(this.GetType());
+                var obj = SerializeConvert.FromJsonString(File.ReadAllText(this.m_fullPath), this.GetType());
                 var ps = this.GetType().GetProperties();
 
                 foreach (var item in ps)
@@ -95,43 +108,29 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 获取默认配置。
+        /// 保存配置
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="overwrite"></param>
+        /// <param name="msg"></param>
         /// <returns></returns>
-        public static T GetDefault<T>() where T : AppConfigBase, new()
+        public bool Save(bool overwrite, out string msg)
         {
-            var type = typeof(T);
-            if (list.TryGetValue(type, out var value))
+            if (overwrite == false && File.Exists(this.m_fullPath))
             {
-                return (T)value;
+                msg = null;
+                return true;
             }
-            var _default = ((T)Activator.CreateInstance(typeof(T)));
-            _default.Load(out _);
-            list.Add(type, _default);
-            return _default;
-        }
-
-        private static readonly Dictionary<Type, object> list = new Dictionary<Type, object>();
-
-        /// <summary>
-        /// 获取默认配置，每次调用该方法时，都会重新加载配置。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T GetNewDefault<T>() where T : AppConfigBase, new()
-        {
-            var _default = ((T)Activator.CreateInstance(typeof(T)));
-            _default.Load(out _);
-            if (list.ContainsKey(_default.GetType()))
+            try
             {
-                list[_default.GetType()] = _default;
+                File.WriteAllText(this.m_fullPath, SerializeConvert.ToJsonString(this));
+                msg = null;
+                return true;
             }
-            else
+            catch (Exception ex)
             {
-                list.Add(_default.GetType(), _default);
+                msg = ex.Message;
+                return false;
             }
-            return _default;
         }
     }
 }

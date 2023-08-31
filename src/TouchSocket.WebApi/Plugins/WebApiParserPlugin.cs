@@ -24,12 +24,12 @@ namespace TouchSocket.WebApi
     /// WebApi解析器
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public class WebApiParserPlugin : PluginBase, IRpcParser, IHttpGetPlugin, IHttpPostPlugin
+    public class WebApiParserPlugin : PluginBase, IRpcParser
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        public WebApiParserPlugin(IContainer container)
+        public WebApiParserPlugin(IContainer container, IPluginsManager pluginsManager)
         {
             if (container.IsRegistered(typeof(RpcStore)))
             {
@@ -39,6 +39,13 @@ namespace TouchSocket.WebApi
             {
                 this.RpcStore = new RpcStore(container);
             }
+
+            if (pluginsManager is null)
+            {
+                throw new ArgumentNullException(nameof(pluginsManager));
+            }
+
+            pluginsManager.Add(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
 
             this.GetRouteMap = new ActionMap(true);
             this.PostRouteMap = new ActionMap(true);
@@ -67,7 +74,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         public RpcStore RpcStore { get; private set; }
 
-        async Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        private Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.GetRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
             {
@@ -127,12 +134,12 @@ namespace TouchSocket.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
+                    invokeResult = RpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
                 {
-                    return;
+                    return EasyTask.CompletedTask;
                 }
                 var httpResponse = e.Context.Response;
                 switch (invokeResult.Status)
@@ -174,13 +181,10 @@ namespace TouchSocket.WebApi
                     client.TryShutdown(SocketShutdown.Both);
                 }
             }
-            else
-            {
-                await e.InvokeNext();
-            }
+            return e.InvokeNext();
         }
 
-        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+        private Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.PostRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
             {
@@ -256,12 +260,12 @@ namespace TouchSocket.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
+                    invokeResult = RpcStore.Execute(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
                 {
-                    return;
+                    return EasyTask.CompletedTask;
                 }
                 var httpResponse = e.Context.Response;
                 switch (invokeResult.Status)
@@ -303,9 +307,25 @@ namespace TouchSocket.WebApi
                     client.TryShutdown(SocketShutdown.Both);
                 }
             }
+            return e.InvokeNext();
+        }
+
+        private Task OnHttpRequest(object sender, PluginEventArgs args)
+        {
+            var client = (IHttpSocketClient)sender;
+            var e = (HttpContextEventArgs)args;
+
+            if (e.Context.Request.Method == HttpMethod.Get)
+            {
+                return this.OnHttpGet(client, e);
+            }
+            else if (e.Context.Request.Method == HttpMethod.Post)
+            {
+                return this.OnHttpPost(client, e);
+            }
             else
             {
-                await e.InvokeNext();
+                return e.InvokeNext();
             }
         }
 

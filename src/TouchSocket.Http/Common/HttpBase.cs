@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -80,6 +81,63 @@ namespace TouchSocket.Http
             set
             {
                 this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 保持连接。
+        /// <para>
+        /// 一般的，当是http1.1时，如果没有显式的Connection: close，即返回true。当是http1.0时，如果没有显式的Connection: Keep-Alive，即返回false。
+        /// </para>
+        /// </summary>
+        public bool KeepAlive
+        {
+            get
+            {
+               var keepalive= this.Headers.Get(HttpHeaders.Connection);
+                if (this.ProtocolVersion == "1.0")
+                {
+                    if (keepalive.IsNullOrEmpty())
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+                else
+                {
+                    if (keepalive.IsNullOrEmpty())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+            set
+            {
+                if (this.ProtocolVersion == "1.0")
+                {
+                    if (value)
+                    {
+                        this.m_headers.Add(HttpHeaders.Connection, "Keep-Alive");
+                    }
+                    else
+                    {
+                        this.m_headers.Add(HttpHeaders.Connection, "close");
+                    }
+                }
+                else
+                {
+                    if (!value)
+                    {
+                        this.m_headers.Add(HttpHeaders.Connection, "close");
+                    }
+                }
             }
         }
 
@@ -227,9 +285,9 @@ namespace TouchSocket.Http
         /// </summary>
         protected abstract void LoadHeaderProterties();
 
-        private void GetRequestHeaders(IEnumerable<string> rows)
+        private void GetRequestHeaders(string[] rows)
         {
-            if (rows == null || rows.Count() <= 0)
+            if (rows == null || rows.Length <= 0)
             {
                 return;
             }

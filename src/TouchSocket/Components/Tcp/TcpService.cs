@@ -32,10 +32,7 @@ namespace TouchSocket.Sockets
         public TcpService()
         {
             this.m_socketClients = new SocketClientCollection();
-            this.m_getDefaultNewId = () =>
-            {
-                return Interlocked.Increment(ref this.m_nextId).ToString();
-            };
+            this.m_getDefaultNewId = GetDefaultNewId;
         }
 
         #region 变量
@@ -59,9 +56,6 @@ namespace TouchSocket.Sockets
 
         /// <inheritdoc/>
         public override IContainer Container => this.m_container;
-
-        /// <inheritdoc/>
-        public override Func<string> GetDefaultNewId => this.m_getDefaultNewId;
 
         /// <inheritdoc/>
         public override int MaxCount => this.m_maxCount;
@@ -219,10 +213,33 @@ namespace TouchSocket.Sockets
 
         #endregion 事件
 
+        private string GetDefaultNewId()
+        {
+            return Interlocked.Increment(ref this.m_nextId).ToString();
+        }
+
+
+        /// <summary>
+        /// 获取下一个新Id
+        /// </summary>
+        /// <returns></returns>
+        protected string GetNextNewId()
+        {
+            try
+            {
+                return this.m_getDefaultNewId.Invoke();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Exception(ex);
+            }
+            return this.GetDefaultNewId();
+        }
+
         /// <inheritdoc/>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
-        public override void AddListen(ListenOption option)
+        public override void AddListen(TcpListenOption option)
         {
             if (option is null)
             {
@@ -393,8 +410,8 @@ namespace TouchSocket.Sockets
             }
             try
             {
-                var optionList = new List<ListenOption>();
-                if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is Action<List<ListenOption>> action)
+                var optionList = new List<TcpListenOption>();
+                if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is Action<List<TcpListenOption>> action)
                 {
                     action.Invoke(optionList);
                 }
@@ -404,14 +421,13 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in iPHosts)
                     {
-                        var option = new ListenOption
+                        var option = new TcpListenOption
                         {
                             IpHost = item,
-                            BufferLength = this.BufferLength,
                             ServiceSslOption = this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) as ServiceSslOption,
                             ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
                             NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
-                            TcpAdapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
+                            Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
                             ReceiveType = this.Config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty)
                         };
                         option.Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty) ?? option.Backlog;
@@ -547,11 +563,6 @@ namespace TouchSocket.Sockets
                 this.m_getDefaultNewId = fun;
             }
             this.m_maxCount = config.GetValue(TouchSocketConfigExtension.MaxCountProperty);
-
-            if (config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) is int value)
-            {
-                this.SetBufferLength(value);
-            }
         }
 
         /// <summary>
@@ -575,7 +586,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void BeginListen(List<ListenOption> optionList)
+        private void BeginListen(List<TcpListenOption> optionList)
         {
             foreach (var item in optionList)
             {
@@ -635,6 +646,7 @@ namespace TouchSocket.Sockets
                     var socket = e.AcceptSocket;
                     if (this.SocketClients.Count < this.m_maxCount)
                     {
+                        //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                         Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                     }
                     else
@@ -660,6 +672,19 @@ namespace TouchSocket.Sockets
             }
         }
 
+        private SingleStreamDataHandlingAdapter GetAdapter(TcpNetworkMonitor monitor)
+        {
+            try
+            {
+                return monitor.Option.Adapter.Invoke();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Exception(ex);
+            }
+            return new NormalDataHandlingAdapter();
+        }
+
         private void OnClientSocketInit(object obj)
         {
             var tuple = (Tuple<Socket, TcpNetworkMonitor>)obj;
@@ -668,15 +693,13 @@ namespace TouchSocket.Sockets
 
             try
             {
-                if (monitor.Option.NoDelay!=null)
+                if (monitor.Option.NoDelay != null)
                 {
                     socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, monitor.Option.NoDelay);
                 }
-                socket.ReceiveBufferSize = monitor.Option.BufferLength;
-                socket.SendBufferSize = monitor.Option.BufferLength;
                 socket.SendTimeout = monitor.Option.SendTimeout;
 
-                var client = this.GetClientInstence(socket,monitor);
+                var client = this.GetClientInstence(socket, monitor);
                 client.InternalSetConfig(this.m_config);
                 client.InternalSetContainer(this.m_container);
                 client.InternalSetService(this);
@@ -686,13 +709,13 @@ namespace TouchSocket.Sockets
 
                 if (client.CanSetDataHandlingAdapter)
                 {
-                    client.SetDataHandlingAdapter(monitor.Option.TcpAdapter.Invoke());
+                    client.SetDataHandlingAdapter(this.GetAdapter(monitor));
                 }
                 client.InternalInitialized();
 
                 var args = new ConnectingEventArgs(socket)
                 {
-                    Id = this.GetDefaultNewId()
+                    Id = this.GetNextNewId()
                 };
                 client.InternalConnecting(args);//Connecting
                 if (args.IsPermitOperation)

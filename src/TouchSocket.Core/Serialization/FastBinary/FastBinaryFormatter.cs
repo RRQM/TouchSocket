@@ -13,6 +13,9 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Text;
 
 namespace TouchSocket.Core
@@ -25,6 +28,11 @@ namespace TouchSocket.Core
         static FastBinaryFormatter()
         {
             AddFastBinaryConverter<Version, VersionFastBinaryConverter>();
+            AddFastBinaryConverter<ByteBlock, ByteBlockFastBinaryConverter>();
+            AddFastBinaryConverter<MemoryStream, MemoryStreamFastBinaryConverter>();
+            AddFastBinaryConverter<Guid, GuidFastBinaryConverter>();
+            AddFastBinaryConverter<DataTable, DataTableFastBinaryConverter>();
+            AddFastBinaryConverter<DataSet, DataSetFastBinaryConverter>();
         }
         private static readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
 
@@ -123,14 +131,12 @@ namespace TouchSocket.Core
                 len += 4;
                 uint paramLen = 0;
 
-#pragma warning disable IDE0007 // 使用隐式类型
-                foreach (object item in param)
+                foreach (var item in param)
                 {
-                    len += SerializeObject(stream, DynamicMethodMemberAccessor.Default.GetValue(item,"Key"));
+                    len += SerializeObject(stream, DynamicMethodMemberAccessor.Default.GetValue(item, "Key"));
                     len += SerializeObject(stream, DynamicMethodMemberAccessor.Default.GetValue(item, "Value"));
                     paramLen++;
                 }
-#pragma warning restore IDE0007 // 使用隐式类型
                 var newPosition = stream.Pos;
                 stream.Pos = oldPosition;
                 stream.Write(TouchSocketBitConverter.Default.GetBytes(paramLen));
@@ -249,6 +255,11 @@ namespace TouchSocket.Core
                         case string value:
                             {
                                 data = Encoding.UTF8.GetBytes(value);
+                                break;
+                            }
+                        case decimal value:
+                            {
+                                data = TouchSocketBitConverter.Default.GetBytes(value);
                                 break;
                             }
                         case DateTime value:
@@ -434,7 +445,7 @@ namespace TouchSocket.Core
                 }
                 else if (type == TouchSocketCoreUtility.decimalType)
                 {
-                    obj = (TouchSocketBitConverter.Default.ToDouble(datas, offset));
+                    obj =(TouchSocketBitConverter.Default.ToDecimal(datas, offset));
                 }
                 else if (type == TouchSocketCoreUtility.charType)
                 {
@@ -454,11 +465,21 @@ namespace TouchSocket.Core
                     }
                     else
                     {
-                        obj = enumType == typeof(short)
-                            ? Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt16(datas, offset))
-                            : enumType == typeof(int)
-                                                    ? Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt32(datas, offset))
-                                                    : (dynamic)Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt64(datas, offset));
+                        if (enumType == typeof(short))
+                        {
+                            obj = Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt16(datas, offset));
+                        }
+                        else
+                        {
+                            if (enumType == typeof(int))
+                            {
+                                obj = Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt32(datas, offset));
+                            }
+                            else
+                            {
+                                obj = Enum.ToObject(type, TouchSocketBitConverter.Default.ToInt64(datas, offset));
+                            }
+                        }
                     }
                 }
                 else if (type == TouchSocketCoreUtility.bytesType)

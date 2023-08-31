@@ -23,7 +23,8 @@ namespace TouchSocket.Dmtp
     [PluginOption(Singleton = true, NotRegister = true)]
     public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
     {
-        Task IDmtpHandshakedPlugin<IDmtpActorObject>.OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             Task.Run(async () =>
             {

@@ -1928,7 +1928,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                     var res = locator.WriteFileSection(result);
                                     if (res.IsSuccess())
                                     {
-                                        fileOperator.AddFlow(fileSection.Length);
+                                        await fileOperator.AddFlowAsync(fileSection.Length);
                                         failed = 0;
                                         break;
                                     }
@@ -1962,7 +1962,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 var result1 = locator.TryFinished();
                 if (this.DmtpActor.IsHandshaked)
                 {
-                    this.FinishedFileResourceInfo(targetId, resourceInfo,fileOperator.Metadata,(int)fileOperator.Timeout.TotalMilliseconds,fileOperator.Token);
+                    this.FinishedFileResourceInfo(targetId, resourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
                 }
 
                 return result1.IsSuccess() ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
@@ -2035,7 +2035,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                             var result = this.PushFileSection(targetId, locator, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
                             if (result.IsSuccess())
                             {
-                                fileOperator.AddFlow(fileSection.Length);
+                               await fileOperator.AddFlowAsync(fileSection.Length);
                             }
                             else
                             {
@@ -2146,7 +2146,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                     var res = locator.WriteFileSection(result);
                                     if (res.IsSuccess())
                                     {
-                                        fileOperator.AddFlow(fileSection.Length);
+                                        await fileOperator.AddFlowAsync(fileSection.Length);
                                         failed = 0;
                                         break;
                                     }
@@ -2180,7 +2180,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 var result1 = locator.TryFinished();
                 if (this.DmtpActor.IsHandshaked)
                 {
-                    this.FinishedFileResourceInfo(resourceInfo,fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds,fileOperator.Token);
+                    this.FinishedFileResourceInfo(resourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
                 }
 
                 return result1.IsSuccess() ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
@@ -2253,7 +2253,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                             var result = this.PushFileSection(locator, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
                             if (result.IsSuccess())
                             {
-                                fileOperator.AddFlow(fileSection.Length);
+                                await fileOperator.AddFlowAsync(fileSection.Length);
                             }
                             else
                             {
@@ -2277,7 +2277,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 });
                 task.ConfigureAwait(false).GetAwaiter().GetResult();
 
-                var res = this.FinishedFileResourceInfo(fileOperator.ResourceInfo,fileOperator.Metadata,(int)fileOperator.Timeout.TotalMilliseconds,fileOperator.Token);
+                var res = this.FinishedFileResourceInfo(fileOperator.ResourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
                 return fileOperator.Token.IsCancellationRequested ? fileOperator.SetResult(Result.Canceled) : fileOperator.SetResult(res.ToResult());
             }
             catch (Exception ex)

@@ -60,6 +60,8 @@ namespace TouchSocket.Sockets
             this.Protocol = Protocol.Udp;
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             this.Monitor = new UdpNetworkMonitor(null, socket);
+            this.ReceiveBufferSize = 1024 * 64;
+            this.SendBufferSize = 1024 * 64;
         }
 
         /// <summary>
@@ -411,11 +413,6 @@ namespace TouchSocket.Sockets
         {
             this.Logger = this.Container.Resolve<ILog>();
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            if (config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) is int value)
-            {
-                this.SetBufferLength(value);
-            }
-
             if (this.CanSetDataHandlingAdapter)
             {
                 this.SetDataHandlingAdapter(this.Config.GetValue(TouchSocketConfigExtension.UdpDataHandlingAdapterProperty).Invoke());
@@ -469,8 +466,6 @@ namespace TouchSocket.Sockets
             threadCount = threadCount < 0 ? 1 : threadCount;
             var socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp)
             {
-                ReceiveBufferSize = BufferLength,
-                SendBufferSize = BufferLength,
                 EnableBroadcast = this.Config.GetValue(TouchSocketConfigExtension.EnableBroadcastProperty)
             };
             if (this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty))
@@ -509,7 +504,7 @@ namespace TouchSocket.Sockets
                             var eventArg = new SocketAsyncEventArgs();
                             this.m_socketAsyncs.Add(eventArg);
                             eventArg.Completed += this.IO_Completed;
-                            var byteBlock = new ByteBlock(this.BufferLength);
+                            var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                             eventArg.UserToken = byteBlock;
                             eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                             eventArg.RemoteEndPoint = iPHost.EndPoint;
@@ -526,7 +521,7 @@ namespace TouchSocket.Sockets
                                 var eventArg = new SocketAsyncEventArgs();
                                 this.m_socketAsyncs.Add(eventArg);
                                 eventArg.Completed += this.IO_Completed;
-                                var byteBlock = new ByteBlock(this.BufferLength);
+                                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                                 eventArg.UserToken = byteBlock;
                                 eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                                 eventArg.RemoteEndPoint = iPHost.EndPoint;
@@ -757,7 +752,7 @@ namespace TouchSocket.Sockets
 
                 this.HandleBuffer(e.RemoteEndPoint, byteBlock);
 
-                var newByteBlock = new ByteBlock(this.BufferLength);
+                var newByteBlock = new ByteBlock(this.ReceiveBufferSize);
                 e.UserToken = newByteBlock;
                 e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Buffer.Length);
 

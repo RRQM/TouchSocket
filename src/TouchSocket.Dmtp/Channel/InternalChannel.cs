@@ -24,14 +24,15 @@ namespace TouchSocket.Dmtp
     internal partial class InternalChannel : DisposableObject, IDmtpChannel
     {
         private readonly DmtpActor m_actor;
-        private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
         private readonly AsyncAutoResetEvent m_asyncAutoResetEvent = new AsyncAutoResetEvent(false);
+        private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
+        private readonly FlowGate m_flowGate;
+        private readonly AutoResetEvent m_resetEvent = new AutoResetEvent(false);
         private int m_cacheCapacity;
         private volatile bool m_canFree;
         private ByteBlock m_currentData;
         private DateTime m_lastOperationTime;
-
-        private readonly AutoResetEvent m_resetEvent = new AutoResetEvent(false);
+        private long m_maxSpeed;
 
         public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
         {
@@ -51,28 +52,6 @@ namespace TouchSocket.Dmtp
             this.Metadata = metadata;
         }
 
-        private readonly FlowGate m_flowGate;
-
-        private int m_maxSpeed;
-
-
-        /// <summary>
-        /// 通道传输速度限制
-        /// </summary>
-        public int MaxSpeed
-        {
-            get => this.m_maxSpeed;
-            set
-            {
-                if (value < 1024)
-                {
-                    value = 1024;
-                }
-                this.m_maxSpeed = value;
-                this.m_flowGate.Maximum = value;
-            }
-        }
-
         /// <summary>
         /// 析构函数
         /// </summary>
@@ -81,10 +60,7 @@ namespace TouchSocket.Dmtp
             this.Dispose(false);
         }
 
-        /// <summary>
-        /// 是否具有数据可读
-        /// </summary>
-        public int Available => this.m_dataQueue.Count;
+        public long Available => this.m_dataQueue.Count;
 
         /// <summary>
         /// 缓存容量
@@ -129,6 +105,22 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public string LastOperationMes { get; private set; }
 
+        public long MaxSpeed
+        {
+            get => this.m_maxSpeed;
+            set
+            {
+                if (value < 1024)
+                {
+                    value = 1024;
+                }
+                this.m_maxSpeed = value;
+                this.m_flowGate.Maximum = value;
+            }
+        }
+
+        public Metadata Metadata { get; private set; }
+
         /// <summary>
         /// 状态
         /// </summary>
@@ -145,8 +137,6 @@ namespace TouchSocket.Dmtp
         /// 是否被使用
         /// </summary>
         public bool Using { get; private set; }
-
-        public Metadata Metadata { get; private set; }
 
         #region 操作
 
@@ -340,7 +330,7 @@ namespace TouchSocket.Dmtp
             }
 
             this.Reset();
-            if (this.Wait(this.Timeout))
+            if (this.Wait())
             {
                 return this.MoveNext();
             }
@@ -397,7 +387,7 @@ namespace TouchSocket.Dmtp
             }
 
             this.Reset();
-            if (await this.WaitAsync(this.Timeout))
+            if (await this.WaitAsync())
             {
                 return await this.MoveNextAsync();
             }
@@ -595,6 +585,7 @@ namespace TouchSocket.Dmtp
         private void Reset()
         {
             this.m_resetEvent.Reset();
+            this.m_asyncAutoResetEvent.Reset();
         }
 
         private void Set()
@@ -603,12 +594,12 @@ namespace TouchSocket.Dmtp
             this.m_asyncAutoResetEvent.Set();
         }
 
-        private bool Wait(TimeSpan timeSpan)
+        private bool Wait()
         {
             return this.m_resetEvent.WaitOne(this.Timeout);
         }
 
-        private Task<bool> WaitAsync(TimeSpan timeSpan)
+        private Task<bool> WaitAsync()
         {
             return this.m_asyncAutoResetEvent.WaitOneAsync(this.Timeout);
         }

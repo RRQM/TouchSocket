@@ -137,7 +137,7 @@ namespace TouchSocket.Dmtp
         {
             this.Protocol = DmtpUtility.DmtpProtocol;
             this.SetDataHandlingAdapter(new TcpDmtpAdapter());
-            this.m_smtpActor = new DmtpActor(this.m_allowRoute)
+            this.m_smtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
                 OutputSend = DmtpActorSend,
                 OnRouting = OnDmtpActorRouting,

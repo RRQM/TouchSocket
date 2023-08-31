@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net461;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>IOC;DependencyInjection</PackageTags>
-		<Description>这是为TouchSocket.Core基于IServiceCollection构建的容器扩展包。
+		<Description>这是一个为Core中扩展Ioc容器为IServiceCollection的库。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Core.DependencyInjection</Title>

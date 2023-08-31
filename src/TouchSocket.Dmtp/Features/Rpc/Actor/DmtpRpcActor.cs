@@ -100,6 +100,7 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         rpcPackage.UnpackageBody(byteBlock);
                         Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                        //this.InvokeThis(rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -231,9 +232,7 @@ namespace TouchSocket.Dmtp.Rpc
                                 MethodInstance = methodInstance,
                                 DmtpRpcPackage = rpcPackage
                             };
-
                             this.TryAdd(rpcPackage.Sign, callContext);
-
                             if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                             {
                                 ps = new object[methodInstance.ParameterTypes.Length];
@@ -280,6 +279,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)
                 {
+                    this.TryRemove(rpcPackage.Sign, out _);
                     return;
                 }
 
@@ -292,9 +292,14 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case InvokeStatus.Success:
                         {
-                            rpcPackage.ReturnParameterBytes = methodInstance.HasReturn
-                                ? this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, invokeResult.Result)
-                                : null;
+                            if (methodInstance.HasReturn)
+                            {
+                                rpcPackage.ReturnParameterBytes = this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, invokeResult.Result);
+                            }
+                            else
+                            {
+                                rpcPackage.ReturnParameterBytes = null;
+                            }
 
                             if (methodInstance.IsByRef)
                             {

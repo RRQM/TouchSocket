@@ -20,7 +20,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http静态内容插件
     /// </summary>
-    public class HttpStaticPagePlugin : PluginBase, IHttpGetPlugin
+    public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     {
         /// <summary>
         /// 构造函数
@@ -58,7 +58,7 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.FileCache.Find(e.Context.Request.RelativeURL, out var data))
             {

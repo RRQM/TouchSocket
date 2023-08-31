@@ -37,7 +37,9 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 协议版本
         /// </summary>
+#pragma warning disable CS0618 // 类型或成员已过时
         public SslProtocols SslProtocols { get; set; } = SslProtocols.Tls12 | SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Default |
+#pragma warning restore CS0618 // 类型或成员已过时
                          SslProtocols.Tls | SslProtocols.Tls11;
 
         /// <summary>

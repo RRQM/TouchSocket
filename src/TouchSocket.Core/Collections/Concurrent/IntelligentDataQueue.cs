@@ -57,6 +57,7 @@ namespace TouchSocket.Core
         {
             var buf = new byte[length];
             Array.Copy(buffer, offset, buf, 0, length);
+
             return new QueueDataBytes(buf);
         }
 
@@ -99,7 +100,7 @@ namespace TouchSocket.Core
         private long m_maxSize;
 
         /// <summary>
-        /// 构造函数
+        /// 智能数据安全队列
         /// </summary>
         /// <param name="maxSize"></param>
         public IntelligentDataQueue(long maxSize)
@@ -110,7 +111,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 构造函数
+        /// 智能数据安全队列
         /// </summary>
         public IntelligentDataQueue() : this(1024 * 1024 * 10)
         {
@@ -172,7 +173,7 @@ namespace TouchSocket.Core
         /// 入队
         /// </summary>
         /// <param name="item"></param>
-        public new void Enqueue(T item)
+        public void Enqueue(in T item)
         {
             lock (this)
             {

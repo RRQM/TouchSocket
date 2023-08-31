@@ -24,9 +24,8 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// <summary>
     /// WebSocketDmtpSocketClient
     /// </summary>
-    public class WebSocketDmtpSocketClient : DependencyObject, IWebSocketDmtpSocketClient
+    public class WebSocketDmtpSocketClient : BaseSocket, IWebSocketDmtpSocketClient
     {
-        private readonly object m_syncRoot = new object();
         private WebSocket m_client;
         private DmtpActor m_smtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
@@ -55,9 +54,6 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         /// <inheritdoc/>
         public DateTime LastSendTime { get; private set; }
-
-        /// <inheritdoc/>
-        public ILog Logger { get; set; }
 
         /// <summary>
         /// 未实现
@@ -130,8 +126,6 @@ namespace TouchSocket.Dmtp.AspNetCore
             };
 
             this.m_smtpAdapter.Config(config);
-
-            this.SetBufferLength(this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) ?? 1024 * 64);
         }
 
         internal void InternalSetContainer(IContainer container)
@@ -365,7 +359,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private void BreakOut(string msg, bool manual)
         {
-            lock (this.m_syncRoot)
+            lock (this.SyncRoot)
             {
                 if (this.DisposedValue)
                 {

@@ -55,7 +55,7 @@ namespace TouchSocket.Http
             {
                 lock (this)
                 {
-                    this.m_response ??= new HttpResponse(this.Request.Client, true);
+                    this.m_response ??= new HttpResponse(this.Request);
                     return this.m_response;
                 }
             }

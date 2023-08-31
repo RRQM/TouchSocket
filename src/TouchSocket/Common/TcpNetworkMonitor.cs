@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class TcpNetworkMonitor
     {
-        internal TcpNetworkMonitor(ListenOption option, Socket socket, SocketAsyncEventArgs e)
+        internal TcpNetworkMonitor(TcpListenOption option, Socket socket, SocketAsyncEventArgs e)
         {
             this.Option = option ?? throw new ArgumentNullException(nameof(option));
             this.Socket = socket ?? throw new ArgumentNullException(nameof(socket));
@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 监听配置
         /// </summary>
-        public ListenOption Option { get; }
+        public TcpListenOption Option { get; }
 
         /// <summary>
         /// Socket组件

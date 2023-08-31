@@ -63,8 +63,8 @@ namespace TouchSocket.Sockets
             return this;
         }
 
-
-        Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        /// <inheritdoc/>
+        public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             try
             {
@@ -112,7 +112,5 @@ namespace TouchSocket.Sockets
 
             return e.InvokeNext();
         }
-
-
     }
 }

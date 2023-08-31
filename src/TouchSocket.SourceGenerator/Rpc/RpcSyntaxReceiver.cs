@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TouchSocket.SourceGenerator.Rpc
+namespace TouchSocket
 {
     /// <summary>
     /// RpcApi语法接收器

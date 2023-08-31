@@ -16,7 +16,7 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IUdpDmtp
+    /// IUdpDmtpService
     /// </summary>
     public interface IUdpDmtp : IUdpSession, IDmtpActorObject
     {

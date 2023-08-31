@@ -27,6 +27,14 @@ namespace TouchSocket.Core
         bool Enable { get; set; }
 
         /// <summary>
+        /// 获取已添加的指定名称的插件数量。
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="includeFunc">是否包含委托插件数量</param>
+        /// <returns></returns>
+        int GetPluginCount(string name,bool includeFunc=true);
+
+        /// <summary>
         /// 所包含的所有插件。
         /// </summary>
         IEnumerable<IPlugin> Plugins { get; }

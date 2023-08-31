@@ -12,8 +12,11 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace TouchSocket.Core
 {
@@ -168,5 +171,66 @@ namespace TouchSocket.Core
                 }
             }
         }
+
+        #region Tuple
+        /// <summary>
+        /// 获取元组的名称列表。
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetTupleElementNames(this ParameterInfo parameter)
+        {
+            return ((dynamic)parameter.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+        }
+
+        /// <summary>
+        /// 获取元组的名称列表。
+        /// </summary>
+        /// <param name="memberInfo"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetTupleElementNames(this MemberInfo memberInfo)
+        {
+            return ((dynamic)memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
+        }
+        #endregion
+
+        /// <summary>
+        /// 获取方法的确定性名称，即使在重载时，也能区分。
+        /// <para>计算规则是：命名空间.类名.方法名(参数：全名)</para>
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static string GetDeterminantName(this MethodInfo methodInfo)
+        {
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append($"{methodInfo.DeclaringType?.Namespace}.{methodInfo.DeclaringType?.Name}.{methodInfo.Name}(");
+
+            foreach (var item in methodInfo.GetParameters())
+            {
+                stringBuilder.Append(item.ParameterType.FullName);
+                if (item != methodInfo.GetParameters().Last())
+                {
+                    stringBuilder.Append('.');
+                }
+            }
+            stringBuilder.Append(')');
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// 获取方法的方法名。主要解决显式实现时函数名称的问题。
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public static string GetName(this MethodInfo methodInfo)
+        {
+            var r = methodInfo.Name.LastIndexOf('.');
+            if (r < 0)
+            {
+                return methodInfo.Name;
+            }
+            return methodInfo.Name.Substring(r+1, methodInfo.Name.Length - r-1);
+        }
+
     }
 }

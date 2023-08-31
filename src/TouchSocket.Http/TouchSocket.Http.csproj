@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>httpserver;httpclient;websocket</PackageTags>
-		<Description>这是基于TouchSocket的，能够解析http1.1的服务器和客户端。它以插件的工作模式，能够像aspnetcore的中间件那样工作。同时，内部还包含了websocket，静态页面，大文件传输，多线程等功能。
+		<Description>这是一个基于Http1.1协议的组件库。它能提供Http服务器、客户端、以及WebSocket组件。功能上支持大文件下载、上传、以及多线程下载和断点续传，小文件form上传，WebApi声明和执行。所提供的Http客户端是基于连接的，可以捕获连接和断开连接等消息。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
 		<Title>TouchSocket.Http</Title>

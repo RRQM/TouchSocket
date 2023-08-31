@@ -7,7 +7,7 @@ namespace TouchSocket.Core
     internal class PluginModel
     {
         public List<Func<object, PluginEventArgs, Task>> Funcs = new List<Func<object, PluginEventArgs, Task>>();
-        public Method Method;
-        public List<IPlugin> Plugins = new List<IPlugin>();
+     
+        public List<PluginEntity> PluginEntities = new List<PluginEntity>();
     }
 }

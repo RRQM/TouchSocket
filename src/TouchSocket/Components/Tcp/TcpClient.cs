@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -57,13 +58,26 @@ namespace TouchSocket.Sockets
         public TcpClientBase()
         {
             this.Protocol = Protocol.Tcp;
+            this.m_receiveCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnReceivePeriod
+            };
+            this.m_sendCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnSendPeriod
+            };
         }
 
         #region 变量
         private DelaySender m_delaySender;
         private Stream m_workStream;
-        private int m_bufferRate = 1;
+        private long m_bufferRate = 1;
         private volatile bool m_online;
+        ValueCounter m_receiveCounter;
+        ValueCounter m_sendCounter;
+        SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         #endregion 变量
 
         #region 事件
@@ -108,8 +122,6 @@ namespace TouchSocket.Sockets
 
         private void PrivateOnConnecting(ConnectingEventArgs e)
         {
-            this.LastReceivedTime = DateTime.Now;
-            this.LastSendTime = DateTime.Now;
             if (this.CanSetDataHandlingAdapter)
             {
                 this.SetDataHandlingAdapter(this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty).Invoke());
@@ -199,10 +211,10 @@ namespace TouchSocket.Sockets
         #region 属性
 
         /// <inheritdoc/>
-        public DateTime LastReceivedTime { get; private set; }
+        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public DateTime LastSendTime { get; private set; }
+        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
 
         /// <inheritdoc/>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
@@ -376,50 +388,107 @@ namespace TouchSocket.Sockets
             }
         }
 
-        //protected Task TcpConnectAsync(int timeout)
-        //{
-        //    lock (this.SyncRoot)
-        //    {
-        //        if (this.m_online)
-        //        {
-        //            return;
-        //        }
-        //        if (this.DisposedValue)
-        //        {
-        //            throw new ObjectDisposedException(this.GetType().FullName);
-        //        }
-        //        if (this.Config == null)
-        //        {
-        //            throw new ArgumentNullException("配置文件不能为空。");
-        //        }
-        //        var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException("iPHost不能为空。");
-        //        this.MainSocket.SafeDispose();
-        //        var socket = this.CreateSocket(iPHost);
-        //        var args = new ConnectingEventArgs(this.MainSocket);
-        //        this.PrivateOnConnecting(args);
-        //        if (timeout == 5000)
-        //        {
-        //            socket.Connect(iPHost.Host, iPHost.Port);
-        //        }
-        //        else
-        //        {
-        //            var task = Task.Run(() =>
-        //            {
-        //                socket.Connect(iPHost.Host, iPHost.Port);
-        //            });
-        //            task.ConfigureAwait(false);
-        //            if (!task.Wait(timeout))
-        //            {
-        //                socket.SafeDispose();
-        //                throw new TimeoutException();
-        //            }
-        //        }
-        //        this.m_online = true;
-        //        this.SetSocket(socket);
-        //        this.BeginReceive();
-        //        this.PrivateOnConnected(new ConnectedEventArgs());
-        //    }
-        //}
+#if NET6_0_OR_GREATER
+
+        /// <summary>
+        /// 异步连接服务器
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="TimeoutException"></exception>
+        protected async Task TcpConnectAsync(int timeout)
+        {
+            try
+            {
+                await m_semaphore.WaitAsync();
+                if (this.m_online)
+                {
+                    return;
+                }
+
+                if (this.DisposedValue)
+                {
+                    throw new ObjectDisposedException(this.GetType().FullName);
+                }
+                if (this.Config == null)
+                {
+                    throw new ArgumentNullException("配置文件不能为空。");
+                }
+                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException("iPHost不能为空。");
+                this.MainSocket.SafeDispose();
+                var socket = this.CreateSocket(iPHost);
+                var args = new ConnectingEventArgs(this.MainSocket);
+                this.PrivateOnConnecting(args);
+                if (timeout == 5000)
+                {
+                    await socket.ConnectAsync(iPHost.Host, iPHost.Port);
+                }
+                else
+                {
+                    using (var tokenSource=new CancellationTokenSource(timeout))
+                    {
+                        try
+                        {
+                            await socket.ConnectAsync(iPHost.Host, iPHost.Port, tokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw new TimeoutException();
+                        }
+                       
+                    }
+                }
+                this.m_online = true;
+                this.SetSocket(socket);
+                this.BeginReceive();
+                this.PrivateOnConnected(new ConnectedEventArgs());
+            }
+            finally
+            {
+                m_semaphore.Release();
+            }
+        }
+#else
+        /// <summary>
+        /// 异步连接服务器
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        protected async Task TcpConnectAsync(int timeout)
+        {
+            try
+            {
+                await this.m_semaphore.WaitAsync();
+                if (this.m_online)
+                {
+                    return;
+                }
+                if (this.DisposedValue)
+                {
+                    throw new ObjectDisposedException(this.GetType().FullName);
+                }
+                if (this.Config == null)
+                {
+                    throw new ArgumentNullException(nameof(this.Config), "配置文件不能为空。");
+                }
+                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException(nameof(IPHost), "iPHost不能为空。");
+                this.MainSocket.SafeDispose();
+                var socket = this.CreateSocket(iPHost);
+                this.PrivateOnConnecting(new ConnectingEventArgs(socket));
+                await Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
+                this.m_online = true;
+                this.SetSocket(socket);
+                this.BeginReceive();
+                this.PrivateOnConnected(new ConnectedEventArgs());
+            }
+            finally
+            {
+                m_semaphore.Release();
+            }
+        }
+#endif
 
         /// <inheritdoc/>
         public virtual ITcpClient Connect(int timeout = 5000)
@@ -429,12 +498,10 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public Task<ITcpClient> ConnectAsync(int timeout = 5000)
+        public async Task<ITcpClient> ConnectAsync(int timeout = 5000)
         {
-            return Task.Run(() =>
-            {
-                return this.Connect(timeout);
-            });
+            await this.TcpConnectAsync(timeout);
+            return this;
         }
         #endregion
 
@@ -444,6 +511,44 @@ namespace TouchSocket.Sockets
             this.ThrowIfDisposed();
             this.m_workStream ??= new NetworkStream(this.MainSocket, true);
             return this.m_workStream;
+        }
+
+        private void OnReceivePeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
+        private void OnSendPeriod(long value)
+        {
+            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize
+        {
+            get => base.ReceiveBufferSize;
+            set
+            {
+                base.ReceiveBufferSize = value;
+                if (this.MainSocket != null)
+                {
+                    this.MainSocket.ReceiveBufferSize = base.ReceiveBufferSize;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override int SendBufferSize
+        {
+            get => base.SendBufferSize;
+            set
+            {
+                base.SendBufferSize = value;
+                if (this.MainSocket != null)
+                {
+                    this.MainSocket.SendBufferSize = base.SendBufferSize;
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -581,21 +686,8 @@ namespace TouchSocket.Sockets
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            if (config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) is int value)
-            {
-                this.SetBufferLength(value);
-            }
             this.Logger ??= this.Container.Resolve<ILog>();
             this.ReceiveType = config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty);
-        }
-
-        /// <summary>
-        /// 在延迟发生错误
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void OnDelaySenderError(Exception ex)
-        {
-            this.Logger.Log(LogLevel.Error, this, "发送错误", ex);
         }
 
         /// <summary>
@@ -653,7 +745,7 @@ namespace TouchSocket.Sockets
                     var eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += this.EventArgs_Completed;
 
-                    var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength);
+                    var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
                     eventArgs.UserToken = byteBlock;
                     eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                     if (!this.MainSocket.ReceiveAsync(eventArgs))
@@ -667,7 +759,7 @@ namespace TouchSocket.Sockets
                     {
                         IsBackground = true
                     }
-                    .Start() ;
+                    .Start();
                 }
             }
         }
@@ -676,7 +768,7 @@ namespace TouchSocket.Sockets
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.BufferLength);
+                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
                     var r = this.MainSocket.Receive(byteBlock.Buffer);
@@ -699,7 +791,7 @@ namespace TouchSocket.Sockets
 
         private void BeginSsl()
         {
-            var byteBlock = new ByteBlock(this.BufferLength);
+            var byteBlock = new ByteBlock(this.ReceiveBufferSize);
             try
             {
                 this.m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
@@ -739,8 +831,6 @@ namespace TouchSocket.Sockets
             {
                 socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
                 {
-                    ReceiveBufferSize = this.BufferLength,
-                    SendBufferSize = this.BufferLength,
                     SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
                 };
             }
@@ -748,8 +838,6 @@ namespace TouchSocket.Sockets
             {
                 socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
                 {
-                    ReceiveBufferSize = this.BufferLength,
-                    SendBufferSize = this.BufferLength,
                     SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
                 };
             }
@@ -806,7 +894,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                this.LastReceivedTime = DateTime.Now;
+                this.m_receiveCounter.Increment(byteBlock.Length);
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;
@@ -1003,8 +1091,7 @@ namespace TouchSocket.Sockets
                         this.MainSocket.AbsoluteSend(buffer, offset, length);
                     }
                 }
-
-                this.LastSendTime = DateTime.Now;
+                this.m_sendCounter.Increment(length);
             }
         }
 
@@ -1042,7 +1129,7 @@ namespace TouchSocket.Sockets
             var delaySenderOption = this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty);
             if (delaySenderOption != null)
             {
-                this.m_delaySender = new DelaySender(socket, delaySenderOption, this.OnDelaySenderError);
+                this.m_delaySender = new DelaySender(delaySenderOption, this.MainSocket.AbsoluteSend);
             }
         }
 
@@ -1066,7 +1153,7 @@ namespace TouchSocket.Sockets
                 this.HandleBuffer(byteBlock);
                 try
                 {
-                    var newByteBlock = BytePool.Default.GetByteBlock(Math.Min(this.BufferLength * this.m_bufferRate, 1024 * 1024));
+                    var newByteBlock = BytePool.Default.GetByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, TouchSocketUtility.MaxBufferLength));
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
 

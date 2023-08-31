@@ -2,12 +2,16 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>Rpc;CodeGenerator</PackageTags>
-		<Description>这是基于TouchSocket的Rpc功能基础类。它能规范Rpc的调用、代理的生成、以及其他特性。
+		<Description>这是一个超轻量、高性能、可扩展的Rpc管理平台框架。您可以基于该框架，快速开发出Rpc执行。目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Rpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Attribute\GeneratorRpcMethodAttribute.cs" />
+	  <Compile Remove="Attribute\GeneratorRpcProxyAttribute.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />

@@ -19,8 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.JsonRpc", "Touc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc", "TouchSocket.Rpc\TouchSocket.Rpc.csproj", "{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator.Rpc", "TouchSocket.SourceGenerator.Rpc\TouchSocket.SourceGenerator.Rpc.csproj", "{79A7F310-F5E2-410C-B953-D5A501EE5185}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi", "TouchSocket.WebApi\TouchSocket.WebApi.csproj", "{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.XmlRpc", "TouchSocket.XmlRpc\TouchSocket.XmlRpc.csproj", "{51400DB7-74C1-45CA-A647-0052D58047E9}"
@@ -33,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案", "解决方�
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.NamedPipe", "TouchSocket.NamedPipe\TouchSocket.NamedPipe.csproj", "{B08988EC-33F6-488E-868B-E36AADDDE456}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator", "TouchSocket.SourceGenerator\TouchSocket.SourceGenerator.csproj", "{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,10 +72,6 @@ Global
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EE9DA27-F93B-4232-88E8-4321FDB3A7EE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{79A7F310-F5E2-410C-B953-D5A501EE5185}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC6D4D92-37E4-4CF8-82E3-A8CB2BFCE96C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -92,6 +88,10 @@ Global
 		{B08988EC-33F6-488E-868B-E36AADDDE456}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B08988EC-33F6-488E-868B-E36AADDDE456}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B08988EC-33F6-488E-868B-E36AADDDE456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
