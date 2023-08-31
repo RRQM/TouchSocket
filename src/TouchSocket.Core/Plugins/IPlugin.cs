@@ -25,5 +25,11 @@ namespace TouchSocket.Core
         /// <para>该属性效果，仅在<see cref="IPluginsManager.Add(IPlugin)"/>之前设置有效。</para>
         /// </summary>
         int Order { get; set; }
+
+        /// <summary>
+        /// 在插件被成功添加在<see cref="IPluginsManager"/>时执行。
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        void Loaded(IPluginsManager pluginsManager);
     }
 }

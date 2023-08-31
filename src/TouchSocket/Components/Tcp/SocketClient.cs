@@ -34,11 +34,22 @@ namespace TouchSocket.Sockets
         public SocketClient()
         {
             this.Protocol = Protocol.Tcp;
+            this.m_receiveCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnReceivePeriod
+            };
+            m_sendCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnSendPeriod
+            };
         }
 
         #region 变量
-
-        private int m_bufferRate = 1;
+        ValueCounter m_receiveCounter;
+        ValueCounter m_sendCounter;
+        private long m_bufferRate = 1;
         private DelaySender m_delaySender;
         private Stream m_workStream;
 
@@ -86,7 +97,7 @@ namespace TouchSocket.Sockets
         public Protocol Protocol { get; set; }
 
         /// <inheritdoc/>
-        public ListenOption ListenOption { get; private set; }
+        public TcpListenOption ListenOption { get; private set; }
 
         /// <inheritdoc/>
         public ReceiveType ReceiveType { get; private set; }
@@ -98,10 +109,10 @@ namespace TouchSocket.Sockets
         public bool UseSsl { get; private set; }
 
         /// <inheritdoc/>
-        public DateTime LastReceivedTime { get; private set; }
+        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public DateTime LastSendTime { get; private set; }
+        public DateTime LastSendTime =>this.m_sendCounter.LastIncrement;
 
         /// <inheritdoc/>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
@@ -127,7 +138,7 @@ namespace TouchSocket.Sockets
                 {
                     var eventArgs = new SocketAsyncEventArgs();
                     eventArgs.Completed += this.EventArgs_Completed;
-                    var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength);
+                    var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
                     eventArgs.UserToken = byteBlock;
                     eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                     if (!this.MainSocket.ReceiveAsync(eventArgs))
@@ -164,7 +175,7 @@ namespace TouchSocket.Sockets
             {
                 return;
             }
-           
+
 
             if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e))
             {
@@ -187,8 +198,6 @@ namespace TouchSocket.Sockets
 
         internal void InternalInitialized()
         {
-            this.LastReceivedTime = DateTime.Now;
-            this.LastSendTime = DateTime.Now;
             this.OnInitialized();
         }
 
@@ -213,11 +222,10 @@ namespace TouchSocket.Sockets
             this.PluginsManager = pluginsManager;
         }
 
-        internal void InternalSetListenOption(ListenOption option)
+        internal void InternalSetListenOption(TcpListenOption option)
         {
             this.ListenOption = option;
             this.ReceiveType = option.ReceiveType;
-            this.SetBufferLength(option.BufferLength);
         }
 
         internal void InternalSetService(TcpServiceBase serviceBase)
@@ -235,7 +243,7 @@ namespace TouchSocket.Sockets
 
             if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
             {
-                this.m_delaySender = new DelaySender(this.MainSocket, senderOption, this.OnDelaySenderError);
+                this.m_delaySender = new DelaySender( senderOption, this.MainSocket.AbsoluteSend);
             }
         }
 
@@ -264,15 +272,6 @@ namespace TouchSocket.Sockets
         protected virtual void OnConnecting(ConnectingEventArgs e)
         {
             this.Service.OnInternalConnecting(this, e);
-        }
-
-        /// <summary>
-        /// 在延迟发生错误
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void OnDelaySenderError(Exception ex)
-        {
-            this.Logger.Log(LogLevel.Error, this, "发送错误", ex);
         }
 
         /// <summary>
@@ -346,6 +345,42 @@ namespace TouchSocket.Sockets
 
         #endregion 事件&委托
 
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize
+        {
+            get => base.ReceiveBufferSize;
+            set
+            {
+                base.ReceiveBufferSize = value;
+                if (this.MainSocket != null)
+                {
+                    this.MainSocket.ReceiveBufferSize = base.ReceiveBufferSize;
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public override int SendBufferSize
+        {
+            get => base.SendBufferSize;
+            set
+            {
+                base.SendBufferSize = value;
+                if (this.MainSocket != null)
+                {
+                    this.MainSocket.SendBufferSize = base.SendBufferSize;
+                }
+            }
+        }
+
+        private void OnSendPeriod(long value)
+        {
+            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+        private void OnReceivePeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
 
         /// <inheritdoc/>
         public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
@@ -511,7 +546,7 @@ namespace TouchSocket.Sockets
         {
             if (!this.DisposedValue)
             {
-                var byteBlock = new ByteBlock(this.BufferLength);
+                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
                     this.m_workStream.BeginRead(byteBlock.Buffer, 0, byteBlock.Capacity, this.EndSsl, byteBlock);
@@ -594,8 +629,7 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-
-                this.LastReceivedTime = DateTime.Now;
+                this.m_receiveCounter.Increment(byteBlock.Length);
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {
                     return;
@@ -633,7 +667,7 @@ namespace TouchSocket.Sockets
                 return;
             }
 
-            if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpReceivedPlugin.OnTcpReceived), this, new ReceivedDataEventArgs(byteBlock, requestInfo)))
+            if (this.PluginsManager.GetPluginCount(nameof(ITcpReceivedPlugin.OnTcpReceived)) > 0 && this.PluginsManager.Raise(nameof(ITcpReceivedPlugin.OnTcpReceived), this, new ReceivedDataEventArgs(byteBlock, requestInfo)))
             {
                 return;
             }
@@ -661,7 +695,7 @@ namespace TouchSocket.Sockets
                 this.HandleBuffer(byteBlock);
                 try
                 {
-                    var newByteBlock = new ByteBlock(Math.Min(this.BufferLength * this.m_bufferRate, 1024 * 1024));
+                    var newByteBlock = new ByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, TouchSocketUtility.MaxBufferLength));
                     e.UserToken = newByteBlock;
                     e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
 
@@ -697,7 +731,7 @@ namespace TouchSocket.Sockets
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
             if (!this.CanSend)
-            {   
+            {
                 throw new NotConnectedException(TouchSocketResource.NotConnected.GetDescription());
             }
             if (this.HandleSendingData(buffer, offset, length))
@@ -708,7 +742,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    if (this.m_delaySender!=null && length < this.m_delaySender.DelayLength)
+                    if (this.m_delaySender != null && length < this.m_delaySender.DelayLength)
                     {
                         this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
                     }
@@ -717,7 +751,7 @@ namespace TouchSocket.Sockets
                         this.MainSocket.AbsoluteSend(buffer, offset, length);
                     }
                 }
-                this.LastSendTime = DateTime.Now;
+                this.m_sendCounter.Increment(length);
             }
         }
 

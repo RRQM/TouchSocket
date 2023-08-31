@@ -14,9 +14,12 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public class NamedPipeSocketClient : BaseSocket, INamedPipeSocketClient
     {
+        #region MyRegion
+        ValueCounter m_valueCounter;
         private object m_delaySender;
-
         private NamedPipeServerStream m_pipeStream;
+        #endregion
+
 
         /// <summary>
         /// 命名管道服务器辅助客户端类
@@ -24,6 +27,11 @@ namespace TouchSocket.NamedPipe
         public NamedPipeSocketClient()
         {
             this.Protocol = Protocol.NamedPipe;
+            this.m_valueCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnPeriod
+            };
         }
 
         /// <inheritdoc/>
@@ -69,13 +77,7 @@ namespace TouchSocket.NamedPipe
 
         internal void BeginReceive()
         {
-            //new Thread(BeginBio)
-            //{
-            //    IsBackground = true
-            //}
-            //    .Start();
-
-            Task.Run(this.BeginBio);
+            Task.Factory.StartNew(this.BeginBio,TaskCreationOptions.LongRunning);
         }
 
         internal void InternalConnected(ConnectedEventArgs e)
@@ -229,7 +231,7 @@ namespace TouchSocket.NamedPipe
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.BufferLength);
+                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
                     var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
@@ -285,6 +287,11 @@ namespace TouchSocket.NamedPipe
         }
 
         #endregion 事件&委托
+
+        private void OnPeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
 
         /// <inheritdoc/>
         public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
@@ -473,6 +480,7 @@ namespace TouchSocket.NamedPipe
                     return;
                 }
 
+                this.m_valueCounter.Increment(byteBlock.Length);
                 this.LastReceivedTime = DateTime.Now;
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {

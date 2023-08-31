@@ -79,7 +79,7 @@ namespace TouchSocket.Http
                         var ares = new AuthenticationChallenge(authHeader, credential);
 
                         request.Headers.Add(HttpHeaders.ProxyAuthorization, ares.ToString());
-                        if (response.CloseConnection)
+                        if (!response.KeepAlive)
                         {
                             base.Close("代理要求关闭连接，随后重写连接。");
                             base.Connect(timeout);

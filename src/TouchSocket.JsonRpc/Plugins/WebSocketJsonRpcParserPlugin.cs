@@ -26,7 +26,8 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public Func<IHttpSocketClient, HttpContext, Task<bool>> AllowJsonRpc { get; set; }
 
-        async Task IWebSocketHandshakedPlugin<IHttpSocketClient>.OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.AllowJsonRpc != null)
             {
@@ -37,7 +38,8 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        async Task IWebSocketReceivedPlugin<IHttpSocketClient>.OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode == WSDataType.Text && client.GetJsonRpc())
             {
@@ -101,7 +103,7 @@ namespace TouchSocket.JsonRpc
                         };
                     }
 
-                    ((IHttpSocketClient)callContext.Caller).SendWithWS(jobject.ToJson());
+                    ((IHttpSocketClient)callContext.Caller).SendWithWS(jobject.ToJsonString());
                 }
             }
             catch

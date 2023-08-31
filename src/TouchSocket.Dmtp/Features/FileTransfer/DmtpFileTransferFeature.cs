@@ -36,7 +36,8 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
 
-        Task IDmtpHandshakedPlugin<IDmtpActorObject>.OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             var smtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor)
             {
@@ -52,7 +53,8 @@ namespace TouchSocket.Dmtp.FileTransfer
             return e.InvokeNext();
         }
 
-        Task IDmtpReceivedPlugin<IDmtpActorObject>.OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpFileTransferActor() is DmtpFileTransferActor smtpFileTransferActor)
             {

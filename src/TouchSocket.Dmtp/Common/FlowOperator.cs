@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -31,7 +32,10 @@ namespace TouchSocket.Dmtp
         /// </summary>
         protected float m_progress;
 
+        private readonly FlowGate m_flowGate = new FlowGate();
+
         private long m_speed;
+
         private long m_speedTemp;
 
         /// <summary>
@@ -39,6 +43,11 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <returns></returns>
         public long CompletedLength { get => this.completedLength; }
+
+        /// <summary>
+        /// 流量控制器。
+        /// </summary>
+        public FlowGate FlowGate => this.m_flowGate;
 
         /// <summary>
         /// 由<see cref="Result"/>的结果，判断是否已结束操作。
@@ -53,7 +62,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 最大传输速度。
         /// </summary>
-        public int MaxSpeed { get; protected set; } = int.MaxValue;
+        public long MaxSpeed { get => this.m_flowGate.Maximum; set => this.m_flowGate.Maximum = value; }
 
         /// <summary>
         /// 元数据
@@ -81,13 +90,6 @@ namespace TouchSocket.Dmtp
         public CancellationToken Token { get; set; }
 
         /// <summary>
-        /// 设置最大速度
-        /// </summary>
-        /// <param name="speed"></param>
-        /// <returns></returns>
-        public abstract bool SetMaxSpeed(int speed);
-
-        /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>
         /// <returns></returns>
@@ -99,31 +101,24 @@ namespace TouchSocket.Dmtp
         }
 
         /// <summary>
-        /// 设置流长度
+        /// 添加流速(线程安全)
         /// </summary>
-        /// <param name="len"></param>
-        public void SetLength(long len)
+        /// <param name="flow"></param>
+        protected virtual void ProtectedAddFlow(int flow)
         {
-            this.Length = len;
-        }
-
-        /// <summary>
-        /// 设置结果状态
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public Result SetResult(Result result)
-        {
-            this.Result = result;
-            return result;
+            this.m_flowGate.AddCheckWait(flow);
+            Interlocked.Add(ref this.m_speedTemp, flow);
+            this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
         }
 
         /// <summary>
         /// 添加流速(线程安全)
         /// </summary>
         /// <param name="flow"></param>
-        protected virtual void ProtectedAddFlow(int flow)
+        /// <returns></returns>
+        protected virtual async Task ProtectedAddFlowAsync(int flow)
         {
+            await this.m_flowGate.AddCheckWaitAsync(flow);
             Interlocked.Add(ref this.m_speedTemp, flow);
             this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
         }

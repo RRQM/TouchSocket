@@ -1,36 +1,36 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// 基于Dmtp协议的消息。
-    /// |*2*|**4**|***************n***********|
-    /// <para></para>
-    /// |ProtocolFlags|Length|Data|
+    /// Dmtp协议的消息。
+    /// <para>|*2*|**4**|***************n***********|</para>
+    /// <para>|ProtocolFlags|Length|Data|</para>
+    /// <para>|ushort|int32|bytes|</para>
     /// </summary>
     public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo
     {
         private int m_bodyLength;
 
         /// <summary>
-        /// 基于Dmtp协议的消息。
-        /// |*2*|**4**|***************n***********|
-        /// <para></para>
-        /// |ProtocolFlags|Length|Data|
+        /// Dmtp协议的消息。
+        /// <para>|*2*|**4**|***************n***********|</para>
+        /// <para>|ProtocolFlags|Length|Data|</para>
+        /// <para>|ushort|int32|bytes|</para>
         /// </summary>
         public DmtpMessage()
         {
         }
 
         /// <summary>
-        /// 基于Dmtp协议的消息。
-        /// |*2*|**4**|***************n***********|
-        /// <para></para>
-        /// |ProtocolFlags|Length|Data|
-        /// </summary>
+        /// Dmtp协议的消息。
+        /// <para>|*2*|**4**|***************n***********|</para>
+        /// <para>|ProtocolFlags|Length|Data|</para>
+        /// <para>|ushort|int32|bytes|</para>
         /// <param name="protocolFlags"></param>
+        /// </summary>
         public DmtpMessage(ushort protocolFlags)
         {
             this.ProtocolFlags = protocolFlags;
@@ -77,6 +77,62 @@ namespace TouchSocket.Dmtp
                 this.Build(byteBlock);
                 return byteBlock.ToArray();
             }
+        }
+
+        /// <summary>
+        /// 从当前内存中解析出一个<see cref="DmtpMessage"/>
+        /// <para>注意：
+        /// <list type="number">
+        /// <item>本解析只能解析一个完整消息。所以使用该方法时，请确认是否已经接收完成一个完整的<see cref="DmtpMessage"/>包。</item>
+        /// <item>本解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，所以需要手动释放。</item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static DmtpMessage CreateFrom(ArraySegment<byte> bytes)
+        {
+            var buffer = bytes.Array;
+            var offset = bytes.Offset;
+
+            var protocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(buffer, offset);
+            var bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(buffer, 2 + offset);
+            var byteBlock = new ByteBlock(bodyLength);
+            byteBlock.Write(buffer, 6 + offset, bodyLength);
+
+            return new DmtpMessage()
+            {
+                m_bodyLength = bodyLength,
+                BodyByteBlock = byteBlock,
+                ProtocolFlags = protocolFlags
+            };
+        }
+
+        /// <summary>
+        /// 从当前内存中解析出一个<see cref="DmtpMessage"/>
+        /// <para>注意：
+        /// <list type="number">
+        /// <item>本解析只能解析一个完整消息。所以使用该方法时，请确认是否已经接收完成一个完整的<see cref="DmtpMessage"/>包。</item>
+        /// <item>本解析所得的<see cref="DmtpMessage"/>消息会脱离生命周期管理，所以需要手动释放。</item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
+        public static DmtpMessage CreateFrom(ByteBlock block)
+        {
+            var buffer = block.Buffer;
+            var protocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(buffer, 0);
+            var bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(buffer, 2);
+            var byteBlock = new ByteBlock(bodyLength);
+            byteBlock.Write(buffer, 6, bodyLength);
+            byteBlock.SeekToStart();
+            return new DmtpMessage()
+            {
+                m_bodyLength = bodyLength,
+                BodyByteBlock = byteBlock,
+                ProtocolFlags = protocolFlags
+            };
         }
 
         /// <summary>

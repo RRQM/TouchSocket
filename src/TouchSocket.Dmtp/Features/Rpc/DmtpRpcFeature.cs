@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
@@ -17,6 +18,7 @@ namespace TouchSocket.Dmtp.Rpc
         {
             this.RpcStore = container.IsRegistered(typeof(RpcStore)) ? container.Resolve<RpcStore>() : new RpcStore(container);
             this.RpcStore.AddRpcParser(this);
+            this.CreateDmtpRpcActor = this.PrivateCreateDmtpRpcActor;
             this.SetProtocolFlags(20);
         }
 
@@ -24,6 +26,11 @@ namespace TouchSocket.Dmtp.Rpc
         /// 方法映射表
         /// </summary>
         public ActionMap ActionMap { get; } = new ActionMap(false);
+
+        /// <summary>
+        /// 创建DmtpRpc实例
+        /// </summary>
+        public Func<IDmtpActor, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
 
         /// <inheritdoc/>
         public ushort ReserveProtocolSize => 5;
@@ -38,6 +45,17 @@ namespace TouchSocket.Dmtp.Rpc
 
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
+
+        /// <summary>
+        /// 设置创建DmtpRpc实例
+        /// </summary>
+        /// <param name="createDmtpRpcActor"></param>
+        /// <returns></returns>
+        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, DmtpRpcActor> createDmtpRpcActor)
+        {
+            this.CreateDmtpRpcActor = createDmtpRpcActor;
+            return this;
+        }
 
         /// <summary>
         /// 设置<see cref="DmtpRpcFeature"/>的起始协议。
@@ -64,19 +82,14 @@ namespace TouchSocket.Dmtp.Rpc
             return this;
         }
 
-        /// <summary>
-        /// 获取<see cref="DmtpRpcActor"/>
-        /// </summary>
-        /// <param name="smtpActor"></param>
-        /// <returns></returns>
-        protected DmtpRpcActor CreateDmtpRpcActor(IDmtpActor smtpActor)
-        {
-            return new DmtpRpcActor(smtpActor);
-        }
-
         private MethodInstance GetInvokeMethod(string name)
         {
             return this.ActionMap.GetMethodInstance(name);
+        }
+
+        private DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor smtpActor)
+        {
+            return new DmtpRpcActor(smtpActor);
         }
 
         #region Rpc配置
@@ -107,9 +120,10 @@ namespace TouchSocket.Dmtp.Rpc
 
         #region Config
 
-        Task IDmtpHandshakedPlugin<IDmtpActorObject>.OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            var smtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor);
+            var smtpRpcActor = CreateDmtpRpcActor(client.DmtpActor);
             smtpRpcActor.RpcStore = this.RpcStore;
             smtpRpcActor.SerializationSelector = this.SerializationSelector;
             smtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
@@ -120,7 +134,8 @@ namespace TouchSocket.Dmtp.Rpc
             return e.InvokeNext();
         }
 
-        Task IDmtpReceivedPlugin<IDmtpActorObject>.OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        /// <inheritdoc/>
+        public Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor smtpRpcActor)
             {

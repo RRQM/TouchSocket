@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>message;arraypool;logger;plugin;3DES;xml;filepool;serialize</PackageTags>
-		<Description>这是为TouchSocket系提供基础服务功能的库，其中包含：内存池、对象池、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能序列化器、规范日志接口等。
+		<Description>这是一个基础服务功能的库，其中包含：内存池、对象池、文件池、流式数据解包器、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能二进制序列化器、规范日志接口等。
 			
 说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Core</Title>

@@ -37,7 +37,7 @@ namespace TouchSocket.Core
             this.FileInfo = fileInfo;
             this.Path = fileInfo.FullName;
             this.m_reference = 0;
-            this.FileStream = fileAccess == FileAccess.Read ? fileInfo.OpenRead() : fileInfo.OpenWrite();
+            this.FileStream = fileInfo.Open(FileMode.OpenOrCreate, fileAccess, FileShare.ReadWrite);
             this.m_lockSlim = new ReaderWriterLockSlim();
         }
 

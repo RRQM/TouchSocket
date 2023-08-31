@@ -48,7 +48,7 @@ namespace TouchSocket.Dmtp.Rpc
                     }
                 case SerializationType.Json:
                     {
-                        return Encoding.UTF8.GetString(parameterBytes).FromJson(parameterType);
+                        return SerializeConvert.FromJsonString(Encoding.UTF8.GetString(parameterBytes), parameterType);
                     }
                 case SerializationType.Xml:
                     {

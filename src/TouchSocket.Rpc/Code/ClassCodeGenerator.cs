@@ -29,6 +29,8 @@ namespace TouchSocket.Rpc
         private static readonly string[] m_dicType = { "Dictionary`2", "IDictionary`2" };
         private static readonly string[] m_listType = { "List`1", "HashSet`1", "IList`1", "ISet`1", "ICollection`1", "IEnumerable`1" };
 
+        private List<string> tupleElementNames;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -54,177 +56,6 @@ namespace TouchSocket.Rpc
         /// 属性类型字典。
         /// </summary>
         public ConcurrentDictionary<Type, ClassCellCode> PropertyDic { get; private set; }
-
-        /// <summary>
-        /// 获取类单元参数
-        /// </summary>
-        /// <returns></returns>
-        public ClassCellCode[] GetClassCellCodes()
-        {
-            return this.PropertyDic.Values.ToArray();
-        }
-
-        /// <summary>
-        /// 获取类型全名
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public string GetTypeFullName(Type type)
-        {
-            if (type.FullName == null)
-            {
-                return type.Name.Replace("&", string.Empty);
-            }
-            else if (type == typeof(void))
-            {
-                return null;
-            }
-            else if (typeof(Task).IsAssignableFrom(type))
-            {
-                var ts = type.GetGenericArguments();
-                return ts.Length == 1 ? ts[0].Name : type.Name;
-            }
-            else if (type.IsArray)
-            {
-                var elementType = type.GetElementType();
-                return this.GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
-            }
-            else if (type.IsNullableType())
-            {
-                return this.GetTypeFullName(type.GetGenericArguments().Length == 0 ? type : type.GetGenericArguments()[0]);
-            }
-            else if (type.IsValueTuple())
-            {
-                var elementTypes = type.GetGenericArguments();
-
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append("(");
-
-                var strings = new List<string>();
-                var tupleNames = new List<string>();
-                if (this.tupleElementNames != null && this.tupleElementNames.Count > 0)
-                {
-                    tupleNames.AddRange(this.tupleElementNames.Skip(0).Take(elementTypes.Length));
-                    this.tupleElementNames.RemoveRange(0, elementTypes.Length);
-                }
-                for (var i = 0; i < elementTypes.Length; i++)
-                {
-                    var item = this.GetTypeFullName(elementTypes[i]);
-                    if (tupleNames.Count > 0)
-                    {
-                        strings.Add($"{item} {tupleNames[i]}");
-                    }
-                    else
-                    {
-                        strings.Add($"{item}");
-                    }
-                }
-                //var strs = elementTypes.Select(e => GetTypeFullName(e));
-
-
-                //foreach (var item in strs)
-                //{
-
-                //}
-                stringBuilder.Append(string.Join(",", strings));
-                stringBuilder.Append(")");
-                return stringBuilder.ToString();
-            }
-            else if (type.IsByRef)
-            {
-                return this.GetTypeFullName(type.GetElementType());
-            }
-            else if (type.IsPrimitive || type == typeof(string))
-            {
-                return type.FullName;
-            }
-            else if (m_listType.Contains(type.Name))
-            {
-                var typeInnerString = this.GetTypeFullName(type.GetGenericArguments()[0]);
-                var typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
-                return typeString;
-            }
-            else if (m_listType.Contains(type.Name) || m_dicType.Contains(type.Name))
-            {
-                var keyString = this.GetTypeFullName(type.GetGenericArguments()[0]);
-                var valueString = this.GetTypeFullName(type.GetGenericArguments()[1]);
-                var typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                return typeString;
-            }
-            else
-            {
-                return this.PropertyDic.ContainsKey(type) ? this.PropertyDic[type].Name : type.FullName;
-            }
-        }
-
-        private List<string> tupleElementNames;
-        /// <summary>
-        /// 获取类型全名
-        /// </summary>
-        /// <param name="parameterInfo"></param>
-        /// <returns></returns>
-        public string GetTypeFullName(ParameterInfo parameterInfo)
-        {
-            this.tupleElementNames = parameterInfo.ParameterType.FullName.Contains("System.ValueTuple") ? (parameterInfo.GetTupleElementNames()?.ToList()) : default;
-            return this.GetTypeFullName(parameterInfo.ParameterType);
-        }
-
-        /// <summary>
-        /// 获取类型全名
-        /// </summary>
-        /// <param name="propertyInfo"></param>
-        /// <returns></returns>
-        public string GetTypeFullName(PropertyInfo propertyInfo)
-        {
-            this.tupleElementNames = propertyInfo.PropertyType.FullName.Contains("System.ValueTuple") ? (propertyInfo.GetTupleElementNames()?.ToList()) : default;
-            return this.GetTypeFullName(propertyInfo.PropertyType);
-        }
-
-        /// <summary>
-        /// 获取类型全名
-        /// </summary>
-        /// <param name="fieldInfo"></param>
-        /// <returns></returns>
-        public string GetTypeFullName(FieldInfo fieldInfo)
-        {
-            this.tupleElementNames = fieldInfo.FieldType.FullName.Contains("System.ValueTuple") ? (fieldInfo.GetTupleElementNames()?.ToList()) : default;
-            return this.GetTypeFullName(fieldInfo.FieldType);
-        }
-
-        internal void CheckDeep()
-        {
-            //foreach (var strItem in GenericTypeDic)
-            //{
-            //    bool goon = true;
-            //    string strItemNew = strItem.Value;
-            //    while (goon)
-            //    {
-            //        goon = false;
-            //        foreach (var item in GenericTypeDic.Keys)
-            //        {
-            //            if (strItemNew.Contains(item.FullName))
-            //            {
-            //                strItemNew = strItemNew.Replace(item.FullName, item.Name);
-            //                goon = true;
-            //            }
-            //        }
-            //    }
-            //    GenericTypeDic[strItem.Key] = strItemNew;
-            //}
-
-            foreach (var strItem in this.PropertyDic)
-            {
-                var strItemNew = strItem.Value.Code;
-                foreach (var item in this.PropertyDic.Keys)
-                {
-                    if (strItemNew.Contains(item.FullName))
-                    {
-                        strItemNew = strItemNew.Replace(item.FullName, item.Name);
-                    }
-                }
-                this.PropertyDic[strItem.Key].Code = strItemNew;
-            }
-        }
 
         /// <summary>
         /// 添加类型字符串
@@ -490,6 +321,174 @@ namespace TouchSocket.Rpc
                 {
                     this.PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
                 }
+            }
+        }
+
+        /// <summary>
+        /// 获取类单元参数
+        /// </summary>
+        /// <returns></returns>
+        public ClassCellCode[] GetClassCellCodes()
+        {
+            return this.PropertyDic.Values.ToArray();
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(Type type)
+        {
+            if (type.FullName == null)
+            {
+                return type.Name.Replace("&", string.Empty);
+            }
+            else if (type == typeof(void))
+            {
+                return null;
+            }
+            else if (typeof(Task).IsAssignableFrom(type))
+            {
+                var ts = type.GetGenericArguments();
+                return ts.Length == 1 ? ts[0].Name : type.Name;
+            }
+            else if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                return this.GetTypeFullName(elementType) + type.Name.Replace(elementType.Name, string.Empty);
+            }
+            else if (type.IsNullableType())
+            {
+                return this.GetTypeFullName(type.GetGenericArguments().Length == 0 ? type : type.GetGenericArguments()[0]);
+            }
+            else if (type.IsValueTuple())
+            {
+                var elementTypes = type.GetGenericArguments();
+
+                var stringBuilder = new StringBuilder();
+                stringBuilder.Append("(");
+
+                var strings = new List<string>();
+                var tupleNames = new List<string>();
+                if (this.tupleElementNames != null && this.tupleElementNames.Count > 0)
+                {
+                    tupleNames.AddRange(this.tupleElementNames.Skip(0).Take(elementTypes.Length));
+                    this.tupleElementNames.RemoveRange(0, elementTypes.Length);
+                }
+                for (var i = 0; i < elementTypes.Length; i++)
+                {
+                    var item = this.GetTypeFullName(elementTypes[i]);
+                    if (tupleNames.Count > 0)
+                    {
+                        strings.Add($"{item} {tupleNames[i]}");
+                    }
+                    else
+                    {
+                        strings.Add($"{item}");
+                    }
+                }
+                //var strs = elementTypes.Select(e => GetTypeFullName(e));
+
+                //foreach (var item in strs)
+                //{
+                //}
+                stringBuilder.Append(string.Join(",", strings));
+                stringBuilder.Append(")");
+                return stringBuilder.ToString();
+            }
+            else if (type.IsByRef)
+            {
+                return this.GetTypeFullName(type.GetElementType());
+            }
+            else if (type.IsPrimitive || type == typeof(string))
+            {
+                return type.FullName;
+            }
+            else if (m_listType.Contains(type.Name))
+            {
+                var typeInnerString = this.GetTypeFullName(type.GetGenericArguments()[0]);
+                var typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
+                return typeString;
+            }
+            else if (m_listType.Contains(type.Name) || m_dicType.Contains(type.Name))
+            {
+                var keyString = this.GetTypeFullName(type.GetGenericArguments()[0]);
+                var valueString = this.GetTypeFullName(type.GetGenericArguments()[1]);
+                var typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
+                return typeString;
+            }
+            else
+            {
+                return this.PropertyDic.ContainsKey(type) ? this.PropertyDic[type].Name : type.FullName;
+            }
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="parameterInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(ParameterInfo parameterInfo)
+        {
+            this.tupleElementNames = parameterInfo.ParameterType.FullName.Contains("System.ValueTuple") ? (parameterInfo.GetTupleElementNames()?.ToList()) : default;
+            return this.GetTypeFullName(parameterInfo.ParameterType);
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="propertyInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(PropertyInfo propertyInfo)
+        {
+            this.tupleElementNames = propertyInfo.PropertyType.FullName.Contains("System.ValueTuple") ? (propertyInfo.GetTupleElementNames()?.ToList()) : default;
+            return this.GetTypeFullName(propertyInfo.PropertyType);
+        }
+
+        /// <summary>
+        /// 获取类型全名
+        /// </summary>
+        /// <param name="fieldInfo"></param>
+        /// <returns></returns>
+        public string GetTypeFullName(FieldInfo fieldInfo)
+        {
+            this.tupleElementNames = fieldInfo.FieldType.FullName.Contains("System.ValueTuple") ? (fieldInfo.GetTupleElementNames()?.ToList()) : default;
+            return this.GetTypeFullName(fieldInfo.FieldType);
+        }
+
+        internal void CheckDeep()
+        {
+            //foreach (var strItem in GenericTypeDic)
+            //{
+            //    bool goon = true;
+            //    string strItemNew = strItem.Value;
+            //    while (goon)
+            //    {
+            //        goon = false;
+            //        foreach (var item in GenericTypeDic.Keys)
+            //        {
+            //            if (strItemNew.Contains(item.FullName))
+            //            {
+            //                strItemNew = strItemNew.Replace(item.FullName, item.Name);
+            //                goon = true;
+            //            }
+            //        }
+            //    }
+            //    GenericTypeDic[strItem.Key] = strItemNew;
+            //}
+
+            foreach (var strItem in this.PropertyDic)
+            {
+                var strItemNew = strItem.Value.Code;
+                foreach (var item in this.PropertyDic.Keys)
+                {
+                    if (strItemNew.Contains(item.FullName))
+                    {
+                        strItemNew = strItemNew.Replace(item.FullName, item.Name);
+                    }
+                }
+                this.PropertyDic[strItem.Key].Code = strItemNew;
             }
         }
 

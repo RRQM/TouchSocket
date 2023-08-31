@@ -101,7 +101,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                target = source.FromJson(targetType);
+                target = SerializeConvert.FromJsonString(source, targetType);
                 return true;
             }
             catch
@@ -121,7 +121,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source = target.ToJson();
+                source = SerializeConvert.ToJsonString(target);
                 return true;
             }
             catch (Exception)

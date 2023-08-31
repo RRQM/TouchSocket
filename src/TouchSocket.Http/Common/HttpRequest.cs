@@ -95,16 +95,6 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// 获取时候保持连接
-        /// </summary>
-        public bool KeepAlive
-        {
-            get
-            {
-                return this.ProtocolVersion != "1.0" && this.Headers.Get(HttpHeaders.Connection) == "keep-alive";
-            }
-        }
 
         /// <summary>
         /// HTTP请求方式。
@@ -407,7 +397,7 @@ namespace TouchSocket.Http
 
         private void ParseUrl()
         {
-            if (this.URL.Contains("?"))
+            if (this.URL.Contains('?'))
             {
                 var urls = this.URL.Split('?');
                 if (urls.Length > 0)

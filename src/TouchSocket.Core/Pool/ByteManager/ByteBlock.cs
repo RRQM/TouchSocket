@@ -301,30 +301,27 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="position"></param>
         /// <returns></returns>
-        public ByteBlock Seek(int position)
+        public void Seek(int position)
         {
             this.Position = position;
-            return this;
         }
 
         /// <summary>
         /// 设置游标到末位
         /// </summary>
         /// <returns></returns>
-        public ByteBlock SeekToEnd()
+        public void SeekToEnd()
         {
             this.Position = this.Length;
-            return this;
         }
 
         /// <summary>
         /// 设置游标到首位
         /// </summary>
         /// <returns></returns>
-        public ByteBlock SeekToStart()
+        public void SeekToStart()
         {
             this.Position = 0;
-            return this;
         }
 
         /// <summary>
@@ -624,7 +621,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public ByteBlock WriteBytesPackage(byte[] value, int offset, int length)
+        public void WriteBytesPackage(byte[] value, int offset, int length)
         {
             if (value == null)
             {
@@ -636,16 +633,22 @@ namespace TouchSocket.Core
                 this.Write(length);
                 this.Write(value, offset, length);
             }
-            return this;
         }
 
         /// <summary>
         /// 写入一个独立的<see cref="byte"/>数组包。值可以为null。
         /// </summary>
         /// <param name="value"></param>
-        public ByteBlock WriteBytesPackage(byte[] value)
+        public void WriteBytesPackage(byte[] value)
         {
-            return value == null ? this.WriteBytesPackage(value, 0, 0) : this.WriteBytesPackage(value, 0, value.Length);
+            if (value == null)
+            {
+                this.WriteBytesPackage(value, 0, 0);
+            }
+            else
+            {
+                this.WriteBytesPackage(value, 0, value.Length);
+            }
         }
 
         #endregion BytesPackage
@@ -675,7 +678,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 写入<see cref="ByteBlock"/>值
         /// </summary>
-        public ByteBlock WriteByteBlock(ByteBlock byteBlock)
+        public void WriteByteBlock(ByteBlock byteBlock)
         {
             if (byteBlock is null)
             {
@@ -686,7 +689,6 @@ namespace TouchSocket.Core
                 this.WriteNotNull();
                 this.WriteBytesPackage(byteBlock.Buffer, 0, byteBlock.Len);
             }
-            return this;
         }
 
         #endregion ByteBlock
@@ -715,15 +717,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(int value, bool? bigEndian = null)
+        public void Write(int value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Int32
@@ -752,15 +759,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(short value, bool? bigEndian = null)
+        public void Write(short value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Int16
@@ -789,15 +801,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(long value, bool? bigEndian = null)
+        public void Write(long value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Int64
@@ -818,10 +835,9 @@ namespace TouchSocket.Core
         /// 写入<see cref="bool"/>值
         /// </summary>
         /// <param name="value"></param>
-        public ByteBlock Write(bool value)
+        public void Write(bool value)
         {
             this.Write(TouchSocketBitConverter.Default.GetBytes(value));
-            return this;
         }
 
         #endregion Boolean
@@ -833,10 +849,9 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public ByteBlock Write(byte value)
+        public void Write(byte value)
         {
             this.Write(new byte[] { value }, 0, 1);
-            return this;
         }
 
         #endregion Byte
@@ -871,7 +886,7 @@ namespace TouchSocket.Core
         /// </list>
         /// </summary>
         /// <param name="value"></param>
-        public ByteBlock Write(string value)
+        public void Write(string value)
         {
             if (value == null)
             {
@@ -883,7 +898,6 @@ namespace TouchSocket.Core
                 this.Write(buffer.Length);
                 this.Write(buffer);
             }
-            return this;
         }
 
         /// <summary>
@@ -891,10 +905,9 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="encoding"></param>
-        public ByteBlock WriteString(string value, Encoding encoding = null)
+        public void WriteString(string value, Encoding encoding = null)
         {
             this.Write((encoding ?? Encoding.UTF8).GetBytes(value));
-            return this;
         }
 
         #endregion String
@@ -923,15 +936,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(char value, bool? bigEndian = null)
+        public void Write(char value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Char
@@ -960,15 +978,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(double value, bool? bigEndian = null)
+        public void Write(double value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Double
@@ -997,15 +1020,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(float value, bool? bigEndian = null)
+        public void Write(float value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion Float
@@ -1034,15 +1062,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(ushort value, bool? bigEndian = null)
+        public void Write(ushort value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion UInt16
@@ -1071,15 +1104,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(uint value, bool? bigEndian = null)
+        public void Write(uint value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion UInt32
@@ -1108,15 +1146,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="bigEndian">是否为指定大端编码。允许true（大端），false（小端），null（默认端序）三种赋值。默认为null。</param>
-        public ByteBlock Write(ulong value, bool? bigEndian = null)
+        public void Write(ulong value, bool? bigEndian = null)
         {
             switch (bigEndian)
             {
-                case true: this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value)); break;
-                case false: this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value)); break;
-                default: this.Write(TouchSocketBitConverter.Default.GetBytes(value)); break;
+                case true:
+                    this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+                    break;
+                case false:
+                    this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
+                    break;
+                default:
+                    this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+                    break;
             }
-            return this;
         }
 
         #endregion UInt64
@@ -1151,19 +1194,17 @@ namespace TouchSocket.Core
         /// <summary>
         /// 写入一个标识非Null值
         /// </summary>
-        public ByteBlock WriteNotNull()
+        public void WriteNotNull()
         {
             this.Write((byte)1);
-            return this;
         }
 
         /// <summary>
         /// 写入一个标识Null值
         /// </summary>
-        public ByteBlock WriteNull()
+        public void WriteNull()
         {
             this.Write((byte)0);
-            return this;
         }
 
         #endregion Null
@@ -1184,10 +1225,9 @@ namespace TouchSocket.Core
         /// 写入<see cref="DateTime"/>值
         /// </summary>
         /// <param name="value"></param>
-        public ByteBlock Write(DateTime value)
+        public void Write(DateTime value)
         {
             this.Write(TouchSocketBitConverter.Default.GetBytes(value.ToBinary()));
-            return this;
         }
 
         #endregion DateTime
@@ -1208,10 +1248,9 @@ namespace TouchSocket.Core
         /// 写入<see cref="TimeSpan"/>值
         /// </summary>
         /// <param name="value"></param>
-        public ByteBlock Write(TimeSpan value)
+        public void Write(TimeSpan value)
         {
             this.Write(TouchSocketBitConverter.Default.GetBytes(value.Ticks));
-            return this;
         }
 
         #endregion TimeSpan
@@ -1276,7 +1315,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="serializationType"></param>
-        public ByteBlock WriteObject(object value, SerializationType serializationType = SerializationType.FastBinary)
+        public void WriteObject(object value, SerializationType serializationType = SerializationType.FastBinary)
         {
             if (value == null)
             {
@@ -1292,32 +1331,27 @@ namespace TouchSocket.Core
                             data = SerializeConvert.FastBinarySerialize(value);
                         }
                         break;
-
                     case SerializationType.Json:
                         {
                             data = SerializeConvert.JsonSerializeToBytes(value);
                         }
                         break;
-
                     case SerializationType.Xml:
                         {
                             data = Encoding.UTF8.GetBytes(SerializeConvert.XmlSerializeToString(value));
                         }
                         break;
-
                     case SerializationType.SystemBinary:
                         {
                             data = SerializeConvert.BinarySerialize(value);
                         }
                         break;
-
                     default:
                         throw new Exception("未定义的序列化类型");
                 }
                 this.Write(data.Length);
                 this.Write(data);
             }
-            return this;
         }
 
         #endregion Object
@@ -1364,7 +1398,29 @@ namespace TouchSocket.Core
         #endregion Package
 
         #region Implicit
+        /// <summary>
+        /// 将<see cref="ByteBlock"/>转为<see cref="ArraySegment{T}"/>。
+        /// <para>注意：实际上是产生了一个新的内存。</para>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public static implicit operator ArraySegment<byte>(ByteBlock byteBlock)
+        {
+            return new ArraySegment<byte>(byteBlock);
+        }
 
+        /// <summary>
+        /// 将<see cref="ByteBlock"/>转为<see cref="byte"/>数组。
+        /// <para>注意：实际上是产生了一个新的内存。</para>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public static implicit operator byte[](ByteBlock byteBlock)
+        {
+            if (byteBlock.m_dis == 0)
+            {
+                throw new ObjectDisposedException(nameof(byteBlock));
+            }
+            return byteBlock.ToArray();
+        }
         #endregion Implicit
 
     }

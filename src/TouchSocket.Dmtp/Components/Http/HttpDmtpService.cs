@@ -67,7 +67,7 @@ namespace TouchSocket.Dmtp
 
         private DmtpActor PrivateOnRpcActorInit()
         {
-            return new DmtpActor(this.m_allowRoute)
+            return new SealedDmtpActor(this.m_allowRoute)
             {
                 OnFindDmtpActor = this.m_allowRoute ? (this.m_findDmtpActor ?? this.OnServiceFindDmtpActor) : null
             };

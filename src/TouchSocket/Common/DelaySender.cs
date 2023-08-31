@@ -21,27 +21,22 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 延迟发送器
     /// </summary>
-    public sealed class DelaySender : DisposableObject
+    public sealed class DelaySender:DisposableObject
     {
-        private readonly ReaderWriterLockSlim m_lockSlim;
-        private readonly Action<Exception> m_onError;
         private readonly IntelligentDataQueue<QueueDataBytes> m_queueDatas;
-        private readonly Socket m_socket;
-        private volatile bool m_sending;
-
+        private readonly Action<byte[], int, int> m_action;
+        AsyncAutoResetEvent m_resetEvent = new AsyncAutoResetEvent(false);
         /// <summary>
         /// 延迟发送器
         /// </summary>
-        /// <param name="socket"></param>
-        /// <param name="onError"></param>
         /// <param name="delaySenderOption"></param>
-        public DelaySender(Socket socket,  DelaySenderOption delaySenderOption, Action<Exception> onError)
+        /// <param name="action"></param>
+        public DelaySender(DelaySenderOption delaySenderOption, Action<byte[],int,int> action)
         {
             this.DelayLength=delaySenderOption.DelayLength;
-            this.m_socket = socket;
-            this.m_onError = onError;
             this.m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(delaySenderOption.QueueLength);
-            this.m_lockSlim = new ReaderWriterLockSlim();
+            Task.Run(this.BeginSend);
+            this.m_action = action ?? throw new ArgumentNullException(nameof(action));
         }
 
         /// <summary>
@@ -49,98 +44,44 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int DelayLength { get;private set; }
 
-        /// <summary>
-        /// 是否处于发送状态
-        /// </summary>
-        public bool Sending
-        {
-            get
-            {
-                using (new ReadLock(this.m_lockSlim))
-                {
-                    return this.m_sending;
-                }
-            }
-
-            private set
-            {
-                using (new WriteLock(this.m_lockSlim))
-                {
-                    this.m_sending = value;
-                }
-            }
-        }
-
+        
         /// <summary>
         /// 发送
         /// </summary>
-        public void Send(QueueDataBytes dataBytes)
+        public void Send(in QueueDataBytes dataBytes)
         {
             this.m_queueDatas.Enqueue(dataBytes);
-            if (this.SwitchToRun())
-            {
-                Task.Factory.StartNew(this.BeginSend);
-            }
+            this.m_resetEvent.Set();
         }
 
-        /// <summary>
-        /// 释放
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        private async Task BeginSend()
         {
-            this.m_queueDatas.Clear();
-            base.Dispose(disposing);
-        }
-
-        private void BeginSend()
-        {
-            try
+            while (!this.DisposedValue)
             {
                 var buffer = BytePool.Default.Rent(this.DelayLength);
-                while (!this.DisposedValue)
+                try
                 {
-                    try
+                    if (this.TryGet(buffer, out var asyncByte))
                     {
-                        if (this.TryGet(buffer, out var asyncByte))
-                        {
-                            this.m_socket.AbsoluteSend(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        this.m_action.Invoke(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        this.m_onError?.Invoke(ex);
-                        break;
+                        await m_resetEvent.WaitOneAsync();
                     }
                 }
-                BytePool.Default.Return(buffer);
-                this.Sending = false;
-            }
-            catch
-            {
-            }
-        }
+                catch
+                {
 
-        private bool SwitchToRun()
-        {
-            using (new WriteLock(this.m_lockSlim))
-            {
-                if (this.m_sending)
-                {
-                    return false;
                 }
-                else
+                finally
                 {
-                    this.m_sending = true;
-                    return true;
+                    BytePool.Default.Return(buffer);
                 }
             }
         }
 
+       
         private bool TryGet(byte[] buffer, out QueueDataBytes asyncByteDe)
         {
             var len = 0;

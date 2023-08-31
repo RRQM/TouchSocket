@@ -34,7 +34,8 @@ namespace TouchSocket.JsonRpc
             return this;
         }
 
-        Task ITcpConnectingPlugin<ITcpClientBase>.OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
+        /// <inheritdoc/>
+        public Task OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
         {
             if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
             {
@@ -44,7 +45,8 @@ namespace TouchSocket.JsonRpc
             return e.InvokeNext();
         }
 
-        async Task ITcpReceivedPlugin<ITcpClientBase>.OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             if (client.Protocol == JsonRpcUtility.TcpJsonRpc)
             {
@@ -93,7 +95,7 @@ namespace TouchSocket.JsonRpc
                 }
 
                 var client = (ITcpClientBase)callContext.Caller;
-                client.Send(jobject.ToJson().ToUTF8Bytes());
+                client.Send(jobject.ToJsonString().ToUTF8Bytes());
             }
             catch
             {

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouchSocket.SourceGenerator.Rpc
+namespace TouchSocket
 {
     /// <summary>
     /// RpcApi代码构建器
@@ -150,27 +150,32 @@ namespace TouchSocket.SourceGenerator.Rpc
         /// <returns></returns>
         public override string ToString()
         {
-            var builder = new StringBuilder();
+            var codeString = new StringBuilder();
+            codeString.AppendLine("/*");
+            codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
+            codeString.AppendLine("*/");
+            codeString.AppendLine("#pragma warning disable");
+
             foreach (var item in this.Usings)
             {
-                builder.AppendLine(item);
+                codeString.AppendLine(item);
             }
-            builder.AppendLine($"namespace {this.GetNamespace()}");
-            builder.AppendLine("{");
+            codeString.AppendLine($"namespace {this.GetNamespace()}");
+            codeString.AppendLine("{");
 
             if (this.AllowAsync(CodeGeneratorFlag.InterfaceSync) || this.AllowAsync(CodeGeneratorFlag.InterfaceAsync))
             {
-                this.BuildIntereface(builder);
+                this.BuildIntereface(codeString);
             }
 
             if (this.AllowAsync(CodeGeneratorFlag.ExtensionSync) || this.AllowAsync(CodeGeneratorFlag.ExtensionAsync))
             {
-                this.BuildMethod(builder);
+                this.BuildMethod(codeString);
             }
-            builder.AppendLine("}");
+            codeString.AppendLine("}");
 
             // System.Diagnostics.Debugger.Launch();
-            return builder.ToString();
+            return codeString.ToString();
         }
 
         private bool AllowAsync(CodeGeneratorFlag flag, IMethodSymbol method = default, Dictionary<string, TypedConstant> namedArguments = default)

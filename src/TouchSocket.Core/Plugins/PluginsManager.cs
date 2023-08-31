@@ -75,32 +75,67 @@ namespace TouchSocket.Core
                 {
                     this.m_container.RegisterSingleton(plugin);
                 }
-                var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
-                foreach (var type in pluginInterfacetypes)
+
+                this.SearchPluginMethod(plugin);
+
+                var pairs = new List<string>();
+                var methodInfos = plugin.GetType()
+                    .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly| BindingFlags.NonPublic);
+                foreach (var methodInfo in methodInfos)
                 {
-                    var pairs = new List<string>();
-
-                    var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-                    foreach (var methodInfo in methodInfos)
+                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
                     {
-                        if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-                        {
-                            if (pairs.Contains(methodInfo.Name))
-                            {
-                                throw new Exception("插件的接口方法不允许重载");
-                            }
+                        var name = methodInfo.GetName();
 
-                            var pluginModel = this.GetPluginModel(methodInfo);
-                            pluginModel.Plugins.Add(plugin);
-                            pluginModel.Plugins.Sort(delegate (IPlugin x, IPlugin y)
+                        if (pairs.Contains(name))
+                        {
+                            throw new Exception("插件的接口方法不允许重载");
+                        }
+                        if (this.m_pluginMethodNames.Contains(name))
+                        {
+                            var pluginModel = this.GetPluginModel(name);
+                            pluginModel.PluginEntities.Add(new PluginEntity(new Method(methodInfo), plugin));
+                            pluginModel.PluginEntities.Sort(delegate (PluginEntity x, PluginEntity y)
                             {
-                                return x.Order == y.Order ? 0 : x.Order < y.Order ? 1 : -1;
+                                return x.Plugin.Order == y.Plugin.Order ? 0 : x.Plugin.Order < y.Plugin.Order ? 1 : -1;
                             });
                         }
+                        pairs.Add(name);
                     }
                 }
                 this.m_plugins.Add(plugin);
+                plugin.Loaded(this);
             }
+        }
+
+        readonly List<string> m_pluginMethodNames = new List<string>();
+        private void SearchPluginMethod(IPlugin plugin)
+        {
+            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
+            foreach (var type in pluginInterfacetypes)
+            {
+                var pairs = new List<string>();
+
+                var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                foreach (var methodInfo in methodInfos)
+                {
+                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
+                    {
+                        var name = methodInfo.GetName();
+                        if (pairs.Contains(name))
+                        {
+                            throw new Exception("插件的接口方法不允许重载");
+                        }
+                        if (!m_pluginMethodNames.Contains(name))
+                        {
+                            m_pluginMethodNames.Add(name);
+                        }
+
+                        pairs.Add(name);
+                    }
+                }
+            }
+
         }
 
         object IPluginsManager.Add(Type pluginType)
@@ -177,17 +212,6 @@ namespace TouchSocket.Core
             base.Dispose(disposing);
         }
 
-        private PluginModel GetPluginModel(MethodInfo methodInfo)
-        {
-            if (!this.m_pluginMethods.TryGetValue(methodInfo.Name, out var pluginModel))
-            {
-                pluginModel = new PluginModel();
-                this.m_pluginMethods.Add(methodInfo.Name, pluginModel);
-            }
-            pluginModel.Method ??= new Method(methodInfo);
-            return pluginModel;
-        }
-
         private PluginModel GetPluginModel(string name)
         {
             if (!this.m_pluginMethods.TryGetValue(name, out var pluginModel))
@@ -196,6 +220,16 @@ namespace TouchSocket.Core
                 this.m_pluginMethods.Add(name, pluginModel);
             }
             return pluginModel;
+        }
+
+        /// <inheritdoc/>
+        public int GetPluginCount(string name, bool includeFunc = true)
+        {
+            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            {
+                return includeFunc ? pluginModel.PluginEntities.Count + pluginModel.Funcs.Count : pluginModel.PluginEntities.Count;
+            }
+            return 0;
         }
     }
 }

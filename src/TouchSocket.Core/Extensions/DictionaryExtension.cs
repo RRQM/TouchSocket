@@ -31,7 +31,7 @@ namespace TouchSocket.Core
         /// <param name="pairs"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static int Remove<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> pairs, Func<KeyValuePair<TKey, TValue>, bool> func)
+        public static int RemoveWhen<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> pairs, Func<KeyValuePair<TKey, TValue>, bool> func)
         {
             var list = new List<TKey>();
             foreach (var item in pairs)

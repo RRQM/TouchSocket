@@ -3,7 +3,7 @@
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<PackageTags>message;arraypool;logger;plugin</PackageTags>
-		<Description>这是一个适用于AspNetCore的、轻量级的、支持插件的综合网络通信库。
+		<Description>TouchSocket.AspNetCore是适用于AspNetCore的专属版本。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.AspNetCore</Title>

@@ -61,7 +61,7 @@ namespace TouchSocket.WebApi
 
                         if (parameters.Length > 0)
                         {
-                            request.Content = new ByteArrayContent(parameters[parameters.Length - 1].ToJson().ToUTF8Bytes());
+                            request.Content = new ByteArrayContent(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]).ToUTF8Bytes());
                         }
                         break;
                     }
@@ -92,7 +92,7 @@ namespace TouchSocket.WebApi
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException(response.Content.ReadAsStringAsync().GetAwaiter().GetResult().FromJson<ActionResult>().Message);
+                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>( response.Content.ReadAsStringAsync().GetAwaiter().GetResult()).Message);
                 }
                 else
                 {
@@ -131,7 +131,7 @@ namespace TouchSocket.WebApi
 
                         if (parameters.Length > 0)
                         {
-                            request.Content = new ByteArrayContent(parameters[parameters.Length - 1].ToJson().ToUTF8Bytes());
+                            request.Content = new ByteArrayContent(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]).ToUTF8Bytes());
                         }
                         break;
                     }
@@ -162,7 +162,7 @@ namespace TouchSocket.WebApi
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException(response.Content.ReadAsStringAsync().GetAwaiter().GetResult().FromJson<ActionResult>().Message);
+                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult()).Message);
                 }
                 else
                 {
@@ -213,7 +213,7 @@ namespace TouchSocket.WebApi
 
                         if (parameters.Length > 0)
                         {
-                            request.Content = new ByteArrayContent(parameters[parameters.Length - 1].ToJson().ToUTF8Bytes());
+                            request.Content = new ByteArrayContent(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]).ToUTF8Bytes());
                         }
                         break;
                     }
@@ -244,7 +244,7 @@ namespace TouchSocket.WebApi
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException((await response.Content.ReadAsStringAsync()).FromJson<ActionResult>().Message);
+                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(await response.Content.ReadAsStringAsync()).Message);
                 }
                 else
                 {
@@ -283,7 +283,7 @@ namespace TouchSocket.WebApi
 
                         if (parameters.Length > 0)
                         {
-                            request.Content = new ByteArrayContent(parameters[parameters.Length - 1].ToJson().ToUTF8Bytes());
+                            request.Content = new ByteArrayContent(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]).ToUTF8Bytes());
                         }
                         break;
                     }
@@ -314,7 +314,7 @@ namespace TouchSocket.WebApi
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException((await response.Content.ReadAsStringAsync()).FromJson<ActionResult>().Message);
+                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(await response.Content.ReadAsStringAsync()).Message);
                 }
                 else
                 {

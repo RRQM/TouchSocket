@@ -59,7 +59,7 @@ namespace TouchSocket.Dmtp
         /// <param name="e"></param>
         protected override void OnConnecting(TClient socketClient, ConnectingEventArgs e)
         {
-            socketClient.SetDmtpActor(new DmtpActor(this.m_allowRoute)
+            socketClient.SetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
             {
                 Id = e.Id,
                 OnFindDmtpActor = this.m_allowRoute ? (this.m_findDmtpActor ?? this.OnServiceFindDmtpActor) : null

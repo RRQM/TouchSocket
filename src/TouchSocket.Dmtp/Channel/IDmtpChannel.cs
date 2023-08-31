@@ -13,12 +13,12 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 通道传输速度限制
         /// </summary>
-        int MaxSpeed { get; set; }
+        long MaxSpeed { get; set; }
 
         /// <summary>
-        /// 是否具有数据可读
+        /// 具有可读数据的长度
         /// </summary>
-        int Available { get; }
+        long Available { get; }
 
         /// <summary>
         /// 缓存容量

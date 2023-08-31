@@ -25,7 +25,7 @@ namespace TouchSocket.XmlRpc
     /// XmlRpc解析器
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public class XmlRpcParserPlugin : PluginBase, IRpcParser, IHttpPostPlugin
+    public class XmlRpcParserPlugin : PluginBase, IRpcParser, IHttpPlugin
     {
         private string m_xmlRpcUrl = "/xmlrpc";
 
@@ -91,118 +91,6 @@ namespace TouchSocket.XmlRpc
 
         #endregion RPC解析器
 
-        async Task IHttpPostPlugin<IHttpSocketClient>.OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
-        {
-            if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
-            {
-                e.Handled = true;
-
-                var xml = new XmlDocument();
-                var xmlstring = e.Context.Request.GetBody();
-                xml.LoadXml(xmlstring);
-                var methodName = xml.SelectSingleNode("methodCall/methodName");
-                var actionKey = methodName.InnerText;
-
-                object[] ps = null;
-                var invokeResult = new InvokeResult();
-                XmlRpcCallContext callContext = null;
-
-                if (this.ActionMap.TryGetMethodInstance(actionKey, out var methodInstance))
-                {
-                    if (methodInstance.IsEnable)
-                    {
-                        try
-                        {
-                            callContext = new XmlRpcCallContext()
-                            {
-                                Caller = client,
-                                HttpContext = e.Context,
-                                MethodInstance = methodInstance,
-                                XmlString = xmlstring
-                            };
-                            ps = new object[methodInstance.ParameterNames.Length];
-                            var paramsNode = xml.SelectSingleNode("methodCall/params");
-                            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                            {
-                                ps[0] = callContext;
-                                var index = 1;
-                                foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                                {
-                                    var valueNode = paramNode.FirstChild.FirstChild;
-                                    ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                                    index++;
-                                }
-                            }
-                            else
-                            {
-                                var index = 0;
-                                foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                                {
-                                    var valueNode = paramNode.FirstChild.FirstChild;
-                                    ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                                    index++;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            invokeResult.Status = InvokeStatus.Exception;
-                            invokeResult.Message = ex.Message;
-                        }
-                    }
-                    else
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
-                        invokeResult.Message = "服务不可用";
-                    }
-                }
-                else
-                {
-                    invokeResult.Status = InvokeStatus.UnFound;
-                    invokeResult.Message = "没有找到这个服务。";
-                }
-
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    var rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
-                    if (rpcServer is ITransientRpcServer transientRpcServer)
-                    {
-                        transientRpcServer.CallContext = callContext;
-                    }
-                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
-                }
-
-                var httpResponse = e.Context.Response;
-
-                var byteBlock = new ByteBlock();
-
-                if (invokeResult.Status == InvokeStatus.Success)
-                {
-                    XmlDataTool.CreatResponse(httpResponse, invokeResult.Result);
-                }
-                else
-                {
-                    httpResponse.StatusCode = 201;
-                    httpResponse.StatusMessage = invokeResult.Message;
-                }
-                try
-                {
-                    httpResponse.Answer();
-                }
-                finally
-                {
-                    byteBlock.Dispose();
-                }
-
-                if (!e.Context.Request.KeepAlive)
-                {
-                    client.TryShutdown(SocketShutdown.Both);
-                }
-            }
-
-            await e.InvokeNext();
-        }
-
         /// <summary>
         /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
         /// </summary>
@@ -212,6 +100,122 @@ namespace TouchSocket.XmlRpc
         {
             this.XmlRpcUrl = xmlRpcUrl;
             return this;
+        }
+
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.Method==HttpMethod.Post)
+            {
+                if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
+                {
+                    e.Handled = true;
+
+                    var xml = new XmlDocument();
+                    var xmlstring = e.Context.Request.GetBody();
+                    xml.LoadXml(xmlstring);
+                    var methodName = xml.SelectSingleNode("methodCall/methodName");
+                    var actionKey = methodName.InnerText;
+
+                    object[] ps = null;
+                    var invokeResult = new InvokeResult();
+                    XmlRpcCallContext callContext = null;
+
+                    if (this.ActionMap.TryGetMethodInstance(actionKey, out var methodInstance))
+                    {
+                        if (methodInstance.IsEnable)
+                        {
+                            try
+                            {
+                                callContext = new XmlRpcCallContext()
+                                {
+                                    Caller = client,
+                                    HttpContext = e.Context,
+                                    MethodInstance = methodInstance,
+                                    XmlString = xmlstring
+                                };
+                                ps = new object[methodInstance.ParameterNames.Length];
+                                var paramsNode = xml.SelectSingleNode("methodCall/params");
+                                if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                                {
+                                    ps[0] = callContext;
+                                    var index = 1;
+                                    foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                    {
+                                        var valueNode = paramNode.FirstChild.FirstChild;
+                                        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                        index++;
+                                    }
+                                }
+                                else
+                                {
+                                    var index = 0;
+                                    foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                    {
+                                        var valueNode = paramNode.FirstChild.FirstChild;
+                                        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                        index++;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                invokeResult.Status = InvokeStatus.Exception;
+                                invokeResult.Message = ex.Message;
+                            }
+                        }
+                        else
+                        {
+                            invokeResult.Status = InvokeStatus.UnEnable;
+                            invokeResult.Message = "服务不可用";
+                        }
+                    }
+                    else
+                    {
+                        invokeResult.Status = InvokeStatus.UnFound;
+                        invokeResult.Message = "没有找到这个服务。";
+                    }
+
+                    if (invokeResult.Status == InvokeStatus.Ready)
+                    {
+                        var rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
+                        if (rpcServer is ITransientRpcServer transientRpcServer)
+                        {
+                            transientRpcServer.CallContext = callContext;
+                        }
+                        invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
+                    }
+
+                    var httpResponse = e.Context.Response;
+
+                    var byteBlock = new ByteBlock();
+
+                    if (invokeResult.Status == InvokeStatus.Success)
+                    {
+                        XmlDataTool.CreatResponse(httpResponse, invokeResult.Result);
+                    }
+                    else
+                    {
+                        httpResponse.StatusCode = 201;
+                        httpResponse.StatusMessage = invokeResult.Message;
+                    }
+                    try
+                    {
+                        httpResponse.Answer();
+                    }
+                    finally
+                    {
+                        byteBlock.Dispose();
+                    }
+
+                    if (!e.Context.Request.KeepAlive)
+                    {
+                        client.TryShutdown(SocketShutdown.Both);
+                    }
+                }
+            }
+
+            await e.InvokeNext();
         }
     }
 }

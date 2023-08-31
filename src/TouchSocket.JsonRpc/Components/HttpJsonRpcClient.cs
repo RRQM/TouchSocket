@@ -23,7 +23,7 @@ namespace TouchSocket.JsonRpc
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitData(context);
 
-            using (var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength))
+            using (var byteBlock = new ByteBlock())
             {
                 if (invokeOption == default)
                 {
@@ -40,7 +40,7 @@ namespace TouchSocket.JsonRpc
                 var request = new HttpRequest();
                 request.Method = HttpMethod.Post;
                 request.SetUrl(this.RemoteIPHost.PathAndQuery);
-                request.FromJson(jsonRpcRequest.ToJson());
+                request.FromJson(jsonRpcRequest.ToJsonString());
                 request.Build(byteBlock);
                 switch (invokeOption.FeedbackType)
                 {
@@ -84,7 +84,7 @@ namespace TouchSocket.JsonRpc
                                 }
                                 else
                                 {
-                                    return resultContext.Return.ToJson().FromJson(returnType);
+                                    return resultContext.Return.ToJsonString().FromJsonString(returnType);
                                 }
                             }
                         }
@@ -100,7 +100,7 @@ namespace TouchSocket.JsonRpc
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitData(context);
 
-            using (var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength))
+            using (var byteBlock = new ByteBlock())
             {
                 if (invokeOption == default)
                 {
@@ -117,7 +117,7 @@ namespace TouchSocket.JsonRpc
                 var request = new HttpRequest();
                 request.Method = HttpMethod.Post;
                 request.SetUrl(this.RemoteIPHost.PathAndQuery);
-                request.FromJson(jsonRpcRequest.ToJson());
+                request.FromJson(jsonRpcRequest.ToJsonString());
                 request.Build(byteBlock);
                 switch (invokeOption.FeedbackType)
                 {
@@ -174,24 +174,25 @@ namespace TouchSocket.JsonRpc
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
 
-            using (var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength))
+            using (var byteBlock = new ByteBlock())
             {
                 if (invokeOption == default)
                 {
                     invokeOption = InvokeOption.WaitInvoke;
                 }
                 parameters ??= new object[0];
-                var jsonRpcRequest = new JsonRpcRequest()
+                var jsonRpcRequest = new JsonRpcRequest
                 {
                     Method = method,
-                    Params = parameters
+                    Params = parameters,
+                    Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null
                 };
-
-                jsonRpcRequest.Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign.ToString() : null;
-                var request = new HttpRequest();
-                request.Method = HttpMethod.Post;
+                var request = new HttpRequest
+                {
+                    Method = HttpMethod.Post
+                };
                 request.SetUrl(this.RemoteIPHost.PathAndQuery);
-                request.FromJson(jsonRpcRequest.ToJson());
+                request.FromJson(jsonRpcRequest.ToJsonString());
                 request.Build(byteBlock);
                 switch (invokeOption.FeedbackType)
                 {
@@ -236,7 +237,7 @@ namespace TouchSocket.JsonRpc
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
 
-            using (var byteBlock = BytePool.Default.GetByteBlock(this.BufferLength))
+            using (var byteBlock = new ByteBlock())
             {
                 if (invokeOption == default)
                 {
@@ -252,7 +253,7 @@ namespace TouchSocket.JsonRpc
                 var request = new HttpRequest();
                 request.Method = HttpMethod.Post;
                 request.SetUrl(this.RemoteIPHost.PathAndQuery);
-                request.FromJson(jsonRpcRequest.ToJson());
+                request.FromJson(jsonRpcRequest.ToJsonString());
                 request.Build(byteBlock);
                 switch (invokeOption.FeedbackType)
                 {
@@ -296,7 +297,7 @@ namespace TouchSocket.JsonRpc
                                 }
                                 else
                                 {
-                                    return resultContext.Return.ToJson().FromJson(returnType);
+                                    return resultContext.Return.ToJsonString().FromJsonString(returnType);
                                 }
                             }
                         }
@@ -322,7 +323,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (jsonString.Contains("error") || jsonString.Contains("result"))
                 {
-                    var responseContext = jsonString.FromJson<JsonResponseContext>();
+                    var responseContext = jsonString.FromJsonString<JsonResponseContext>();
                     if (responseContext != null && !responseContext.Id.IsNullOrEmpty())
                     {
                         var waitContext = new JsonRpcWaitResult

@@ -158,6 +158,10 @@ namespace TouchSocket.Rpc
 
             var namesp = string.IsNullOrEmpty(@namespace) ? "RRQMProxy" : @namespace;
 
+            codeString.AppendLine("/*");
+            codeString.AppendLine("此代码由Rpc工具直接生成，非必要请不要修改此处代码");
+            codeString.AppendLine("*/");
+            codeString.AppendLine("#pragma warning disable");
             codeString.AppendLine("using System;");
             codeString.AppendLine("using TouchSocket.Core;");
             codeString.AppendLine("using TouchSocket.Sockets;");

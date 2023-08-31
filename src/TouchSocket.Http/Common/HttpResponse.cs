@@ -32,7 +32,7 @@ namespace TouchSocket.Http
         private long m_sentLength;
 
         /// <summary>
-        /// 构造函数
+        /// Http响应
         /// </summary>
         /// <param name="client"></param>
         /// <param name="isServer"></param>
@@ -51,6 +51,16 @@ namespace TouchSocket.Http
             }
         }
 
+        /// <summary>
+        /// 从<see cref="HttpRequest"/>创建一个Http响应
+        /// </summary>
+        /// <param name="request"></param>
+        public HttpResponse(HttpRequest request) : this(request.Client,true)
+        {
+            this.ProtocolVersion = request.ProtocolVersion;
+            this.Protocols = request.Protocols;
+            this.KeepAlive = request.KeepAlive;
+        }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -74,17 +84,6 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         /// </summary>
         public override ITcpClientBase Client => this.m_client;
-
-        /// <summary>
-        /// 关闭会话请求
-        /// </summary>
-        public bool CloseConnection
-        {
-            get
-            {
-                return this.Headers.Get(HttpHeaders.Connection).Equals("close", StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
 
         /// <summary>
         /// 是否分块
@@ -301,7 +300,7 @@ namespace TouchSocket.Http
             {
                 using (var byteBlock = new ByteBlock(count + 1024))
                 {
-                    byteBlock.Write(Encoding.UTF8.GetBytes($"{count.ToString("X")}\r\n"));
+                    byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
                     byteBlock.Write(buffer, offset, count);
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
                     this.m_client.DefaultSend(byteBlock);
@@ -350,7 +349,7 @@ namespace TouchSocket.Http
             }
             if (first.Length > 1)
             {
-                int.TryParse(first[1], out var code);
+                _ = int.TryParse(first[1], out var code);
                 this.StatusCode = code;
             }
             var msg = string.Empty;

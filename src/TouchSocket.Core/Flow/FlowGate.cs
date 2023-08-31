@@ -35,7 +35,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 检测等待
         /// </summary>
-        public void AddCheckWait(int increment)
+        public void AddCheckWait(long increment)
         {
             if (this.Increment(increment))
             {
@@ -53,7 +53,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="increment"></param>
         /// <returns></returns>
-        public async Task AddCheckWaitAsync(int increment)
+        public async Task AddCheckWaitAsync(long increment)
         {
             if (this.Increment(increment))
             {

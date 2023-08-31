@@ -242,7 +242,6 @@ namespace TouchSocket.NamedPipe
                 var option = new NamedPipeListenOption
                 {
                     Name = pipeName,
-                    BufferLength = this.BufferLength,
                     Adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty),
                     SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
                 };
@@ -330,11 +329,6 @@ namespace TouchSocket.NamedPipe
                 this.m_getDefaultNewId = fun;
             }
             this.m_maxCount = config.GetValue(TouchSocketConfigExtension.MaxCountProperty);
-
-            if (config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) is int value)
-            {
-                this.SetBufferLength(value);
-            }
         }
 
         private void BeginListen(List<NamedPipeListenOption> optionList)
@@ -395,7 +389,6 @@ namespace TouchSocket.NamedPipe
             client.InternalSetContainer(this.m_container);
             client.InternalSetService(this);
             client.InternalSetNamedPipe(namedPipe);
-            client.SetBufferLength(this.BufferLength);
             client.InternalSetPluginsManager(this.m_pluginsManager);
 
             if (client.CanSetDataHandlingAdapter)
@@ -441,7 +434,8 @@ namespace TouchSocket.NamedPipe
                     {
                         return;
                     }
-                    var namedPipe = new NamedPipeServerStream(option.Name, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, option.BufferLength, option.BufferLength);
+                    var namedPipe = new NamedPipeServerStream(option.Name, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0);
+
                     namedPipe.WaitForConnection();
 
                     this.OnClientSocketInit(namedPipe, monitor);

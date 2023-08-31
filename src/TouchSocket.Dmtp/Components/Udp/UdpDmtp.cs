@@ -20,12 +20,12 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp.Rpc
 {
     /// <summary>
-    /// UDP Rpc解释器
+    /// UdpDmtpService
     /// </summary>
     public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
     {
         private readonly Timer m_timer;
-        private readonly ConcurrentDictionary<EndPoint, UdpDmtpActor> m_udpRpcActors;
+        private readonly ConcurrentDictionary<EndPoint, UdpDmtpClient> m_udpDmtpClients = new ConcurrentDictionary<EndPoint, UdpDmtpClient>();
 
         /// <summary>
         /// 构造函数
@@ -34,38 +34,56 @@ namespace TouchSocket.Dmtp.Rpc
         {
             this.m_timer = new Timer((obj) =>
             {
-                this.m_udpRpcActors.Remove((kv) =>
-                {
-                    if (--kv.Value.Tick < 0)
-                    {
-                        return true;
-                    }
-                    return false;
-                });
-            }, null, 1000 * 30, 1000 * 30);
-            this.m_udpRpcActors = new ConcurrentDictionary<EndPoint, UdpDmtpActor>();
+                //this.m_udpDmtpClients.RemoveWhen((kv) =>
+                //{
+                //    if (DateTime.Now - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
+                //    {
+                //        return true;
+                //    }
+                //    return false;
+                //});
+            }, null, 1000 * 10, 1000 * 10);
         }
 
-        public IDmtpActor DmtpActor => throw new NotImplementedException();
-
         /// <inheritdoc/>
-        public bool Ping(int timeout = 5000)
+        public IDmtpActor DmtpActor => this.PrivateGetUdpDmtpClient().DmtpActor;
+
+
+        /// <summary>
+        /// 通过终结点获取<see cref="IUdpDmtpClient"/>
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <returns></returns>
+        public IUdpDmtpClient GetUdpDmtpClient(EndPoint endPoint)
         {
-            return this.GetUdpRpcActor().Ping(timeout);
+            return this.PrivateGetUdpDmtpClient(endPoint);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             this.m_timer.SafeDispose();
-            this.m_udpRpcActors.Clear();
+            this.m_udpDmtpClients.Clear();
             base.Dispose(disposing);
         }
 
         /// <inheritdoc/>
         protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            // this.GetUdpRpcActor(remoteEndPoint).InputReceivedData(byteBlock);
+            var client = this.PrivateGetUdpDmtpClient(remoteEndPoint);
+            if (client==null)
+            {
+                return;
+            }
+
+            var message = DmtpMessage.CreateFrom(byteBlock);
+            if (!client.InputReceivedData(message))
+            {
+                if (this.PluginsManager.Enable)
+                {
+                    this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), client, new DmtpMessageEventArgs(message));
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -74,27 +92,29 @@ namespace TouchSocket.Dmtp.Rpc
             base.LoadConfig(config);
         }
 
-        private UdpDmtpActor GetUdpRpcActor(EndPoint endPoint)
+        private UdpDmtpClient PrivateGetUdpDmtpClient(EndPoint endPoint)
         {
-            if (!this.m_udpRpcActors.TryGetValue(endPoint, out var udpRpcActor))
+            if (!this.m_udpDmtpClients.TryGetValue(endPoint, out var udpRpcActor))
             {
-                udpRpcActor = new UdpDmtpActor(this, endPoint, this.Container.Resolve<ILog>())
+                udpRpcActor = new UdpDmtpClient(this, endPoint, this.Container.Resolve<ILog>())
                 {
                     Client = this,
                 };
-                this.m_udpRpcActors.TryAdd(endPoint, udpRpcActor);
+                if (udpRpcActor.Created(this.PluginsManager))
+                {
+                    this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
+                }
             }
-            udpRpcActor.Tick++;
             return udpRpcActor;
         }
 
-        private UdpDmtpActor GetUdpRpcActor()
+        private IUdpDmtpClient PrivateGetUdpDmtpClient()
         {
             if (this.RemoteIPHost == null)
             {
                 throw new ArgumentNullException(nameof(this.RemoteIPHost));
             }
-            return this.GetUdpRpcActor(this.RemoteIPHost.EndPoint);
+            return this.PrivateGetUdpDmtpClient(this.RemoteIPHost.EndPoint);
         }
     }
 }

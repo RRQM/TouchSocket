@@ -66,11 +66,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract Func<string> GetDefaultNewId { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public abstract int MaxCount { get; }
 
         /// <summary>
@@ -269,7 +264,7 @@ namespace TouchSocket.Sockets
         /// 添加一个地址监听。支持在服务器运行过程中动态添加。
         /// </summary>
         /// <param name="options"></param>
-        public abstract void AddListen(ListenOption options);
+        public abstract void AddListen(TcpListenOption options);
 
         /// <summary>
         /// 移除一个地址监听。支持在服务器运行过程中动态移除。

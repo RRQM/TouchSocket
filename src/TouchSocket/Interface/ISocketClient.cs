@@ -50,6 +50,6 @@ namespace TouchSocket.Sockets
         /// 注意：一般情况下不要随意修改该值。
         /// </para>
         /// </summary>
-        ListenOption ListenOption { get; }
+        TcpListenOption ListenOption { get; }
     }
 }

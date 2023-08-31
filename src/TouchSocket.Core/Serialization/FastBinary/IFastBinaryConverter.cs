@@ -20,17 +20,18 @@ namespace TouchSocket.Core
         /// <summary>
         /// 读取对象，不需要考虑为null的情况。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
+        /// <param name="buffer">读取的内存</param>
+        /// <param name="offset">内存偏移</param>
+        /// <param name="len">该数据对象应该占用的长度</param>
+        /// <returns>返回实际对象</returns>
         public object Read(byte[] buffer, int offset, int len);
 
         /// <summary>
         /// 写入对象，不需要考虑为null的情况。
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
+        /// <param name="byteBlock">存储内存块</param>
+        /// <param name="obj">需要序列化的对象</param>
+        /// <returns>返回该对象实际占用的字节长度。</returns>
         public int Write(ByteBlock byteBlock, object obj);
     }
 
@@ -50,20 +51,10 @@ namespace TouchSocket.Core
             return this.Read(buffer, offset, len);
         }
 
-        /// <summary>
-        /// 写入对象，不需要考虑为null的情况。
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="obj"></param>
+        /// <inheritdoc cref="IFastBinaryConverter.Write(ByteBlock, object)"/>
         protected abstract int Write(ByteBlock byteBlock, T obj);
 
-        /// <summary>
-        /// 读取对象，不需要考虑为null的情况。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="len"></param>
-        /// <returns></returns>
+        /// <inheritdoc cref="IFastBinaryConverter.Read(byte[], int, int)"/>
         protected abstract T Read(byte[] buffer, int offset, int len);
     }
 }

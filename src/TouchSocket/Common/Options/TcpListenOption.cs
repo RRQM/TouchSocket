@@ -6,7 +6,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 监听配置
     /// </summary>
-    public class ListenOption
+    public class TcpListenOption
     {
         /// <summary>
         /// 名称
@@ -17,11 +17,6 @@ namespace TouchSocket.Sockets
         /// 监听地址
         /// </summary>
         public IPHost IpHost { get; set; }
-
-        /// <summary>
-        /// 接收、发送缓存大小。同时也是内存池借鉴尺寸。
-        /// </summary>
-        public int BufferLength { get; set; } = 1024 * 64;
 
         /// <summary>
         /// 发送超时时间
@@ -61,7 +56,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置Tcp适配器
         /// </summary>
-        public Func<SingleStreamDataHandlingAdapter> TcpAdapter { get; set; } =
+        public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; } =
             () => new NormalDataHandlingAdapter();
     }
 }

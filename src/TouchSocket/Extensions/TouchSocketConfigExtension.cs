@@ -22,18 +22,6 @@ namespace TouchSocket.Sockets
     public static class TouchSocketConfigExtension
     {
         #region 数据
-
-        /// <summary>
-        /// 接收缓存容量，默认1024*64，其作用有两个：
-        /// <list type="number">
-        /// <item>指示单次可接受的最大数据量</item>
-        /// <item>指示常规申请内存块的长度</item>
-        /// </list>
-        /// 所需类型<see cref="int"/>
-        /// </summary>
-        public static readonly DependencyProperty<int?> BufferLengthProperty =
-            DependencyProperty<int?>.Register("BufferLength", 1024 * 64);
-
         /// <summary>
         /// 发送超时设定，默认为30000ms。
         /// 所需类型<see cref="int"/>
@@ -71,9 +59,9 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已不可用，内部的接收缓存池会根据接收数据的大小，自动调节",true)]
         public static TouchSocketConfig SetBufferLength(this TouchSocketConfig config, int value)
         {
-            config.SetValue(BufferLengthProperty, value);
             return config;
         }
 
@@ -222,16 +210,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 当udp作为客户端时，开始接收数据。起作用相当于<see cref="SetBindIPHost(TouchSocketConfig, IPHost)"/>随机端口。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseUdpReceive(this TouchSocketConfig config)
-        {
-            return SetBindIPHost(config, 0);
-        }
-
-        /// <summary>
         /// 设置客户端Ssl配置，为Null时则不启用。
         /// </summary>
         /// <param name="config"></param>
@@ -329,7 +307,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 直接单个配置服务器监听的地址组。所需类型<see cref="Action"/>
         /// </summary>
-        public static readonly DependencyProperty<Action<List<ListenOption>>> ListenOptionsProperty = DependencyProperty<Action<List<ListenOption>>>.Register("ListenOptions", null);
+        public static readonly DependencyProperty<Action<List<TcpListenOption>>> ListenOptionsProperty = DependencyProperty<Action<List<TcpListenOption>>>.Register("ListenOptions", null);
 
         /// <summary>
         /// 最大可连接数，默认为10000，所需类型<see cref="int"/>
@@ -342,7 +320,7 @@ namespace TouchSocket.Sockets
         public static readonly DependencyProperty<bool> ReuseAddressProperty = DependencyProperty<bool>.Register("ReuseAddress", false);
 
         /// <summary>
-        /// 挂起连接队列的最大长度，默认100。
+        /// 挂起连接队列的最大长度，默认不设置值。
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
@@ -383,7 +361,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig SetListenOptions(this TouchSocketConfig config, Action<List<ListenOption>> value)
+        public static TouchSocketConfig SetListenOptions(this TouchSocketConfig config, Action<List<TcpListenOption>> value)
         {
             config.SetValue(ListenOptionsProperty, value);
             return config;
@@ -445,6 +423,15 @@ namespace TouchSocket.Sockets
             return config;
         }
 
+        /// <summary>
+        /// 当udp作为客户端时，开始接收数据。起作用相当于<see cref="SetBindIPHost(TouchSocketConfig, IPHost)"/>随机端口。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig UseUdpReceive(this TouchSocketConfig config)
+        {
+            return SetBindIPHost(config, 0);
+        }
         #endregion UDP
 
         #region 创建

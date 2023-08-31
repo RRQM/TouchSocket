@@ -223,7 +223,7 @@ namespace TouchSocket.JsonRpc
                         if (obj.TryGetValue(methodInstance.ParameterNames[i], out var jToken))
                         {
                             var type = methodInstance.ParameterTypes[i];
-                            jsonRpcContext.Parameters[i] = jToken.ToJson().FromJson(type);
+                            jsonRpcContext.Parameters[i] = jToken.ToJsonString().FromJsonString(type);
                         }
                         else
                         {
@@ -252,7 +252,7 @@ namespace TouchSocket.JsonRpc
                         jsonRpcContext.Parameters[0] = callContext;
                         for (var i = 0; i < array.Count; i++)
                         {
-                            jsonRpcContext.Parameters[i + 1] = array[i].ToJson().FromJson(methodInstance.ParameterTypes[i + 1]);
+                            jsonRpcContext.Parameters[i + 1] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i + 1]);
                         }
                     }
                     else
@@ -265,7 +265,7 @@ namespace TouchSocket.JsonRpc
 
                         for (var i = 0; i < array.Count; i++)
                         {
-                            jsonRpcContext.Parameters[i] = array[i].ToJson().FromJson(methodInstance.ParameterTypes[i]);
+                            jsonRpcContext.Parameters[i] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i]);
                         }
                     }
                 }

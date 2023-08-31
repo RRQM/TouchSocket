@@ -23,7 +23,7 @@ namespace TouchSocket.Http
 
         /// <summary>
         /// 在收到Http请求时。注意：此插件的执行在<see cref="IHttpGetPlugin"/>,<see cref="IHttpPostPlugin"/>,
-        /// <see cref="IHttpDeletePlugin"/>,<see cref="IHttpPutPlugin"/>之后。
+        /// <see cref="IHttpDeletePlugin"/>,<see cref="IHttpPutPlugin"/>之前。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>

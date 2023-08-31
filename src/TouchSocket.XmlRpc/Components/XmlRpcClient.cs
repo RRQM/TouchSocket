@@ -35,7 +35,7 @@ namespace TouchSocket.XmlRpc
                 {
                     invokeOption = InvokeOption.WaitInvoke;
                 }
-                using (var byteBlock = new ByteBlock(this.BufferLength))
+                using (var byteBlock = new ByteBlock())
                 {
                     var request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.PathAndQuery, method, parameters);
 
@@ -70,7 +70,7 @@ namespace TouchSocket.XmlRpc
                     invokeOption = InvokeOption.WaitInvoke;
                 }
 
-                using (var byteBlock = new ByteBlock(this.BufferLength))
+                using (var byteBlock = new ByteBlock())
                 {
                     var request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.PathAndQuery, method, parameters);
                     var response = this.RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);

@@ -57,11 +57,6 @@ namespace TouchSocket.Sockets
         int Count { get; }
 
         /// <summary>
-        /// 获取默认新Id。
-        /// </summary>
-        Func<string> GetDefaultNewId { get; }
-
-        /// <summary>
         /// 获取最大可连接数
         /// </summary>
         int MaxCount { get; }

@@ -43,12 +43,18 @@ namespace TouchSocket.NamedPipe
         public NamedPipeClientBase()
         {
             this.Protocol = Protocol.NamedPipe;
+            this.m_valueCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnPeriod
+            };
         }
 
         #region 变量
         private DelaySender m_delaySender;
         private volatile bool m_online;
         private NamedPipeClientStream m_pipeStream;
+        ValueCounter m_valueCounter;
         #endregion 变量
 
         #region 事件
@@ -352,6 +358,11 @@ namespace TouchSocket.NamedPipe
         }
         #endregion
 
+        private void OnPeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
         /// <inheritdoc/>
         public virtual void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter)
         {
@@ -478,12 +489,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="config"></param>
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
-            if (config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) is int value)
-            {
-                this.SetBufferLength(value);
-            }
             this.Logger ??= this.Container.Resolve<ILog>();
-            //this.ReceiveType = config.GetValue(TouchSocketConfigExtension.ReceiveTypeProperty);
         }
 
         /// <summary>
@@ -521,21 +527,14 @@ namespace TouchSocket.NamedPipe
 
         private void BeginReceive()
         {
-            //new Thread(BeginBio)
-            //{
-            //    IsBackground = true
-            //}
-            //    .Start();
-
-            Task.Run(BeginBio);
-
+            Task.Factory.StartNew(this.BeginBio, TaskCreationOptions.LongRunning);
         }
 
         private async Task BeginBio()
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.BufferLength);
+                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
                    
@@ -570,6 +569,11 @@ namespace TouchSocket.NamedPipe
         {
             try
             {
+                if (this.DisposedValue)
+                {
+                    return;
+                }
+                this.m_valueCounter.Increment(byteBlock.Length);
                 this.LastReceivedTime = DateTime.Now;
                 if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
                 {

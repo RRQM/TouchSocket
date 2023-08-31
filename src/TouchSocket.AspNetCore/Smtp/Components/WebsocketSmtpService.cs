@@ -291,7 +291,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         }
         private DmtpActor CreateDmtpActor(WebSocketDmtpSocketClient client)
         {
-            return new DmtpActor(true)
+            return new SealedDmtpActor(true)
             {
                 OnFindDmtpActor = this.OnServiceFindDmtpActor,
                 Id = client.Id

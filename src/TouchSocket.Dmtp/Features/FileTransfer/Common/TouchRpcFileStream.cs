@@ -112,7 +112,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     try
                     {
-                        File.WriteAllText(this.m_path + ".temp", this.m_fileInfo.ToJson());
+                        File.WriteAllText(this.m_path + ".temp",SerializeConvert.ToJsonString(this.m_fileInfo));
                         this.m_lastTime = DateTime.Now.TimeOfDay;
                     }
                     catch

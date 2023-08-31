@@ -24,6 +24,11 @@ namespace TouchSocket.Core
         private object m_sender;
 
         /// <summary>
+        /// 由使用者自定义的状态对象。
+        /// </summary>
+        public object State { get; set; }
+
+        /// <summary>
         /// 执行的插件数量。
         /// </summary>
         public int Count { get; private set; }
@@ -54,10 +59,11 @@ namespace TouchSocket.Core
             }
             else
             {
-                if (this.m_pluginModel.Plugins.Count > this.m_index)
+                if (this.m_pluginModel.PluginEntities.Count > this.m_index)
                 {
                     this.Count++;
-                    return this.m_pluginModel.Method.InvokeAsync(this.m_pluginModel.Plugins[this.m_index++], this.m_sender, this);
+                    var entity = this.m_pluginModel.PluginEntities[this.m_index++];
+                    return entity.Method.InvokeAsync(entity.Plugin, this.m_sender, this);
                 }
                 else
                 {

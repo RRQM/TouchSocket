@@ -110,7 +110,7 @@ namespace TouchSocket.Dmtp
                 this.m_client = new ClientWebSocket();
                 await this.m_client.ConnectAsync(this.RemoteIPHost, default);
 
-                this.m_smtpActor = new DmtpActor(false)
+                this.m_smtpActor = new SealedDmtpActor(false)
                 {
                     OutputSend = this.OnDmtpActorSend,
                     OnRouting = this.OnDmtpActorRouting,
@@ -213,8 +213,6 @@ namespace TouchSocket.Dmtp
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
             this.Logger ??= this.Container.Resolve<ILog>();
 
-            this.SetBufferLength(this.Config.GetValue(TouchSocketConfigExtension.BufferLengthProperty) ?? 1024 * 64);
-
             if (this.Container.IsRegistered(typeof(IDmtpRouteService)))
             {
                 this.m_allowRoute = true;
@@ -241,7 +239,7 @@ namespace TouchSocket.Dmtp
             {
                 while (true)
                 {
-                    using (var byteBlock = new ByteBlock(this.BufferLength))
+                    using (var byteBlock = new ByteBlock(this.ReceiveBufferSize))
                     {
                         var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer, 0, byteBlock.Capacity), default);
                         if (result.Count == 0)
