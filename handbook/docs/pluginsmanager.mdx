@@ -226,7 +226,9 @@ SayHelloPlugin------Leave
 当某个插件在响应时，如果设置e.Handled=true，或者没有调用下一个插件，则该数据将**不会**再触发后续的插件。
 
 
-## 七、插件性能
+## 七、提升插件性能
+
+### 7.1 插件性能测试
 
 如下图所示，添加10个插件，并且调用10000次。即：单个插件方法被调用10w次。
 
@@ -239,9 +241,124 @@ SayHelloPlugin------Leave
 5. PluginRun（插件调用）
 6. PluginActionRun（插件委托调用）
 
-实际上插件内部使用的是IL调用，所以即使调用上有迭代，性能上也和表达式树差不多。但是总体而言性能上是有缺失的。
+实际上插件内部使用的是IL调用，所以即使调用上有迭代，性能上也和直接调用的表达式树差不多（这里插件是采用递归的方式迭代，而表达式树测试则是直接for迭代）。但是总体而言性能上是有缺失的。
 
-但是当使用插件委托调用时，性能上会有所提升。和直接调用相比，虽然性能降低了20%。但是这已经是委托调用的极限。
-所以我们建议，可以看出，
+但是当使用插件委托调用时，性能上会有所提升。和直接调用相比，虽然性能降低了20%。但是这已经是委托调用的极限，且没有任何动态代码的生成。这意味着在unity调用也是完全可行的。
 
 <img src={require('../static/img/docs/pluginsmanager-1.png').default} />
+
+### 7.2 注册委托
+
+注册委托，使用委托，可以提升插件性能。
+
+```csharp
+//订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
+pluginsManager.Add(nameof(ISayPlugin.Say), () => 
+{
+    Console.WriteLine("在Action1中获得");
+});
+```
+
+其次，不仅可以直接使用委托，还可以在插件里面注册方法为委托。
+
+```csharp 
+public class SayHelloAction: PluginBase
+{
+    protected override void Loaded(IPluginsManager pluginsManager)
+    {
+        base.Loaded(pluginsManager);
+
+        //注册本地方法为委托
+        pluginsManager.Add<object,MyPluginEventArgs>(nameof(ISayPlugin.Say),this.Say);
+    }
+
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "helloaction")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::caution 注意事项
+
+注册方法为委托时，不要再实现接口，避免重复调用。
+
+:::  
+
+### 7.3 源生成插件委托
+
+使用源生成器，直接可以生成委托调用，但是这要求你的编译器支持，一般（vs2022以上、或者Rider等）。
+
+首先需要安装`TouchSocket.CodeAnalyzer`。
+
+然后使用`GeneratorPlugin`特性标记所需方法即可。
+
+```csharp
+public partial class SayHelloGenerator : PluginBase
+{
+    //如果在代码里，继承了PluginBase，并且没有显示重写Loaded
+    //则在源生成时，会自己生成重写代码。
+    //如果显示重写了Loaded。就需要自己手动调用RegisterPlugins。不然插件不会生效的。
+    //protected override void Loaded(IPluginsManager pluginsManager)
+    //{
+    //    base.Loaded(pluginsManager);
+    //    this.RegisterPlugins(pluginsManager);
+    //}
+
+    /// <summary>
+    /// 使用源生成插件
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    [GeneratorPlugin(nameof(ISayPlugin.Say))]
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hellogenerator")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::caution 注意事项
+
+1. 使用源生成器时，插件类必须声明为部分类（`partial`），且不能是类中类。
+2. 使用源生成器时，不要再实现接口，避免重复调用。
+3. 使用源生成器时，如果在代码里，继承了`PluginBase`，并且没有显式重写`Loaded`，那生成的代码会自动重写`Loaded`。如果显式重写了`Loaded`，就需要自己手动调用`RegisterPlugins`。不然插件不会生效的。
+
+:::  
+
+:::tip 提示
+
+使用源生成器时，可以先使用插件接口的方式，实现所需的方法。然后再删除接口，添加`GeneratorPlugin`特性，可以简化很多书写。
+
+:::  
+
+:::tip 建议
+
+如果您在性能与易用性之间做权衡的话，我们建议可以使用插件委托实现（或者源生成器）。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/PluginConsoleApp)
