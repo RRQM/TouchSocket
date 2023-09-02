@@ -216,22 +216,21 @@ WS服务器，订阅与其相关的插件即可。此处用于处理WebSocket的
 【定义插件】
 
 ```csharp
-public class MyWebSocketPlugin<TSocketClient> : PluginBase, IWebSocketHandshakingPlugin<TSocketClient>,
-    IWebSocketHandshakedPlugin<TSocketClient>, IWebSocketReceivedPlugin<TSocketClient> where TSocketClient : IHttpSocketClient
+public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketHandshaking(TSocketClient client, HttpContextEventArgs e)
+    public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
     {
         client.Logger.Info("WebSocket正在连接");
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketHandshaked(TSocketClient client, HttpContextEventArgs e)
+    public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
     {
         client.Logger.Info("WebSocket成功连接");
         await e.InvokeNext();
     }
 
-    public async Task OnWebSocketReceived(TSocketClient client, WSDataFrameEventArgs e)
+    public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)
         {
@@ -242,7 +241,11 @@ public class MyWebSocketPlugin<TSocketClient> : PluginBase, IWebSocketHandshakin
 
             case WSDataType.Text:
                 client.Logger.Info(e.DataFrame.ToText());
-                client.SendWithWS("我已收到");
+
+                if (!client.IsClient)
+                {
+                    client.SendWithWS("我已收到");
+                }
                 return;
 
             case WSDataType.Binary:
@@ -292,7 +295,7 @@ service.Setup(new TouchSocketConfig()//加载配置
     {
         a.UseWebSocket()//添加WebSocket功能
                .SetWSUrl("/ws");
-        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+        a.Add<MyWebSocketPlugin>();//自定义插件。
     }))
     .Start();
 ```
