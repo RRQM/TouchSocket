@@ -20,12 +20,6 @@ namespace XUnitTestProject.Tcp
         [Fact]
         public void OfRRQMConfigBeOk()
         {
-            var bufferLength = 1024;
-            var logger = ConsoleLogger.Default;
-            var config = new TouchSocketConfig();
-            config.SetValue(TouchSocketConfigExtension.BufferLengthProperty, bufferLength);
-
-            Assert.Equal(bufferLength, config.GetValue(TouchSocketConfigExtension.BufferLengthProperty));
         }
 
         [Fact]

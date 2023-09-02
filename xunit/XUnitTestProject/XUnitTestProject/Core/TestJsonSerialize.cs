@@ -56,7 +56,7 @@ namespace XUnitTestProject.Core
                     ExplodeAdd = "2"
                 }
             };
-            var ss = SerializeConvert.ToJson(response);
+            var ss = SerializeConvert.ToJsonString(response);
         }
 
         [Fact]
@@ -80,10 +80,10 @@ namespace XUnitTestProject.Core
             var ss = JsonConvert.SerializeObject(response);
 
             var pp = JsonConvert.DeserializeObject<JsonResponseContext>(str);
-            var vv = str.FromJson<JsonResponseContext>();
+            var vv = str.FromJsonString<JsonResponseContext>();
 
-            var s1 = vv.Result.ToJson();
-            var u = s1.FromJson<UserInfoModel>();
+            var s1 = vv.Result.ToJsonString();
+            var u = s1.FromJsonString<UserInfoModel>();
         }
     }
 

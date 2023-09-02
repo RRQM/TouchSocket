@@ -24,12 +24,12 @@ namespace XUnitTestProject.Tcp
             service.Setup(new TouchSocketConfig())
                 .Start();//启动
 
-            service.AddListen(new ListenOption()//在Service运行时，可以调用，直接添加监听
+            service.AddListen(new TcpListenOption()//在Service运行时，可以调用，直接添加监听
             {
                 IpHost = 7791,
                 Name = "server3",//名称用于区分监听
                 ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-                TcpAdapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
+                Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
                                                                    //还有其他可配置项，都是单独对当前地址有效。
             });
 
@@ -85,8 +85,7 @@ namespace XUnitTestProject.Tcp
             config.SetListenIPHosts(new IPHost[] { new IPHost($"127.0.0.1:8848"), new IPHost($"127.0.0.1:8849") })
                 .SetThreadCount(1)
                 .SetServerName("RRQMServer")
-                .SetMaxCount(1000)
-                .SetBufferLength(1024);
+                .SetMaxCount(1000);
 
             //载入配置
             service.Setup(config);

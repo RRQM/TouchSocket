@@ -26,15 +26,13 @@ namespace XUnitTestProject.Udp
             var config = new TouchSocketConfig();//UDP配置
             config.SetRemoteIPHost(new IPHost("127.0.0.1:10086"))
                 .SetBindIPHost(new IPHost("127.0.0.1:10087"))
-                .SetServerName("RRQMUdpServer")
-                .SetBufferLength(2048);
+                .SetServerName("RRQMUdpServer");
 
             udpSession.Setup(config);//加载配置
             udpSession.Start();//启动
 
             Assert.Equal(ServerState.Running, udpSession.ServerState);
             Assert.Equal("RRQMUdpServer", udpSession.ServerName);
-            Assert.Equal(2048, udpSession.BufferLength);
             Assert.Equal("127.0.0.1:10086", udpSession.RemoteIPHost.ToString());
 
             udpSession.Stop();
@@ -43,7 +41,6 @@ namespace XUnitTestProject.Udp
             udpSession.Start();
             Assert.Equal(ServerState.Running, udpSession.ServerState);
             Assert.Equal("RRQMUdpServer", udpSession.ServerName);
-            Assert.Equal(2048, udpSession.BufferLength);
             Assert.Equal("127.0.0.1:10086", udpSession.RemoteIPHost.ToString());
 
             udpSession.Dispose();
@@ -90,8 +87,7 @@ namespace XUnitTestProject.Udp
 
             var config = new TouchSocketConfig();
             config.SetBindIPHost(new IPHost($"127.0.0.1:{port1}"))
-                .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())
-                .SetBufferLength(1024 * 1024);
+                .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter());
 
             udpReceiver.Setup(config);//加载配置
             udpReceiver.Start();//启动
@@ -149,8 +145,7 @@ namespace XUnitTestProject.Udp
 
             var config = new TouchSocketConfig();
             config.SetBindIPHost(new IPHost($"127.0.0.1:{port1}"))
-                .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
-                .SetBufferLength(1024 * 1024);
+                .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter());
 
             udpReceiver.Setup(config);//加载配置
             udpReceiver.Start();//启动
@@ -206,8 +201,7 @@ namespace XUnitTestProject.Udp
             var config = new TouchSocketConfig();
             config.SetBindIPHost(new IPHost($"127.0.0.1:{port1}"))
                  .SetThreadCount(10)
-                .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
-                .SetBufferLength(1024 * 1024);
+                .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter());
 
             udpReceiver.Setup(config);//加载配置
             udpReceiver.Start();//启动

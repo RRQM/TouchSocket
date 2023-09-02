@@ -1,7 +1,7 @@
 /*
 此代码由Rpc工具直接生成，非必要请不要修改此处代码
 */
-#pragma warning disable CS8618
+#pragma warning disable
 using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -2500,29 +2500,6 @@ return returnData;
 
 }
 
-public class Class04
-{
-public System.Int32 P1{get;set;}
-public System.String P2{get;set;}
-public System.Int32 P3{get;set;}
-}
-
-
-public class Args
-{
-public System.Int32 P1{get;set;}
-public System.Double P2{get;set;}
-public System.String P3{get;set;}
-}
-
-
-public class ProxyClass1
-{
-public System.Int32 P1{get;set;}
-public ProxyClass2 P2{get;set;}
-}
-
-
 public class Class01
 {
 public System.Int32 Age{get;set;}
@@ -2532,6 +2509,13 @@ public System.String? P2{get;set;}
 public (System.String a,System.Int32 b)? P3{get;set;}
 public System.Int32? P4;
 public (System.String a,System.Int32 b)? P5;
+}
+
+
+public class ProxyClass1
+{
+public System.Int32 P1{get;set;}
+public ProxyClass2 P2{get;set;}
 }
 
 
@@ -2545,6 +2529,22 @@ public class ProxyClass2
 {
 public System.Int32 P1{get;set;}
 public ProxyClass3 P2{get;set;}
+}
+
+
+public class Args
+{
+public System.Int32 P1{get;set;}
+public System.Double P2{get;set;}
+public System.String P3{get;set;}
+}
+
+
+public class Class04
+{
+public System.Int32 P1{get;set;}
+public System.String P2{get;set;}
+public System.Int32 P3{get;set;}
 }
 
 

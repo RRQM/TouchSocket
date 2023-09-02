@@ -23,10 +23,10 @@ using XUnitTestProject.Rpc;
 
 namespace XUnitTestProject.Dmtp
 {
-    public class TestWebsocketDmtpClient : UnitBase
+    public class TestWebSocketDmtpClient : UnitBase
     {
         [Fact]
-        public async void CancellationTokenInvokeShouldBeOk()
+        public async Task CancellationTokenInvokeShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             var remoteTest = new RemoteTest(client.GetDmtpRpcActor());
@@ -34,7 +34,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void CompressRemoteStreamShouldBeOk()
+        public async Task CompressRemoteStreamShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(new Metadata().Add("2", "2"));
@@ -61,7 +61,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void ConnectShouldBeOk()
+        public async Task  ConnectShouldBeOk()
         {
             var tasks = new List<Task>();
             for (var j = 0; j < 10; j++)
@@ -105,7 +105,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void CreateChannelToClientShouldBeOk_1()
+        public async Task CreateChannelToClientShouldBeOk_1()
         {
             var client1 = await this.GetClient(this.GetConfig());
             var client2 = await this.GetClient(this.GetConfig());
@@ -167,7 +167,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void CreateChannelToClientShouldBeOk_2()
+        public async Task CreateChannelToClientShouldBeOk_2()
         {
             var client1 = await this.GetClient(this.GetConfig());
             var client2 = await this.GetClient(this.GetConfig());
@@ -224,7 +224,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void CreateChannelToServerShouldBeOk()
+        public async Task CreateChannelToServerShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
 
@@ -287,7 +287,7 @@ namespace XUnitTestProject.Dmtp
         [InlineData(SerializationType.FastBinary)]
         [InlineData(SerializationType.Json)]
         [InlineData(SerializationType.Xml)]
-        public async void InvokeRefClientByIDShouldBeOk(SerializationType serializationType)
+        public async Task InvokeRefClientByIDShouldBeOk(SerializationType serializationType)
         {
             var config = this.GetConfig();
             config.ConfigurePlugins(a =>
@@ -386,7 +386,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void Ping2CShouldBeOk()
+        public async Task Ping2CShouldBeOk()
         {
             var client1 = await this.GetClient(this.GetConfig());
             client1.ResetId("111111111");
@@ -413,7 +413,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PingSelfShouldBeOk()
+        public async Task PingSelfShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             Assert.True(!string.IsNullOrEmpty(client.Id));
@@ -425,7 +425,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PingShouldBeOk()
+        public async Task PingShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             Assert.True(!string.IsNullOrEmpty(client.Id));
@@ -437,15 +437,15 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PullFile2CShouldBeOk()
+        public async Task PullFile2CShouldBeOk()
         {
             for (var j = 0; j < 10; j++)
             {
                 var client1 = await this.GetClient(this.GetConfig());
                 var client2 = await this.GetClient(this.GetConfig());
 
-                var path = "PullFile2C.test";
-                var savePath = "SavePullFile2C.test";
+                var path = this.GetType().Name + "PullFile2C.test";
+                var savePath = this.GetType().Name + "SavePullFile2C.test";
                 if (File.Exists(path))
                 {
                     File.Delete(path);
@@ -499,13 +499,13 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PullFileShouldBeOk()
+        public async Task PullFileShouldBeOk()
         {
             for (var j = 0; j < 10; j++)
             {
                 var client = await this.GetClient(this.GetConfig());
-                var path = "PullFile.test";
-                var savePath = "SavePullFile.test";
+                var path = this.GetType().Name + "PullFile.test";
+                var savePath = this.GetType().Name + "SavePullFile.test";
                 if (File.Exists(path))
                 {
                     File.Delete(path);
@@ -566,10 +566,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PullSmallFile2C_ShouldBeOk()
+        public async Task PullSmallFile2C_ShouldBeOk()
         {
-            var path = "PullSmallFile2C.test";
-            var savePath = Path.GetFullPath("SavePullSmallFile2C.test");
+            var path = this.GetType().Name + "PullSmallFile2C.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePullSmallFile2C.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -620,10 +620,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PullSmallFileShouldBeOk()
+        public async Task PullSmallFileShouldBeOk()
         {
-            var path = "PullSmallFile.test";
-            var savePath = Path.GetFullPath("SavePullSmallFile.test");
+            var path = this.GetType().Name + "PullSmallFile.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePullSmallFile.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -672,14 +672,14 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PushFile2CShouldBeOk()
+        public async Task PushFile2CShouldBeOk()
         {
             for (var j = 0; j < 10; j++)
             {
                 var client1 = await this.GetClient(this.GetConfig());
                 var client2 = await this.GetClient(this.GetConfig());
 
-                var path = "PushFile2C.test";
+                var path = this.GetType().Name + "PushFile2C.test";
                 var savePath = "SavePushFile2C.test";
                 if (File.Exists(path))
                 {
@@ -734,12 +734,12 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PushFileShouldBeOk()
+        public async Task PushFileShouldBeOk()
         {
             for (var j = 0; j < 10; j++)
             {
                 var client = await this.GetClient(this.GetConfig());
-                var path = "PushFile.test";
+                var path = this.GetType().Name + "PushFile.test";
                 var savePath = "SavePushFile.test";
                 if (File.Exists(path))
                 {
@@ -794,10 +794,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PushSmallFile2C_ShouldBeOk()
+        public async Task PushSmallFile2C_ShouldBeOk()
         {
-            var path = "PushSmallFile2C.test";
-            var savePath = Path.GetFullPath("SavePushSmallFile2C.test");
+            var path = this.GetType().Name + "PushSmallFile2C.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePushSmallFile2C.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -846,10 +846,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void PushSmallFileShouldBeOk()
+        public async Task PushSmallFileShouldBeOk()
         {
-            var path = "PushSmallFile.test";
-            var savePath = Path.GetFullPath("SavePushSmallFile.test");
+            var path = this.GetType().Name + "PushSmallFile.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePushSmallFile.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -897,7 +897,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RedisShouldBeOk()
+        public async Task RedisShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             var redis = client.GetDmtpRedisActor();
@@ -966,7 +966,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RemoteAccessShouldBeOk()
+        public async Task RemoteAccessShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
             var dirPath = Path.GetFullPath("Test");
@@ -1008,7 +1008,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RemoteStream2CShouldBeOk()
+        public async Task RemoteStream2CShouldBeOk()
         {
             var client1 = await this.GetClient(this.GetConfig());
             var client2 = await this.GetClient(this.GetConfig());
@@ -1048,7 +1048,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RemoteStreamShouldBeOk()
+        public async Task RemoteStreamShouldBeOk()
         {
             var client = await this.GetClient(this.GetConfig());
 
@@ -1075,7 +1075,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RemoteStreamShouldBeOk_2()
+        public async Task RemoteStreamShouldBeOk_2()
         {
             var client = await this.GetClient(this.GetConfig());
 
@@ -1086,10 +1086,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RequestPullFileResource2CShouldBeOk()
+        public async Task RequestPullFileResource2CShouldBeOk()
         {
-            var path = "RequestPullFileResource2C.test";
-            var savePath = "SaveRequestPullFileResource2C.test";
+            var path = this.GetType().Name + "RequestPullFileResource2C.test";
+            var savePath = this.GetType().Name + "SaveRequestPullFileResource2C.test";
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -1153,7 +1153,7 @@ namespace XUnitTestProject.Dmtp
             });
 
             await Task.WhenAll(t1, t2);
-            var finishedResult = client1.GetDmtpFileTransferActor().FinishedFileResourceInfo(client2.Id, resource);
+            var finishedResult = client1.GetDmtpFileTransferActor().FinishedFileResourceInfo(client2.Id, resource, ResultCode.Success);
             Assert.True(finishedResult.IsSuccess());
             var result = fileResourceLocator.TryFinished();
             Assert.True(result.IsSuccess());
@@ -1184,10 +1184,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RequestPullFileResourceShouldBeOk()
+        public async Task RequestPullFileResourceShouldBeOk()
         {
-            var path = "RequestPullFileResource.test";
-            var savePath = "SaveRequestPullFileResource.test";
+            var path = this.GetType().Name + "RequestPullFileResource.test";
+            var savePath = this.GetType().Name + "SaveRequestPullFileResource.test";
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -1250,7 +1250,7 @@ namespace XUnitTestProject.Dmtp
              });
 
             await Task.WhenAll(t1, t2);
-            var finishedResult = client.GetDmtpFileTransferActor().FinishedFileResourceInfo(resource);
+            var finishedResult = client.GetDmtpFileTransferActor().FinishedFileResourceInfo(resource, ResultCode.Success);
             Assert.True(finishedResult.IsSuccess());
             var result = fileResourceLocator.TryFinished();
             Assert.True(result.IsSuccess());
@@ -1283,8 +1283,8 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public async Task RequestPushFileResource2CShouldBeOk()
         {
-            var path = "RequestPushFileResource2C.test";
-            var savePath = Path.GetFullPath("SaveRequestPushFileResource2C.test");
+            var path = this.GetType().Name + "RequestPushFileResource2C.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SaveRequestPushFileResource2C.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -1331,7 +1331,7 @@ namespace XUnitTestProject.Dmtp
             var res = fileResourceLocator.TryFinished();
             Assert.True(res.IsSuccess());
 
-            var fresult = client1.GetDmtpFileTransferActor().FinishedFileResourceInfo(client2.Id, fileResourceLocator.FileResourceInfo);
+            var fresult = client1.GetDmtpFileTransferActor().FinishedFileResourceInfo(client2.Id, fileResourceLocator.FileResourceInfo, ResultCode.Success);
             Assert.True(fresult.IsSuccess());
             using (var pathReader = FilePool.GetReader(path))
             {
@@ -1360,10 +1360,10 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void RequestPushFileResourceShouldBeOk()
+        public async Task RequestPushFileResourceShouldBeOk()
         {
-            var path = "RequestPushFileResource.test";
-            var savePath = Path.GetFullPath("SaveRequestPushFileResource.test");
+            var path = this.GetType().Name + "RequestPushFileResource.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SaveRequestPushFileResource.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -1409,7 +1409,7 @@ namespace XUnitTestProject.Dmtp
             var res = fileResourceLocator.TryFinished();
             Assert.True(res.IsSuccess());
 
-            var fresult = client.GetDmtpFileTransferActor().FinishedFileResourceInfo(fileResourceLocator.FileResourceInfo);
+            var fresult = client.GetDmtpFileTransferActor().FinishedFileResourceInfo(fileResourceLocator.FileResourceInfo, ResultCode.Success);
             Assert.True(fresult.IsSuccess());
             using (var pathReader = FilePool.GetReader(path))
             {
@@ -1438,7 +1438,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void ResetIdShouldBeOk()
+        public async Task ResetIdShouldBeOk()
         {
             var client1 = await this.GetClient(this.GetConfig());
             var client2 = await this.GetClient(this.GetConfig());
@@ -1519,13 +1519,11 @@ namespace XUnitTestProject.Dmtp
                 .SetRemoteIPHost("ws://127.0.0.1:7806/websocketsmtp")
                 .SetVerifyToken("123RPC")
                 .SetCacheTimeoutEnable(false)
-                .SetBufferLength(1024 * 1024)
                 .ConfigureContainer(a =>
                 {
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseAutoBufferLength();
                     a.UseDmtpRpc()
                     .ConfigureRpcStore(store =>
                     {
