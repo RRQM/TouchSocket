@@ -32,7 +32,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void CancellationTokenInvokeShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var remoteTest = new RemoteTest(client.GetDmtpRpcActor());
             remoteTest.Test26();
         }
@@ -40,7 +40,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void CompressRemoteStreamShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(new Metadata().Add("2", "2"));
             remoteStream.DataCompressor = new GZipDataCompressor();
 
@@ -67,7 +67,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void CreateChannelToServerShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
 
             var data = new byte[0];
             ushort protocol = 0;
@@ -102,7 +102,7 @@ namespace XUnitTestProject.Dmtp
         [InlineData(SerializationType.Xml)]
         public void InvokeServiceShouldBeOk(SerializationType serializationType)
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
 
             var invokeOption = new DmtpInvokeOption()
             {
@@ -143,7 +143,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public async Task PingAsyncShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
 
             for (var i = 0; i < 1000; i++)
             {
@@ -154,7 +154,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void PingShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
 
             for (var i = 0; i < 100000; i++)
             {
@@ -167,9 +167,9 @@ namespace XUnitTestProject.Dmtp
         {
             for (var j = 0; j < 10; j++)
             {
-                var client = this.GetClient();
-                var path = "PullFile.test";
-                var savePath = "SavePullFile.test";
+                var client = this.GetClient(this.GetConfig());
+                var path = this.GetType().Name + "PullFile.test";
+                var savePath = this.GetType().Name + "SavePullFile.test";
                 if (File.Exists(path))
                 {
                     File.Delete(path);
@@ -230,8 +230,8 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void PullSmallFileShouldBeOk()
         {
-            var path = "PullSmallFile.test";
-            var savePath = Path.GetFullPath("SavePullSmallFile.test");
+            var path = this.GetType().Name + "PullSmallFile.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePullSmallFile.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -248,7 +248,7 @@ namespace XUnitTestProject.Dmtp
                 writer.Write(buffer);
             }
 
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var result = client.GetDmtpFileTransferActor().PullSmallFile(Path.GetFullPath(path), default, 10000);
             Assert.True(result.IsSuccess());
 
@@ -284,9 +284,9 @@ namespace XUnitTestProject.Dmtp
         {
             for (var j = 0; j < 10; j++)
             {
-                var client = this.GetClient();
-                var path = "PushFile.test";
-                var savePath = "SavePushFile.test";
+                var client = this.GetClient(this.GetConfig());
+                var path = this.GetType().Name + "PushFile.test";
+                var savePath = this.GetType().Name + "SavePushFile.test";
                 if (File.Exists(path))
                 {
                     File.Delete(path);
@@ -347,8 +347,8 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void PushSmallFileShouldBeOk()
         {
-            var path = "PushSmallFile.test";
-            var savePath = Path.GetFullPath("SavePushSmallFile.test");
+            var path = this.GetType().Name + "PushSmallFile.test";
+            var savePath = Path.GetFullPath(this.GetType().Name + "SavePushSmallFile.test");
             if (File.Exists(path))
             {
                 File.Delete(path);
@@ -365,7 +365,7 @@ namespace XUnitTestProject.Dmtp
                 writer.Write(buffer);
             }
 
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var result = client.GetDmtpFileTransferActor().PushSmallFile(Path.GetFullPath(savePath), new FileInfo(path), default, timeout: 10000);
             Assert.True(result.IsSuccess());
 
@@ -398,7 +398,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void RedisShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var redis = client.GetDmtpRedisActor();
 
             redis.ClearCache();
@@ -467,7 +467,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void RemoteAccessShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
             var dirPath = Path.GetFullPath("Test");
 
             if (Directory.Exists(dirPath))
@@ -509,7 +509,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void RemoteStreamShouldBeOk()
         {
-            var client = this.GetClient();
+            var client = this.GetClient(this.GetConfig());
 
             var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(new Metadata().Add("1", "1"));
 
@@ -536,7 +536,7 @@ namespace XUnitTestProject.Dmtp
         [Fact]
         public void RouterPackageShouldBeOk()
         {
-            var client1 = this.GetClient();
+            var client1 = this.GetClient(this.GetConfig());
 
             //DmtpRouterPackageActor
             var actor1 = client1.GetDmtpRouterPackageActor();
@@ -551,20 +551,26 @@ namespace XUnitTestProject.Dmtp
             }
         }
 
-        private UdpDmtp GetClient()
+        private UdpDmtp GetClient(TouchSocketConfig config)
         {
-            if (client != null)
+            if (this.client != null)
             {
-                return client;
+                return this.client;
             }
-            client = new UdpDmtp();
+            this.client = new UdpDmtp();
 
-            client.Setup(new TouchSocketConfig()
+            this.client.Setup(config);
+            this.client.Start();
+            return this.client;
+        }
+
+        private TouchSocketConfig GetConfig()
+        {
+            return new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7797")
                 .UseUdpReceive()
                 .SetVerifyToken("123RPC")
                 .SetCacheTimeoutEnable(false)
-                .SetBufferLength(1024 * 1024)
                 .ConfigureContainer(a =>
                 {
                 })
@@ -582,9 +588,7 @@ namespace XUnitTestProject.Dmtp
                     a.UseDmtpRouterPackage();
 
                     a.Add<MyDmtpPlugin>();
-                }));
-            client.Start();
-            return client;
+                });
         }
     }
 }

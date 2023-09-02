@@ -14,9 +14,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RpcArgsClassLib;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Http;
@@ -55,7 +52,7 @@ namespace XUnitTestConsoleApp
             CreateHttpService(7801);
 
             CreateTcpDmtp(7794);
-            CreateUdpDmtp(7797);
+            CreateUdpRpcParser(7797);
             CreateTcpJsonRpcParser(7803);
 
             CreateTLVTcpService(7805);
@@ -83,8 +80,6 @@ namespace XUnitTestConsoleApp
                         })
                         .ConfigurePlugins(a =>
                         {
-                            a.UseAutoBufferLength();
-
                             a.UseDmtpRpc()
                             .ConfigureRpcStore(store =>
                             {
@@ -115,8 +110,6 @@ namespace XUnitTestConsoleApp
                             })
                             .ConfigurePlugins(a =>
                             {
-                                a.UseAutoBufferLength();
-
                                 a.UseDmtpRpc()
                                 .ConfigureRpcStore(a =>
                                 {
@@ -158,7 +151,6 @@ namespace XUnitTestConsoleApp
             m_httpService = new HttpDmtpService();
             m_httpService.Setup(new TouchSocketConfig()
                  .SetContainer(GetContainer())
-                 .SetBufferLength(1024 * 1024)
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .SetVerifyToken("123RPC")
                 .ConfigureContainer(a =>
@@ -167,9 +159,6 @@ namespace XUnitTestConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseAutoBufferLength();
-
-
                     a.UseWebSocket()
                     .SetVerifyConnection((client, context) =>
                     {
@@ -296,7 +285,6 @@ namespace XUnitTestConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear();
-                    a.UseAutoBufferLength();
                 });
 
             //载入配置
@@ -321,8 +309,6 @@ namespace XUnitTestConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseAutoBufferLength();
-
                     a.UseDmtpRpc()
                     .ConfigureRpcStore(a =>
                     {
@@ -416,7 +402,7 @@ namespace XUnitTestConsoleApp
             Console.WriteLine($"TLVTcpService已启动,端口：{port}");
         }
 
-        private static void CreateUdpDmtp(int port)
+        private static void CreateUdpRpcParser(int port)
         {
             var udpDmtp = new UdpDmtp();
 
@@ -473,21 +459,23 @@ namespace XUnitTestConsoleApp
         //}
     }
 
-    internal class MyHttpPlugin : PluginBase, IHttpGetPlugin
+    internal class MyHttpPlugin : PluginBase, IHttpPlugin
     {
-        Task IHttpGetPlugin<IHttpSocketClient>.OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        public Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.UrlEquals("/xunit"))
+            if (e.Context.Request.IsGet())
             {
-                e.Handled = true;
+                if (e.Context.Request.UrlEquals("/xunit"))
+                {
+                    e.Handled = true;
 
-                e.Context.Response
-                    .FromText("OK")
-                    .SetStatus()
-                    .Answer();
-                return Task.CompletedTask;
+                    e.Context.Response
+                        .FromText("OK")
+                        .SetStatus()
+                        .Answer();
+                    return Task.CompletedTask;
+                }
             }
-
             return e.InvokeNext();
         }
     }

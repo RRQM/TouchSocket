@@ -77,7 +77,7 @@ namespace XUnitTestProject.Dmtp
         Task IDmtpReceivedPlugin<IDmtpActorObject>.OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             var protocol = e.DmtpMessage.ProtocolFlags;
-            ByteBlock byteBlock = e.DmtpMessage.BodyByteBlock;
+            var byteBlock = e.DmtpMessage.BodyByteBlock;
             Console.WriteLine($"TcpDmtpService收到数据，协议为：{protocol}，数据长度为：{byteBlock.Len}");
             switch (protocol)
             {

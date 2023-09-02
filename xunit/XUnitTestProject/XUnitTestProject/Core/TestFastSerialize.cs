@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Data;
 using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
@@ -417,6 +418,46 @@ namespace XUnitTestProject.Core
                 Assert.Equal(4, newValue.Length);
                 Assert.True(newValue.ToArray().SequenceEqual(new byte[] { 1, 2, 3, 4 }));
             }
+        }
+
+        [Fact]
+        public void SerializeGuidShouldBeOk()
+        {
+            var guid = Guid.Empty;
+
+            var bytes = SerializeConvert.FastBinarySerialize(guid);
+            var newValue = SerializeConvert.FastBinaryDeserialize<Guid>(bytes);
+
+            Assert.True(Guid.Empty == newValue);
+
+            guid = Guid.NewGuid();
+
+            bytes = SerializeConvert.FastBinarySerialize(guid);
+            newValue = SerializeConvert.FastBinaryDeserialize<Guid>(bytes);
+
+            Assert.True(guid == newValue);
+        }
+
+        [Fact]
+        public void SerializeDataSetShouldBeOk()
+        {
+            var value = new DataSet();
+
+            var bytes = SerializeConvert.FastBinarySerialize(value);
+            var newValue = SerializeConvert.FastBinaryDeserialize<DataSet>(bytes);
+
+            Assert.NotNull(newValue);
+        }
+
+        [Fact]
+        public void SerializeDataTableShouldBeOk()
+        {
+            var value = new DataTable();
+
+            var bytes = SerializeConvert.FastBinarySerialize(value);
+            var newValue = SerializeConvert.FastBinaryDeserialize<DataTable>(bytes);
+
+            Assert.NotNull(newValue);
         }
     }
 
