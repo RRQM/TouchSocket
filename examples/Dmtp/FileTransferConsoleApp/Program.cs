@@ -678,14 +678,14 @@ namespace FileTransferConsoleApp
                              a.UseDmtpFileTransfer();
                          });
 
-            clientFactory.OnFindTransferIds = (client, targetId) =>
+            clientFactory.SetFindTransferIds((client, targetId) =>
             {
                 //此处的操作不唯一，可能需要rpc实现。
                 //其目的比较简单，就是获取到targetId对应的主客户端的所有传输客户端的Id集合。
                 //这样就实现了多个客户端向多个客户端传输文件的目的。
 
                 return new string[] { targetId };//此处为模拟结果。
-            };
+            });
             return clientFactory;
         }
     }

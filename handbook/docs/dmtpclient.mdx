@@ -126,7 +126,7 @@ DmtpClient工厂工作模式是一种，由单个主通讯连接和多个传输�
 
 【创建】
 ```csharp
-var clientFactory = new TcpTouchRpcClientFactory()
+var clientFactory = new TcpDmtpClientFactory()
 {
     MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
     MaxCount = 10,//最大数量，当超过该数量的连接后，会等待指定时间，或者永久等待。
@@ -150,9 +150,15 @@ Result result = clientFactory.CheckStatus();
 
 :::  
 
+:::info 备注
+
+主通讯器的配置和传输通讯器的配置是分离的，所以可以分开配置。
+
+:::  
+
 【使用】
 
-```csharp {5,10}
+```csharp
 var clientFactory = CreateTcpClientFactory();
 var client = clientFactory.GetTransferClient();
 try
@@ -165,12 +171,6 @@ finally
     clientFactory.ReleaseTransferClient(client);
 }
 ```
-
-:::tip 提示
-
-TouchRpcClient工厂只实现了IRpcClient和多线程文件传输的接口，所以和其他客户端相比，本身不具备其他的功能。但是可以通过单个通讯器进行其他业务的交互。
-
-:::  
 
 ### 4.6 NamedPipeDmtpClient
 
