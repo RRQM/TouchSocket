@@ -611,6 +611,10 @@ namespace FileTransferConsoleApp
                        a.UseDmtpFileTransfer();//必须添加文件传输插件
 
                        a.Add<MyPlugin>();
+
+                       a.UseDmtpHeartbeat()//使用Dmtp心跳
+                       .SetTick(TimeSpan.FromSeconds(3))
+                       .SetMaxFailCount(3);
                    })
                    .BuildWithTcpDmtpClient();
 
