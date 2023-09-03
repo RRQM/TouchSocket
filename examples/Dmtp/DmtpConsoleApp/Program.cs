@@ -98,7 +98,6 @@ namespace DmtpConsoleApp
                 .Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
-
             return service;
         }
     }
@@ -121,6 +120,23 @@ namespace DmtpConsoleApp
                 return;
             }
 
+            await e.InvokeNext();
+        }
+    }
+
+    internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
+    {
+        public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        {
+            if (e.DmtpMessage.ProtocolFlags == 10)
+            {
+                //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
+                string msg = e.DmtpMessage.BodyByteBlock.ToString();
+
+                return;
+            }
+
+            //flags不满足，调用下一个插件
             await e.InvokeNext();
         }
     }
