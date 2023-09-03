@@ -17,6 +17,18 @@ TouchSocket系列是否能用于Unity3D
 
 TouchSocket提供一个简单的示例demo，包含一个服务器和unity包。以供大家下载试用。 [TouchSocket For Unity](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Unity3d)
 
+## 【问】用于Unity 3D时，显示有dll不兼容，或者找不到？
+
+【描述】
+
+unity提示：由于以下错误，将不会加载程序集“Assets/Plugins/TouchSocket.dl”无法解析引用“TouchSocket.Core”。程序集是否丢失或与当前平台不兼容?可以在插件检查器中禁用引用验证.无法解析引用“TouchSocket”。程序集是否丢失或与当前平台不兼容?可以在插件检查器中禁用引用验证
+
+### 【解决】
+
+这是因为TouchSocket系列程序集有依赖关系。例如：TouchSocket依赖于TouchSocket.Core。所以在下载TouchSocket.dll时，应该也下载TouchSocket.Core.dll.
+
+当然有时候我们对具体依赖不了解时，可以直接在vs看依赖关系。
+
 ## 【问】程序集用于Unity 3D时，有莫名其妙的异常？
 
 【描述】

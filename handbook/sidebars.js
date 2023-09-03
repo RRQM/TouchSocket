@@ -562,6 +562,11 @@ module.exports = {
                   id: "dmtpbaseconnection",
                   label: "a.连接及Id同步"
                 },
+                {
+                  type: "doc",
+                  id: "dmtpextension",
+                  label: "b.协议扩展"
+                },
               ]
           },
           {
