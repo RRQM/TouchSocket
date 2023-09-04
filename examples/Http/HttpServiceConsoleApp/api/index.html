@@ -1,62 +1,103 @@
-<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Swagger UI</title>
-    <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
-    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
-    <style>
-      html
-      {
-        box-sizing: border-box;
-        overflow: -moz-scrollbars-vertical;
-        overflow-y: scroll;
-      }
 
-      *,
-      *:before,
-      *:after
-      {
-        box-sizing: inherit;
-      }
+<head>
+    <meta charset="utf-8">
 
-      body
-      {
-        margin:0;
-        background: #fafafa;
-      }
-    </style>
-  </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程序员数据可视化大屏展示</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="js/myMap.js"></script>
+</head>
 
-  <body>
-    <div id="swagger-ui"></div>
+<body>
+    <header>
+        <h1>程序员数据可视化大屏展示</h1>
+        <div class="showTime">当前时间：2021年8月<span></span></div>
+    </header>
+    <section class="mainbox">
+        <div class="column">
+            <div class="panel bar">
+                <h2>
+                    柱状图-各行业程序员数量 <a href="javascript:;">2021</a>
+                    <a href="javacript:;"> 2020</a>
+                </h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel line">
+                <h2>折线图-学习变化</h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel pie">
+                <h2>饼形图-工程师年龄分布</h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="no">
+                <div class="no-hd">
+                    <ul>
+                        <li>225811</li>
+                        <li>104563</li>
+                    </ul>
+                </div>
+                <div class="no-bd">
+                    <ul>
+                        <li>程序员需求人数</li>
+                        <li>程序员供应人数</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="map">
+                <div class="chart"></div>
+                <div class="map1"></div>
+                <div class="map2"></div>
+                <div class="map3"></div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="panel bar1">
+                <h2>柱状图-开发技能</h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel line1">
+                <h2>折线图-公司人员流动</h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel pie1">
+                <h2>饼形图-各地区程序员占比</h2>
+                <div class="chart"></div>
+                <div class="panel-footer"></div>
+            </div>
+        </div>
+    </section>
 
-    <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
-    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+    <script src="js/flexible.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/index.js"></script>
+    <script src="js/china.js"></script>
+    <script src="js/myMap.js"></script>
+
     <script>
-    window.onload = function() {
-      // Begin Swagger UI call region
-      const ui = SwaggerUIBundle({
-        url: "openapi.yaml",
-        defaultModelsExpandDepth: 0,
-        displayRequestDuration: true,
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
-        ],
-        layout: "StandaloneLayout"
-      })
-      // End Swagger UI call region
+        (function(fn) {
+            fn();
+            setInterval(fn, 1000);
+        })(function() {
+            var dt = new Date();
+            document.querySelector(".showTime span").innerHTML =
+                dt.getDate() + "日-" +
+                dt.getHours() + "时" +
+                dt.getMinutes() + "分" +
+                dt.getSeconds() + "秒";
+        });
+    </script>
 
-      window.ui = ui
-    }
-  </script>
-  </body>
+
+</body>
+
 </html>
