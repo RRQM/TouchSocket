@@ -32,7 +32,7 @@ namespace NamedPipeClientConsoleApp
             //载入配置
             client.Setup(new TouchSocketConfig()
                 .SetPipeServer(".")//一般本机管道时，可以不用此配置
-                .SetPipeName("TouchSocketPipe")//管道名称
+                .SetPipeName("touchsocketpipe")//管道名称
                 .ConfigurePlugins(a =>
                 {
                     

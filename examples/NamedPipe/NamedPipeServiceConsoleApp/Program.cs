@@ -22,7 +22,7 @@ namespace NamedPipeServiceConsoleApp
             service.Connected = (client, e) => { };//有客户端成功连接
             service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetPipeName("TouchSocketPipe")//设置命名管道名称
+                .SetPipeName("touchsocketpipe")//设置命名管道名称
                 .SetNamedPipeListenOptions(list =>
                 {
                     //如果想实现多个命名管道的监听，即可这样设置，一直Add即可。
