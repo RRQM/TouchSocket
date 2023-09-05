@@ -91,7 +91,7 @@ function Banner() {
               // section="schema"
               source={`
 // highlight-next-line
-TcpService service = new TcpService();
+var service = new TcpService();
 service.Connecting = (client, e) => { };//有客户端正在连接
 service.Connected = (client, e) => { };//有客户端成功连接
 service.Disconnected = (client, e) => { };//有客户端断开连接
@@ -99,11 +99,11 @@ service.Received = (client, byteBlock, requestInfo) =>
 {
     //从客户端收到信息
     string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
-    client.Logger.Info($"已从{client.ID}接收到信息：{mes}");
+    client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 };
 
 service.Setup(new TouchSocketConfig()//载入配置
-    .SetListenIPHosts("tcp://127.0.0.1:7788",7789)//同时监听两个地址
+    .SetListenIPHosts("tcp://127.0.0.1:7788", 7789)//同时监听两个地址
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -113,6 +113,7 @@ service.Setup(new TouchSocketConfig()//载入配置
         //a.Add();//此处可以添加插件
     }))
     .Start();//启动
+
 `}
             />
           </SystemWindow>
