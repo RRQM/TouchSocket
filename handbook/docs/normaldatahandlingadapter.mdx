@@ -10,12 +10,12 @@ title: a.正常数据处理适配器
 
 ## 一、说明
 
-正常数据处理适配器就是处理**普通**的TCP报文，内部不进行任何数据处理，这也就意味着它并**不能解决粘、分包**的问题，它只是能够将数据进行接收和处理而已。 <a name="TrOBm"></a>
+`NormalDataHandlingAdapter`正常数据处理适配器就是处理**普通**的Tcp报文，内部不进行任何数据处理，这也就意味着它并**不能**解决粘、分包的问题，它只是能够将数据进行接收和处理而已。
 
 ## 二、特点
 
-1. 能够接收所有TCP报文，与语言、框架无关。
-2. 相当于加强版的Socket，但是数据发送与接收是完全一致的。
+1. 能够接收所有Tcp报文，与语言、框架无关。
+2. 相当于加强版的Socket，**没有**解决粘、分包问题的能力。
 
 
 ## 三、使用
@@ -23,7 +23,7 @@ title: a.正常数据处理适配器
 步骤
 
 1. TouchSocketConfig配置中设置
-2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据。
 
 ```csharp {10}
 TcpService service = new TcpService();
@@ -38,6 +38,12 @@ service.Setup(new TouchSocketConfig()//载入配置
     .SetDataHandlingAdapter(()=> { return new NormalDataHandlingAdapter(); }))//配置适配器
     .Start();//启动
 ```
+
+:::caution 注意
+
+byteBlock的数据长度是byteBlock.Len（byteBlock.Length）
+
+:::  
 
 :::tip 提示
 

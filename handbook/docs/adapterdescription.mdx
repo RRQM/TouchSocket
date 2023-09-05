@@ -11,8 +11,8 @@ title: 介绍及使用
 ## 一、说明
 在TouchSocket中，适配器贯穿始终，其作用实际上有两个，分别为：
 
-- 对发送和接收的数据进行预先的封装和解封，以达到解析数据的作用（可以简单理解为处理黏、分包）。
-- 将特殊数据解析为可以传递的数据结构，以达到解析数据的目的。
+- 对**发送**和**接收**的数据进行预先的封装和解封，以达到**解析数据**的作用（可以简单理解为处理黏、分包）。
+- 将特殊数据解析为可以传递的数据结构，以达到**解析数据**的目的。
 
 :::tip 总结
 
@@ -28,7 +28,7 @@ title: 介绍及使用
 
 ### 2.2 数据逻辑
 
-TouchSocket的适配器，在初始阶段（原始TCP），会收到一个ByteBlock数据，然后经过适配器处理以后，可选择两个参数（ByteBlock和IRequestInfo）的**任意组合**投递数据。
+TouchSocket的适配器，在初始阶段（原始Tcp），会收到一个ByteBlock数据，然后经过适配器处理以后，可选择两个参数（`ByteBlock`和`IRequestInfo`）的**任意组合**投递数据。
 
 例如：**FixedHeaderPackageAdapter**，仅投递ByteBlock数据，届时IRequestInfo将为null。而如果是继承的**CustomDataHandlingAdapter**，则仅投递IRequestInfo，ByteBlock将为null。
 
@@ -36,54 +36,30 @@ TouchSocket的适配器，在初始阶段（原始TCP），会收到一个ByteBl
 
 大家有时候可能会迷惑，为什么TouchSocket要设计两个参数投递，而不像其他的那样的，在会话里面，把适配器直接泛型规范了，直接抛出对应的类型。这是因为泛型约束太大，不够灵活。例如：
 
-- 第一，不能随时切换适配器，例如适配webSocket，在握手阶段，要解析http数据，所以，此时应该选择http数据处理适配，而完成握手以后，就要解析ws数据格式了，所以此时应该切换适配器为ws数据处理适配器。
-- 第二，两个参数能提高性能。例如HTTP数据处理适配器，在高性能工作模式下，由IRequestInfo投递请求头，由ByteBlock投递Body，这样Body是从内存池获得，就不存在内存消耗了。
+- 第一，不能随时切换适配器，例如适配WebSocket，在握手阶段，要解析http数据，所以，此时应该选择http数据处理适配，而完成握手以后，就要解析ws数据格式了，所以此时应该切换适配器为ws数据处理适配器。
+- 第二，两个参数能提高性能。例如HTTP数据处理适配器，在高性能工作模式下，由`IRequestInfo`投递请求头，由`ByteBlock`投递Body，这样Body是从内存池获得，就不存在内存消耗了。
 
-## 三、TCP使用
+## 三、Tcp使用
 
-在TCP系中使用数据处理适配器是非常简单的一个过程。而且为了不同场景，TouchSocket支持多种方式的适配器使用。服务器和客户端使用一致
+在Tcp系中使用数据处理适配器是非常简单的一个过程。而且为了不同场景，TouchSocket支持多种方式的适配器使用。服务器和客户端使用一致
 
 ### 3.1 在Config配置中使用
 
 在Config配置使用时，相当于初始化赋值。比较单一，但是很可靠。
 ```csharp
-.SetDataHandlingAdapter(()=> { return new MyCustomBetweenAndDataHandlingAdapter(); })
+var config = new TouchSocketConfig();
+config.SetTcpDataHandlingAdapter(() => new NormalDataHandlingAdapter());
 ```
-### 3.2 订阅Connecting相关事件
 
-只需要在`OnConnecting`方法（或`Connecting`事件）中对新连接的Client，调用SetDataHandlingAdapter进行赋值即可。
+### 3.2 直接设置适配器
+
+直接设置适配器，可以在任意时刻进行。
 
 ```csharp
-public class MyTcpService : TcpService<MySocketClient>
-{
-    protected override void OnConnecting(MySocketClient socketClient, ClientOperationEventArgs e)
-    {
-        socketClient.SetDataHandlingAdapter(new NormalDataHandlingAdapter());//直接对数据处理器赋值，立即生效
-        base.OnConnecting(socketClient, e);
-    }
-}
+ client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
 ```
 
-### 3.3 使用插件，代替Connecting相关事件实现
-
-使用插件实现该功能，实际上和步骤2一样，但是因为是基于插件，所以更好于管理。
-
-```csharp
-class MyPlugin : TcpPluginBase
-{
-    protected override void OnConnecting(ITcpClientBase client, ClientOperationEventArgs e)
-    {
-        client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
-        base.OnConnecting(client, e);
-    }
-}
-```
-
-### 3.4 任意时刻设置
-
-实际上，大家可以从步骤2、3中看出来，适配器是可以被随意赋值的，这也就说明，适配器是可以随时被替换的。那么也就可以被随时赋值了。
-
-## 四、UDP使用插件
+## 四、Udp使用插件
 
 Udp使用的插件，只能从Config配置。
 
@@ -97,14 +73,14 @@ Udp使用的插件，只能从Config配置。
       })
       .ConfigureContainer(a =>
       {
-          a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+         
       }))
       .Start();
 ```
 
 :::caution 注意
 
-同一个适配器实例，只可被赋值一次，不然会异常。_如果在构造函数（或其他一次性函数）中设置适配器的话，在重连时，最好重新设置适配器，因为框架在Disconnected时会置空适配器，同时在Connecting执行完后会检测适配器，如果没有再次设置适配器的话，会选择默认适配器（TcpClient会选择普通适配器，Protocol及派生会选择固定包头适配器）。
+同一个适配器实例，只可被赋值一次，不然会异常。
 
 :::  
 

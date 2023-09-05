@@ -214,6 +214,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpBroadcastConsoleApp", "U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpDemoApp", "Udp\UdpDemoApp\UdpDemoApp.csproj", "{0CB31446-301C-49F6-B333-91992FDF36A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NormalAdapterConsoleApp", "Adapter\NormalAdapterConsoleApp\NormalAdapterConsoleApp.csproj", "{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -464,6 +466,10 @@ Global
 		{0CB31446-301C-49F6-B333-91992FDF36A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CB31446-301C-49F6-B333-91992FDF36A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CB31446-301C-49F6-B333-91992FDF36A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -556,6 +562,7 @@ Global
 		{93457FDB-5F10-44C6-B8D9-A13909EE2870} = {8B9374B5-42D7-48C9-84C7-A560167F0D47}
 		{68C10FDD-7E5D-4EB1-8FDA-D35C32ACE8C1} = {ECB9C1D8-AB1D-4105-AF2F-BC9D14158BF3}
 		{0CB31446-301C-49F6-B333-91992FDF36A2} = {F4D798A3-8D65-4750-9552-B02BCE081508}
+		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
