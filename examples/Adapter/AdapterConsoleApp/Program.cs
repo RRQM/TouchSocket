@@ -1,99 +1,244 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
+
     internal class Program
     {
-        /// <summary>
-        /// Tcp内置适配器介绍，请看说明文档<see href="https://www.yuque.com/eo2w71/rrqm/dd2d6d011491561c2c0d6f9b904aad98"/>
-        /// </summary>
-        /// <param name="args"></param>
-        private static void Main(string[] args)
+        private static TcpClient CreateClient()
         {
-            // 1.黏、分包问题使用内置适配器即可解决。
-            //● 正常数据处理适配器(NormalDataHandlingAdapter)
-            //● 固定包头数据处理适配器(FixedHeaderPackageAdapter)
-            //● 固定长度数据处理适配器(FixedSizePackageAdapter)
-            //● 终止因子分割数据处理适配器(TerminatorPackageAdapter)
-
-            var consoleAction = new ConsoleAction();
-            consoleAction.OnException += ConsoleAction_OnException;
-            consoleAction.Add("0", "启动服务器测试适配器", StartTcpService);
-            consoleAction.Add("1", "原始适配器实现demo", TestRawDataHandlingAdapter);
-            consoleAction.Add("2", "SGCC适配器实现demo", TestSGCCCustomDataHandlingAdapter);
-
-            consoleAction.ShowAll();
-            while (true)
-            {
-                if (!consoleAction.Run(Console.ReadLine()))
+            var client = new TcpClient();
+            //载入配置
+            client.Setup(new TouchSocketConfig()
+                .SetRemoteIPHost("127.0.0.1:7789")
+                .SetTcpDataHandlingAdapter(() => new MyDataHandleAdapter())
+                .ConfigureContainer(a =>
                 {
-                    Console.WriteLine("指令不正确。");
-                }
-            }
+                    a.AddConsoleLogger();//添加一个日志注入
+                }));
+
+            client.Connect();//调用连接，当连接不成功时，会抛出异常。
+            client.Logger.Info("客户端成功连接");
+            return client;
         }
 
-        private static void StartTcpService()
+        private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Connected = (client, e) => { };//有客户端连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
             service.Received = (client, byteBlock, requestInfo) =>
             {
                 //从客户端收到信息
-                if (requestInfo is MyBetweenAndRequestInfo info)
-                {
-                    Console.WriteLine(Encoding.UTF8.GetString(info.Body));
-                }
+                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+                client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .SetTcpDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); })
-                .SetThreadCount(10))
+                .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                .SetTcpDataHandlingAdapter(() => new MyDataHandleAdapter())
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                })
+                .ConfigurePlugins(a =>
+                {
+                    //a.Add();//此处可以添加插件
+                }))
                 .Start();//启动
+            service.Logger.Info("服务器已启动");
+            return service;
         }
 
-        private static void ConsoleAction_OnException(Exception obj)
+        private static void Main(string[] args)
         {
-            Console.WriteLine(obj.Message);
-        }
+            var service = CreateService();
+            var client = CreateClient();
 
-        private static void TestRawDataHandlingAdapter()
-        {
-            for (var i = 0; i < 10; i++)
+            ConsoleLogger.Default.Info("输入任意内容，回车发送（将会循环发送10次）");
+            while (true)
             {
-                var tester = TcpDataAdapterTester.CreateTester(new RawDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
-                using var block = new ByteBlock();
-                block.Write((byte)1);//写入数据类型   这里并未写入数据长度，因为这个适配器在发送前会再封装一次。
-                block.Write((byte)1);//写入数据指令
-                var buffer = new byte[100];
-                new Random().NextBytes(buffer);
-                block.Write(buffer);//写入数据
-                var data = block.ToArray();
+                var str = Console.ReadLine();
+                for (var i = 0; i < 10; i++)
+                {
+                    client.Send(str);
+                }
+            }
+        }
+    }
 
-                // 输出测试时间，用于衡量适配性能.
-                // 测试100次，限时2秒完成
-                Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
+    internal class MyDataHandleAdapter : SingleStreamDataHandlingAdapter
+    {
+        /// <summary>
+        /// 包剩余长度
+        /// </summary>
+        private byte m_surPlusLength;
+
+        /// <summary>
+        /// 临时包，此包仅当前实例储存
+        /// </summary>
+        private ByteBlock m_tempByteBlock;
+
+        public override bool CanSendRequestInfo => false;
+
+        public override bool CanSplicingSend => false;
+
+        protected override void PreviewReceived(ByteBlock byteBlock)
+        {
+            //收到从原始流式数据。
+
+            var buffer = byteBlock.Buffer;
+            var r = byteBlock.Len;
+            if (this.m_tempByteBlock == null)//如果没有临时包，则直接分包。
+            {
+                this.SplitPackage(buffer, 0, r);
+            }
+            else
+            {
+                if (this.m_surPlusLength == r)//接收长度正好等于剩余长度，组合完数据以后直接处理数据。
+                {
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.m_surPlusLength = 0;
+                }
+                else if (this.m_surPlusLength < r)//接收长度大于剩余长度，先组合包，然后处理包，然后将剩下的分包。
+                {
+                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.PreviewHandle(this.m_tempByteBlock);
+                    this.m_tempByteBlock = null;
+                    this.SplitPackage(buffer, this.m_surPlusLength, r);
+                }
+                else//接收长度小于剩余长度，无法处理包，所以必须先组合包，然后等下次接收。
+                {
+                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_surPlusLength -= (byte)r;
+                }
             }
         }
 
-        private static void TestSGCCCustomDataHandlingAdapter()
+        protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            var lines = File.ReadAllLines("SGCC测试数据.txt");
-            foreach (var item in lines)
-            {
-                var tester = TcpDataAdapterTester.CreateTester(new SGCCCustomDataHandlingAdapter(), new Random().Next(1, 1024));//用BufferLength模拟粘包，分包
-                using var block = new ByteBlock();
+            //在发送流式数据之前
 
-                var data = item.ByHexStringToBytes(" ");
-                // 输出测试时间，用于衡量适配性能.
-                // 测试100次，限时2秒完成
-                Console.WriteLine(tester.Run(data, 100, 100, 1000 * 2).ToString());
+            if (length > byte.MaxValue)//超长判断
+            {
+                throw new OverlengthException("发送数据太长。");
+            }
+
+            //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
+            //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
+            using (var byteBlock = new ByteBlock(1024))
+            {
+                byteBlock.Write((byte)length);//先写长度
+                byteBlock.Write(buffer, offset, length);//再写数据
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
+
+        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
+        {
+            //使用拼接模式发送，在发送流式数据之前
+
+            int dataLen = 0;
+            foreach (var item in transferBytes)
+            {
+                dataLen += item.Count;
+            }
+            if (dataLen > byte.MaxValue)//超长判断
+            {
+                throw new OverlengthException("发送数据太长。");
+            }
+
+            //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
+            //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
+
+            using (var byteBlock = new ByteBlock(1024))
+            {
+                byteBlock.Write((byte)dataLen);//先写长度
+                foreach (var item in transferBytes)
+                {
+                    byteBlock.Write(item.Array, item.Offset, item.Count);//依次写入
+                }
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+            }
+        }
+
+        protected override void PreviewSend(IRequestInfo requestInfo)
+        {
+            //使用对象发送，在发送流式数据之前
+
+            if (requestInfo is MyClass myClass)
+            {
+               // this.
+            }
+        }
+
+        /// <summary>
+        /// 处理数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        private void PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                this.GoReceived(byteBlock, null);
+            }
+            finally
+            {
+                byteBlock.Dispose();//在框架里面将内存块释放
+            }
+        }
+
+        /// <summary>
+        /// 分解包
+        /// </summary>
+        /// <param name="dataBuffer"></param>
+        /// <param name="index"></param>
+        /// <param name="r"></param>
+        private void SplitPackage(byte[] dataBuffer, int index, int r)
+        {
+            while (index < r)
+            {
+                var length = dataBuffer[index];
+                var recedSurPlusLength = r - index - 1;
+                if (recedSurPlusLength >= length)
+                {
+                    var byteBlock = new ByteBlock(length);
+                    byteBlock.Write(dataBuffer, index + 1, length);
+                    this.PreviewHandle(byteBlock);
+                    this.m_surPlusLength = 0;
+                }
+                else//半包
+                {
+                    this.m_tempByteBlock = new ByteBlock(length);
+                    this.m_surPlusLength = (byte)(length - recedSurPlusLength);
+                    this.m_tempByteBlock.Write(dataBuffer, index + 1, recedSurPlusLength);
+                }
+                index += length + 1;
+            }
+        }
+    }
+
+    class MyClass : IRequestInfo
+    {
+        public OrderType OrderType { get; set; }
+        public DataType DataType { get; set; }
+
+        public byte[] Data { get; set; }
+    }
+
+    enum DataType : byte
+    {
+        Down = 0,
+        Up = 1
+    }
+
+    enum OrderType : byte
+    {
+        Hold = 0,
+        Go = 1
     }
 }

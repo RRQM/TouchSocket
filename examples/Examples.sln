@@ -220,6 +220,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixedHeaderAdapterConsoleAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FixedSizeAdapterConsoleApp", "Adapter\FixedSizeAdapterConsoleApp\FixedSizeAdapterConsoleApp.csproj", "{A605D10C-F5B2-43E7-B421-55002D827EC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerminatorAdapterConsoleApp", "Adapter\TerminatorAdapterConsoleApp\TerminatorAdapterConsoleApp.csproj", "{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -482,6 +484,10 @@ Global
 		{A605D10C-F5B2-43E7-B421-55002D827EC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A605D10C-F5B2-43E7-B421-55002D827EC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A605D10C-F5B2-43E7-B421-55002D827EC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -577,6 +583,7 @@ Global
 		{0277227A-D8F4-4585-B9E4-EB4F41ADEDF9} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{AFC64955-89F4-4E66-98A2-8D3AAE596B9A} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{A605D10C-F5B2-43E7-B421-55002D827EC1} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{03C5CEFA-577A-413F-A63A-C40D1E1AF9FF} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
