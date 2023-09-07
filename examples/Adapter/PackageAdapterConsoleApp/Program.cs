@@ -2,7 +2,7 @@
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace FixedHeaderAdapterConsoleApp
+namespace PackageAdapterConsoleApp
 {
     internal class Program
     {
@@ -28,7 +28,7 @@ namespace FixedHeaderAdapterConsoleApp
             //载入配置
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
@@ -51,7 +51,7 @@ namespace FixedHeaderAdapterConsoleApp
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）

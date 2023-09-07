@@ -11,7 +11,7 @@ title: 原始适配器
 
 ## 一、说明
 
-原始适配器则是直接从`SingleStreamDataHandlingAdapter`继承，能够在第一时间，第一手接触到流式数据。可以自定实现数据的继续投递方式。但一般实现算法比较困难，因为所考虑的情况比较多。例如：假设如下数据格式，第一个字节表示整个数据长度（包括数据类型和指令类型），第二字节表示数据类型，第三字节表示指令类型，后续字节表示其他数据。其次，希望在发送时，只传入数据类型，指令类型和其他数据，而数据长度则由适配器自行封装。最后，希望在接收端每次能接收到一个完整的数据。
+原始适配器则是直接从`SingleStreamDataHandlingAdapter（或者NormalDataHandlingAdapter）`继承，能够在第一时间，第一手接触到流式数据。可以自定实现数据的继续投递方式。但一般实现算法比较困难，因为所考虑的情况比较多。例如：假设如下数据格式，第一个字节表示整个数据长度（包括数据类型和指令类型），第二字节表示数据类型，第三字节表示指令类型，后续字节表示其他数据。其次，希望在发送时，只传入数据类型，指令类型和其他数据，而数据长度则由适配器自行封装。最后，希望在接收端每次能接收到一个完整的数据。
 
 <img src={require('../static/img/docs/datahandleadapter-1.png').default}/>
 
@@ -19,6 +19,7 @@ title: 原始适配器
 
 1. 能够第一时间，第一手接触到流式数据
 2. 希望能自定义投递数据的方式
+3. 本身不具备处理数据粘分包的能力，需要自己实现。
 
 ## 三、实现适配器
 
@@ -377,3 +378,64 @@ public void Down_Hold_SplicingSend(byte[] data)
 有时候，我们希望能够直接把一个数据对象直接进行发送，可是流式数据包只能发送byte[]，那么我们如何发送一个对象呢？
 
 可以重写实现`PreviewSend(IRequestInfo requestInfo)`函数。实现将对象转为byte[]，然后调用`GoSend`发送。
+
+首先声明对象
+
+```csharp
+class MyClass : IRequestInfo
+{
+    public OrderType OrderType { get; set; }
+    public DataType DataType { get; set; }
+
+    public byte[] Data { get; set; }
+}
+
+enum DataType : byte
+{
+    Down = 0,
+    Up = 1
+}
+
+enum OrderType : byte
+{
+    Hold = 0,
+    Go = 1
+}
+```
+
+然后重写`PreviewSend(IRequestInfo requestInfo)`函数
+
+```csharp
+protected override void PreviewSend(IRequestInfo requestInfo)
+{
+    //使用对象发送，在发送流式数据之前
+
+    if (requestInfo is MyClass myClass)
+    {
+        var data = myClass.Data ?? Array.Empty<byte>();
+        if (data.Length > byte.MaxValue)//超长判断
+        {
+            throw new OverlengthException("发送数据太长。");
+        }
+
+        //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
+        //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
+        using (var byteBlock = new ByteBlock(1024))
+        {
+            byteBlock.Write((byte)data.Length);//先写长度
+            byteBlock.Write((byte)myClass.DataType);//然后数据类型
+            byteBlock.Write((byte)myClass.OrderType);//然后指令类型
+            byteBlock.Write(data);//再写数据
+            this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+        }
+    }
+}
+```
+
+:::tip 提示
+
+发送对象功能，可以发送多种类型的数据对象，只要做好适配器实现即可。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/AdapterConsoleApp)

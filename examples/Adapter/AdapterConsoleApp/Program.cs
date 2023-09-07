@@ -172,7 +172,22 @@ namespace AdapterConsoleApp
 
             if (requestInfo is MyClass myClass)
             {
-               // this.
+                var data = myClass.Data ?? Array.Empty<byte>();
+                if (data.Length > byte.MaxValue)//超长判断
+                {
+                    throw new OverlengthException("发送数据太长。");
+                }
+
+                //从内存池申请内存块，因为此处数据绝不超过255，所以避免内存池碎片化，每次申请1K
+                //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
+                using (var byteBlock = new ByteBlock(1024))
+                {
+                    byteBlock.Write((byte)data.Length);//先写长度
+                    byteBlock.Write((byte)myClass.DataType);//然后数据类型
+                    byteBlock.Write((byte)myClass.OrderType);//然后指令类型
+                    byteBlock.Write(data);//再写数据
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
         }
 

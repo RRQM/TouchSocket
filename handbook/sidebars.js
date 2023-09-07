@@ -340,63 +340,48 @@ module.exports = {
               [
                 {
                   type: "doc",
-                  id: "normaldatahandlingadapter",
-                  label: "a.正常数据处理适配器"
-                },
-                {
-                  type: "doc",
-                  id: "fixedheaderpackageadapter",
-                  label: "b.固定包头数据处理适配器"
-                },
-                {
-                  type: "doc",
-                  id: "fixedsizepackageadapter",
-                  label: "c.固定长度数据处理适配器"
-                },
-                {
-                  type: "doc",
-                  id: "terminatorpackageadapter",
-                  label: "d.终止因子数据处理适配器"
-                },
-                {
-                  type: "doc",
                   id: "datahandleadapter",
-                  label: "e.原始自定义适配器"
+                  label: "a.原始适配器"
+                },
+                {
+                  type: "doc",
+                  id: "packageadapter",
+                  label: "b.内置包适配器"
                 },
                 {
                   type: "doc",
                   id: "customdatahandlingadapter",
-                  label: "f.用户自定义适配器"
+                  label: "c.用户自定义适配器"
                 },
                 {
                   type: "doc",
                   id: "customfixedheaderdatahandlingadapter",
-                  label: "g.模板解析固定包头适配器"
+                  label: "d.模板解析固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "customunfixedheaderdatahandlingadapter",
-                  label: "h.模板解析非固定包头适配器"
+                  label: "e.模板解析非固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "bigfixedheadercustomdatahandlingadapter",
-                  label: "i.模板解析大数据固定包头适配器"
+                  label: "f.模板解析大数据固定包头适配器"
                 },
                 {
                   type: "doc",
                   id: "custombetweenanddatahandlingadapter",
-                  label: "j.模板解析区间数据适配器"
+                  label: "g.模板解析区间数据适配器"
                 },
                 {
                   type: "doc",
                   id: "pipelinedatahandlingadapter",
-                  label: "k.Pipeline数据适配器"
+                  label: "h.Pipeline数据适配器"
                 },
                 {
                   type: "doc",
                   id: "tlvdatahandlingadapter",
-                  label: "l.三元组编码TLV适配器"
+                  label: "i.三元组编码TLV适配器"
                 },
               ]
           },
