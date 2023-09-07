@@ -10,7 +10,7 @@ title: 用户自定义适配器
 
 ## 一、说明
 
-和原始适配器相比，用户自定义适配器（**CustomDataHandlingAdapter**）简单很多。因为他只需要考虑接下来如何处理即可。
+用户自定义适配器，是为了解决当用户的数据是其他情况的问题。不过和原始适配器相比，用户自定义适配器（**CustomDataHandlingAdapter**）要简单很多。因为他提供了很多指令可以组合处理不同情况，而你只需要简单调用即可。
 
 ## 二、运行逻辑
 
@@ -64,7 +64,7 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
     /// <param name="request">对象。</param>
     /// <param name="tempCapacity">缓存容量指导，指示当需要缓存时，应该申请多大的内存。</param>
     /// <returns></returns>
-    protected override FilterResult Filter(ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
     {
         //以下解析思路为一次性解析，不考虑缓存的临时对象。
 
@@ -99,7 +99,6 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
             //2.将byteBlock.Pos递增bodyLength的长度。
             byteBlock.Read(out byte[] body, bodyLength);
 
-            myRequestInfo.Header = header;
             myRequestInfo.DataType = header[1];
             myRequestInfo.OrderType = header[2];
             myRequestInfo.Body = body;
@@ -117,11 +116,6 @@ internal class MyRequestInfo : IRequestInfo
     public byte[] Body { get; internal set; }
 
     /// <summary>
-    /// 自定义属性,Header
-    /// </summary>
-    public byte[] Header { get; internal set; }
-
-    /// <summary>
     /// 自定义属性,DataType
     /// </summary>
     public byte DataType { get; internal set; }
@@ -133,25 +127,55 @@ internal class MyRequestInfo : IRequestInfo
 }
 ```
 
-【接收】
+使用
 
-```csharp
-TcpService service = new TcpService();
-service.Received += (client, byteBlock, requestInfo) =>
+```csharp {7,30}
+static TcpClient CreateClient()
 {
-    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (requestInfo is MyRequestInfo myRequestInfo)
-    {
-        //此处可以处理MyRequestInfo的相关信息了。
-        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
-    }
-  
-};
+    var client = new TcpClient();
+    //载入配置
+    client.Setup(new TouchSocketConfig()
+        .SetRemoteIPHost("127.0.0.1:7789")
+        .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+        .ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();//添加一个日志注入
+        }));
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetDataHandlingAdapter(() => { return new MyCustomDataHandlingAdapter(); }))//配置适配器
-    .Start();//启动
+    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+static TcpService CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, byteBlock, requestInfo) =>
+    {
+        //从客户端收到信息
+
+        if (requestInfo is MyRequestInfo myRequest)
+        {
+            client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
+        }
+       
+    };
+
+    service.Setup(new TouchSocketConfig()//载入配置
+        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+        .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+        .ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        })
+        .ConfigurePlugins(a =>
+        {
+            //a.Add();//此处可以添加插件
+        }))
+        .Start();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
 ```
 
 :::tip 提示
