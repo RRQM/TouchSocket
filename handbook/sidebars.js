@@ -492,7 +492,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "13、Rpc代理生成",
+      label: "13、Rpc组件",
       items:
         [
           {
@@ -514,6 +514,11 @@ module.exports = {
             type: "doc",
             id: "generateproxysourcegeneratordemo",
             label: "13.4 SG代理推荐写法"
+          },
+          {
+            type: "doc",
+            id: "rpcactionfilter",
+            label: "13.5 Rpc服务AOP"
           }
         ]
     },

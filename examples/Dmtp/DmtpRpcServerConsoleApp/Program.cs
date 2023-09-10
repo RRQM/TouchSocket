@@ -55,6 +55,7 @@ namespace ConsoleApp2
 
         }
 
+        [MyRpcActionFilter]
         class MyRpcServer : RpcServer
         {
             private readonly ILog m_logger;
@@ -72,6 +73,7 @@ namespace ConsoleApp2
             /// <returns></returns>
             [DmtpRpc(true)]//使用函数名直接调用
             [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+            [MyRpcActionFilter]
             public int Add(int a, int b)
             {
                 this.m_logger.Info("调用Add");
@@ -141,6 +143,42 @@ namespace ConsoleApp2
                 }
 
                 await e.InvokeNext();
+            }
+        }
+
+        public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
+        {
+            public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+            {
+                //invokeResult = new InvokeResult()
+                //{
+                //    Status = InvokeStatus.UnEnable,
+                //    Message = "不允许执行",
+                //    Result = default
+                //};
+                if (callContext.Caller is ISocketClient client)
+                {
+                    client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
+                }
+                return Task.FromResult(invokeResult);
+            }
+
+            public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+            {
+                if (callContext.Caller is ISocketClient client)
+                {
+                    client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+                }
+                return Task.FromResult(invokeResult);
+            }
+
+            public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+            {
+                if (callContext.Caller is ISocketClient client)
+                {
+                    client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+                }
+                return Task.FromResult(invokeResult);
             }
         }
     }
