@@ -127,18 +127,18 @@ module.exports = {
       type: "category",
       label: "05、疑难解答",
       items:
-      [
-        {
-          type: "doc",
-          id: "troubleshootsourcecode",
-          label: "5.1 源码相关",
-        },
-        {
-          type: "doc",
-          id: "troubleshootunity3d",
-          label: "5.2 Unity3D相关",
-        },
-      ]
+        [
+          {
+            type: "doc",
+            id: "troubleshootsourcecode",
+            label: "5.1 源码相关",
+          },
+          {
+            type: "doc",
+            id: "troubleshootunity3d",
+            label: "5.2 Unity3D相关",
+          },
+        ]
     },
     {
       type: "category",
@@ -592,10 +592,23 @@ module.exports = {
         ]
     },
     {
-      type: "doc",
+      type: "category",
       label: "15、WebApi组件",
-      id: "webapi"
+      items:
+        [
+          {
+            type: "doc",
+            label: "15.1 WebApi",
+            id: "webapi"
+          },
+          {
+            type: "doc",
+            label: "15.2 Swagger页面",
+            id: "swagger"
+          },
+        ]
     },
+
     {
       type: "doc",
       label: "16、JsonRpc组件",
