@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -28,12 +26,12 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferedEventArgs.Result"/>属性值进行判断。
         /// </summary>
-        public Action<IDmtpActor, FileTransferedEventArgs> OnFileTransfered { get; set; }
+        public Func<IDmtpActor, FileTransferedEventArgs, Task> OnFileTransfered { get; set; }
 
         /// <summary>
         /// 在文件传输即将进行时触发。
         /// </summary>
-        public Action<IDmtpActor, FileTransferingEventArgs> OnFileTransfering { get; set; }
+        public Func<IDmtpActor, FileTransferingEventArgs, Task> OnFileTransfering { get; set; }
 
         #endregion 委托
 
@@ -539,9 +537,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <inheritdoc/>
         public IDmtpActor DmtpActor { get; }
 
-        /// <summary>
-        /// 文件资源访问接口。
-        /// </summary>
+        /// <inheritdoc/>
         public IFileResourceController FileController { get; set; }
 
         /// <inheritdoc/>
@@ -559,6 +555,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         #endregion 属性
+
+        private string GetFullPath(string path)
+        {
+            return this.FileController.GetFullPath(this.m_rootPath, path);
+        }
 
         private bool TryFindDmtpFileTransferActor(string targetId, out DmtpFileTransferActor rpcActor)
         {
@@ -580,48 +581,41 @@ namespace TouchSocket.Dmtp.FileTransfer
             return false;
         }
 
-        private string GetFullPath(string path)
-        {
-            return this.FileController.GetFullPath(this.m_rootPath, path);
-        }
-
         #region Id传输
 
         /// <inheritdoc/>
-
-        public FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
+        public FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             if (string.IsNullOrEmpty(targetId))
             {
-                return new FinishedResult(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(targetId), fileResourceInfo.ResourceHandle, default);
+                return this.PrivateFinishedFileResourceInfo(targetId, fileResourceInfo, code, metadata, timeout, token);
             }
 
             if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
             {
-                return rpcActor.FinishedFileResourceInfo(fileResourceInfo, metadata, timeout, token);
+                return rpcActor.FinishedFileResourceInfo(fileResourceInfo, code, metadata, timeout, token);
             }
             else
             {
-                return this.PrivateFinishedFileResourceInfo(targetId, fileResourceInfo, metadata, timeout, token);
+                return this.PrivateFinishedFileResourceInfo(targetId, fileResourceInfo, code, metadata, timeout, token);
             }
         }
 
         /// <inheritdoc/>
-        public Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
+        public Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
             {
-                return this.FinishedFileResourceInfo(targetId, fileResourceInfo, metadata, timeout, token);
+                return this.FinishedFileResourceInfo(targetId, fileResourceInfo, code, metadata, timeout, token);
             });
         }
 
         /// <inheritdoc/>
-
         public FileResourceInfoResult PullFileResourceInfo(string targetId, string path, Metadata metadata = default, int fileSectionSize = 1024 * 512, int timeout = 5000, CancellationToken token = default)
         {
             if (string.IsNullOrEmpty(targetId))
             {
-                return new FileResourceInfoResult(TouchSocketCoreResource.ArgumentNull.GetDescription(targetId));
+                return this.PrivatePullFileResourceInfo(targetId, path, metadata, fileSectionSize, timeout, token);
             }
 
             if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
@@ -635,7 +629,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata = default, int fileSectionSize = 1024 * 512, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
@@ -645,12 +638,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public FileSectionResult PullFileSection(string targetId, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
         {
             if (string.IsNullOrEmpty(targetId))
             {
-                return new FileSectionResult(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(targetId), default, fileSection);
+                return this.PrivatePullFileSection(targetId, fileSection, timeout, token);
             }
 
             if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
@@ -664,7 +656,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
@@ -674,12 +665,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public Result PushFileResourceInfo(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             if (string.IsNullOrEmpty(targetId))
             {
-                return new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(targetId));
+                return this.PrivatePushFileResourceInfo(targetId, savePath, fileResourceLocator, metadata, timeout, token);
             }
 
             if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
@@ -693,7 +683,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
@@ -703,7 +692,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-
         public Task<Result> PushFileSectionAsync(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
@@ -712,23 +700,41 @@ namespace TouchSocket.Dmtp.FileTransfer
             });
         }
 
+        /// <inheritdoc/>
+        public Result PushFileSection(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
+        {
+            if (string.IsNullOrEmpty(targetId))
+            {
+                return this.PrivatePushFileSection(targetId, fileResourceLocator, fileSection, timeout, token);
+            }
+
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
+            {
+                return rpcActor.PushFileSection(fileResourceLocator, fileSection, timeout, token);
+            }
+            else
+            {
+                return this.PrivatePushFileSection(targetId, fileResourceLocator, fileSection, timeout, token);
+            }
+        }
+
         #endregion Id传输
 
         #region 传输
 
         /// <inheritdoc/>
 
-        public FinishedResult FinishedFileResourceInfo(FileResourceInfo fileResourceInfo, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
+        public FinishedResult FinishedFileResourceInfo(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
-            return this.PrivateFinishedFileResourceInfo(default, fileResourceInfo, metadata, timeout, token);
+            return this.PrivateFinishedFileResourceInfo(default, fileResourceInfo, code, metadata, timeout, token);
         }
 
         /// <inheritdoc/>
-        public Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
+        public Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             return Task.Run(() =>
             {
-                return this.FinishedFileResourceInfo(fileResourceInfo, metadata, timeout, token);
+                return this.FinishedFileResourceInfo(fileResourceInfo, code, metadata, timeout, token);
             });
         }
 
@@ -778,24 +784,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public Result PushFileSection(string targetId, FileResourceLocator fileResourceLocator, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                return new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(targetId));
-            }
-
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpFileTransferActor(targetId, out var rpcActor))
-            {
-                return rpcActor.PushFileSection(fileResourceLocator, fileSection, timeout, token);
-            }
-            else
-            {
-                return this.PrivatePushFileSection(targetId, fileResourceLocator, fileSection, timeout, token);
-            }
-        }
-
-        /// <inheritdoc/>
         public Result PushFileSection(FileResourceLocator fileResourceLocator, FileSection fileSection, int timeout = 5000, CancellationToken token = default)
         {
             return this.PrivatePushFileSection(default, fileResourceLocator, fileSection, timeout, token);
@@ -810,7 +798,9 @@ namespace TouchSocket.Dmtp.FileTransfer
             });
         }
 
-        private FinishedResult PrivateFinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
+        #region Private
+
+        private FinishedResult PrivateFinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
             var waitFinishedPackage = new WaitFinishedPackage()
             {
@@ -819,6 +809,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 Route = targetId.HasValue(),
                 ResourceHandle = fileResourceInfo.ResourceHandle,
                 Metadata = metadata,
+                Code = code
             };
 
             var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(waitFinishedPackage);
@@ -841,19 +832,19 @@ namespace TouchSocket.Dmtp.FileTransfer
                             {
                                 case TouchSocketDmtpStatus.Success:
                                     {
-                                        return new FinishedResult(ResultCode.Success, waitFile.ResourceHandle, waitFile.UnFinishedIndexs);
+                                        return new FinishedResult(ResultCode.Success, waitFile.ResourceHandle);
                                     }
                                 case TouchSocketDmtpStatus.ResourceHandleNotFind:
                                     {
-                                        return new FinishedResult(ResultCode.Error, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFile.ResourceHandle), waitFile.ResourceHandle, waitFile.UnFinishedIndexs);
+                                        return new FinishedResult(ResultCode.Error, TouchSocketDmtpStatus.ResourceHandleNotFind.GetDescription(waitFile.ResourceHandle), waitFile.ResourceHandle);
                                     }
                                 case TouchSocketDmtpStatus.HasUnFinished:
                                     {
-                                        return new FinishedResult(ResultCode.Fail, TouchSocketDmtpStatus.HasUnFinished.GetDescription(waitFile.UnFinishedIndexs.Length), waitFile.ResourceHandle, waitFile.UnFinishedIndexs);
+                                        return new FinishedResult(ResultCode.Fail, TouchSocketDmtpStatus.HasUnFinished.GetDescription(), waitFile.ResourceHandle);
                                     }
                                 default:
                                     {
-                                        return new FinishedResult(ResultCode.Error, waitFile.Message, waitFile.ResourceHandle, waitFile.UnFinishedIndexs);
+                                        return new FinishedResult(ResultCode.Error, waitFile.Message, waitFile.ResourceHandle);
                                     }
                             }
                         }
@@ -1022,15 +1013,19 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         private Result PrivatePushFileResourceInfo(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = default, int timeout = 5000, CancellationToken token = default)
         {
+            var fileResourceInfo = fileResourceLocator.FileResourceInfo;
+
             var waitFileResource = new WaitFileResource()
             {
                 Path = savePath,
                 TargetId = targetId,
                 Route = targetId.HasValue(),
                 SourceId = this.DmtpActor.Id,
-                FileInfo = fileResourceLocator.FileResourceInfo.FileInfo,
+                FileInfo = fileResourceInfo.FileInfo,
                 Metadata = metadata,
-                FileSectionSize = fileResourceLocator.FileResourceInfo.FileSectionSize
+                FileSectionSize = fileResourceInfo.FileSectionSize,
+                ResourceHandle = fileResourceInfo.ResourceHandle,
+                ContinuationIndex = fileResourceInfo.GetContinuationIndex()
             };
 
             var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(waitFileResource);
@@ -1099,7 +1094,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 fileSection.Status = FileSectionStatus.Fail;
                 return new Result(fileSectionResult);
             }
-            var waitFileSection = new WaitFileSection()
+            using var waitFileSection = new WaitFileSection()
             {
                 SourceId = this.DmtpActor.Id,
                 TargetId = targetId,
@@ -1110,7 +1105,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
             var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(waitFileSection);
 
-            var byteBlock = new ByteBlock(fileSectionResult.Value.Count + 1024);
+            var byteBlock = new ByteBlock(fileSectionResult.Value.Len + 1024);
             try
             {
                 waitFileSection.Package(byteBlock);
@@ -1166,7 +1161,17 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
-        private void RequestFinishedFileResourceInfo(object o)//请求完成
+        #endregion Private
+
+        #endregion 传输
+
+        #region Request
+
+        /// <summary>
+        /// 请求完成
+        /// </summary>
+        /// <param name="o"></param>
+        private async Task RequestFinishedFileResourceInfo(object o)
         {
             //2.未找到
             //3.未完成
@@ -1221,7 +1226,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                                 }
                                 else
                                 {
-                                    waitFinishedPackage.UnFinishedIndexs = sections.Select(a => a.Index).ToArray();
                                     waitFinishedPackage.Status = TouchSocketDmtpStatus.HasUnFinished.ToValue();
 
                                     resultThis = new Result(ResultCode.Fail, TouchSocketDmtpStatus.HasUnFinished.GetDescription(sections.Length));
@@ -1253,20 +1257,24 @@ namespace TouchSocket.Dmtp.FileTransfer
                     this.DmtpActor.Send(this.m_finishedFileResourceInfo_Response, byteBlock);
                 }
 
-                var args = new FileTransferedEventArgs(
-                    transferType, waitFinishedPackage?.Metadata, resourceInfo?.FileInfo, resultThis)
+                var args = new FileTransferedEventArgs(transferType, waitFinishedPackage?.Metadata, resourceInfo?.FileInfo, waitFinishedPackage.Code == ResultCode.Canceled ? Result.Canceled : resultThis)
                 {
                     ResourcePath = resourcePath,
                     SavePath = savePath
                 };
-                this.OnFileTransfered?.Invoke(this.DmtpActor, args);
+                await this.OnFileTransfered.Invoke(this.DmtpActor, args);
             }
-            catch
+            catch (Exception ex)
             {
+                this.DmtpActor.Logger.Exception(ex);
             }
         }
 
-        private void RequestPullFileResourceInfo(object o)//请求拉取
+        /// <summary>
+        /// 请求拉取文件信息
+        /// </summary>
+        /// <param name="o"></param>
+        private async Task RequestPullFileResourceInfo(object o)
         {
             //2.不响应
             //3.不允许
@@ -1283,7 +1291,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                         ResourcePath = waitFileResource.Path
                     };
 
-                    this.OnFileTransfering.Invoke(this.DmtpActor, args);
+                    await this.OnFileTransfering.Invoke(this.DmtpActor, args);
 
                     var fullPath = this.GetFullPath(args.ResourcePath);
 
@@ -1325,6 +1333,10 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
+        /// <summary>
+        /// 请求拉取文件块
+        /// </summary>
+        /// <param name="o"></param>
         private void RequestPullFileSection(object o)
         {
             try
@@ -1333,17 +1345,18 @@ namespace TouchSocket.Dmtp.FileTransfer
                 //3.读取文件长度不一致
                 var waitFileSection = (WaitFileSection)o;
                 var length = waitFileSection.FileSection.Length;
-                var buffer = BytePool.Default.Rent(length);
                 try
                 {
+                    var bufferByteBlock = new ByteBlock(length);
                     if (this.FileController.TryGetFileResourceLocator(waitFileSection.FileSection.ResourceHandle,
                    out var locator))
                     {
-                        var r = locator.ReadBytes(waitFileSection.FileSection.Offset, buffer, 0, length);
+                        var r = locator.ReadBytes(waitFileSection.FileSection.Offset, bufferByteBlock.Buffer, 0, length);
                         if (r == length)
                         {
                             waitFileSection.Status = TouchSocketDmtpStatus.Success.ToValue();
-                            waitFileSection.Value = new ArraySegment<byte>(buffer, 0, length);
+                            bufferByteBlock.SetLength(r);
+                            waitFileSection.Value = bufferByteBlock;
                         }
                         else
                         {
@@ -1364,8 +1377,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 }
                 finally
                 {
-                    waitFileSection.Value = default;
-                    BytePool.Default.Return(buffer);
+                    waitFileSection.Dispose();
                 }
             }
             catch
@@ -1373,7 +1385,11 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
-        private void RequestPushFileResourceInfo(object o)//请求推送
+        /// <summary>
+        /// 请求推送文件信息
+        /// </summary>
+        /// <param name="o"></param>
+        private async Task RequestPushFileResourceInfo(object o)
         {
             //2.不响应
             //3.不支持
@@ -1383,19 +1399,36 @@ namespace TouchSocket.Dmtp.FileTransfer
                 var waitFileResource = (WaitFileResource)o;
                 try
                 {
-                    var args = new FileTransferingEventArgs(TransferType.Push,
-                        waitFileResource.Metadata, waitFileResource.FileInfo)
+                    var args = new FileTransferingEventArgs(TransferType.Push, waitFileResource.Metadata, waitFileResource.FileInfo)
                     {
                         SavePath = waitFileResource.Path
                     };
 
-                    this.OnFileTransfering.Invoke(this.DmtpActor, args);
+                    await this.OnFileTransfering.Invoke(this.DmtpActor, args);
 
                     var savePath = this.GetFullPath(args.SavePath);
 
                     if (args.IsPermitOperation)
                     {
                         var locator = this.FileController.LoadFileResourceLocatorForWrite(savePath, new FileResourceInfo(waitFileResource.FileInfo, waitFileResource.FileSectionSize));
+
+                        if (waitFileResource.ContinuationIndex > 0)//续传
+                        {
+                            long size = waitFileResource.ContinuationIndex * waitFileResource.FileSectionSize;
+                            if (locator.FileStorage.Length < size)
+                            {
+                                waitFileResource.Status = TouchSocketDmtpStatus.Exception.ToValue();
+                                waitFileResource.Message = "续传文件长度错误";
+                            }
+                            else
+                            {
+                                for (var i = 0; i < waitFileResource.ContinuationIndex; i++)
+                                {
+                                    locator.FileResourceInfo.FileSections[i].Status = FileSectionStatus.Finished;
+                                }
+                            }
+                        }
+
                         waitFileResource.ResourceHandle = locator.FileResourceInfo.ResourceHandle;
                         waitFileResource.Status = TouchSocketDmtpStatus.Success.ToValue();
                     }
@@ -1422,6 +1455,10 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
+        /// <summary>
+        /// 请求推送文件块
+        /// </summary>
+        /// <param name="o"></param>
         private void RequestPushFileSection(object o)
         {
             //2.没找到
@@ -1463,6 +1500,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     waitFileSection.Message = ex.Message;
                 }
 
+                waitFileSection.Value.Dispose();
                 waitFileSection.Value = default;
                 using (var byteBlock = new ByteBlock())
                 {
@@ -1476,7 +1514,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
-        #endregion 传输
+        #endregion Request
 
         #region 小文件
 
@@ -1709,7 +1747,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
-        private void RequestPullSmallFile(object o)
+        private async Task RequestPullSmallFile(object o)
         {
             //2.不响应
             //3.不允许
@@ -1728,7 +1766,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                         ResourcePath = waitSmallFilePackage.Path
                     };
 
-                    this.OnFileTransfering.Invoke(this.DmtpActor, args);
+                    await this.OnFileTransfering.Invoke(this.DmtpActor, args);
 
                     var fullPath = this.GetFullPath(args.ResourcePath);
                     waitSmallFilePackage.Path = fullPath;
@@ -1790,10 +1828,11 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     ResourcePath = waitSmallFilePackage.Path
                 };
-                this.OnFileTransfered?.Invoke(this.DmtpActor, resultArgs);
+                await this.OnFileTransfered.Invoke(this.DmtpActor, resultArgs);
             }
-            catch
+            catch (Exception ex)
             {
+                this.DmtpActor.Logger.Exception(ex);
             }
             finally
             {
@@ -1801,7 +1840,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
         }
 
-        private void RequestPushSmallFile(object o)
+        private async Task RequestPushSmallFile(object o)
         {
             //2.不响应
             //3.不允许
@@ -1818,7 +1857,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                         SavePath = waitSmallFilePackage.Path
                     };
 
-                    this.OnFileTransfering.Invoke(this.DmtpActor, args);
+                    await this.OnFileTransfering.Invoke(this.DmtpActor, args);
 
                     var fullPath = this.GetFullPath(args.SavePath);
                     waitSmallFilePackage.Path = fullPath;
@@ -1853,448 +1892,14 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     SavePath = waitSmallFilePackage.Path
                 };
-                this.OnFileTransfered?.Invoke(this.DmtpActor, resultArgs);
+                await this.OnFileTransfered.Invoke(this.DmtpActor, resultArgs);
             }
-            catch
+            catch (Exception ex)
             {
+                this.DmtpActor.Logger.Exception(ex);
             }
         }
 
         #endregion 小文件
-
-        #region Id文件传输
-
-        /// <inheritdoc/>
-        public Result PullFile(string targetId, FileOperator fileOperator)
-        {
-            if (fileOperator is null)
-            {
-                return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(nameof(fileOperator))));
-            }
-            if (fileOperator.IsEnd)
-            {
-                fileOperator.SetResult(Result.Default);
-            }
-
-            try
-            {
-                var resourceInfoResult = this.PullFileResourceInfo(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                if (resourceInfoResult.NotSuccess())
-                {
-                    return fileOperator.SetResult(new Result(resourceInfoResult));
-                }
-                var resourceInfo = resourceInfoResult.FileResourceInfo;
-                if (fileOperator.ResourceInfo == null)
-                {
-                    fileOperator.SetLength(resourceInfo.FileInfo.Length);
-                    fileOperator.ResourceInfo = resourceInfo;
-                }
-                else
-                {
-                    fileOperator.ResourceInfo.ResetResourceHandle(resourceInfo.ResourceHandle);
-                }
-
-                var locator = new FileResourceLocator(fileOperator.ResourceInfo, this.GetFullPath(fileOperator.SavePath));
-                var sections = new ConcurrentQueue<FileSection>();
-                foreach (var item in locator.FileResourceInfo.FileSections)
-                {
-                    if (item.Status != FileSectionStatus.Finished)
-                    {
-                        sections.Enqueue(item);
-                    }
-                }
-
-                var failResult = Result.UnknownFail;
-                var task = Task.Run(async () =>
-                {
-                    var failed = 0;
-                    while (true)
-                    {
-                        if (failed > fileOperator.TryCount)
-                        {
-                            break;
-                        }
-                        if (!sections.TryDequeue(out var fileSection))
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            var result = this.PullFileSection(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                            if (result.IsSuccess())
-                            {
-                                for (var j = 0; j < fileOperator.TryCount; j++)
-                                {
-                                    var res = locator.WriteFileSection(result);
-                                    if (res.IsSuccess())
-                                    {
-                                        await fileOperator.AddFlowAsync(fileSection.Length);
-                                        failed = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                failResult = new Result(result);
-                                if (result.ResultCode == ResultCode.Canceled)
-                                {
-                                    return;
-                                }
-                                failed++;
-                                sections.Enqueue(fileSection);
-                                await Task.Delay(500);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            failed++;
-                            failResult = new Result(ex);
-                            await Task.Delay(500);
-                        }
-                    }
-                });
-                task.ConfigureAwait(false).GetAwaiter().GetResult();
-                if (fileOperator.Token.IsCancellationRequested)
-                {
-                    return fileOperator.SetResult(Result.Canceled);
-                }
-                var result1 = locator.TryFinished();
-                if (this.DmtpActor.IsHandshaked)
-                {
-                    this.FinishedFileResourceInfo(targetId, resourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                }
-
-                return result1.IsSuccess() ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
-            }
-            catch (Exception ex)
-            {
-                return fileOperator.SetResult(new Result(ex));
-            }
-        }
-
-        /// <inheritdoc/>
-        public Task<Result> PullFileAsync(string targetId, FileOperator fileOperator)
-        {
-            return Task.Run(() =>
-            {
-                return this.PullFile(targetId, fileOperator);
-            });
-        }
-
-        /// <inheritdoc/>
-        public Result PushFile(string targetId, FileOperator fileOperator)
-        {
-            if (fileOperator is null)
-            {
-                return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(nameof(fileOperator))));
-            }
-            if (fileOperator.IsEnd)
-            {
-                fileOperator.SetResult(Result.Default);
-            }
-
-            try
-            {
-                if (fileOperator.ResourceInfo == null)
-                {
-                    fileOperator.ResourceInfo = new FileResourceInfo(this.GetFullPath(fileOperator.ResourcePath), fileOperator.FileSectionSize);
-                    fileOperator.SetLength(fileOperator.ResourceInfo.FileInfo.Length);
-                }
-                using var locator = new FileResourceLocator(fileOperator.ResourceInfo);
-                var resultInfo = this.PushFileResourceInfo(targetId, fileOperator.SavePath, locator, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                if (resultInfo.NotSuccess())
-                {
-                    return fileOperator.SetResult(resultInfo);
-                }
-                var sections = new ConcurrentQueue<FileSection>();
-                foreach (var item in locator.FileResourceInfo.FileSections)
-                {
-                    if (item.Status != FileSectionStatus.Finished)
-                    {
-                        sections.Enqueue(item);
-                    }
-                }
-
-                var failResult = Result.UnknownFail;
-                var task = Task.Run(async () =>
-                {
-                    var failed = 0;
-                    while (true)
-                    {
-                        if (failed > fileOperator.TryCount)
-                        {
-                            break;
-                        }
-                        if (!sections.TryDequeue(out var fileSection))
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            var result = this.PushFileSection(targetId, locator, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                            if (result.IsSuccess())
-                            {
-                               await fileOperator.AddFlowAsync(fileSection.Length);
-                            }
-                            else
-                            {
-                                failResult = new Result(result);
-                                if (result.ResultCode == ResultCode.Canceled)
-                                {
-                                    return;
-                                }
-                                failed++;
-                                sections.Enqueue(fileSection);
-                                await Task.Delay(500);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            failed++;
-                            failResult = new Result(ex);
-                            await Task.Delay(500);
-                        }
-                    }
-                });
-                task.ConfigureAwait(false).GetAwaiter().GetResult();
-                var res = this.FinishedFileResourceInfo(targetId, fileOperator.ResourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                return fileOperator.Token.IsCancellationRequested ? fileOperator.SetResult(Result.Canceled) : fileOperator.SetResult(res.ToResult());
-            }
-            catch (Exception ex)
-            {
-                return fileOperator.SetResult(new Result(ex));
-            }
-        }
-
-        /// <inheritdoc/>
-        public Task<Result> PushFileAsync(string targetId, FileOperator fileOperator)
-        {
-            return Task.Run(() =>
-            {
-                return this.PushFile(targetId, fileOperator);
-            });
-        }
-
-        #endregion Id文件传输
-
-        #region 文件传输
-
-        /// <inheritdoc/>
-        public Result PullFile(FileOperator fileOperator)
-        {
-            if (fileOperator is null)
-            {
-                return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(nameof(fileOperator))));
-            }
-            if (fileOperator.IsEnd)
-            {
-                fileOperator.SetResult(Result.Default);
-            }
-
-            try
-            {
-                var resourceInfoResult = this.PullFileResourceInfo(fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                if (resourceInfoResult.NotSuccess())
-                {
-                    return new Result(resourceInfoResult);
-                }
-
-                var resourceInfo = resourceInfoResult.FileResourceInfo;
-                if (fileOperator.ResourceInfo == null)
-                {
-                    fileOperator.SetLength(resourceInfo.FileInfo.Length);
-                    fileOperator.ResourceInfo = resourceInfo;
-                }
-                else
-                {
-                    fileOperator.ResourceInfo.ResetResourceHandle(resourceInfo.ResourceHandle);
-                }
-
-                var locator = new FileResourceLocator(fileOperator.ResourceInfo, this.GetFullPath(fileOperator.SavePath));
-                var sections = new ConcurrentQueue<FileSection>();
-                foreach (var item in locator.FileResourceInfo.FileSections)
-                {
-                    if (item.Status != FileSectionStatus.Finished)
-                    {
-                        sections.Enqueue(item);
-                    }
-                }
-
-                var failResult = Result.UnknownFail;
-
-                var task = Task.Run(async () =>
-                {
-                    var failed = 0;
-                    while (true)
-                    {
-                        if (failed > fileOperator.TryCount)
-                        {
-                            break;
-                        }
-                        if (!sections.TryDequeue(out var fileSection))
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            var result = this.PullFileSection(fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                            if (result.IsSuccess())
-                            {
-                                for (var j = 0; j < fileOperator.TryCount; j++)
-                                {
-                                    var res = locator.WriteFileSection(result);
-                                    if (res.IsSuccess())
-                                    {
-                                        await fileOperator.AddFlowAsync(fileSection.Length);
-                                        failed = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                failResult = new Result(result);
-                                if (result.ResultCode == ResultCode.Canceled)
-                                {
-                                    return;
-                                }
-                                failed++;
-                                sections.Enqueue(fileSection);
-                                await Task.Delay(500);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            failed++;
-                            failResult = new Result(ex);
-                            await Task.Delay(500);
-                        }
-                    }
-                });
-                task.ConfigureAwait(false).GetAwaiter().GetResult();
-                if (fileOperator.Token.IsCancellationRequested)
-                {
-                    return fileOperator.SetResult(Result.Canceled);
-                }
-                var result1 = locator.TryFinished();
-                if (this.DmtpActor.IsHandshaked)
-                {
-                    this.FinishedFileResourceInfo(resourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                }
-
-                return result1.IsSuccess() ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);
-            }
-            catch (Exception ex)
-            {
-                return fileOperator.SetResult(new Result(ex));
-            }
-        }
-
-        /// <inheritdoc/>
-        public Task<Result> PullFileAsync(FileOperator fileOperator)
-        {
-            return Task.Run(() =>
-            {
-                return this.PullFile(fileOperator);
-            });
-        }
-
-        /// <inheritdoc/>
-        public Result PushFile(FileOperator fileOperator)
-        {
-            if (fileOperator is null)
-            {
-                return fileOperator.SetResult(new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(nameof(fileOperator))));
-            }
-            if (fileOperator.IsEnd)
-            {
-                fileOperator.SetResult(Result.Default);
-            }
-
-            try
-            {
-                if (fileOperator.ResourceInfo == null)
-                {
-                    fileOperator.ResourceInfo = new FileResourceInfo(this.GetFullPath(fileOperator.ResourcePath), fileOperator.FileSectionSize);
-                    fileOperator.SetLength(fileOperator.ResourceInfo.FileInfo.Length);
-                }
-                using var locator = new FileResourceLocator(fileOperator.ResourceInfo);
-                var resultInfo = this.PushFileResourceInfo(fileOperator.SavePath, locator, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                if (resultInfo.NotSuccess())
-                {
-                    return fileOperator.SetResult(resultInfo);
-                }
-                var sections = new ConcurrentQueue<FileSection>();
-                foreach (var item in locator.FileResourceInfo.FileSections)
-                {
-                    if (item.Status != FileSectionStatus.Finished)
-                    {
-                        sections.Enqueue(item);
-                    }
-                }
-
-                var failResult = Result.UnknownFail;
-                var task = Task.Run(async () =>
-                {
-                    var failed = 0;
-                    while (true)
-                    {
-                        if (failed > fileOperator.TryCount)
-                        {
-                            break;
-                        }
-                        if (!sections.TryDequeue(out var fileSection))
-                        {
-                            break;
-                        }
-                        try
-                        {
-                            var result = this.PushFileSection(locator, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                            if (result.IsSuccess())
-                            {
-                                await fileOperator.AddFlowAsync(fileSection.Length);
-                            }
-                            else
-                            {
-                                failResult = new Result(result);
-                                if (result.ResultCode == ResultCode.Canceled)
-                                {
-                                    return;
-                                }
-                                failed++;
-                                sections.Enqueue(fileSection);
-                                await Task.Delay(500);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            failed++;
-                            failResult = new Result(ex);
-                            await Task.Delay(500);
-                        }
-                    }
-                });
-                task.ConfigureAwait(false).GetAwaiter().GetResult();
-
-                var res = this.FinishedFileResourceInfo(fileOperator.ResourceInfo, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token);
-                return fileOperator.Token.IsCancellationRequested ? fileOperator.SetResult(Result.Canceled) : fileOperator.SetResult(res.ToResult());
-            }
-            catch (Exception ex)
-            {
-                return fileOperator.SetResult(new Result(ex));
-            }
-        }
-
-        /// <inheritdoc/>
-        public Task<Result> PushFileAsync(FileOperator fileOperator)
-        {
-            return Task.Run(() =>
-            {
-                return this.PushFile(fileOperator);
-            });
-        }
-
-        #endregion 文件传输
     }
 }

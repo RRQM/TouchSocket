@@ -38,7 +38,7 @@ namespace TouchSocket.Core
                     type = type.GetGenericArguments()[0];
                 }
                 this.Type = type;
-                if (TouchSocketCoreUtility.listType.IsAssignableFrom(type))
+                if (type.IsList())
                 {
                     var genericType = type;
                     while (true)
@@ -57,7 +57,7 @@ namespace TouchSocket.Core
                     this.AddMethod = new Method(type.GetMethod("Add"));
                     this.InstanceType = InstanceType.List;
                 }
-                else if (TouchSocketCoreUtility.dicType.IsAssignableFrom(type))
+                else if (type.IsDictionary())
                 {
                     var genericType = type;
                     while (true)

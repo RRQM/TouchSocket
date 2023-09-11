@@ -65,6 +65,11 @@ namespace TouchSocket.Dmtp.FileTransfer
             return this.ProtectedAddFlowAsync(flow);
         }
 
+        internal void AddCompletedLength(int flow)
+        {
+           this.completedLength += flow;
+        }
+
         /// <summary>
         /// 设置流长度
         /// </summary>

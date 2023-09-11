@@ -16,25 +16,16 @@ namespace TouchSocket.Dmtp.FileTransfer
 {
     internal class WaitFinishedPackage : WaitRouterPackage
     {
-        public WaitFinishedPackage()
-        {
-            this.UnFinishedIndexs = new int[0];
-        }
-
+        public ResultCode Code { get; set; }
         public Metadata Metadata { get; set; }
         public int ResourceHandle { get; set; }
-        public int[] UnFinishedIndexs { get; set; }
 
         public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
             byteBlock.Write(this.ResourceHandle);
             byteBlock.WritePackage(this.Metadata);
-            byteBlock.Write(this.UnFinishedIndexs.Length);
-            foreach (var item in this.UnFinishedIndexs)
-            {
-                byteBlock.Write(item);
-            }
+            byteBlock.Write((byte)this.Code);
         }
 
         public override void UnpackageBody(in ByteBlock byteBlock)
@@ -42,17 +33,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             base.UnpackageBody(byteBlock);
             this.ResourceHandle = byteBlock.ReadInt32();
             this.Metadata = byteBlock.ReadPackage<Metadata>();
-            var len = byteBlock.ReadInt32();
-            if (len == 0)
-            {
-                return;
-            }
-
-            this.UnFinishedIndexs = new int[len];
-            for (var i = 0; i < len; i++)
-            {
-                this.UnFinishedIndexs[i] = byteBlock.ReadInt32();
-            }
+            this.Code = (ResultCode)byteBlock.ReadByte();
         }
     }
 }

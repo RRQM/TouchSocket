@@ -39,9 +39,7 @@ namespace TouchSocket.Core
         public static readonly Type dateTimeType = typeof(DateTime);
         public static readonly Type bytesType = typeof(byte[]);
         public static readonly Type dicType = typeof(IDictionary);
-        public static readonly Type iEnumerableType = typeof(IEnumerable);
         public static readonly Type arrayType = typeof(Array);
-        public static readonly Type listType = typeof(IList);
         public static readonly Type nullableType = typeof(Nullable<>);
 
         public static readonly byte[] ZeroBytes = new byte[0];

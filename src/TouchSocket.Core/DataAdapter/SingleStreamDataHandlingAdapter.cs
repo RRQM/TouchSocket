@@ -26,9 +26,9 @@ namespace TouchSocket.Core
         public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(1);
 
         /// <summary>
-        /// 是否启用缓存超时。默认true。
+        /// 是否启用缓存超时。默认false。
         /// </summary>
-        public bool CacheTimeoutEnable { get; set; } = true;
+        public bool CacheTimeoutEnable { get; set; } = false;
 
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收

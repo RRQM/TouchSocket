@@ -23,11 +23,11 @@ namespace TouchSocket.Sockets
     {
         #region 数据
         /// <summary>
-        /// 发送超时设定，默认为30000ms。
+        /// 发送超时设定，默认为0。
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty<int> SendTimeoutProperty =
-            DependencyProperty<int>.Register("SendTimeout", 30000);
+            DependencyProperty<int>.Register("SendTimeout", 0);
 
         /// <summary>
         /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
@@ -66,7 +66,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 发送超时设定，默认为30000ms。如果需要禁用该配置，可设置0。
+        /// 发送超时设定，单位毫秒，默认为0。意为禁用该配置。
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>

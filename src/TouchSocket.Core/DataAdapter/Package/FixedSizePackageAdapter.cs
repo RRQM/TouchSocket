@@ -115,7 +115,7 @@ namespace TouchSocket.Core
             var byteBlock = new ByteBlock(this.FixedSize);
 
             byteBlock.Write(buffer, offset, length);
-            for (var i = (int)byteBlock.Pos; i < this.FixedSize; i++)
+            for (var i = byteBlock.Pos; i < this.FixedSize; i++)
             {
                 byteBlock.Buffer[i] = 0;
             }

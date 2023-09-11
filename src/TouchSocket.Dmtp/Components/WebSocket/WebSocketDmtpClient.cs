@@ -24,12 +24,31 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public class WebSocketDmtpClient : BaseSocket, IWebSocketDmtpClient
     {
+        /// <summary>
+        /// WebSocketDmtpClient
+        /// </summary>
+        public WebSocketDmtpClient()
+        {
+            this.m_receiveCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnReceivePeriod
+            };
+            this.m_sendCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnSendPeriod
+            };
+        }
+
         #region 字段
 
         private bool m_allowRoute;
         private CancellationTokenSource m_cancellationTokenSource;
         private ClientWebSocket m_client;
         private Func<string, IDmtpActor> m_findDmtpActor;
+        private ValueCounter m_receiveCounter;
+        private ValueCounter m_sendCounter;
         private DmtpActor m_smtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
 
@@ -52,19 +71,19 @@ namespace TouchSocket.Dmtp
         public DisconnectEventHandler<WebSocketDmtpClient> Disconnected { get; set; }
 
         /// <inheritdoc/>
+        public IDmtpActor DmtpActor { get => this.m_smtpActor; }
+
+        /// <inheritdoc/>
         public string Id => this.DmtpActor.Id;
 
         /// <inheritdoc/>
         public bool IsHandshaked { get; private set; }
 
         /// <inheritdoc/>
-        public IPluginsManager PluginsManager { get; private set; }
+        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public IPHost RemoteIPHost { get; private set; }
-
-        /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => this.m_smtpActor; }
+        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
 
         /// <summary>
         /// 未实现
@@ -77,13 +96,13 @@ namespace TouchSocket.Dmtp
         public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
+        public IPluginsManager PluginsManager { get; private set; }
+
+        /// <inheritdoc/>
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
 
         /// <inheritdoc/>
-        public DateTime LastReceivedTime { get; private set; }
-
-        /// <inheritdoc/>
-        public DateTime LastSendTime { get; private set; }
+        public IPHost RemoteIPHost { get; private set; }
 
         /// <summary>
         /// 发送<see cref="IDmtpActor"/>关闭消息。
@@ -247,7 +266,7 @@ namespace TouchSocket.Dmtp
                             break;
                         }
                         byteBlock.SetLength(result.Count);
-                        this.LastReceivedTime = DateTime.Now;
+                        this.m_receiveCounter.Increment(result.Count);
 
                         this.m_smtpAdapter.ReceivedInput(byteBlock);
                     }
@@ -318,6 +337,16 @@ namespace TouchSocket.Dmtp
             }
             this.Container = container;
             this.PluginsManager = pluginsManager;
+        }
+
+        private void OnReceivePeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
+        private void OnSendPeriod(long value)
+        {
+            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         private void PrivateClose(string msg)
@@ -402,8 +431,8 @@ namespace TouchSocket.Dmtp
                 }
                 task.ConfigureAwait(false);
                 task.GetAwaiter().GetResult();
+                this.m_sendCounter.Increment(transferBytes[i].Count);
             }
-            this.LastSendTime = DateTime.Now;
         }
 
         #endregion 内部委托绑定

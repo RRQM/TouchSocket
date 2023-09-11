@@ -8,10 +8,6 @@
 		<Title>TouchSocket.Rpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Remove="Attribute\GeneratorRpcMethodAttribute.cs" />
-	  <Compile Remove="Attribute\GeneratorRpcProxyAttribute.cs" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />

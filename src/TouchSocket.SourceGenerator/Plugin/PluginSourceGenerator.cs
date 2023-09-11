@@ -63,7 +63,10 @@ namespace TouchSocket.Core
                 //Debugger.Launch();
                 foreach (var builder in builders)
                 {
-                    context.AddSource($"{builder.GetFileName()}.g.cs", builder.ToSourceText());
+                    if (builder.TryToSourceText(out var sourceText))
+                    {
+                        context.AddSource($"{builder.GetFileName()}.g.cs", sourceText);
+                    }
                 }
             }
         }

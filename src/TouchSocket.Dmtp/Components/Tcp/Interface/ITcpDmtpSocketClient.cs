@@ -11,32 +11,15 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
+using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Dmtp
 {
+
     /// <summary>
-    /// TouchRpcFileInfo
+    /// ITcpDmtpSocketClient
     /// </summary>
-    public class TouchRpcFileInfo : RemoteFileInfo
+    public interface ITcpDmtpSocketClient : ITcpDmtpClientBase, ISocketClient
     {
-        /// <summary>
-        /// 流位置
-        /// </summary>
-        public long Position { get; set; }
-
-        /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
-        {
-            base.Package(byteBlock);
-            byteBlock.Write(this.Position);
-        }
-
-        /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
-        {
-            base.Unpackage(byteBlock);
-            this.Position = byteBlock.ReadInt64();
-        }
     }
 }

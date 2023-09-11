@@ -19,20 +19,15 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// </summary>
     public class FinishedResult : ResultBase
     {
-        private readonly int[] m_unFinishedIndexs;
-
         /// <summary>
         /// 失败的请求结果
         /// </summary>
         /// <param name="resultCode"></param>
         /// <param name="message"></param>
         /// <param name="resourceHandle"></param>
-        /// <param name="unFinishedIndexs"></param>
-        public FinishedResult(ResultCode resultCode, string message, int resourceHandle, int[] unFinishedIndexs) :
-            base(resultCode, message)
+        public FinishedResult(ResultCode resultCode, string message, int resourceHandle) : base(resultCode, message)
         {
             this.ResourceHandle = resourceHandle;
-            this.m_unFinishedIndexs = unFinishedIndexs;
         }
 
         /// <summary>
@@ -40,12 +35,9 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         /// <param name="resultCode"></param>
         /// <param name="resourceHandle"></param>
-        /// <param name="unFinishedIndexs"></param>
-        public FinishedResult(ResultCode resultCode, int resourceHandle, int[] unFinishedIndexs) :
-          base(resultCode)
+        public FinishedResult(ResultCode resultCode, int resourceHandle) : base(resultCode)
         {
             this.ResourceHandle = resourceHandle;
-            this.m_unFinishedIndexs = unFinishedIndexs;
         }
 
         /// <summary>
@@ -53,21 +45,14 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         /// <param name="result"></param>
         /// <param name="resourceHandle"></param>
-        public FinishedResult(Result result, int resourceHandle) :
-         base(result)
+        public FinishedResult(Result result, int resourceHandle) : base(result)
         {
             this.ResourceHandle = resourceHandle;
-            this.m_unFinishedIndexs = new int[0];
         }
 
         /// <summary>
         /// 资源句柄
         /// </summary>
         public int ResourceHandle { get; private set; }
-
-        /// <summary>
-        /// 未完成的文件块集合
-        /// </summary>
-        public int[] UnFinishedIndexs { get => this.m_unFinishedIndexs ?? new int[0]; }
     }
 }

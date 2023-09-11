@@ -438,6 +438,7 @@ namespace TouchSocket.Rpc
                     }
 
                     var actionFilters = new List<IRpcActionFilter>();
+
                     foreach (var item in method.GetCustomAttributes(true))
                     {
                         if (item is IRpcActionFilter filter)
@@ -445,9 +446,26 @@ namespace TouchSocket.Rpc
                             actionFilters.Add(filter);
                         }
                     }
+
+                    foreach (var item in serverFromType.GetCustomAttributes(true))
+                    {
+                        if (item is IRpcActionFilter filter)
+                        {
+                            actionFilters.Add(filter);
+                        }
+                    }
+
                     if (serverFromType != serverToType)
                     {
                         foreach (var item in toMethod.GetCustomAttributes(true))
+                        {
+                            if (item is IRpcActionFilter filter)
+                            {
+                                actionFilters.Add(filter);
+                            }
+                        }
+
+                        foreach (var item in serverToType.GetCustomAttributes(true))
                         {
                             if (item is IRpcActionFilter filter)
                             {

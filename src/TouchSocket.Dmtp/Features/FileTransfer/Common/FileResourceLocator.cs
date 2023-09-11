@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 缓存文件的扩展名。
         /// </summary>
-        public const string ExtensionName = ".rrqmpro";
+        public const string ExtensionName = ".dmtpfile";
 
         /// <summary>
         /// 根据资源信息，初始化一个仅读的定位器。
@@ -102,8 +102,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
             else
             {
-                return this.FileResourceInfo.FileSections.FirstOrDefault(a =>
-            a.Status == FileSectionStatus.Default || a.Status == FileSectionStatus.Fail);
+                return this.FileResourceInfo.FileSections.FirstOrDefault(a => a.Status == FileSectionStatus.Default || a.Status == FileSectionStatus.Fail);
             }
         }
 
@@ -156,15 +155,16 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     return new FileSectionResult(ResultCode.Error, "数据块不一致。", default, fileSection);
                 }
-                var buffer = BytePool.Default.Rent(fileSection.Length);
-                var r = this.FileStorage.Read(oldFileSection.Offset, buffer, 0, fileSection.Length);
+                var bufferByteBlock = new ByteBlock(fileSection.Length);
+                var r = this.FileStorage.Read(oldFileSection.Offset, bufferByteBlock.Buffer, 0, fileSection.Length);
                 if (r != fileSection.Length)
                 {
                     return new FileSectionResult(ResultCode.Error, "读取长度不一致。", default, fileSection);
                 }
                 else
                 {
-                    return new FileSectionResult(ResultCode.Success, new ArraySegment<byte>(buffer, 0, r), fileSection);
+                    bufferByteBlock.SetLength(r);
+                    return new FileSectionResult(ResultCode.Success, bufferByteBlock, fileSection);
                 }
             }
             catch (Exception ex)
@@ -270,6 +270,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     return new Result(ResultCode.Error, "数据块不一致。");
                 }
                 this.FileStorage.Write(srcFileSection.Offset, value.Array, value.Offset, value.Count);
+                this.FileStorage.Flush();
                 fileSection.Status = FileSectionStatus.Finished;
                 srcFileSection.Status = FileSectionStatus.Finished;
                 return Result.Success;

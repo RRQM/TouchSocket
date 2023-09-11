@@ -34,6 +34,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.NamedPipe", "To
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator", "TouchSocket.SourceGenerator\TouchSocket.SourceGenerator.csproj", "{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi.Swagger", "TouchSocket.WebApi.Swagger\TouchSocket.WebApi.Swagger.csproj", "{02401902-0085-4ACA-B997-A79FDCD766F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +94,10 @@ Global
 		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BDF43E9-C19A-41B7-9AA0-1D0830039C85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02401902-0085-4ACA-B997-A79FDCD766F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02401902-0085-4ACA-B997-A79FDCD766F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02401902-0085-4ACA-B997-A79FDCD766F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02401902-0085-4ACA-B997-A79FDCD766F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

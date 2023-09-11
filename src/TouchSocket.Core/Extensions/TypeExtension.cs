@@ -12,8 +12,11 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core
 {
@@ -22,7 +25,15 @@ namespace TouchSocket.Core
     /// </summary>
     public static class TypeExtension
     {
-        #region Type扩展
+        /// <summary>
+        /// 获取默认值
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static object GetDefault(this Type targetType)
+        {
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+        }
 
         /// <summary>
         /// 获取类型
@@ -35,33 +46,109 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 获取默认值
+        /// 检查类型是否是匿名类型
         /// </summary>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static object GetDefault(this Type targetType)
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsAnonymous(this Type type)
         {
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            // 检查是否贴有 [CompilerGenerated] 特性
+            if (!type.IsDefined(typeof(CompilerGeneratedAttribute), false))
+            {
+                return false;
+            }
+
+            // 类型限定名是否以 <> 开头且以 AnonymousType 结尾
+            return type.FullName.HasValue()
+                && type.FullName.StartsWith("<>")
+                && type.FullName.Contains("AnonymousType");
         }
 
         /// <summary>
-        /// 判断是否为静态类。
+        /// 检查类型是否是小数类型
         /// </summary>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static bool IsStatic(this Type targetType)
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsDecimal(this Type type)
         {
-            return targetType.IsAbstract && targetType.IsSealed;
+            // 如果是浮点类型则直接返回
+            if (type == typeof(decimal)
+                || type == typeof(double)
+                || type == typeof(float))
+            {
+                return true;
+            }
+
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Double:
+                case TypeCode.Decimal:
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
-        /// 判断为结构体
+        /// 检查类型是否是字典类型
         /// </summary>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static bool IsStruct(this Type targetType)
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsDictionary(this Type type)
         {
-            return !targetType.IsPrimitive && !targetType.IsClass && !targetType.IsEnum && targetType.IsValueType;
+            return TouchSocketCoreUtility.dicType.IsAssignableFrom(type);
+        }
+
+        /// <summary>
+        /// 检查类型是否可实例化
+        /// </summary>
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsInstantiable(this Type type)
+        {
+            return type is { IsClass: true, IsAbstract: false }
+                && !type.IsStatic();
+        }
+
+        /// <summary>
+        /// 检查类型是否是整数类型
+        /// </summary>
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsInteger(this Type type)
+        {
+            // 如果是枚举或浮点类型则直接返回
+            if (type.IsEnum || type.IsDecimal())
+            {
+                return false;
+            }
+
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 是否是<see cref="List{T}"/>类型。
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsList(this Type type)
+        {
+            return typeof(IList).IsAssignableFrom(type);
         }
 
         /// <summary>
@@ -107,6 +194,37 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 检查类型是否是数值类型
+        /// </summary>
+        /// <param name="type"><see cref="Type"/></param>
+        /// <returns><see cref="bool"/></returns>
+        public static bool IsNumeric(this Type type)
+        {
+            return type.IsInteger()
+                || type.IsDecimal();
+        }
+
+        /// <summary>
+        /// 判断是否为静态类。
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static bool IsStatic(this Type targetType)
+        {
+            return targetType.IsAbstract && targetType.IsSealed;
+        }
+
+        /// <summary>
+        /// 判断为结构体
+        /// </summary>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static bool IsStruct(this Type targetType)
+        {
+            return !targetType.IsPrimitive && !targetType.IsClass && !targetType.IsEnum && targetType.IsValueType;
+        }
+
+        /// <summary>
         /// 判断该类型是否为值元组类型
         /// </summary>
         /// <param name="theType"></param>
@@ -117,7 +235,5 @@ namespace TouchSocket.Core
                  theType.IsGenericType &&
                  theType.FullName.StartsWith("System.ValueTuple");
         }
-
-        #endregion Type扩展
     }
 }
