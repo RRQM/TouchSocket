@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -121,7 +122,7 @@ namespace DmtpClientApp
 
     public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
     {
-        public override void Executing(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+        public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
             //invokeResult = new InvokeResult()
             //{
@@ -129,30 +130,29 @@ namespace DmtpClientApp
             //    Message = "不允许执行",
             //    Result = default
             //};
-            if (callContext.Caller is TcpDmtpSocketClient client)
+            if (callContext.Caller is ISocketClient client)
             {
-                client.Logger.Info($"即将执行RPC-{callContext.MethodInstance.Name}");
+                client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
             }
-            base.Executing(callContext, parameters, ref invokeResult);
+            return Task.FromResult(invokeResult);
         }
 
-        public override void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+        public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
-            if (callContext.Caller is TcpDmtpSocketClient client)
+            if (callContext.Caller is ISocketClient client)
             {
                 client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
             }
-            base.Executed(callContext, parameters, ref invokeResult);
+            return Task.FromResult(invokeResult);
         }
 
-        public override void ExecutException(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
+        public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
-            if (callContext.Caller is TcpDmtpSocketClient client)
+            if (callContext.Caller is ISocketClient client)
             {
                 client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
             }
-
-            base.ExecutException(callContext, parameters, ref invokeResult, exception);
+            return Task.FromResult(invokeResult);
         }
     }
 }
