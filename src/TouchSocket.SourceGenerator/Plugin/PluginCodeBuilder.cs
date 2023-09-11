@@ -58,10 +58,16 @@ namespace TouchSocket
         /// 转换为SourceText
         /// </summary>
         /// <returns></returns>
-        public SourceText ToSourceText()
+        public bool TryToSourceText(out SourceText sourceText)
         {
             var code = this.ToString();
-            return SourceText.From(code, Encoding.UTF8);
+            if (string.IsNullOrEmpty(code))
+            {
+                sourceText = null;
+                return false;
+            }
+            sourceText=SourceText.From(code, Encoding.UTF8);
+            return true;
         }
 
         /// <summary>
@@ -70,7 +76,11 @@ namespace TouchSocket
         /// <returns></returns>
         public override string ToString()
         {
-
+            var methods = this.FindMethods().ToList();
+            if (methods.Count==0)
+            {
+                return null;
+            }
             var codeString = new StringBuilder();
             codeString.AppendLine("/*");
             codeString.AppendLine("此代码由Plugin工具直接生成，非必要请不要修改此处代码");
@@ -90,7 +100,6 @@ namespace TouchSocket
             codeString.AppendLine("{");
             codeString.AppendLine("private int RegisterPlugins(IPluginsManager pluginsManager)");
             codeString.AppendLine("{");
-            var methods = this.FindMethods().ToList();
             foreach (var item in methods)
             {
                 this.BuildMethod(codeString, item);

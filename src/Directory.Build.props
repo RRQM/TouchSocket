@@ -3,8 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.159</Version>
-		<NoPackageAnalysis>true</NoPackageAnalysis>
+		<Version>2.0.0-beta.171</Version>
 		<LangVersion>8.0</LangVersion>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<Company>若汝棋茗</Company>

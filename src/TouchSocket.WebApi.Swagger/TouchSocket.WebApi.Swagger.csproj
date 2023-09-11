@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Swagger</PackageTags>
+		<Description>这是适用于TouchSocket.WebApi的Swagger页面，可以直接在浏览器调试WebApi。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+		<Title>TouchSocket.WebApi.Swagger</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi.Swagger</PackageOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+  <ItemGroup>
+    <None Remove="api\favicon-16x16.png" />
+    <None Remove="api\favicon-32x32.png" />
+    <None Remove="api\index.html" />
+    <None Remove="api\oauth2-redirect.html" />
+    <None Remove="api\openapi.json" />
+    <None Remove="api\swagger-ui-bundle.js" />
+    <None Remove="api\swagger-ui-es-bundle-core.js" />
+    <None Remove="api\swagger-ui-es-bundle.js" />
+    <None Remove="api\swagger-ui-standalone-preset.js" />
+    <None Remove="api\swagger-ui.css" />
+    <None Remove="api\swagger-ui.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="api\favicon-16x16.png" />
+    <EmbeddedResource Include="api\favicon-32x32.png" />
+    <EmbeddedResource Include="api\index.html" />
+    <EmbeddedResource Include="api\oauth2-redirect.html" />
+    <EmbeddedResource Include="api\openapi.json" />
+    <EmbeddedResource Include="api\swagger-ui-bundle.js" />
+    <EmbeddedResource Include="api\swagger-ui-es-bundle-core.js" />
+    <EmbeddedResource Include="api\swagger-ui-es-bundle.js" />
+    <EmbeddedResource Include="api\swagger-ui-standalone-preset.js" />
+    <EmbeddedResource Include="api\swagger-ui.css" />
+    <EmbeddedResource Include="api\swagger-ui.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TouchSocket.WebApi\TouchSocket.WebApi.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -68,8 +68,8 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].Executing(callContext, ps, ref invokeResult);
-                        callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, ref invokeResult).ConfigureAwait(false).GetAwaiter().GetResult();
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, invokeResult)
+                            .ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
 
@@ -113,8 +113,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].Executed(callContext, ps, ref invokeResult);
-                        callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, ref invokeResult)
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, invokeResult)
                             .ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
@@ -127,8 +126,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex)
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex)
                              .ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
@@ -141,9 +139,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex)
-                             .ConfigureAwait(false).GetAwaiter().GetResult();
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -167,8 +163,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].Executing(callContext, ps, ref invokeResult);
-                        await callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, ref invokeResult);
+                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, invokeResult);
                     }
                 }
 
@@ -212,8 +207,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].Executed(callContext, ps, ref invokeResult);
-                        await callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, ref invokeResult);
+                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, invokeResult);
                     }
                 }
             }
@@ -225,8 +219,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex);
+                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex);
                     }
                 }
             }
@@ -238,8 +231,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        callContext.MethodInstance.Filters[i].ExecutException(callContext, ps, ref invokeResult, ex);
-                        await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, ref invokeResult, ex);
+                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex);
                     }
                 }
             }

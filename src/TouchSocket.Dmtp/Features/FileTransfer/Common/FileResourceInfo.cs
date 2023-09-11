@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TouchSocket.Core;
@@ -22,6 +23,8 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// </summary>
     public class FileResourceInfo : PackageBase
     {
+        private FileSection[] m_fileSections;
+
         /// <summary>
         /// 初始化一个本地资源
         /// </summary>
@@ -48,7 +51,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <summary>
-        /// 初始化一个资源
+        /// 初始化一个远程资源
         /// </summary>
         /// <param name="fileInfo"></param>
         /// <param name="fileSectionSize"></param>
@@ -65,7 +68,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 资源分块集合。
         /// </summary>
-        public FileSection[] FileSections { get; private set; }
+        public FileSection[] FileSections { get => this.m_fileSections; }
 
         /// <summary>
         /// 文件分块尺寸。
@@ -78,13 +81,37 @@ namespace TouchSocket.Dmtp.FileTransfer
         public int ResourceHandle { get; private set; }
 
         /// <summary>
+        /// 获取尝试续传时的索引。
+        /// </summary>
+        /// <returns></returns>
+        public int GetContinuationIndex()
+        {
+            if (this.m_fileSections==null)
+            {
+                return 0;
+            }
+
+            var i = 0;
+            foreach (var item in this.m_fileSections)
+            {
+                if (item.Status!= FileSectionStatus.Finished)
+                {
+                    return i;
+                }
+                i++;
+            }
+
+            return i;
+        }
+
+        /// <summary>
         /// 按文件块状态，获取块集合，如果没用找到任何元素，则返回空数组。
         /// </summary>
         /// <param name="fileSectionStatus"></param>
         /// <returns></returns>
-        public FileSection[] GetFileSections(FileSectionStatus fileSectionStatus)
+        public IEnumerable<FileSection> GetFileSections(FileSectionStatus fileSectionStatus)
         {
-            return this.FileSections.Where(a => a.Status == fileSectionStatus).ToArray();
+            return this.FileSections.Where(a => a.Status == fileSectionStatus);
         }
 
         /// <inheritdoc/>
@@ -92,11 +119,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             byteBlock.Write(this.ResourceHandle);
             byteBlock.WritePackage(this.FileInfo);
-            byteBlock.Write(this.FileSections.Length);
-            foreach (var item in this.FileSections)
-            {
-                item.Package(byteBlock);
-            }
         }
 
         /// <summary>
@@ -117,18 +139,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             this.ResourceHandle = byteBlock.ReadInt32();
             this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
-            var count = byteBlock.ReadInt32();
-            this.FileSections = new FileSection[count];
-            for (var i = 0; i < count; i++)
-            {
-                var fileSection = new FileSection();
-                fileSection.Unpackage(byteBlock);
-                this.FileSections[i] = fileSection;
-            }
         }
 
         private void Create(RemoteFileInfo fileInfo, long fileSectionSize)
         {
+            this.ResourceHandle = this.GetHashCode();
             this.FileSectionSize = (int)fileSectionSize;
             var sectionCount = (int)((fileInfo.Length / fileSectionSize) + 1);
             var sections = new FileSection[sectionCount];
@@ -138,15 +153,14 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     Offset = i * fileSectionSize,
                     Length = (int)Math.Min(fileInfo.Length - i * fileSectionSize, fileSectionSize),
-                    ResourceHandle = this.GetHashCode(),
+                    ResourceHandle = this.ResourceHandle,
                     Status = FileSectionStatus.Default,
                     Index = i
                 };
                 sections[i] = fileSection;
             }
-            this.ResourceHandle = this.GetHashCode();
             this.FileInfo = fileInfo;
-            this.FileSections = sections;
+            this.m_fileSections = sections;
         }
     }
 }

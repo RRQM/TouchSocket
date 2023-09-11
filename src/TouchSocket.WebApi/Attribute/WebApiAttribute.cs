@@ -65,13 +65,13 @@ namespace TouchSocket.WebApi
                 {
                     var stringBuilder = new StringBuilder();
                     stringBuilder.Append(actionUrl);
-                    stringBuilder.Append("?");
+                    stringBuilder.Append('?');
                     for (; i < methodInstance.ParameterNames.Length; i++)
                     {
                         stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
                         if (i != methodInstance.ParameterNames.Length - 1)
                         {
-                            stringBuilder.Append("&");
+                            stringBuilder.Append('&');
                         }
                     }
                     actionUrl = stringBuilder.ToString();
@@ -85,13 +85,13 @@ namespace TouchSocket.WebApi
                 {
                     var stringBuilder = new StringBuilder();
                     stringBuilder.Append(actionUrl);
-                    stringBuilder.Append("?");
+                    stringBuilder.Append('?');
                     for (; i < methodInstance.ParameterNames.Length - 1; i++)
                     {
                         stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
                         if (i != methodInstance.ParameterNames.Length - 2)
                         {
-                            stringBuilder.Append("&");
+                            stringBuilder.Append('&');
                         }
                     }
                     actionUrl = stringBuilder.ToString();

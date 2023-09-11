@@ -33,6 +33,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         int MaxSmallFileLength { get; set; }
 
+        /// <summary>
+        /// 文件资源访问接口。
+        /// </summary>
+        IFileResourceController FileController { get;}
+
         #region Id小文件
 
         /// <summary>
@@ -138,11 +143,12 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
         /// <param name="fileResourceInfo">文件资源信息</param>
+        /// <param name="code">状态代码</param>
         /// <param name="metadata">元数据</param>
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo,ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 请求完成一个资源。
@@ -151,18 +157,19 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
         /// <param name="fileResourceInfo">文件资源信息</param>
+        /// <param name="code">状态代码</param>
         /// <param name="metadata">元数据</param>
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 拉取文件信息。
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都应该对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
@@ -179,7 +186,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都应该对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
@@ -218,7 +225,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都必须对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
@@ -235,7 +242,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都必须对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="targetId">目标客户端Id</param>
@@ -281,11 +288,12 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>如果是Pull，当正常返回时，则说明服务器对于这个过程已完成，后续还需要再<see cref="FileResourceLocator.TryFinished"/>。</para>
         /// </summary>
         /// <param name="fileResourceInfo">文件资源信息</param>
+        /// <param name="code">状态代码</param>
         /// <param name="metadata">元数据</param>
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        FinishedResult FinishedFileResourceInfo(FileResourceInfo fileResourceInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        FinishedResult FinishedFileResourceInfo(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 请求完成一个资源。
@@ -293,18 +301,19 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>如果是Pull，当正常返回时，则说明服务器对于这个过程已完成，后续还需要再<see cref="FileResourceLocator.TryFinished"/>。</para>
         /// </summary>
         /// <param name="fileResourceInfo">文件资源信息</param>
+        /// <param name="code">状态代码</param>
         /// <param name="metadata">元数据</param>
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 拉取文件信息。
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都应该对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="path">资源路径</param>
@@ -320,7 +329,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都应该对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都应该对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="path">资源路径</param>
@@ -356,7 +365,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都必须对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="savePath">保存路径</param>
@@ -372,7 +381,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <para>注意：</para>
         /// <list type="number">
         /// <item>完成该操作后，必须在设定时间（60秒）内至少完成一次文件块访问，不然该信息将变得无效，</item>
-        /// <item>每次该操作，都必须对应一次<see cref="IDmtpFileTransferActor.FinishedFileResourceInfo(FileResourceInfo, Metadata, int, CancellationToken)"/></item>
+        /// <item>每次该操作，都必须对应一次<see cref="FinishedFileResourceInfo(FileResourceInfo,ResultCode, Metadata, int, CancellationToken)"/></item>
         /// </list>
         /// </summary>
         /// <param name="savePath">保存路径</param>
@@ -407,128 +416,128 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         #endregion 文件传输
 
-        #region Id传输功能实现
+        //#region Id传输功能实现
 
-        /// <summary>
-        /// 多线程拉取文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Result PullFile(string targetId, FileOperator fileOperator);
+        ///// <summary>
+        ///// 多线程拉取文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="targetId"></param>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Result PullFile(string targetId, FileOperator fileOperator);
 
-        /// <summary>
-        /// 多线程拉取文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Task<Result> PullFileAsync(string targetId, FileOperator fileOperator);
+        ///// <summary>
+        ///// 多线程拉取文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="targetId"></param>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Task<Result> PullFileAsync(string targetId, FileOperator fileOperator);
 
-        /// <summary>
-        /// 推送文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Result PushFile(string targetId, FileOperator fileOperator);
+        ///// <summary>
+        ///// 推送文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="targetId"></param>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Result PushFile(string targetId, FileOperator fileOperator);
 
-        /// <summary>
-        /// 推送文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Task<Result> PushFileAsync(string targetId, FileOperator fileOperator);
+        ///// <summary>
+        ///// 推送文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="targetId"></param>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Task<Result> PushFileAsync(string targetId, FileOperator fileOperator);
 
-        #endregion Id传输功能实现
+        //#endregion Id传输功能实现
 
-        #region 传输功能实现
+        //#region 传输功能实现
 
-        /// <summary>
-        /// 多线程拉取文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Result PullFile(FileOperator fileOperator);
+        ///// <summary>
+        ///// 多线程拉取文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Result PullFile(FileOperator fileOperator);
 
-        /// <summary>
-        /// 多线程拉取文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Task<Result> PullFileAsync(FileOperator fileOperator);
+        ///// <summary>
+        ///// 多线程拉取文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Task<Result> PullFileAsync(FileOperator fileOperator);
 
-        /// <summary>
-        /// 推送文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Result PushFile(FileOperator fileOperator);
+        ///// <summary>
+        ///// 推送文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Result PushFile(FileOperator fileOperator);
 
-        /// <summary>
-        /// 推送文件。
-        /// <para>
-        /// 注意
-        /// <list type="number">
-        /// <item>如果返回正确结果，则无需其他动作。</item>
-        /// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="fileOperator"></param>
-        /// <returns></returns>
-        Task<Result> PushFileAsync(FileOperator fileOperator);
+        ///// <summary>
+        ///// 推送文件。
+        ///// <para>
+        ///// 注意
+        ///// <list type="number">
+        ///// <item>如果返回正确结果，则无需其他动作。</item>
+        ///// <item>如果返回其他结果，则当<see cref="FileOperator.ResourceInfo"/>不为空时，可能会尝试续传。</item>
+        ///// </list>
+        ///// </para>
+        ///// </summary>
+        ///// <param name="fileOperator"></param>
+        ///// <returns></returns>
+        //Task<Result> PushFileAsync(FileOperator fileOperator);
 
-        #endregion 传输功能实现
+        //#endregion 传输功能实现
     }
 }

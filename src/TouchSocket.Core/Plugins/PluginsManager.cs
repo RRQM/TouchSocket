@@ -76,11 +76,11 @@ namespace TouchSocket.Core
                     this.m_container.RegisterSingleton(plugin);
                 }
 
-                this.SearchPluginMethod(plugin);
+                var list = this.SearchPluginMethod(plugin);
 
                 var pairs = new List<string>();
                 var methodInfos = plugin.GetType()
-                    .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly| BindingFlags.NonPublic);
+                    .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.NonPublic);
                 foreach (var methodInfo in methodInfos)
                 {
                     if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
@@ -91,7 +91,7 @@ namespace TouchSocket.Core
                         {
                             throw new Exception("插件的接口方法不允许重载");
                         }
-                        if (this.m_pluginMethodNames.Contains(name))
+                        if (list.Contains(name))
                         {
                             var pluginModel = this.GetPluginModel(name);
                             pluginModel.PluginEntities.Add(new PluginEntity(new Method(methodInfo), plugin));
@@ -108,9 +108,9 @@ namespace TouchSocket.Core
             }
         }
 
-        readonly List<string> m_pluginMethodNames = new List<string>();
-        private void SearchPluginMethod(IPlugin plugin)
+        private List<string> SearchPluginMethod(IPlugin plugin)
         {
+            List<string> pluginMethodNames = new List<string>();
             var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
             foreach (var type in pluginInterfacetypes)
             {
@@ -126,16 +126,16 @@ namespace TouchSocket.Core
                         {
                             throw new Exception("插件的接口方法不允许重载");
                         }
-                        if (!m_pluginMethodNames.Contains(name))
+                        if (!pluginMethodNames.Contains(name))
                         {
-                            m_pluginMethodNames.Add(name);
+                            pluginMethodNames.Add(name);
                         }
 
                         pairs.Add(name);
                     }
                 }
             }
-
+            return pluginMethodNames;
         }
 
         object IPluginsManager.Add(Type pluginType)

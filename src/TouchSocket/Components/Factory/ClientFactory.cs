@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Client工厂
     /// </summary>
-    public abstract class ClientFactory<TClient> : DisposableObject where TClient : IClient
+    public abstract class ClientFactory<TClient> : DependencyObject where TClient : IClient
     {
         /// <summary>
         /// Client工厂

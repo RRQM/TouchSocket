@@ -26,7 +26,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="resultCode"></param>
         /// <param name="value"></param>
         /// <param name="fileSection"></param>
-        public FileSectionResult(ResultCode resultCode, ArraySegment<byte> value, FileSection fileSection) : base(resultCode)
+        public FileSectionResult(ResultCode resultCode, ByteBlock value, FileSection fileSection) : base(resultCode)
         {
             this.Value = value;
             this.FileSection = fileSection;
@@ -39,7 +39,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="message"></param>
         /// <param name="value"></param>
         /// <param name="fileSection"></param>
-        public FileSectionResult(ResultCode resultCode, string message, ArraySegment<byte> value, FileSection fileSection) : base(resultCode, message)
+        public FileSectionResult(ResultCode resultCode, string message, ByteBlock value, FileSection fileSection) : base(resultCode, message)
         {
             this.Value = value;
             this.FileSection = fileSection;
@@ -53,18 +53,14 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 实际数据
         /// </summary>
-        public ArraySegment<byte> Value { get; private set; }
+        public ByteBlock Value { get; private set; }
 
         /// <summary>
         /// Dispose
         /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
         public void Dispose()
         {
-            if (this.Value.Count > 0)
-            {
-                BytePool.Default.Return(this.Value.Array);
-            }
+            this.Value.Dispose();
         }
     }
 }

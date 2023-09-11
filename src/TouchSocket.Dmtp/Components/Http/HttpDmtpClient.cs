@@ -20,7 +20,7 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// HttpRpcClient
+    /// HttpDmtpClient
     /// </summary>
     public partial class HttpDmtpClient : HttpClientBase, IHttpDmtpClient
     {

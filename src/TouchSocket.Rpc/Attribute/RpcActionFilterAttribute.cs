@@ -22,36 +22,21 @@ namespace TouchSocket.Rpc
     public abstract class RpcActionFilterAttribute : Attribute, IRpcActionFilter
     {
         /// <inheritdoc/>
-        public virtual void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+        public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
+            return Task.FromResult(invokeResult) ;
         }
 
         /// <inheritdoc/>
-        public virtual Task ExecutedAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+        public virtual Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
-            return EasyTask.CompletedTask;
+            return Task.FromResult(invokeResult);
         }
 
         /// <inheritdoc/>
-        public virtual void ExecutException(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
+        public virtual Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
-        }
-
-        /// <inheritdoc/>
-        public virtual Task ExecutExceptionAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult, Exception exception)
-        {
-            return EasyTask.CompletedTask;
-        }
-
-        /// <inheritdoc/>
-        public virtual void Executing(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
-        {
-        }
-
-        /// <inheritdoc/>
-        public virtual Task ExecutingAsync(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
-        {
-            return EasyTask.CompletedTask;
+            return Task.FromResult(invokeResult);
         }
     }
 }

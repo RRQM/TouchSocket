@@ -396,7 +396,8 @@ namespace TouchSocket.Dmtp
                                 this.SendJsonObject(P2_Handshake_Response, waitVerify);
                                 this.IsHandshaked = true;
                                 args.Message = "Success";
-                                this.PrivateHandshaked(args);
+
+                                Task.Factory.StartNew(this.PrivateHandshaked,args);
                             }
                             else//不允许连接
                             {
@@ -861,9 +862,9 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private void PrivateHandshaked(DmtpVerifyEventArgs e)
+        private void PrivateHandshaked(object obj)
         {
-            this.OnHandshaked?.Invoke(this, e);
+            this.OnHandshaked?.Invoke(this, (DmtpVerifyEventArgs)obj);
         }
 
         private bool PrivatePing(string targetId, int timeout)

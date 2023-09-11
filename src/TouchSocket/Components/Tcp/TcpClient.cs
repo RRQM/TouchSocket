@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,19 +70,22 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
+
         private DelaySender m_delaySender;
         private Stream m_workStream;
         private long m_bufferRate = 1;
         private volatile bool m_online;
-        ValueCounter m_receiveCounter;
-        ValueCounter m_sendCounter;
-        SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        private ValueCounter m_receiveCounter;
+        private ValueCounter m_sendCounter;
+        private SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+
         #endregion 变量
 
         #region 事件
 
         /// <inheritdoc/>
         public ConnectedEventHandler<ITcpClient> Connected { get; set; }
+
         /// <inheritdoc/>
         public ConnectingEventHandler<ITcpClient> Connecting { get; set; }
 
@@ -336,6 +338,7 @@ namespace TouchSocket.Sockets
         #endregion 断开操作
 
         #region Connect
+
         /// <summary>
         /// 建立Tcp的连接。
         /// </summary>
@@ -437,7 +440,6 @@ namespace TouchSocket.Sockets
                         {
                             throw new TimeoutException();
                         }
-                       
                     }
                 }
                 this.m_online = true;
@@ -451,6 +453,7 @@ namespace TouchSocket.Sockets
             }
         }
 #else
+
         /// <summary>
         /// 异步连接服务器
         /// </summary>
@@ -485,9 +488,10 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                m_semaphore.Release();
+                this.m_semaphore.Release();
             }
         }
+
 #endif
 
         /// <inheritdoc/>
@@ -503,7 +507,8 @@ namespace TouchSocket.Sockets
             await this.TcpConnectAsync(timeout);
             return this;
         }
-        #endregion
+
+        #endregion Connect
 
         /// <inheritdoc/>
         public Stream GetStream()
@@ -755,7 +760,7 @@ namespace TouchSocket.Sockets
                 }
                 else if (this.ReceiveType == ReceiveType.Bio)
                 {
-                    new Thread(BeginBio)
+                    new Thread(this.BeginBio)
                     {
                         IsBackground = true
                     }
@@ -1082,7 +1087,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    if (this.m_delaySender != null && length < m_delaySender.DelayLength)
+                    if (this.m_delaySender != null && length < this.m_delaySender.DelayLength)
                     {
                         this.m_delaySender.Send(QueueDataBytes.CreateNew(buffer, offset, length));
                     }

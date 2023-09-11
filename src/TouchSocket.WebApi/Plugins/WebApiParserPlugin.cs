@@ -227,9 +227,14 @@ namespace TouchSocket.WebApi
                             for (; i < methodInstance.Parameters.Length - 1; i++)
                             {
                                 var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
-                                ps[i] = !value.IsNullOrEmpty()
-                                    ? this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i])
-                                    : methodInstance.ParameterTypes[i].GetDefault();
+                                if (!value.IsNullOrEmpty())
+                                {
+                                    ps[i] = this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                }
+                                else
+                                {
+                                    ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                }
                             }
                         }
 

@@ -26,13 +26,31 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// </summary>
     public class WebSocketDmtpSocketClient : BaseSocket, IWebSocketDmtpSocketClient
     {
+        /// <summary>
+        /// WebSocketDmtpSocketClient
+        /// </summary>
+        public WebSocketDmtpSocketClient()
+        {
+            this.m_receiveCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnReceivePeriod
+            };
+            this.m_sendCounter = new ValueCounter
+            {
+                Period = TimeSpan.FromSeconds(1),
+                OnPeriod = this.OnSendPeriod
+            };
+        }
+        #region 字段
         private WebSocket m_client;
         private DmtpActor m_smtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
         private WebSocketDmtpService m_service;
+        private ValueCounter m_receiveCounter;
+        private ValueCounter m_sendCounter;
+        #endregion
 
-        /// <inheritdoc/>
-        public int BufferLength { get; private set; }
 
         /// <inheritdoc/>
         public TouchSocketConfig Config { get; private set; }
@@ -50,10 +68,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         public bool IsHandshaked => this.DmtpActor.IsHandshaked;
 
         /// <inheritdoc/>
-        public DateTime LastReceivedTime { get; private set; }
+        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public DateTime LastSendTime { get; private set; }
+        public DateTime LastSendTime =>this.m_sendCounter.LastIncrement;
 
         /// <summary>
         /// 未实现
@@ -109,13 +127,6 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.DirectResetId(newId);
         }
 
-        /// <inheritdoc/>
-        public int SetBufferLength(int value)
-        {
-            this.BufferLength = value;
-            return this.BufferLength;
-        }
-
         internal void InternalSetConfig(TouchSocketConfig config)
         {
             this.Config = config;
@@ -148,6 +159,17 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             this.m_service = service;
         }
+
+        private void OnReceivePeriod(long value)
+        {
+            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
+        private void OnSendPeriod(long value)
+        {
+            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
+        }
+
 
         #region 内部委托绑定
 
@@ -225,8 +247,9 @@ namespace TouchSocket.Dmtp.AspNetCore
                 }
                 task.ConfigureAwait(false);
                 task.GetAwaiter().GetResult();
+
+                this.m_sendCounter.Increment(transferBytes[i].Count);
             }
-            this.LastSendTime = DateTime.Now;
         }
 
         #endregion 内部委托绑定
@@ -289,7 +312,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 while (true)
                 {
-                    using (var byteBlock = new ByteBlock(this.BufferLength))
+                    using (var byteBlock = new ByteBlock(this.ReceiveBufferSize))
                     {
                         var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer, 0, byteBlock.Capacity), default);
                         if (result.Count == 0)
@@ -297,7 +320,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                             break;
                         }
                         byteBlock.SetLength(result.Count);
-                        this.LastReceivedTime = DateTime.Now;
+                        this.m_receiveCounter.Increment(result.Count);
 
                         this.m_smtpAdapter.ReceivedInput(byteBlock);
                     }

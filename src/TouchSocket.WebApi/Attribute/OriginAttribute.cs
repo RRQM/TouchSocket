@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
@@ -37,13 +38,8 @@ namespace TouchSocket.WebApi
         /// </summary>
         public string AllowOrigin { get; set; } = "*";
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="parameters"></param>
-        /// <param name="invokeResult"></param>
-        public override void Executed(ICallContext callContext, object[] parameters, ref InvokeResult invokeResult)
+        public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
             if (callContext is IHttpCallContext httpCallContext && httpCallContext.HttpContext != default)
             {
@@ -51,7 +47,7 @@ namespace TouchSocket.WebApi
                 httpCallContext.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", this.AllowMethods);
                 httpCallContext.HttpContext.Response.Headers.Add("Access-Control-Allow-Credentials", this.AllowCredentials.ToString().ToLower());
             }
-            base.Executed(callContext, parameters, ref invokeResult);
+            return await base.ExecutedAsync(callContext, parameters, invokeResult);
         }
     }
 }

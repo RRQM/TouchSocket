@@ -171,9 +171,9 @@ namespace TouchSocket.Resources
         ResourceHandleNotFind,
 
         /// <summary>
-        /// 还有{0}个资源没有完成。
+        /// 还有多个资源没有完成。
         /// </summary>
-        [Description("还有{0}个资源没有完成。")]
+        [Description("还有多个资源没有完成。")]
         HasUnFinished,
 
         /// <summary>
