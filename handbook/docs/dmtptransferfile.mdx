@@ -225,7 +225,7 @@ var fileOperator = new FileOperator//实例化本次传输的控制器，用于�
     FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
 };
 
-fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -263,7 +263,7 @@ var fileOperator = new FileOperator//实例化本次传输的控制器，用于�
     FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
 };
 
-fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -309,7 +309,7 @@ var fileOperator = new FileOperator//实例化本次传输的控制器，用于�
     FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
 };
 
-fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -354,7 +354,7 @@ var fileOperator = new FileOperator//实例化本次传输的控制器，用于�
     FileSectionSize = 1024 * 512//分包大小，当网络较差时，应该适当减小该值
 };
 
-fileOperator.SetMaxSpeed(1024*1024);//设置最大限速为1Mb。
+fileOperator.MaxSpeed=1024 * 1024;//设置最大限速为1Mb。
 
 //此处的作用相当于Timer，定时每秒输出当前的传输进度和速度。
 var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
@@ -408,7 +408,28 @@ internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
 
 其他`PullFile`或者`PushFile`操作均和上述一致。
 
-## 六、小文件传输
+## 六、断点续传
+
+本文件传输，支持断点续传。能够在传输过程中，暂停（实际上就是取消）传输，下次继续传输。
+
+断点续传的使用步骤如下：
+
+1. 当本次传输失败、或主动取消时，可以保存`fileOperator.ResourceInfo`对象属性。
+2. 当下次再次请求传输时，可以将已保存的`ResourceInfo`对象，先赋值给`fileOperator.ResourceInfo`属性。那么如果保存路径一致，且文件大小符合续传要求，则可以继续传输。
+
+:::caution 注意
+
+本断点续传不验证文件唯一性，假如在续传前后文件大小不一致，则会导致续传失败。如果文件大小一致，但是内容已发送变化，则可能得到一个错误的文件。所以建议在续传时要么确定文件不会再变化，要么需要在传输完成后进行文件唯一性验证（例如MD5）。
+
+:::  
+
+:::tip 提示
+
+文件续传适用于所有传输类型，无论是客户端对服务器，还是服务器对客户端，还是客户端对客户端。
+
+:::  
+
+## 七、小文件传输
 
 小文件传输是指，当传输文件小于设定大小（默认1024*1024字节）时的传输。
 
@@ -416,9 +437,8 @@ internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
 
 常规传输，建立一个传输通道，大约需要传输两端，往返通信4-6次。这在本地局域网中，显得无所谓。但是在互联网环境中，一次ping延迟平均50ms，那么建立一个传输，就大约需要200-300ms。这也就意味着，即使一个文件只有一字节，也需要200ms-300。所以，这明显是不合理的。所以又新增了小文件传输，只要文件在1Mb以内，仅往返1次，就可以完成传输。
 
-<a name="m2KIr"></a>
 
-### 6.1 拉取小文件
+### 7.1 拉取小文件
 
 1. 直接调用PullSmallFile或者PullSmallFileAsync，获取到实际的文件数据。
 2. 通过Save方法，将数据写入文件。也可以自行保存。
@@ -437,7 +457,7 @@ byte[] data = result.Value;//此处即是下载的小文件的实际数据
 result.Save(saveFilePath,overwrite:true);//将数据保存到指定路径。
 ```
 
-### 6.2 推送小文件
+### 7.2 推送小文件
 
 【推送文件】
 
@@ -473,7 +493,7 @@ if (result.IsSuccess())
 
 :::  
 
-## 七、多线程文件传输 <Tag>企业版</Tag>
+## 八、多线程文件传输 <Tag>企业版</Tag>
 
 多线程文件传输，顾名思义，就是多个连接链路，共同传输一个文件。
 
@@ -484,7 +504,7 @@ if (result.IsSuccess())
 例如，我自己租的一个单核云服务器，它的单个连接速率只有1Mb，但是弹性带宽却有10Mb。宏观表象就是，一个客户端连接时，可以用1Mb带宽，两个客户端连接时，就可以用2Mb。那么这时候，多线程传输就显得格外重要了。
 
 
-### 7.1 创建多链路连接器
+### 8.1 创建多链路连接器
 
 因为是多链路传输，所以，就必须建立多个客户端的连接到服务器。这里使用已经封装好的通信模型ClientFactory。
 
@@ -517,7 +537,7 @@ clientFactory.MainConfig//配置主通信
              });
 ```
 
-### 7.2 多线程请求文件
+### 8.2 多线程请求文件
 
 ```csharp
 using var clientFactory = CreateClientFactory();
@@ -566,7 +586,7 @@ IResult result = clientFactory.PullFile(fileOperator);
 ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 ```
 
-### 7.3 多线程推送文件
+### 8.3 多线程推送文件
 
 ```csharp
 using var clientFactory = CreateClientFactory();
@@ -614,7 +634,7 @@ loopAction.RunAsync();
 IResult result = clientFactory.PushFile(fileOperator);
 ```
 
-### 7.4 客户端之间传输文件
+### 8.4 客户端之间传输文件
 
 该功能也支持客户端之间互相传输。使用方法基本一致，需要额外指定目标Id，以及**获取传输的Id集合**即可。
 
