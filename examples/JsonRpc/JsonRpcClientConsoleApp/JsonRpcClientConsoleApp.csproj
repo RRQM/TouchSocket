@@ -12,6 +12,6 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.172" />
+		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.173" />
 	</ItemGroup>
 </Project>
