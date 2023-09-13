@@ -1,4 +1,5 @@
 ﻿using RpcProxy;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -58,17 +59,17 @@ namespace ClientConsoleApp
         {
             var client = GetTcpDmtpClient();
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-
-            var invokeOption = new DmtpInvokeOption()
+            //设置调用配置
+            var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
+            var invokeOption = new DmtpInvokeOption()//调用配置
             {
-                FeedbackType = FeedbackType.WaitInvoke,
-                SerializationType = SerializationType.FastBinary,
-                Timeout = 5000,
-                Token = tokenSource.Token
+                FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+                SerializationType = SerializationType.FastBinary,//序列化类型
+                Timeout = 5000,//调用超时设置
+                Token = tokenSource.Token//配置可取消令箭
             };
 
-            var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", DmtpInvokeOption.WaitInvoke, 10, 20);
+            var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", invokeOption, 10, 20);
             client.Logger.Info($"调用Add方法成功，结果：{sum}");
         }
 
@@ -129,6 +130,7 @@ namespace ClientConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc()
+                    //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
                     .SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor))
                     .ConfigureRpcStore(store =>
                     {
@@ -177,6 +179,83 @@ namespace ClientConsoleApp
             {
                 this.m_logger.Info(msg);
                 return true;
+            }
+        }
+
+        /// <summary>
+        /// 序列化选择器
+        /// </summary>
+        public class MySerializationSelector : SerializationSelector
+        {
+            /// <summary>
+            /// 反序列化
+            /// </summary>
+            /// <param name="serializationType"></param>
+            /// <param name="parameterBytes"></param>
+            /// <param name="parameterType"></param>
+            /// <returns></returns>
+            public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+            {
+                if (parameterBytes == null)
+                {
+                    return parameterType.GetDefault();
+                }
+                switch (serializationType)
+                {
+                    case SerializationType.FastBinary:
+                        {
+                            return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
+                        }
+                    case SerializationType.SystemBinary:
+                        {
+                            return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                        }
+                    case SerializationType.Json:
+                        {
+                            return Encoding.UTF8.GetString(parameterBytes).FromJsonString(parameterType);
+                        }
+                    case SerializationType.Xml:
+                        {
+                            return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                        }
+                    default:
+                        throw new RpcException("未指定的反序列化方式");
+                }
+            }
+
+            /// <summary>
+            /// 序列化参数
+            /// </summary>
+            /// <param name="serializationType"></param>
+            /// <param name="parameter"></param>
+            /// <returns></returns>
+            public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+            {
+                if (parameter == null)
+                {
+                    return null;
+                }
+                switch (serializationType)
+                {
+                    case SerializationType.FastBinary:
+                        {
+                            return SerializeConvert.FastBinarySerialize(parameter);
+                        }
+                    case SerializationType.SystemBinary:
+                        {
+                            return SerializeConvert.BinarySerialize(parameter);
+                        }
+                    case SerializationType.Json:
+                        {
+                            return SerializeConvert.JsonSerializeToBytes(parameter);
+                        }
+                    case SerializationType.Xml:
+                        {
+                            return SerializeConvert.XmlSerializeToBytes(parameter);
+                        }
+                    default:
+                        throw new RpcException("未指定的序列化方式");
+                }
             }
         }
     }
