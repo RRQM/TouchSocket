@@ -57,6 +57,17 @@ namespace ClientConsoleApp
         static void RunInvokeT()
         {
             var client = GetTcpDmtpClient();
+
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+            var invokeOption = new DmtpInvokeOption()
+            {
+                FeedbackType = FeedbackType.WaitInvoke,
+                SerializationType = SerializationType.FastBinary,
+                Timeout = 5000,
+                Token = tokenSource.Token
+            };
+
             var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", DmtpInvokeOption.WaitInvoke, 10, 20);
             client.Logger.Info($"调用Add方法成功，结果：{sum}");
         }
@@ -118,7 +129,7 @@ namespace ClientConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc()
-                    .SetCreateDmtpRpcActor((actor)=>new MyDmtpRpcActor(actor))
+                    .SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor))
                     .ConfigureRpcStore(store =>
                     {
                         store.RegisterServer<MyClientRpcServer>();
@@ -128,14 +139,14 @@ namespace ClientConsoleApp
                 .SetVerifyToken("Dmtp"));
             client.Connect();
 
-            IRpcClient1 rpcClient1= client.GetDmtpRpcActor<IRpcClient1>();
-            IRpcClient2 rpcClient2= client.GetDmtpRpcActor<IRpcClient2>();
+            IRpcClient1 rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();
+            IRpcClient2 rpcClient2 = client.GetDmtpRpcActor<IRpcClient2>();
 
             client.Logger.Info($"连接成功，Id={client.Id}");
             return client;
         }
 
-        interface IRpcClient1:IDmtpRpcActor
+        interface IRpcClient1 : IDmtpRpcActor
         {
 
         }

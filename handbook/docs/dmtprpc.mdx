@@ -437,13 +437,202 @@ internal class MyPlugin : PluginBase,IDmtpRoutingPlugin
 }
 ```
 
-## 五、Rpc大数据传输
+## 五、调用配置
+
+DmtpRpc支持单次调用配置，以及全局调用配置。
+
+### 5.1 单次调用配置
+单次调用配置，就是在每次调用的时候，使用新建`DmtpInvokeOption`对象，然后在`Invoke`时，传入`invokeOption`即可。
+
+其中详细介绍如下：
+
+#### 5.1.1 FeedbackType
+
+FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、WaitInvoke。
+
+- `OnlySend`意为只发送Rpc请求，不进行任何等待。这在通知类调用时是非常快速的。
+- `WaitSend`意为发送Rpc请求，并等待**接收**结果。即，返回时，仅表示对方收到了Rpc请求，但是具体执行如何，则不可知。这一般在不可靠协议中是有用的。
+- `WaitInvoke`意为发送Rpc请求，并等待**执行**结果。即，返回时，表示对方已经执行了Rpc请求，如果有执行返回值，则携带返回值。如果执行过程发生异常，则会将异常返回。
+
+#### 5.1.2 SerializationType
+
+SerializationType是序列化类型，其枚举值有`FastBinary`、`Json`、`Xml`、`SystemBinary`。其特点如下：
+
+| FastBinary  |Json  |Xml  |SystemBinary  |
+| ----  | ----  | ----  | ----  |
+ | 序列化方式速度快，数据量小，但是兼容的数据格式也比较有限。仅支持基础类型、自定义实体类、数组、List、字典 | 兼容性好，可读性强，但是受字符串影响，性能不出众，且数据量受限制 | 兼容性一般，可读性强，同样受字符串影响，性能不出众，且数据量受限制 | 序列化速度快。但是兼容性低。且要求类必须一致，不然需要重新指定图根。 |
+
+<details>
+<summary>自定义序列化</summary>
+<div>
+
+
+Dmtp除了上述的4中内置序列化，还支持自定义序列化。
+
+首先，需要实现序列化转换器。
+
+```csharp
+/// <summary>
+/// 序列化选择器
+/// </summary>
+public class MySerializationSelector : SerializationSelector
+{
+    /// <summary>
+    /// 反序列化
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameterBytes"></param>
+    /// <param name="parameterType"></param>
+    /// <returns></returns>
+    public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+    {
+        if (parameterBytes == null)
+        {
+            return parameterType.GetDefault();
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                }
+            case SerializationType.Json:
+                {
+                    return Encoding.UTF8.GetString(parameterBytes).FromJsonString(parameterType);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                }
+            default:
+                throw new RpcException("未指定的反序列化方式");
+        }
+    }
+
+    /// <summary>
+    /// 序列化参数
+    /// </summary>
+    /// <param name="serializationType"></param>
+    /// <param name="parameter"></param>
+    /// <returns></returns>
+    public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+    {
+        if (parameter == null)
+        {
+            return null;
+        }
+        switch (serializationType)
+        {
+            case SerializationType.FastBinary:
+                {
+                    return SerializeConvert.FastBinarySerialize(parameter);
+                }
+            case SerializationType.SystemBinary:
+                {
+                    return SerializeConvert.BinarySerialize(parameter);
+                }
+            case SerializationType.Json:
+                {
+                    return SerializeConvert.JsonSerializeToBytes(parameter);
+                }
+            case SerializationType.Xml:
+                {
+                    return SerializeConvert.XmlSerializeToBytes(parameter);
+                }
+            default:
+                throw new RpcException("未指定的序列化方式");
+        }
+    }
+}
+```
+
+然后配置序列化器
+
+```csharp {10}
+var client = new TcpDmtpClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseDmtpRpc()
+        .SetSerializationSelector(new MySerializationSelector())
+        .ConfigureRpcStore(store =>
+        {
+            store.RegisterServer<MyClientRpcServer>();
+        });
+    })
+    .SetRemoteIPHost("127.0.0.1:7789")
+    .SetVerifyToken("Dmtp"));
+client.Connect();
+```
+
+:::caution 注意
+
+序列化器的配置，必须是调用端和响应端相同的配置。不然序列化不统一，则无法进行反序列化。
+
+:::  
+
+最后就是使用序列化。因为序列化类型是枚举值，所以使用时需要强制转换一下。
+
+```csharp {4}
+var invokeOption = new DmtpInvokeOption()//调用配置
+{
+    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+    SerializationType = (SerializationType)5,//序列化类型
+    Timeout = 5000,//调用超时设置
+    Token = tokenSource.Token//配置可取消令箭
+};
+```
+
+</div>
+</details>
+
+
+#### 5.1.3 Timeout
+
+Timeout是超时时间，单位是毫秒。
+
+#### 5.1.4 CancellationToken
+
+CancellationToken是取消令箭源，可用于取消Rpc的调用。
+
+:::tip 提示
+
+取消调用时，其取消消息可以传递到被调用端，所以，被调用端可以通过ICallContext（调用上下文）获取到Token。
+
+:::  
+
+```csharp
+var client = GetTcpDmtpClient();
+
+//设置调用配置
+var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
+var invokeOption = new DmtpInvokeOption()//调用配置
+{
+    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+    SerializationType = SerializationType.FastBinary,//序列化类型
+    Timeout = 5000,//调用超时设置
+    Token = tokenSource.Token//配置可取消令箭
+};
+
+var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", invokeOption, 10, 20);
+client.Logger.Info($"调用Add方法成功，结果：{sum}");
+```
+
+## 六、Rpc大数据传输
 
 > **在Rpc中，并没有对传输的数据做限制，但是因为Rpc默认使用的固定包头适配器中，默认设置的可传递数据为10Mb，所以在Rpc中，用户可一次性传递的数据包大约为9.9Mb。所以，如果用户传递超出阈值的数据，适配器则会触发异常，而无法接收。但在实际上Rpc的使用中，大数据的传输也是很重要的一个环节，所以在此做了大数据的传输思路建议，希望能有效解决大家的麻烦。**
 
 <a name="DU9Pj"></a>
 
-### 5.1 设置适配器参数（推荐指数：⭐）
+### 6.1 设置适配器参数（推荐指数：⭐）
 
 > 操作原理：在固定包头适配器中，默认限制了单次可发送数据包的最大值，所以可以修改此值实现目的。
 
@@ -461,15 +650,14 @@ TouchSocketConfig config = new TouchSocketConfig()//配置
 
 :::  
 
-<a name="p5kjo"></a>
 
-### 5.2 Rpc嵌套Channel（推荐指数：⭐⭐⭐⭐⭐）
+### 6.2 Rpc嵌套Channel（推荐指数：⭐⭐⭐⭐⭐）
 
 > 操作原理：先利用Rpc让客户端与服务器约定特定的Channel，然后后续数据通过Channel传递，最后由Rpc返回结果。
 
 <a name="FuEck"></a>
 
-#### 5.2.1 请求流数据
+#### 6.2.1 请求流数据
 
 【Service端】
 
@@ -526,7 +714,7 @@ Console.WriteLine($"状态：{status}，size={size}");
 
 <a name="GmNPl"></a>
 
-#### 5.2.2 推送流数据
+#### 6.2.2 推送流数据
 
 【Service端】
 
@@ -580,7 +768,7 @@ await task;//等待异步接收完成
 Console.WriteLine($"状态：{status}，result={result}");
 ```
 
-## 六、限制代理接口
+## 七、限制代理接口
 
 默认情况下，代理生成的接口，是面向`IRpcClient`的，即：面向所有`Rpc终端`。但是有时候我们希望不同的终端，只能调用不同的方法。甚至有时候希望，不同的终端可以重载方法。所以如果不对生成的接口做限制，就可能发生下图问题。
 
