@@ -214,11 +214,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpBroadcastConsoleApp", "U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UdpDemoApp", "Udp\UdpDemoApp\UdpDemoApp.csproj", "{0CB31446-301C-49F6-B333-91992FDF36A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PackageAdapterConsoleApp", "Adapter\PackageAdapterConsoleApp\PackageAdapterConsoleApp.csproj", "{4F16A8DB-2D02-44DF-9D9D-C65FDBB0DF22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackageAdapterConsoleApp", "Adapter\PackageAdapterConsoleApp\PackageAdapterConsoleApp.csproj", "{4F16A8DB-2D02-44DF-9D9D-C65FDBB0DF22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomAdapterConsoleApp", "Adapter\CustomAdapterConsoleApp\CustomAdapterConsoleApp.csproj", "{8758DEC7-5A7F-413D-BD26-9922B78B409B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomAdapterConsoleApp", "Adapter\CustomAdapterConsoleApp\CustomAdapterConsoleApp.csproj", "{8758DEC7-5A7F-413D-BD26-9922B78B409B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomFixedHeaderConsoleApp", "Adapter\CustomFixedHeaderConsoleApp\CustomFixedHeaderConsoleApp.csproj", "{35DB87D2-2238-4530-A265-56C89980057A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomFixedHeaderConsoleApp", "Adapter\CustomFixedHeaderConsoleApp\CustomFixedHeaderConsoleApp.csproj", "{35DB87D2-2238-4530-A265-56C89980057A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IocConsoleApp", "Core\IocConsoleApp\IocConsoleApp.csproj", "{2649AA5F-4C16-4B80-8D74-EAD6F9211038}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -482,6 +484,10 @@ Global
 		{35DB87D2-2238-4530-A265-56C89980057A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35DB87D2-2238-4530-A265-56C89980057A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35DB87D2-2238-4530-A265-56C89980057A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2649AA5F-4C16-4B80-8D74-EAD6F9211038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2649AA5F-4C16-4B80-8D74-EAD6F9211038}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2649AA5F-4C16-4B80-8D74-EAD6F9211038}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2649AA5F-4C16-4B80-8D74-EAD6F9211038}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -577,6 +583,7 @@ Global
 		{4F16A8DB-2D02-44DF-9D9D-C65FDBB0DF22} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{8758DEC7-5A7F-413D-BD26-9922B78B409B} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{35DB87D2-2238-4530-A265-56C89980057A} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{2649AA5F-4C16-4B80-8D74-EAD6F9211038} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
