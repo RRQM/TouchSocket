@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -28,6 +29,7 @@ namespace ServiceConsoleApp
             service.Disconnected = (client, e) => { };//有客户端断开连接
 
             service.Setup(new TouchSocketConfig()//载入配置
+                                                 //.UseAspNetCoreContainer(new ServiceCollection())//使用其他Ioc
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
