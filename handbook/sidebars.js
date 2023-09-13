@@ -188,7 +188,7 @@ module.exports = {
           {
             type: "doc",
             id: "ioc",
-            label: "6.9 依赖注入容器"
+            label: "6.9 依赖注入容器(IOC)"
           },
           {
             type: "doc",
