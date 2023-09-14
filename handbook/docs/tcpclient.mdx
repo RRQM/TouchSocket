@@ -213,11 +213,6 @@ tcpClient.Connect();
 ```csharp
 public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
 {
-    public MyPlugin()
-    {
-        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
-    }
-
     public Task OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收

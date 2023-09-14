@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.173" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.175" />
   </ItemGroup>
 
 </Project>

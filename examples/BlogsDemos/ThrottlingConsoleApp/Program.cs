@@ -66,7 +66,6 @@ namespace ThrottlingConsoleApp
         public MyThrottlingPlugin(int max)
         {
             this.m_max = max;
-            this.Order = int.MaxValue;//提升优先级
         }
 
         public Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)

@@ -379,11 +379,6 @@ service.Setup(new TouchSocketConfig()//载入配置
 ```csharp
 public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
-    public MyPlugin()
-    {
-        this.Order = 0;//此值表示插件的执行顺序，当多个插件并存时，该值越大，越在前执行。
-    }
-
     public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
