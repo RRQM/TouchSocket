@@ -66,10 +66,6 @@ namespace PluginConsoleApp
 
     public class SayHelloPlugin : PluginBase, ISayPlugin
     {
-        public SayHelloPlugin()
-        {
-            Order = 0;//插件的添加顺序，该值越大，越靠前执行。默认都是0
-        }
         public async Task Say(object sender, MyPluginEventArgs e)
         {
             Console.WriteLine($"{this.GetType().Name}------Enter");
