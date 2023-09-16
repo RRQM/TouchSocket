@@ -7,6 +7,7 @@ using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using TouchSocket.WebApi.Swagger;
 using static System.Net.WebRequestMethods;
 
 namespace HttpPerformanceConsoleApp
@@ -33,6 +34,9 @@ namespace HttpPerformanceConsoleApp
                        store.RegisterServer<ApiServer>();//注册服务
                    });
 
+                   a.UseSwagger()//使用Swagger页面
+                   .UseLaunchBrowser();//启动浏览器
+
                    //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                    a.UseDefaultHttpServicePlugin();
                }))
@@ -56,20 +60,6 @@ namespace HttpPerformanceConsoleApp
             app.RunAsync("http://127.0.0.1:7789");
             ConsoleLogger.Default.Info("Aspnet已启动，请求连接：http://127.0.0.1:7789/ApiServer/Add?a=10&b=20");
             
-        }
-    }
-
-    class MyClass:HttpSocketClient
-    {
-        protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            var httpResponse = new HttpResponse(this);
-            httpResponse.SetStatus();
-            httpResponse.FromJson("30");
-
-            this.Send(httpResponse.BuildAsBytes());
-            this.Close();
-            return true;
         }
     }
 }
