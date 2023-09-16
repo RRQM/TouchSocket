@@ -17,7 +17,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 传输限速
         /// </summary>
-        public const int MaxSpeed = 1024 * 1024;
+        public const long MaxSpeed = 1024 * 1024L;
 
         private static void Main(string[] args)
         {

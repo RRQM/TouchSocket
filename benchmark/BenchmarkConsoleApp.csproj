@@ -9,12 +9,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-		<PackageReference Include="MemoryPack" Version="1.8.13" />
+		<PackageReference Include="MemoryPack" Version="1.9.16" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
 		<PackageReference Include="Nino.Serialization" Version="1.2.1" />
 		<PackageReference Include="Nino.Shared" Version="1.0.15" />
-		<PackageReference Include="SunnyUI.FrameDecoder" Version="3.0.3" />
-		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.146" />
+		<PackageReference Include="SunnyUI.FrameDecoder" Version="5.2.2" />
+		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.178" />
 	</ItemGroup>
 
 </Project>

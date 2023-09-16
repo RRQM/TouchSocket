@@ -115,6 +115,11 @@ namespace BenchmarkConsoleApp.Benchmark
             {
             }
 
+            public void Loaded(IPluginsManager pluginsManager)
+            {
+                
+            }
+
             public Task Test(object sender, PluginEventArgs e)
             {
                 return e.InvokeNext();
