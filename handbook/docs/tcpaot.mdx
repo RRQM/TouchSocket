@@ -92,7 +92,7 @@ public class MyContainer : IContainer
 
 ### 2.2 配置插件
 
-插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，其他方式可以参考[插件使用](../docs/pluginsmanager.mdx)。
+插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，详情请看[插件使用](../docs/pluginsmanager.mdx)。
 
 ```csharp
 internal partial class MyServicePluginClass : PluginBase
@@ -210,4 +210,5 @@ class CloseException : Exception
 </PropertyGroup>
 ```
 
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples_aot/Tcp/TcpConsoleApp)
 
