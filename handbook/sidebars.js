@@ -272,6 +272,11 @@ module.exports = {
             id: "tcpother",
             label: "7.10 其他场景应用"
           },
+          {
+            type: "doc",
+            id: "tcpaot",
+            label: "7.11 AOT模式"
+          },
         ]
     },
     {

@@ -1,0 +1,213 @@
+---
+id: tcpaot
+title: Tcp使用AOT模式
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+## 一、说明
+
+Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，而不是在运行时动态加载。
+
+## 二、使用方法
+
+实际上，Tcp是完全支持AOT模式，只不过在`TouchSocket`中，引入了容器、插件等需要反射或运行时构建的功能，所以需要对这些进行配置。
+
+### 2.1 配置容器
+
+配置容器，即手动解决容器反射实例的问题。这部分目前暂时手写实现，后续考虑会使用源生成或者结合其他支持源生成的IOC容器。
+
+```csharp
+/// <summary>
+/// IOC容器
+/// </summary>
+public class MyContainer : IContainer
+{
+    public MyContainer()
+    {
+        this.m_pluginsManager = new PluginsManager(this);
+        this.m_logger = new LoggerGroup();
+    }
+
+    readonly IPluginsManager m_pluginsManager;
+    readonly ILog m_logger;
+
+    public bool IsRegistered(Type fromType, string key = "")
+    {
+        //一般所有的类型，都返回true
+        return true;
+    }
+
+    
+    public void Register(DependencyDescriptor descriptor, string key = "")
+    {
+        //一般不用实现
+    }
+
+    public object Resolve(Type fromType, object[] ps = null, string key = "")
+    {
+        //此处的逻辑主要实现，当容器请求类型时，返回对应的实例。
+        //如果是单例，可以将单例保存为字段，直接返回
+        //如果是瞬态，则可以返回new
+        if ($"{fromType.FullName}{key}" == $"{typeof(IPluginsManager).FullName}{key}")
+        {
+            return this.m_pluginsManager;
+        }
+        else if ($"{fromType.FullName}{key}" == $"{typeof(ILog).FullName}{key}")
+        {
+            return this.m_logger;
+        }
+        else if ($"{fromType.FullName}{key}" == $"{typeof(TouchSocket.Core.IContainer).FullName}{key}")
+        {
+            return this;
+        }
+        throw new Exception("没有解决容器类型");
+    }
+
+   
+    public void Unregister(DependencyDescriptor descriptor, string key = "")
+    {
+        //一般不用实现
+    }
+
+    IEnumerator<DependencyDescriptor> IEnumerable<DependencyDescriptor>.GetEnumerator()
+    {
+        //一般不用实现
+        return default;
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        //一般不用实现
+        return ((TouchSocket.Core.IContainer)this).GetEnumerator();
+    }
+}
+```
+
+:::tip 提示
+
+如果是单例，可以将单例保存为字段，直接返回。如果是瞬态，则可以返回new
+
+:::  
+
+### 2.2 配置插件
+
+插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，其他方式可以参考[插件使用](../docs/pluginsmanager.mdx)。
+
+```csharp
+internal partial class MyServicePluginClass : PluginBase
+{
+    [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
+    public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
+    {
+        if (sender is ITcpService service)
+        {
+            foreach (var item in service.Monitors)
+            {
+                ConsoleLogger.Default.Info($"iphost={item.Option.IpHost}");
+            }
+        }
+        if (e.ServerState == ServerState.Running)
+        {
+            ConsoleLogger.Default.Info($"服务器成功启动");
+        }
+        else
+        {
+            ConsoleLogger.Default.Info($"服务器启动失败，状态：{e.ServerState}，异常：{e.Exception}");
+        }
+        return e.InvokeNext();
+    }
+
+    [GeneratorPlugin(nameof(IServerStopedPlugin.OnServerStoped))]
+    public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
+    {
+        Console.WriteLine("服务已停止");
+        return e.InvokeNext();
+    }
+}
+
+partial class TcpServiceReceivedPlugin : PluginBase
+{
+    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
+    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    {
+        //从客户端收到信息
+        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        if (mes == "close")
+        {
+            throw new CloseException(mes);
+        }
+        client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
+
+        client.Send(mes);//将收到的信息直接返回给发送方
+
+        //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+
+        //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
+        var ids = client.Service.GetIds();
+        foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+        {
+            if (clientId != client.Id)//不给自己发
+            {
+                await client.Service.SendAsync(clientId, mes);
+            }
+        }
+
+        //await Task.Delay(1000);
+    }
+}
+
+/// <summary>
+/// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
+/// </summary>
+partial class ClosePlugin : PluginBase
+{
+    private readonly ILog m_logger;
+
+    public ClosePlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
+    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    {
+        try
+        {
+            await e.InvokeNext();
+        }
+        catch (CloseException ex)
+        {
+            m_logger.Info("拦截到CloseException");
+            client.Close(ex.Message);
+        }
+        catch (Exception exx)
+        {
+
+        }
+        finally
+        {
+
+        }
+    }
+}
+
+class CloseException : Exception
+{
+    public CloseException(string msg) : base(msg) { }
+}
+```
+
+### 2.3 项目配置
+
+.Net8对AOT支持比较好，所以最好使用.Net8。然后对项目配置一般如下：
+
+```xml {3,4}
+<PropertyGroup>
+  ...
+  <PublishAot>true</PublishAot>
+  <InvariantGlobalization>true</InvariantGlobalization>
+</PropertyGroup>
+```
+
+
