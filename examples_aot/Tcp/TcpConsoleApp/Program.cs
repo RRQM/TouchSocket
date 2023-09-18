@@ -81,7 +81,7 @@ namespace TcpConsoleApp
     /// <summary>
     /// IOC容器
     /// </summary>
-    public class MyContainer : IContainer
+    public class MyContainer : ManualContainer
     {
         public MyContainer()
         {
@@ -93,69 +93,49 @@ namespace TcpConsoleApp
         readonly IPluginsManager m_pluginsManager;
         readonly ILog m_logger;
         readonly ClosePlugin m_closePlugin;
-        readonly TcpServiceReceivedPlugin m_tcpServiceReceivedPlugin = new TcpServiceReceivedPlugin();
-        readonly MyServicePluginClass m_myServicePluginClass = new MyServicePluginClass();
+        readonly TcpServiceReceivedPlugin m_tcpServiceReceivedPlugin = new();
+        readonly MyServicePluginClass m_myServicePluginClass = new();
 
-        public bool IsRegistered(Type fromType, string key = "")
-        {
-            //一般所有的类型，都返回true
-            return true;
-        }
-
-        
-        public void Register(DependencyDescriptor descriptor, string key = "")
-        {
-            //一般不用实现
-        }
-
-        public object Resolve(Type fromType, object[] ps = null, string key = "")
+        protected override bool TryResolve(Type fromType, out object instance, object[] ps = null, string key = "")
         {
             //此处的逻辑主要实现，当容器请求类型时，返回对应的实例。
             //如果是单例，可以将单例保存为字段，直接返回
             //如果是瞬态，则可以返回new
+
+            if (base.TryResolve(fromType, out instance, ps, key))
+            {
+                //如果基类方法已经解决，则直接返回。
+                //这意味着所需类型应该是以单例实例注册，或者直接获取的IContainer根。
+                return true;
+            }
+
             if ($"{fromType.FullName}{key}" == $"{typeof(IPluginsManager).FullName}{key}")
             {
-                return this.m_pluginsManager;
+                instance = this.m_pluginsManager;
+                return true;
             }
             else if ($"{fromType.FullName}{key}" == $"{typeof(ILog).FullName}{key}")
             {
-                return this.m_logger;
-            }
-            else if ($"{fromType.FullName}{key}" == $"{typeof(TouchSocket.Core.IContainer).FullName}{key}")
-            {
-                return this;
+                instance = this.m_logger;
+                return true;
             }
             else if ($"{fromType.FullName}{key}" == $"{typeof(ClosePlugin).FullName}{key}")
             {
-                return this.m_closePlugin;
+                instance = this.m_closePlugin;
+                return true;
             }
             else if ($"{fromType.FullName}{key}" == $"{typeof(TcpServiceReceivedPlugin).FullName}{key}")
             {
-                return this.m_tcpServiceReceivedPlugin;
+                instance = this.m_tcpServiceReceivedPlugin;
+                return true;
             }
             else if ($"{fromType.FullName}{key}" == $"{typeof(MyServicePluginClass).FullName}{key}")
             {
-                return this.m_myServicePluginClass;
+                instance = this.m_myServicePluginClass;
+                return true;
             }
-            throw new Exception("没有解决容器类型");
-        }
 
-       
-        public void Unregister(DependencyDescriptor descriptor, string key = "")
-        {
-            //一般不用实现
-        }
-
-        IEnumerator<DependencyDescriptor> IEnumerable<DependencyDescriptor>.GetEnumerator()
-        {
-            //一般不用实现
-            return default;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            //一般不用实现
-            return ((TouchSocket.Core.IContainer)this).GetEnumerator();
+            return false;
         }
     }
 
