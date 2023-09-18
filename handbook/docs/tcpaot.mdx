@@ -15,82 +15,29 @@ Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，�
 
 ### 2.1 配置容器
 
-配置容器，即手动解决容器反射实例的问题。这部分目前暂时手写实现，后续考虑会使用源生成或者结合其他支持源生成的IOC容器。
+配置容器，即“手动”解决容器反射实例的问题。目前这部分使用源生成IOC完成。详情请看[源生成IOC](../docs/ioc.mdx)
 
 ```csharp
 /// <summary>
 /// IOC容器
 /// </summary>
-public class MyContainer : ManualContainer
+[AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
+[AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
+[GeneratorContainer]
+public partial class MyContainer : ManualContainer
 {
-    public MyContainer()
-    {
-        this.m_pluginsManager = new PluginsManager(this);
-        this.m_logger = new LoggerGroup();
-        this.m_closePlugin = new ClosePlugin(this.m_logger);
-    }
-
-    readonly IPluginsManager m_pluginsManager;
-    readonly ILog m_logger;
-    readonly ClosePlugin m_closePlugin;
-    readonly TcpServiceReceivedPlugin m_tcpServiceReceivedPlugin = new();
-    readonly MyServicePluginClass m_myServicePluginClass = new();
-
-    protected override bool TryResolve(Type fromType, out object instance, object[] ps = null, string key = "")
-    {
-        //此处的逻辑主要实现，当容器请求类型时，返回对应的实例。
-        //如果是单例，可以将单例保存为字段，直接返回
-        //如果是瞬态，则可以返回new
-
-        if (base.TryResolve(fromType, out instance, ps, key))
-        {
-            //如果基类方法已经解决，则直接返回。
-            //这意味着所需类型应该是以单例实例注册，或者直接获取的IContainer根。
-            return true;
-        }
-
-        if ($"{fromType.FullName}{key}" == $"{typeof(IPluginsManager).FullName}{key}")
-        {
-            instance = this.m_pluginsManager;
-            return true;
-        }
-        else if ($"{fromType.FullName}{key}" == $"{typeof(ILog).FullName}{key}")
-        {
-            instance = this.m_logger;
-            return true;
-        }
-        else if ($"{fromType.FullName}{key}" == $"{typeof(ClosePlugin).FullName}{key}")
-        {
-            instance = this.m_closePlugin;
-            return true;
-        }
-        else if ($"{fromType.FullName}{key}" == $"{typeof(TcpServiceReceivedPlugin).FullName}{key}")
-        {
-            instance = this.m_tcpServiceReceivedPlugin;
-            return true;
-        }
-        else if ($"{fromType.FullName}{key}" == $"{typeof(MyServicePluginClass).FullName}{key}")
-        {
-            instance = this.m_myServicePluginClass;
-            return true;
-        }
-
-        return false;
-    }
+  
 }
 ```
-
-:::tip 提示
-
-如果是单例，可以将单例保存为字段，直接返回。如果是瞬态，则可以返回new
-
-:::  
 
 ### 2.2 配置插件
 
 插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，详情请看[插件使用](../docs/pluginsmanager.mdx)。
 
+同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
+
 ```csharp
+[AutoInjectForSingleton]
 internal partial class MyServicePluginClass : PluginBase
 {
     [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
@@ -122,6 +69,7 @@ internal partial class MyServicePluginClass : PluginBase
     }
 }
 
+[AutoInjectForSingleton]
 partial class TcpServiceReceivedPlugin : PluginBase
 {
     [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
@@ -156,6 +104,7 @@ partial class TcpServiceReceivedPlugin : PluginBase
 /// <summary>
 /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
 /// </summary>
+[AutoInjectForSingleton]
 partial class ClosePlugin : PluginBase
 {
     private readonly ILog m_logger;
