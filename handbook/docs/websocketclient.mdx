@@ -332,9 +332,13 @@ client.Connect();
 
 ## 七、其他操作
 
-### 7.1 Ping机制
+### 7.1 握手机制
 
-WebSocket有自己的Ping、Pong机制。所以直接调用已有方法即可。
+`WebSocket`是从HttpClient、TcpClient继承来的，所以很多属性仅仅是表示Tcp的状态。要获取握手信息，需要调用client.GetHandshaked()扩展方法获得。
+
+### 7.2 Ping机制
+
+`WebSocket`有自己的Ping、Pong机制。所以直接调用已有方法即可。
 
 ```csharp
 client.PingWS();
