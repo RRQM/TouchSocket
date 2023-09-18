@@ -26,6 +26,7 @@ TouchSocket内置了**Container**容器。只需要引入TouchSocket.Core即可�
 - 支持标签参数注入。
 - 支持泛型注入。
 - 支持Object注入。
+- 支持**源生成注入**，全面接入AOT模式。
 
 ## 三、注入方式
 
@@ -218,6 +219,59 @@ var b2 = myClass5_1.MyClass1 == myClass5_3.MyClass1;
 默认参数实例化，仅在**瞬时注入**周期中适用。
 
 :::  
+
+## 四、源生成IOC容器
+
+使用源生成IOC容器，能实现100%代码静态生成。能够有效解决运行时代码效率问题和AOT反射问题。
+
+使用源生成IOC非常简单。首先，安装NuGet包：`TouchSocket.CodeAnalyzer`。这是TouchSocket的源生成分析器。
+
+然后声明自己的容器，遵循如下：
+
+1. 必须继承`ManualContainer`。
+2. 必须使用`partial`修饰为部分类。
+3. 必须添加特性`GeneratorContainer`。
+
+```csharp
+ [GeneratorContainer]
+ partial class MyContainer : ManualContainer
+ {
+
+ }
+```
+
+### 4.1 注册类型
+
+注册类型，可以直接添加特性即可：
+
+```csharp 
+[AutoInjectForSingleton]//将声明的类型直接标识为单例注入
+class MyClass12
+{
+
+}
+
+[AutoInjectForTransient]//将声明的类型直接标识为瞬态注入
+class MyClass13
+{
+
+}
+```
+
+### 4.2 注册现有类型
+
+现有类型已经完成声明，所以无法直接添加特性。所以只能将特性添加在`ManualContainer`的继承类上。
+
+```csharp
+[AddSingletonInject(typeof(IInterface10), typeof(MyClass10))]//直接添加现有类型为单例
+[AddTransientInject(typeof(IInterface11), typeof(MyClass11))]//直接添加现有类型为瞬态
+[GeneratorContainer]
+partial class MyContainer : ManualContainer
+{
+
+}
+```
+
 
 ## 四、生命周期
 

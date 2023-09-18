@@ -81,64 +81,15 @@ namespace TcpConsoleApp
     /// <summary>
     /// IOC容器
     /// </summary>
-    public class MyContainer : ManualContainer
+    [AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
+    [AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
+    [GeneratorContainer]
+    public partial class MyContainer : ManualContainer
     {
-        public MyContainer()
-        {
-            this.m_pluginsManager = new PluginsManager(this);
-            this.m_logger = new LoggerGroup();
-            this.m_closePlugin = new ClosePlugin(this.m_logger);
-        }
-
-        readonly IPluginsManager m_pluginsManager;
-        readonly ILog m_logger;
-        readonly ClosePlugin m_closePlugin;
-        readonly TcpServiceReceivedPlugin m_tcpServiceReceivedPlugin = new();
-        readonly MyServicePluginClass m_myServicePluginClass = new();
-
-        protected override bool TryResolve(Type fromType, out object instance, object[] ps = null, string key = "")
-        {
-            //此处的逻辑主要实现，当容器请求类型时，返回对应的实例。
-            //如果是单例，可以将单例保存为字段，直接返回
-            //如果是瞬态，则可以返回new
-
-            if (base.TryResolve(fromType, out instance, ps, key))
-            {
-                //如果基类方法已经解决，则直接返回。
-                //这意味着所需类型应该是以单例实例注册，或者直接获取的IContainer根。
-                return true;
-            }
-
-            if ($"{fromType.FullName}{key}" == $"{typeof(IPluginsManager).FullName}{key}")
-            {
-                instance = this.m_pluginsManager;
-                return true;
-            }
-            else if ($"{fromType.FullName}{key}" == $"{typeof(ILog).FullName}{key}")
-            {
-                instance = this.m_logger;
-                return true;
-            }
-            else if ($"{fromType.FullName}{key}" == $"{typeof(ClosePlugin).FullName}{key}")
-            {
-                instance = this.m_closePlugin;
-                return true;
-            }
-            else if ($"{fromType.FullName}{key}" == $"{typeof(TcpServiceReceivedPlugin).FullName}{key}")
-            {
-                instance = this.m_tcpServiceReceivedPlugin;
-                return true;
-            }
-            else if ($"{fromType.FullName}{key}" == $"{typeof(MyServicePluginClass).FullName}{key}")
-            {
-                instance = this.m_myServicePluginClass;
-                return true;
-            }
-
-            return false;
-        }
+      
     }
 
+    [AutoInjectForSingleton]
     internal partial class MyServicePluginClass : PluginBase
     {
         [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
@@ -170,6 +121,7 @@ namespace TcpConsoleApp
         }
     }
 
+    [AutoInjectForSingleton]
     partial class TcpServiceReceivedPlugin : PluginBase
     {
         [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
@@ -204,6 +156,7 @@ namespace TcpConsoleApp
     /// <summary>
     /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
     /// </summary>
+    [AutoInjectForSingleton]
     partial class ClosePlugin : PluginBase
     {
         private readonly ILog m_logger;
