@@ -22,10 +22,10 @@ namespace WebApiClientApp
             {
                 var client = CreateWebApiClient();
 
-                var sum1 = client.InvokeT<int>("GET:/Server/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
+                var sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-                var sum2 = client.InvokeT<int>("POST:/Server/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
+                var sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
                 Console.WriteLine($"Post调用成功，结果：{sum2}");
 
                 var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
@@ -35,10 +35,10 @@ namespace WebApiClientApp
             {
                 var client = CreateWebApiClientSlim();
 
-                var sum1 = client.InvokeT<int>("GET:/Server/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
+                var sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-                var sum2 = client.InvokeT<int>("POST:/Server/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
+                var sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
                 Console.WriteLine($"Post调用成功，结果：{sum2}");
 
                 var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
