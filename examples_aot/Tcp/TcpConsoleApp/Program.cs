@@ -9,7 +9,6 @@ namespace TcpConsoleApp
     {
         private static void Main(string[] args)
         {
-            //GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
             var service = CreateService();
             var client = CreateClient();
             Console.WriteLine("输入任意内容，回车发送");
