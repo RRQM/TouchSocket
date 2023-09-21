@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -14,26 +15,34 @@ namespace DmtpRpcConsoleApp
         {
 
 
-            //RPC AOT还每完成适配
-
-            SerializeConvert.NewtonsoftJsonFirst = true;
-            //GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Expression;
-            var service = GetService();
-            var client = GetClient();
-            WaitVerify waitVerify = new WaitVerify();
-            while (true)
+            //RPC AOT还没完成适配
+            try
             {
-                Console.WriteLine("请输入账号和密码，用空格隔开。");
-                var strs = Console.ReadLine()?.Split(" ");
-                if (strs == null || strs.Length != 2)
+                SerializeConvert.NewtonsoftJsonFirst = false;
+                //GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Expression;
+                var service = GetService();
+                var client = GetClient();
+                WaitVerify waitVerify = new WaitVerify();
+                while (true)
                 {
-                    Console.WriteLine("无效输入");
-                    continue;
-                }
+                    Console.WriteLine("请输入账号和密码，用空格隔开。");
+                    var strs = Console.ReadLine()?.Split(" ");
+                    if (strs == null || strs.Length != 2)
+                    {
+                        Console.WriteLine("无效输入");
+                        continue;
+                    }
 
-                var result = client.GetDmtpRpcActor().Login(strs[0], strs[1]);
-                Console.WriteLine($"结果：{result}");
+                    var result = client.GetDmtpRpcActor().Login(strs[0], strs[1]);
+                    Console.WriteLine($"结果：{result}");
+                }
             }
+            catch(Exception ex)
+            {
+                ConsoleLogger.Default.Exception(ex);
+                Console.ReadKey();
+            }
+           
         }
         static TcpDmtpClient GetClient()
         {
@@ -93,6 +102,7 @@ namespace DmtpRpcConsoleApp
         bool Login(string account, string password);
     }
 
+    
     [GeneratorRpcServer]
     public partial class MyRpcServer : IMyRpcServer
     {
