@@ -59,8 +59,8 @@ namespace LimitNumberOfConnectionsConsoleApp
 
         private readonly ILog m_logger;
 
-        [DependencyInject(2)]
-        public LimitNumberOfConnectionsPlugin(int max, ILog logger)
+        [DependencyInject]
+        public LimitNumberOfConnectionsPlugin(ILog logger, int max=2)
         {
             this.Max = max;
             this.m_logger = logger;

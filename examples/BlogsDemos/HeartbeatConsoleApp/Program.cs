@@ -200,8 +200,8 @@ namespace HeartbeatConsoleApp
         private readonly int m_timeTick;
         private readonly ILog logger;
 
-        [DependencyInject(1000 * 5)]
-        public HeartbeatAndReceivePlugin(int timeTick, ILog logger)
+        [DependencyInject]
+        public HeartbeatAndReceivePlugin( ILog logger,int timeTick= 1000 * 5)
         {
             this.m_timeTick = timeTick;
             this.logger = logger;
