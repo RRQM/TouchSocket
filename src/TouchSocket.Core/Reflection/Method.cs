@@ -41,24 +41,32 @@ namespace TouchSocket.Core
     }
 
     /// <summary>
-    /// 表示方法
+    /// 一个动态调用方法
     /// </summary>
     public class Method
     {
         /// <summary>
         /// 方法执行委托
         /// </summary>
-        private readonly FastInvokeHandler m_invoker;
+        protected Func<object, object[], object> m_invoker;
 
         /// <summary>
-        /// 方法
+        /// 初始化一个动态调用方法
+        /// </summary>
+        /// <param name="method"></param>
+        public Method(MethodInfo method):this(method,true)
+        { 
+        
+        }
+        /// <summary>
+        /// 初始化一个动态调用方法
         /// </summary>
         /// <param name="method">方法信息</param>
-        public Method(MethodInfo method)
+        /// <param name="build">是否直接使用IL构建调用</param>
+        public Method(MethodInfo method,bool build)
         {
             this.Info = method ?? throw new ArgumentNullException(nameof(method));
             this.Name = method.Name;
-            this.Static = method.IsStatic;
             foreach (var item in method.GetParameters())
             {
                 if (item.ParameterType.IsByRef)
@@ -66,13 +74,19 @@ namespace TouchSocket.Core
                     this.IsByRef = true;
                 }
             }
-            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
             {
-                //unity
+                if (build)
+                {
+                    this.m_invoker = this.CreateILInvoker(method);
+                }
             }
-            else
+            else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
             {
-                this.m_invoker = GetMethodInvoker(method);
+                if (build)
+                {
+                    this.m_invoker = this.CreateExpressionInvoker(method);
+                }
             }
 
             if (method.ReturnType == typeof(Task))
@@ -98,14 +112,6 @@ namespace TouchSocket.Core
                 this.ReturnType = method.ReturnType;
             }
         }
-
-        /// <summary>
-        /// FastInvokeHandler
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="paramters"></param>
-        /// <returns></returns>
-        public delegate object FastInvokeHandler(object target, object[] paramters);
 
         /// <summary>
         /// 是否具有返回值。当返回值为Task时，也会认为没有返回值。
@@ -135,75 +141,25 @@ namespace TouchSocket.Core
         public Type ReturnType { get; private set; }
 
         /// <summary>
-        /// 是否为静态函数
-        /// </summary>
-        public bool Static { get; private set; }
-
-        /// <summary>
         /// 返回值的Task类型。
         /// </summary>
         public TaskReturnType TaskType { get; private set; }
 
         /// <summary>
         /// 执行方法。
-        /// <para>当方法为void或task时，会返回null</para>
-        /// <para>当方法为task泛型时，会wait后的值</para>
-        /// <para>注意：当调用方为UI主线程时，调用异步方法，则极有可能发生死锁。</para>
         /// </summary>
         /// <param name="instance">实例</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public object Invoke(object instance, params object[] parameters)
+        public virtual object Invoke(object instance, params object[] parameters)
         {
-            switch (this.TaskType)
+            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
             {
-                case TaskReturnType.None:
-                    {
-                        object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
-
-                        return re;
-                    }
-                case TaskReturnType.Task:
-                    {
-                        object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
-
-                        var task = (Task)re;
-                        task.ConfigureAwait(false).GetAwaiter().GetResult();
-                        return default;
-                    }
-                case TaskReturnType.TaskObject:
-                    {
-                        object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
-                        var task = (Task)re;
-                        task.ConfigureAwait(false).GetAwaiter().GetResult();
-                        return DynamicMethodMemberAccessor.Default.GetValue(task, "Result");
-                    }
-                default:
-                    return default;
+                return this.Info.Invoke(instance, parameters);
+            }
+            else
+            {
+                return this.m_invoker.Invoke(instance, parameters);
             }
         }
 
@@ -213,7 +169,7 @@ namespace TouchSocket.Core
         /// <param name="instance"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public Task InvokeAsync(object instance, params object[] parameters)
+        public virtual Task InvokeAsync(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -224,7 +180,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.Task:
                     {
                         object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
                         {
                             re = this.Info.Invoke(instance, parameters);
                         }
@@ -237,7 +193,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
                         {
                             re = this.Info.Invoke(instance, parameters);
                         }
@@ -258,7 +214,7 @@ namespace TouchSocket.Core
         /// <param name="instance"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public Task<TResult> InvokeAsync<TResult>(object instance, params object[] parameters)
+        public virtual Task<TResult> InvokeAsync<TResult>(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -273,7 +229,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         object re;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
                         {
                             re = this.Info.Invoke(instance, parameters);
                         }
@@ -297,7 +253,7 @@ namespace TouchSocket.Core
         /// <param name="instance">实例</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public async Task<object> InvokeObjectAsync(object instance, params object[] parameters)
+        public virtual async Task<object> InvokeObjectAsync(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -312,7 +268,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         Task task;
-                        if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+                        if (GlobalEnvironment.DynamicBuilderType== DynamicBuilderType.Reflect)
                         {
                             task = (Task)this.Info.Invoke(instance, parameters);
                         }
@@ -403,7 +359,12 @@ namespace TouchSocket.Core
             }
         }
 
-        private static FastInvokeHandler GetMethodInvoker(MethodInfo methodInfo)
+        /// <summary>
+        /// 构建IL调用
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        protected  Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
         {
             var dynamicMethod = new DynamicMethod(string.Empty, typeof(object), new Type[] { typeof(object), typeof(object[])
     }, methodInfo.DeclaringType.Module);
@@ -462,17 +423,16 @@ namespace TouchSocket.Core
             }
 
             il.Emit(OpCodes.Ret);
-            var invoder = (FastInvokeHandler)dynamicMethod.CreateDelegate(typeof(FastInvokeHandler));
+            var invoder = (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
             return invoder;
         }
 
         /// <summary>
-        /// 生成方法的调用委托
+        /// 构建表达式树调用
         /// </summary>
-        /// <param name="method">方法成员信息</param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="method"></param>
         /// <returns></returns>
-        private Func<object, object[], object> CreateInvoker(MethodInfo method)
+        protected Func<object, object[], object> CreateExpressionInvoker(MethodInfo method)
         {
             var instance = Expression.Parameter(typeof(object), "instance");
             var parameters = Expression.Parameter(typeof(object[]), "parameters");

@@ -163,6 +163,5 @@ namespace TouchSocket.Sockets
             pluginsManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
-
     }
 }

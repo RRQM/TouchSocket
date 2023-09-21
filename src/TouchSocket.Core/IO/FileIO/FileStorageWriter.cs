@@ -19,7 +19,6 @@ namespace TouchSocket.Core
 
     public partial class FileStorageWriter : DisposableObject, IWrite
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

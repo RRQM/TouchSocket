@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
-using System.Linq;
-using System.Net.Security;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -15,7 +8,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道终端接口
     /// </summary>
-    public interface INamedPipeClientBase: IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
+    public interface INamedPipeClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
     {
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
@@ -25,7 +18,7 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 用于通讯的管道流。
         /// </summary>
-        public PipeStream PipeStream { get;}
+        public PipeStream PipeStream { get; }
 
         /// <summary>
         /// 客户端配置

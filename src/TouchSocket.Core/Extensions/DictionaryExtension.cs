@@ -109,6 +109,7 @@ namespace TouchSocket.Core
         {
             return dictionary.TryGetValue(tkey, out var value) ? value : default;
         }
+
         #endregion 字典扩展
     }
 }

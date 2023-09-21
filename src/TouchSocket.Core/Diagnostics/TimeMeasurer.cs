@@ -35,7 +35,6 @@ namespace TouchSocket.Core
             return stopwatch.Elapsed;
         }
 
-
         /// <summary>
         /// 开始运行
         /// </summary>

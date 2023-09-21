@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -20,6 +19,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http静态内容插件
     /// </summary>
+    [PluginOption(Singleton = false, NotRegister = true)]
     public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     {
         /// <summary>
@@ -36,6 +36,22 @@ namespace TouchSocket.Http
         public FileCachePool FileCache { get; private set; }
 
         /// <summary>
+        /// 提供文件扩展名和MIME类型之间的映射。
+        /// </summary>
+        public IContentTypeProvider ContentTypeProvider { get; set; }
+
+        /// <summary>
+        /// 设置提供文件扩展名和MIME类型之间的映射。
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public HttpStaticPagePlugin SetContentTypeProvider(IContentTypeProvider provider)
+        {
+            this.ContentTypeProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+            return this;
+        }
+
+        /// <summary>
         /// 添加静态
         /// </summary>
         /// <param name="path">Static content path</param>
@@ -45,7 +61,6 @@ namespace TouchSocket.Http
         public void AddFolder(string path, string prefix = "/", string filter = "*.*", TimeSpan? timeout = null)
         {
             timeout ??= TimeSpan.FromHours(1);
-
             this.FileCache.InsertPath(path, prefix, filter, timeout.Value, null);
         }
 
@@ -62,10 +77,13 @@ namespace TouchSocket.Http
         {
             if (this.FileCache.Find(e.Context.Request.RelativeURL, out var data))
             {
-                e.Context.Response
-                    .SetStatus()
-                    .SetContentTypeByExtension(Path.GetExtension(e.Context.Request.RelativeURL))
-                    .SetContentLength(data.Length)
+                e.Context.Response.SetStatus();
+                if (this.ContentTypeProvider?.TryGetContentType(e.Context.Request.RelativeURL, out var result) != true)
+                {
+                    result = HttpTools.GetContentTypeFromExtension(e.Context.Request.RelativeURL);
+                }
+                e.Context.Response.ContentType = result;
+                e.Context.Response.SetContentLength(data.Length)
                     .WriteContent(data);
                 e.Handled = true;
             }

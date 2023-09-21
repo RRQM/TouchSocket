@@ -12,6 +12,7 @@ namespace TouchSocket.Core
     {
         private readonly AsyncAutoResetEvent m_asyncWaitHandle;
         private volatile WaitDataStatus m_status;
+        private CancellationTokenRegistration m_tokenRegistration;
 
         /// <summary>
         /// 构造函数
@@ -62,7 +63,15 @@ namespace TouchSocket.Core
         {
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(this.Cancel);
+                if (this.m_tokenRegistration == default)
+                {
+                    this.m_tokenRegistration = cancellationToken.Register(this.Cancel);
+                }
+                else
+                {
+                    this.m_tokenRegistration.Dispose();
+                    this.m_tokenRegistration = cancellationToken.Register(this.Cancel);
+                }
             }
         }
 
@@ -71,7 +80,6 @@ namespace TouchSocket.Core
         {
             this.WaitResult = result;
         }
-
 
         /// <summary>
         /// 等待指定时间
@@ -103,6 +111,7 @@ namespace TouchSocket.Core
             this.m_status = WaitDataStatus.Disposed;
             this.WaitResult = default;
             this.m_asyncWaitHandle.SafeDispose();
+            this.m_tokenRegistration.Dispose();
             base.Dispose(disposing);
         }
     }

@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using TouchSocket.Core;
 
 namespace TouchSocket.Core
 {

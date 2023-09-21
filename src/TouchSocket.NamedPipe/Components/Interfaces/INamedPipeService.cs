@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -11,17 +8,12 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器接口
     /// </summary>
-    public interface INamedPipeService: IService, IIdSender, IIdRequsetInfoSender, IPluginObject
+    public interface INamedPipeService : IService, IIdSender, IIdRequsetInfoSender, IPluginObject
     {
         /// <summary>
         /// 当前在线客户端数量
         /// </summary>
         int Count { get; }
-
-        /// <summary>
-        /// 获取默认新Id。
-        /// </summary>
-        Func<string> GetDefaultNewId { get; }
 
         /// <summary>
         /// 获取最大可连接数

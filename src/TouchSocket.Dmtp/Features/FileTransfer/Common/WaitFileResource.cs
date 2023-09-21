@@ -23,6 +23,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public int ResourceHandle { get; set; }
         protected override bool IncludedRouter => true;
         public int ContinuationIndex { get; set; }
+
         public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);

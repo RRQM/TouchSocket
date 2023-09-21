@@ -69,6 +69,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 try
                 {
+                    //Console.WriteLine(byteBlock.Len);
                     var rpcPackage = new DmtpRpcPackage();
                     rpcPackage.UnpackageRouter(byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
@@ -194,7 +195,7 @@ namespace TouchSocket.Dmtp.Rpc
             try
             {
                 var rpcPackage = (DmtpRpcPackage)o;
-
+                //Console.WriteLine(rpcPackage.MethodName);
                 var psData = rpcPackage.ParametersBytes;
                 if (rpcPackage.Feedback == FeedbackType.WaitSend)
                 {

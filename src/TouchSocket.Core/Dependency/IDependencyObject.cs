@@ -13,14 +13,14 @@ namespace TouchSocket.Core
         /// <typeparam name="TValue"></typeparam>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp);
+        TValue GetValue<TValue>(IDependencyProperty<TValue> dp);
 
         /// <summary>
         /// 是否有值。
         /// </summary>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public bool HasValue<TValue>(IDependencyProperty<TValue> dp);
+        bool HasValue<TValue>(IDependencyProperty<TValue> dp);
 
         /// <summary>
         /// 重置属性值。
@@ -28,14 +28,14 @@ namespace TouchSocket.Core
         /// <typeparam name="TValue"></typeparam>
         /// <param name="dp"></param>
         /// <returns></returns>
-        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp);
+        DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp);
 
         /// <summary>
         /// 设置依赖注入的值
         /// </summary>
         /// <param name="dp"></param>
         /// <param name="value"></param>
-        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value);
+        DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value);
 
         /// <summary>
         /// 尝试获取依赖注入的值，当没有注入时，会返回<see langword="false"/>。
@@ -44,7 +44,7 @@ namespace TouchSocket.Core
         /// <param name="dp"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value);
+        bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value);
 
         /// <summary>
         /// 重置属性值。
@@ -53,7 +53,6 @@ namespace TouchSocket.Core
         /// <param name="dp"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value);
+        bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value);
     }
-
 }

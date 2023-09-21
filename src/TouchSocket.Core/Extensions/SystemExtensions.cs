@@ -76,7 +76,7 @@ namespace TouchSocket.Core
             return dt.ToString("r", CultureInfo.InvariantCulture);
         }
 
-#if !NETCOREAPP3_1_OR_GREATER
+#if !NET6_0_OR_GREATER
 
         /// <summary>
         /// 清除所有成员
@@ -173,6 +173,7 @@ namespace TouchSocket.Core
         }
 
         #region Tuple
+
         /// <summary>
         /// 获取元组的名称列表。
         /// </summary>
@@ -192,7 +193,8 @@ namespace TouchSocket.Core
         {
             return ((dynamic)memberInfo.GetCustomAttribute(Type.GetType("System.Runtime.CompilerServices.TupleElementNamesAttribute")))?.TransformNames;
         }
-        #endregion
+
+        #endregion Tuple
 
         /// <summary>
         /// 获取方法的确定性名称，即使在重载时，也能区分。
@@ -229,8 +231,7 @@ namespace TouchSocket.Core
             {
                 return methodInfo.Name;
             }
-            return methodInfo.Name.Substring(r+1, methodInfo.Name.Length - r-1);
+            return methodInfo.Name.Substring(r + 1, methodInfo.Name.Length - r - 1);
         }
-
     }
 }

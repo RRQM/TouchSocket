@@ -20,15 +20,6 @@ namespace TouchSocket.Http
     /// </summary>
     public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
     {
-        /// <summary>
-        /// 默认的Http服务。为Http做兜底拦截。该插件应该最后添加。
-        /// </summary>
-        public DefaultHttpServicePlugin()
-        {
-            this.Order = int.MinValue;
-        }
-
-
         /// <inheritdoc/>
         public Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
@@ -39,7 +30,7 @@ namespace TouchSocket.Http
             if (e.Context.Request.IsMethod("OPTIONS"))
             {
                 var response = e.Context.Response;
-                response.SetStatus();
+                response.SetStatus(204);
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
                 response.Headers.Add("Access-Control-Allow-Headers", "*");
                 response.Headers.Add("Allow", "OPTIONS, GET, POST");

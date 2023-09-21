@@ -20,11 +20,10 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class NATService : TcpService<NATSocketClient>
     {
-       
         /// <inheritdoc/>
         protected override NATSocketClient GetClientInstence(Socket socket, TcpNetworkMonitor monitor)
         {
-            var client = base.GetClientInstence(socket,monitor);
+            var client = base.GetClientInstence(socket, monitor);
             client.m_internalDis = this.OnTargetClientDisconnected;
             client.m_internalTargetClientRev = this.OnTargetClientReceived;
             return client;
@@ -48,7 +47,7 @@ namespace TouchSocket.Sockets
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected sealed override void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed void OnReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var data = this.OnNATReceived(socketClient, byteBlock, requestInfo);
             if (data != null)

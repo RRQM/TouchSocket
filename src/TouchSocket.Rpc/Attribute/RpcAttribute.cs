@@ -720,9 +720,14 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetInvokenKey(MethodInstance methodInstance)
         {
-            return this.MethodInvoke
-                ? this.GetMethodName(methodInstance, false)
-                : !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+            if (this.MethodInvoke)
+            {
+                return this.GetMethodName(methodInstance, false);
+            }
+            else
+            {
+                return !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+            }
         }
 
         /// <summary>
@@ -841,9 +846,14 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetReturn(MethodInstance methodInstance, bool isAsync)
         {
-            return isAsync
-                ? methodInstance.ReturnType == null ? "Task" : $"Task<{this.GetProxyParameterName(methodInstance.Info.ReturnParameter)}>"
-                : methodInstance.ReturnType == null ? "void" : this.GetProxyParameterName(methodInstance.Info.ReturnParameter);
+            if (isAsync)
+            {
+                return methodInstance.ReturnType == null ? "Task" : $"Task<{this.GetProxyParameterName(methodInstance.Info.ReturnParameter)}>";
+            }
+            else
+            {
+                return methodInstance.ReturnType == null ? "void" : this.GetProxyParameterName(methodInstance.Info.ReturnParameter);
+            }
         }
 
         internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)

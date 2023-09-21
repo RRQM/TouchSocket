@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -59,7 +57,6 @@ namespace TouchSocket.Http
         /// </summary>
         public bool? ContentComplated { get; protected set; } = null;
 
-
         /// <summary>
         /// 内容长度
         /// </summary>
@@ -94,7 +91,7 @@ namespace TouchSocket.Http
         {
             get
             {
-               var keepalive= this.Headers.Get(HttpHeaders.Connection);
+                var keepalive = this.Headers.Get(HttpHeaders.Connection);
                 if (this.ProtocolVersion == "1.0")
                 {
                     if (keepalive.IsNullOrEmpty())

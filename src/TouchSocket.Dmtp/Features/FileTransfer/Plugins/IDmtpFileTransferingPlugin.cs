@@ -15,7 +15,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="e"></param>
         /// <returns></returns>
         Task OnDmtpFileTransfering(TClient client, FileTransferingEventArgs e);
-
     }
 
     /// <summary>
@@ -23,6 +22,5 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// </summary>
     public interface IDmtpFileTransferingPlugin : IDmtpFileTransferingPlugin<IDmtpActorObject>
     {
-
     }
 }

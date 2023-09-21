@@ -23,6 +23,7 @@ namespace TouchSocket.Sockets
         /// 同步根。
         /// </summary>
         protected readonly object SyncRoot = new object();
+
         private int m_receiveBufferSize = 1024 * 64;
         private int m_sendBufferSize = 1024 * 64;
 
@@ -32,12 +33,14 @@ namespace TouchSocket.Sockets
             get => m_sendBufferSize;
             set => m_sendBufferSize = value < 1024 ? 1024 : value;
         }
+
         /// <inheritdoc/>
         public virtual int ReceiveBufferSize
         {
             get => m_receiveBufferSize;
             set => m_receiveBufferSize = value < 1024 ? 1024 : value;
         }
+
         /// <inheritdoc/>
         public ILog Logger { get; set; }
     }

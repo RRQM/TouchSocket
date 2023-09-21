@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
@@ -258,7 +257,7 @@ namespace TouchSocket.JsonRpc
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return base.HandleReceivedData(byteBlock,requestInfo);
+                return base.HandleReceivedData(byteBlock, requestInfo);
             }
 
             try

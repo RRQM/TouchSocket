@@ -32,6 +32,7 @@ namespace TouchSocket.NamedPipe
             base.OnReceived(socketClient, byteBlock, requestInfo);
         }
     }
+
     /// <summary>
     /// 泛型命名管道服务器。
     /// </summary>
@@ -60,9 +61,11 @@ namespace TouchSocket.NamedPipe
         private IPluginsManager m_pluginsManager;
         private ServerState m_serverState;
         private NamedPipeSocketClientCollection m_socketClients = new NamedPipeSocketClientCollection();
+
         #endregion 字段
 
         #region 属性
+
         /// <inheritdoc/>
         public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
@@ -71,9 +74,6 @@ namespace TouchSocket.NamedPipe
 
         /// <inheritdoc/>
         public override IContainer Container { get => this.m_container; }
-
-        /// <inheritdoc/>
-        public override Func<string> GetDefaultNewId => this.m_getDefaultNewId;
 
         /// <inheritdoc/>
         public override int MaxCount { get => this.m_maxCount; }
@@ -399,7 +399,7 @@ namespace TouchSocket.NamedPipe
 
             var args = new ConnectingEventArgs(null)
             {
-                Id = this.GetDefaultNewId()
+                Id = this.m_getDefaultNewId.Invoke()
             };
             client.InternalConnecting(args);//Connecting
             if (args.IsPermitOperation)

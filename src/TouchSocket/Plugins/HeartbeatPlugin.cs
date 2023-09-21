@@ -17,7 +17,6 @@ namespace TouchSocket.Sockets
         /// 心跳间隔。默认3秒。
         /// </summary>
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(3);
-
     }
 
     /// <summary>
@@ -32,7 +31,7 @@ namespace TouchSocket.Sockets
         /// <param name="heartbeatPlugin"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        public static THeartbeatPlugin SetTick<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin, TimeSpan timeSpan) 
+        public static THeartbeatPlugin SetTick<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin, TimeSpan timeSpan)
             where THeartbeatPlugin : HeartbeatPlugin
         {
             heartbeatPlugin.Tick = timeSpan;
@@ -46,7 +45,7 @@ namespace TouchSocket.Sockets
         /// <param name="heartbeatPlugin"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static THeartbeatPlugin SetMaxFailCount<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin,int value)
+        public static THeartbeatPlugin SetMaxFailCount<THeartbeatPlugin>(this THeartbeatPlugin heartbeatPlugin, int value)
              where THeartbeatPlugin : HeartbeatPlugin
         {
             heartbeatPlugin.MaxFailCount = value;

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {

@@ -15,7 +15,6 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         /// <returns></returns>
         Task OnTcpReceived(TClient client, ReceivedDataEventArgs e);
-
     }
 
     /// <summary>
@@ -23,6 +22,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface ITcpReceivedPlugin : ITcpReceivedPlugin<ITcpClientBase>
     {
-
     }
 }

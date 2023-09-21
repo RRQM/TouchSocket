@@ -48,7 +48,6 @@ namespace TouchSocket.Dmtp.Rpc
         /// <inheritdoc/>
         public IDmtpActor DmtpActor => this.PrivateGetUdpDmtpClient().DmtpActor;
 
-
         /// <summary>
         /// 通过终结点获取<see cref="IUdpDmtpClient"/>
         /// </summary>
@@ -71,7 +70,7 @@ namespace TouchSocket.Dmtp.Rpc
         protected override void HandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var client = this.PrivateGetUdpDmtpClient(remoteEndPoint);
-            if (client==null)
+            if (client == null)
             {
                 return;
             }

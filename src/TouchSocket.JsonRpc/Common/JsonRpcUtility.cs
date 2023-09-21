@@ -11,6 +11,5 @@ namespace TouchSocket.JsonRpc
         /// TcpJsonRpc
         /// </summary>
         public static Protocol TcpJsonRpc { get; private set; } = new Protocol("TcpJsonRpc");
-
     }
 }

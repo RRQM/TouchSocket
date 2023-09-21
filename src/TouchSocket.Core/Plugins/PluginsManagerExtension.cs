@@ -106,7 +106,6 @@ namespace TouchSocket.Core
                 }
                 pluginsManager.Add(name, newFunc);
             }
-
         }
 
         /// <summary>

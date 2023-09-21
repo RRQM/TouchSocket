@@ -22,12 +22,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 有效区间。如果想长期有效，请使用<see cref="TimeSpan.Zero"/>
         /// </summary>
-        public TimeSpan Duration { get; }
+        TimeSpan Duration { get; }
 
         /// <summary>
         /// 更新时间
         /// </summary>
-        public DateTime UpdateTime { get; set; }
+        DateTime UpdateTime { get; set; }
     }
 
     /// <summary>
@@ -38,11 +38,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 键
         /// </summary>
-        public TKey Key { get; }
+        TKey Key { get; }
 
         /// <summary>
         /// 值
         /// </summary>
-        public TValue Value { get; set; }
+        TValue Value { get; set; }
     }
 }

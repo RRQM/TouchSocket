@@ -94,11 +94,14 @@ namespace TouchSocket.Core
                         if (list.Contains(name))
                         {
                             var pluginModel = this.GetPluginModel(name);
-                            pluginModel.PluginEntities.Add(new PluginEntity(new Method(methodInfo), plugin));
-                            pluginModel.PluginEntities.Sort(delegate (PluginEntity x, PluginEntity y)
-                            {
-                                return x.Plugin.Order == y.Plugin.Order ? 0 : x.Plugin.Order < y.Plugin.Order ? 1 : -1;
-                            });
+                            var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
+                            pluginModel.Funcs.Add(pluginEntity.Run);
+
+                            //pluginModel.PluginEntities.Add(new PluginEntity(new Method(methodInfo), plugin));
+                            //pluginModel.PluginEntities.Sort(delegate (PluginEntity x, PluginEntity y)
+                            //{
+                            //    return x.Plugin.Order == y.Plugin.Order ? 0 : x.Plugin.Order < y.Plugin.Order ? 1 : -1;
+                            //});
                         }
                         pairs.Add(name);
                     }
@@ -153,8 +156,16 @@ namespace TouchSocket.Core
                     }
                 }
             }
-
-            var plugin = (IPlugin)this.m_container.ResolveWithoutRoot(pluginType);
+            IPlugin plugin;
+            if (this.m_container.IsRegistered(pluginType))
+            {
+                plugin = (IPlugin)this.m_container.Resolve(pluginType); 
+            }
+            else
+            {
+                plugin = (IPlugin)this.m_container.ResolveWithoutRoot(pluginType);
+            }
+            
             ((IPluginsManager)this).Add(plugin);
             return plugin;
         }
@@ -223,11 +234,11 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public int GetPluginCount(string name, bool includeFunc = true)
+        public int GetPluginCount(string name)
         {
             if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
             {
-                return includeFunc ? pluginModel.PluginEntities.Count + pluginModel.Funcs.Count : pluginModel.PluginEntities.Count;
+                return pluginModel.Funcs.Count;
             }
             return 0;
         }

@@ -6,8 +6,8 @@
     public static class GlobalEnvironment
     {
         /// <summary>
-        /// 优化平台
+        /// 动态构建类型，默认使用IL
         /// </summary>
-        public static OptimizedPlatforms OptimizedPlatforms { get; set; } = OptimizedPlatforms.None;
+        public static DynamicBuilderType DynamicBuilderType { get; set; } = DynamicBuilderType.IL;
     }
 }

@@ -11,6 +11,7 @@
                 case OpenApiDataTypes.Integer:
                 case OpenApiDataTypes.Boolean:
                     return true;
+
                 case OpenApiDataTypes.Binary:
                 case OpenApiDataTypes.BinaryCollection:
                 case OpenApiDataTypes.Record:

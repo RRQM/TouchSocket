@@ -22,6 +22,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface IServerStopedPlugin : IServerStopedPlugin<IService>
     {
-
     }
 }

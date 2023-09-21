@@ -9,7 +9,6 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public interface INamedPipeDisconnectingPlugin<in TClient> : IPlugin where TClient : INamedPipeClientBase
     {
-
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// <para>
@@ -27,6 +26,5 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public interface INamedPipeDisconnectingPlugin : INamedPipeDisconnectingPlugin<INamedPipeClientBase>
     {
-
     }
 }

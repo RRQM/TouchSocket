@@ -47,7 +47,7 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// Json字符串
         /// </summary>
-        public string JsonString { get;  }
+        public string JsonString { get; }
 
         /// <summary>
         /// <inheritdoc/>

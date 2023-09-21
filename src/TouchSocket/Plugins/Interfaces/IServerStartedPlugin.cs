@@ -8,7 +8,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface IServerStartedPlugin<in TServer> : IPlugin where TServer : IService
     {
-
         /// <summary>
         /// 当服务器执行<see cref="IService.Start"/>后时。
         /// <para>
@@ -18,7 +17,6 @@ namespace TouchSocket.Sockets
         /// <param name="sender"></param>
         /// <param name="e"></param>
         Task OnServerStarted(TServer sender, ServiceStateEventArgs e);
-
     }
 
     /// <summary>
@@ -26,6 +24,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface IServerStartedPlugin : IServerStartedPlugin<IService>
     {
-
     }
 }

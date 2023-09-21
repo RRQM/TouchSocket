@@ -40,7 +40,6 @@ namespace TouchSocket.XmlRpc
             this.InvokeKey = invokenKey;
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

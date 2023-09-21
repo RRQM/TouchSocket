@@ -74,7 +74,6 @@ namespace TouchSocket.Core
         /// <param name="bytes"></param>
         public ByteBlock(byte[] bytes) : this(bytes, bytes.Length)
         {
-
         }
 
         /// <summary>
@@ -656,7 +655,10 @@ namespace TouchSocket.Core
         #region ByteBlock
 
         /// <summary>
-        /// 从当前流位置读取一个<see cref="ByteBlock"/>值
+        /// 从当前流位置读取一个<see cref="ByteBlock"/>值。
+        /// <para>
+        /// 注意，使用该方式读取到的内存块，会脱离释放周期，所以最好在使用完成后自行释放。
+        /// </para>
         /// </summary>
         public ByteBlock ReadByteBlock()
         {
@@ -724,9 +726,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -766,9 +770,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -808,9 +814,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -943,9 +951,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -985,9 +995,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -1027,9 +1039,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -1069,9 +1083,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -1111,9 +1127,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -1153,9 +1171,11 @@ namespace TouchSocket.Core
                 case true:
                     this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
                     break;
+
                 case false:
                     this.Write(TouchSocketBitConverter.LittleEndian.GetBytes(value));
                     break;
+
                 default:
                     this.Write(TouchSocketBitConverter.Default.GetBytes(value));
                     break;
@@ -1178,7 +1198,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 判断该值是否为Null，然后写入标识值
         /// </summary>
-        public ByteBlock WriteIsNull<T>(T t) where T : class
+        public void WriteIsNull<T>(T t) where T : class
         {
             if (t == null)
             {
@@ -1188,8 +1208,26 @@ namespace TouchSocket.Core
             {
                 this.WriteNotNull();
             }
-            return this;
         }
+
+        /// <summary>
+        /// 判断该值是否为Null，然后写入标识值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public void WriteIsNull<T>(T? t) where T : struct
+        {
+            if (t.HasValue)
+            {
+                this.WriteNotNull();
+            }
+            else
+            {
+                this.WriteNull();
+            }
+        }
+
 
         /// <summary>
         /// 写入一个标识非Null值
@@ -1331,21 +1369,25 @@ namespace TouchSocket.Core
                             data = SerializeConvert.FastBinarySerialize(value);
                         }
                         break;
+
                     case SerializationType.Json:
                         {
                             data = SerializeConvert.JsonSerializeToBytes(value);
                         }
                         break;
+
                     case SerializationType.Xml:
                         {
                             data = Encoding.UTF8.GetBytes(SerializeConvert.XmlSerializeToString(value));
                         }
                         break;
+
                     case SerializationType.SystemBinary:
                         {
                             data = SerializeConvert.BinarySerialize(value);
                         }
                         break;
+
                     default:
                         throw new Exception("未定义的序列化类型");
                 }
@@ -1384,20 +1426,16 @@ namespace TouchSocket.Core
         /// <typeparam name="TPackage"></typeparam>
         /// <param name="package"></param>
         /// <returns></returns>
-        public ByteBlock WritePackage<TPackage>(TPackage package) where TPackage : class, IPackage
+        public void WritePackage<TPackage>(TPackage package) where TPackage : class, IPackage
         {
             this.WriteIsNull(package);
-            if (package != null)
-            {
-                package.Package(this);
-            }
-
-            return this;
+            package?.Package(this);
         }
 
         #endregion Package
 
         #region Implicit
+
         /// <summary>
         /// 将<see cref="ByteBlock"/>转为<see cref="ArraySegment{T}"/>。
         /// <para>注意：实际上是产生了一个新的内存。</para>
@@ -1421,7 +1459,7 @@ namespace TouchSocket.Core
             }
             return byteBlock.ToArray();
         }
-        #endregion Implicit
 
+        #endregion Implicit
     }
 }

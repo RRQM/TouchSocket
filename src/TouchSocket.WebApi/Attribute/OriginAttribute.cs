@@ -19,7 +19,7 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// 跨域相关设置
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
     public sealed class OriginAttribute : RpcActionFilterAttribute
     {
         /// <summary>

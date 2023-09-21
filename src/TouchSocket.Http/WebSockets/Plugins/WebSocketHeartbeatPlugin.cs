@@ -23,7 +23,7 @@ namespace TouchSocket.Http.WebSockets
     public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
     {
         /// <inheritdoc/>
-        Task IWebSocketHandshakedPlugin<IHttpClientBase>.OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+        public Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
         {
             Task.Run(async () =>
             {
@@ -45,7 +45,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         failedCount++;
                     }
-                    if (failedCount > this.MaxFailCount) 
+                    if (failedCount > this.MaxFailCount)
                     {
                         client.CloseWithWS("自动心跳失败次数达到最大，已断开连接。");
                     }

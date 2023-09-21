@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -173,7 +172,6 @@ namespace TouchSocket.Core
                 Array.Reverse(bytes);
                 return BitConverter.ToUInt64(bytes, 0);
             }
-
         }
 
         #endregion ulong
@@ -281,7 +279,6 @@ namespace TouchSocket.Core
                 Array.Reverse(bytes);
                 return BitConverter.ToInt16(bytes, 0);
             }
-
         }
 
         #endregion short
@@ -364,7 +361,6 @@ namespace TouchSocket.Core
                 Array.Reverse(bytes);
                 return BitConverter.ToInt64(bytes, 0);
             }
-
         }
 
         #endregion long

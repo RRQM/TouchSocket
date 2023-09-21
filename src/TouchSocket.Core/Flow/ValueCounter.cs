@@ -21,7 +21,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 周期内的累计计数值。
         /// </summary>
-        public readonly long Count { get => this.m_count; }
+        public long Count { get => this.m_count; }
 
         /// <summary>
         /// 最后一次递增时间

@@ -186,7 +186,7 @@ namespace TouchSocket.Core
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static void FastBinarySerialize<T>(ByteBlock stream,in T obj)
+        public static void FastBinarySerialize<T>(ByteBlock stream, in T obj)
         {
             FastBinaryFormatter.Serialize(stream, obj);
         }
@@ -383,6 +383,7 @@ namespace TouchSocket.Core
         /// 其他平台将使用System.Text.Json。
         /// </para>
         /// </summary>
+        [Obsolete("此配置已被弃用，内部Json序列化均通过NewtonsoftJson完成", true)]
         public static bool NewtonsoftJsonFirst { get; set; } = true;
 
         /// <summary>
@@ -392,16 +393,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string ToJsonString(this object item)
         {
-            if (NewtonsoftJsonFirst)
-            {
-                return Newtonsoft.Json.JsonConvert.SerializeObject(item);
-            }
-
-#if NETCOREAPP3_1_OR_GREATER
-            return System.Text.Json.JsonSerializer.Serialize(item);
-#else
             return Newtonsoft.Json.JsonConvert.SerializeObject(item);
-#endif
         }
 
         /// <summary>
@@ -412,16 +404,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object FromJsonString(this string json, Type type)
         {
-            if (NewtonsoftJsonFirst)
-            {
-                return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
-            }
-
-#if NETCOREAPP3_1_OR_GREATER
-            return System.Text.Json.JsonSerializer.Deserialize(json, type);
-#else
             return Newtonsoft.Json.JsonConvert.DeserializeObject(json, type);
-#endif
         }
 
         /// <summary>

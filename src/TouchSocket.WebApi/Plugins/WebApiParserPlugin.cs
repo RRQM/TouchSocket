@@ -60,6 +60,17 @@ namespace TouchSocket.WebApi
         public StringConverter Converter { get; private set; }
 
         /// <summary>
+        /// 配置转换器。可以实现json序列化或者xml序列化。
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public WebApiParserPlugin ConfigureConverter(Action<StringConverter> action)
+        {
+            action.Invoke(this.Converter);
+            return this;
+        }
+
+        /// <summary>
         /// 获取Get函数路由映射图
         /// </summary>
         public ActionMap GetRouteMap { get; private set; }
@@ -111,9 +122,14 @@ namespace TouchSocket.WebApi
                             for (; i < methodInstance.Parameters.Length; i++)
                             {
                                 var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
-                                ps[i] = !value.IsNullOrEmpty()
-                                    ? this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i])
-                                    : methodInstance.ParameterTypes[i].GetDefault();
+                                if (!value.IsNullOrEmpty())
+                                {
+                                    ps[i] = this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                }
+                                else
+                                {
+                                    ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                }
                             }
                         }
                     }

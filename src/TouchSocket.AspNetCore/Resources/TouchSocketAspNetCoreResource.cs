@@ -87,7 +87,8 @@ namespace TouchSocket.Resources
         /// </summary>
         [Description("RemoteStreamActor为空，可能需要启用RemoteStream插件。")]
         RemoteStreamActorNull,
-        #endregion
+
+        #endregion Dmtp
 
         #region DmtpRpc
 

@@ -47,8 +47,9 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
-        ValueCounter m_receiveCounter;
-        ValueCounter m_sendCounter;
+
+        private ValueCounter m_receiveCounter;
+        private ValueCounter m_sendCounter;
         private long m_bufferRate = 1;
         private DelaySender m_delaySender;
         private Stream m_workStream;
@@ -112,7 +113,7 @@ namespace TouchSocket.Sockets
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public DateTime LastSendTime =>this.m_sendCounter.LastIncrement;
+        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
 
         /// <inheritdoc/>
         public Func<ByteBlock, bool> OnHandleRawBuffer { get; set; }
@@ -156,7 +157,8 @@ namespace TouchSocket.Sockets
         internal void BeginReceiveSsl(ServiceSslOption sslOption)
         {
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.MainSocket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.MainSocket, false), false);
-            sslStream.AuthenticateAsServer(sslOption.Certificate, sslOption.ClientCertificateRequired, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
+            sslStream.AuthenticateAsServer(sslOption.Certificate);
+
             this.m_workStream = sslStream;
             this.UseSsl = true;
             if (this.ReceiveType == ReceiveType.Iocp)
@@ -175,7 +177,6 @@ namespace TouchSocket.Sockets
             {
                 return;
             }
-
 
             if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e))
             {
@@ -243,7 +244,7 @@ namespace TouchSocket.Sockets
 
             if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
             {
-                this.m_delaySender = new DelaySender( senderOption, this.MainSocket.AbsoluteSend);
+                this.m_delaySender = new DelaySender(senderOption, this.MainSocket.AbsoluteSend);
             }
         }
 
@@ -377,6 +378,7 @@ namespace TouchSocket.Sockets
         {
             this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
+
         private void OnReceivePeriod(long value)
         {
             this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
@@ -385,7 +387,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
         {
-
             lock (this.SyncRoot)
             {
                 if (this.Online)

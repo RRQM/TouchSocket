@@ -61,7 +61,6 @@ namespace TouchSocket.Sockets
                 }
                 catch
                 {
-
                 }
             }
         }

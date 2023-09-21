@@ -4,6 +4,5 @@ namespace TouchSocket.WebApi.Swagger
 {
     internal class OpenApiPath : Dictionary<string, OpenApiPathValue>
     {
-
     }
 }

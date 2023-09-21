@@ -8,7 +8,6 @@ namespace TouchSocket.Http
     {
         public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
         {
-
         }
 
         public new string this[string key]
@@ -36,8 +35,6 @@ namespace TouchSocket.Http
                 this.AddOrUpdate(key, value);
             }
         }
-
-
 
         public new void Add(string key, string value)
         {

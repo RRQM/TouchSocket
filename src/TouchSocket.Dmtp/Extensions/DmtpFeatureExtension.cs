@@ -5,6 +5,5 @@
     /// </summary>
     public static class DmtpFeatureExtension
     {
-
     }
 }

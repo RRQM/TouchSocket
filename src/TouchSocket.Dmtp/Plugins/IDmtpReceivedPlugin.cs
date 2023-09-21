@@ -34,6 +34,5 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public interface IDmtpReceivedPlugin : IDmtpReceivedPlugin<IDmtpActorObject>
     {
-
     }
 }

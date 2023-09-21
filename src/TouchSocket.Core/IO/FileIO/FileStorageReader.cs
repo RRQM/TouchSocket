@@ -19,7 +19,6 @@ namespace TouchSocket.Core
 
     public partial class FileStorageReader : DisposableObject
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -10,7 +7,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道客户端接口
     /// </summary>
-    public interface INamedPipeClient: INamedPipeClientBase
+    public interface INamedPipeClient : INamedPipeClientBase
     {
         /// <summary>
         /// 成功连接到服务器

@@ -54,7 +54,6 @@ namespace TouchSocket.Sockets
         /// <param name="port"></param>
         public IPHost(int port) : this($"0.0.0.0:{port}")
         {
-
         }
 
         /// <summary>

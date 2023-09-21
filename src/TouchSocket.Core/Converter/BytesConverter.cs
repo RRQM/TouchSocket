@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
+using System.Text;
 
 namespace TouchSocket.Core
 {
@@ -40,6 +42,11 @@ namespace TouchSocket.Core
         public int Order { get; set; }
 
         /// <summary>
+        /// JsonSettings
+        /// </summary>
+        public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="source"></param>
@@ -50,7 +57,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                target = SerializeConvert.JsonDeserializeFromBytes(source, targetType);
+                target = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(source), targetType, this.JsonSettings);
                 return true;
             }
             catch
@@ -70,7 +77,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source = SerializeConvert.JsonSerializeToBytes(target);
+                source = JsonConvert.SerializeObject(target, JsonSettings).ToUTF8Bytes();
                 return true;
             }
             catch (Exception)

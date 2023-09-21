@@ -24,6 +24,7 @@ namespace TouchSocket.Core
         /// <para>该属性值越大，越靠前执行。值相等时，按添加先后顺序</para>
         /// <para>该属性效果，仅在<see cref="IPluginsManager.Add(IPlugin)"/>之前设置有效。</para>
         /// </summary>
+        [Obsolete("该属性已被弃用，插件顺序将直接由添加顺序决定。本设置将在正式版发布时直接删除", true)]
         int Order { get; set; }
 
         /// <summary>

@@ -3,8 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.171</Version>
-		<LangVersion>8.0</LangVersion>
+		<Version>2.0.0-beta.186</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
@@ -24,7 +23,13 @@
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
-	
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
 	<ItemGroup>
 		<None Include="LICENSE.txt">
 			<Pack>True</Pack>

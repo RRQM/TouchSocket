@@ -20,7 +20,6 @@ namespace TouchSocket.Http
     /// </summary>
     public interface IHttpPlugin<in TClient> : IPlugin where TClient : IHttpSocketClient
     {
-
         /// <summary>
         /// 在收到Http请求时。注意：此插件的执行在<see cref="IHttpGetPlugin"/>,<see cref="IHttpPostPlugin"/>,
         /// <see cref="IHttpDeletePlugin"/>,<see cref="IHttpPutPlugin"/>之前。
@@ -36,6 +35,5 @@ namespace TouchSocket.Http
     /// </summary>
     public interface IHttpPlugin : IHttpPlugin<IHttpSocketClient>
     {
-
     }
 }

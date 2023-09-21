@@ -22,6 +22,5 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public interface IWebSocketHandshakingPlugin : IWebSocketHandshakingPlugin<IHttpClientBase>
     {
-
     }
 }

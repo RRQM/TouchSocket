@@ -92,6 +92,7 @@ namespace TouchSocket.Sockets
                  return this.Clear();
              });
         }
+
         /// <summary>
         /// 清理池中的所有客户端。
         /// </summary>

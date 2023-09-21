@@ -18,6 +18,5 @@ namespace TouchSocket.Core
     /// </summary>
     public class TouchSocketConfig : DependencyObject
     {
-
     }
 }

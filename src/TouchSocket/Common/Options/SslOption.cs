@@ -37,15 +37,13 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 协议版本
         /// </summary>
-#pragma warning disable CS0618 // 类型或成员已过时
-        public SslProtocols SslProtocols { get; set; } = SslProtocols.Tls12 | SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Default |
-#pragma warning restore CS0618 // 类型或成员已过时
-                         SslProtocols.Tls | SslProtocols.Tls11;
+
+        public SslProtocols SslProtocols { get; set; }
 
         /// <summary>
         /// 该值指定身份验证期间是否检查证书吊销列表
         /// </summary>
-        public bool CheckCertificateRevocation { get; set; } = false;
+        public bool CheckCertificateRevocation { get; set; }
 
         /// <summary>
         /// SSL验证回调。

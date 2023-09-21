@@ -21,26 +21,43 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc函数实例
     /// </summary>
-    public class MethodInstance : Method
+    public sealed class MethodInstance : Method
     {
         private RpcAttribute[] m_rpcAttributes;
-
         private RpcAttribute[] m_serverRpcAttributes;
 
         /// <summary>
-        /// 构造函数
+        /// 实例化一个Rpc调用函数，并在方法声明的类上操作
         /// </summary>
         /// <param name="methodInfo"></param>
-        public MethodInstance(MethodInfo methodInfo) : base(methodInfo)
+        public MethodInstance(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType)
         {
-        }
 
+        }
         /// <summary>
-        /// 描述属性
+        /// 实例化一个Rpc调用函数，并在指定类上操作
         /// </summary>
-        public string GetDescription()
+        /// <param name="methodInfo"></param>
+        /// <param name="serverType"></param>
+        public MethodInstance(MethodInfo methodInfo, Type serverType) : base(methodInfo, false)
         {
-            return this.Info.GetCustomAttribute<DescriptionAttribute>()?.Description;
+            var name = $"{serverType.Name}{methodInfo.Name}Func";
+            var property = serverType.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Static);
+            if (property == null)
+            {
+                if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
+                {
+                    this.m_invoker = this.CreateILInvoker(methodInfo);
+                }
+                else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
+                {
+                    this.m_invoker = this.CreateExpressionInvoker(methodInfo);
+                }
+            }
+            else
+            {
+                this.m_invoker = (Func<object, object[], object>)property.GetValue(null);
+            }
         }
 
         /// <summary>
@@ -138,6 +155,14 @@ namespace TouchSocket.Rpc
 
             attribute = this.ServerRpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
             return attribute ?? default;
+        }
+
+        /// <summary>
+        /// 描述属性
+        /// </summary>
+        public string GetDescription()
+        {
+            return this.Info.GetCustomAttribute<DescriptionAttribute>()?.Description;
         }
     }
 }

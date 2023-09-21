@@ -20,19 +20,29 @@ namespace TouchSocket.Rpc
     public class RpcServerFactory : IRpcServerFactory
     {
         private readonly IContainer m_container;
+        private readonly ILog m_logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="container"></param>
-        public RpcServerFactory(IContainer container)
+        public RpcServerFactory(IContainer container,ILog logger)
         {
             this.m_container = container;
+            this.m_logger = logger;
         }
 
         IRpcServer IRpcServerFactory.Create(ICallContext callContext, object[] ps)
         {
-            return (IRpcServer)this.m_container.Resolve(callContext.MethodInstance.ServerType);
+            try
+            {
+                return (IRpcServer)this.m_container.Resolve(callContext.MethodInstance.ServerType);
+            }
+            catch (System.Exception ex)
+            {
+                this.m_logger.Exception(ex);
+                throw;
+            }
         }
     }
 }

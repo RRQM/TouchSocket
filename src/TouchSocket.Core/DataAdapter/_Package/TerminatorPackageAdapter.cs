@@ -12,32 +12,46 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using TouchSocket.Core;
+using System.Text;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 固定长度数据包处理适配器。
+    /// 终止字符数据包处理适配器，支持以任意字符、字节数组结尾的数据包。
     /// </summary>
-    public class FixedSizePackageAdapter : SingleStreamDataHandlingAdapter
+    public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
     {
-        /// <summary>
-        /// 包剩余长度
-        /// </summary>
-        private int m_surPlusLength = 0;
-
-        /// <summary>
-        /// 临时包
-        /// </summary>
         private ByteBlock m_tempByteBlock;
+
+        private readonly byte[] m_terminatorCode;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="fixedSize">数据包的长度</param>
-        public FixedSizePackageAdapter(int fixedSize)
+        /// <param name="terminator"></param>
+        public TerminatorPackageAdapter(string terminator) : this(0, Encoding.UTF8.GetBytes(terminator))
         {
-            this.FixedSize = fixedSize;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="terminator"></param>
+        /// <param name="encoding"></param>
+        public TerminatorPackageAdapter(string terminator, Encoding encoding)
+            : this(0, encoding.GetBytes(terminator))
+        {
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="minSize"></param>
+        /// <param name="terminatorCode"></param>
+        public TerminatorPackageAdapter(int minSize, byte[] terminatorCode)
+        {
+            this.MinSize = minSize;
+            this.m_terminatorCode = terminatorCode;
         }
 
         /// <summary>
@@ -51,9 +65,14 @@ namespace TouchSocket.Core
         public override bool CanSplicingSend => true;
 
         /// <summary>
-        /// 获取已设置的数据包的长度
+        /// 即使找到了终止因子，也不会结束，默认0
         /// </summary>
-        public int FixedSize { get; private set; }
+        public int MinSize { get; set; } = 0;
+
+        /// <summary>
+        /// 保留终止因子
+        /// </summary>
+        public bool ReserveTerminatorCode { get; set; }
 
         /// <summary>
         /// 预处理
@@ -67,30 +86,50 @@ namespace TouchSocket.Core
             }
             var buffer = byteBlock.Buffer;
             var r = byteBlock.Len;
-            if (this.m_tempByteBlock == null)
+            if (this.m_tempByteBlock != null)
             {
-                this.SplitPackage(buffer, 0, r);
+                this.m_tempByteBlock.Write(buffer, 0, r);
+                buffer = this.m_tempByteBlock.Buffer;
+                r = (int)this.m_tempByteBlock.Pos;
+            }
+
+            var indexes = buffer.IndexOfInclude(0, r, this.m_terminatorCode);
+            if (indexes.Count == 0)
+            {
+                if (r > this.MaxPackageSize)
+                {
+                    this.Reset();
+                    this.Logger?.Error("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
+                }
+                else if (this.m_tempByteBlock == null)
+                {
+                    this.m_tempByteBlock = new ByteBlock(r * 2);
+                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
+                }
             }
             else
             {
-                if (this.m_surPlusLength == r)
+                var startIndex = 0;
+                foreach (var lastIndex in indexes)
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_tempByteBlock);
-                    this.m_tempByteBlock = null;
-                    this.m_surPlusLength = 0;
+                    var length = this.ReserveTerminatorCode ? lastIndex - startIndex + 1 : lastIndex - startIndex - this.m_terminatorCode.Length + 1;
+                    var packageByteBlock = new ByteBlock(length);
+                    packageByteBlock.Write(buffer, startIndex, length);
+
+                    var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, (int)packageByteBlock.Pos);
+
+                    this.PreviewHandle(packageByteBlock);
+                    startIndex = lastIndex + 1;
                 }
-                else if (this.m_surPlusLength < r)
+                this.Reset();
+                if (startIndex < r)
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_tempByteBlock);
-                    this.m_tempByteBlock = null;
-                    this.SplitPackage(buffer, this.m_surPlusLength, r);
-                }
-                else
-                {
-                    this.m_tempByteBlock.Write(buffer, 0, r);
-                    this.m_surPlusLength -= r;
+                    this.m_tempByteBlock = new ByteBlock((r - startIndex) * 2);
+                    this.m_tempByteBlock.Write(buffer, startIndex, r - startIndex);
                     if (this.UpdateCacheTimeWhenRev)
                     {
                         this.LastCacheTime = DateTime.Now;
@@ -107,19 +146,15 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         protected override void PreviewSend(byte[] buffer, int offset, int length)
         {
-            var dataLen = length - offset;
-            if (dataLen > this.FixedSize)
+            if (length > this.MaxPackageSize)
             {
-                throw new OverlengthException("发送的数据包长度大于FixedSize");
+                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
-            var byteBlock = new ByteBlock(this.FixedSize);
-
+            var dataLen = length - offset + this.m_terminatorCode.Length;
+            var byteBlock = new ByteBlock(dataLen);
             byteBlock.Write(buffer, offset, length);
-            for (var i = byteBlock.Pos; i < this.FixedSize; i++)
-            {
-                byteBlock.Buffer[i] = 0;
-            }
-            byteBlock.SetLength(this.FixedSize);
+            byteBlock.Write(this.m_terminatorCode);
+
             try
             {
                 this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
@@ -141,20 +176,19 @@ namespace TouchSocket.Core
             {
                 length += item.Count;
             }
-
-            if (length > this.FixedSize)
+            if (length > this.MaxPackageSize)
             {
-                throw new OverlengthException("发送的数据包长度大于FixedSize");
+                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
             }
-            var byteBlock = new ByteBlock(this.FixedSize);
-
+            var dataLen = length + this.m_terminatorCode.Length;
+            var byteBlock = new ByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
                 byteBlock.Write(item.Array, item.Offset, item.Count);
             }
 
-            Array.Clear(byteBlock.Buffer, byteBlock.Pos, this.FixedSize);
-            byteBlock.SetLength(this.FixedSize);
+            byteBlock.Write(this.m_terminatorCode);
+
             try
             {
                 this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
@@ -181,7 +215,6 @@ namespace TouchSocket.Core
         {
             this.m_tempByteBlock.SafeDispose();
             this.m_tempByteBlock = null;
-            this.m_surPlusLength = 0;
             base.Reset();
         }
 
@@ -189,36 +222,12 @@ namespace TouchSocket.Core
         {
             try
             {
+                byteBlock.Position = 0;
                 this.GoReceived(byteBlock, null);
             }
             finally
             {
                 byteBlock.Dispose();
-            }
-        }
-
-        private void SplitPackage(byte[] dataBuffer, int index, int r)
-        {
-            while (index < r)
-            {
-                if (r - index >= this.FixedSize)
-                {
-                    var byteBlock = new ByteBlock(this.FixedSize);
-                    byteBlock.Write(dataBuffer, index, this.FixedSize);
-                    this.PreviewHandle(byteBlock);
-                    this.m_surPlusLength = 0;
-                }
-                else//半包
-                {
-                    this.m_tempByteBlock = new ByteBlock(this.FixedSize);
-                    this.m_surPlusLength = this.FixedSize - (r - index);
-                    this.m_tempByteBlock.Write(dataBuffer, index, r - index);
-                    if (this.UpdateCacheTimeWhenRev)
-                    {
-                        this.LastCacheTime = DateTime.Now;
-                    }
-                }
-                index += this.FixedSize;
             }
         }
     }

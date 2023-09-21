@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Sockets;
+﻿using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {
@@ -15,6 +10,6 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 服务器唯一Id。
         /// </summary>
-        string Id { get;}
+        string Id { get; }
     }
 }

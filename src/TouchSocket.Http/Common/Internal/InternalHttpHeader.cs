@@ -8,7 +8,6 @@ namespace TouchSocket.Http
     {
         public InternalHttpHeader() : base(StringComparer.OrdinalIgnoreCase)
         {
-
         }
 
         public new string this[string key]

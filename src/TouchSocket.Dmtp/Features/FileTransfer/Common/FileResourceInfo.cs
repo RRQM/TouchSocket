@@ -86,7 +86,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         public int GetContinuationIndex()
         {
-            if (this.m_fileSections==null)
+            if (this.m_fileSections == null)
             {
                 return 0;
             }
@@ -94,7 +94,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             var i = 0;
             foreach (var item in this.m_fileSections)
             {
-                if (item.Status!= FileSectionStatus.Finished)
+                if (item.Status != FileSectionStatus.Finished)
                 {
                     return i;
                 }

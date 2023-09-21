@@ -29,7 +29,7 @@ namespace TouchSocket.Dmtp
         private bool m_allowRoute;
         private Func<string, IDmtpActor> m_findDmtpActor;
         private DmtpActor m_smtpActor;
-
+        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         #endregion 字段
 
         /// <inheritdoc cref="IDmtpActor.Id"/>
@@ -41,7 +41,14 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public IDmtpActor DmtpActor { get => this.m_smtpActor; }
 
-        /// <inheritdoc/>
+        #region 连接
+
+        /// <summary>
+        /// 建立Tcp连接，并且执行握手。
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public override ITcpClient Connect(int timeout = 5000)
         {
             lock (this.SyncRoot)
@@ -50,7 +57,7 @@ namespace TouchSocket.Dmtp
                 {
                     return this;
                 }
-                if (!this.CanSend)
+                if (!this.Online)
                 {
                     base.Connect(timeout);
                 }
@@ -76,6 +83,131 @@ namespace TouchSocket.Dmtp
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public virtual IHttpDmtpClient Connect(CancellationToken token, int timeout = 5000)
+        {
+            lock (this.SyncRoot)
+            {
+                if (this.IsHandshaked)
+                {
+                    return this;
+                }
+                if (!this.Online)
+                {
+                    base.Connect(timeout);
+                }
+
+                var request = new HttpRequest()
+                    .SetHost(this.RemoteIPHost.Host);
+                request.Headers.Add(HttpHeaders.Connection, "upgrade");
+                request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());
+
+                request.AsMethod(DmtpUtility.Dmtp);
+                var response = this.RequestContent(request, timeout: timeout, token: token);
+                if (response.StatusCode == 101)
+                {
+                    this.SwitchProtocolToDmtp();
+                    this.m_smtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
+                        this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
+                        timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
+                    return this;
+                }
+                else
+                {
+                    throw new Exception(response.StatusMessage);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 建立Tcp连接，并且执行握手。
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public override async Task<ITcpClient> ConnectAsync(int timeout = 5000)
+        {
+            try
+            {
+                await this.m_semaphore.WaitAsync();
+                if (this.IsHandshaked)
+                {
+                    return this;
+                }
+                if (!this.Online)
+                {
+                    await base.ConnectAsync(timeout);
+                }
+
+                var request = new HttpRequest()
+                    .SetHost(this.RemoteIPHost.Host);
+                request.Headers.Add(HttpHeaders.Connection, "upgrade");
+                request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());
+
+                request.AsMethod(DmtpUtility.Dmtp);
+                var response = this.RequestContent(request);
+                if (response.StatusCode == 101)
+                {
+                    this.SwitchProtocolToDmtp();
+                    await this.m_smtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
+                         this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
+                         timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
+                    return this;
+                }
+                else
+                {
+                    throw new Exception(response.StatusMessage);
+                }
+            }
+            finally
+            {
+                this.m_semaphore.Release();
+            }
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IHttpDmtpClient> ConnectAsync(CancellationToken token, int timeout = 5000)
+        {
+            try
+            {
+                await this.m_semaphore.WaitAsync();
+                if (this.IsHandshaked)
+                {
+                    return this;
+                }
+                if (!this.Online)
+                {
+                    await base.ConnectAsync(timeout);
+                }
+
+                var request = new HttpRequest()
+                    .SetHost(this.RemoteIPHost.Host);
+                request.Headers.Add(HttpHeaders.Connection, "upgrade");
+                request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());
+
+                request.AsMethod(DmtpUtility.Dmtp);
+                var response = this.RequestContent(request, timeout: timeout, token: token);
+                if (response.StatusCode == 101)
+                {
+                    this.SwitchProtocolToDmtp();
+                    await this.m_smtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
+                         this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
+                         timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
+                    return this;
+                }
+                else
+                {
+                    throw new Exception(response.StatusMessage);
+                }
+            }
+            finally
+            {
+                this.m_semaphore.Release();
+            }
+        }
+
+        #endregion 连接
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
@@ -120,6 +252,7 @@ namespace TouchSocket.Dmtp
         }
 
         #region ResetId
+
         ///<inheritdoc cref="IDmtpActor.ResetId(string)"/>
         public void ResetId(string id)
         {
@@ -131,7 +264,8 @@ namespace TouchSocket.Dmtp
         {
             return this.m_smtpActor.ResetIdAsync(newId);
         }
-        #endregion
+
+        #endregion ResetId
 
         private void SwitchProtocolToDmtp()
         {

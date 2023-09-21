@@ -21,6 +21,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface ILoadingConfigPlugin : ILoadingConfigPlugin<object>
     {
-
     }
 }

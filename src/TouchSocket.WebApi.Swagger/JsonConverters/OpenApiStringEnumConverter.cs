@@ -6,7 +6,6 @@ namespace TouchSocket.WebApi.Swagger
     {
         public OpenApiStringEnumConverter() : base(true)
         {
-
         }
     }
 }

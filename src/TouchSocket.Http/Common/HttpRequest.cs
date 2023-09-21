@@ -95,7 +95,6 @@ namespace TouchSocket.Http
             }
         }
 
-
         /// <summary>
         /// HTTP请求方式。
         /// </summary>

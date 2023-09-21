@@ -22,7 +22,8 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             return pluginsManager.Add<DmtpFileTransferFeature>();
         }
-        #endregion
+
+        #endregion 插件扩展
 
         #region DependencyProperty
 
@@ -142,7 +143,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                         {
                             using (var result = actor.PullFileSection(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token))
                             {
-
                                 if (result.IsSuccess())
                                 {
                                     for (var j = 0; j < fileOperator.TryCount; j++)

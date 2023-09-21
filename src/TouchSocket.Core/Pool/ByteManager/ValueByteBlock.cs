@@ -1024,6 +1024,24 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 判断该值是否为Null，然后写入标识值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public void WriteIsNull<T>(T? t) where T : struct
+        {
+            if (t.HasValue)
+            {
+                this.WriteNotNull();
+            }
+            else
+            {
+                this.WriteNull();
+            }
+        }
+
+        /// <summary>
         /// 写入一个标识非Null值
         /// </summary>
         public void WriteNotNull()

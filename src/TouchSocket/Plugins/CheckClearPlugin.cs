@@ -99,7 +99,6 @@ namespace TouchSocket.Sockets
             return e.InvokeNext();
         }
 
-
         /// <summary>
         /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
         /// 则只检验发送方向是否有数据流动。没有的话则会断开连接。

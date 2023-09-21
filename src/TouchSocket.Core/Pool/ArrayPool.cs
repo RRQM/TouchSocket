@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading;
 
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 using System.Numerics;
 #endif
 
@@ -186,7 +185,7 @@ namespace TouchSocket.Core
 
         internal static int SelectBucketIndex(int bufferSize)
         {
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
             return BitOperations.Log2((uint)(bufferSize - 1) | 15u) - 3;
 #else
             return (int)(Math.Log((uint)(bufferSize - 1) | 15u, 2) - 3);
@@ -247,7 +246,6 @@ namespace TouchSocket.Core
                         }
 
                         return count;
-
                     }
                     finally
                     {
@@ -277,7 +275,6 @@ namespace TouchSocket.Core
                         }
 
                         return size;
-
                     }
                     finally
                     {
@@ -285,7 +282,6 @@ namespace TouchSocket.Core
                     }
                 }
             }
-
 
             internal T[] Rent()
             {

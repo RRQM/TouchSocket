@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Http;
+﻿using TouchSocket.Http;
 using TouchSocket.WebApi;
 
 namespace TouchSocket.JsonRpc
@@ -11,7 +6,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// HttpJsonRpcCallContext
     /// </summary>
-    class HttpJsonRpcCallContext : JsonRpcCallContextBase, IHttpCallContext
+    internal class HttpJsonRpcCallContext : JsonRpcCallContextBase, IHttpCallContext
     {
         /// <summary>
         /// HttpJsonRpcCallContext

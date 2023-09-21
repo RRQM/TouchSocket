@@ -10,7 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace TouchSocket.Core
 {
@@ -38,17 +40,17 @@ namespace TouchSocket.Core
         /// <summary>
         /// 首键
         /// </summary>
-        public readonly TKey1 Key1 { get; }
+        public TKey1 Key1 { get; }
 
         /// <summary>
         /// 次键
         /// </summary>
-        public readonly TKey2 Key2 { get; }
+        public TKey2 Key2 { get; }
 
         /// <summary>
         /// 值
         /// </summary>
-        public readonly TValue Value { get; }
+        public TValue Value { get; }
     }
 
     /// <summary>
@@ -69,6 +71,16 @@ namespace TouchSocket.Core
         /// 元素数量。
         /// </summary>
         public int Count { get => this.m_key1ToValue.Count; }
+
+        /// <summary>
+        /// Key1集合
+        /// </summary>
+        public ICollection<TKey1> Key1s => this.m_key1ToValue.Keys;
+
+        /// <summary>
+        /// Key2集合
+        /// </summary>
+        public ICollection<TKey2> Key2s => this.m_key2ToValue.Keys;
 
         /// <summary>
         /// 清空所有元素。

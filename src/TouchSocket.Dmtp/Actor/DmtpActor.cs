@@ -374,7 +374,8 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            var waitVerify = SerializeConvert.FromJsonString<WaitVerify>(message.GetBodyString());
+                            var waitVerify = this.ResolveJsonObject<WaitVerify>(message.GetBodyString());
+
                             var args = new DmtpVerifyEventArgs()
                             {
                                 Token = waitVerify.Token,
@@ -397,7 +398,7 @@ namespace TouchSocket.Dmtp
                                 this.IsHandshaked = true;
                                 args.Message = "Success";
 
-                                Task.Factory.StartNew(this.PrivateHandshaked,args);
+                                Task.Factory.StartNew(this.PrivateHandshaked, args);
                             }
                             else//不允许连接
                             {
@@ -409,6 +410,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
+                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                             this.Close(false, ex.Message);
                         }
                         return true;
@@ -417,7 +419,7 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            var waitVerify = SerializeConvert.FromJsonString<WaitVerify>(message.GetBodyString());
+                            var waitVerify = this.ResolveJsonObject<WaitVerify>(message.GetBodyString());
                             this.WaitHandlePool.SetRun(waitVerify);
                             SpinWait.SpinUntil(() =>
                             {
@@ -435,7 +437,7 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            var waitSetId = SerializeConvert.FromJsonString<WaitSetId>(message.GetBodyString());
+                            var waitSetId = this.ResolveJsonObject<WaitSetId>(message.GetBodyString());
                             try
                             {
                                 this.OnResetId?.Invoke(this, waitSetId);
@@ -459,7 +461,7 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            this.WaitHandlePool.SetRun(SerializeConvert.FromJsonString<WaitSetId>(message.GetBodyString()));
+                            this.WaitHandlePool.SetRun(this.ResolveJsonObject<WaitSetId>(message.GetBodyString()));
                         }
                         catch (Exception ex)
                         {
@@ -471,7 +473,7 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            var waitPing = SerializeConvert.FromJsonString<WaitPingPackage>(message.GetBodyString());
+                            var waitPing = this.ResolveJsonObject<WaitPing>(message.GetBodyString());
 
                             if (this.AllowRoute && waitPing.Route)
                             {
@@ -509,7 +511,7 @@ namespace TouchSocket.Dmtp
                     {
                         try
                         {
-                            var waitPing = SerializeConvert.FromJsonString<WaitPingPackage>(message.GetBodyString());
+                            var waitPing = this.ResolveJsonObject<WaitPing>(message.GetBodyString());
 
                             if (this.AllowRoute && waitPing.Route)
                             {
@@ -770,7 +772,7 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public virtual void SendFastObject<T>(ushort protocol, T obj)
+        public virtual void SendFastObject<T>(ushort protocol, in T obj)
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -779,18 +781,29 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <inheritdoc/>
-        public virtual void SendJsonObject<T>(ushort protocol, T obj)
+        private void SendJsonObject<T>(ushort protocol, in T obj)
         {
-            using (var byteBlock = new ByteBlock())
-            {
-                byteBlock.Write(SerializeConvert.JsonSerializeToBytes(obj));
-                this.Send(protocol, byteBlock);
-            }
+#if NET6_0_OR_GREATER
+            var bytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(obj, typeof(T), TouchSokcetDmtpSourceGenerationContext.Default);
+#else
+            var bytes = SerializeConvert.JsonSerializeToBytes(obj);
+#endif
+
+            this.Send(protocol, bytes, 0, bytes.Length);
+        }
+
+        private T ResolveJsonObject<T>(string json)
+        {
+#if NET6_0_OR_GREATER
+
+            return (T)System.Text.Json.JsonSerializer.Deserialize(json, typeof(T), TouchSokcetDmtpSourceGenerationContext.Default);
+#else
+            return SerializeConvert.FromJsonString<T>(json);
+#endif
         }
 
         /// <inheritdoc/>
-        public virtual void SendPackage(ushort protocol, IPackage package)
+        public virtual void SendPackage(ushort protocol, in IPackage package)
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -869,7 +882,7 @@ namespace TouchSocket.Dmtp
 
         private bool PrivatePing(string targetId, int timeout)
         {
-            var waitPing = new WaitPingPackage
+            var waitPing = new WaitPing
             {
                 TargetId = targetId,
                 SourceId = Id,
@@ -910,7 +923,7 @@ namespace TouchSocket.Dmtp
 
         private async Task<bool> PrivatePingAsync(string targetId, int timeout)
         {
-            var waitPing = new WaitPingPackage
+            var waitPing = new WaitPing
             {
                 TargetId = targetId,
                 SourceId = Id,

@@ -32,7 +32,7 @@ namespace TouchSocket.Sockets
         public TcpService()
         {
             this.m_socketClients = new SocketClientCollection();
-            this.m_getDefaultNewId = GetDefaultNewId;
+            this.m_getDefaultNewId = this.GetDefaultNewId;
         }
 
         #region 变量
@@ -218,7 +218,6 @@ namespace TouchSocket.Sockets
             return Interlocked.Increment(ref this.m_nextId).ToString();
         }
 
-
         /// <summary>
         /// 获取下一个新Id
         /// </summary>
@@ -357,7 +356,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override IService Setup(TouchSocketConfig config)
         {
-
             if (config == null)
             {
                 throw new ArgumentNullException(nameof(config));
