@@ -16,7 +16,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 结果类型
     /// </summary>
-    public enum ResultCode:byte
+    public enum ResultCode : byte
     {
         /// <summary>
         /// 默认

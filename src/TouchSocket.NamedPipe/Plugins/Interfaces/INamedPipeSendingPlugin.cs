@@ -35,6 +35,5 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public interface INamedPipeSendingPlugin : INamedPipeSendingPlugin<INamedPipeClientBase>
     {
-
     }
 }

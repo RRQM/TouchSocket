@@ -23,6 +23,7 @@ namespace TouchSocket.Core
         private FieldInfo[] m_fieldInfos;
         private PropertyInfo[] m_properties;
         public IFastBinaryConverter Converter { get; set; }
+
         public SerializObject(Type type)
         {
             this.Type = type;

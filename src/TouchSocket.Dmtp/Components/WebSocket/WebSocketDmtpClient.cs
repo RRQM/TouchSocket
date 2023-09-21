@@ -44,14 +44,13 @@ namespace TouchSocket.Dmtp
         #region 字段
 
         private bool m_allowRoute;
-        private CancellationTokenSource m_cancellationTokenSource;
         private ClientWebSocket m_client;
         private Func<string, IDmtpActor> m_findDmtpActor;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
-        private DmtpActor m_smtpActor;
+        private SealedDmtpActor m_dmtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
-
+        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         #endregion 字段
 
         /// <inheritdoc/>
@@ -71,13 +70,13 @@ namespace TouchSocket.Dmtp
         public DisconnectEventHandler<WebSocketDmtpClient> Disconnected { get; set; }
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => this.m_smtpActor; }
+        public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
 
         /// <inheritdoc/>
-        public string Id => this.DmtpActor.Id;
+        public string Id => this.m_dmtpActor.Id;
 
         /// <inheritdoc/>
-        public bool IsHandshaked { get; private set; }
+        public bool IsHandshaked => this.m_dmtpActor.IsHandshaked;
 
         /// <inheritdoc/>
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
@@ -118,41 +117,95 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public async Task ConnectAsync(int timeout = 5000)
         {
-            if (this.IsHandshaked)
+            try
             {
-                return;
+                await this.m_semaphore.WaitAsync();
+                if (this.IsHandshaked)
+                {
+                    return;
+                }
+
+                if (this.m_client == null || this.m_client.State != WebSocketState.Open)
+                {
+                    this.m_client.SafeDispose();
+                    this.m_client = new ClientWebSocket();
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, default);
+
+                    this.m_dmtpActor = new SealedDmtpActor(false)
+                    {
+                        OutputSend = this.OnDmtpActorSend,
+                        OnRouting = this.OnDmtpActorRouting,
+                        OnHandshaking = this.OnDmtpActorHandshaking,
+                        OnHandshaked = this.OnDmtpActorHandshaked,
+                        OnClose = this.OnDmtpActorClose,
+                        Logger = this.Logger,
+                        Client = this,
+                        OnFindDmtpActor = this.m_findDmtpActor,
+                        OnCreateChannel = this.OnDmtpActorCreateChannel
+                    };
+
+                    this.m_smtpAdapter = new TcpDmtpAdapter()
+                    {
+                        ReceivedCallBack = this.PrivateHandleReceivedData
+                    };
+                    _ = this.BeginReceive();
+                }
+
+                this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
+                    this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
+                    timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
             }
-            this.m_cancellationTokenSource = new CancellationTokenSource();
-            if (this.m_client == null || this.m_client.State != WebSocketState.Open)
+            finally
             {
-                this.m_client.SafeDispose();
-                this.m_client = new ClientWebSocket();
-                await this.m_client.ConnectAsync(this.RemoteIPHost, default);
-
-                this.m_smtpActor = new SealedDmtpActor(false)
-                {
-                    OutputSend = this.OnDmtpActorSend,
-                    OnRouting = this.OnDmtpActorRouting,
-                    OnHandshaking = this.OnDmtpActorHandshaking,
-                    OnHandshaked = this.OnDmtpActorHandshaked,
-                    OnClose = this.OnDmtpActorClose,
-                    Logger = this.Logger,
-                    Client = this,
-                    OnFindDmtpActor = this.m_findDmtpActor,
-                    OnCreateChannel = this.OnDmtpActorCreateChannel
-                };
-
-                this.m_smtpAdapter = new TcpDmtpAdapter()
-                {
-                    ReceivedCallBack = this.PrivateHandleReceivedData
-                };
-                _ = this.BeginReceive();
+                this.m_semaphore.Release();
             }
+        }
 
-            this.m_smtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
-                this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
-                timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
-            this.IsHandshaked = true;
+        /// <inheritdoc/>
+        public async Task ConnectAsync(CancellationToken token, int timeout = 5000)
+        {
+            try
+            {
+                await this.m_semaphore.WaitAsync();
+                if (this.IsHandshaked)
+                {
+                    return;
+                }
+
+                if (this.m_client == null || this.m_client.State != WebSocketState.Open)
+                {
+                    this.m_client.SafeDispose();
+                    this.m_client = new ClientWebSocket();
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, token);
+
+                    this.m_dmtpActor = new SealedDmtpActor(false)
+                    {
+                        OutputSend = this.OnDmtpActorSend,
+                        OnRouting = this.OnDmtpActorRouting,
+                        OnHandshaking = this.OnDmtpActorHandshaking,
+                        OnHandshaked = this.OnDmtpActorHandshaked,
+                        OnClose = this.OnDmtpActorClose,
+                        Logger = this.Logger,
+                        Client = this,
+                        OnFindDmtpActor = this.m_findDmtpActor,
+                        OnCreateChannel = this.OnDmtpActorCreateChannel
+                    };
+
+                    this.m_smtpAdapter = new TcpDmtpAdapter()
+                    {
+                        ReceivedCallBack = this.PrivateHandleReceivedData
+                    };
+                    _ = this.BeginReceive();
+                }
+
+                this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
+                    this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
+                    timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
+            }
+            finally
+            {
+                this.m_semaphore.Release();
+            }
         }
 
         /// <inheritdoc/>
@@ -286,8 +339,6 @@ namespace TouchSocket.Dmtp
             {
                 if (this.IsHandshaked)
                 {
-                    this.IsHandshaked = false;
-                    this.m_cancellationTokenSource?.Cancel();
                     this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None);
                     this.m_client.SafeDispose();
                     this.DmtpActor.SafeDispose();
@@ -357,7 +408,7 @@ namespace TouchSocket.Dmtp
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var message = (DmtpMessage)requestInfo;
-            if (!this.m_smtpActor.InputReceivedData(message))
+            if (!this.m_dmtpActor.InputReceivedData(message))
             {
                 if (this.PluginsManager.Enable)
                 {

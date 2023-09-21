@@ -79,6 +79,7 @@ namespace TouchSocket.Resources
         /// </summary>
         [Description("没有找到类型{0}的公共构造函数。")]
         NotFindPublicConstructor,
+
         /// <summary>
         /// 路径‘{0}’对应的流文件，仍然被‘{1}’对象应用。
         /// </summary>

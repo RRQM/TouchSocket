@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -24,7 +23,7 @@ namespace TouchSocket.Rpc
         /// <inheritdoc/>
         public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
         {
-            return Task.FromResult(invokeResult) ;
+            return Task.FromResult(invokeResult);
         }
 
         /// <inheritdoc/>

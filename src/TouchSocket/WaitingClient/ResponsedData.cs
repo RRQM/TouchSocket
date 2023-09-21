@@ -20,7 +20,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public struct ResponsedData
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

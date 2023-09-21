@@ -51,7 +51,7 @@ namespace TouchSocket.Dmtp.Rpc
 
         public bool Created(IPluginsManager pluginsManager)
         {
-            this.pluginsManager= pluginsManager;
+            this.pluginsManager = pluginsManager;
             var args = new DmtpVerifyEventArgs()
             {
                 Id = this.Id,

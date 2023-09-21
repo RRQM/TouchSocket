@@ -51,7 +51,7 @@ namespace TouchSocket.Http
         /// </summary>
         protected virtual void OnReceivedHttpRequest(HttpRequest request)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest))>0)
+            if (this.PluginsManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest)) > 0)
             {
                 var e = new HttpContextEventArgs(new HttpContext(request));
 

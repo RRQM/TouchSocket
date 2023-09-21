@@ -21,6 +21,5 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public interface IWebSocketClosingPlugin : IWebSocketClosingPlugin<IHttpClientBase>
     {
-
     }
 }

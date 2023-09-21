@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
-using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -21,19 +19,20 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 延迟发送器
     /// </summary>
-    public sealed class DelaySender:DisposableObject
+    public sealed class DelaySender : DisposableObject
     {
         private readonly IntelligentDataQueue<QueueDataBytes> m_queueDatas;
         private readonly Action<byte[], int, int> m_action;
-        AsyncAutoResetEvent m_resetEvent = new AsyncAutoResetEvent(false);
+        private AsyncAutoResetEvent m_resetEvent = new AsyncAutoResetEvent(false);
+
         /// <summary>
         /// 延迟发送器
         /// </summary>
         /// <param name="delaySenderOption"></param>
         /// <param name="action"></param>
-        public DelaySender(DelaySenderOption delaySenderOption, Action<byte[],int,int> action)
+        public DelaySender(DelaySenderOption delaySenderOption, Action<byte[], int, int> action)
         {
-            this.DelayLength=delaySenderOption.DelayLength;
+            this.DelayLength = delaySenderOption.DelayLength;
             this.m_queueDatas = new IntelligentDataQueue<QueueDataBytes>(delaySenderOption.QueueLength);
             Task.Run(this.BeginSend);
             this.m_action = action ?? throw new ArgumentNullException(nameof(action));
@@ -42,9 +41,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 延迟包最大尺寸。
         /// </summary>
-        public int DelayLength { get;private set; }
+        public int DelayLength { get; private set; }
 
-        
         /// <summary>
         /// 发送
         /// </summary>
@@ -72,7 +70,6 @@ namespace TouchSocket.Sockets
                 }
                 catch
                 {
-
                 }
                 finally
                 {
@@ -81,7 +78,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-       
         private bool TryGet(byte[] buffer, out QueueDataBytes asyncByteDe)
         {
             var len = 0;

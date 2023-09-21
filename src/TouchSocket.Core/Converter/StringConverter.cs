@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
 
 namespace TouchSocket.Core
@@ -91,6 +92,11 @@ namespace TouchSocket.Core
         public int Order { get; set; }
 
         /// <summary>
+        /// JsonSettings
+        /// </summary>
+        public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
+
+        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="source"></param>
@@ -101,7 +107,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                target = SerializeConvert.FromJsonString(source, targetType);
+                target = JsonConvert.DeserializeObject(source, targetType, this.JsonSettings);
                 return true;
             }
             catch
@@ -121,7 +127,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source = SerializeConvert.ToJsonString(target);
+                source = JsonConvert.SerializeObject(target, JsonSettings);
                 return true;
             }
             catch (Exception)

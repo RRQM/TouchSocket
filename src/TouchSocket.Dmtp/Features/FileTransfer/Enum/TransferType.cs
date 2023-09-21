@@ -41,6 +41,4 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         SmallPull
     }
-
-
 }

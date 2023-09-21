@@ -17,6 +17,61 @@ namespace TouchSocket.Core
     /// <summary>
     /// 指定依赖类型。
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method| AttributeTargets.Parameter)]
+    public class DependencyInjectAttribute : Attribute
+    {
+        /// <summary>
+        /// 默认注入配置
+        /// </summary>
+        public DependencyInjectAttribute()
+        {
+
+        }
+
+        /// <summary>
+        /// 使用指定Key参数注入。
+        /// </summary>
+        /// <param name="key"></param>
+        public DependencyInjectAttribute(string key)
+        {
+            this.Key = key;
+        }
+
+        /// <summary>
+        /// 类型，Key指定性注入。
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        public DependencyInjectAttribute(Type type, string key)
+        {
+            this.Key = key;
+            this.Type = type;
+        }
+
+        /// <summary>
+        /// 类型，指定性注入。
+        /// </summary>
+        /// <param name="type"></param>
+        public DependencyInjectAttribute(Type type)
+        {
+            this.Key = string.Empty;
+            this.Type = type;
+        }
+
+        /// <summary>
+        /// 指定键。
+        /// </summary>
+        public string Key { get; }
+
+        /// <summary>
+        /// 注入类型
+        /// </summary>
+        public Type Type { get; }
+    }
+
+    /// <summary>
+    /// 指定依赖类型。
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class DependencyTypeAttribute : Attribute
     {
@@ -33,98 +88,5 @@ namespace TouchSocket.Core
         /// 支持类型。
         /// </summary>
         public DependencyType Type { get; }
-    }
-
-    /// <summary>
-    /// 依赖注入类型。
-    /// </summary>
-    public enum DependencyType
-    {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        Constructor = 1,
-
-        /// <summary>
-        /// 属性
-        /// </summary>
-        Property = 2,
-
-        /// <summary>
-        /// 方法
-        /// </summary>
-        Method = 4
-    }
-
-    /// <summary>
-    /// 指定依赖类型，构造函数，可用于构造函数，属性，方法。
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method)]
-    public class DependencyInjectAttribute : Attribute
-    {
-        /// <summary>
-        /// 初始化一个依赖注入对象。并且指定构造参数。
-        /// <para>当创建时也指定参数时，会覆盖该设定。</para>
-        /// </summary>
-        /// <param name="ps"></param>
-        public DependencyInjectAttribute(params object[] ps)
-        {
-            this.Ps = ps;
-        }
-
-        /// <summary>
-        /// 构造参数
-        /// </summary>
-        public object[] Ps { get; }
-    }
-
-    /// <summary>
-    /// 参数，属性指定性注入。
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
-    public class DependencyParamterInjectAttribute : DependencyInjectAttribute
-    {
-        /// <summary>
-        /// 参数，属性指定性注入。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="ps"></param>
-        public DependencyParamterInjectAttribute(string key, params object[] ps) : base(ps)
-        {
-            this.Key = key;
-        }
-
-        /// <summary>
-        /// 类型，参数，属性指定性注入。
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="key"></param>
-        /// <param name="ps"></param>
-        public DependencyParamterInjectAttribute(Type type, string key, params object[] ps) : base(ps)
-        {
-            this.Key = key;
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 类型，参数，属性指定性注入。
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="ps"></param>
-        public DependencyParamterInjectAttribute(Type type, params object[] ps) : base(ps)
-        {
-            this.Key = string.Empty;
-            this.Type = type;
-        }
-
-        /// <summary>
-        /// 注入类型
-        /// </summary>
-        public Type Type { get; }
-
-        /// <summary>
-        /// 指定键。
-        /// </summary>
-        public string Key { get; }
     }
 }

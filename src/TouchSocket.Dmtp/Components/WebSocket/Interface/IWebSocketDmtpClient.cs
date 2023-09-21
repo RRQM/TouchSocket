@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Dmtp
@@ -25,5 +26,13 @@ namespace TouchSocket.Dmtp
         /// <param name="timeout">验证超时时间</param>
         /// <returns></returns>
         Task ConnectAsync(int timeout = 5000);
+
+        /// <summary>
+        /// 异步连接
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        Task ConnectAsync(CancellationToken token, int timeout = 5000);
     }
 }

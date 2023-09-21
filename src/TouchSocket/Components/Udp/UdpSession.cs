@@ -336,7 +336,6 @@ namespace TouchSocket.Sockets
                 this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.ServerState, ex) { Message = ex.Message });
                 throw;
             }
-
         }
 
         /// <summary>
@@ -486,7 +485,7 @@ namespace TouchSocket.Sockets
             }
 #endif
 
-            #endregion
+            #endregion Windows下UDP连接被重置错误10054
 
             this.PreviewBind(socket);
 

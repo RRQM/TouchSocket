@@ -34,7 +34,6 @@ namespace TouchSocket.Core
             this.m_name = propertyName;
         }
 
-
         /// <summary>
         /// 属性名称
         /// </summary>

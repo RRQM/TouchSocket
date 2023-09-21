@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.NamedPipe
 {
-    internal class NamedPipeSocketClientCollection: ConcurrentDictionary<string, INamedPipeSocketClient>, INamedPipeSocketClientCollection
+    internal class NamedPipeSocketClientCollection : ConcurrentDictionary<string, INamedPipeSocketClient>, INamedPipeSocketClientCollection
     {
         public IEnumerable<INamedPipeSocketClient> GetClients()
         {

@@ -21,5 +21,4 @@ namespace TouchSocket.Dmtp
     public interface IHttpDmtpSocketClient : IHttpDmtpClientBase, ISocketClient
     {
     }
-
 }

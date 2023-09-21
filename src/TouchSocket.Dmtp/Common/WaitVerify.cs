@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -17,7 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 验证消息
     /// </summary>
-    public class WaitVerify : WaitResult
+    public sealed class WaitVerify : WaitResult
     {
         /// <summary>
         /// 令箭

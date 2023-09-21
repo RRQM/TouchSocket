@@ -18,6 +18,5 @@ namespace TouchSocket.Resources
     /// </summary>
     public enum TouchSocketWebApiResource : byte
     {
-
     }
 }

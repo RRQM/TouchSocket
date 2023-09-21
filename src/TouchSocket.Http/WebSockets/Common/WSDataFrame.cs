@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System.Text;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {

@@ -15,7 +15,6 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="e"></param>
         /// <returns></returns>
         Task OnWebSocketReceived(TClient client, WSDataFrameEventArgs e);
-
     }
 
     /// <summary>
@@ -23,6 +22,5 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public interface IWebSocketReceivedPlugin : IWebSocketReceivedPlugin<IHttpClientBase>
     {
-
     }
 }

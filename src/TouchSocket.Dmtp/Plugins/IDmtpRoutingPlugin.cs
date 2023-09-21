@@ -15,8 +15,6 @@ namespace TouchSocket.Dmtp
         /// <param name="client"></param>
         /// <param name="e"></param>
         Task OnDmtpRouting(TClient client, PackageRouterEventArgs e);
-
-
     }
 
     /// <summary>
@@ -24,6 +22,5 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public interface IDmtpRoutingPlugin : IDmtpRoutingPlugin<IDmtpActorObject>
     {
-
     }
 }

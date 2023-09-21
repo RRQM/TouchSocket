@@ -81,6 +81,7 @@ namespace Microsoft.Extensions.DependencyInjection
         #endregion TcpService
 
         #region UdpSession
+
         /// <summary>
         /// 添加<see cref="UdpSession"/>服务。以TUdpSession泛型为注册接口。
         /// </summary>
@@ -122,6 +123,7 @@ namespace Microsoft.Extensions.DependencyInjection
             udpSession.Start();
             return AddUdpSession<IUdpSession>(service, udpSession);
         }
-        #endregion
+
+        #endregion UdpSession
     }
 }

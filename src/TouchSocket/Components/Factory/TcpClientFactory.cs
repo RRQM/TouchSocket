@@ -115,7 +115,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected virtual void OnMainClientSetuping()
         {
-
         }
 
         /// <inheritdoc/>

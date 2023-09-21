@@ -48,6 +48,7 @@ namespace TouchSocket.Sockets
         /// 适配器筛选
         /// </summary>
         public AdapterFilter AdapterFilter { get; set; } = AdapterFilter.AllAdapter;
+
         /// <summary>
         /// 当Client为Tcp系时。是否在断开连接时立即触发结果。默认会返回null。当<see cref="ThrowBreakException"/>为<see langword="true"/>时，会触发异常。
         /// </summary>

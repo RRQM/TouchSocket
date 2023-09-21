@@ -21,7 +21,6 @@
 //        /// <param name="httpClient"></param>
 //        public HttpJsonRpcClientSlim(System.Net.Http.HttpClient httpClient = default):base(httpClient)
 //        {
-            
 //        }
 
 //        private readonly WaitHandlePool<IWaitResult> m_waitHandle = new WaitHandlePool<IWaitResult>();
@@ -314,7 +313,6 @@
 //                }
 //            }
 //        }
-
 
 //    }
 //}

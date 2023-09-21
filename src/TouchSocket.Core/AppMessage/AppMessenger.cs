@@ -182,7 +182,7 @@ namespace TouchSocket.Core
 
                          foreach (var item in list)
                          {
-                             if (!item.Static && !item.WeakReference.TryGetTarget(out _))
+                             if (!item.Info.IsStatic && !item.WeakReference.TryGetTarget(out _))
                              {
                                  clear.Add(item);
                                  continue;
@@ -230,7 +230,7 @@ namespace TouchSocket.Core
                          for (var i = 0; i < list.Count; i++)
                          {
                              var item = list[i];
-                             if (!item.Static && !item.WeakReference.TryGetTarget(out _))
+                             if (!item.Info.IsStatic && !item.WeakReference.TryGetTarget(out _))
                              {
                                  clear.Add(item);
                                  continue;

@@ -22,6 +22,7 @@ namespace TouchSocket.Sockets
     public static class TouchSocketConfigExtension
     {
         #region 数据
+
         /// <summary>
         /// 发送超时设定，默认为0。
         /// 所需类型<see cref="int"/>
@@ -59,7 +60,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("此配置已不可用，内部的接收缓存池会根据接收数据的大小，自动调节",true)]
+        [Obsolete("此配置已不可用，内部的接收缓存池会根据接收数据的大小，自动调节", true)]
         public static TouchSocketConfig SetBufferLength(this TouchSocketConfig config, int value)
         {
             return config;
@@ -279,7 +280,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig SetNoDelay(this TouchSocketConfig config,bool value)
+        public static TouchSocketConfig SetNoDelay(this TouchSocketConfig config, bool value)
         {
             config.SetValue(NoDelayProperty, value);
             return config;
@@ -432,6 +433,7 @@ namespace TouchSocket.Sockets
         {
             return SetBindIPHost(config, 0);
         }
+
         #endregion UDP
 
         #region 创建

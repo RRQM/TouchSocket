@@ -19,7 +19,6 @@ namespace TouchSocket.Core
     /// </summary>
     public class ConcurrentDoublyDictionary<TKey, TValue>
     {
-
         /// <summary>
         /// 构造函数
         /// </summary>

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.WebApi.Swagger
 {
@@ -19,6 +15,13 @@ namespace TouchSocket.WebApi.Swagger
         public SwaggerDescriptionAttribute(string[] groups)
         {
             this.Groups = groups;
+        }
+
+        /// <summary>
+        /// Swagger描述特性
+        /// </summary>
+        public SwaggerDescriptionAttribute()
+        {
         }
 
         /// <summary>

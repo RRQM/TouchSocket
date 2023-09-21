@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -13,9 +10,9 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// 基于Http协议的JsonRpc客户端
     /// </summary>
-    public class HttpJsonRpcClient:HttpClientBase, IHttpJsonRpcClient
+    public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
-        private readonly WaitHandlePool<IWaitResult> m_waitHandle=new WaitHandlePool<IWaitResult>();
+        private readonly WaitHandlePool<IWaitResult> m_waitHandle = new WaitHandlePool<IWaitResult>();
 
         /// <inheritdoc/>
         public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
@@ -306,7 +303,6 @@ namespace TouchSocket.JsonRpc
                 }
             }
         }
-
 
         /// <inheritdoc/>
         protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)

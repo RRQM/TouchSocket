@@ -2,9 +2,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -32,6 +34,11 @@ namespace TouchSocket.WebApi.Swagger
         }
 
         /// <summary>
+        /// 是否在浏览器打开Swagger页面
+        /// </summary>
+        public bool LaunchBrowser { get; set; }
+
+        /// <summary>
         /// 访问Swagger的前缀，默认“swagger”
         /// </summary>
         public string Prefix { get; set; } = "swagger";
@@ -39,6 +46,10 @@ namespace TouchSocket.WebApi.Swagger
         /// <inheritdoc/>
         public async Task OnServerStarted(IService sender, ServiceStateEventArgs e)
         {
+            if (e.ServerState!= ServerState.Running)
+            {
+                return;
+            }
             if (!this.m_container.IsRegistered(typeof(WebApiParserPlugin)))
             {
                 this.m_logger.Warning($"该服务器中似乎没有添加{nameof(WebApiParserPlugin)}插件（WebApi插件）。");
@@ -52,7 +63,8 @@ namespace TouchSocket.WebApi.Swagger
             }
 
             var assembly = Assembly.GetExecutingAssembly();
-            foreach (var item in assembly.GetManifestResourceNames())
+            var names = assembly.GetManifestResourceNames();
+            foreach (var item in names)
             {
                 using (var stream = assembly.GetManifestResourceStream(item))
                 {
@@ -60,15 +72,42 @@ namespace TouchSocket.WebApi.Swagger
                     stream.Read(bytes, 0, bytes.Length);
                     var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
                     var name = item.Replace("TouchSocket.WebApi.Swagger.api.", string.Empty);
-                    if (name== "openapi.json")
+                    if (name == "openapi.json")
                     {
-                        bytes = this.BuildOpenApi(webApiParserPlugin);
+                        try
+                        {
+                            bytes = this.BuildOpenApi(webApiParserPlugin);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.m_logger.Exception(ex);
+                        }
                     }
                     var key = prefix == "/" ? $"/{name}" : $"{prefix}/{name}";
                     this.m_swagger.Add(key, bytes);
                 }
             }
             await e.InvokeNext();
+
+            if (this.LaunchBrowser)
+            {
+                var iphost = (sender as ITcpService).Monitors.First().Option.IpHost;
+                string host;
+                if (iphost.IsLoopback || iphost.DnsSafeHost == "127.0.0.1" || iphost.DnsSafeHost == "0.0.0.0")
+                {
+                    host = "127.0.0.1";
+                }
+                else
+                {
+                    host = iphost.DnsSafeHost;
+                }
+
+                var scheme = iphost.Scheme == "https" ? iphost.Scheme : "http";
+
+                var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
+                var index = prefix == "/" ? $"/index.html" : $"{prefix}/index.html";
+                this.OpenWebLink($"{scheme}://{host}:{iphost.Port}{index}");
+            }
         }
 
         /// <summary>
@@ -80,6 +119,23 @@ namespace TouchSocket.WebApi.Swagger
         {
             this.Prefix = value;
             return this;
+        }
+
+        /// <summary>
+        /// 在浏览器打开Swagger页面
+        /// </summary>
+        /// <returns></returns>
+        public SwaggerPlugin UseLaunchBrowser()
+        {
+            this.LaunchBrowser = true;
+            return this;
+        }
+
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginsManager pluginsManager)
+        {
+            base.Loaded(pluginsManager);
+            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -125,12 +181,24 @@ namespace TouchSocket.WebApi.Swagger
             return false;
         }
 
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginsManager pluginsManager)
+        private void OpenWebLink(string url)
         {
-            base.Loaded(pluginsManager);
-            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                };
+                Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                this.m_logger.Exception(ex);
+            }
         }
+
+        #region Build
 
         private void AddSchemaType(Type type, in List<Type> types)
         {
@@ -164,39 +232,6 @@ namespace TouchSocket.WebApi.Swagger
             }
         }
 
-        private IEnumerable<string> GetTags(MethodInstance methodInstance)
-        {
-            var tags = new List<string>();
-            foreach (var item in methodInstance.ServerType.GetCustomAttributes(true))
-            {
-                if (item is SwaggerDescriptionAttribute descriptionAttribute)
-                {
-                    if (descriptionAttribute.Groups!=null)
-                    {
-                        tags.AddRange(descriptionAttribute.Groups);
-                    }
-                }
-            }
-
-            foreach (var item in methodInstance.Info.GetCustomAttributes(true))
-            {
-                if (item is SwaggerDescriptionAttribute descriptionAttribute)
-                {
-                    if (descriptionAttribute.Groups != null)
-                    {
-                        tags.AddRange(descriptionAttribute.Groups);
-                    }
-                }
-            }
-
-            if (tags.Count==0)
-            {
-                tags.Add(methodInstance.ServerType.Name);
-            }
-
-            return tags;
-        }
-
         private void BuildGet(WebApiParserPlugin webApiParserPlugin, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
         {
             foreach (var item in webApiParserPlugin.GetRouteMap)
@@ -205,8 +240,12 @@ namespace TouchSocket.WebApi.Swagger
                 var methodInstance = item.Value;
                 var openApiPath = new OpenApiPath();
 
-                var openApiPathValue = new OpenApiPathValue();
-                openApiPathValue.Tags = this.GetTags(methodInstance);
+                var openApiPathValue = new OpenApiPathValue
+                {
+                    Tags = this.GetTags(methodInstance),
+                    Description = methodInstance.GetDescription(),
+                    Summary = methodInstance.GetDescription()
+                };
                 var i = 0;
                 if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
                 {
@@ -261,8 +300,12 @@ namespace TouchSocket.WebApi.Swagger
                 var methodInstance = item.Value;
                 var openApiPath = new OpenApiPath();
 
-                var openApiPathValue = new OpenApiPathValue();
-                openApiPathValue.Tags = this.GetTags(methodInstance);
+                var openApiPathValue = new OpenApiPathValue
+                {
+                    Tags = this.GetTags(methodInstance),
+                    Description = methodInstance.GetDescription(),
+                    Summary = methodInstance.GetDescription()
+                };
 
                 var i = 0;
                 if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
@@ -427,7 +470,16 @@ namespace TouchSocket.WebApi.Swagger
 
                 case OpenApiDataTypes.Object:
                     {
-                        schema.Ref = $"#/components/schemas/{type.Name}";
+                        if (type.IsEnum)
+                        {
+                            schema.Enum = (int[])Enum.GetValues(type);
+                            schema.Type = OpenApiDataTypes.Integer;
+                        }
+                        else
+                        {
+                            schema.Ref = $"#/components/schemas/{this.GetSchemaName(type)}";
+                        }
+
                         break;
                     }
                 case OpenApiDataTypes.Struct:
@@ -444,6 +496,22 @@ namespace TouchSocket.WebApi.Swagger
             return schema;
         }
 
+        private string GetSchemaName(Type type)
+        {
+            if (!type.IsGenericType)
+            {
+                return type.Name;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (var item in type.GetGenericArguments())
+            {
+                stringBuilder.Append(GetSchemaName(item));
+            }
+            stringBuilder.Append(type.Name.Substring(0, type.Name.IndexOf('`')));
+            return stringBuilder.ToString();
+        }
+
         private OpenApiComponent GetComponents(List<Type> types)
         {
             if (types.Count == 0)
@@ -455,12 +523,13 @@ namespace TouchSocket.WebApi.Swagger
             foreach (var type in types)
             {
                 var schema = this.CreateSchema(type);
-                schema.Properties = new Dictionary<string, OpenApiProperty>();
+                var properties = new Dictionary<string, OpenApiProperty>();
                 foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
-                    schema.Properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType));
+                    properties.Add(propertyInfo.Name, this.CreateProperty(propertyInfo.PropertyType));
                 }
-                components.Schemas.Add(type.Name, schema);
+                schema.Properties = properties.Count == 0 ? default : properties;
+                components.Schemas.TryAdd(this.GetSchemaName(type), schema);
             }
             return components;
         }
@@ -521,6 +590,39 @@ namespace TouchSocket.WebApi.Swagger
                 default:
                     return "object";
             }
+        }
+
+        private IEnumerable<string> GetTags(MethodInstance methodInstance)
+        {
+            var tags = new List<string>();
+            foreach (var item in methodInstance.ServerType.GetCustomAttributes(true))
+            {
+                if (item is SwaggerDescriptionAttribute descriptionAttribute)
+                {
+                    if (descriptionAttribute.Groups != null)
+                    {
+                        tags.AddRange(descriptionAttribute.Groups);
+                    }
+                }
+            }
+
+            foreach (var item in methodInstance.Info.GetCustomAttributes(true))
+            {
+                if (item is SwaggerDescriptionAttribute descriptionAttribute)
+                {
+                    if (descriptionAttribute.Groups != null)
+                    {
+                        tags.AddRange(descriptionAttribute.Groups);
+                    }
+                }
+            }
+
+            if (tags.Count == 0)
+            {
+                tags.Add(methodInstance.ServerType.Name);
+            }
+
+            return tags;
         }
 
         private Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
@@ -589,5 +691,7 @@ namespace TouchSocket.WebApi.Swagger
                 _ => OpenApiDataTypes.Any
             };
         }
+
+        #endregion Build
     }
 }

@@ -36,7 +36,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 文件资源访问接口。
         /// </summary>
-        IFileResourceController FileController { get;}
+        IFileResourceController FileController { get; }
 
         #region Id小文件
 
@@ -86,7 +86,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<Result> PushSmallFileAsync(string targetId, string savePath, FileInfo fileInfo, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
-        #endregion 小文件
+        #endregion Id小文件
 
         #region 小文件
 
@@ -148,7 +148,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="timeout">超时设置</param>
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
-        FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo,ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
+        FinishedResult FinishedFileResourceInfo(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int timeout = 5000, CancellationToken token = default);
 
         /// <summary>
         /// 请求完成一个资源。

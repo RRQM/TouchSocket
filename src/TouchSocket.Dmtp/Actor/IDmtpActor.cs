@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
         /// </summary>
-        bool IsReliable { get;}
+        bool IsReliable { get; }
 
         /// <summary>
         /// 包含当前功能件的宿主通讯端。
@@ -223,22 +223,14 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="obj"></param>
-        void SendFastObject<T>(ushort protocol, T obj);
-
-        /// <summary>
-        /// 发送Json序列化的小（64K）对象。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="protocol"></param>
-        /// <param name="obj"></param>
-        void SendJsonObject<T>(ushort protocol, T obj);
+        void SendFastObject<T>(ushort protocol, in T obj);
 
         /// <summary>
         /// 以包发送小（64K）对象。接收方ReadPackage即可。
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="package"></param>
-        void SendPackage(ushort protocol, IPackage package);
+        void SendPackage(ushort protocol, in IPackage package);
 
         /// <summary>
         /// 发送以utf-8编码的字符串。

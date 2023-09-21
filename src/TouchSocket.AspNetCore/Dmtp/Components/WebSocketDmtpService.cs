@@ -152,8 +152,6 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 this.GetDefaultNewId = () => { return Interlocked.Increment(ref this.m_idCount).ToString(); };
             }
-
-
         }
 
         /// <summary>
@@ -175,7 +173,6 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <inheritdoc/>
         /// </summary>
         public IPluginsManager PluginsManager { get; private set; }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -245,7 +242,6 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <param name="config"></param>
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
-
         }
 
         private void BuildConfig(TouchSocketConfig config)
@@ -289,6 +285,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.Container = container;
             this.PluginsManager = pluginsManager;
         }
+
         private DmtpActor CreateDmtpActor(WebSocketDmtpSocketClient client)
         {
             return new SealedDmtpActor(true)

@@ -422,11 +422,6 @@ namespace TouchSocket.Core
                 }
                 ctor = fromType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }
-            else
-            {
-                ops ??= ctor.GetCustomAttribute<DependencyInjectAttribute>().Ps;
-            }
-
             DependencyTypeAttribute dependencyTypeAttribute = null;
             if (fromType.IsDefined(typeof(DependencyTypeAttribute), true))
             {
@@ -452,11 +447,11 @@ namespace TouchSocket.Core
                         }
                         else
                         {
-                            if (parameters[i].IsDefined(typeof(DependencyParamterInjectAttribute), true))
+                            if (parameters[i].IsDefined(typeof(DependencyInjectAttribute), true))
                             {
-                                var attribute = parameters[i].GetCustomAttribute<DependencyParamterInjectAttribute>();
+                                var attribute = parameters[i].GetCustomAttribute<DependencyInjectAttribute>();
                                 var type = attribute.Type ?? parameters[i].ParameterType;
-                                ps[i] = container.Resolve(type, attribute.Ps, attribute.Key);
+                                ps[i] = container.Resolve(type, default, attribute.Key);
                             }
                             else
                             {
@@ -465,6 +460,10 @@ namespace TouchSocket.Core
                         }
                     }
                 }
+            }
+            if (ps==null||ps.Length==0)
+            {
+                return Activator.CreateInstance(fromType);
             }
             return Activator.CreateInstance(fromType, ps);
         }

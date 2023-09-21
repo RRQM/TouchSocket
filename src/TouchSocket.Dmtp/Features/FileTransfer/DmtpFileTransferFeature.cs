@@ -6,7 +6,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// 能够基于Dmtp协议，提供文件传输的能力
     /// </summary>
-    public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakedPlugin, IDmtpReceivedPlugin, IDmtpFeature
+    public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin, IDmtpFeature
     {
         private readonly IFileResourceController m_fileResourceController;
         private readonly IPluginsManager m_pluginsManager;
@@ -37,7 +37,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public ushort StartProtocol { get; set; }
 
         /// <inheritdoc/>
-        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             var smtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor)
             {

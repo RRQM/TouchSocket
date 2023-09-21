@@ -8,7 +8,7 @@ namespace TouchSocket.Dmtp.Rpc
     /// <summary>
     /// 能够基于Dmtp协议，提供Rpc的功能
     /// </summary>
-    public class DmtpRpcFeature : PluginBase, IRpcParser, IDmtpHandshakedPlugin, IDmtpReceivedPlugin, IDmtpFeature
+    public class DmtpRpcFeature : PluginBase, IRpcParser, IDmtpFeature
     {
         /// <summary>
         /// 能够基于Dmtp协议，提供Rpc的功能
@@ -121,7 +121,14 @@ namespace TouchSocket.Dmtp.Rpc
         #region Config
 
         /// <inheritdoc/>
-        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        protected override void Loaded(IPluginsManager pluginsManager)
+        {
+            base.Loaded(pluginsManager);
+            pluginsManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking),this.OnDmtpHandshaking);
+            pluginsManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(nameof(IDmtpReceivedPlugin.OnDmtpReceived),this.OnDmtpReceived);
+        }
+
+        private Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             var smtpRpcActor = CreateDmtpRpcActor(client.DmtpActor);
             smtpRpcActor.RpcStore = this.RpcStore;
@@ -134,8 +141,7 @@ namespace TouchSocket.Dmtp.Rpc
             return e.InvokeNext();
         }
 
-        /// <inheritdoc/>
-        public Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        private Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor smtpRpcActor)
             {

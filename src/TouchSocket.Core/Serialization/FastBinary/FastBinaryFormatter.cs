@@ -13,7 +13,6 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Text;
@@ -34,6 +33,7 @@ namespace TouchSocket.Core
             AddFastBinaryConverter<DataTable, DataTableFastBinaryConverter>();
             AddFastBinaryConverter<DataSet, DataSetFastBinaryConverter>();
         }
+
         private static readonly ConcurrentDictionary<Type, SerializObject> m_instanceCache = new ConcurrentDictionary<Type, SerializObject>();
 
         /// <summary>
@@ -445,7 +445,7 @@ namespace TouchSocket.Core
                 }
                 else if (type == TouchSocketCoreUtility.decimalType)
                 {
-                    obj =(TouchSocketBitConverter.Default.ToDecimal(datas, offset));
+                    obj = (TouchSocketBitConverter.Default.ToDecimal(datas, offset));
                 }
                 else if (type == TouchSocketCoreUtility.charType)
                 {

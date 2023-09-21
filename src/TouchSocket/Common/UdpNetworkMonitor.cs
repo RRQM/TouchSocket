@@ -18,7 +18,6 @@ namespace TouchSocket.Sockets
         {
             this.IPHost = iPHost;
             this.Socket = socket ?? throw new ArgumentNullException(nameof(socket));
-
         }
 
         /// <summary>

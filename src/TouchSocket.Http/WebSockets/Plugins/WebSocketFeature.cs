@@ -85,7 +85,8 @@ namespace TouchSocket.Http.WebSockets
             return this;
         }
 
-        async Task IHttpPlugin<IHttpSocketClient>.OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (client.Protocol == Protocol.Http)
             {

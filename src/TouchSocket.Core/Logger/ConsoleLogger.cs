@@ -23,6 +23,7 @@ namespace TouchSocket.Core
         {
             Default = new ConsoleLogger();
         }
+
         private readonly ConsoleColor m_consoleBackgroundColor;
 
         private readonly ConsoleColor m_consoleForegroundColor;

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -53,11 +51,6 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         /// </summary>
         public abstract INamedPipeSocketClientCollection SocketClients { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract Func<string> GetDefaultNewId { get; }
 
         /// <summary>
         /// <inheritdoc/>

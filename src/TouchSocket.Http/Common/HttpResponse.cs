@@ -55,12 +55,13 @@ namespace TouchSocket.Http
         /// 从<see cref="HttpRequest"/>创建一个Http响应
         /// </summary>
         /// <param name="request"></param>
-        public HttpResponse(HttpRequest request) : this(request.Client,true)
+        public HttpResponse(HttpRequest request) : this(request.Client, true)
         {
             this.ProtocolVersion = request.ProtocolVersion;
             this.Protocols = request.Protocols;
             this.KeepAlive = request.KeepAlive;
         }
+
         /// <summary>
         /// 构造函数
         /// </summary>

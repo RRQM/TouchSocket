@@ -19,5 +19,8 @@ namespace TouchSocket.WebApi.Swagger
 
         [JsonProperty("items")]
         public OpenApiSchema Items { get; set; }
+
+        [JsonProperty("enum")]
+        public int[] Enum { get; set; }
     }
 }

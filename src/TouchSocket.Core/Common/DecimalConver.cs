@@ -23,6 +23,7 @@
             }
             return bytes;
         }
+
         /// <summary>
         /// 将固定字节长度（16）数组转换为<see cref="decimal"/>对象。
         /// </summary>

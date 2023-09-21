@@ -405,7 +405,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await m_semaphore.WaitAsync();
+                await this.m_semaphore.WaitAsync();
                 if (this.m_online)
                 {
                     return;
@@ -430,7 +430,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    using (var tokenSource=new CancellationTokenSource(timeout))
+                    using (var tokenSource = new CancellationTokenSource(timeout))
                     {
                         try
                         {
@@ -502,7 +502,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public async Task<ITcpClient> ConnectAsync(int timeout = 5000)
+        public virtual async Task<ITcpClient> ConnectAsync(int timeout = 5000)
         {
             await this.TcpConnectAsync(timeout);
             return this;

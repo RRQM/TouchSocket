@@ -23,7 +23,7 @@ namespace TouchSocket.Core
 
         static BytePool()
         {
-            Default=new BytePool();
+            Default = new BytePool();
         }
 
         /// <summary>

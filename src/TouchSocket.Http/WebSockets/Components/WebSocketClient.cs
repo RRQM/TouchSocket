@@ -44,6 +44,8 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public class WebSocketClientBase : HttpClientBase, IWebSocketClient
     {
+        #region Connect
+
         /// <summary>
         /// 请求连接到WebSocket。
         /// </summary>
@@ -63,7 +65,7 @@ namespace TouchSocket.Http.WebSockets
         {
             lock (this.SyncRoot)
             {
-                if (!this.CanSend)
+                if (!this.Online)
                 {
                     base.Connect(timeout);
                 }
@@ -106,6 +108,59 @@ namespace TouchSocket.Http.WebSockets
                 return this.Connect(token, timeout);
             });
         }
+
+        /// <summary>
+        /// 请求连接到WebSocket。
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="WebSocketConnectException"></exception>
+        public override async Task<ITcpClient> ConnectAsync(int timeout = 5000)
+        {
+            try
+            {
+                await this.m_semaphoreSlim.WaitAsync();
+                if (!this.Online)
+                {
+                    await base.ConnectAsync(timeout);
+                }
+
+                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+                var url = iPHost.PathAndQuery;
+                var request = WSTools.GetWSRequest(this.RemoteIPHost.Host, url, this.GetWebSocketVersion(), out var base64Key);
+                this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
+
+                var response = this.Request(request, false, timeout, CancellationToken.None);
+                if (response.StatusCode != 101)
+                {
+                    throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
+                }
+                var accept = response.Headers.Get("sec-websocket-accept").Trim();
+                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    this.MainSocket.SafeDispose();
+                    throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
+                }
+
+                this.SetAdapter(new WebSocketDataHandlingAdapter());
+                this.SetValue(WebSocketFeature.HandshakedProperty, true);
+                response.Flag = true;
+                this.OnHandshaked(new HttpContextEventArgs(new HttpContext(request, response)));
+                return this;
+            }
+            finally
+            {
+                m_semaphoreSlim.Release();
+            }
+        }
+
+        #endregion Connect
+
+        #region 字段
+
+        private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+
+        #endregion 字段
 
         #region 事件
 

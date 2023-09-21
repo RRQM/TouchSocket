@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Core
 {
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
     /// <summary>
     /// RangeExtension
     /// </summary>

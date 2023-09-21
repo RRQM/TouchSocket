@@ -35,9 +35,9 @@ namespace TouchSocket.Core
         {
             if (rootPath is null)
             {
-                throw new ArgumentNullException(nameof(rootPath));
+                throw new ArgumentNullException(nameof(rootPath)); 
             }
-            this.m_rootPath = rootPath;
+            this.m_rootPath = rootPath; 
         }
 
         /// <summary>

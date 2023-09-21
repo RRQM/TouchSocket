@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {

@@ -34,6 +34,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface IUdpReceivedPlugin : IUdpReceivedPlugin<IUdpSession>
     {
-
     }
 }

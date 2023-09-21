@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TouchSocket.JsonRpc
+﻿namespace TouchSocket.JsonRpc
 {
     /// <summary>
     /// ITcpJsonRpcCallContext
     /// </summary>
-    public interface ITcpJsonRpcCallContext:IJsonRpcCallContext
+    public interface ITcpJsonRpcCallContext : IJsonRpcCallContext
     {
     }
 }

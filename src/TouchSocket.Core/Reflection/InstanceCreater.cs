@@ -4,8 +4,7 @@ using System.Linq.Expressions;
 
 namespace TouchSocket.Core
 {
-
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
     /// <summary>
     /// 实例生成
     /// </summary>
@@ -22,12 +21,14 @@ namespace TouchSocket.Core
         }
     }
 #else
+
     /// <summary>
     /// 实例生成
     /// </summary>
     public static class InstanceCreater
     {
         private static readonly Hashtable m_paramCache = Hashtable.Synchronized(new Hashtable());//缓存
+
         /// <summary>
         /// 根据对象类型创建对象实例
         /// </summary>
@@ -42,7 +43,6 @@ namespace TouchSocket.Core
                 m_paramCache[key] = value;
             }
             return value();
-
         }
 
         private static Func<object> CreateInstanceByType(Type type)
@@ -50,5 +50,6 @@ namespace TouchSocket.Core
             return Expression.Lambda<Func<object>>(Expression.New(type), null).Compile();
         }
     }
+
 #endif
 }

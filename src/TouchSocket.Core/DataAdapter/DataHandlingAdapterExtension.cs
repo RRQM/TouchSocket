@@ -1,5 +1,4 @@
 ﻿using System;
-using TouchSocket.Core;
 
 namespace TouchSocket.Core
 {
@@ -34,7 +33,8 @@ namespace TouchSocket.Core
                 adapter.UpdateCacheTimeWhenRev = v3;
             }
         }
-        #endregion
+
+        #endregion SingleStreamDataHandlingAdapter
 
         #region 适配器配置
 

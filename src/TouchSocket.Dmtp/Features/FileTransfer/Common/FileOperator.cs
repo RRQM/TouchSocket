@@ -67,7 +67,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         internal void AddCompletedLength(int flow)
         {
-           this.completedLength += flow;
+            this.completedLength += flow;
         }
 
         /// <summary>

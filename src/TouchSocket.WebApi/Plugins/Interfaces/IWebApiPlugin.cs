@@ -30,6 +30,5 @@ namespace TouchSocket.WebApi
     /// </summary>
     public interface IWebApiPlugin : IWebApiPlugin<IWebApiClientBase>
     {
-
     }
 }

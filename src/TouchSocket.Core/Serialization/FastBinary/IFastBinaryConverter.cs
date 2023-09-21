@@ -24,7 +24,7 @@ namespace TouchSocket.Core
         /// <param name="offset">内存偏移</param>
         /// <param name="len">该数据对象应该占用的长度</param>
         /// <returns>返回实际对象</returns>
-        public object Read(byte[] buffer, int offset, int len);
+        object Read(byte[] buffer, int offset, int len);
 
         /// <summary>
         /// 写入对象，不需要考虑为null的情况。
@@ -32,7 +32,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">存储内存块</param>
         /// <param name="obj">需要序列化的对象</param>
         /// <returns>返回该对象实际占用的字节长度。</returns>
-        public int Write(ByteBlock byteBlock, object obj);
+        int Write(ByteBlock byteBlock, object obj);
     }
 
     /// <summary>

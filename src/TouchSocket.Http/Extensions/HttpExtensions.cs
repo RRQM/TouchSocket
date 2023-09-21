@@ -15,7 +15,6 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {
@@ -319,7 +318,6 @@ namespace TouchSocket.Http
             return request.Method == new HttpMethod(method);
         }
 
-
         /// <summary>
         /// 是否作为Post访问
         /// </summary>
@@ -343,6 +341,7 @@ namespace TouchSocket.Http
         #endregion 判断函数
 
         #region 判断属性
+
         /// <summary>
         /// 是否在headers中包含升级连接
         /// </summary>
@@ -352,7 +351,9 @@ namespace TouchSocket.Http
         {
             return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade.GetDescription(), StringComparison.OrdinalIgnoreCase);
         }
-        #endregion
+
+        #endregion 判断属性
+
         #endregion HttpRequest
 
         #region HttpResponse
@@ -646,6 +647,5 @@ namespace TouchSocket.Http
         #endregion FromFileAsync
 
         #endregion HttpResponse
-
     }
 }

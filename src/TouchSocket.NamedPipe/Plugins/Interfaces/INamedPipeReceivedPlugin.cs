@@ -16,7 +16,6 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         /// <returns></returns>
         Task OnNamedPipeReceived(TClient client, ReceivedDataEventArgs e);
-
     }
 
     /// <summary>
@@ -24,6 +23,5 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public interface INamedPipeReceivedPlugin : INamedPipeReceivedPlugin<INamedPipeClientBase>
     {
-
     }
 }

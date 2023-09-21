@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace TouchSocket.Core
 {
@@ -12,7 +7,7 @@ namespace TouchSocket.Core
         protected override MemoryStream Read(byte[] buffer, int offset, int len)
         {
             var memoryStream = new MemoryStream(len);
-            memoryStream.Write(buffer,offset,len);
+            memoryStream.Write(buffer, offset, len);
             memoryStream.Position = 0;
             return memoryStream;
         }

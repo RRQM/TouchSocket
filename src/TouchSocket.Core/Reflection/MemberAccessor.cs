@@ -17,7 +17,6 @@ namespace TouchSocket.Core
         /// </summary>
         public MemberAccessor() : base(typeof(T))
         {
-
         }
     }
 
@@ -42,12 +41,13 @@ namespace TouchSocket.Core
 
         private Dictionary<string, FieldInfo> dicFieldInfes;
         private Dictionary<string, PropertyInfo> dicProperties;
+
         /// <summary>
         /// 构建
         /// </summary>
         public void Build()
         {
-            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
             {
                 this.dicFieldInfes = this.OnGetFieldInfes.Invoke(this.Type).ToDictionary(a => a.Name);
                 this.dicProperties = this.OnGetProperties.Invoke(this.Type).ToDictionary(a => a.Name);
@@ -86,7 +86,7 @@ namespace TouchSocket.Core
 
         private Func<object, string, object> GenerateGetValue()
         {
-            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
             {
                 return (obj, key) =>
                 {
@@ -118,7 +118,6 @@ namespace TouchSocket.Core
                 catch
                 {
                 }
-
             }
             foreach (var propertyInfo in this.OnGetProperties.Invoke(this.Type))
             {
@@ -145,7 +144,7 @@ namespace TouchSocket.Core
 
         private Action<object, string, object> GenerateSetValue()
         {
-            if (GlobalEnvironment.OptimizedPlatforms.HasFlag(OptimizedPlatforms.Unity))
+            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
             {
                 return (obj, key, value) =>
                 {

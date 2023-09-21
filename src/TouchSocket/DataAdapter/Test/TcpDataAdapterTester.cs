@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -24,6 +19,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class TcpDataAdapterTester : SingleStreamDataAdapterTester
     {
-        
     }
 }

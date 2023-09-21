@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Security.Principal;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -51,16 +50,19 @@ namespace TouchSocket.NamedPipe
         }
 
         #region 变量
+
         private DelaySender m_delaySender;
         private volatile bool m_online;
         private NamedPipeClientStream m_pipeStream;
-        ValueCounter m_valueCounter;
+        private ValueCounter m_valueCounter;
+
         #endregion 变量
 
         #region 事件
 
         /// <inheritdoc/>
         public ConnectedEventHandler<INamedPipeClient> Connected { get; set; }
+
         /// <inheritdoc/>
         public ConnectingEventHandler<INamedPipeClient> Connecting { get; set; }
 
@@ -213,7 +215,6 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
 
-
         /// <inheritdoc/>
         public PipeStream PipeStream => this.m_pipeStream;
 
@@ -295,6 +296,7 @@ namespace TouchSocket.NamedPipe
         #endregion 断开操作
 
         #region Connect
+
         /// <summary>
         /// 建立管道的连接。
         /// </summary>
@@ -324,7 +326,6 @@ namespace TouchSocket.NamedPipe
                 var serverName = this.Config.GetValue(NamedPipeConfigExtension.PipeServerNameProperty);
                 this.m_pipeStream.SafeDispose();
 
-
                 var namedPipe = CreatePipeClient(serverName, pipeName);
                 this.PrivateOnConnecting(new ConnectingEventArgs(null));
                 namedPipe.Connect(timeout);
@@ -339,7 +340,6 @@ namespace TouchSocket.NamedPipe
                 throw new Exception("未知异常");
             }
         }
-
 
         /// <inheritdoc/>
         public virtual INamedPipeClient Connect(int timeout = 5000)
@@ -356,7 +356,8 @@ namespace TouchSocket.NamedPipe
                 return this.Connect(timeout);
             });
         }
-        #endregion
+
+        #endregion Connect
 
         private void OnPeriod(long value)
         {
@@ -537,7 +538,6 @@ namespace TouchSocket.NamedPipe
                 var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
-                   
                     var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
                     if (r == 0)
                     {

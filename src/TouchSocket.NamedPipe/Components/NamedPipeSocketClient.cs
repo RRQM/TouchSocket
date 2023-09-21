@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -15,11 +14,12 @@ namespace TouchSocket.NamedPipe
     public class NamedPipeSocketClient : BaseSocket, INamedPipeSocketClient
     {
         #region MyRegion
-        ValueCounter m_valueCounter;
+
+        private ValueCounter m_valueCounter;
         private object m_delaySender;
         private NamedPipeServerStream m_pipeStream;
-        #endregion
 
+        #endregion MyRegion
 
         /// <summary>
         /// 命名管道服务器辅助客户端类
@@ -77,7 +77,7 @@ namespace TouchSocket.NamedPipe
 
         internal void BeginReceive()
         {
-            Task.Factory.StartNew(this.BeginBio,TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(this.BeginBio, TaskCreationOptions.LongRunning);
         }
 
         internal void InternalConnected(ConnectedEventArgs e)

@@ -25,6 +25,5 @@ namespace TouchSocket.Http
     [Obsolete("该插件已被弃用，请考虑使用“IHttpPlugin”插件代替使用。本插件将在正式版发布时直接移除。", true)]
     public interface IHttpPutPlugin : IHttpPutPlugin<IHttpSocketClient>
     {
-
     }
 }

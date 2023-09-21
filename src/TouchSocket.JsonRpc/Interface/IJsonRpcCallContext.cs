@@ -11,14 +11,13 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Rpc;
-using TouchSocket.WebApi;
 
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
     /// IJsonRpcCallContext
     /// </summary>
-    public interface IJsonRpcCallContext:ICallContext
+    public interface IJsonRpcCallContext : ICallContext
     {
         /// <summary>
         /// Json字符串

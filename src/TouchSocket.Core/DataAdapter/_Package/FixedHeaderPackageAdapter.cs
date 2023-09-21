@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using TouchSocket.Core;
 
 namespace TouchSocket.Core
 {
@@ -249,6 +248,7 @@ namespace TouchSocket.Core
         {
             try
             {
+                byteBlock.Position = 0;
                 this.GoReceived(byteBlock, null);
             }
             finally

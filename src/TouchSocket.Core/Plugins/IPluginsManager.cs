@@ -30,9 +30,8 @@ namespace TouchSocket.Core
         /// 获取已添加的指定名称的插件数量。
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="includeFunc">是否包含委托插件数量</param>
         /// <returns></returns>
-        int GetPluginCount(string name,bool includeFunc=true);
+        int GetPluginCount(string name);
 
         /// <summary>
         /// 所包含的所有插件。
@@ -59,7 +58,6 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <returns></returns>
         void Add(string name, Func<object, PluginEventArgs, Task> func);
-
 
         /// <summary>
         /// 触发对应插件

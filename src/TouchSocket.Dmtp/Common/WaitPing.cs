@@ -15,9 +15,9 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// WaitPingPackage
+    /// WaitPing
     /// </summary>
-    public class WaitPingPackage : WaitRouterPackage
+    public class WaitPing : WaitRouterPackage
     {
     }
 }

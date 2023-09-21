@@ -12,9 +12,6 @@ namespace TouchSocket.Core
         private bool m_end = true;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool m_func = true;
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int m_index;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -43,33 +40,16 @@ namespace TouchSocket.Core
             {
                 return EasyTask.CompletedTask;
             }
-            if (this.m_func)
+
+            if (this.m_pluginModel.Funcs.Count > this.m_index)
             {
-                if (this.m_pluginModel.Funcs.Count > this.m_index)
-                {
-                    this.Count++;
-                    return this.m_pluginModel.Funcs[this.m_index++].Invoke(this.m_sender, this);
-                }
-                else
-                {
-                    this.m_func = false;
-                    this.m_index = 0;
-                    return this.InvokeNext();
-                }
+                this.Count++;
+                return this.m_pluginModel.Funcs[this.m_index++].Invoke(this.m_sender, this);
             }
             else
             {
-                if (this.m_pluginModel.PluginEntities.Count > this.m_index)
-                {
-                    this.Count++;
-                    var entity = this.m_pluginModel.PluginEntities[this.m_index++];
-                    return entity.Method.InvokeAsync(entity.Plugin, this.m_sender, this);
-                }
-                else
-                {
-                    this.m_end = true;
-                    return EasyTask.CompletedTask;
-                }
+                this.m_end = true;
+                return EasyTask.CompletedTask;
             }
         }
 
@@ -79,7 +59,6 @@ namespace TouchSocket.Core
             this.m_pluginModel = pluginModel;
             this.m_end = false;
             this.m_index = 0;
-            this.m_func = true;
         }
     }
 }

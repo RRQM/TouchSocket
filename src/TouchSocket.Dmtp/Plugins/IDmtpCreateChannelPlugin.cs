@@ -23,6 +23,5 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public interface IDmtpCreateChannelPlugin : IDmtpCreateChannelPlugin<IDmtpActorObject>
     {
-
     }
 }

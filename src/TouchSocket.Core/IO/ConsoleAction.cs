@@ -110,7 +110,7 @@ namespace TouchSocket.Core
         {
             while (true)
             {
-                var str=Console.ReadLine();
+                var str = Console.ReadLine();
                 if (!this.Run(str))
                 {
                     Console.WriteLine($"没有这个指令。");

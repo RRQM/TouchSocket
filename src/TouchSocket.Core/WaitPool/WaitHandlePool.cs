@@ -55,7 +55,6 @@ namespace TouchSocket.Core
             {
                 item.Cancel();
             }
-
         }
 
         /// <summary>

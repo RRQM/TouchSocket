@@ -26,8 +26,8 @@ namespace TouchSocket.Rpc
         /// <param name="ignoreCase"></param>
         public ActionMap(bool ignoreCase) : base(ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
         {
-
         }
+
         /// <summary>
         /// 通过actionKey获取函数实例
         /// </summary>

@@ -22,6 +22,5 @@ namespace TouchSocket.Sockets
     /// </summary>
     public interface ITcpConnectedPlugin : ITcpConnectedPlugin<ITcpClientBase>
     {
-
     }
 }

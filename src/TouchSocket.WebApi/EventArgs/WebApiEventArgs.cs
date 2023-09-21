@@ -62,5 +62,4 @@ namespace TouchSocket.WebApi
         public System.Net.Http.HttpResponseMessage ResponseMessage { get; }
     }
 #endif
-
 }

@@ -24,7 +24,6 @@ namespace TouchSocket.Core
             InitCompletedTask();
         }
 
-
         /// <summary>
         /// 已完成的Task
         /// </summary>

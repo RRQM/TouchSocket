@@ -11,18 +11,13 @@ namespace TouchSocket.Core
     /// </summary>
     public class AsyncResetEvent : DisposableObject
     {
-
         private readonly bool m_autoReset;
-
 
         private readonly object m_locker = new object();
 
-
         private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
 
-
         private volatile bool m_eventSet;
-
 
         private static readonly Task m_completeTask = Task.FromResult(true);
 

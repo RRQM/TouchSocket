@@ -9,6 +9,7 @@
         /// 一个手动恢复的异步通知事件
         /// </summary>
         public AsyncManualResetEvent() : this(false) { }
+
         /// <summary>
         ///  一个手动恢复的异步通知事件
         /// </summary>

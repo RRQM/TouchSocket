@@ -97,7 +97,5 @@ namespace TouchSocket.Core
             var hashOfInput = GetMD5Hash(str);
             return hashOfInput.CompareTo(hash) == 0;
         }
-
-
     }
 }

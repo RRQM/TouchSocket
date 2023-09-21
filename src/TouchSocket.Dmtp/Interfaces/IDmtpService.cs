@@ -18,6 +18,5 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public interface IDmtpService
     {
-
     }
 }

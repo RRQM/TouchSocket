@@ -18,9 +18,8 @@ namespace TouchSocket.Core
     /// <summary>
     /// MessageInstance
     /// </summary>
-    public class MessageInstance : Method
+    public sealed class MessageInstance : Method
     {
-
         /// <summary>
         /// MessageInstance
         /// </summary>

@@ -42,15 +42,17 @@ namespace TouchSocket.Dmtp.AspNetCore
                 OnPeriod = this.OnSendPeriod
             };
         }
+
         #region 字段
+
         private WebSocket m_client;
         private DmtpActor m_smtpActor;
         private TcpDmtpAdapter m_smtpAdapter;
         private WebSocketDmtpService m_service;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
-        #endregion
 
+        #endregion 字段
 
         /// <inheritdoc/>
         public TouchSocketConfig Config { get; private set; }
@@ -71,7 +73,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public DateTime LastSendTime =>this.m_sendCounter.LastIncrement;
+        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
 
         /// <summary>
         /// 未实现
@@ -169,7 +171,6 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
-
 
         #region 内部委托绑定
 

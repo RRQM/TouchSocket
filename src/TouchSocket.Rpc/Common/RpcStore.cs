@@ -83,13 +83,15 @@ namespace TouchSocket.Rpc
                 {
                     case TaskReturnType.Task:
                         {
-                            callContext.MethodInstance.Invoke(rpcServer, ps);
+                            callContext.MethodInstance.InvokeAsync(rpcServer, ps)
+                                .ConfigureAwait(false).GetAwaiter().GetResult();
                         }
                         break;
 
                     case TaskReturnType.TaskObject:
                         {
-                            invokeResult.Result = callContext.MethodInstance.Invoke(rpcServer, ps);
+                            invokeResult.Result = callContext.MethodInstance.InvokeObjectAsync(rpcServer, ps)
+                                 .ConfigureAwait(false).GetAwaiter().GetResult();
                         }
                         break;
 
@@ -177,7 +179,7 @@ namespace TouchSocket.Rpc
                 {
                     case TaskReturnType.Task:
                         {
-                            await callContext.MethodInstance.InvokeAsync(rpcServer, ps);
+                            await (Task)callContext.MethodInstance.Invoke(rpcServer, ps);
                         }
                         break;
 
@@ -513,7 +515,6 @@ namespace TouchSocket.Rpc
                 this.Container.RegisterSingleton(serverFromType, serverToType);
             }
             var methodInstances = CodeGenerator.GetMethodInstances(serverFromType, serverToType);
-
             foreach (var item in methodInstances)
             {
                 item.IsSingleton = singleton;

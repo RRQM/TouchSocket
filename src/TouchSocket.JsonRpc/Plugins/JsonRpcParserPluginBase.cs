@@ -15,7 +15,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TouchSocket.Core;
-using TouchSocket.Http;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc

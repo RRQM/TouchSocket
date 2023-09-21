@@ -105,7 +105,7 @@ namespace TouchSocket.XmlRpc
         /// <inheritdoc/>
         public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.Method==HttpMethod.Post)
+            if (e.Context.Request.Method == HttpMethod.Post)
             {
                 if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
                 {
