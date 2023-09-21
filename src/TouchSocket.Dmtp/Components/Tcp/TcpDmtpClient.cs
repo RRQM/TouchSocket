@@ -31,7 +31,6 @@ namespace TouchSocket.Dmtp
         {
             this.Protocol = DmtpUtility.DmtpProtocol;
         }
-
         /// <inheritdoc cref="IDmtpActor.Id"/>
         public string Id => this.DmtpActor.Id;
 
@@ -39,8 +38,8 @@ namespace TouchSocket.Dmtp
 
         private bool m_allowRoute;
         private Func<string, IDmtpActor> m_findDmtpActor;
-        private SealedDmtpActor m_smtpActor;
-        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        private DmtpActor m_smtpActor;
+
         #endregion 字段
 
         /// <inheritdoc cref="IDmtpActor.IsHandshaked"/>
@@ -60,8 +59,6 @@ namespace TouchSocket.Dmtp
             base.Close(msg);
         }
 
-        #region 连接
-
         /// <summary>
         /// 建立Tcp连接，并且执行握手。
         /// </summary>
@@ -75,7 +72,7 @@ namespace TouchSocket.Dmtp
                 {
                     return this;
                 }
-                if (!this.Online)
+                if (!this.CanSend)
                 {
                     base.Connect(timeout);
                 }
@@ -86,84 +83,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <inheritdoc/>
-        public virtual ITcpDmtpClient Connect(CancellationToken token, int timeout = 5000)
-        {
-            lock (this.SyncRoot)
-            {
-                if (this.IsHandshaked)
-                {
-                    return this;
-                }
-                if (!this.Online)
-                {
-                    base.Connect(timeout);
-                }
-
-                this.m_smtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
-                    this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty), timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
-                return this;
-            }
-        }
-
-        /// <summary>
-        /// 建立Tcp连接，并且执行握手。
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public override async Task<ITcpClient> ConnectAsync(int timeout = 5000)
-        {
-            try
-            {
-                await this.m_semaphore.WaitAsync();
-                if (this.IsHandshaked)
-                {
-                    return this;
-                }
-                if (!this.Online)
-                {
-                    await base.ConnectAsync(timeout);
-                }
-
-                await this.m_smtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
-                     this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty), timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
-                return this;
-            }
-            finally
-            {
-                this.m_semaphore.Release();
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<ITcpDmtpClient> ConnectAsync(CancellationToken token, int timeout = 5000)
-        {
-            try
-            {
-                await this.m_semaphore.WaitAsync();
-                if (this.IsHandshaked)
-                {
-                    return this;
-                }
-                if (!this.Online)
-                {
-                    await base.ConnectAsync(timeout);
-                }
-
-                await this.m_smtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
-                     this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty), timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
-                return this;
-            }
-            finally
-            {
-                this.m_semaphore.Release();
-            }
-        }
-
-        #endregion 连接
-
         #region ResetId
-
         ///<inheritdoc cref="IDmtpActor.ResetId(string)"/>
         public void ResetId(string id)
         {
@@ -175,8 +95,7 @@ namespace TouchSocket.Dmtp
         {
             return this.m_smtpActor.ResetIdAsync(newId);
         }
-
-        #endregion ResetId
+        #endregion
 
         #region 发送
 

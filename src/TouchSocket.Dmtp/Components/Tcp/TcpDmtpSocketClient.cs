@@ -157,7 +157,6 @@ namespace TouchSocket.Dmtp
         }
 
         #region ResetId
-
         ///<inheritdoc cref="IDmtpActor.ResetId(string)"/>
         public override void ResetId(string id)
         {
@@ -169,8 +168,7 @@ namespace TouchSocket.Dmtp
         {
             return this.m_smtpActor.ResetIdAsync(newId);
         }
-
-        #endregion ResetId
+        #endregion
 
         internal void SetDmtpActor(DmtpActor actor)
         {
