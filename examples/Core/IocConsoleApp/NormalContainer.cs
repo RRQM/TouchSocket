@@ -113,13 +113,13 @@ namespace IocConsoleApp
         /// <summary>
         /// 获得指定类型的对象，然后赋值到object
         /// </summary>
-        [DependencyParamterInject(typeof(MyClass2))]
+        [DependencyInject(typeof(MyClass2))]
         public object MyClass2 { get; set; }
 
         /// <summary>
         /// 按照类型+Key获取
         /// </summary>
-        [DependencyParamterInject("key")]
+        [DependencyInject("key")]
         public MyClass1 KeyMyClass1 { get; set; }
     }
 

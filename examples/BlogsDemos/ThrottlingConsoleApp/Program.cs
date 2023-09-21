@@ -62,8 +62,8 @@ namespace ThrottlingConsoleApp
     {
         private readonly int m_max;
 
-        [DependencyInject(10)]
-        public MyThrottlingPlugin(int max)
+        [DependencyInject]
+        public MyThrottlingPlugin(int max = 10)
         {
             this.m_max = max;
         }

@@ -87,7 +87,7 @@ class MyClass3
     /// <summary>
     /// 获得指定类型的对象，然后赋值到object
     /// </summary>
-    [DependencyParamterInject(typeof(MyClass2))]
+    [DependencyInject(typeof(MyClass2))]
     public object MyClass2 { get; set; }
 
     /// <summary>
@@ -116,7 +116,7 @@ static void PropertyInject()
 
 :::tip 提示
 
-`DependencyParamterInject`特性中，Type和Key，可以同时使用，也可以只使用其中一个。
+`DependencyInject`特性中，Type和Key，可以同时使用，也可以只使用其中一个。
 
 :::  
 
@@ -154,7 +154,7 @@ static void MethodInject()
 
 :::tip 提示
 
-`DependencyInject`和`DependencyParamterInject`特性，也可以在方法注入时，对参数进行使用。
+`DependencyInject`特性，也可以在方法注入时，对参数进行使用。
 
 ::: 
 
@@ -172,6 +172,12 @@ class MyClass1
 
 }
 ```
+
+:::info 备注
+
+Constructor构造函数配置不管配不配置，默认都是支持的。
+
+:::  
 
 
 ### 3.5 默认参数实例化
