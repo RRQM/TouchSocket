@@ -15,7 +15,6 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
-
     /// <summary>
     /// ITcpDmtpSocketClient
     /// </summary>
