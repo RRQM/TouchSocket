@@ -13,16 +13,10 @@ namespace DmtpRpcConsoleApp
     {
         static void Main(string[] args)
         {
-
-
-            //RPC AOT还没完成适配
             try
             {
-                SerializeConvert.NewtonsoftJsonFirst = false;
-                //GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Expression;
                 var service = GetService();
                 var client = GetClient();
-                WaitVerify waitVerify = new WaitVerify();
                 while (true)
                 {
                     Console.WriteLine("请输入账号和密码，用空格隔开。");
