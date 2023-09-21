@@ -30,10 +30,8 @@ namespace TouchSocket.Dmtp
     public partial class TcpDmtpService<TClient> : TcpService<TClient>, ITcpDmtpService where TClient : TcpDmtpSocketClient, new()
     {
         #region 字段
-
         private bool m_allowRoute;
         private Func<string, IDmtpActor> m_findDmtpActor;
-
         #endregion 字段
 
         /// <summary>
