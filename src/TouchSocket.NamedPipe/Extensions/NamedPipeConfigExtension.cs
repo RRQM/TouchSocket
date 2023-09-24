@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using TouchSocket.Core;
+using TouchSocket.NamedPipe.Plugins;
+using System.Threading.Tasks;
+
 
 namespace TouchSocket.NamedPipe
 {
@@ -77,5 +80,71 @@ namespace TouchSocket.NamedPipe
             config.SetValue(PipeServerNameProperty, value);
             return config;
         }
+
+        /// <summary>
+        /// 使用断线重连。
+        /// <para>该效果仅客户端在完成首次连接，且为被动断开时有效。</para>
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        /// <param name="successCallback">成功回调函数</param>
+        /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
+        /// <param name="printLog">是否输出日志。</param>
+        /// <param name="sleepTime">失败时，停留时间</param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<NamedPipeClientBase> UseNamedPipeReconnection(this IPluginsManager pluginsManager, int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<INamedPipeClientBase> successCallback = null)
+        {
+            var first = true;
+            var reconnectionPlugin = new ReconnectionPlugin<NamedPipeClientBase>();
+            reconnectionPlugin.SetConnectAction(async client =>
+            {
+                var tryT = tryCount;
+                while (tryCount < 0 || tryT-- > 0)
+                {
+                    try
+                    {
+                        if (client.Online)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            if (first)
+                            {
+                                await Task.Delay(500);
+                                first = false;
+                            }
+                            client.Connect();
+                            first = true;
+                        }
+                        successCallback?.Invoke(client);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (printLog)
+                        {
+                            client.Logger.Log(LogLevel.Error, client, "断线重连失败。", ex);
+                        }
+                        await Task.Delay(sleepTime);
+                    }
+                }
+                return true;
+            });
+            pluginsManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
+        /// <summary>
+        /// 使用指定刻度爱你类型的断线重连
+        /// </summary>
+        /// <param name="pluginsManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<NamedPipeClientBase> UseNamedPipeReconnection<NamedPipeClientBase>(this IPluginsManager pluginsManager) where NamedPipeClientBase : class, INamedPipeClientBase
+        {
+            var reconnectionPlugin = new ReconnectionPlugin<NamedPipeClientBase>();
+            pluginsManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
     }
 }
