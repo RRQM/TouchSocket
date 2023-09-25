@@ -9,6 +9,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
     interface ISimpleDmtpRpcActor : IActor
     {
-
+        void Invoke(string methodName);
+        void Invoke(string targetId, string methodName);
     }
 }
