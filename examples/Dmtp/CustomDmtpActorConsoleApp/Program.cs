@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using CustomDmtpActorConsoleApp.SimpleDmtpRpc;
+using System.Reflection;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -14,7 +15,24 @@ namespace CustomDmtpActorConsoleApp
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            var service = GetTcpDmtpService();
+            var client = GetTcpDmtpClient();
+
+            while (true)
+            {
+                string methodName = Console.ReadLine();
+                var actor = client.GetSimpleDmtpRpcActor();
+
+                try
+                {
+                    actor.Invoke(methodName);
+                    Console.WriteLine("调用成功");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()
@@ -28,6 +46,7 @@ namespace CustomDmtpActorConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
+                       a.UseSimpleDmtpRpc();
 
                        a.UseDmtpHeartbeat()//使用Dmtp心跳
                        .SetTick(TimeSpan.FromSeconds(3))
@@ -53,7 +72,8 @@ namespace CustomDmtpActorConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-
+                       a.UseSimpleDmtpRpc()
+                       .RegisterRpc(new MyServer());
                    })
                    .SetVerifyToken("File");//连接验证口令。
 
@@ -63,6 +83,14 @@ namespace CustomDmtpActorConsoleApp
             return service;
         }
 
+    }
+
+    class MyServer
+    {
+        public void SayHello()
+        {
+            Console.WriteLine("Hello");
+        }
     }
 
 }

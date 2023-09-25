@@ -222,9 +222,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomFixedHeaderConsoleApp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IocConsoleApp", "Core\IocConsoleApp\IocConsoleApp.csproj", "{2649AA5F-4C16-4B80-8D74-EAD6F9211038}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "开发自定义DmtpActor", "开发自定义DmtpActor", "{56CB516C-E67D-42E0-9249-CB7C4C4CE244}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "自定义DmtpActor", "自定义DmtpActor", "{56CB516C-E67D-42E0-9249-CB7C4C4CE244}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDmtpActorConsoleApp", "Dmtp\CustomDmtpActorConsoleApp\CustomDmtpActorConsoleApp.csproj", "{171ED076-12AE-4770-A858-F6258343B3CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomDmtpActorConsoleApp", "Dmtp\CustomDmtpActorConsoleApp\CustomDmtpActorConsoleApp.csproj", "{171ED076-12AE-4770-A858-F6258343B3CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

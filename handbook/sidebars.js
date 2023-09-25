@@ -548,51 +548,50 @@ module.exports = {
             label: "14.3 创建Dmtp客户端"
           },
           {
-            type: "category",
+            type: "doc",
             label: "14.4 基础功能",
-            items:
-              [
-                {
-                  type: "doc",
-                  id: "dmtpbaseconnection",
-                  label: "a.连接及Id同步"
-                },
-                {
-                  type: "doc",
-                  id: "dmtpextension",
-                  label: "b.协议扩展"
-                },
-              ]
+            id: "dmtpbase"
+          },
+          {
+            type: "category",
+            label: "14.5 进阶功能",
+            items: [
+              {
+                type: "doc",
+                label: "a.自定义DmtpActor",
+                id: "dmtpcustomactor"
+              },
+            ]
           },
           {
             type: "doc",
-            label: "14.5 Rpc功能",
+            label: "14.6 Rpc功能",
             id: "dmtprpc"
           },
           {
             type: "doc",
-            label: "14.6 文件传输",
+            label: "14.7 文件传输",
             id: "dmtptransferfile"
           },
           {
             type: "doc",
             id: "remotefilecontrol",
-            label: "14.7 远程文件操作"
+            label: "14.8 远程文件操作"
           },
           {
             type: "doc",
             id: "dmtpremotestream",
-            label: "14.8 远程流映射"
+            label: "14.9 远程流映射"
           },
           {
             type: "doc",
             id: "dmtprouterpackage",
-            label: "14.9 路由包传输"
+            label: "14.10 路由包传输"
           },
           {
             type: "doc",
             id: "dmtpredis",
-            label: "14.10 Redis缓存"
+            label: "14.11 Redis缓存"
           }
         ]
     },
