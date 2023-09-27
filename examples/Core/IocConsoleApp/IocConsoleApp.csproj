@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.188">
+    <PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.189">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.188" />
-    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.188" />
+    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.189" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.189" />
   </ItemGroup>
 
 </Project>
