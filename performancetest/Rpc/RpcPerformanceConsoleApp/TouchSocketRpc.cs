@@ -25,7 +25,7 @@ namespace RpcPerformanceConsoleApp
                            store.RegisterServer<TestController>();
                        });
                    })
-                   .SetVerifyToken("TouchRpc");//设定连接口令，作用类似账号密码
+                   .SetVerifyToken("Rpc");//设定连接口令，作用类似账号密码
 
             service.Setup(config)
                 .Start();
@@ -42,7 +42,7 @@ namespace RpcPerformanceConsoleApp
                     a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("TouchRpc"));
+                .SetVerifyToken("Rpc"));
             client.Connect();
 
             var timeSpan = TimeMeasurer.Run(() =>
@@ -73,7 +73,7 @@ namespace RpcPerformanceConsoleApp
                     a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("TouchRpc"));
+                .SetVerifyToken("Rpc"));
             client.Connect();
 
             var timeSpan = TimeMeasurer.Run(() =>
@@ -104,7 +104,7 @@ namespace RpcPerformanceConsoleApp
                     a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("TouchRpc"));
+                .SetVerifyToken("Rpc"));
             client.Connect();
 
 
