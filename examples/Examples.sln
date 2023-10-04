@@ -226,6 +226,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "自定义DmtpActor", "自�
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomDmtpActorConsoleApp", "Dmtp\CustomDmtpActorConsoleApp\CustomDmtpActorConsoleApp.csproj", "{171ED076-12AE-4770-A858-F6258343B3CC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "反向Rpc", "反向Rpc", "{9F264382-A7D8-49A9-B351-E28107C1EEEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReverseJsonRpcConsoleApp", "JsonRpc\ReverseJsonRpcConsoleApp\ReverseJsonRpcConsoleApp.csproj", "{9C9C5679-B802-48E8-8159-1B205C1793DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -496,6 +500,10 @@ Global
 		{171ED076-12AE-4770-A858-F6258343B3CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{171ED076-12AE-4770-A858-F6258343B3CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{171ED076-12AE-4770-A858-F6258343B3CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C9C5679-B802-48E8-8159-1B205C1793DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C9C5679-B802-48E8-8159-1B205C1793DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C9C5679-B802-48E8-8159-1B205C1793DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C9C5679-B802-48E8-8159-1B205C1793DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -594,6 +602,8 @@ Global
 		{2649AA5F-4C16-4B80-8D74-EAD6F9211038} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 		{56CB516C-E67D-42E0-9249-CB7C4C4CE244} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
 		{171ED076-12AE-4770-A858-F6258343B3CC} = {56CB516C-E67D-42E0-9249-CB7C4C4CE244}
+		{9F264382-A7D8-49A9-B351-E28107C1EEEF} = {969A695E-BEB5-45B8-93D8-B31640FA495D}
+		{9C9C5679-B802-48E8-8159-1B205C1793DB} = {9F264382-A7D8-49A9-B351-E28107C1EEEF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
