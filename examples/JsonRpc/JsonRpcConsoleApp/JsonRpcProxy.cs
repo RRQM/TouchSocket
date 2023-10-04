@@ -1,3 +1,7 @@
+/*
+此代码由Rpc工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
 using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
