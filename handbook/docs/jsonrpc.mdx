@@ -22,6 +22,7 @@ JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关*
 - 支持自定义类型。
 - 支持类型嵌套。
 - 支持js、Android等调用。
+- 支持服务器主动调用客户端
 
 
 ## 三、定义服务
@@ -203,7 +204,7 @@ service.Setup(new TouchSocketConfig()
 
 ### 5.2 Http协议直接调用
 
-在Http协议时，以Url+Post方式即可
+在Http协议时，以`Url+Post`方式即可
 
 ```csharp
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
@@ -211,7 +212,7 @@ service.Setup(new TouchSocketConfig()
 
 ### 5.3 Websocket协议直接调用
 
-在Websocket协议时，以文本类型，直接发送到服务器即可。
+在Websocket协议时，以`文本类型`，直接发送到服务器即可。
 
 ```csharp
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
@@ -263,3 +264,8 @@ JsonRpc也支持代理调用。详情请看[生成代理](../docs/generateproxyf
 
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/JsonRpc)
+
+## 七、反向Rpc（服务器主动调用客户端）
+
+框架提供了反向Rpc，即服务器主动调用客户端。该功能主要应用于服务器需要主动通知客户端的情况。具体使用方法如下：
+

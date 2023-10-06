@@ -371,11 +371,11 @@ namespace WebSocketConsoleApp
             [Router("/[api]/ws")]
             [Router("/[api]/[action]")]
             [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
-            public void ConnectWS(IWebApiCallContext callContext)
+            public async Task ConnectWS(IWebApiCallContext callContext)
             {
                 if (callContext.Caller is HttpSocketClient socketClient)
                 {
-                    if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
+                    if (await socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
                     {
                         this.m_logger.Info("WS通过WebApi连接");
                     }
