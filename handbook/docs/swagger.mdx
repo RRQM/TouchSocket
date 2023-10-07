@@ -19,7 +19,7 @@ Swagger是一个用于生成、描述和调用RESTful接口的Web服务。通俗
 
 使用非常简单，先安装`TouchSocket.WebApi.Swagger`的包，然后直接UseSwagger即可。
 
-```csharp {14}
+```csharp {14-15}
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()
    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -33,7 +33,8 @@ service.Setup(new TouchSocketConfig()
            store.RegisterServer<ApiServer>();//注册服务
        });
 
-       a.UseSwagger();
+       a.UseSwagger()//使用Swagger页面
+        .UseLaunchBrowser();//启动浏览器
 
        //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
        a.UseDefaultHttpServicePlugin();
