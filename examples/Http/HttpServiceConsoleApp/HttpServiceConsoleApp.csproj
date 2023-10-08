@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.192" />
+    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.194" />
   </ItemGroup>
 
   <ItemGroup>
