@@ -69,8 +69,11 @@ namespace FileTransferConsoleApp
                 return;
             }
             ConsoleLogger.Default.Info("开始向服务器推送文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "MultithreadingClientPushFileFromService.Test";
             var saveFilePath = "SaveMultithreadingClientPushFileFromService.Test";
+
             if (!File.Exists(filePath))//创建服务器端的测试文件
             {
                 using (var stream = File.OpenWrite(filePath))
@@ -78,6 +81,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -130,6 +134,8 @@ namespace FileTransferConsoleApp
                 return;
             }
             ConsoleLogger.Default.Info("开始从服务器下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "MultithreadingClientPullFileFromService.Test";
             var saveFilePath = "SaveMultithreadingClientPullFileFromService.Test";
             if (!File.Exists(filePath))//创建服务器端的测试文件
@@ -139,6 +145,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -220,6 +227,8 @@ namespace FileTransferConsoleApp
         static void PullSmallFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载小文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "PullSmallFileFromService.Test";
             var saveFilePath = "SavePullSmallFileFromService.Test";
             if (!File.Exists(filePath))//创建测试文件
@@ -229,6 +238,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(1024);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -260,6 +270,8 @@ namespace FileTransferConsoleApp
             using var client2 = GetTcpDmtpClient();
 
             ConsoleLogger.Default.Info("开始从其他客户端下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ClientPushFileFromClient.Test";
             var saveFilePath = "SaveClientPushFileFromClient.Test";
             if (!File.Exists(filePath))//创建测试文件
@@ -269,6 +281,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -317,6 +330,8 @@ namespace FileTransferConsoleApp
             using var client2 = GetTcpDmtpClient();
 
             ConsoleLogger.Default.Info("开始从其他客户端下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ClientPullFileFromClient.Test";
             var saveFilePath = "SaveClientPullFileFromClient.Test";
             if (!File.Exists(filePath))//创建测试文件
@@ -326,6 +341,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -378,6 +394,8 @@ namespace FileTransferConsoleApp
             }
 
             ConsoleLogger.Default.Info("开始从客户端下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ServicePushFileFromClient.Test";
             var saveFilePath = "SaveServicePushFileFromClient.Test";
             if (!File.Exists(filePath))//创建服务器的测试文件
@@ -387,6 +405,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到客户端的元数据
             metadata.Add("1", "1");
@@ -439,6 +458,8 @@ namespace FileTransferConsoleApp
             }
 
             ConsoleLogger.Default.Info("开始从客户端下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ServicePullFileFromClient.Test";
             var saveFilePath = "SaveServicePullFileFromClient.Test";
             if (!File.Exists(filePath))//创建客户端的测试文件
@@ -448,6 +469,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到客户端的元数据
             metadata.Add("1", "1");
@@ -494,6 +516,8 @@ namespace FileTransferConsoleApp
         static void ClientPullFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载文件");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ClientPullFileFromService.Test";
             var saveFilePath = "SaveClientPullFileFromService.Test";
             if (!File.Exists(filePath))//创建服务器端的测试文件
@@ -503,6 +527,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
@@ -549,6 +574,8 @@ namespace FileTransferConsoleApp
         static void ClientPushFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("上传文件到服务器");
+
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
             var filePath = "ClientPushFileFromService.Test";
             var saveFilePath = "SaveClientPushFileFromService.Test";
             if (!File.Exists(filePath))//创建客户端的测试文件
@@ -558,6 +585,7 @@ namespace FileTransferConsoleApp
                     stream.SetLength(FileLength);
                 }
             }
+            /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
 
             var metadata = new Metadata();//传递到服务器的元数据
             metadata.Add("1", "1");
