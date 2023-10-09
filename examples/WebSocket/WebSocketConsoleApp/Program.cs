@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -21,7 +25,8 @@ namespace WebSocketConsoleApp
             consoleAction.Add("3", "使用/ws和header参数连接", ConnectWith_wsheader);
             consoleAction.Add("4", "使用post方式连接", ConnectWith_Post_ws);
             consoleAction.Add("5", "发送字符串", SendText);
-            consoleAction.Add("6", "调用Add", SendAdd);
+            consoleAction.Add("6", "发送部分字符串", SendSubstringText);
+            consoleAction.Add("7", "调用Add", SendAdd);
 
             consoleAction.ShowAll();
 
@@ -54,6 +59,24 @@ namespace WebSocketConsoleApp
             await Task.Delay(1000);
 
         }
+        private static void SendSubstringText()
+        {
+            var client = new WebSocketClient();
+            client.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+            client.Connect();
+
+            for (int i = 0; i < 10; i++)
+            {
+                var msg = Encoding.UTF8.GetBytes("hello");
+                client.SendWithWS( "Hello",i == 9);
+            }
+        }
+
         private static void SendText()
         {
             var client = new WebSocketClient();
@@ -262,22 +285,52 @@ namespace WebSocketConsoleApp
                 await e.InvokeNext();
             }
 
+            //此处使用字典，原因是插件是多客户端并发的，所以需要字典找到对应客户端的缓存
+            Dictionary<IHttpClientBase, StringBuilder> m_stringBuilders = new Dictionary<IHttpClientBase, StringBuilder>();//接收临时Text
+          
             public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
             {
                 switch (e.DataFrame.Opcode)
                 {
                     case WSDataType.Cont:
-                        client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                        {
+                            client.Logger.Info($"收到后续包长度：{e.DataFrame.PayloadLength}");
 
+                            //找到客户端对应的缓存
+                            if (this.m_stringBuilders.TryGetValue(client, out var stringBuilder))//后续包是文本
+                            {
+                                stringBuilder.Append(e.DataFrame.ToText());
+
+                                if (e.DataFrame.FIN)//完成接收后续包
+                                {
+                                    client.Logger.Info($"完成接收后续包：{stringBuilder.ToString()}");
+                                    this.m_stringBuilders.Remove(client);//置空
+                                }
+                            }
+                        }
+                        
                         return;
 
                     case WSDataType.Text:
-                        client.Logger.Info(e.DataFrame.ToText());
-
-                        if (!client.IsClient)
+                        if (e.DataFrame.FIN)//一个包直接结束接收
                         {
-                            client.SendWithWS("我已收到");
+                            client.Logger.Info(e.DataFrame.ToText());
+
+                            if (!client.IsClient)
+                            {
+                                client.SendWithWS("我已收到");
+                            }
                         }
+                        else//一个包没有结束，还有后续包
+                        {
+                            client.Logger.Info($"收到未完成的文本：{e.DataFrame.PayloadLength}");
+
+
+                            var stringBuilder = new StringBuilder();
+                            stringBuilder.Append(e.DataFrame.ToText());
+                            this.m_stringBuilders.Add(client,stringBuilder);
+                        }
+                        
                         return;
 
                     case WSDataType.Binary:
