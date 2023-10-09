@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.194" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.194" />
+		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.194"/>
+		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.194"/>
 	</ItemGroup>
 
 </Project>
