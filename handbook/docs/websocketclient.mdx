@@ -329,6 +329,34 @@ client.Setup(new TouchSocketConfig()
 client.Connect();
 ```
 
+### 6.3 使用WebSocket显式ReadAsync
+
+```csharp
+using (var client = GetClient())
+{
+    //通过GetWebSocket扩展方法，获取到显式的WebSocket终端。
+    //需要注意的是，此处的using，仅仅是释放当前创建的WebSocket。而不是WebSocketClient的连接。
+    using (var websocket=client.GetWebSocket())
+    {
+        while (true)
+        {
+            using (var receiveResult = await websocket.ReadAsync(CancellationToken.None))
+            {
+                if (receiveResult.DataFrame == null)
+                {
+                    //断开连接了
+                    break;
+                }
+
+                if (receiveResult.DataFrame.IsText)
+                {
+                    Console.WriteLine($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
+                }
+            }
+        }
+    }
+}
+```
 
 ## 七、其他操作
 
