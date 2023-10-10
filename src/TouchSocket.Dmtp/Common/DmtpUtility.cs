@@ -17,7 +17,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// DmtpUtility
     /// </summary>
-    public partial class DmtpUtility
+    public static partial class DmtpUtility
     {
         /// <summary>
         /// Dmtp字符串
@@ -28,5 +28,15 @@ namespace TouchSocket.Dmtp
         /// Dmtp协议
         /// </summary>
         public static Protocol DmtpProtocol { get; private set; } = new Protocol(Dmtp);
+
+        /// <summary>
+        /// 是否为Dmtp协议
+        /// </summary>
+        /// <param name="protocol"></param>
+        /// <returns></returns>
+        public static bool IsDmtp(this Protocol protocol)
+        {
+            return protocol == DmtpProtocol;
+        }
     }
 }

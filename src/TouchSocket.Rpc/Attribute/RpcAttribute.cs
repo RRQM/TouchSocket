@@ -726,7 +726,7 @@ namespace TouchSocket.Rpc
             }
             else
             {
-                return !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{methodInstance.ServerType.FullName}.{methodInstance.Name}".ToLower();
+                return !this.InvokeKey.IsNullOrEmpty() ? this.InvokeKey : $"{methodInstance.ServerFromType.FullName}.{methodInstance.Name}".ToLower();
             }
         }
 

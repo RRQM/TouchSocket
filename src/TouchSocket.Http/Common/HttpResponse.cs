@@ -14,6 +14,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -144,6 +145,27 @@ namespace TouchSocket.Http
                 if (this.m_client.CanSend)
                 {
                     this.m_client.DefaultSend(byteBlock);
+                }
+                this.Responsed = true;
+            }
+        }
+
+        /// <summary>
+        /// 构建数据并回应。
+        /// <para>该方法仅在具有Client实例时有效。</para>
+        /// </summary>
+        public async Task AnswerAsync()
+        {
+            if (this.Responsed)
+            {
+                return;
+            }
+            using (var byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock);
+                if (this.m_client.CanSend)
+                {
+                    await this.m_client.DefaultSendAsync(byteBlock);
                 }
                 this.Responsed = true;
             }

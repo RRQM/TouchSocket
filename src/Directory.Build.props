@@ -2,8 +2,8 @@
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\Keys\TouchSocket.snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.186</Version>
+		<AssemblyOriginatorKeyFile>Sign.snk</AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta.196</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>

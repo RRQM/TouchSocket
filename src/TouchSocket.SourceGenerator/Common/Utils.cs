@@ -1,25 +1,72 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TouchSocket
 {
     internal static class Utils
     {
-        public static bool IsInheritFrom(this ITypeSymbol typeSymbol,string baseType)
+        public static bool IsInheritFrom(this ITypeSymbol typeSymbol, string baseType)
         {
-            if (typeSymbol.BaseType==null)
+            if (typeSymbol.BaseType == null)
             {
                 return false;
             }
 
-            if (typeSymbol.BaseType.ToDisplayString()==baseType)
+            if (typeSymbol.BaseType.ToDisplayString() == baseType)
             {
                 return true;
             }
 
-            return IsInheritFrom(typeSymbol.BaseType,baseType);
+            return IsInheritFrom(typeSymbol.BaseType, baseType);
+        }
+
+        public static string RenameCamelCase(this string str)
+        {
+            var firstChar = str[0];
+
+            if (firstChar == char.ToLowerInvariant(firstChar))
+            {
+                return str;
+            }
+
+            var name = str.ToCharArray();
+            name[0] = char.ToLowerInvariant(firstChar);
+
+            return new string(name);
+        }
+
+       
+        public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
+        {
+            foreach (var attr in symbol.GetAttributes())
+            {
+                var attrClass = attr.AttributeClass;
+                if (attrClass != null && attrClass.ToDisplayString()==attribute.ToDisplayString())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool HasAttribute(this ISymbol symbol, string attribute,out AttributeData attributeData)
+        {
+            foreach (var attr in symbol.GetAttributes())
+            {
+                var attrClass = attr.AttributeClass;
+                if (attrClass != null && attrClass.ToDisplayString()==attribute)
+                {
+                    attributeData = attr;
+                    return true;
+                }
+            }
+            attributeData = default;
+            return false;
+        }
+
+        public static bool HasFlags(int value, int flag)
+        {
+            return (value & flag) == flag;
         }
     }
 }

@@ -20,7 +20,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP终端基础接口。
+    /// Tcp终端基础接口。
     /// <para>
     /// 注意：该接口并不仅表示客户端。<see cref="SocketClient"/>也实现了该接口。
     /// </para>
@@ -71,7 +71,7 @@ namespace TouchSocket.Sockets
 
         /// <summary>
         /// 判断是否在线
-        /// <para>该属性仅表示TCP状态是否在线</para>
+        /// <para>该属性仅表示Tcp状态是否在线</para>
         /// </summary>
         bool Online { get; }
 

@@ -65,7 +65,7 @@ namespace TouchSocket.XmlRpc
             set => this.m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
         }
 
-        #region RPC解析器
+        #region Rpc解析器
 
         void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
@@ -89,7 +89,7 @@ namespace TouchSocket.XmlRpc
             }
         }
 
-        #endregion RPC解析器
+        #endregion Rpc解析器
 
         /// <summary>
         /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。

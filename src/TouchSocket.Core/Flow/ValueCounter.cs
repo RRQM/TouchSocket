@@ -39,6 +39,15 @@ namespace TouchSocket.Core
         public TimeSpan Period { get; set; }
 
         /// <summary>
+        /// 重置<see cref="Count"/>和<see cref="LastIncrement"/>
+        /// </summary>
+        public void Reset()
+        {
+            this.m_count = 0;
+            this.m_lastIncrement = default;
+        }
+
+        /// <summary>
         /// 累计增加计数
         /// </summary>
         /// <param name="value"></param>

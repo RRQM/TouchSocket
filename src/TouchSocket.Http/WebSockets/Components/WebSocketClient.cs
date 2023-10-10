@@ -150,7 +150,7 @@ namespace TouchSocket.Http.WebSockets
             }
             finally
             {
-                m_semaphoreSlim.Release();
+                this.m_semaphoreSlim.Release();
             }
         }
 
@@ -182,10 +182,7 @@ namespace TouchSocket.Http.WebSockets
         {
             this.Handshaked?.Invoke(this, e);
 
-            if (this.PluginsManager.Raise(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e))
-            {
-                return;
-            }
+            _ = this.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
         }
 
         /// <summary>
@@ -238,6 +235,10 @@ namespace TouchSocket.Http.WebSockets
         protected override void OnDisconnected(DisconnectEventArgs e)
         {
             this.SetValue(WebSocketFeature.HandshakedProperty, false);
+            if (this.TryGetValue(WebSocketClientExtensions.WebSocketProperty, out var internalWebSocket))
+            {
+                _=internalWebSocket.TryInputReceiveAsync(null);
+            }
             base.OnDisconnected(e);
         }
 
@@ -247,6 +248,14 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         protected virtual void OnHandleWSDataFrame(WSDataFrame dataFrame)
         {
+            if (this.TryGetValue(WebSocketClientExtensions.WebSocketProperty, out var internalWebSocket))
+            {
+                if (internalWebSocket.TryInputReceiveAsync(dataFrame).ConfigureAwait(false).GetAwaiter().GetResult())
+                {
+                    return;
+                }
+            }
+
             if (this.PluginsManager.Enable)
             {
                 this.PluginsManager.Raise(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, new WSDataFrameEventArgs(dataFrame));

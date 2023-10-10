@@ -8,14 +8,17 @@ namespace TouchSocket.JsonRpc
     /// 基于Tcp协议的JsonRpc功能插件
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnectingPlugin, ITcpReceivedPlugin
+    public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase
     {
         /// <summary>
         /// 基于Tcp协议的JsonRpc功能插件
         /// </summary>
         /// <param name="container"></param>
-        public TcpJsonRpcParserPlugin(IContainer container) : base(container)
+        /// <param name="pluginsManager"></param>
+        public TcpJsonRpcParserPlugin(IContainer container, IPluginsManager pluginsManager) : base(container)
         {
+            pluginsManager.Add<ITcpClientBase, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), OnTcpConnected);
+            pluginsManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived), OnTcpReceived);
         }
 
         /// <summary>
@@ -25,7 +28,7 @@ namespace TouchSocket.JsonRpc
 
         /// <summary>
         /// 不需要自动转化协议。
-        /// <para>仅当服务器是TCP时生效。此时如果携带协议为TcpJsonRpc时才会解释为jsonRpc。</para>
+        /// <para>仅当服务器是Tcp时生效。才会解释为jsonRpc。</para>
         /// </summary>
         /// <returns></returns>
         public TcpJsonRpcParserPlugin NoSwitchProtocol()
@@ -35,20 +38,49 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        public Task OnTcpConnecting(ITcpClientBase client, ConnectingEventArgs e)
+        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        {
+            try
+            {
+                JsonRpcResponseBase response;
+                if (error == null)
+                {
+                    response = new JsonRpcSuccessResponse
+                    {
+                        Result = result,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                else
+                {
+                    response = new JsonRpcErrorResponse
+                    {
+                        Error = error,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
+                var client = (ITcpClientBase)callContext.Caller;
+                client.Send(str.ToUTF8Bytes());
+            }
+            catch
+            {
+            }
+        }
+
+        private Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {
             if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
             {
-                client.Protocol = JsonRpcUtility.TcpJsonRpc;
+                client.SetIsJsonRpc();
             }
 
             return e.InvokeNext();
         }
 
-        /// <inheritdoc/>
-        public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        private Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
-            if (client.Protocol == JsonRpcUtility.TcpJsonRpc)
+            if (client.GetIsJsonRpc())
             {
                 var jsonRpcStr = string.Empty;
                 if (e.RequestInfo is IJsonRpcRequestInfo requestInfo)
@@ -63,43 +95,22 @@ namespace TouchSocket.JsonRpc
                 if (jsonRpcStr.HasValue())
                 {
                     e.Handled = true;
-                    this.ThisInvoke(new TcpJsonRpcCallContext(client, jsonRpcStr));
-                    return;
-                }
-            }
 
-            await e.InvokeNext();
-        }
-
-        /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
-        {
-            try
-            {
-                object jobject;
-                if (error == null)
-                {
-                    jobject = new JsonRpcSuccessResponse
+                    if (client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
+                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
                     {
-                        result = result,
-                        id = callContext.JsonRpcContext.Id
-                    };
-                }
-                else
-                {
-                    jobject = new JsonRpcErrorResponse
+                        actionClient.InputResponseString(jsonRpcStr);
+                    }
+                    else
                     {
-                        error = error,
-                        id = callContext.JsonRpcContext.Id
-                    };
-                }
+                        Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
+                    }
 
-                var client = (ITcpClientBase)callContext.Caller;
-                client.Send(jobject.ToJsonString().ToUTF8Bytes());
+                    return EasyTask.CompletedTask;
+                }
             }
-            catch
-            {
-            }
+
+            return e.InvokeNext();
         }
     }
 }

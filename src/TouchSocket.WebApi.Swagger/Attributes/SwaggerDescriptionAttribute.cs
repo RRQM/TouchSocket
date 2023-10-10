@@ -12,7 +12,7 @@ namespace TouchSocket.WebApi.Swagger
         /// Swagger描述特性
         /// </summary>
         /// <param name="groups"></param>
-        public SwaggerDescriptionAttribute(string[] groups)
+        public SwaggerDescriptionAttribute(params string[] groups)
         {
             this.Groups = groups;
         }

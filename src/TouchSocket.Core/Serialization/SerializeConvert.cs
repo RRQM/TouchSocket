@@ -16,6 +16,10 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
+#if NET6_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
+
 
 namespace TouchSocket.Core
 {
@@ -186,7 +190,11 @@ namespace TouchSocket.Core
         /// <param name="stream"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static void FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ByteBlock stream, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
+#else
         public static void FastBinarySerialize<T>(ByteBlock stream, in T obj)
+#endif
         {
             FastBinaryFormatter.Serialize(stream, obj);
         }
@@ -196,7 +204,11 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
+#else
         public static byte[] FastBinarySerialize<T>(in T obj)
+#endif
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -216,7 +228,11 @@ namespace TouchSocket.Core
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data, int offset)
+#else
         public static T FastBinaryDeserialize<T>(byte[] data, int offset)
+#endif
         {
             return (T)FastBinaryFormatter.Deserialize(data, offset, typeof(T));
         }
@@ -228,7 +244,11 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="type"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static object FastBinaryDeserialize(byte[] data, int offset, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)
+#else
         public static object FastBinaryDeserialize(byte[] data, int offset, Type type)
+#endif
         {
             return FastBinaryFormatter.Deserialize(data, offset, type);
         }
@@ -239,10 +259,21 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="data"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data)
+#else
         public static T FastBinaryDeserialize<T>(byte[] data)
+#endif
         {
             return FastBinaryDeserialize<T>(data, 0);
         }
+
+#if NET6_0_OR_GREATER
+        public static void AddFastBinary<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>()
+        { 
+        
+        }
+#endif
 
         #endregion Fast二进制反序列化
 

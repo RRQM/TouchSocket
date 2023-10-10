@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets
         public static readonly Protocol Http = new Protocol("http");
 
         /// <summary>
-        /// TCP协议
+        /// Tcp协议
         /// </summary>
         public static readonly Protocol Tcp = new Protocol("tcp");
 

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
@@ -8,7 +9,7 @@ namespace TouchSocket.JsonRpc
     /// HttpJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
+    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase
     {
         private string m_jsonRpcUrl = "/jsonrpc";
 
@@ -16,8 +17,10 @@ namespace TouchSocket.JsonRpc
         /// HttpJsonRpcParserPlugin
         /// </summary>
         /// <param name="container"></param>
-        public HttpJsonRpcParserPlugin(IContainer container) : base(container)
+        /// <param name="pluginsManager"></param>
+        public HttpJsonRpcParserPlugin(IContainer container, IPluginsManager pluginsManager) : base(container)
         {
+            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), OnHttpRequest);
         }
 
         /// <summary>
@@ -27,21 +30,6 @@ namespace TouchSocket.JsonRpc
         {
             get => this.m_jsonRpcUrl;
             set => this.m_jsonRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
-        }
-
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
-        {
-            if (e.Context.Request.Method == HttpMethod.Post)
-            {
-                if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
-                {
-                    e.Handled = true;
-                    this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
-                    return;
-                }
-            }
-            await e.InvokeNext();
         }
 
         /// <summary>
@@ -60,34 +48,46 @@ namespace TouchSocket.JsonRpc
         {
             try
             {
-                using (var responseByteBlock = new ByteBlock())
+                JsonRpcResponseBase response;
+                if (error == null)
                 {
-                    object jobject;
-                    if (error == null)
+                    response = new JsonRpcSuccessResponse
                     {
-                        jobject = new JsonRpcSuccessResponse
-                        {
-                            result = result,
-                            id = callContext.JsonRpcContext.Id
-                        };
-                    }
-                    else
-                    {
-                        jobject = new JsonRpcErrorResponse
-                        {
-                            error = error,
-                            id = callContext.JsonRpcContext.Id
-                        };
-                    }
-
-                    var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
-                    httpResponse.FromJson(jobject.ToJsonString());
-                    httpResponse.Answer();
+                        Result = result,
+                        Id = callContext.JsonRpcContext.Id
+                    };
                 }
+                else
+                {
+                    response = new JsonRpcErrorResponse
+                    {
+                        Error = error,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
+
+                var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
+                httpResponse.FromJson(str);
+                httpResponse.Answer();
             }
             catch
             {
             }
+        }
+
+        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.Method == HttpMethod.Post)
+            {
+                if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
+                {
+                    e.Handled = true;
+                    await this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
+                    return;
+                }
+            }
+            await e.InvokeNext();
         }
     }
 }

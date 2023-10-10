@@ -6,23 +6,16 @@ using System.Linq;
 
 namespace TouchSocket
 {
-    /// <summary>
-    /// RpcApi语法接收器
-    /// </summary>
-    sealed class RpcSyntaxReceiver : ISyntaxReceiver
+    
+    internal sealed class RpcClientSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorRpcProxyAttributeTypeName = "TouchSocket.Rpc.GeneratorRpcProxyAttribute";
         public const string RpcMethodAttributeTypeName = "TouchSocket.Rpc.GeneratorRpcMethodAttribute";
 
-        /// <summary>
-        /// 接口列表
-        /// </summary>
+       
         private readonly List<InterfaceDeclarationSyntax> interfaceSyntaxList = new List<InterfaceDeclarationSyntax>();
 
-        /// <summary>
-        /// 访问语法树 
-        /// </summary>
-        /// <param name="syntaxNode"></param>
+        
         void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is InterfaceDeclarationSyntax syntax)
@@ -33,11 +26,7 @@ namespace TouchSocket
 
         public static INamedTypeSymbol GeneratorRpcProxyAttribute { get; private set; }
 
-        /// <summary>
-        /// 获取所有RpcApi符号
-        /// </summary>
-        /// <param name="compilation"></param>
-        /// <returns></returns>
+       
         public IEnumerable<INamedTypeSymbol> GetRpcApiTypes(Compilation compilation)
         {
             //Debugger.Launch();
@@ -55,7 +44,6 @@ namespace TouchSocket
                 }
             }
         }
-
 
         /// <summary>
         /// 是否为Rpc接口
@@ -89,26 +77,6 @@ namespace TouchSocket
 
                 return true;
             }) is not null;
-        }
-
-
-        /// <summary>
-        /// 返回是否声明指定的特性
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <param name="attribute"></param>
-        /// <returns></returns>
-        public static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attribute)
-        {
-            foreach (var attr in symbol.GetAttributes())
-            {
-                var attrClass = attr.AttributeClass;
-                if (attrClass != null && attrClass.AllInterfaces.Contains(attribute))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

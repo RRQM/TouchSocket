@@ -16,8 +16,7 @@ using System.Runtime.CompilerServices;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 具有释放的对象。
-    /// 并未实现析构函数相关。
+    /// 具有释放的对象。内部实现了GC.SuppressFinalize，但不包括析构函数相关。
     /// </summary>
     public class DisposableObject : IDisposable
     {

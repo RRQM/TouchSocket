@@ -18,7 +18,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP系列服务器接口
+    /// Tcp系列服务器接口
     /// </summary>
     public interface ITcpService<TClient> : ITcpService where TClient : ISocketClient
     {
@@ -47,7 +47,7 @@ namespace TouchSocket.Sockets
     }
 
     /// <summary>
-    /// TCP服务器接口
+    /// Tcp服务器接口
     /// </summary>
     public interface ITcpService : IService, IIdSender, IIdRequsetInfoSender, IPluginObject
     {

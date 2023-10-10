@@ -11,47 +11,22 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
+
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
-    /// JsonRpcSuccessResponse
-    /// </summary>
-    public class JsonRpcSuccessResponse
-    {
-        /// <summary>
-        /// jsonrpc
-        /// </summary>
-        public string jsonrpc = "2.0";
-
-        /// <summary>
-        /// result
-        /// </summary>
-        public object result;
-
-        /// <summary>
-        /// id
-        /// </summary>
-        public string id;
-    }
-
-    /// <summary>
     /// JsonRpcErrorResponse
     /// </summary>
-    public class JsonRpcErrorResponse
+    public class JsonRpcErrorResponse: JsonRpcResponseBase
     {
-        /// <summary>
-        /// jsonrpc
-        /// </summary>
-        public string jsonrpc = "2.0";
-
         /// <summary>
         /// error
         /// </summary>
-        public JsonRpcError error;
-
-        /// <summary>
-        /// id
-        /// </summary>
-        public string id;
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonPropertyName("error")]
+#endif
+        [JsonProperty("error")]
+        public JsonRpcError Error { get; set; }
     }
 }

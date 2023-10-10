@@ -1,15 +1,14 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 
 namespace TouchSocket
 {
-    /// <summary>
-    /// HttpApi代码生成器
-    /// </summary>
+   
     [Generator]
     public class PluginSourceGenerator : ISourceGenerator
     {
-        string m_generatorPluginAttribute = @"
+        private string m_generatorPluginAttribute = @"
 using System;
 
 namespace TouchSocket.Core
@@ -33,23 +32,18 @@ namespace TouchSocket.Core
 }
 
 ";
-        /// <summary>
-        /// 初始化
-        /// </summary>
-        /// <param name="context"></param>
+
+       
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForPostInitialization(a => 
+            context.RegisterForPostInitialization(a =>
             {
                 a.AddSource(nameof(this.m_generatorPluginAttribute), this.m_generatorPluginAttribute);
             });
             context.RegisterForSyntaxNotifications(() => new PluginSyntaxReceiver());
         }
 
-        /// <summary>
-        /// 执行
-        /// </summary>
-        /// <param name="context"></param>
+        
         public void Execute(GeneratorExecutionContext context)
         {
             var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
@@ -65,7 +59,10 @@ namespace TouchSocket.Core
                 {
                     if (builder.TryToSourceText(out var sourceText))
                     {
-                        context.AddSource($"{builder.GetFileName()}.g.cs", sourceText);
+                        var tree = CSharpSyntaxTree.ParseText(sourceText);
+                        var root = tree.GetRoot().NormalizeWhitespace();
+                        var ret = root.ToFullString();
+                        context.AddSource($"{builder.GetFileName()}.g.cs", ret);
                     }
                 }
             }

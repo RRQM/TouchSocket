@@ -73,10 +73,10 @@ namespace TouchSocket.Dmtp
         public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
 
         /// <inheritdoc/>
-        public string Id => this.m_dmtpActor.Id;
+        public string Id => this.m_dmtpActor?.Id;
 
         /// <inheritdoc/>
-        public bool IsHandshaked => this.m_dmtpActor.IsHandshaked;
+        public bool IsHandshaked { get;private set; }
 
         /// <inheritdoc/>
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
@@ -154,6 +154,7 @@ namespace TouchSocket.Dmtp
                 this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
                     this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
                     timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), CancellationToken.None);
+                this.IsHandshaked = true;
             }
             finally
             {
@@ -201,6 +202,7 @@ namespace TouchSocket.Dmtp
                 this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty),
                     this.Config.GetValue(DmtpConfigExtension.DefaultIdProperty),
                     timeout, this.Config.GetValue(DmtpConfigExtension.MetadataProperty), token);
+                this.IsHandshaked = true;
             }
             finally
             {
@@ -339,6 +341,7 @@ namespace TouchSocket.Dmtp
             {
                 if (this.IsHandshaked)
                 {
+                    this.IsHandshaked = false;
                     this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None);
                     this.m_client.SafeDispose();
                     this.DmtpActor.SafeDispose();

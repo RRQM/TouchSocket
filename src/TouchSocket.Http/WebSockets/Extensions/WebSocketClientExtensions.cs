@@ -21,6 +21,53 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public static class WebSocketClientExtensions
     {
+        #region DependencyProperty
+
+        private static readonly DependencyProperty<bool> IsContProperty =
+            DependencyProperty<bool>.Register("IsCont", false);
+
+        private static void SetIsCont(this IHttpClientBase client, bool value)
+        {
+            client.SetValue(IsContProperty, value);
+        }
+
+        private static bool GetIsCont(this IHttpClientBase client)
+        {
+            return client.GetValue(IsContProperty);
+        }
+
+        internal static readonly DependencyProperty<InternalWebSocket> WebSocketProperty =
+           DependencyProperty<InternalWebSocket>.Register("WebSocket", null);
+
+        /// <summary>
+        /// 获取显式WebSocket终端。
+        /// <para>
+        /// 
+        /// </para>
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="allowReceive"></param>
+        /// <returns></returns>
+        public static IWebSocket GetWebSocket(this IHttpClientBase client,bool allowReceive=true)
+        {
+            var websocket = client.GetValue(WebSocketProperty);
+            if (websocket == null)
+            {
+                websocket = new InternalWebSocket(client, allowReceive);
+                client.SetValue(WebSocketProperty, websocket);
+            }
+            return websocket;
+        }
+
+        /// <summary>
+        /// 清除显式WebSocket终端。
+        /// </summary>
+        /// <param name="client"></param>
+        public static void ClearWebSocket(this IHttpClientBase client)
+        {
+            client.RemoveValue(WebSocketProperty);
+        }
+        #endregion
         /// <summary>
         /// 发送Close报文。
         /// </summary>
@@ -119,29 +166,7 @@ namespace TouchSocket.Http.WebSockets
 
         #region 同步发送
 
-        /// <summary>
-        /// 采用WebSocket协议，发送二进制流数据。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public static void SendWithWS(this IHttpClientBase client, byte[] buffer, int offset, int length)
-        {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Binary })
-            {
-                if (offset == 0)
-                {
-                    frame.PayloadData = new ByteBlock(buffer, length);
-                }
-                else
-                {
-                    frame.AppendBinary(buffer, offset, length);
-                }
-                SendWithWS(client, frame);
-            }
-        }
-
+       
         /// <summary>
         /// 采用WebSocket协议，发送二进制流数据。
         /// </summary>
@@ -150,9 +175,9 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public static void SendWithWS(this IHttpClientBase client, bool endOfMessage, byte[] buffer, int offset, int length)
+        public static void SendWithWS(this IHttpClientBase client, byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = endOfMessage ? WSDataType.Binary : WSDataType.Cont })
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode =  WSDataType.Binary })
             {
                 if (offset == 0)
                 {
@@ -162,7 +187,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     frame.AppendBinary(buffer, offset, length);
                 }
-                SendWithWS(client, frame);
+                SendWithWS(client, frame,endOfMessage);
             }
         }
 
@@ -171,9 +196,14 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
-        public static void SendWithWS(this IHttpClientBase client, ByteBlock byteBlock)
+        /// <param name="endOfMessage"></param>
+        public static void SendWithWS(this IHttpClientBase client, ByteBlock byteBlock, bool endOfMessage = true)
         {
-            SendWithWS(client, byteBlock.Buffer, 0, byteBlock.Len);
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode =  WSDataType.Binary })
+            {
+                frame.PayloadData = byteBlock;
+                SendWithWS(client, frame,endOfMessage);
+            }
         }
 
         /// <summary>
@@ -181,9 +211,10 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        public static void SendWithWS(this IHttpClientBase client, byte[] buffer)
+        /// <param name="endOfMessage"></param>
+        public static void SendWithWS(this IHttpClientBase client, byte[] buffer, bool endOfMessage = true)
         {
-            SendWithWS(client, buffer, 0, buffer.Length);
+            SendWithWS(client, buffer, 0, buffer.Length, endOfMessage);
         }
 
         /// <summary>
@@ -191,11 +222,12 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="text"></param>
-        public static void SendWithWS(this IHttpClientBase client, string text)
+        /// <param name="endOfMessage"></param>
+        public static void SendWithWS(this IHttpClientBase client, string text, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Text }.AppendText(text))
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode =  WSDataType.Text }.AppendText(text))
             {
-                SendWithWS(client, frame);
+                SendWithWS(client, frame,endOfMessage);
             }
         }
 
@@ -204,8 +236,29 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
-        public static void SendWithWS(this IHttpClientBase client, WSDataFrame dataFrame)
+        /// <param name="endOfMessage"></param>
+        public static void SendWithWS(this IHttpClientBase client, WSDataFrame dataFrame,bool endOfMessage=true)
         {
+            var isCont = client.GetIsCont();
+
+            WSDataType dataType;
+            if (isCont)
+            {
+                dataType = WSDataType.Cont;
+                if (endOfMessage)
+                {
+                    client.SetIsCont(false);
+                }
+            }
+            else
+            {
+                dataType = dataFrame.Opcode;
+                if (!endOfMessage)
+                {
+                    client.SetIsCont(true);
+                }
+            }
+            dataFrame.Opcode = dataType;
             using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
             {
                 if (client.IsClient)
@@ -232,9 +285,9 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, bool endOfMessage, byte[] buffer, int offset, int length)
+        public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = endOfMessage ? WSDataType.Binary : WSDataType.Cont })
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode =  WSDataType.Binary })
             {
                 if (offset == 0)
                 {
@@ -244,7 +297,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     frame.AppendBinary(buffer, offset, length);
                 }
-                return SendWithWSAsync(client, frame);
+                return SendWithWSAsync(client, frame,endOfMessage);
             }
         }
 
@@ -253,42 +306,10 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer, int offset, int length)
+        /// <param name="endOfMessage"></param>
+        public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Binary })
-            {
-                if (offset == 0)
-                {
-                    frame.PayloadData = new ByteBlock(buffer, length);
-                }
-                else
-                {
-                    frame.AppendBinary(buffer, offset, length);
-                }
-                return SendWithWSAsync(client, frame);
-            }
-        }
-
-        /// <summary>
-        /// 采用WebSocket协议，发送二进制流数据。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="byteBlock"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, ByteBlock byteBlock)
-        {
-            return SendWithWSAsync(client, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 采用WebSocket协议，发送二进制流数据。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer)
-        {
-            return SendWithWSAsync(client, buffer, 0, buffer.Length);
+            return SendWithWSAsync(client, buffer, 0, buffer.Length, endOfMessage);
         }
 
         /// <summary>
@@ -296,11 +317,12 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="text"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, string text)
+        /// <param name="endOfMessage"></param>
+        public static Task SendWithWSAsync(this IHttpClientBase client, string text, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Text }.AppendText(text))
+            using (var frame = new WSDataFrame() { FIN = true, Opcode =  WSDataType.Text }.AppendText(text))
             {
-                return SendWithWSAsync(client, frame);
+                return SendWithWSAsync(client, frame, endOfMessage);
             }
         }
 
@@ -309,8 +331,29 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
-        public static Task SendWithWSAsync(this IHttpClientBase client, WSDataFrame dataFrame)
+        /// <param name="endOfMessage"></param>
+        public static Task SendWithWSAsync(this IHttpClientBase client, WSDataFrame dataFrame,bool endOfMessage=true)
         {
+            var isCont = client.GetIsCont();
+
+            WSDataType dataType;
+            if (isCont)
+            {
+                dataType = WSDataType.Cont;
+                if (endOfMessage)
+                {
+                    client.SetIsCont(false);
+                }
+            }
+            else
+            {
+                dataType = dataFrame.Opcode;
+                if (!endOfMessage)
+                {
+                    client.SetIsCont(true);
+                }
+            }
+            dataFrame.Opcode = dataType;
             using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
             {
                 if (client.IsClient)

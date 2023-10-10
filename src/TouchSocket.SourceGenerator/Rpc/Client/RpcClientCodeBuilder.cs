@@ -1,34 +1,27 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TouchSocket
 {
-    /// <summary>
-    /// RpcApi代码构建器
-    /// </summary>
-    internal sealed class RpcCodeBuilder
+
+    internal sealed class RpcClientCodeBuilder
     {
-        /// <summary>
-        /// 接口符号
-        /// </summary>
         private readonly INamedTypeSymbol m_rpcApi;
 
         private readonly Dictionary<string, TypedConstant> m_rpcApiNamedArguments;
 
-        /// <summary>
-        /// RpcApi代码构建器
-        /// </summary>
-        /// <param name="rpcApi"></param>
-        public RpcCodeBuilder(INamedTypeSymbol rpcApi)
+        public RpcClientCodeBuilder(INamedTypeSymbol rpcApi)
         {
             this.m_rpcApi = rpcApi;
-            var attributeData = rpcApi.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcSyntaxReceiver.GeneratorRpcProxyAttributeTypeName);
+            var attributeData = rpcApi.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcClientSyntaxReceiver.GeneratorRpcProxyAttributeTypeName);
 
             this.m_rpcApiNamedArguments = attributeData.NamedArguments.ToDictionary(a => a.Key, a => a.Value);
 
@@ -46,76 +39,49 @@ namespace TouchSocket
         /// 代码生成标识
         /// </summary>
         [Flags]
-        private enum CodeGeneratorFlag
+        public enum CodeGeneratorFlag
         {
-            /// <summary>
-            /// 生成同步代码（源代码生成无效）
-            /// </summary>
-            [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            Sync = 1,
-
-            /// <summary>
-            /// 生成异步代码（源代码生成无效）
-            /// </summary>
-            [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            Async = 2,
-
             /// <summary>
             /// 生成扩展同步代码
             /// </summary>
-            ExtensionSync = 4,
+            ExtensionSync = 1,
 
             /// <summary>
             /// 生成扩展异步代码
             /// </summary>
-            ExtensionAsync = 8,
-
-            /// <summary>
-            /// 包含接口（源代码生成无效）
-            /// </summary>
-            [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            IncludeInterface = 16,
-
-            /// <summary>
-            /// 包含实例（源代码生成无效）
-            /// </summary>
-            [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            IncludeInstance = 32,
+            ExtensionAsync = 2,
 
             /// <summary>
             /// 包含扩展（源代码生成无效）
             /// </summary>
             [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            IncludeExtension = 64,
+            IncludeExtension = 4,
 
             /// <summary>
             /// 生成实例类同步代码（源代码生成无效）
             /// </summary>
-            InstanceSync = 128,
+            InstanceSync = 8,
 
             /// <summary>
             /// 生成实例类异步代码（源代码生成无效）
             /// </summary>
-            InstanceAsync = 256,
+            InstanceAsync = 16,
 
             /// <summary>
             /// 生成接口同步代码
             /// </summary>
-            InterfaceSync = 512,
+            InterfaceSync = 32,
 
             /// <summary>
             /// 生成接口异步代码
             /// </summary>
-            InterfaceAsync = 1024,
+            InterfaceAsync = 64,
         }
 
         public string Prefix { get; set; }
 
         public string ServerName { get; set; }
 
-        /// <summary>
-        /// using
-        /// </summary>
         public IEnumerable<string> Usings
         {
             get
@@ -134,20 +100,12 @@ namespace TouchSocket
             return this.m_rpcApi.ToDisplayString() + "Generator";
         }
 
-        /// <summary>
-        /// 转换为SourceText
-        /// </summary>
-        /// <returns></returns>
         public SourceText ToSourceText()
         {
             var code = this.ToString();
             return SourceText.From(code, Encoding.UTF8);
         }
 
-        /// <summary>
-        /// 转换为字符串
-        /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             var codeString = new StringBuilder();
@@ -212,17 +170,17 @@ namespace TouchSocket
             return true;
         }
 
-        private void BuildIntereface(StringBuilder builder)
+        private void BuildIntereface(StringBuilder codeString)
         {
             var interfaceNames = new List<string>();
             if (this.IsInheritedInterface())
             {
                 var interfaceNames1 = this.m_rpcApi.Interfaces
-               .Where(a => RpcSyntaxReceiver.IsRpcApiInterface(a))
-               .Select(a => $"I{new RpcCodeBuilder(a).GetClassName()}");
+               .Where(a => RpcClientSyntaxReceiver.IsRpcApiInterface(a))
+               .Select(a => $"I{new RpcClientCodeBuilder(a).GetClassName()}");
 
                 var interfaceNames2 = this.m_rpcApi.Interfaces
-                   .Where(a => !RpcSyntaxReceiver.IsRpcApiInterface(a))
+                   .Where(a => !RpcClientSyntaxReceiver.IsRpcApiInterface(a))
                    .Select(a => a.ToDisplayString());
 
                 interfaceNames.AddRange(interfaceNames1);
@@ -231,44 +189,47 @@ namespace TouchSocket
 
             if (interfaceNames.Count == 0)
             {
-                builder.AppendLine($"public interface I{this.GetClassName()}");
+                codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+                codeString.AppendLine($"public interface I{this.GetClassName()}");
             }
             else
             {
-                builder.AppendLine($"public interface I{this.GetClassName()} :{string.Join(",", interfaceNames)}");
+                codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+                codeString.AppendLine($"public interface I{this.GetClassName()} :{string.Join(",", interfaceNames)}");
             }
 
-            builder.AppendLine("{");
+            codeString.AppendLine("{");
             //Debugger.Launch();
 
             foreach (var method in this.FindApiMethods())
             {
                 var methodCode = this.BuildMethodInterface(method);
-                builder.AppendLine(methodCode);
+                codeString.AppendLine(methodCode);
             }
 
-            builder.AppendLine("}");
+            codeString.AppendLine("}");
         }
 
-        private void BuildMethod(StringBuilder builder)
+        private void BuildMethod(StringBuilder codeString)
         {
-            builder.AppendLine($"public static class {this.GetClassName()}Extensions");
-            builder.AppendLine("{");
+            codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
+            codeString.AppendLine($"public static class {this.GetClassName()}Extensions");
+            codeString.AppendLine("{");
             //Debugger.Launch();
 
             foreach (var method in this.FindApiMethods())
             {
                 var methodCode = this.BuildMethod(method);
-                builder.AppendLine(methodCode);
+                codeString.AppendLine(methodCode);
             }
 
-            builder.AppendLine("}");
+            codeString.AppendLine("}");
         }
 
         private string BuildMethod(IMethodSymbol method)
         {
             //Debugger.Launch();
-            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcSyntaxReceiver.RpcMethodAttributeTypeName);
+            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcClientSyntaxReceiver.RpcMethodAttributeTypeName);
             if (attributeData is null)
             {
                 return string.Empty;
@@ -548,7 +509,7 @@ namespace TouchSocket
         private string BuildMethodInterface(IMethodSymbol method)
         {
             //Debugger.Launch();
-            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcSyntaxReceiver.RpcMethodAttributeTypeName);
+            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcClientSyntaxReceiver.RpcMethodAttributeTypeName);
             if (attributeData is null)
             {
                 return string.Empty;
@@ -641,7 +602,6 @@ namespace TouchSocket
             return codeString.ToString();
         }
 
-      
         private IEnumerable<IMethodSymbol> FindApiMethods()
         {
             return this.m_rpcApi

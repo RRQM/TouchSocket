@@ -85,7 +85,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         public RpcStore RpcStore { get; private set; }
 
-        private Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.GetRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
             {
@@ -150,12 +150,12 @@ namespace TouchSocket.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = RpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
                 {
-                    return EasyTask.CompletedTask;
+                    return;
                 }
                 var httpResponse = e.Context.Response;
                 switch (invokeResult.Status)
@@ -197,10 +197,10 @@ namespace TouchSocket.WebApi
                     client.TryShutdown(SocketShutdown.Both);
                 }
             }
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
-        private Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (this.PostRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
             {
@@ -281,12 +281,12 @@ namespace TouchSocket.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult = RpcStore.Execute(rpcServer, ps, callContext);
+                    invokeResult =await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)
                 {
-                    return EasyTask.CompletedTask;
+                    return;
                 }
                 var httpResponse = e.Context.Response;
                 switch (invokeResult.Status)
@@ -328,7 +328,7 @@ namespace TouchSocket.WebApi
                     client.TryShutdown(SocketShutdown.Both);
                 }
             }
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
         private Task OnHttpRequest(object sender, PluginEventArgs args)
@@ -350,7 +350,7 @@ namespace TouchSocket.WebApi
             }
         }
 
-        #region RPC解析器
+        #region Rpc解析器
 
         void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
@@ -402,6 +402,6 @@ namespace TouchSocket.WebApi
             }
         }
 
-        #endregion RPC解析器
+        #endregion Rpc解析器
     }
 }
