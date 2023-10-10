@@ -23,11 +23,10 @@ namespace TouchSocket.Dmtp.Redis
         public BytesConverter Converter { get; set; }
 
         /// <inheritdoc/>
-        public ICache<string, byte[]> ICache { get; set; }
-
-        /// <inheritdoc/>
         public IDmtpActor DmtpActor { get; }
 
+        /// <inheritdoc/>
+        public ICache<string, byte[]> ICache { get; set; }
         /// <inheritdoc/>
         public int Timeout { get; set; } = 30 * 1000;
 
@@ -414,16 +413,14 @@ namespace TouchSocket.Dmtp.Redis
                 {
                     case WaitDataStatus.SetRunning:
                         {
-                            return waitData.WaitResult.Status == 1
-                                ? true
-                                : waitData.WaitResult.Status == byte.MaxValue ? false : throw new Exception(waitData.WaitResult.Message);
+                            return waitData.WaitResult.Status == 1 || (waitData.WaitResult.Status == byte.MaxValue ? false : throw new Exception(waitData.WaitResult.Message));
                         }
                     case WaitDataStatus.Overtime: throw new TimeoutException(Resources.TouchSocketDmtpStatus.Overtime.GetDescription());
                     case WaitDataStatus.Canceled: return false;
                     case WaitDataStatus.Default:
                     case WaitDataStatus.Disposed:
                     default:
-                        throw new TimeoutException(Resources.TouchSocketDmtpStatus.UnknownError.GetDescription());
+                        throw new TimeoutException(TouchSocketDmtpStatus.UnknownError.GetDescription());
                 }
             }
             finally

@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace TouchSocket
@@ -10,7 +9,7 @@ namespace TouchSocket
     /// <summary>
     /// RpcApi语法接收器
     /// </summary>
-    sealed class PluginSyntaxReceiver : ISyntaxReceiver
+    internal sealed class PluginSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorPluginAttributeTypeName = "TouchSocket.Core.GeneratorPluginAttribute";
 
@@ -20,7 +19,7 @@ namespace TouchSocket
         private readonly List<ClassDeclarationSyntax> m_classSyntaxList = new List<ClassDeclarationSyntax>();
 
         /// <summary>
-        /// 访问语法树 
+        /// 访问语法树
         /// </summary>
         /// <param name="syntaxNode"></param>
         void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
@@ -56,7 +55,6 @@ namespace TouchSocket
             }
         }
 
-
         /// <summary>
         /// 是否为插件
         /// </summary>
@@ -83,7 +81,6 @@ namespace TouchSocket
                 return false;
             });
         }
-
 
         /// <summary>
         /// 返回是否声明指定的特性

@@ -16,7 +16,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP端口转发服务器
+    /// Tcp端口转发服务器
     /// </summary>
     public class NATService : TcpService<NATSocketClient>
     {

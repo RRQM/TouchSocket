@@ -27,6 +27,6 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// JsonRpc数据包
         /// </summary>
-        public JsonRpcContext JsonRpcContext { get; }
+        public JsonRpcRequestContext JsonRpcContext { get; }
     }
 }

@@ -20,7 +20,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP命令行插件。
+    /// Tcp命令行插件。
     /// </summary>
     public abstract class TcpCommandLinePlugin : PluginBase, ITcpReceivedPlugin
     {
@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Method>();
 
         /// <summary>
-        /// TCP命令行插件。
+        /// Tcp命令行插件。
         /// </summary>
         /// <param name="logger"></param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -64,7 +64,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             try
             {
@@ -90,7 +90,21 @@ namespace TouchSocket.Sockets
 
                     try
                     {
-                        var result = method.Invoke(this, os);
+                        object result;
+                        switch (method.TaskType)
+                        {
+                            case TaskReturnType.Task:
+                                await method.InvokeAsync(this, os);
+                                result = default;
+                                break;
+                            case TaskReturnType.TaskObject:
+                                result = await method.InvokeObjectAsync(this, os);
+                                break;
+                            case TaskReturnType.None:
+                            default:
+                                result = method.Invoke(this, os);
+                                break;
+                        }
                         if (method.HasReturn)
                         {
                             client.Send(this.Converter.ConvertTo(result));
@@ -110,7 +124,7 @@ namespace TouchSocket.Sockets
                 this.m_logger.Log(LogLevel.Error, this, ex.Message, ex);
             }
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
     }
 }

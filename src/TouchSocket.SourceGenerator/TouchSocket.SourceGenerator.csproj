@@ -6,6 +6,7 @@
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
 		<BaseOutputPath>bin</BaseOutputPath>
+		<GenerateDocumentationFile>False</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>

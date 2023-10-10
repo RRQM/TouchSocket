@@ -10,47 +10,24 @@ namespace TouchSocket.JsonRpc
     /// WebSocketJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketReceivedPlugin<IHttpSocketClient>, IWebSocketHandshakedPlugin<IHttpSocketClient>
+    public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase
     {
         /// <summary>
         /// WebSocketJsonRpcParserPlugin
         /// </summary>
         /// <param name="container"></param>
-        public WebSocketJsonRpcParserPlugin(IContainer container) : base(container)
+        /// <param name="pluginsManager"></param>
+        public WebSocketJsonRpcParserPlugin(IContainer container, IPluginsManager pluginsManager) : base(container)
         {
+            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this.OnWebSocketHandshaked);
+
+            pluginsManager.Add<IHttpSocketClient, WSDataFrameEventArgs>(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this.OnWebSocketReceived);
         }
 
         /// <summary>
         /// 经过判断是否标识当前的客户端为JsonRpc
         /// </summary>
         public Func<IHttpSocketClient, HttpContext, Task<bool>> AllowJsonRpc { get; set; }
-
-        /// <inheritdoc/>
-        public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
-        {
-            if (this.AllowJsonRpc != null)
-            {
-                if (await this.AllowJsonRpc.Invoke(client, e.Context))
-                {
-                    client.SetJsonRpc();
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
-        {
-            if (e.DataFrame.Opcode == WSDataType.Text && client.GetJsonRpc())
-            {
-                var jsonRpcStr = e.DataFrame.ToText();
-                e.Handled = true;
-                this.ThisInvoke(new WebSocketJsonRpcCallContext(client, jsonRpcStr));
-            }
-            else
-            {
-                await e.InvokeNext();
-            }
-        }
 
         /// <summary>
         /// 经过判断是否标识当前的客户端为JsonRpc
@@ -82,31 +59,71 @@ namespace TouchSocket.JsonRpc
         {
             try
             {
-                using (var responseByteBlock = new ByteBlock())
+                JsonRpcResponseBase response;
+                if (error == null)
                 {
-                    object jobject;
-                    if (error == null)
+                    response = new JsonRpcSuccessResponse
                     {
-                        jobject = new JsonRpcSuccessResponse
-                        {
-                            result = result,
-                            id = callContext.JsonRpcContext.Id
-                        };
-                    }
-                    else
-                    {
-                        jobject = new JsonRpcErrorResponse
-                        {
-                            error = error,
-                            id = callContext.JsonRpcContext.Id
-                        };
-                    }
-
-                    ((IHttpSocketClient)callContext.Caller).SendWithWS(jobject.ToJsonString());
+                        Result = result,
+                        Id = callContext.JsonRpcContext.Id
+                    };
                 }
+                else
+                {
+                    response = new JsonRpcErrorResponse
+                    {
+                        Error = error,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
+                ((IHttpSocketClient)callContext.Caller).SendWithWS(str);
             }
             catch
             {
+            }
+        }
+
+        private async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            if (this.AllowJsonRpc != null)
+            {
+                if (await this.AllowJsonRpc.Invoke(client, e.Context))
+                {
+                    client.SetIsJsonRpc();
+                }
+            }
+
+            await e.InvokeNext();
+        }
+
+        private Task OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
+        {
+            if (e.DataFrame.Opcode == WSDataType.Text && client.GetIsJsonRpc())
+            {
+                var jsonRpcStr = e.DataFrame.ToText();
+                if (jsonRpcStr.IsNullOrEmpty())
+                {
+                    return e.InvokeNext();
+                }
+
+                e.Handled = true;
+
+                if (client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
+                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
+                {
+                    actionClient.InputResponseString(jsonRpcStr);
+                }
+                else
+                {
+                    Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
+                }
+
+                return EasyTask.CompletedTask;
+            }
+            else
+            {
+                return e.InvokeNext();
             }
         }
     }

@@ -162,7 +162,7 @@ namespace TouchSocket.Sockets
         #region TcpClient
 
         /// <summary>
-        /// TCP固定端口绑定，
+        /// Tcp固定端口绑定，
         /// 所需类型<see cref="IPHost"/>
         /// </summary>
         public static readonly DependencyProperty<IPHost> BindIPHostProperty = DependencyProperty<IPHost>.Register("BindIPHost", null);

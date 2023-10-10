@@ -60,6 +60,14 @@ namespace TouchSocket.Core
         public Func<IContainer, object> ImplementationFactory { get; set; }
 
         /// <summary>
+        /// 在获取到注册时触发委托。
+        /// <para>
+        /// 在单例实例注册时，不会触发。在单例注册时，只会触发一次，在瞬态注册时，会每次都触发。
+        /// </para>
+        /// </summary>
+        public Action<object> OnResolved { get; set; }
+
+        /// <summary>
         /// 实例类型
         /// </summary>
         public Type ToType { get; }

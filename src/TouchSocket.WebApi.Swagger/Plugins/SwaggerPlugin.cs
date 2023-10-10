@@ -595,7 +595,7 @@ namespace TouchSocket.WebApi.Swagger
         private IEnumerable<string> GetTags(MethodInstance methodInstance)
         {
             var tags = new List<string>();
-            foreach (var item in methodInstance.ServerType.GetCustomAttributes(true))
+            foreach (var item in methodInstance.ServerFromType.GetCustomAttributes(true))
             {
                 if (item is SwaggerDescriptionAttribute descriptionAttribute)
                 {
@@ -619,7 +619,7 @@ namespace TouchSocket.WebApi.Swagger
 
             if (tags.Count == 0)
             {
-                tags.Add(methodInstance.ServerType.Name);
+                tags.Add(methodInstance.ServerFromType.Name);
             }
 
             return tags;

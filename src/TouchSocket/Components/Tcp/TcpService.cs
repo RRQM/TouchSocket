@@ -22,7 +22,7 @@ using TouchSocket.Resources;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TCP泛型服务器，由使用者自己指定<see cref="SocketClient"/>类型。
+    /// Tcp泛型服务器，由使用者自己指定<see cref="SocketClient"/>类型。
     /// </summary>
     public class TcpService<TClient> : TcpServiceBase, ITcpService<TClient> where TClient : SocketClient, new()
     {
@@ -764,7 +764,7 @@ namespace TouchSocket.Sockets
     }
 
     /// <summary>
-    /// TCP服务器
+    /// Tcp服务器
     /// </summary>
     public class TcpService : TcpService<SocketClient>
     {

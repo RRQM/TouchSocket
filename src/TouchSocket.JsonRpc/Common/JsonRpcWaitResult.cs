@@ -10,14 +10,54 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using Newtonsoft.Json;
 using TouchSocket.Core;
 
 namespace TouchSocket.JsonRpc
 {
-    internal class JsonRpcWaitResult : WaitResult
+    /// <summary>
+    /// JsonRpcWaitResult
+    /// </summary>
+    public class JsonRpcWaitResult : JsonRpcResponseBase,IWaitResult
     {
-        public object Return;
+        /// <summary>
+        /// Result
+        /// </summary>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonPropertyName("result")]
+#endif
+        [JsonProperty("result")]
+        public object Result { get; set; }
 
-        public JsonRpcError Error;
+        /// <summary>
+        /// Error
+        /// </summary>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonPropertyName("error")]
+#endif
+        [JsonProperty("error")]
+        public JsonRpcError Error { get; set; }
+
+
+        /// <inheritdoc/>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonIgnore]
+#endif
+        [JsonIgnore]
+        public string Message { get ; set ; }
+
+        /// <inheritdoc/>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonIgnore]
+#endif
+        [JsonIgnore]
+        public long Sign { get=> (long)this.Id ; set=>this.Id=value ; }
+
+        /// <inheritdoc/>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonIgnore]
+#endif
+        [JsonIgnore]
+        public byte Status { get ; set ; }
     }
 }

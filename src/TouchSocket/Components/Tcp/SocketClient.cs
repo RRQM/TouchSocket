@@ -259,7 +259,7 @@ namespace TouchSocket.Sockets
         public DisconnectEventHandler<ITcpClientBase> Disconnecting { get; set; }
 
         /// <summary>
-        /// 当客户端完整建立TCP连接。
+        /// 当客户端完整建立Tcp连接。
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnConnected(ConnectedEventArgs e)

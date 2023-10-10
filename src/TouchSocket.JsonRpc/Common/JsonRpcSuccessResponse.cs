@@ -16,20 +16,17 @@ using Newtonsoft.Json;
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
-    /// JsonRpcPackage
+    /// JsonRpcSuccessResponse
     /// </summary>
-    public class JsonRpcContext : JsonRpcRequest
+    public class JsonRpcSuccessResponse: JsonRpcResponseBase
     {
         /// <summary>
-        /// parameters
+        /// result
         /// </summary>
-        [JsonProperty("parameters")]
-        public object[] Parameters { get; set; }
-
-        /// <summary>
-        /// needResponse
-        /// </summary>
-        [JsonProperty("needResponse")]
-        public bool NeedResponse { get; set; }
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonPropertyName("result")]
+#endif
+        [JsonProperty("result")]
+        public object Result { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;</TargetFrameworks>
 		<PackageTags>rpc,analyzer</PackageTags>
-		<Description>这是一个为TouchSocket全系提供语法分析、源代码生成的库。目前包含Rpc源代理代码生成。	</Description>
+		<Description>这是一个为TouchSocket全系提供语法分析、源生成的库。目前包含Rpc源生成、插件源生成、IOC容器源生成。	</Description>
 		<Title>TouchSocket.CodeAnalyzer</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.CodeAnalyzer</PackageOutputPath>
 		<DevelopmentDependency>true</DevelopmentDependency>

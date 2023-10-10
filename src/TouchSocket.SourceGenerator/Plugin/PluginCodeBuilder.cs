@@ -1,33 +1,24 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TouchSocket
 {
-    /// <summary>
-    /// RpcApi代码构建器
-    /// </summary>
+    
     internal sealed class PluginCodeBuilder
     {
-        /// <summary>
-        /// 接口符号
-        /// </summary>
+        
         private readonly INamedTypeSymbol m_pluginClass;
 
-        const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
-        const string PluginBaseString = "TouchSocket.Core.PluginBase";
-        const string IPluginsManagerString = "TouchSocket.Core.IPluginsManager";
+        private const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
+        private const string PluginBaseString = "TouchSocket.Core.PluginBase";
+        private const string IPluginsManagerString = "TouchSocket.Core.IPluginsManager";
 
-        /// <summary>
-        /// RpcApi代码构建器
-        /// </summary>
-        /// <param name="pluginClass"></param>
+       
         public PluginCodeBuilder(INamedTypeSymbol pluginClass)
         {
             this.m_pluginClass = pluginClass;
@@ -35,9 +26,7 @@ namespace TouchSocket
 
         public string Prefix { get; set; }
 
-        /// <summary>
-        /// using
-        /// </summary>
+        
         public IEnumerable<string> Usings
         {
             get
@@ -54,10 +43,7 @@ namespace TouchSocket
             return this.m_pluginClass.ToDisplayString() + "Generator";
         }
 
-        /// <summary>
-        /// 转换为SourceText
-        /// </summary>
-        /// <returns></returns>
+        
         public bool TryToSourceText(out SourceText sourceText)
         {
             var code = this.ToString();
@@ -66,18 +52,15 @@ namespace TouchSocket
                 sourceText = null;
                 return false;
             }
-            sourceText=SourceText.From(code, Encoding.UTF8);
+            sourceText = SourceText.From(code, Encoding.UTF8);
             return true;
         }
 
-        /// <summary>
-        /// 转换为字符串
-        /// </summary>
-        /// <returns></returns>
+     
         public override string ToString()
         {
             var methods = this.FindMethods().ToList();
-            if (methods.Count==0)
+            if (methods.Count == 0)
             {
                 return null;
             }
@@ -96,6 +79,7 @@ namespace TouchSocket
 
             codeString.AppendLine($"namespace {this.m_pluginClass.ContainingNamespace}");
             codeString.AppendLine("{");
+            codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
             codeString.AppendLine($"partial class {this.m_pluginClass.Name}");
             codeString.AppendLine("{");
             codeString.AppendLine("private int RegisterPlugins(IPluginsManager pluginsManager)");
@@ -103,13 +87,12 @@ namespace TouchSocket
             foreach (var item in methods)
             {
                 this.BuildMethod(codeString, item);
-            } 
+            }
             codeString.AppendLine($"return {methods.Count};");
             codeString.AppendLine("}");
             this.TryBuildInvokeRedister(codeString);
             codeString.AppendLine("}");
             codeString.AppendLine("}");
-
 
             // System.Diagnostics.Debugger.Launch();
             return codeString.ToString();
@@ -146,7 +129,7 @@ namespace TouchSocket
             stringBuilder.Append($"{methodSymbol.Name});");
             stringBuilder.AppendLine();
         }
-        
+
         private bool HasOverrideMethod()
         {
             return this.m_pluginClass
@@ -154,7 +137,7 @@ namespace TouchSocket
                 .OfType<IMethodSymbol>()
                 .Any(m =>
                 {
-                    if (m.Name== "Loaded" && m.IsOverride && m.Parameters.Length == 1 && m.Parameters[0].Type.ToDisplayString()== IPluginsManagerString)
+                    if (m.Name == "Loaded" && m.IsOverride && m.Parameters.Length == 1 && m.Parameters[0].Type.ToDisplayString() == IPluginsManagerString)
                     {
                         return true;
                     }
@@ -184,7 +167,5 @@ namespace TouchSocket
                     return m.GetAttributes().Any(a => a.AttributeClass.ToDisplayString() == PluginSyntaxReceiver.GeneratorPluginAttributeTypeName);
                 });
         }
-
-
     }
 }

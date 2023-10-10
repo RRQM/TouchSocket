@@ -24,7 +24,7 @@ using TouchSocket.Resources;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 简单TCP客户端
+    /// 简单Tcp客户端
     /// </summary>
     public class TcpClient : TcpClientBase
     {
@@ -46,7 +46,7 @@ namespace TouchSocket.Sockets
     }
 
     /// <summary>
-    /// TCP客户端
+    /// Tcp客户端
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
     public class TcpClientBase : BaseSocket, ITcpClient
@@ -67,6 +67,10 @@ namespace TouchSocket.Sockets
                 Period = TimeSpan.FromSeconds(1),
                 OnPeriod = this.OnSendPeriod
             };
+            this.m_tcpCore = new InternalTcpCore()
+            {
+                OnReceived = this.HandleBuffer
+            };
         }
 
         #region 变量
@@ -77,8 +81,8 @@ namespace TouchSocket.Sockets
         private volatile bool m_online;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
-        private SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
-
+        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        private InternalTcpCore m_tcpCore;
         #endregion 变量
 
         #region 事件
@@ -890,6 +894,26 @@ namespace TouchSocket.Sockets
                 e.SafeDispose();
                 this.BreakOut(ex.Message);
             }
+        }
+
+        private void HandleBuffer(TcpCore core, ByteBlock byteBlock)
+        {
+            this.ThrowIfDisposed();
+            if (this.OnHandleRawBuffer?.Invoke(byteBlock) == false)
+            {
+                return;
+            }
+
+            if (this.PluginsManager.Enable && this.PluginsManager.Raise(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock)))
+            {
+                return;
+            }
+            if (this.DataHandlingAdapter == null)
+            {
+                this.Logger.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
+                return;
+            }
+            this.DataHandlingAdapter.ReceivedInput(byteBlock);
         }
 
         /// <summary>

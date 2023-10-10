@@ -11,11 +11,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
@@ -38,6 +39,7 @@ namespace TouchSocket.JsonRpc
             {
                 this.RpcStore = new RpcStore(container);
             }
+            
             this.ActionMap = new ActionMap(true);
             this.RpcStore.AddRpcParser(this);
         }
@@ -47,36 +49,11 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public ActionMap ActionMap { get; private set; }
 
+        
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public RpcStore RpcStore { get; private set; }
-
-        #region RPC解析器
-
-        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
-                }
-            }
-        }
-
-        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Remove(attribute.GetInvokenKey(methodInstance));
-                }
-            }
-        }
-
-        #endregion RPC解析器
 
         /// <summary>
         /// 处理响应结果。
@@ -84,19 +61,19 @@ namespace TouchSocket.JsonRpc
         /// <param name="callContext"></param>
         /// <param name="result"></param>
         /// <param name="error"></param>
-        protected abstract void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error);
+        protected abstract void Response(JsonRpcCallContextBase callContext, object result,JsonRpcError error);
 
         /// <summary>
         /// 调用JsonRpc
         /// </summary>
-        /// <param name="callContext"></param>
-        protected void ThisInvoke(JsonRpcCallContextBase callContext)
+        protected async Task ThisInvoke(object obj)
         {
+            var callContext = (JsonRpcCallContextBase)obj;
             var invokeResult = new InvokeResult();
 
             try
             {
-                this.BuildRequestContext(ref callContext);
+                JsonRpcUtility.BuildRequestContext(this.ActionMap,ref callContext);
             }
             catch (Exception ex)
             {
@@ -124,151 +101,40 @@ namespace TouchSocket.JsonRpc
                     transientRpcServer.CallContext = callContext;
                 }
 
-                invokeResult = RpcStore.Execute(rpcServer, callContext.JsonRpcContext.Parameters, callContext);
+                invokeResult = await RpcStore.ExecuteAsync(rpcServer, callContext.JsonRpcContext.Parameters, callContext);
             }
 
-            if (!callContext.JsonRpcContext.NeedResponse)
+            if (!callContext.JsonRpcContext.Id.HasValue)
             {
                 return;
             }
-            JsonRpcError error = null;
-            switch (invokeResult.Status)
-            {
-                case InvokeStatus.Success:
-                    {
-                        break;
-                    }
-                case InvokeStatus.UnFound:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32601,
-                            Message = "函数未找到"
-                        };
-                        break;
-                    }
-                case InvokeStatus.UnEnable:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32601,
-                            Message = "函数已被禁用"
-                        };
-                        break;
-                    }
-                case InvokeStatus.InvocationException:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32603,
-                            Message = "函数内部异常"
-                        };
-                        break;
-                    }
-                case InvokeStatus.Exception:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32602,
-                            Message = invokeResult.Message
-                        };
-                        break;
-                    }
-                default:
-                    return;
-            }
-
+            var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
             this.Response(callContext, invokeResult.Result, error);
         }
+        #region Rpc解析器
 
-        private void BuildRequestContext(ref JsonRpcCallContextBase callContext)
+        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {
-            var jsonRpcContext = SerializeConvert.JsonDeserializeFromString<JsonRpcContext>(callContext.JsonString);
-            callContext.JsonRpcContext = jsonRpcContext;
-            if (jsonRpcContext.Id != null)
+            foreach (var methodInstance in methodInstances)
             {
-                jsonRpcContext.NeedResponse = true;
-            }
-
-            if (this.ActionMap.TryGetMethodInstance(jsonRpcContext.Method, out var methodInstance))
-            {
-                callContext.MethodInstance = methodInstance;
-                if (jsonRpcContext.Params == null)
+                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                    {
-                        jsonRpcContext.Parameters = methodInstance.ParameterNames.Length > 1 ? throw new RpcException("调用参数计数不匹配") : (new object[] { callContext });
-                    }
-                    else
-                    {
-                        if (methodInstance.ParameterNames.Length != 0)
-                        {
-                            throw new RpcException("调用参数计数不匹配");
-                        }
-                    }
-                }
-                if (jsonRpcContext.Params is Dictionary<string, object> obj)
-                {
-                    jsonRpcContext.Parameters = new object[methodInstance.ParameterNames.Length];
-                    //内联
-                    var i = 0;
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                    {
-                        jsonRpcContext.Parameters[0] = callContext;
-                        i = 1;
-                    }
-                    for (; i < methodInstance.ParameterNames.Length; i++)
-                    {
-                        if (obj.TryGetValue(methodInstance.ParameterNames[i], out var jToken))
-                        {
-                            var type = methodInstance.ParameterTypes[i];
-                            jsonRpcContext.Parameters[i] = jToken.ToJsonString().FromJsonString(type);
-                        }
-                        else
-                        {
-                            if (methodInstance.Parameters[i].HasDefaultValue)
-                            {
-                                jsonRpcContext.Parameters[i] = methodInstance.Parameters[i].DefaultValue;
-                            }
-                            else
-                            {
-                                throw new RpcException("调用参数计数不匹配");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    var array = (IList)jsonRpcContext.Params;
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
-                    {
-                        if (array.Count != methodInstance.ParameterNames.Length - 1)
-                        {
-                            throw new RpcException("调用参数计数不匹配");
-                        }
-                        jsonRpcContext.Parameters = new object[methodInstance.ParameterNames.Length];
-
-                        jsonRpcContext.Parameters[0] = callContext;
-                        for (var i = 0; i < array.Count; i++)
-                        {
-                            jsonRpcContext.Parameters[i + 1] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i + 1]);
-                        }
-                    }
-                    else
-                    {
-                        if (array.Count != methodInstance.ParameterNames.Length)
-                        {
-                            throw new RpcException("调用参数计数不匹配");
-                        }
-                        jsonRpcContext.Parameters = new object[methodInstance.ParameterNames.Length];
-
-                        for (var i = 0; i < array.Count; i++)
-                        {
-                            jsonRpcContext.Parameters[i] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i]);
-                        }
-                    }
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
                 }
             }
         }
+
+        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
+                {
+                    this.ActionMap.Remove(attribute.GetInvokenKey(methodInstance));
+                }
+            }
+        }
+
+        #endregion Rpc解析器
     }
 }

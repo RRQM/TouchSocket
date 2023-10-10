@@ -94,7 +94,22 @@ namespace TouchSocket.Http.WebSockets
 
                         try
                         {
-                            var result = method.Invoke(this, os);
+                            object result;
+                            switch (method.TaskType)
+                            {
+                                case TaskReturnType.Task:
+                                    await method.InvokeAsync(this, os);
+                                    result = default;
+                                    break;
+                                case TaskReturnType.TaskObject:
+                                    result = await method.InvokeObjectAsync(this, os);
+                                    break;
+                                case TaskReturnType.None:
+                                default:
+                                    result = method.Invoke(this, os);
+                                    break;
+                            }
+
                             if (method.HasReturn)
                             {
                                 if (client is HttpClient httpClient)

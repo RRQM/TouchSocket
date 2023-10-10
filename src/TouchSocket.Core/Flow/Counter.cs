@@ -19,11 +19,6 @@ namespace TouchSocket.Core
         protected DateTime m_lastIncrement;
 
         /// <summary>
-        /// 当达到一个周期时触发。
-        /// </summary>
-        public Action<long> OnPeriod { get; set; }
-
-        /// <summary>
         /// 周期内的累计计数值。
         /// </summary>
         public long Count { get => this.m_count; }
@@ -32,6 +27,11 @@ namespace TouchSocket.Core
         /// 最后一次递增时间
         /// </summary>
         public DateTime LastIncrement { get => this.m_lastIncrement; }
+
+        /// <summary>
+        /// 当达到一个周期时触发。
+        /// </summary>
+        public Action<long> OnPeriod { get; set; }
 
         /// <summary>
         /// 计数周期。默认1秒。
@@ -59,6 +59,15 @@ namespace TouchSocket.Core
             }
             Interlocked.Add(ref this.m_count, value);
             return isPeriod;
+        }
+
+        /// <summary>
+        /// 重置<see cref="Count"/>和<see cref="LastIncrement"/>
+        /// </summary>
+        public void Reset()
+        {
+            this.m_count = 0;
+            this.m_lastIncrement = default;
         }
     }
 }

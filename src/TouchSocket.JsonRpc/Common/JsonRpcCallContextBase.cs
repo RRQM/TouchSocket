@@ -42,7 +42,7 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// JsonRpc上下文
         /// </summary>
-        public JsonRpcContext JsonRpcContext { get; internal set; }
+        public JsonRpcRequestContext JsonRpcContext { get; internal set; }
 
         /// <summary>
         /// Json字符串

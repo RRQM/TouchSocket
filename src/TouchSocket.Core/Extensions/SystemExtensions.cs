@@ -205,7 +205,7 @@ namespace TouchSocket.Core
         public static string GetDeterminantName(this MethodInfo methodInfo)
         {
             var stringBuilder = new StringBuilder();
-            stringBuilder.Append($"{methodInfo.DeclaringType?.Namespace}.{methodInfo.DeclaringType?.Name}.{methodInfo.Name}(");
+            stringBuilder.Append($"{methodInfo.DeclaringType?.Namespace}.{methodInfo.DeclaringType?.Name}.{methodInfo.GetName()}(");
 
             foreach (var item in methodInfo.GetParameters())
             {

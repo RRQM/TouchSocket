@@ -67,6 +67,11 @@ namespace TouchSocket.Core
                 byteBlock.Read(out var header, this.HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
+                    if (requestInfo.BodyLength>this.MaxPackageSize)
+                    {
+                        this.OnError($"接收的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
+                        return FilterResult.GoOn;
+                    }
                     request = requestInfo;
                     if (requestInfo.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                     {

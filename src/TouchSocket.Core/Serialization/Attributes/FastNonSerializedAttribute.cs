@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// 忽略的Fast序列化
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class FastNonSerializedAttribute : Attribute
+    public sealed class FastNonSerializedAttribute : Attribute
     {
     }
 }
