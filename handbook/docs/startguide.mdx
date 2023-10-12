@@ -72,11 +72,29 @@ Version="1.2.3"可能不是最新的版本，请前往[Nuget官网](https://www.
 
 :::tip 提示
 
-如果下载速度较慢，可以考虑使用迅雷等工具加速。
+如果下载速度较慢，可以考虑使用迅雷等工具加速。同时不同的包可能有不同的依赖，所以依赖包也需要下载。
 
 :::  
 
-将下载的后缀为`.nupkg`的文件，通过压缩工具`解压`。得到如下目录结构。
+当然你可以通过`nuget.exe`直接下载，这样的好处就是依赖库它会一起下载。首先你需要到[nuget](https://www.nuget.org/downloads)下载可运行程序。一般选择`Windows x86 Commandline`的最新的即可。本示例使用`v6.7.0`.
+
+然后把下载好的`nuget.exe`放到任意目录下。
+
+然后使用`cmd`、或者`powershell`等工具进入该目录（比较简单的操作是，先打开该目录，然后按住`shift`键，然后右击鼠标，会有`在此处打开命令行`或`powershell`等选项）。然后执行下列命令。
+
+```bash
+ .\nuget.exe install TouchSocket -Version 1.2.3 -SolutionDirectory . -PackageSaveMode nupkg
+```
+
+:::tip 提示
+
+Version="1.2.3"可能不是最新的版本，请前往[Nuget官网](https://www.nuget.org/packages?q=TouchSocket)查看。
+
+:::  
+
+然后会在当前目录下，生成一个名为“packages”的文件夹。在这个文件夹就有所有依赖的库。
+
+然后将下载的后缀为`.nupkg`的文件，通过压缩工具`解压`（如果是通过nuget.exe下载的话，不用解压）。得到如下目录结构。
 
 <img src={require('../static/img/docs/startguide-10.png').default} />
 
