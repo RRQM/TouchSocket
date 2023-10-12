@@ -24,9 +24,10 @@ namespace ScreenUdpReceiver
             {
                 this.udpSession = new UdpSession();
 
-                this.udpSession.Received = (endpoint, byteBlock, requestInfo) =>
+                this.udpSession.Received = (c, e) =>
                 {
-                    this.pictureBox1.Image = Image.FromStream(byteBlock);
+                    this.pictureBox1.Image = Image.FromStream(e.ByteBlock);
+                    return EasyTask.CompletedTask;
                 };
                 this.udpSession.Setup(new TouchSocketConfig()
                .SetBindIPHost(new IPHost("127.0.0.1:7790"))

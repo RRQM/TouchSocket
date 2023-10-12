@@ -1,6 +1,7 @@
 ﻿using RpcProxy;
 using System;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 using TouchSocket.XmlRpc;
 
 namespace XmlRpcClientApp
@@ -24,8 +25,7 @@ namespace XmlRpcClientApp
         private static XmlRpcClient GetXmlRpcClient()
         {
             var jsonRpcClient = new XmlRpcClient();
-            jsonRpcClient.Setup("http://127.0.0.1:7789/xmlRpc");
-            jsonRpcClient.Connect();
+            jsonRpcClient.Connect("http://127.0.0.1:7789/xmlRpc");
             Console.WriteLine("连接成功");
             return jsonRpcClient;
         }

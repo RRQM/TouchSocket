@@ -1,6 +1,7 @@
 ﻿using Consul;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -14,16 +15,29 @@ namespace ConsulConsoleApp
             service.Connecting = (client, e) =>
             {
                 service.Logger.Info("Connecting");
+                return Task.CompletedTask;
             };//有客户端正在连接
-            service.Connected = (client, e) => { service.Logger.Info("Connected"); };//有客户端连接
-            service.Disconnected = (client, e) => { service.Logger.Info("Disconnected"); };//有客户端断开连接
-            service.Received = (client, byteBlock, requestInfo) =>
+
+            service.Connected = (client, e) => 
+            { 
+                service.Logger.Info("Connected");
+                return Task.CompletedTask;
+            };//有客户端连接
+
+            service.Disconnected = (client, e) => 
+            { 
+                service.Logger.Info("Disconnected");
+                return Task.CompletedTask;
+            };//有客户端断开连接
+
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
                 //client.Send(mes);//将收到的信息直接返回给发送方
+                return Task.CompletedTask;
             };
 
             service.Setup(new TouchSocketConfig()//载入配置

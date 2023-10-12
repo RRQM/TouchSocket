@@ -18,9 +18,9 @@ namespace NamedPipeServiceConsoleApp
         private static NamedPipeService CreateService()
         {
             var service = new NamedPipeService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端成功连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
+            service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+            service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+            service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetPipeName("touchsocketpipe")//设置命名管道名称
                 .SetNamedPipeListenOptions(list =>

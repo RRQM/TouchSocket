@@ -13,11 +13,12 @@ namespace AccessRestrictionsConsoleApp
         private static void Main(string[] args)
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+                return Task.CompletedTask;
             };
 
             service.Setup(new TouchSocketConfig()//载入配置

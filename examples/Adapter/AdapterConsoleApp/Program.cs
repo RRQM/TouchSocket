@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -29,11 +30,12 @@ namespace AdapterConsoleApp
         private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+                return Task.CompletedTask;
             };
 
             service.Setup(new TouchSocketConfig()//载入配置

@@ -22,12 +22,13 @@ namespace TLVWinFormsApp
         private void button1_Click(object sender, EventArgs e)
         {
             //订阅收到消息事件
-            this.m_tcpService.Received = (client, byteBlock, requestInfo) =>
+            this.m_tcpService.Received = (client,e) =>
             {
-                if (requestInfo is TLVDataFrame frame)
+                if (e.RequestInfo is TLVDataFrame frame)
                 {
                     client.Logger.Info($"服务器收到,Tag={frame.Tag},Len={frame.Length},Value={(frame.Value != null ? Encoding.UTF8.GetString(frame.Value) : string.Empty)}");
                 }
+                return EasyTask.CompletedTask;
             };
 
             var config = new TouchSocketConfig();

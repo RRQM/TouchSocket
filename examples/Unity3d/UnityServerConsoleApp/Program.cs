@@ -27,10 +27,11 @@ namespace UnityServerConsoleApp
         private static void StartUdpService(int port)
         {
             var udpService = new UdpSession();
-            udpService.Received = (remote, byteBlock, requestInfo) =>
+            udpService.Received = (c, e) =>
             {
-                udpService.Send(remote, byteBlock);
-                Console.WriteLine($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+                udpService.Send(e.EndPoint, e.ByteBlock);
+                Console.WriteLine($"收到：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
+                return EasyTask.CompletedTask;
             };
             udpService.Setup(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(port))

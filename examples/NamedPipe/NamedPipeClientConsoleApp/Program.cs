@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
@@ -11,7 +12,7 @@ namespace NamedPipeClientConsoleApp
         {
             var client = CreateClient();
 
-            while (true) 
+            while (true)
             {
                 client.Send(Console.ReadLine());
             }
@@ -20,13 +21,23 @@ namespace NamedPipeClientConsoleApp
         private static NamedPipeClient CreateClient()
         {
             var client = new NamedPipeClient();
-            client.Connected = (client, e) => { };//成功连接到服务器
-            client.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-            client.Received = (client, byteBlock, requestInfo) =>
+            client.Connected = (client, e) =>
+            {
+                return Task.CompletedTask;
+            };//成功连接到服务器
+
+            client.Disconnected = (client, e) =>
+            {
+                return Task.CompletedTask;
+            };//从服务器断开连接，当连接不成功时不会触发。
+
+            client.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 client.Logger.Info($"客户端接收到信息：{mes}");
+
+                return Task.CompletedTask;
             };
 
             //载入配置
@@ -35,7 +46,7 @@ namespace NamedPipeClientConsoleApp
                 .SetPipeName("touchsocketpipe")//管道名称
                 .ConfigurePlugins(a =>
                 {
-                    
+
                 })
                 .ConfigureContainer(a =>
                 {

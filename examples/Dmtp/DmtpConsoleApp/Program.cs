@@ -20,15 +20,16 @@ namespace DmtpConsoleApp
         static async Task Connect_2()
         {
             using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
-            tcpClient.Received = (client, byteBlock, requestInfo) =>
+            tcpClient.Received = (client,e) =>
             {
                 //此处接收服务器返回的消息
-                var flags = byteBlock.ReadUInt16(bigEndian: true);
-                var length = byteBlock.ReadInt32(bigEndian: true);
+                var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
+                var length = e.ByteBlock.ReadInt32(bigEndian: true);
 
-                var json = Encoding.UTF8.GetString(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
 
                 ConsoleLogger.Default.Info($"收到响应：flags={flags}，length={length}，json={json}");
+                return Task.CompletedTask;
             };
 
             //开始链接服务器

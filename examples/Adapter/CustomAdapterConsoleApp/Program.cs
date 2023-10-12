@@ -57,15 +57,15 @@ namespace CustomAdapterConsoleApp
         static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
 
-                if (requestInfo is MyRequestInfo myRequest)
+                if (e.RequestInfo is MyRequestInfo myRequest)
                 {
                     client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
                 }
-               
+                return Task.CompletedTask;
             };
 
             service.Setup(new TouchSocketConfig()//载入配置

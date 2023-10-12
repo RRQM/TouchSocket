@@ -47,13 +47,13 @@ namespace NamedPipeStressTestingConsoleApp
         private static NamedPipeService CreateService(string name)
         {
             var service = new NamedPipeService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端成功连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接\
+            service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+            service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端成功连接
+            service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接\
 
             long count = 0;
             DateTime dateTime = DateTime.Now;
-            service.Received = (client, byteBlock, request) =>
+            service.Received = (client,e) =>
             {
                 if (DateTime.Now-dateTime>TimeSpan.FromSeconds(1))
                 {
@@ -61,7 +61,8 @@ namespace NamedPipeStressTestingConsoleApp
                     count = 0;
                     dateTime = DateTime.Now;
                 }
-                count += byteBlock.Len;
+                count += e.ByteBlock.Len;
+                return EasyTask.CompletedTask;
             };
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetPipeName(name)//设置命名管道名称

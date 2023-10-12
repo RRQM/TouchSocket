@@ -92,14 +92,15 @@ function Banner() {
               source={`
 // highlight-next-line
 var service = new TcpService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnected = (client, e) => { };//有客户端断开连接
-service.Received = (client, byteBlock, requestInfo) =>
+service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置
@@ -111,9 +112,8 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
-
+    }));
+service.Start();//启动
 `}
             />
           </SystemWindow>

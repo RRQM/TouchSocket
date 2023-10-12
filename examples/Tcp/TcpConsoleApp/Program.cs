@@ -11,7 +11,6 @@ namespace ServiceConsoleApp
     {
         private static void Main(string[] args)
         {
-            //GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
             var service = CreateService();
             var client = CreateClient();
             Console.WriteLine("输入任意内容，回车发送");
@@ -24,9 +23,9 @@ namespace ServiceConsoleApp
         private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端成功连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
+            service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+            service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+            service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 
             service.Setup(new TouchSocketConfig()//载入配置
                                                  //.UseAspNetCoreContainer(new ServiceCollection())//使用其他Ioc
@@ -50,13 +49,14 @@ namespace ServiceConsoleApp
         private static TcpClient CreateClient()
         {
             var tcpClient = new TcpClient();
-            tcpClient.Connected = (client, e) => { };//成功连接到服务器
-            tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-            tcpClient.Received = (client, byteBlock, requestInfo) =>
+            tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+            tcpClient.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+            tcpClient.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
+                return EasyTask.CompletedTask;
             };
 
             //载入配置
@@ -76,7 +76,23 @@ namespace ServiceConsoleApp
             tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
         }
+
     }
+
+    class MyTcpClient : TcpClientBase
+    {
+        protected override async Task ReceivedData(ReceivedDataEventArgs e)
+        {
+            //此处逻辑单线程处理。
+
+            //此处处理数据，功能相当于Received委托。
+            string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+            Console.WriteLine($"已接收到信息：{mes}");
+            await base.ReceivedData(e);
+        }
+    }
+
+
 
     internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {

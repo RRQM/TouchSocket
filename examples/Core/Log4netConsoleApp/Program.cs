@@ -17,13 +17,13 @@ namespace Log4netConsoleApp
         private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = async (client, e) =>
             {
                 //从客户端收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 service.Logger.Info($"服务器已从{client.Id}接收到信息：{mes}");
 
-                client.Send(mes);//将收到的信息直接返回给发送方
+                await client.SendAsync(mes);//将收到的信息直接返回给发送方
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
