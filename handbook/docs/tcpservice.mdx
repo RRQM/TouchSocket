@@ -125,29 +125,33 @@ Ssl配置，为Null时则不启用。
 代码如下：
 
 ```csharp
-TcpService service = new TcpService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnecting = (client, e) => { };//有客户端正在断开连接，只有当主动断开时才有效。
-service.Disconnected = (client, e) => { };//有客户端断开连接
-service.Received = (client, byteBlock, requestInfo) =>
+var service = new TcpService();
+service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+service.Disconnecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+    var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
     client.Send(mes);//将收到的信息直接返回给发送方
 
     //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
 
-    var ids = service.GetIds();
-    foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
-    {
-        if (clientId != client.Id)//不给自己发
-        {
-            service.Send(clientId, mes);
-        }
-    }
+    //将收到的信息返回给在线的所有客户端。
+    //注意：这里只是一个建议思路，实际上群发应该使用生产者消费者模式设计
+    //var ids = service.GetIds();
+    //foreach (var clientId in ids)
+    //{
+    //    if (clientId != client.Id)//不给自己发
+    //    {
+    //        service.Send(clientId, mes);
+    //    }
+    //}
+
+    return EasyTask.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置
@@ -159,8 +163,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
+    }));
+
+service.Start();//启动
 ```
 
 :::info 温馨提示
@@ -180,15 +185,14 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 ```csharp
 public class MySocketClient : SocketClient
 {
-    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    protected override async Task ReceivedData(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
-
-        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。但一般建议返回false。
+        await base.ReceivedData(e);
     }
 }
 ```
@@ -204,18 +208,17 @@ public class MyService : TcpService<MySocketClient>
         base.LoadConfig(config);
     }
 
-    protected override void OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
+    protected override async Task OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
-     
+
         //e.Id:对新连接的客户端进行ID初始化，默认情况下是按照设定的规则随机分配的。
         //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
         //e.IsPermitOperation:指示是否允许该客户端链接。
-        base.OnConnecting(socketClient, e);
+        await base.OnConnecting(socketClient, e);
     }
 }
-
 ```
 
 （3）创建服务器（包含MyService）。
@@ -279,7 +282,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 直接添加监听配置是更加个性化的监听配置，它可以单独控制指定监听地址的具体配置，例如：是否启用Ssl加密、使用何种适配器等。
 
 ```csharp
-TcpService service = new TcpService();
+var service = new TcpService();
 
 service.Setup(new TouchSocketConfig()//载入配置
     .SetListenOptions(option =>
@@ -290,7 +293,7 @@ service.Setup(new TouchSocketConfig()//载入配置
             Name = "server1",//名称用于区分监听
             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
             Adapter = () => new NormalDataHandlingAdapter(),//可以单独对当前地址监听，配置适配器
-            //还有其他可配置项，都是单独对当前地址有效。
+                                                            //还有其他可配置项，都是单独对当前地址有效。
         });
 
         option.Add(new TcpListenOption()
@@ -299,7 +302,7 @@ service.Setup(new TouchSocketConfig()//载入配置
             Name = "server2",//名称用于区分监听
             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
             Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-            //还有其他可配置项，都是单独对当前地址有效。
+                                                            //还有其他可配置项，都是单独对当前地址有效。
         });
     }))
     .Start();//启动
@@ -345,16 +348,17 @@ foreach (var item in service.Monitors)
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
 ```csharp
-TcpService service = new TcpService();
-service.Received = (client, byteBlock, requestInfo) =>
+var service = new TcpService();
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts("tcp://127.0.0.1:7789",7790)//同时监听两个地址
+    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -396,7 +400,7 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin
 （2）创建使用插件处理的服务器
 
 ```csharp {10}
-TcpService service = new TcpService();
+var service = new TcpService();
 service.Setup(new TouchSocketConfig()
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>

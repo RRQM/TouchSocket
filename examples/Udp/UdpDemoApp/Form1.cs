@@ -18,17 +18,18 @@ namespace UdpDemoApp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.m_udpSession.Received = (remote, byteBlock, requestInfo) =>
+            this.m_udpSession.Received = (remote,e) =>
             {
-                if (byteBlock.Len > 1024)
+                if (e.ByteBlock.Len > 1024)
                 {
-                    this.m_udpSession.Logger.Info($"收到：{byteBlock.Len}长度的数据。");
+                    this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Len}长度的数据。");
                     this.m_udpSession.Send("收到");
                 }
                 else
                 {
-                    this.m_udpSession.Logger.Info($"收到：{Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len)}");
+                    this.m_udpSession.Logger.Info($"收到：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
                 }
+                return EasyTask.CompletedTask;
             };
 
             this.m_udpSession.Setup(new TouchSocketConfig()
@@ -87,7 +88,6 @@ namespace UdpDemoApp
             //调用GetWaitingClient获取到IWaitingClient的对象。
             var waitClient = this.m_udpSession.GetWaitingClient(new WaitingOptions()
             {
-                AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
                 RemoteIPHost = new IPHost(this.textBox3.Text)//表示目的地址
             });
 

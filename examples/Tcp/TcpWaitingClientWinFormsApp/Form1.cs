@@ -43,7 +43,6 @@ namespace TcpWaitingClientWinFormsApp
                 this.IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
-                    AdapterFilter = AdapterFilter.AllAdapter,
                     BreakTrigger = true,
                     ThrowBreakException = true
                 });
@@ -67,7 +66,6 @@ namespace TcpWaitingClientWinFormsApp
                 this.IsConnected();
                 var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
                 {
-                    AdapterFilter = AdapterFilter.AllAdapter,
                     BreakTrigger = true,
                     ThrowBreakException = true
                 },

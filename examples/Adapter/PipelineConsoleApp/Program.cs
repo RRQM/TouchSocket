@@ -10,9 +10,9 @@ namespace PipelineConsoleApp
         {
             var service = new TcpService();
 
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = async (client, e) =>
             {
-                if (requestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
+                if (e.RequestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
                 {
                     //pipeline.ReadTimeout = 1000 * 60;//设置读取超时时间为60秒。
                     //StreamReader streamReader = new StreamReader(pipeline);//所以可以直接用StreamReader构造
@@ -22,7 +22,7 @@ namespace PipelineConsoleApp
                     while (true)
                     {
                         var buffer = new byte[1024];
-                        var r = pipeline.Read(buffer);
+                        var r = await pipeline.ReadAsync(buffer);
                         var str = Encoding.UTF8.GetString(buffer, 0, r);
                         if (str.Contains("E"))
                         {

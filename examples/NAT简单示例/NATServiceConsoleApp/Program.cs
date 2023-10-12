@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -21,9 +22,9 @@ namespace NATServiceConsoleApp
 
     internal class MyNATService : NATService
     {
-        protected override void OnConnected(NATSocketClient socketClient, ConnectedEventArgs e)
+        protected override async Task OnConnected(NATSocketClient socketClient, ConnectedEventArgs e)
         {
-            base.OnConnected(socketClient, e);
+            await base.OnConnected(socketClient, e);
             try
             {
                 //此处模拟的是只要连接到NAT服务器，就转发。
@@ -46,16 +47,16 @@ namespace NATServiceConsoleApp
             base.OnTargetClientDisconnected(socketClient, tcpClient, e);
         }
 
-        protected override byte[] OnNATReceived(NATSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override byte[] OnNATReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
         {
             //服务器收到的数据
-            return base.OnNATReceived(socketClient, byteBlock, requestInfo);
+            return base.OnNATReceived(socketClient, e);
         }
 
-        protected override byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
         {
             //连接的客户端收到的数据
-            return base.OnTargetClientReceived(socketClient, tcpClient, byteBlock, requestInfo);
+            return base.OnTargetClientReceived(socketClient, tcpClient, e);
         }
     }
 }

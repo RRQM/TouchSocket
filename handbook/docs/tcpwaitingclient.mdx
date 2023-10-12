@@ -22,13 +22,12 @@ title: 同步请求
 ### 2.1 以TcpClient为例
 
 ```csharp
-TcpClient client = new TcpClient();
+var client = new TcpClient();
 client.Connect("tcp://127.0.0.1:7789");
 
 //调用GetWaitingClient获取到IWaitingClient的对象。
 var waitClient = client.GetWaitingClient(new WaitingOptions()
 {
-    AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
     BreakTrigger = true,//表示当连接断开时，会立即触发
     ThrowBreakException = true//表示当连接断开时，是否触发异常
 }, 
@@ -54,18 +53,17 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 ```csharp
 var service = new TcpService();
-service.Received = (client, byteBlock, requestInfo) =>
+service.Received = async (client, e) =>
 {
     //调用GetWaitingClient获取到IWaitingClient的对象。
     var waitClient = client.GetWaitingClient(new WaitingOptions()
     {
-        AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
         BreakTrigger = true,//表示当连接断开时，会立即触发
         ThrowBreakException = true//表示当连接断开时，是否触发异常
-    }, 
+    },
     response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
     {
-        if (response.Data.Length==1)
+        if (response.Data.Length == 1)
         {
             return true;
         }
@@ -73,7 +71,7 @@ service.Received = (client, byteBlock, requestInfo) =>
     });
 
     //然后使用SendThenReturn。
-    byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+    byte[] returnData =await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
     client.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
     //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.

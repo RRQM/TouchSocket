@@ -76,15 +76,16 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 
 ```csharp
 var client = new NamedPipeClient();
-client.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建管道，但是还未建立连接
-client.Connected = (client, e) => { };//成功连接到服务器
-client.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
-client.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-client.Received = (client, byteBlock, requestInfo) =>
+client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建管道，但是还未建立连接
+client.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
+client.Disconnecting = (client, e) => {return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
+client.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+client.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     client.Logger.Info($"客户端接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
 
 //载入配置
@@ -113,28 +114,23 @@ client.Send("RRQM");
 一般继承实现的话，可以从NamedPipeClientBase继承。
 
 ```csharp
-class MyNamedPipeClient: NamedPipeClientBase
+class MyNamedPipeClient : NamedPipeClientBase
 {
-    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    protected override async Task ReceivedData(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
 
-        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。
+        await base.ReceivedData(e);
     }
 }
 ```
 
 ```csharp
 var client = new MyNamedPipeClient();
-client.Connecting = (client, e) => { };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
-client.Connected = (client, e) => { };//成功连接到服务器
-client.Disconnecting = (client, e) => { };//即将从服务器断开连接。此处仅主动断开才有效。
-client.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-
 //载入配置
 client.Setup(new TouchSocketConfig()
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
@@ -155,22 +151,15 @@ client.Connect();//调用连接，当连接不成功时，会抛出异常。
 当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
 ```csharp
-var client = new NamedPipe();
-client.Received = (client, byteBlock, requestInfo) =>
+var client = new NamedPipeClient();
+client.Received =(client, e) =>
 {
     //从服务器收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     Console.WriteLine($"接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
-
-//声明配置
-TouchSocketConfig config = new TouchSocketConfig();
-config.
-SetPipeName("TouchSocketPipe");//设置命名管道名称
-
-//载入配置
-tcpClient.Setup(config);
-tcpClient.Connect();
+client.Connect("TouchSocketPipe");
 ```
 
 ### 7.2 插件处理 <Tag>推荐</Tag>

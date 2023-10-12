@@ -96,28 +96,32 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 
 ```csharp
 var service = new NamedPipeService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnecting = (client, e) => { };//有客户端正在断开连接，只有当主动断开时才有效。
-service.Disconnected = (client, e) => { };//有客户端断开连接
-service.Received = (client, byteBlock, requestInfo) =>
+service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
+service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端成功连接
+service.Disconnecting = (client, e) => {return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
     client.Send(mes);//将收到的信息直接返回给发送方
 
     //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
 
-    var ids = service.GetIds();
-    foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
-    {
-        if (clientId != client.Id)//不给自己发
-        {
-            service.Send(clientId, mes);
-        }
-    }
+    //将收到的信息返回给在线的所有客户端。
+    //注意：这只是个设计建议，实际上群发应该使用生产者消费者的设计模式
+    //var ids = service.GetIds();
+    //foreach (var clientId in ids)
+    //{
+    //    if (clientId != client.Id)//不给自己发
+    //    {
+    //        service.Send(clientId, mes);
+    //    }
+    //}
+
+    return Task.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置
@@ -150,15 +154,14 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 ```csharp
 public class MySocketClient : NamedPipeSocketClient
 {
-    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    protected override async Task ReceivedData(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
-
-        return true;//返回true，则表示该数据已被当前处理。不会再触发后续的插件等。但一般建议返回false。
+        await base.ReceivedData(e);
     }
 }
 ```
@@ -174,25 +177,23 @@ public class MyService : NamedPipeService<MySocketClient>
         base.LoadConfig(config);
     }
 
-    protected override void OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
+    protected override async Task OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
-     
+
         //e.Id:对新连接的客户端进行ID初始化，默认情况下是按照设定的规则随机分配的。
         //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
         //e.IsPermitOperation:指示是否允许该客户端链接。
-        base.OnConnecting(socketClient, e);
+        await base.OnConnecting(socketClient, e);
     }
 }
-
 ```
 
 （3）创建服务器（包含MyService）。
 
 ```csharp
-MyService service = new MyService();
-
+var service = new MyService();
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
@@ -209,7 +210,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 （4）创建服务器（不含MyService）。
 
 ```csharp
-TcpService<MySocketClient> service = new TcpService<MySocketClient>();
+var service = new NamedPipeService<MySocketClient>();
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
@@ -238,9 +239,8 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 ```csharp
 var service = new NamedPipeService();
-
 service.Setup(new TouchSocketConfig()//载入配置
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
+    .SetPipeName("TouchSocketPipe"))//设置命名管道名称
     .Start();//启动
 ```
 
@@ -250,9 +250,6 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 ```csharp
 var service = new NamedPipeService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端成功连接
-service.Disconnected = (client, e) => { };//有客户端断开连接
 service.Setup(new TouchSocketConfig()//载入配置
     .SetPipeName("TouchSocketPipe")//设置默认命名管道名称
     .SetNamedPipeListenOptions(list =>
@@ -320,25 +317,20 @@ foreach (var item in service.Monitors)
 
 ```csharp
 var service = new NamedPipeService();
-service.Received = (client, byteBlock, requestInfo) =>
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    }))
-    .Start();//启动
+service.Start("TouchSocketPipe");//启动
 ```
 
 ### 9.2 重写NamedPipeSocketClient处理
 
-正如6.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
+正如6.2所示，可以直接在MySocketClient的重写**ReceivedData**中直接处理数据。
 
 ### 9.3 插件处理 <Tag>推荐</Tag>
 

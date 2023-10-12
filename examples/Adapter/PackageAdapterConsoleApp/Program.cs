@@ -42,11 +42,12 @@ namespace PackageAdapterConsoleApp
         static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);//注意：数据长度是byteBlock.Len
+                string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+                return EasyTask.CompletedTask;
             };
 
             service.Setup(new TouchSocketConfig()//载入配置
