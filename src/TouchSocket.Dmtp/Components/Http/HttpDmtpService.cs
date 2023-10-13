@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -54,10 +55,10 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        protected override void OnConnected(TClient socketClient, ConnectedEventArgs e)
+        protected override async Task OnConnected(TClient socketClient, ConnectedEventArgs e)
         {
             socketClient.m_internalOnRpcActorInit = this.PrivateOnRpcActorInit;
-            base.OnConnected(socketClient, e);
+            await base.OnConnected(socketClient, e);
         }
 
         private IDmtpActor OnServiceFindDmtpActor(string id)

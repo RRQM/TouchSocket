@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -36,9 +37,14 @@ namespace TouchSocket.Core
         public Action<ByteBlock, IRequestInfo> ReceivedCallBack { get; set; }
 
         /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行发送
+        /// 当发送数据处理完成后，回调该函数执行发送
         /// </summary>
         public Action<byte[], int, int> SendCallBack { get; set; }
+
+        /// <summary>
+        /// 当发送数据处理完成后，回调该函数执行异步发送
+        /// </summary>
+        public Func<byte[], int, int, Task> SendAsyncCallBack { get; set; }
 
         /// <summary>
         /// 是否在收到数据时，即刷新缓存时间。默认true。
@@ -54,6 +60,12 @@ namespace TouchSocket.Core
         /// </summary>
         protected DateTime LastCacheTime { get; set; }
 
+        /// <inheritdoc/>
+        public override bool CanSendRequestInfo => false;
+
+        /// <inheritdoc/>
+        public override bool CanSplicingSend => false;
+
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
         /// </summary>
@@ -68,6 +80,17 @@ namespace TouchSocket.Core
             {
                 this.OnError(ex.Message);
             }
+        }
+
+        #region SendInput
+
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        public void SendInput(IRequestInfo requestInfo)
+        {
+            this.PreviewSend(requestInfo);
         }
 
         /// <summary>
@@ -89,6 +112,98 @@ namespace TouchSocket.Core
         {
             this.PreviewSend(transferBytes);
         }
+
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        public Task SendInputAsync(IRequestInfo requestInfo)
+        {
+            return this.PreviewSendAsync(requestInfo);
+        }
+
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        public Task SendInputAsync(byte[] buffer, int offset, int length)
+        {
+            return this.PreviewSendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 发送数据的切入点，该方法由框架自动调用。
+        /// </summary>
+        /// <param name="transferBytes"></param>
+        public Task SendInputAsync(IList<ArraySegment<byte>> transferBytes)
+        {
+            return this.PreviewSendAsync(transferBytes);
+        }
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        protected virtual void PreviewSend(IRequestInfo requestInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="buffer">数据</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        protected virtual void PreviewSend(byte[] buffer, int offset, int length)
+        {
+            this.GoSend(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 组合发送预处理数据，
+        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
+        /// </summary>
+        /// <param name="transferBytes">代发送数据组合</param>
+        protected virtual void PreviewSend(IList<ArraySegment<byte>> transferBytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        protected virtual Task PreviewSendAsync(IRequestInfo requestInfo)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 当发送数据前预先处理数据
+        /// </summary>
+        /// <param name="buffer">数据</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        protected virtual Task PreviewSendAsync(byte[] buffer, int offset, int length)
+        {
+            return this.GoSendAsync(buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 组合发送预处理数据，
+        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
+        /// </summary>
+        /// <param name="transferBytes">代发送数据组合</param>
+        protected virtual Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion SendInput
 
         /// <summary>
         /// <inheritdoc/>
@@ -121,25 +236,22 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 异步发送已经经过预先处理后的数据
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        protected Task GoSendAsync(byte[] buffer, int offset, int length)
+        {
+            return this.SendAsyncCallBack.Invoke(buffer, offset, length);
+        }
+
+        /// <summary>
         /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock, IRequestInfo)"/>处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
         protected abstract void PreviewReceived(ByteBlock byteBlock);
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected abstract void PreviewSend(byte[] buffer, int offset, int length);
-
-        /// <summary>
-        /// 组合发送预处理数据，
-        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
-        /// </summary>
-        /// <param name="transferBytes">代发送数据组合</param>
-        protected abstract void PreviewSend(IList<ArraySegment<byte>> transferBytes);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。

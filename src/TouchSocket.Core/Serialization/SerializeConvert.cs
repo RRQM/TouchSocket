@@ -268,13 +268,6 @@ namespace TouchSocket.Core
             return FastBinaryDeserialize<T>(data, 0);
         }
 
-#if NET6_0_OR_GREATER
-        public static void AddFastBinary<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>()
-        { 
-        
-        }
-#endif
-
         #endregion Fast二进制反序列化
 
         #region Xml序列化和反序列化

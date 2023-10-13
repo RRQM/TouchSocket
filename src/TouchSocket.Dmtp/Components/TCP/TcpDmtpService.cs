@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -59,14 +60,14 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override void OnConnecting(TClient socketClient, ConnectingEventArgs e)
+        protected override async Task OnConnecting(TClient socketClient, ConnectingEventArgs e)
         {
             socketClient.SetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
             {
                 Id = e.Id,
                 OnFindDmtpActor = this.m_allowRoute ? (this.m_findDmtpActor ?? this.OnServiceFindDmtpActor) : null
             });
-            base.OnConnecting(socketClient, e);
+            await base.OnConnecting(socketClient, e);
         }
 
         private IDmtpActor OnServiceFindDmtpActor(string id)

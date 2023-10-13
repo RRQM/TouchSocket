@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
@@ -18,5 +20,5 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     /// <param name="client"></param>
     /// <param name="dataFrame"></param>
-    public delegate void WSDataFrameEventHandler<TClient>(TClient client, WSDataFrame dataFrame);
+    public delegate Task WSDataFrameEventHandler<TClient>(TClient client, WSDataFrame dataFrame);
 }

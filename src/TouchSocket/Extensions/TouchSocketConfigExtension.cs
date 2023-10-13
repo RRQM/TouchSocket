@@ -42,6 +42,7 @@ namespace TouchSocket.Sockets
         /// <para><see cref="ReceiveType.None"/>为不投递IO接收申请，用户可通过<see cref="ITcpClientBase.GetStream"/>，获取到流以后，自己处理接收。注意：连接端不会感知主动断开</para>
         /// 所需类型<see cref="TouchSocket.Sockets. ReceiveType"/>
         /// </summary>
+        [Obsolete("该配置已被弃用，正式版发布时会直接删除", true)]
         public static readonly DependencyProperty<ReceiveType> ReceiveTypeProperty = DependencyProperty<ReceiveType>.Register("ReceiveType", ReceiveType.Iocp);
 
         /// <summary>
@@ -98,6 +99,7 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("该配置已被弃用，正式版发布时会直接删除", true)]
         public static TouchSocketConfig SetReceiveType(this TouchSocketConfig config, ReceiveType value)
         {
             config.SetValue(ReceiveTypeProperty, value);

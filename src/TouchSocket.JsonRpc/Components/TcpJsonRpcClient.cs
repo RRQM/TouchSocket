@@ -397,25 +397,27 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        
+
         /// <inheritdoc/>
-        protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override Task ReceivedData(ReceivedDataEventArgs e)
         {
             string jsonString = null;
-            if (byteBlock == null)
+            if (e.ByteBlock == null)
             {
-                if (requestInfo is IJsonRpcRequestInfo jsonRpcRequest)
+                if (e.RequestInfo is IJsonRpcRequestInfo jsonRpcRequest)
                 {
                     jsonString = jsonRpcRequest.GetJsonRpcString();
                 }
             }
             else
             {
-                jsonString = byteBlock.ToString();
+                jsonString = e.ByteBlock.ToString();
             }
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return base.HandleReceivedData(byteBlock, requestInfo);
+                return base.ReceivedData(e);
             }
 
             try
@@ -437,7 +439,7 @@ namespace TouchSocket.JsonRpc
             catch
             {
             }
-            return base.HandleReceivedData(byteBlock, requestInfo);
+            return base.ReceivedData(e);
         }
     }
 }

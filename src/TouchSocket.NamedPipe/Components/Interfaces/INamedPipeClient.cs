@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {

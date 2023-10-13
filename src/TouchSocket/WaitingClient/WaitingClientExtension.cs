@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets
         /// <param name="waitingOptions"></param>
         /// <param name="func">当条件成立时返回</param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func) where TClient : IClient, IDefaultSender, ISender
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func) where TClient : IClient, ISender
         {
             return new WaitingClient<TClient>(client, waitingOptions, func);
         }
@@ -39,10 +39,9 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IClient, IDefaultSender, ISender
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IClient, ISender
         {
-            var waitingClient = new WaitingClient<TClient>(client, waitingOptions);
-            return waitingClient;
+            return new WaitingClient<TClient>(client, waitingOptions);
         }
     }
 }

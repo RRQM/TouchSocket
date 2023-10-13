@@ -57,12 +57,5 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <exception cref="Exception"></exception>
         ITcpClient Setup(TouchSocketConfig config);
-
-        /// <summary>
-        /// 配置服务器
-        /// </summary>
-        /// <param name="ipHost"></param>
-        /// <returns></returns>
-        ITcpClient Setup(string ipHost);
     }
 }

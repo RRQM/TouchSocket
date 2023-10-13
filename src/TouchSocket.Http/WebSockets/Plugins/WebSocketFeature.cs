@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
     /// </summary>
     [PluginOption(Singleton = true, NotRegister = false)]
-    public sealed class WebSocketFeature : PluginBase, ITcpReceivedPlugin, IHttpPlugin,ITcpDisconnectedPlugin
+    public sealed class WebSocketFeature : PluginBase, ITcpReceivedPlugin, IHttpPlugin, ITcpDisconnectedPlugin
     {
         /// <summary>
         /// 表示是否完成WS握手
@@ -63,7 +63,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 验证连接
         /// </summary>
-        public Func<IHttpSocketClient, HttpContext, bool> VerifyConnection { get; set; }
+        public Func<IHttpSocketClient, HttpContext, Task<bool>> VerifyConnection { get; set; }
 
         /// <summary>
         /// 用于WebSocket连接的路径，默认为“/ws”
@@ -90,7 +90,7 @@ namespace TouchSocket.Http.WebSockets
         {
             if (client.Protocol == Protocol.Http)
             {
-                if (this.VerifyConnection.Invoke(client, e.Context))
+                if (await this.VerifyConnection.Invoke(client, e.Context))
                 {
                     e.Handled = true;
                     _ = client.SwitchProtocolToWebSocket(e.Context);
@@ -109,9 +109,9 @@ namespace TouchSocket.Http.WebSockets
         public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             client.SetValue(HandshakedProperty, false);
-            if (client.TryGetValue(WebSocketClientExtensions.WebSocketProperty, out var internalWebSocket))
+            if (client.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
             {
-                _=internalWebSocket.TryInputReceiveAsync(null);
+                _ = internalWebSocket.TryInputReceiveAsync(null);
             }
             await e.InvokeNext();
         }
@@ -137,6 +137,21 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="func"></param>
         /// <returns></returns>
         public WebSocketFeature SetVerifyConnection(Func<IHttpSocketClient, HttpContext, bool> func)
+        {
+            this.VerifyConnection = async (client, context) =>
+            {
+                await EasyTask.CompletedTask;
+                return func.Invoke(client, context);
+            };
+            return this;
+        }
+
+        /// <summary>
+        /// 验证连接
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public WebSocketFeature SetVerifyConnection(Func<IHttpSocketClient, HttpContext, Task<bool>> func)
         {
             this.VerifyConnection = func;
             return this;
@@ -178,7 +193,7 @@ namespace TouchSocket.Http.WebSockets
                 ((HttpSocketClient)client).PongWS();
                 return;
             }
-            if (client.TryGetValue(WebSocketClientExtensions.WebSocketProperty, out var internalWebSocket))
+            if (client.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
             {
                 if (await internalWebSocket.TryInputReceiveAsync(dataFrame))
                 {
@@ -188,8 +203,9 @@ namespace TouchSocket.Http.WebSockets
             await this.m_pluginsManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), client, new WSDataFrameEventArgs(dataFrame));
         }
 
-        private bool ThisVerifyConnection(IHttpSocketClient client, HttpContext context)
+        private async Task<bool> ThisVerifyConnection(IHttpSocketClient client, HttpContext context)
         {
+            await EasyTask.CompletedTask;
             if (context.Request.Method == HttpMethod.Get)
             {
                 if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))

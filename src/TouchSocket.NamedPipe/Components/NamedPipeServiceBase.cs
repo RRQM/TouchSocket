@@ -97,29 +97,29 @@ namespace TouchSocket.NamedPipe
         /// <returns></returns>
         public abstract IService Stop();
 
-        internal void OnInternalConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
+        internal Task OnInternalConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
         {
-            this.OnClientConnected(socketClient, e);
+            return this.OnClientConnected(socketClient, e);
         }
 
-        internal void OnInternalConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
+        internal Task OnInternalConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
         {
-            this.OnClientConnecting(socketClient, e);
+            return this.OnClientConnecting(socketClient, e);
         }
 
-        internal void OnInternalDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        internal Task OnInternalDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
-            this.OnClientDisconnected(socketClient, e);
+            return this.OnClientDisconnected(socketClient, e);
         }
 
-        internal void OnInternalDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        internal Task OnInternalDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
-            this.OnClientDisconnecting(socketClient, e);
+            return this.OnClientDisconnecting(socketClient, e);
         }
 
-        internal void OnInternalReceivedData(INamedPipeSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        internal Task OnInternalReceivedData(INamedPipeSocketClient socketClient,ReceivedDataEventArgs e)
         {
-            this.OnClientReceivedData(socketClient, byteBlock, requestInfo);
+            return this.OnClientReceivedData(socketClient, e);
         }
 
         /// <summary>
@@ -127,21 +127,21 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e);
+        protected abstract Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e);
 
         /// <summary>
         /// 客户端请求连接
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e);
+        protected abstract Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e);
 
         /// <summary>
         /// 客户端断开连接
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e);
+        protected abstract Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e);
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
@@ -150,15 +150,14 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract void OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e);
+        protected abstract Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e);
 
         /// <summary>
         /// 收到数据时
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected abstract void OnClientReceivedData(INamedPipeSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo);
+        /// <param name="e"></param>
+        protected abstract Task OnClientReceivedData(INamedPipeSocketClient socketClient,ReceivedDataEventArgs e);
 
         #region Id发送
 

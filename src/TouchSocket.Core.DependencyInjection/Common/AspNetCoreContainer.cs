@@ -134,12 +134,8 @@ namespace TouchSocket.Core.AspNetCore
         }
 
         /// <inheritdoc/>
-        public object Resolve(Type fromType, object[] ps = null, string key = "")
+        public object Resolve(Type fromType,string key = "")
         {
-            if (ps != null)
-            {
-                throw new InvalidOperationException("当前容器不支持参数构建");
-            }
             if (key.HasValue())
             {
                 throw new InvalidOperationException("当前容器不支持Key构建");

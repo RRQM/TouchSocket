@@ -15,6 +15,10 @@ namespace TouchSocket.Sockets
     {
         private const string m_msg1 = "远程终端主动关闭";
 
+        /// <summary>
+        /// 初始缓存大小
+        /// </summary>
+        public const int BufferSize = 1024 * 10;
         #region 字段
 
         /// <summary>
@@ -26,9 +30,9 @@ namespace TouchSocket.Sockets
         private bool m_disposedValue;
         private SpinLock m_lock;
         private volatile bool m_online;
-        private int m_receiveBufferSize = 64 * 1024;
+        private int m_receiveBufferSize = BufferSize;
         private ValueCounter m_receiveCounter;
-        private int m_sendBufferSize = 1024 * 64;
+        private int m_sendBufferSize = BufferSize;
         private ValueCounter m_sendCounter;
         private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         #endregion 字段
@@ -299,6 +303,14 @@ namespace TouchSocket.Sockets
             this.SslStream?.Dispose();
             this.SslStream = null;
             this.Socket = null;
+            this.OnReceived = null;
+            this.OnBreakOut = null;
+            this.UserToken = null;
+            this.m_bufferRate = 1;
+            this.m_lock = new SpinLock();
+            this.m_receiveBufferSize = BufferSize;
+            this.m_sendBufferSize = BufferSize;
+            this.m_online = false;
         }
 
         /// <summary>

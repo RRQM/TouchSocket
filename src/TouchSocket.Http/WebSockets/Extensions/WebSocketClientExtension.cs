@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WSClientExtensions
     /// </summary>
-    public static class WebSocketClientExtensions
+    public static class WebSocketClientExtension
     {
         #region DependencyProperty
 

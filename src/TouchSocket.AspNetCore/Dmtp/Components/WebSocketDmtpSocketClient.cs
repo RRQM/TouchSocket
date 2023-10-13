@@ -134,7 +134,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.Config = config;
             this.m_smtpAdapter = new TcpDmtpAdapter()
             {
-                ReceivedCallBack = PrivateHandleReceivedData,
+                ReceivedCallBack = this.PrivateHandleReceivedData,
                 Logger = this.Logger
             };
 
@@ -291,6 +291,29 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         #endregion 事件
 
+        #region Receiver
+
+        /// <summary>
+        /// 不支持该功能
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
+        public IReceiver CreateReceiver()
+        {
+            throw new NotSupportedException("不支持该功能");
+        }
+
+        /// <summary>
+        /// 不支持该功能
+        /// </summary>
+        /// <exception cref="NotSupportedException"></exception>
+        public void ClearReceiver()
+        {
+            throw new NotSupportedException("不支持该功能");
+        }
+
+        #endregion
+
         internal void SetDmtpActor(DmtpActor actor)
         {
             actor.OnResetId = this.ThisOnResetId;
@@ -409,10 +432,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             var message = (DmtpMessage)requestInfo;
             if (!this.m_smtpActor.InputReceivedData(message))
             {
-                if (this.PluginsManager.Enable)
-                {
-                    this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
-                }
+                this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
             }
         }
 

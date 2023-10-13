@@ -57,13 +57,13 @@ namespace TouchSocket.Core
 
         /// <inheritdoc/>
         /// <exception cref="Exception"></exception>
-        public object Resolve(Type fromType, object[] ps = null, string key = "")
+        public object Resolve(Type fromType,string key = "")
         {
             if (fromType.FullName == "TouchSocket.Core.IContainer")
             {
                 return this;
             }
-            if (this.TryResolve(fromType, out var instance, ps, key))
+            if (this.TryResolve(fromType, out var instance, key))
             {
                 return instance;
             }
@@ -90,10 +90,9 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="fromType"></param>
         /// <param name="instance"></param>
-        /// <param name="ps"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        protected virtual bool TryResolve(Type fromType, out object instance, object[] ps = null, string key = "")
+        protected virtual bool TryResolve(Type fromType, out object instance,string key = "")
         {
             if (key.IsNullOrEmpty())
             {

@@ -43,7 +43,6 @@ namespace TouchSocket.Dmtp
 
         #region 字段
 
-        private bool m_allowRoute;
         private ClientWebSocket m_client;
         private Func<string, IDmtpActor> m_findDmtpActor;
         private ValueCounter m_receiveCounter;
@@ -231,18 +230,6 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 配置
         /// </summary>
-        /// <param name="ipHost"></param>
-        /// <returns></returns>
-        public IWebSocketDmtpClient Setup(string ipHost)
-        {
-            var config = new TouchSocketConfig();
-            config.SetRemoteIPHost(new IPHost(ipHost));
-            return this.Setup(config);
-        }
-
-        /// <summary>
-        /// 配置
-        /// </summary>
         /// <param name="config"></param>
         /// <exception cref="Exception"></exception>
         public IWebSocketDmtpClient Setup(TouchSocketConfig config)
@@ -289,7 +276,6 @@ namespace TouchSocket.Dmtp
 
             if (this.Container.IsRegistered(typeof(IDmtpRouteService)))
             {
-                this.m_allowRoute = true;
                 this.m_findDmtpActor = this.Container.Resolve<IDmtpRouteService>().FindDmtpActor;
             }
         }
@@ -413,10 +399,7 @@ namespace TouchSocket.Dmtp
             var message = (DmtpMessage)requestInfo;
             if (!this.m_dmtpActor.InputReceivedData(message))
             {
-                if (this.PluginsManager.Enable)
-                {
-                    this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
-                }
+                this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
             }
         }
 
@@ -526,5 +509,28 @@ namespace TouchSocket.Dmtp
         }
 
         #endregion 事件触发
+
+        #region Receiver
+
+        /// <summary>
+        /// 不支持该功能
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException"></exception>
+        public IReceiver CreateReceiver()
+        {
+            throw new NotSupportedException("不支持该功能");
+        }
+
+        /// <summary>
+        /// 不支持该功能
+        /// </summary>
+        /// <exception cref="NotSupportedException"></exception>
+        public void ClearReceiver()
+        {
+            throw new NotSupportedException("不支持该功能");
+        }
+
+        #endregion
     }
 }

@@ -10,9 +10,6 @@ namespace TouchSocket.Sockets
     {
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 当主动调用Close断开时。
-        /// </para>
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>

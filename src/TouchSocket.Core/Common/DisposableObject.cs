@@ -12,13 +12,14 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 具有释放的对象。内部实现了GC.SuppressFinalize，但不包括析构函数相关。
     /// </summary>
-    public class DisposableObject : IDisposable
+    public partial class DisposableObject : IDisposable
     {
         /// <summary>
         /// 判断是否已释放。
@@ -61,4 +62,19 @@ namespace TouchSocket.Core
             GC.SuppressFinalize(this);
         }
     }
+
+//#if NET6_0_OR_GREATER
+//    public partial class DisposableObject : IAsyncDisposable
+//    {
+//        public ValueTask DisposeAsync()
+//        {
+//            throw new NotImplementedException();
+//        }
+//    }
+//    public class DisposableObject1 : IAsyncDisposable
+//    {
+        
+//    }
+
+//#endif
 }
