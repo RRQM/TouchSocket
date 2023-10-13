@@ -130,7 +130,7 @@ namespace TouchSocket
 
         private void BuildPrivateTryResolve(StringBuilder codeString, List<InjectDescription> singletonDescriptions, List<InjectDescription> transientInjectDescriptions)
         {
-            codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance, object[] ps = null, string key = \"\")");
+            codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance, string key = \"\")");
             codeString.AppendLine("{");
             codeString.AppendLine("string typeKey;");
             codeString.AppendLine("if(key.IsNullOrEmpty())");
@@ -511,7 +511,7 @@ namespace TouchSocket
                 .OfType<IMethodSymbol>()
                 .Any(m =>
                 {
-                    if (m.Name == "TryResolve" && m.IsOverride && m.Parameters.Length == 4)
+                    if (m.Name == "TryResolve" && m.IsOverride && m.Parameters.Length == 3)
                     {
                         return true;
                     }
@@ -526,13 +526,13 @@ namespace TouchSocket
                 return;
             }
 
-            stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance, object[] ps = null, string key = \"\")");
+            stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance, string key = \"\")");
             stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance, ps, key))");
+            stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance, key))");
             stringBuilder.AppendLine("{");
             stringBuilder.AppendLine("return true;");
             stringBuilder.AppendLine("}");
-            stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance, ps, key);");
+            stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance, key);");
             stringBuilder.AppendLine("}");
         }
     }

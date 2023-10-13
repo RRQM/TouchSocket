@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WSDataFrame辅助扩展类
     /// </summary>
-    public static class WebSocketDataFrameExtensions
+    public static class WebSocketDataFrameExtension
     {
         /// <summary>
         /// 追加二进制流

@@ -14,18 +14,15 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
-    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, IDefaultSender, ISender
+    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, ISender
     {
         private readonly Func<ResponsedData, bool> m_func;
-        private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1);
-        private readonly WaitData<ResponsedData> m_waitData = new WaitData<ResponsedData>();
-        private readonly WaitDataAsync<ResponsedData> m_waitDataAsync = new WaitDataAsync<ResponsedData>();
-
+        private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
         private volatile bool m_breaked;
+        private CancellationTokenSource m_cancellation;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func)
         {
@@ -55,61 +52,13 @@ namespace TouchSocket.Sockets
         protected override void Dispose(bool disposing)
         {
             this.Client = default;
-            this.m_waitData.SafeDispose();
+            this.Cancel();
             base.Dispose(disposing);
         }
 
         private void Cancel()
         {
-            this.m_waitData.Cancel();
-            this.m_waitDataAsync.Cancel();
-        }
-
-        private void OnDisconnected(ITcpClientBase client, DisconnectEventArgs e)
-        {
-            this.m_breaked = true;
-            this.Cancel();
-        }
-
-        private bool OnHandleRawBuffer(ByteBlock byteBlock)
-        {
-            var responsedData = new ResponsedData(byteBlock.ToArray(), null, true);
-            if (this.m_func == null || this.m_func.Invoke(responsedData))
-            {
-                return !this.Set(responsedData);
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        private bool OnHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            ResponsedData responsedData;
-            if (byteBlock != null)
-            {
-                responsedData = new ResponsedData(byteBlock.ToArray(), requestInfo, false);
-            }
-            else
-            {
-                responsedData = new ResponsedData(null, requestInfo, false);
-            }
-
-            if (this.m_func == null || this.m_func.Invoke(responsedData))
-            {
-                return !this.Set(responsedData);
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        private void Reset()
-        {
-            this.m_waitData.Reset();
-            this.m_waitDataAsync.Reset();
+            this.m_cancellation.Cancel();
         }
 
         #region 同步Response
@@ -120,78 +69,71 @@ namespace TouchSocket.Sockets
             {
                 this.m_semaphoreSlim.Wait();
                 this.m_breaked = false;
-                this.Reset();
-                if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
+                if (token.CanBeCanceled)
                 {
-                    tcpClient.Disconnected += this.OnDisconnected;
-                }
-
-                if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
-                {
-                    this.Client.OnHandleReceivedData += this.OnHandleReceivedData;
+                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
                 }
                 else
                 {
-                    this.Client.OnHandleRawBuffer += this.OnHandleRawBuffer;
+                    m_cancellation = new CancellationTokenSource(timeout);
                 }
-
-                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+                using (m_cancellation)
                 {
-                    if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
+                    if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
-                        session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-                    }
-                    else
-                    {
-                        session.DefaultSend(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-                    }
-                }
-                else
-                {
-                    if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
-                    {
-                        this.Client.Send(buffer, offset, length);
-                    }
-                    else
-                    {
-                        this.Client.DefaultSend(buffer, offset, length);
-                    }
-                }
-
-                this.m_waitData.SetCancellationToken(token);
-                switch (this.m_waitData.Wait(timeout))
-                {
-                    case WaitDataStatus.SetRunning:
-                        return this.m_waitData.WaitResult;
-
-                    case WaitDataStatus.Overtime:
-                        throw new TimeoutException();
-                    case WaitDataStatus.Canceled:
+                        using (var receiver = session.CreateReceiver())
                         {
-                            return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : (ResponsedData)default;
+                            session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+
+                            while (true)
+                            {
+                                using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                                {
+                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                }
+                            }
                         }
-                    case WaitDataStatus.Default:
-                    case WaitDataStatus.Disposed:
-                    default:
-                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                    }
+                    else
+                    {
+                        using (var receiver = this.Client.CreateReceiver())
+                        {
+                            this.Client.Send(buffer, offset, length);
+                            while (true)
+                            {
+                                using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                                {
+                                    if (receiverResult.IsClosed)
+                                    {
+                                        this.m_breaked = true;
+                                        this.Cancel();
+                                    }
+                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                    if (this.m_func == null)
+                                    {
+                                        return response;
+                                    }
+                                    else
+                                    {
+                                        if (this.m_func.Invoke(response))
+                                        {
+                                            return response;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : default(ResponsedData);
             }
             finally
             {
                 this.m_semaphoreSlim.Release();
-                if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
-                {
-                    tcpClient.Disconnected -= this.OnDisconnected;
-                }
-
-                if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
-                {
-                    this.Client.OnHandleReceivedData -= this.OnHandleReceivedData;
-                }
-                else
-                {
-                    this.Client.OnHandleRawBuffer -= this.OnHandleRawBuffer;
-                }
             }
         }
 
@@ -215,78 +157,71 @@ namespace TouchSocket.Sockets
             {
                 await this.m_semaphoreSlim.WaitAsync();
                 this.m_breaked = false;
-                this.Reset();
-                if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
+                if (token.CanBeCanceled)
                 {
-                    tcpClient.Disconnected += this.OnDisconnected;
-                }
-
-                if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
-                {
-                    this.Client.OnHandleReceivedData += this.OnHandleReceivedData;
+                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
                 }
                 else
                 {
-                    this.Client.OnHandleRawBuffer += this.OnHandleRawBuffer;
+                    m_cancellation = new CancellationTokenSource(timeout);
                 }
-
-                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+                using (m_cancellation)
                 {
-                    if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
+                    if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
-                        session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-                    }
-                    else
-                    {
-                        session.DefaultSend(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-                    }
-                }
-                else
-                {
-                    if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.SendAdapter)
-                    {
-                        this.Client.Send(buffer, offset, length);
-                    }
-                    else
-                    {
-                        this.Client.DefaultSend(buffer, offset, length);
-                    }
-                }
-
-                this.m_waitDataAsync.SetCancellationToken(token);
-                switch (await this.m_waitDataAsync.WaitAsync(timeout))
-                {
-                    case WaitDataStatus.SetRunning:
-                        return this.m_waitData.WaitResult;
-
-                    case WaitDataStatus.Overtime:
-                        throw new TimeoutException();
-                    case WaitDataStatus.Canceled:
+                        using (var receiver = session.CreateReceiver())
                         {
-                            return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : (ResponsedData)default;
+                            await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+
+                            while (true)
+                            {
+                                using (var receiverResult = await receiver.ReadAsync(token))
+                                {
+                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                }
+                            }
                         }
-                    case WaitDataStatus.Default:
-                    case WaitDataStatus.Disposed:
-                    default:
-                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                    }
+                    else
+                    {
+                        using (var receiver = this.Client.CreateReceiver())
+                        {
+                            await this.Client.SendAsync(buffer, offset, length);
+                            while (true)
+                            {
+                                using (var receiverResult = await receiver.ReadAsync(token))
+                                {
+                                    if (receiverResult.IsClosed)
+                                    {
+                                        this.m_breaked = true;
+                                        this.Cancel();
+                                    }
+                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                    if (this.m_func == null)
+                                    {
+                                        return response;
+                                    }
+                                    else
+                                    {
+                                        if (this.m_func.Invoke(response))
+                                        {
+                                            return response;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : default(ResponsedData);
             }
             finally
             {
                 this.m_semaphoreSlim.Release();
-                if (this.WaitingOptions.BreakTrigger && this.Client is ITcpClientBase tcpClient)
-                {
-                    tcpClient.Disconnected -= this.OnDisconnected;
-                }
-
-                if (this.WaitingOptions.AdapterFilter == AdapterFilter.AllAdapter || this.WaitingOptions.AdapterFilter == AdapterFilter.WaitAdapter)
-                {
-                    this.Client.OnHandleReceivedData -= this.OnHandleReceivedData;
-                }
-                else
-                {
-                    this.Client.OnHandleRawBuffer -= this.OnHandleRawBuffer;
-                }
             }
         }
 
@@ -339,12 +274,5 @@ namespace TouchSocket.Sockets
         }
 
         #endregion 字节异步
-
-        private bool Set(ResponsedData responsedData)
-        {
-            this.m_waitData.Set(responsedData);
-            this.m_waitDataAsync.Set(responsedData);
-            return true;
-        }
     }
 }

@@ -85,15 +85,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="requestInfo"></param>
-        protected override void PreviewSend(IRequestInfo requestInfo)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
         }

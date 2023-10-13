@@ -11,11 +11,14 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 适配器筛选
     /// </summary>
+    [Obsolete("此配置已被弃用，所有的数据收发都将需要经过适配器",true)]
     public enum AdapterFilter
     {
         /// <summary>
@@ -47,6 +50,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 适配器筛选
         /// </summary>
+        [Obsolete("此配置已被弃用，所有的数据收发都将需要经过适配器", true)]
         public AdapterFilter AdapterFilter { get; set; } = AdapterFilter.AllAdapter;
 
         /// <summary>

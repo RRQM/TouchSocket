@@ -434,7 +434,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override void OnHandleWSDataFrame(WSDataFrame dataFrame)
+        protected override async Task OnReceivedWSDataFrame(WSDataFrame dataFrame)
         {
             string jsonString = null;
             if (dataFrame.Opcode == WSDataType.Text)
@@ -444,13 +444,13 @@ namespace TouchSocket.JsonRpc
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                base.OnHandleWSDataFrame(dataFrame);
+                await base.OnReceivedWSDataFrame(dataFrame);
                 return;
             }
 
             if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
             {
-                Task.Factory.StartNew(this.ThisInvoke,new WebSocketJsonRpcCallContext(this, jsonString));
+                _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(this, jsonString));
             }
             else
             {
@@ -462,7 +462,7 @@ namespace TouchSocket.JsonRpc
                 }
             }
 
-            base.OnHandleWSDataFrame(dataFrame);
+            await base.OnReceivedWSDataFrame(dataFrame);
         }
     }
 }

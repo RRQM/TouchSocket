@@ -305,14 +305,14 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override Task ReceivedData(ReceivedDataEventArgs e)
         {
-            var httpResponse = (HttpResponse)requestInfo;
+            var httpResponse = (HttpResponse)e.RequestInfo;
             var jsonString = httpResponse.GetBody();
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return base.HandleReceivedData(byteBlock, requestInfo);
+                return base.ReceivedData(e);
             }
 
             try
@@ -327,7 +327,7 @@ namespace TouchSocket.JsonRpc
             catch
             {
             }
-            return base.HandleReceivedData(byteBlock, requestInfo);
+            return base.ReceivedData(e);
         }
     }
 }

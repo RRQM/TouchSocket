@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -25,12 +26,10 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="data"></param>
         /// <param name="requestInfo"></param>
-        /// <param name="isRawBuffer"></param>
-        public ResponsedData(byte[] data, IRequestInfo requestInfo, bool isRawBuffer)
+        public ResponsedData(byte[] data, IRequestInfo requestInfo)
         {
             this.Data = data;
             this.RequestInfo = requestInfo;
-            this.IsRawBuffer = isRawBuffer;
         }
 
         /// <summary>
@@ -42,10 +41,5 @@ namespace TouchSocket.Sockets
         /// RequestInfo
         /// </summary>
         public IRequestInfo RequestInfo { get; private set; }
-
-        /// <summary>
-        /// 是否为原生缓存区。即没有经过适配器处理。
-        /// </summary>
-        public bool IsRawBuffer { get; private set; }
     }
 }

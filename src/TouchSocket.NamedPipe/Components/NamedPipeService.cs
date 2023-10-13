@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
@@ -20,16 +21,14 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         public ReceivedEventHandler<NamedPipeSocketClient> Received { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected override void OnReceived(NamedPipeSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override Task OnReceived(NamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
-            this.Received?.Invoke(socketClient, byteBlock, requestInfo);
-            base.OnReceived(socketClient, byteBlock, requestInfo);
+            if (this.Received != null)
+            {
+                return this.Received.Invoke(socketClient, e);
+            }
+            return EasyTask.CompletedTask;
         }
     }
 
@@ -67,9 +66,6 @@ namespace TouchSocket.NamedPipe
         #region 属性
 
         /// <inheritdoc/>
-        public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
-
-        /// <inheritdoc/>
         public override TouchSocketConfig Config { get => this.m_config; }
 
         /// <inheritdoc/>
@@ -83,6 +79,9 @@ namespace TouchSocket.NamedPipe
 
         /// <inheritdoc/>
         public override IPluginsManager PluginsManager { get => this.m_pluginsManager; }
+
+        /// <inheritdoc/>
+        public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
         /// <inheritdoc/>
         public override ServerState ServerState => this.m_serverState;
@@ -110,10 +109,7 @@ namespace TouchSocket.NamedPipe
 
             var networkMonitor = new NamedPipeMonitor(option);
 
-            new Thread(this.ThreadBegin)
-            {
-                IsBackground = true
-            }.Start(networkMonitor);
+            Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
             this.m_monitors.Add(networkMonitor);
         }
 
@@ -382,7 +378,7 @@ namespace TouchSocket.NamedPipe
             this.m_pluginsManager = pluginsManager;
         }
 
-        private void OnClientSocketInit(NamedPipeServerStream namedPipe, NamedPipeMonitor monitor)
+        private async Task OnClientSocketInit(NamedPipeServerStream namedPipe, NamedPipeMonitor monitor)
         {
             var client = this.GetClientInstence(namedPipe, monitor);
             client.InternalSetConfig(this.m_config);
@@ -395,21 +391,21 @@ namespace TouchSocket.NamedPipe
             {
                 client.SetDataHandlingAdapter(monitor.Option.Adapter.Invoke());
             }
-            client.InternalInitialized();
+            await client.InternalInitialized();
 
             var args = new ConnectingEventArgs(null)
             {
                 Id = this.m_getDefaultNewId.Invoke()
             };
-            client.InternalConnecting(args);//Connecting
+            await client.InternalConnecting(args);//Connecting
             if (args.IsPermitOperation)
             {
                 client.InternalSetId(args.Id);
                 if (this.m_socketClients.TryAdd(client))
                 {
-                    client.InternalConnected(new ConnectedEventArgs());
+                    _ = client.InternalConnected(new ConnectedEventArgs());
 
-                    client.BeginReceive();
+                    _ = client.BeginReceive();
                 }
                 else
                 {
@@ -422,7 +418,7 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        private void ThreadBegin(object obj)
+        private async Task ThreadBegin(object obj)
         {
             var monitor = (NamedPipeMonitor)obj;
             var option = monitor.Option;
@@ -438,7 +434,7 @@ namespace TouchSocket.NamedPipe
 
                     namedPipe.WaitForConnection();
 
-                    this.OnClientSocketInit(namedPipe, monitor);
+                    await this.OnClientSocketInit(namedPipe, monitor);
                 }
                 catch (Exception ex)
                 {
@@ -466,25 +462,17 @@ namespace TouchSocket.NamedPipe
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 当主动调用Close断开时，可通过<see cref="MsgPermitEventArgs.IsPermitOperation"/>终止断开行为。
-        /// </para>
         /// </summary>
         public DisconnectEventHandler<TClient> Disconnecting { get; set; }
 
         /// <summary>
-        /// 当客户端Id被修改时触发。
-        /// </summary>
-        public IdChangedEventHandler<TClient> IdChanged { get; set; }
-
-        /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
+        protected override sealed Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
         {
-            this.OnConnected((TClient)socketClient, e);
+            return this.OnConnected((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -492,9 +480,9 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
+        protected override sealed Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
         {
-            this.OnConnecting((TClient)socketClient, e);
+            return this.OnConnecting((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -502,9 +490,9 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
-            this.OnDisconnected((TClient)socketClient, e);
+            return this.OnDisconnected((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -512,9 +500,9 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed void OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
-            this.OnDisconnecting((TClient)socketClient, e);
+            return this.OnDisconnecting((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -523,9 +511,9 @@ namespace TouchSocket.NamedPipe
         /// <param name="socketClient"></param>
         /// <param name="byteBlock"></param>
         /// <param name="requestInfo"></param>
-        protected override sealed void OnClientReceivedData(INamedPipeSocketClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected override sealed Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
-            this.OnReceived((TClient)socketClient, byteBlock, requestInfo);
+            return this.OnReceived((TClient)socketClient, e);
         }
 
         /// <summary>
@@ -533,9 +521,13 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnected(TClient socketClient, ConnectedEventArgs e)
+        protected virtual Task OnConnected(TClient socketClient, ConnectedEventArgs e)
         {
-            this.Connected?.Invoke(socketClient, e);
+            if (this.Connected != null)
+            {
+                return this.Connected.Invoke(socketClient, e);
+            }
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -543,9 +535,13 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnConnecting(TClient socketClient, ConnectingEventArgs e)
+        protected virtual Task OnConnecting(TClient socketClient, ConnectingEventArgs e)
         {
-            this.Connecting?.Invoke(socketClient, e);
+            if (this.Connecting != null)
+            {
+                return this.Connecting.Invoke(socketClient, e);
+            }
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -553,32 +549,37 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnected(TClient socketClient, DisconnectEventArgs e)
+        protected virtual Task OnDisconnected(TClient socketClient, DisconnectEventArgs e)
         {
-            this.Disconnected?.Invoke(socketClient, e);
+            if (this.Disconnected != null)
+            {
+                return this.Disconnected.Invoke(socketClient, e);
+            }
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
-        /// <para>
-        /// 当主动调用Close断开时，可通过<see cref="MsgPermitEventArgs.IsPermitOperation"/>终止断开行为。
-        /// </para>
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual void OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
+        protected virtual Task OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
         {
-            this.Disconnecting?.Invoke(socketClient, e);
+            if (this.Disconnecting != null)
+            {
+                return this.Disconnecting.Invoke(socketClient, e);
+            }
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
         /// 当收到适配器数据。
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
-        protected virtual void OnReceived(TClient socketClient, ByteBlock byteBlock, IRequestInfo requestInfo)
+        /// <param name="e"></param>
+        protected virtual Task OnReceived(TClient socketClient, ReceivedDataEventArgs e)
         {
+            return EasyTask.CompletedTask;
         }
 
         #endregion 事件

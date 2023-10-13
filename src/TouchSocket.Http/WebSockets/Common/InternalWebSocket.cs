@@ -69,7 +69,17 @@ namespace TouchSocket.Http.WebSockets
             await this.m_resetEventForRead.WaitOneAsync(token);
             return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
         }
-
+#if NET6_0_OR_GREATER
+        public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
+        {
+            if (!this.m_receive)
+            {
+                return new WebSocketReceiveResult(this.ComplateRead, null);
+            }
+            await this.m_resetEventForRead.WaitOneAsync(token);
+            return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
+        }
+#endif
         #region 发送
         public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
         {
@@ -139,7 +149,7 @@ namespace TouchSocket.Http.WebSockets
 
         protected override void Dispose(bool disposing)
         {
-            this.m_client.RemoveValue(WebSocketClientExtensions.WebSocketProperty);
+            this.m_client.RemoveValue(WebSocketClientExtension.WebSocketProperty);
             this.m_resetEventForComplateRead.SafeDispose();
             this.m_resetEventForRead.SafeDispose();
             this.m_dataFrame = null;
@@ -148,8 +158,8 @@ namespace TouchSocket.Http.WebSockets
 
         private void ComplateRead()
         {
-            this.m_resetEventForComplateRead.Set();
             this.m_dataFrame = default;
+            this.m_resetEventForComplateRead.Set();
         }
     }
 }

@@ -86,16 +86,6 @@ namespace TouchSocket.Http
             return this;
         }
 
-        /// <summary>
-        /// 配置
-        /// </summary>
-        /// <param name="remoteIPHost"></param>
-        /// <returns></returns>
-        public HttpClientSlim Setup(string remoteIPHost)
-        {
-            return this.Setup(new TouchSocketConfig().SetRemoteIPHost(remoteIPHost));
-        }
-
         private void BuildConfig(TouchSocketConfig config)
         {
             this.Config = config;

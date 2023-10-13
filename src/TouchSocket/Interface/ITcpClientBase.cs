@@ -83,6 +83,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 接收模式
         /// </summary>
+        [Obsolete("该配置已被弃用，正式版发布时会直接删除", true)]
         public ReceiveType ReceiveType { get; }
 
         /// <summary>
@@ -101,6 +102,7 @@ namespace TouchSocket.Sockets
         /// 获取流，在正常模式下为<see cref="NetworkStream"/>，在Ssl模式下为<see cref="SslStream"/>。
         /// </summary>
         /// <returns></returns>
+        [Obsolete("该方法已被弃用，正式版发布时会直接删除", true)]
         Stream GetStream();
 
         /// <summary>

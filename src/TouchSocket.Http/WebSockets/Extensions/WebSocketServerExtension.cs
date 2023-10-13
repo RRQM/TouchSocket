@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocketServerExtensions
     /// </summary>
-    public static class WebSocketServerExtensions
+    public static class WebSocketServerExtension
     {
         /// <summary>
         /// 转化Protocol协议标识为<see cref="Protocol.WebSocket"/>
@@ -40,7 +40,8 @@ namespace TouchSocket.Http.WebSockets
                     {
                         IsPermitOperation = true
                     };
-                    await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), client, args);
+                    await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), client, args).ConfigureAwait(false);
+
                     if (args.Context.Response.Responsed)
                     {
                         return false;
@@ -54,9 +55,10 @@ namespace TouchSocket.Http.WebSockets
                         using (var byteBlock = new ByteBlock())
                         {
                             args.Context.Response.Build(byteBlock);
-                            await client.DefaultSendAsync(byteBlock);
+                            await client.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
-                        await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext));
+                        await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext))
+                            .ConfigureAwait(false);
                         return true;
                     }
                     else
@@ -65,7 +67,7 @@ namespace TouchSocket.Http.WebSockets
                         using (var byteBlock = new ByteBlock())
                         {
                             args.Context.Response.Build(byteBlock);
-                            await client.DefaultSendAsync(byteBlock);
+                            await client.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
 
                         client.Close("主动拒绝WebSocket连接");

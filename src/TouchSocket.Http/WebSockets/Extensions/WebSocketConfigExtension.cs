@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// WebSocketConfigExtensions
     /// </summary>
-    public static class WebSocketConfigExtensions
+    public static class WebSocketConfigExtension
     {
         /// <summary>
         /// 构建WebSocketClient类客户端，并连接
