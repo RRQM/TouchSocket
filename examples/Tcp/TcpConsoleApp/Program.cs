@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -11,15 +12,17 @@ namespace ServiceConsoleApp
     {
         private static void Main(string[] args)
         {
+            var consoleAction = new ConsoleAction();
+            consoleAction.Add("1", "以Received委托接收", RunClientForReceived);
+            consoleAction.Add("2", "以ReadAsync异步阻塞接收", () => { RunClientForRead().GetFalseAwaitResult(); });
+            
             var service = CreateService();
-            var client = CreateClient();
-            Console.WriteLine("输入任意内容，回车发送");
-            while (true)
-            {
-                client.Send(Console.ReadLine());
-            }
+
+            consoleAction.ShowAll();
+            consoleAction.RunCommandLine();
         }
 
+       
         private static TcpService CreateService()
         {
             var service = new TcpService();
@@ -46,21 +49,25 @@ namespace ServiceConsoleApp
             return service;
         }
 
-        private static TcpClient CreateClient()
+
+        /// <summary>
+        /// 以Received异步委托接收数据
+        /// </summary>
+        private static void RunClientForReceived()
         {
-            var tcpClient = new TcpClient();
-            tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
-            tcpClient.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
-            tcpClient.Received = (client, e) =>
+            var client = new TcpClient();
+            client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+            client.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+            client.Received = (client, e) =>
             {
                 //从服务器收到信息
                 var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
-                tcpClient.Logger.Info($"客户端接收到信息：{mes}");
+                client.Logger.Info($"客户端接收到信息：{mes}");
                 return EasyTask.CompletedTask;
             };
 
             //载入配置
-            tcpClient.Setup(new TouchSocketConfig()
+            client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
@@ -73,10 +80,59 @@ namespace ServiceConsoleApp
                     a.AddConsoleLogger();//添加一个日志注入
                 }))
                 .Connect();
-            tcpClient.Logger.Info("客户端成功连接");
-            return tcpClient;
+            client.Logger.Info("客户端成功连接");
+
+
+            Console.WriteLine("输入任意内容，回车发送");
+            while (true)
+            {
+                client.Send(Console.ReadLine());
+            }
         }
 
+
+        private static async Task RunClientForRead()
+        {
+            var client = new TcpClient();
+            
+            //载入配置
+            client.Setup(new TouchSocketConfig()
+                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                .ConfigurePlugins(a =>
+                {
+                    a.UseReconnection()
+                    .SetTick(TimeSpan.FromSeconds(1))
+                    .UsePolling();
+                })
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();//添加一个日志注入
+                }))
+                .Connect();
+            client.Logger.Info("客户端成功连接");
+
+            Console.WriteLine("输入任意内容，回车发送");
+            while (true)
+            {
+                client.Send(Console.ReadLine());
+
+                //receiver可以复用，不需要每次接收都新建
+                using (var receiver=client.CreateReceiver())
+                {
+                    using ( var receiverResult=await receiver.ReadAsync(CancellationToken.None))
+                    {
+                        if (receiverResult.IsClosed)
+                        {
+                            //断开连接了
+                        }
+
+                        //从服务器收到信息
+                        var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
+                        client.Logger.Info($"客户端接收到信息：{mes}");
+                    }
+                }
+            }
+        }
     }
 
     class MyTcpClient : TcpClientBase
@@ -140,16 +196,16 @@ namespace ServiceConsoleApp
             //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
 
             //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
-            var ids = client.Service.GetIds();
-            foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
-            {
-                if (clientId != client.Id)//不给自己发
-                {
-                    await client.Service.SendAsync(clientId, mes);
-                }
-            }
+            //var ids = client.Service.GetIds();
+            //foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+            //{
+            //    if (clientId != client.Id)//不给自己发
+            //    {
+            //        await client.Service.SendAsync(clientId, mes);
+            //    }
+            //}
 
-            //await Task.Delay(1000);
+            await e.InvokeNext();
         }
     }
 
