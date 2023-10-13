@@ -15,14 +15,14 @@ namespace ServiceConsoleApp
             var consoleAction = new ConsoleAction();
             consoleAction.Add("1", "以Received委托接收", RunClientForReceived);
             consoleAction.Add("2", "以ReadAsync异步阻塞接收", () => { RunClientForRead().GetFalseAwaitResult(); });
-            
+
             var service = CreateService();
 
             consoleAction.ShowAll();
             consoleAction.RunCommandLine();
         }
 
-       
+
         private static TcpService CreateService()
         {
             var service = new TcpService();
@@ -66,22 +66,9 @@ namespace ServiceConsoleApp
                 return EasyTask.CompletedTask;
             };
 
-            //载入配置
-            client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .ConfigurePlugins(a =>
-                {
-                    a.UseReconnection()
-                    .SetTick(TimeSpan.FromSeconds(1))
-                    .UsePolling();
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Connect();
+            client.Setup(GetConfig());//载入配置
+            client.Connect();//连接
             client.Logger.Info("客户端成功连接");
-
 
             Console.WriteLine("输入任意内容，回车发送");
             while (true)
@@ -90,25 +77,26 @@ namespace ServiceConsoleApp
             }
         }
 
-
+        private static TouchSocketConfig GetConfig()
+        {
+            return new TouchSocketConfig()
+                    .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                    .ConfigurePlugins(a =>
+                    {
+                        a.UseReconnection()
+                        .SetTick(TimeSpan.FromSeconds(1))
+                        .UsePolling();
+                    })
+                    .ConfigureContainer(a =>
+                    {
+                        a.AddConsoleLogger();//添加一个日志注入
+                    });
+        }
         private static async Task RunClientForRead()
         {
             var client = new TcpClient();
-            
-            //载入配置
-            client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-                .ConfigurePlugins(a =>
-                {
-                    a.UseReconnection()
-                    .SetTick(TimeSpan.FromSeconds(1))
-                    .UsePolling();
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Connect();
+            client.Setup(GetConfig());//载入配置
+            client.Connect();//连接
             client.Logger.Info("客户端成功连接");
 
             Console.WriteLine("输入任意内容，回车发送");
@@ -117,9 +105,9 @@ namespace ServiceConsoleApp
                 client.Send(Console.ReadLine());
 
                 //receiver可以复用，不需要每次接收都新建
-                using (var receiver=client.CreateReceiver())
+                using (var receiver = client.CreateReceiver())
                 {
-                    using ( var receiverResult=await receiver.ReadAsync(CancellationToken.None))
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
                         if (receiverResult.IsClosed)
                         {
