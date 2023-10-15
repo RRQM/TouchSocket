@@ -71,7 +71,8 @@ namespace TouchSocket.Sockets
                 this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
-                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    using CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeout);
+                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, token);
                 }
                 else
                 {
@@ -87,7 +88,7 @@ namespace TouchSocket.Sockets
 
                             while (true)
                             {
-                                using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                                using (var receiverResult = receiver.ReadAsync(m_cancellation.Token).GetFalseAwaitResult())
                                 {
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
                                 }
@@ -101,7 +102,7 @@ namespace TouchSocket.Sockets
                             this.Client.Send(buffer, offset, length);
                             while (true)
                             {
-                                using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                                using (var receiverResult = receiver.ReadAsync(m_cancellation.Token).GetFalseAwaitResult())
                                 {
                                     if (receiverResult.IsClosed)
                                     {
@@ -159,7 +160,8 @@ namespace TouchSocket.Sockets
                 this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
-                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    using CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeout);
+                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, token);
                 }
                 else
                 {
@@ -175,7 +177,7 @@ namespace TouchSocket.Sockets
 
                             while (true)
                             {
-                                using (var receiverResult = await receiver.ReadAsync(token))
+                                using (var receiverResult = await receiver.ReadAsync(m_cancellation.Token))
                                 {
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
                                 }
@@ -189,7 +191,7 @@ namespace TouchSocket.Sockets
                             await this.Client.SendAsync(buffer, offset, length);
                             while (true)
                             {
-                                using (var receiverResult = await receiver.ReadAsync(token))
+                                using (var receiverResult = await receiver.ReadAsync(m_cancellation.Token))
                                 {
                                     if (receiverResult.IsClosed)
                                     {
