@@ -582,6 +582,13 @@ namespace TouchSocket.Sockets
 
         private void PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
+            if (this.m_receiver != null)
+            {
+                if (this.m_receiver.TryInputReceive(byteBlock, requestInfo))
+                {
+                    return;
+                }
+            }
             this.ReceivedData(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo));
         }
 
