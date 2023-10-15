@@ -21,9 +21,9 @@ Pipeline适配器，是结合IOCP与管道模型结合的产物。功能类似�
 ```csharp
 TcpService service = new TcpService();
 
-service.Received += (client, byteBlock, requestInfo) =>
+service.Received += (client, e) =>
 {
-    if (requestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
+    if (e.RequestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
     {
         pipeline.ReadTimeout = 1000 * 60;//设置读取超时时间为60秒。
         StreamReader streamReader = new StreamReader(pipeline);//所以可以直接用StreamReader构造

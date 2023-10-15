@@ -117,10 +117,10 @@ public class MyCustomUnfixedHeaderDataHandlingAdapter : CustomUnfixedHeaderDataH
 
 ```csharp
 TcpService service = new TcpService();
-service.Received += (client, byteBlock, requestInfo) =>
+service.Received += (client, e) =>
 {
     //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (requestInfo is MyUnfixedHeaderRequestInfo myRequestInfo)
+    if (e.RequestInfo is MyUnfixedHeaderRequestInfo myRequestInfo)
     {
         //此处可以处理MyUnfixedHeaderRequestInfo的相关信息了。
         string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);

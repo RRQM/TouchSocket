@@ -85,10 +85,10 @@ class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapte
 
 ```csharp
 TcpService service = new TcpService();
-service.Received += (client, byteBlock, requestInfo) =>
+service.Received += (client, e) =>
 {
     //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (requestInfo is MyBetweenAndRequestInfo myRequestInfo)
+    if (e.RequestInfo is MyBetweenAndRequestInfo myRequestInfo)
     {
         //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
     }
