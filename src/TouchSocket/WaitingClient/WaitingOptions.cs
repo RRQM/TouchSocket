@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 适配器筛选
     /// </summary>
-    [Obsolete("此配置已被弃用，所有的数据收发都将需要经过适配器",true)]
+    [Obsolete("此配置已被弃用，所有的数据收发都将需要经过适配器", true)]
     public enum AdapterFilter
     {
         /// <summary>
@@ -67,5 +67,10 @@ namespace TouchSocket.Sockets
         /// 当Client为Tcp系时。是否在断开连接时以异常返回结果。
         /// </summary>
         public bool ThrowBreakException { get; set; } = true;
+
+        /// <summary>
+        /// 筛选函数
+        /// </summary>
+        public Func<ResponsedData, bool> FilterFunc { get; set; }
     }
 }

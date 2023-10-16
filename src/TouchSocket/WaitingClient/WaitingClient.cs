@@ -19,17 +19,9 @@ namespace TouchSocket.Sockets
 {
     internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, ISender
     {
-        private readonly Func<ResponsedData, bool> m_func;
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
         private volatile bool m_breaked;
-        private CancellationTokenSource m_cancellation;
-
-        public WaitingClient(TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func)
-        {
-            this.Client = client ?? throw new ArgumentNullException(nameof(client));
-            this.WaitingOptions = waitingOptions;
-            this.m_func = func;
-        }
+        private CancellationTokenSource m_cancellationTokenSource;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
@@ -49,21 +41,8 @@ namespace TouchSocket.Sockets
 
         public WaitingOptions WaitingOptions { get; set; }
 
-        protected override void Dispose(bool disposing)
-        {
-            this.Client = default;
-            this.Cancel();
-            base.Dispose(disposing);
-        }
-
-        private void Cancel()
-        {
-            this.m_cancellation.Cancel();
-        }
-
-        #region 同步Response
-
-        public ResponsedData SendThenResponse(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default)
+        #region 发送
+        public ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
             try
             {
@@ -71,14 +50,13 @@ namespace TouchSocket.Sockets
                 this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
-                    using CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeout);
-                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, token);
+                    this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 }
                 else
                 {
-                    m_cancellation = new CancellationTokenSource(timeout);
+                    this.m_cancellationTokenSource = new CancellationTokenSource(5000);
                 }
-                using (m_cancellation)
+                using (m_cancellationTokenSource)
                 {
                     if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
@@ -88,7 +66,7 @@ namespace TouchSocket.Sockets
 
                             while (true)
                             {
-                                using (var receiverResult = receiver.ReadAsync(m_cancellation.Token).GetFalseAwaitResult())
+                                using (var receiverResult = receiver.ReadAsync(this.m_cancellationTokenSource.Token).GetFalseAwaitResult())
                                 {
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
                                 }
@@ -102,7 +80,7 @@ namespace TouchSocket.Sockets
                             this.Client.Send(buffer, offset, length);
                             while (true)
                             {
-                                using (var receiverResult = receiver.ReadAsync(m_cancellation.Token).GetFalseAwaitResult())
+                                using (var receiverResult = receiver.ReadAsync(this.m_cancellationTokenSource.Token).GetFalseAwaitResult())
                                 {
                                     if (receiverResult.IsClosed)
                                     {
@@ -111,13 +89,13 @@ namespace TouchSocket.Sockets
                                     }
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
-                                    if (this.m_func == null)
+                                    if (this.WaitingOptions.FilterFunc == null)
                                     {
                                         return response;
                                     }
                                     else
                                     {
-                                        if (this.m_func.Invoke(response))
+                                        if (this.WaitingOptions.FilterFunc.Invoke(response))
                                         {
                                             return response;
                                         }
@@ -134,25 +112,12 @@ namespace TouchSocket.Sockets
             }
             finally
             {
+                this.m_cancellationTokenSource= null;
                 this.m_semaphoreSlim.Release();
             }
         }
 
-        public ResponsedData SendThenResponse(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return this.SendThenResponse(buffer, 0, buffer.Length, timeout, token);
-        }
-
-        public ResponsedData SendThenResponse(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return this.SendThenResponse(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
-        }
-
-        #endregion 同步Response
-
-        #region Response异步
-
-        public async Task<ResponsedData> SendThenResponseAsync(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default)
+        public async Task<ResponsedData> SendThenResponseAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
             try
             {
@@ -160,14 +125,13 @@ namespace TouchSocket.Sockets
                 this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
-                    using CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(timeout);
-                    m_cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, token);
+                    this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 }
                 else
                 {
-                    m_cancellation = new CancellationTokenSource(timeout);
+                    this.m_cancellationTokenSource = new CancellationTokenSource(5000);
                 }
-                using (m_cancellation)
+                using (m_cancellationTokenSource)
                 {
                     if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
@@ -177,7 +141,7 @@ namespace TouchSocket.Sockets
 
                             while (true)
                             {
-                                using (var receiverResult = await receiver.ReadAsync(m_cancellation.Token))
+                                using (var receiverResult = await receiver.ReadAsync(m_cancellationTokenSource.Token))
                                 {
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
                                 }
@@ -191,7 +155,7 @@ namespace TouchSocket.Sockets
                             await this.Client.SendAsync(buffer, offset, length);
                             while (true)
                             {
-                                using (var receiverResult = await receiver.ReadAsync(m_cancellation.Token))
+                                using (var receiverResult = await receiver.ReadAsync(this.m_cancellationTokenSource.Token))
                                 {
                                     if (receiverResult.IsClosed)
                                     {
@@ -200,13 +164,13 @@ namespace TouchSocket.Sockets
                                     }
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
-                                    if (this.m_func == null)
+                                    if (this.WaitingOptions.FilterFunc == null)
                                     {
                                         return response;
                                     }
                                     else
                                     {
-                                        if (this.m_func.Invoke(response))
+                                        if (this.WaitingOptions.FilterFunc.Invoke(response))
                                         {
                                             return response;
                                         }
@@ -223,58 +187,39 @@ namespace TouchSocket.Sockets
             }
             finally
             {
+                this.m_cancellationTokenSource = null;
                 this.m_semaphoreSlim.Release();
             }
         }
 
-        public Task<ResponsedData> SendThenResponseAsync(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default)
+        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
-            return this.SendThenResponseAsync(buffer, 0, buffer.Length, timeout, token);
+            return this.SendThenResponse(buffer, offset, length, token).Data;
         }
 
-        public Task<ResponsedData> SendThenResponseAsync(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default)
+        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
-            return this.SendThenResponseAsync(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
+            return (await this.SendThenResponseAsync(buffer, offset, length, token)).Data;
         }
 
-        #endregion Response异步
+        #endregion
 
-        #region 字节同步
-
-        public byte[] SendThenReturn(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default)
+        protected override void Dispose(bool disposing)
         {
-            return this.SendThenResponse(buffer, offset, length, timeout, token).Data;
+            this.Cancel();
+            this.Client = default;
+            base.Dispose(disposing);
         }
 
-        public byte[] SendThenReturn(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default)
+        private void Cancel()
         {
-            return this.SendThenReturn(buffer, 0, buffer.Length, timeout, token);
+            try
+            {
+                this.m_cancellationTokenSource?.Cancel();
+            }
+            catch
+            {
+            }
         }
-
-        public byte[] SendThenReturn(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return this.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, timeout, token);
-        }
-
-        #endregion 字节同步
-
-        #region 字节异步
-
-        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return (await this.SendThenResponseAsync(buffer, offset, length, timeout, token)).Data;
-        }
-
-        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return (await this.SendThenResponseAsync(buffer, 0, buffer.Length, timeout, token)).Data;
-        }
-
-        public async Task<byte[]> SendThenReturnAsync(ByteBlock byteBlock, int timeout = 1000 * 5, CancellationToken token = default)
-        {
-            return (await this.SendThenResponseAsync(byteBlock.Buffer, 0, byteBlock.Len, timeout, token)).Data;
-        }
-
-        #endregion 字节异步
     }
 }

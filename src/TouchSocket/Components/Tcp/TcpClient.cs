@@ -331,10 +331,7 @@ namespace TouchSocket.Sockets
                 var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty) ?? throw new ArgumentNullException(nameof(IPHost), "iPHost不能为空。");
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
-                this.PrivateOnConnecting(new ConnectingEventArgs(socket))
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
+                this.PrivateOnConnecting(new ConnectingEventArgs(socket)).GetFalseAwaitResult();
                 if (timeout == 5000)
                 {
                     socket.Connect(iPHost.Host, iPHost.Port);
