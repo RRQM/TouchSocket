@@ -7,8 +7,8 @@
 		<PublishAot>true</PublishAot>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.186" />
-		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.186">
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.201" />
+		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.201">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

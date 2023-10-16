@@ -95,10 +95,10 @@ namespace TcpStressTestingConsoleApp
         static TcpService GetTcpService()
         {
             var service = new TcpService();
-            service.Received = (client, byteBlock, requestInfo) =>
+            service.Received = async (client, e) =>
             {
-                byteBlock.SetHolding(true);
-                m_channel.Writer.WriteAsync(byteBlock);
+                e.ByteBlock.SetHolding(true);
+                await m_channel.Writer.WriteAsync(e.ByteBlock);
                 //client.Send(byteBlock);
             };
 
@@ -165,11 +165,6 @@ namespace TcpStressTestingConsoleApp
         static TcpClient GetTcpClient()
         {
             var tcpClient = new TcpClient();
-            tcpClient.Received = (client, byteBlock, requestInfo) =>
-            {
-                //客户端接收
-            };
-
             //载入配置
             tcpClient.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
