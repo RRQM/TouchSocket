@@ -14,6 +14,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestMethod
     {
         [Fact]
@@ -49,13 +50,11 @@ namespace XUnitTestProject.Core
             Assert.True(!method.IsByRef);
             Assert.True(method.ReturnType == null);
             Assert.True(method.TaskType == TaskReturnType.Task);
-
-            Assert.True(method.Invoke(new MyMethod()) == null);
             await method.InvokeAsync(new MyMethod());
         }
 
         [Fact]
-        public async void Method4ShouleBeOk()
+        public async Task Method4ShouleBeOk()
         {
             var method = this.GetMethod("Method4");
             Assert.True(method.HasReturn);
@@ -64,7 +63,7 @@ namespace XUnitTestProject.Core
             Assert.True(method.TaskType == TaskReturnType.TaskObject);
 
             var objs = new object[] { 10 };
-            Assert.True((int)method.Invoke(new MyMethod(), objs) == 11);
+            Assert.True((int)await method.InvokeObjectAsync(new MyMethod(), objs) == 11);
             Assert.True((int)objs[0] == 11);
 
             Assert.True(await method.InvokeAsync<int>(new MyMethod(), objs) == 12);
@@ -81,7 +80,7 @@ namespace XUnitTestProject.Core
             Assert.True(method.TaskType == TaskReturnType.TaskObject);
 
             var objs = new object[] { 10 };
-            Assert.True((int)method.Invoke(new MyMethod(), objs) == 11);
+            Assert.True((int)await method.InvokeObjectAsync(new MyMethod(), objs) == 11);
             Assert.True(await method.InvokeAsync<int>(new MyMethod(), objs) == 11);
         }
 

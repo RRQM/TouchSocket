@@ -472,6 +472,21 @@ Task<ProxyClass1> Test03_GetProxyClassAsync(IInvokeOption invokeOption = default
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+System.String Test38_CallBackJsonRpcService(System.String id,System.Int32 age,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.String> Test38_CallBackJsonRpcServiceAsync(System.String id,System.Int32 age,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 System.Int32 GET_Sum(System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default);
 ///<summary>
 ///无注释信息
@@ -1479,6 +1494,35 @@ return (ProxyClass1) await Client.InvokeAsync(typeof(ProxyClass1),"xunittestcons
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+public System.String Test38_CallBackJsonRpcService(System.String id,System.Int32 age,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id,age};
+System.String returnData=(System.String)Client.Invoke(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test38_callbackjsonrpcservice",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<System.String> Test38_CallBackJsonRpcServiceAsync(System.String id,System.Int32 age,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id,age};
+return (System.String) await Client.InvokeAsync(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test38_callbackjsonrpcservice",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 public System.Int32 GET_Sum(System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default)
 {
 if(Client==null)
@@ -2346,6 +2390,27 @@ return (ProxyClass1) await client.InvokeAsync(typeof(ProxyClass1),"xunittestcons
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+public static System.String Test38_CallBackJsonRpcService<TClient>(this TClient client,System.String id,System.Int32 age,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.JsonRpc.IJsonRpcClient{
+object[] parameters = new object[]{id,age};
+System.String returnData=(System.String)client.Invoke(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test38_callbackjsonrpcservice",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<System.String> Test38_CallBackJsonRpcServiceAsync<TClient>(this TClient client,System.String id,System.Int32 age,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.JsonRpc.IJsonRpcClient{
+object[] parameters = new object[]{id,age};
+return (System.String) await client.InvokeAsync(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test38_callbackjsonrpcservice",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 public static System.Int32 GET_Sum<TClient>(this TClient client,System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{a,b};
@@ -2500,25 +2565,6 @@ return returnData;
 
 }
 
-public class Class01
-{
-public System.Int32 Age{get;set;}
-public System.String Name{get;set;}
-public System.Int32? P1{get;set;}
-public System.String? P2{get;set;}
-public (System.String a,System.Int32 b)? P3{get;set;}
-public System.Int32? P4;
-public (System.String a,System.Int32 b)? P5;
-}
-
-
-public class ProxyClass1
-{
-public System.Int32 P1{get;set;}
-public ProxyClass2 P2{get;set;}
-}
-
-
 public struct StructArgs
 {
 public System.Int32 P1{get;set;}
@@ -2532,11 +2578,28 @@ public ProxyClass3 P2{get;set;}
 }
 
 
-public class Args
+public class ProxyClass3
 {
 public System.Int32 P1{get;set;}
-public System.Double P2{get;set;}
-public System.String P3{get;set;}
+}
+
+
+public class ProxyClass1
+{
+public System.Int32 P1{get;set;}
+public ProxyClass2 P2{get;set;}
+}
+
+
+public class Class01
+{
+public System.Int32 Age{get;set;}
+public System.String Name{get;set;}
+public System.Int32? P1{get;set;}
+public System.String? P2{get;set;}
+public (System.String a,System.Int32 b)? P3{get;set;}
+public System.Int32? P4;
+public (System.String a,System.Int32 b)? P5;
 }
 
 
@@ -2548,9 +2611,11 @@ public System.Int32 P3{get;set;}
 }
 
 
-public class ProxyClass3
+public class Args
 {
 public System.Int32 P1{get;set;}
+public System.Double P2{get;set;}
+public System.String P3{get;set;}
 }
 
 

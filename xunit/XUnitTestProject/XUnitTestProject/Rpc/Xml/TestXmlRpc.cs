@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using TouchSocket.Sockets;
 using TouchSocket.XmlRpc;
 
 namespace XUnitTestProject.Rpc.Xml
@@ -20,9 +21,7 @@ namespace XUnitTestProject.Rpc.Xml
         public void ShouldSuccessfulCallService()
         {
             var client = new XmlRpcClient();
-
-            client.Setup("http://127.0.0.1:7801/xmlrpc");
-            client.Connect();
+            client.Connect("http://127.0.0.1:7801/xmlrpc");
 
             var remoteTest = new RemoteTest(client);
             remoteTest.Test01(null);

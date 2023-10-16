@@ -15,6 +15,7 @@ using TouchSocket.Resources;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestResTypeString
     {
         [Fact]

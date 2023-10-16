@@ -2,6 +2,7 @@
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestLogger : UnitBase
     {
         [Fact]

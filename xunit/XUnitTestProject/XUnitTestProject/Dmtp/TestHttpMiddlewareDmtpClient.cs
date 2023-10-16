@@ -61,12 +61,13 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void ConnectShouldBeOk()
+        public async Task ConnectShouldBeOk()
         {
+            int waitTime = 500;
             var tasks = new List<Task>();
             for (var j = 0; j < 10; j++)
             {
-                var task = Task.Run(() =>
+                var task = Task.Run(async () =>
                   {
                       var client = this.GetClient(this.GetConfig(), false);
                       var connecting = 0;
@@ -77,14 +78,17 @@ namespace XUnitTestProject.Dmtp
                       client.Connecting = (client, e) =>
                       {
                           connecting += 1;
+                          return Task.CompletedTask;
                       };
                       client.Connected = (client, e) =>
                       {
                           connected += 1;
+                          return Task.CompletedTask;
                       };
                       client.Disconnected = (client, e) =>
                       {
                           disConnected += 1;
+                          return Task.CompletedTask;
                       };
 
                       client.PluginsManager.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), () =>
@@ -102,13 +106,15 @@ namespace XUnitTestProject.Dmtp
                           client.Connect();
                           Assert.True(client.Online);
                           Assert.True(client.IsHandshaked);
+
+                          await Task.Delay(waitTime);
                           Assert.Equal(1, connecting);
                           Assert.Equal(1, connected);
                           Assert.Equal(1, handshaked);
 
                           client.Close("主动断开");
 
-                          //await Task.Delay(100);
+                          await Task.Delay(waitTime);
                           Assert.False(client.Online);
                           Assert.False(client.IsHandshaked);
                           Assert.Equal(1, disConnected);

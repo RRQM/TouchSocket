@@ -138,12 +138,12 @@ namespace XUnitTestProject.Dependency
             Assert.Equal(10, log4.A);
             Assert.Equal("RRQM", log4.B);
 
-            log4 = container.Resolve<ILog>(new object[] { 20, "IOU" }) as MyLog4;
+            log4 = container.Resolve<ILog>() as MyLog4;
 
             Assert.NotNull(log4.MyLog1);
             Assert.NotNull(log4.MyLog2);
-            Assert.Equal(20, log4.A);
-            Assert.Equal("IOU", log4.B);
+            Assert.Equal(10, log4.A);
+            Assert.Equal("RRQM", log4.B);
         }
 
         [Fact]
@@ -183,8 +183,6 @@ namespace XUnitTestProject.Dependency
             Assert.NotNull(log6.MyLog4);
             Assert.True(log6.MyLog1.GetType() == typeof(MyLog1));
             Assert.True(log6.MyLog4.GetType() == typeof(MyLog4));
-            Assert.True(((MyLog4)log6.MyLog4).A == 20);
-            Assert.True(((MyLog4)log6.MyLog4).B == "IOU");
         }
 
         [Fact]
@@ -241,8 +239,6 @@ namespace XUnitTestProject.Dependency
             var log9 = container.Resolve<ILog>() as MyLog9;
 
             Assert.NotNull(log9);
-            Assert.True(log9.A == 10);
-            Assert.True(log9.B == "RRQM");
         }
     }
 
@@ -295,8 +291,8 @@ namespace XUnitTestProject.Dependency
 
     public class MyLog4 : ILog
     {
-        [DependencyInject(10, "RRQM")]
-        public MyLog4(int a, string b, MyLog1 myLog1, MyLog2 myLog2)
+        [DependencyInject]
+        public MyLog4(MyLog1 myLog1, MyLog2 myLog2, int a = 10, string b = "RRQM")
         {
             this.A = a;
             this.B = b;
@@ -318,10 +314,10 @@ namespace XUnitTestProject.Dependency
 
     public class MyLog5 : ILog
     {
-        [DependencyParamterInject("MyLog1")]
+        [DependencyInject("MyLog1")]
         public ILog MyLog1 { get; set; }
 
-        [DependencyParamterInject("MyLog2")]
+        [DependencyInject("MyLog2")]
         public ILog MyLog2 { get; set; }
 
         public LogLevel LogLevel { get; set; }
@@ -334,8 +330,8 @@ namespace XUnitTestProject.Dependency
 
     public class MyLog6 : ILog
     {
-        [DependencyInject(10, "RRQM")]
-        public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+        [DependencyInject]
+        public void DependencyMethod(int a, string b, [DependencyInject("MyLog1")] ILog myLog1, [DependencyInject("MyLog4")] ILog myLog4)
         {
             this.A = a;
             this.B = b;
@@ -375,8 +371,8 @@ namespace XUnitTestProject.Dependency
     [DependencyType(DependencyType.Constructor)]
     public class MyLog8 : ILog
     {
-        [DependencyInject(10, "RRQM")]
-        public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+        [DependencyInject("RRQM")]
+        public void DependencyMethod(int a, string b, [DependencyInject("MyLog1")] ILog myLog1, [DependencyInject("MyLog4")] ILog myLog4)
         {
             this.A = a;
             this.B = b;
@@ -399,17 +395,13 @@ namespace XUnitTestProject.Dependency
     [DependencyType(DependencyType.Constructor | DependencyType.Method)]
     public class MyLog9 : ILog
     {
-        [DependencyInject(10, "RRQM")]
-        public void DependencyMethod(int a, string b, [DependencyParamterInject("MyLog1")] ILog myLog1, [DependencyParamterInject("MyLog4", 20, "IOU")] ILog myLog4)
+        [DependencyInject("RRQM")]
+        public void DependencyMethod([DependencyInject("MyLog1")] ILog myLog1, [DependencyInject("MyLog4")] ILog myLog4)
         {
-            this.A = a;
-            this.B = b;
             this.MyLog1 = myLog1;
             this.MyLog4 = myLog4;
         }
 
-        public int A { get; set; }
-        public string B { get; set; }
         public ILog MyLog1 { get; set; }
         public ILog MyLog4 { get; set; }
         public LogLevel LogLevel { get; set; }
@@ -422,7 +414,7 @@ namespace XUnitTestProject.Dependency
 
     public class MyLog10 : ILog
     {
-        [DependencyParamterInject(typeof(ILog))]
+        [DependencyInject(typeof(ILog))]
         public object MyLog1 { get; set; }
 
         public LogLevel LogLevel { get; set; }

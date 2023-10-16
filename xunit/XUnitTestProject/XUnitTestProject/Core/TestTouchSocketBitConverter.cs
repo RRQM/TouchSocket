@@ -14,6 +14,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestTouchSocketBitConverter
     {
         [Fact]

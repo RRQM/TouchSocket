@@ -17,6 +17,7 @@ using TouchSocket.JsonRpc;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestJsonSerialize
     {
         [Fact]
@@ -49,8 +50,8 @@ namespace XUnitTestProject.Core
         {
             var response = new JsonRpcSuccessResponse()
             {
-                id = "10",
-                result = new UserInfoModel()
+                Id = 10,
+                Result = new UserInfoModel()
                 {
                     ExpAdd = "1",
                     ExplodeAdd = "2"
@@ -69,8 +70,8 @@ namespace XUnitTestProject.Core
 
             var response = new JsonRpcSuccessResponse()
             {
-                id = "10",
-                result = new UserInfoModel()
+                Id = 10,
+                Result = new UserInfoModel()
                 {
                     ExpAdd = "1",
                     ExplodeAdd = "2"
@@ -79,8 +80,8 @@ namespace XUnitTestProject.Core
 
             var ss = JsonConvert.SerializeObject(response);
 
-            var pp = JsonConvert.DeserializeObject<JsonResponseContext>(str);
-            var vv = str.FromJsonString<JsonResponseContext>();
+            var pp = JsonConvert.DeserializeObject<JsonRpcResponseContext>(str);
+            var vv = str.FromJsonString<JsonRpcResponseContext>();
 
             var s1 = vv.Result.ToJsonString();
             var u = s1.FromJsonString<UserInfoModel>();

@@ -1,4 +1,5 @@
 ﻿using TouchSocket.Dmtp.Rpc;
+using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
 
 namespace XUnitTestProject.Dmtp
@@ -8,6 +9,7 @@ namespace XUnitTestProject.Dmtp
         public int count;
 
         [DmtpRpc(true)]
+        [JsonRpc(true)]
         public int Add(int a, int b)
         {
             Interlocked.Increment(ref this.count);
@@ -23,6 +25,7 @@ namespace XUnitTestProject.Dmtp
         }
 
         [DmtpRpc(true)]
+        [JsonRpc(true)]
         public string SayHello(int age)
         {
             return $"我今年{age}岁了";

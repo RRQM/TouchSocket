@@ -28,6 +28,7 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Sockets;
 using TouchSocket.NamedPipe;
 using XUnitTestConsoleApp.Server;
+using TouchSocket.Http.WebSockets;
 
 namespace XUnitTestConsoleApp
 {
@@ -56,6 +57,7 @@ namespace XUnitTestConsoleApp
             CreateTcpJsonRpcParser(7803);
 
             CreateTLVTcpService(7805);
+
 
             CodeGenerator.AddProxyType<ProxyClass1>();
             CodeGenerator.AddProxyType<ProxyClass2>(deepSearch: true);
@@ -170,8 +172,14 @@ namespace XUnitTestConsoleApp
                         {
                             return true;
                         }
+
+                        if (context.Request.UrlEquals("/wsread"))
+                        {
+                            return true;
+                        }
                         return false;
                     });
+                    a.Add<MyWebSocketPlugin>();
 
                     a.UseWebApi()
                     .ConfigureRpcStore(store =>
@@ -271,12 +279,12 @@ namespace XUnitTestConsoleApp
 
         private static void CreateTcpService(int port)
         {
-            var tcpService = new TcpService();
+            var service = new TcpService();
 
             //订阅收到消息事件
-            tcpService.Received = (client, byteBlock, requestInfo) =>
+            service.Received = async (client, e) =>
             {
-                client.Send(byteBlock);
+                await client.SendAsync(e.ByteBlock);
             };
 
             var config = new TouchSocketConfig();
@@ -285,13 +293,14 @@ namespace XUnitTestConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear();
+                    a.Add<MyTcpPlugin>();
                 });
 
             //载入配置
-            tcpService.Setup(config);
+            service.Setup(config);
 
             //启动
-            tcpService.Start();
+            service.Start();
             Console.WriteLine($"TcpService已启动,端口：{port}");
         }
 
@@ -378,12 +387,14 @@ namespace XUnitTestConsoleApp
             var tcpService = new TcpService();
 
             //订阅收到消息事件
-            tcpService.Received += (client, byteBlock, requestInfo) =>
+            tcpService.Received += (client, e) =>
             {
-                if (requestInfo is TLVDataFrame frame)
+                if (e.RequestInfo is TLVDataFrame frame)
                 {
                     client.Send(frame);
                 }
+
+                return Task.CompletedTask;
             };
 
             var config = new TouchSocketConfig();
@@ -457,6 +468,60 @@ namespace XUnitTestConsoleApp
         //    udpSession.Start();//启动
         //    Console.WriteLine($"UdpService已启动，监听端口：{bindPort}，目标端口：{targetPort}");
         //}
+    }
+
+    class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpDisconnectedPlugin
+    {
+        private readonly ILog m_logger;
+
+        public MyTcpPlugin(ILog logger)
+        {
+            this.m_logger = logger;
+        }
+        public async Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+        {
+            m_logger.Info("TcpConnected");
+            await e.InvokeNext();
+        }
+
+        public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        {
+            m_logger.Info("TcpDisconnected");
+            await e.InvokeNext();
+        }
+    }
+
+    internal class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin, IWebSocketHandshakedPlugin
+    {
+        public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.UrlEquals("/wsread"))
+            {
+                using (var webSocket = client.GetWebSocket())
+                {
+                    while (true)
+                    {
+                        using (var receiveResult = await webSocket.ReadAsync(CancellationToken.None))
+                        {
+                            if (receiveResult.DataFrame == null)
+                            {
+                                break;
+                            }
+                            await Console.Out.WriteLineAsync($"WebSocket同步Read：{receiveResult.DataFrame.ToText()}");
+                            webSocket.Send(receiveResult.DataFrame.ToText());
+                        }
+                    }
+                    client.Logger.Info("Websocket断开");
+                }
+                return;
+            }
+            await e.InvokeNext();
+        }
+
+        public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+        {
+            await e.InvokeNext();
+        }
     }
 
     internal class MyHttpPlugin : PluginBase, IHttpPlugin

@@ -10,9 +10,8 @@ namespace XUnitTestProject.Tcp
             var tcpClient = new TcpClient();
             tcpClient.Connect("tcp://127.0.0.1:7789");
 
-            var waitingClient = tcpClient.GetWaitingClient(new WaitingOptions()
+            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
             {
-                AdapterFilter = AdapterFilter.AllAdapter,
                 BreakTrigger = true,
                 ThrowBreakException = true
             });
@@ -21,6 +20,25 @@ namespace XUnitTestProject.Tcp
             var buffer = new byte[len];
             Random.Shared.NextBytes(buffer);
             var bytes = waitingClient.SendThenReturn(buffer);
+            Assert.True(bytes.SequenceEqual(bytes));
+        }
+
+        [Fact]
+        public async Task WaitingClientAsyncShouldBeOk()
+        {
+            var tcpClient = new TcpClient();
+            await tcpClient.ConnectAsync("tcp://127.0.0.1:7789");
+
+            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
+            {
+                BreakTrigger = true,
+                ThrowBreakException = true
+            });
+
+            var len = Random.Shared.Next(10, 100);
+            var buffer = new byte[len];
+            Random.Shared.NextBytes(buffer);
+            var bytes = await waitingClient.SendThenReturnAsync(buffer);
             Assert.True(bytes.SequenceEqual(bytes));
         }
 
@@ -34,24 +52,22 @@ namespace XUnitTestProject.Tcp
             {
                 var filter = false;
 
-                var waitingClient = tcpClient.GetWaitingClient(new WaitingOptions()
+                var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
-                    AdapterFilter = AdapterFilter.AllAdapter,
                     BreakTrigger = true,
-                    ThrowBreakException = true
-                }
-            ,
-            (response) =>
-            {
-                if (response.Data != null)
-                {
-                    if (response.Data.ToList().Contains(9))
+                    ThrowBreakException = true,
+                    FilterFunc = (response) =>
                     {
-                        return true;
+                        if (response.Data != null)
+                        {
+                            if (response.Data.ToList().Contains(9))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
                     }
-                }
-                return false;
-            });
+                });
 
                 var buffer = new byte[1024];
                 Random.Shared.NextBytes(buffer);
@@ -68,6 +84,52 @@ namespace XUnitTestProject.Tcp
                     {
                         var bytes = waitingClient.SendThenReturn(buffer);
                     });
+                }
+            }
+        }
+
+        [Fact]
+        public async Task FilterWaitingClientAsyncShouldBeOk()
+        {
+            var tcpClient = new TcpClient();
+            await tcpClient.ConnectAsync("tcp://127.0.0.1:7789");
+
+            while (true)
+            {
+                var filter = false;
+
+                var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
+                {
+                    BreakTrigger = true,
+                    ThrowBreakException = true,
+                    FilterFunc = (response) =>
+                    {
+                        if (response.Data != null)
+                        {
+                            if (response.Data.ToList().Contains(9))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+
+                var buffer = new byte[1024];
+                Random.Shared.NextBytes(buffer);
+                filter = buffer.ToList().Contains(0);
+                if (filter)
+                {
+                    var bytes = await waitingClient.SendThenReturnAsync(buffer);
+                    Assert.True(bytes.SequenceEqual(bytes));
+                    return;
+                }
+                else
+                {
+                    await Assert.ThrowsAnyAsync<TimeoutException>(async () =>
+                     {
+                         var bytes = await waitingClient.SendThenReturnAsync(buffer);
+                     });
                 }
             }
         }

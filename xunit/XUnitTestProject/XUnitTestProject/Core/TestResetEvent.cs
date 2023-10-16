@@ -2,6 +2,7 @@
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestResetEvent
     {
         [Fact]

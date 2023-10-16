@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
+using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using XUnitTestProject.Dmtp;
 using XUnitTestProject.Rpc;
 
 namespace XUnitTestProject.JsonRpc
@@ -98,6 +100,49 @@ namespace XUnitTestProject.JsonRpc
             remoteTest.Test17(null);
             remoteTest.Test18(null);
             remoteTest.Test22(null);
+        }
+
+        [Fact]
+        public void WebSocketReseverShouldBeOk()
+        {
+            var client = new TouchSocketConfig()
+                .ConfigurePlugins(a =>
+                {
+                    a.UseGlobalRpcStore()
+                        .ConfigureRpcStore(store =>
+                        {
+                            store.RegisterServer<CallbackServer>();
+                        });
+                })
+                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                 .SetRemoteIPHost("127.0.0.1:7803")
+                 .BuildWithTcpJsonRpcClient();
+
+            var remoteTest = new RemoteTest(client);
+
+            remoteTest.Test38(null, null);
+
+        }
+
+        [Fact]
+        public void TcpReseverShouldBeOk()
+        {
+            var client = new TouchSocketConfig()
+                .ConfigurePlugins(a =>
+                {
+                    a.UseGlobalRpcStore()
+                        .ConfigureRpcStore(store =>
+                        {
+                            store.RegisterServer<CallbackServer>();
+                        });
+                })
+                 .SetRemoteIPHost("ws://127.0.0.1:7801/wsjsonrpc")
+                 .BuildWithWebSocketJsonRpcClient();
+
+            var remoteTest = new RemoteTest(client);
+
+            remoteTest.Test38(null, null);
+
         }
     }
 }

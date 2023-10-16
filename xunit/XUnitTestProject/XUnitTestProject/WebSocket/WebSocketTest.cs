@@ -38,5 +38,44 @@ namespace XUnitTestProject.WebSocket
                 }
             }
         }
+
+        [Fact]
+        public async Task WebSocketReadShouldBeOk()
+        {
+            var receivedCount = 0;
+            using (var client = new WebSocketClient())
+            {
+                client.Setup(new TouchSocketConfig()
+                .ConfigurePlugins(a =>
+                {
+                    a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), () =>
+                    {
+                        Interlocked.Increment(ref receivedCount);
+                    });
+                })
+                .SetRemoteIPHost("ws://127.0.0.1:7801/wsread"));
+
+                client.Connect();
+
+                using (var websocket = client.GetWebSocket())
+                {
+                    Assert.True(websocket.IsHandshaked == true);
+
+                    for (var i = 0; i < 100; i++)
+                    {
+                        var str = "RRQM" + i;
+                        websocket.Send(str);
+                        using (var tokenSource=new CancellationTokenSource(5000))
+                        {
+                            using (var receiveResult = await websocket.ReadAsync(tokenSource.Token))
+                            {
+                                var strNew = receiveResult.DataFrame.ToText();
+                                Assert.Equal(str, strNew);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

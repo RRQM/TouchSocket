@@ -14,6 +14,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestAppMessenger
     {
         [Fact]
@@ -21,7 +22,7 @@ namespace XUnitTestProject.Core
         {
             var appMessenger = new AppMessenger();
             appMessenger.RegisterStatic<MessageObject>();
-            var staticAdd = await appMessenger.SendAsync<int>("StaticAdd", 20, 10);
+            var staticAdd =await appMessenger.SendAsync<int>("StaticAdd", 20, 10);
             Assert.Equal(30, staticAdd);
 
             appMessenger.Register(new MessageObject());
@@ -36,21 +37,21 @@ namespace XUnitTestProject.Core
     public class MessageObject : IMessageObject
     {
         [AppMessage]
-        public int Add(int a, int b)
+        public Task<int> Add(int a, int b)
         {
-            return a + b;
+            return Task.FromResult(a + b);
         }
 
         [AppMessage]
-        public static int StaticAdd(int a, int b)
+        public static Task<int> StaticAdd(int a, int b)
         {
-            return a + b;
+            return Task.FromResult(a + b);
         }
 
         [AppMessage]
-        public int Sub(int a, int b)
+        public Task<int> Sub(int a, int b)
         {
-            return a - b;
+            return Task.FromResult(a - b);
         }
     }
 }

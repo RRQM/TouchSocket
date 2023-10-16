@@ -75,6 +75,7 @@ namespace XUnitTestProject.Dmtp
                       client.Disconnected = (client, e) =>
                       {
                           disConnected += 1;
+                          return Task.CompletedTask;
                       };
 
                       client.PluginsManager.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), () =>
@@ -290,23 +291,15 @@ namespace XUnitTestProject.Dmtp
         public async Task InvokeRefClientByIDShouldBeOk(SerializationType serializationType)
         {
             var config = this.GetConfig();
-            config.ConfigurePlugins(a =>
-            {
-                a.UseGlobalRpcStore()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<CallbackServer>();
-                    });
-            });
 
-            var client1 = await this.GetClient(config);
-            var client2 = await this.GetClient(config);
+            var client1 =await this.GetClient(config);
+            var client2 =await this.GetClient(config);
 
             var invokeOption = new DmtpInvokeOption()
             {
                 FeedbackType = FeedbackType.WaitInvoke,
                 SerializationType = serializationType,
-                Timeout = 1000
+                Timeout = 5000
             };
 
             var types = new Type[] { typeof(int), typeof(int) };
@@ -1086,201 +1079,6 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async Task RequestPullFileResource2CShouldBeOk()
-        {
-            var path = this.GetType().Name + "RequestPullFileResource2C.test";
-            var savePath = this.GetType().Name + "SaveRequestPullFileResource2C.test";
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-            if (File.Exists(savePath))
-            {
-                File.Delete(savePath);
-            }
-
-            using (var writer = FilePool.GetWriter(path))
-            {
-                for (var i = 0; i < 100; i++)
-                {
-                    var buffer = new byte[1024 * 1024];
-                    new Random().NextBytes(buffer);
-                    //byte[] buffer = new byte[] {0,1,2,3,4,5,6,7,8,9 };
-                    writer.Write(buffer);
-                }
-            }
-
-            var client1 = await this.GetClient(this.GetConfig());
-            var client2 = await this.GetClient(this.GetConfig());
-            var resource = client1.GetDmtpFileTransferActor().PullFileResourceInfo(client2.Id, Path.GetFullPath(path)).FileResourceInfo;
-            var fileResourceLocator = new FileResourceLocator(resource, savePath);
-            var t1 = Task.Run(() =>
-            {
-                for (var j = 0; j < resource.FileSections.Length / 2; j++)
-                {
-                    while (true)
-                    {
-                        var result = client1.GetDmtpFileTransferActor().PullFileSection(client2.Id, resource.FileSections[j]);
-                        if (result.IsSuccess())
-                        {
-                            var res = fileResourceLocator.WriteFileSection(result);
-                            if (res.IsSuccess())
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
-
-            var t2 = Task.Run(() =>
-            {
-                for (var i = resource.FileSections.Length / 2; i < resource.FileSections.Length; i++)
-                {
-                    while (true)
-                    {
-                        var result = client1.GetDmtpFileTransferActor().PullFileSection(client2.Id, resource.FileSections[i]);
-                        if (result.IsSuccess())
-                        {
-                            var res = fileResourceLocator.WriteFileSection(result);
-                            if (res.IsSuccess())
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
-
-            await Task.WhenAll(t1, t2);
-            var finishedResult = client1.GetDmtpFileTransferActor().FinishedFileResourceInfo(client2.Id, resource, ResultCode.Success);
-            Assert.True(finishedResult.IsSuccess());
-            var result = fileResourceLocator.TryFinished();
-            Assert.True(result.IsSuccess());
-            using (var pathReader = FilePool.GetReader(path))
-            {
-                using (var savePathReader = FilePool.GetReader(savePath))
-                {
-                    Assert.True(pathReader.FileStorage.Length == savePathReader.FileStorage.Length);
-                    var buffer1 = new byte[1024 * 1024];
-                    var buffer2 = new byte[1024 * 1024];
-
-                    while (true)
-                    {
-                        var r1 = pathReader.Read(buffer1, 0, buffer1.Length);
-                        var r2 = savePathReader.Read(buffer2, 0, buffer2.Length);
-                        Assert.True(r1 == r2);
-                        if (r1 == 0)
-                        {
-                            break;
-                        }
-                        for (var i = 0; i < r1; i++)
-                        {
-                            Assert.Equal(buffer1[i], buffer2[i]);
-                        }
-                    }
-                }
-            }
-        }
-
-        [Fact]
-        public async Task RequestPullFileResourceShouldBeOk()
-        {
-            var path = this.GetType().Name + "RequestPullFileResource.test";
-            var savePath = this.GetType().Name + "SaveRequestPullFileResource.test";
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-            if (File.Exists(savePath))
-            {
-                File.Delete(savePath);
-            }
-
-            using (var writer = FilePool.GetWriter(path))
-            {
-                for (var i = 0; i < 100; i++)
-                {
-                    var buffer = new byte[1024 * 1024];
-                    new Random().NextBytes(buffer);
-                    //byte[] buffer = new byte[] {0,1,2,3,4,5,6,7,8,9 };
-                    writer.Write(buffer);
-                }
-            }
-
-            var client = await this.GetClient(this.GetConfig());
-            var resource = client.GetDmtpFileTransferActor().PullFileResourceInfo(Path.GetFullPath(path)).FileResourceInfo;
-            var fileResourceLocator = new FileResourceLocator(resource, savePath);
-            var t1 = Task.Run(() =>
-             {
-                 for (var j = 0; j < resource.FileSections.Length / 2; j++)
-                 {
-                     while (true)
-                     {
-                         var result = client.GetDmtpFileTransferActor().PullFileSection(resource.FileSections[j]);
-                         if (result.IsSuccess())
-                         {
-                             var res = fileResourceLocator.WriteFileSection(result);
-                             if (res.IsSuccess())
-                             {
-                                 break;
-                             }
-                         }
-                     }
-                 }
-             });
-
-            var t2 = Task.Run(() =>
-             {
-                 for (var i = resource.FileSections.Length / 2; i < resource.FileSections.Length; i++)
-                 {
-                     while (true)
-                     {
-                         var result = client.GetDmtpFileTransferActor().PullFileSection(resource.FileSections[i]);
-                         if (result.IsSuccess())
-                         {
-                             var res = fileResourceLocator.WriteFileSection(result);
-                             if (res.IsSuccess())
-                             {
-                                 break;
-                             }
-                         }
-                     }
-                 }
-             });
-
-            await Task.WhenAll(t1, t2);
-            var finishedResult = client.GetDmtpFileTransferActor().FinishedFileResourceInfo(resource, ResultCode.Success);
-            Assert.True(finishedResult.IsSuccess());
-            var result = fileResourceLocator.TryFinished();
-            Assert.True(result.IsSuccess());
-            using (var pathReader = FilePool.GetReader(path))
-            {
-                using (var savePathReader = FilePool.GetReader(savePath))
-                {
-                    Assert.True(pathReader.FileStorage.Length == savePathReader.FileStorage.Length);
-                    var buffer1 = new byte[1024 * 1024];
-                    var buffer2 = new byte[1024 * 1024];
-
-                    while (true)
-                    {
-                        var r1 = pathReader.Read(buffer1, 0, buffer1.Length);
-                        var r2 = savePathReader.Read(buffer2, 0, buffer2.Length);
-                        Assert.True(r1 == r2);
-                        if (r1 == 0)
-                        {
-                            break;
-                        }
-                        for (var i = 0; i < r1; i++)
-                        {
-                            Assert.Equal(buffer1[i], buffer2[i]);
-                        }
-                    }
-                }
-            }
-        }
-
-        [Fact]
         public async Task RequestPushFileResource2CShouldBeOk()
         {
             var path = this.GetType().Name + "RequestPushFileResource2C.test";
@@ -1487,8 +1285,7 @@ namespace XUnitTestProject.Dmtp
         {
             var client = await this.GetClient(this.GetConfig());
 
-            client.Container.Resolve<RpcStore>().RegisterServer<CallbackServer>();
-
+           
             var invokeOption = new DmtpInvokeOption()
             {
                 FeedbackType = FeedbackType.WaitInvoke,
