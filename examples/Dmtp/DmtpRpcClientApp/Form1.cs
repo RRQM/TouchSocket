@@ -68,6 +68,7 @@ namespace DmtpClientApp
 
                     //使用重连
                     a.UseReconnection<TcpDmtpClient>()
+                    .UsePolling()
                     .SetActionForCheck(async (c, i) =>//重新定义检活策略
                     {
                         //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用
@@ -90,8 +91,7 @@ namespace DmtpClientApp
                             return false;
                         }
                     })
-                    .SetTick(TimeSpan.FromSeconds(3))
-                    .UsePolling();
+                    .SetTick(TimeSpan.FromSeconds(3));
                 })
                 .SetVerifyToken("Rpc"));
                 this.m_client.Connect();
