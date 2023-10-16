@@ -25,19 +25,19 @@ title: 同步请求
 var client = new TcpClient();
 client.Connect("tcp://127.0.0.1:7789");
 
-//调用GetWaitingClient获取到IWaitingClient的对象。
-var waitClient = client.GetWaitingClient(new WaitingOptions()
+//调用CreateWaitingClient获取到IWaitingClient的对象。
+var waitClient = client.CreateWaitingClient(new WaitingOptions()
 {
     BreakTrigger = true,//表示当连接断开时，会立即触发
-    ThrowBreakException = true//表示当连接断开时，是否触发异常
-}, 
- response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-{
-    if (response.Data.Length==1)
+    ThrowBreakException = true,//表示当连接断开时，是否触发异常
+    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
     {
-        return true;
+        if (response.Data.Length == 1)
+        {
+            return true;
+        }
+        return false;
     }
-    return false;
 });
 
 //然后使用SendThenReturn。
@@ -55,19 +55,19 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 var service = new TcpService();
 service.Received = async (client, e) =>
 {
-    //调用GetWaitingClient获取到IWaitingClient的对象。
-    var waitClient = client.GetWaitingClient(new WaitingOptions()
+    //调用CreateWaitingClient获取到IWaitingClient的对象。
+    var waitClient = client.CreateWaitingClient(new WaitingOptions()
     {
         BreakTrigger = true,//表示当连接断开时，会立即触发
-        ThrowBreakException = true//表示当连接断开时，是否触发异常
-    },
-    response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
-    {
-        if (response.Data.Length == 1)
+        ThrowBreakException = true,//表示当连接断开时，是否触发异常
+        response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
         {
-            return true;
+            if (response.Data.Length == 1)
+            {
+                return true;
+            }
+            return false;
         }
-        return false;
     });
 
     //然后使用SendThenReturn。

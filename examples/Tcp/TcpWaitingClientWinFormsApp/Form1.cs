@@ -9,6 +9,32 @@ namespace TcpWaitingClientWinFormsApp
         public Form1()
         {
             this.InitializeComponent();
+
+            var client = new TcpClient();
+            client.Connect("tcp://127.0.0.1:7789");
+
+            //调用CreateWaitingClient获取到IWaitingClient的对象。
+            var waitClient = client.CreateWaitingClient(new WaitingOptions()
+            {
+                BreakTrigger = true,//表示当连接断开时，会立即触发
+                ThrowBreakException = true,//表示当连接断开时，是否触发异常
+                FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+                {
+                    if (response.Data.Length == 1)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            //然后使用SendThenReturn。
+            byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+            m_tcpClient.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+            //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+            ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+            IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
         }
 
         TcpClient m_tcpClient;
