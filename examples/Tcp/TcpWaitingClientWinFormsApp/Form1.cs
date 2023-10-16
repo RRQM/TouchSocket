@@ -41,7 +41,7 @@ namespace TcpWaitingClientWinFormsApp
             try
             {
                 this.IsConnected();
-                var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
+                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
                     BreakTrigger = true,
                     ThrowBreakException = true
@@ -64,22 +64,22 @@ namespace TcpWaitingClientWinFormsApp
             try
             {
                 this.IsConnected();
-                var waitingClient = this.m_tcpClient.GetWaitingClient(new WaitingOptions()
+                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
                     BreakTrigger = true,
-                    ThrowBreakException = true
-                },
-                (response) =>
-                {
-                    if (response.Data != null)
+                    ThrowBreakException = true,
+                    FilterFunc = (response) =>
                     {
-                        var str = Encoding.UTF8.GetString(response.Data);
-                        if (str.Contains(this.textBox4.Text))
+                        if (response.Data != null)
                         {
-                            return true;
+                            var str = Encoding.UTF8.GetString(response.Data);
+                            if (str.Contains(this.textBox4.Text))
+                            {
+                                return true;
+                            }
                         }
+                        return false;
                     }
-                    return false;
                 });
 
                 var bytes = waitingClient.SendThenReturn(this.textBox3.Text.ToUTF8Bytes());
