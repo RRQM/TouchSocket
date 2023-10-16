@@ -31,10 +31,9 @@ var config = new TouchSocketConfig()
 udpSession.Setup(config);
 udpSession.Start();
 
-//调用GetWaitingClient获取到IWaitingClient的对象。
-var waitClient = udpSession.GetWaitingClient(new WaitingOptions()
+//调用CreateWaitingClient获取到IWaitingClient的对象。
+var waitClient = udpSession.CreateWaitingClient(new WaitingOptions()
 {
-    AdapterFilter = AdapterFilter.AllAdapter,//表示发送和接收的数据都会经过适配器
     RemoteIPHost = new IPHost("127.0.0.1:7799")//表示目的地址
 });
 
@@ -49,7 +48,7 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 :::caution 注意
 
-Udp的同步请求，有两种策略，一种则是在配置中设置**SetRemoteIPHost**，然后在**GetWaitingClient**时则不必再设置RemoteIPHost，这种情况一般适用于客户端。第二种则是不配置**SetRemoteIPHost**，然后在**GetWaitingClient**时设置RemoteIPHost，这种情况适用于服务器。
+Udp的同步请求，有两种策略，一种则是在配置中设置**SetRemoteIPHost**，然后在**CreateWaitingClient**时则不必再设置RemoteIPHost，这种情况一般适用于客户端。第二种则是不配置**SetRemoteIPHost**，然后在**CreateWaitingClient**时设置RemoteIPHost，这种情况适用于服务器。
 
 :::  
 
