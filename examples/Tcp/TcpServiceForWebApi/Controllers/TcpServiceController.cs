@@ -55,9 +55,12 @@ namespace TcpServiceForWebApi.Controllers
             {
                 if (this.m_tcpService.SocketClients.TryGetSocketClient(id, out var client))
                 {
-                    var result = client.GetWaitingClient(new WaitingOptions(), data =>
+                    var result = client.CreateWaitingClient(new WaitingOptions()
                     {
-                        return true;//此处可以筛选返回数据。
+                        FilterFunc = data =>
+                        {
+                            return true;//此处可以筛选返回数据。
+                        }
                     }).SendThenReturn(Encoding.UTF8.GetBytes(msg));
                     return new Result(ResultCode.Success, Encoding.UTF8.GetString(result));
                 }
