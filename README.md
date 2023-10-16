@@ -24,8 +24,6 @@
 
 </div>
 
-中文 | [English](README.en.md)
-
 ## 🎀描述
 
 ![Alt](https://repobeats.axiom.co/api/embed/7b543e0b31f0488b08dfd319fafca0044dfd1050.svg "Repobeats analytics image")
@@ -33,25 +31,25 @@
 【开源版】
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (TouchSocket.Core)](https://img.shields.io/nuget/v/TouchSocket.Core.svg?label=TouchSocket.Core)](https://www.nuget.org/packages/TouchSocket.Core)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| 这是一个基础服务功能的库，其中包含：内存池、对象池、<br>文件池、流式数据解包器、等待逻辑池、AppMessenger、<br>3DES加密、Xml快速存储、运行时间测量器、<br>文件快捷操作、高性能二进制序列化器、规范日志接口等。|
-|[![NuGet version (TouchSocket.Core.DependencyInjection)](https://img.shields.io/nuget/v/TouchSocket.Core.DependencyInjection.svg?label=TouchSocket.Core.DependencyInjection)](https://www.nuget.org/packages/TouchSocket.Core)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| 这是一个为Core中扩展Ioc容器为IServiceCollection的库。|
-|[![NuGet version (TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| TouchSocket是.Net(包括 C# 、VB.Net、F#)的一个整合性的<br>socket网络通信框架。包含了 tcp、udp、ssl等一系列的通信模块。<br>一键式解决 tcp 黏分包问题，udp大数据包分片组合问题等。<br>使用协议模板，可快速实现「固定包头」、「固定长度」、<br>「区间字符」等一系列的数据报文解析。|
-|[![NuGet version (TouchSocket.Http)](https://img.shields.io/nuget/v/TouchSocket.Http.svg?label=TouchSocket.Http)](https://www.nuget.org/packages/TouchSocket.Http)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| 这是一个基于Http1.1协议的组件库。它能提供Http服务器、客户端、<br>以及WebSocket组件。功能上支持大文件下载、上传、<br>以及多线程下载和断点续传，小文件form上传，WebApi声明和执行。<br>所提供的Http客户端是基于连接的，可以捕获连接和断开连接等消息。|
-|[![NuGet version (TouchSocket.NamedPipe)](https://img.shields.io/nuget/v/TouchSocket.NamedPipe.svg?label=TouchSocket.NamedPipe)](https://www.nuget.org/packages/TouchSocket.NamedPipe)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| 这是一个基于命名管道的组件库。它模仿Tcp封装了命名管道的服务器<br>和客户端，以及连接、断开连接等消息。功能上实现了多管道名称监听、<br>流式数据解析，以极致接近Tcp的体验使用命名管道。|
-|[![NuGet version (TouchSocket.CodeAnalyzer)](https://img.shields.io/nuget/v/TouchSocket.CodeAnalyzer.svg?label=TouchSocket.CodeAnalyzer)](https://www.nuget.org/packages/TouchSocket.CodeAnalyzer)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)| 这是一个为TouchSocket全系提供语法分析、<br>源代码生成的库。目前包含Rpc源代理代码生成。|
-|[![NuGet version (TouchSocket.Rpc)](https://img.shields.io/nuget/v/TouchSocket.Rpc.svg?label=TouchSocket.Rpc)](https://www.nuget.org/packages/TouchSocket.Rpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|这是一个超轻量、高性能、可扩展的Rpc管理平台框架。<br>您可以基于该框架，快速开发出Rpc执行。<br>目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。|
-|[![NuGet version (TouchSocket.Dmtp)](https://img.shields.io/nuget/v/TouchSocket.Dmtp.svg?label=TouchSocket.Dmtp)](https://www.nuget.org/packages/TouchSocket.Dmtp)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|DMTP（Duplex Message Transport Protocol双工消息传输协议）<br>是一个简单易用，便捷高效，且易于扩展的二进制数据协议。<br>目前基于该协议，已实现的功能包括：连接验证、同步Id、<br>Rpc（包括客户端请求服务器，服务器请求客户端、客户端请求客户端）、<br>文件传输（包括客户端向服务器请求文件、客户端向服务器推送文件、<br>服务器向客户端请求文件、服务器向客户端推送文件、<br>客户端之间请求、推送文件）、Redis等。|
-|[![NuGet version (TouchSocket.JsonRpc)](https://img.shields.io/nuget/v/TouchSocket.JsonRpc.svg?label=TouchSocket.JsonRpc)](https://www.nuget.org/packages/TouchSocket.JsonRpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|这是一个提供JsonRpc服务器和客户端的组件库。<br>可以通过该组件创建基于Tcp、Http、WebSocket协议的<br>JsonRpc服务器和客户端，支持JsonRpc全部功能，<br>可与Web，Android等平台无缝对接。|
-|[![NuGet version (TouchSocket.XmlRpc)](https://img.shields.io/nuget/v/TouchSocket.XmlRpc.svg?label=TouchSocket.XmlRpc)](https://www.nuget.org/packages/TouchSocket.XmlRpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|这是一个提供XmlRpc服务器和客户端的组件库。<br>可以通过该组件创建XmlRpc服务解析器，<br>完美支持XmlRpc数据类型，类型嵌套，Array等。<br>也能与CookComputing.XmlRpcV2完美对接。<br>不限Web，Android等平台。|
-|[![NuGet version (TouchSocket.WebApi)](https://img.shields.io/nuget/v/TouchSocket.WebApi.svg?label=TouchSocket.WebApi)](https://www.nuget.org/packages/TouchSocket.WebApi)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|这是一个提供WebApi服务器和客户端的组件库。<br>可以通过该组件创建WebApi服务解析器和客户端，<br>让桌面端、Web端、移动端可以跨语言调用RPC函数。<br>功能支持自定义路由、Get传参、Post传参等。|
-| [![NuGet version (TouchSocket.AspNetCore)](https://img.shields.io/nuget/v/TouchSocket.AspNetCore.svg?label=TouchSocket.AspNetCore)](https://www.nuget.org/packages/TouchSocket.AspNetCore)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket) | TouchSocket.AspNetCore是适用于AspNetCore的专属版本。|
+|[![NuGet version (TouchSocket.Core)](https://img.shields.io/nuget/v/TouchSocket.Core.svg?label=TouchSocket.Core)](https://www.nuget.org/packages/TouchSocket.Core)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| 这是一个基础服务功能的库，其中包含：内存池、对象池、<br>文件池、流式数据解包器、等待逻辑池、AppMessenger、<br>3DES加密、Xml快速存储、运行时间测量器、<br>文件快捷操作、高性能二进制序列化器、规范日志接口等。|
+|[![NuGet version (TouchSocket.Core.DependencyInjection)](https://img.shields.io/nuget/v/TouchSocket.Core.DependencyInjection.svg?label=TouchSocket.Core.DependencyInjection)](https://www.nuget.org/packages/TouchSocket.Core)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| 这是一个为Core中扩展Ioc容器为IServiceCollection的库。|
+|[![NuGet version (TouchSocket)](https://img.shields.io/nuget/v/TouchSocket.svg?label=TouchSocket)](https://www.nuget.org/packages/TouchSocket)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| TouchSocket是.Net(包括 C# 、VB.Net、F#)的一个整合性的<br>socket网络通信框架。包含了 tcp、udp、ssl等一系列的通信模块。<br>一键式解决 tcp 黏分包问题，udp大数据包分片组合问题等。<br>使用协议模板，可快速实现「固定包头」、「固定长度」、<br>「区间字符」等一系列的数据报文解析。|
+|[![NuGet version (TouchSocket.Http)](https://img.shields.io/nuget/v/TouchSocket.Http.svg?label=TouchSocket.Http)](https://www.nuget.org/packages/TouchSocket.Http)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| 这是一个基于Http1.1协议的组件库。它能提供Http服务器、客户端、<br>以及WebSocket组件。功能上支持大文件下载、上传、<br>以及多线程下载和断点续传，小文件form上传，WebApi声明和执行。<br>所提供的Http客户端是基于连接的，可以捕获连接和断开连接等消息。|
+|[![NuGet version (TouchSocket.NamedPipe)](https://img.shields.io/nuget/v/TouchSocket.NamedPipe.svg?label=TouchSocket.NamedPipe)](https://www.nuget.org/packages/TouchSocket.NamedPipe)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| 这是一个基于命名管道的组件库。它模仿Tcp封装了命名管道的服务器<br>和客户端，以及连接、断开连接等消息。功能上实现了多管道名称监听、<br>流式数据解析，以极致接近Tcp的体验使用命名管道。|
+|[![NuGet version (TouchSocket.CodeAnalyzer)](https://img.shields.io/nuget/v/TouchSocket.CodeAnalyzer.svg?label=TouchSocket.CodeAnalyzer)](https://www.nuget.org/packages/TouchSocket.CodeAnalyzer)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| 这是一个为TouchSocket全系提供语法分析、<br>源代码生成的库。目前包含Rpc源代理代码生成。|
+|[![NuGet version (TouchSocket.Rpc)](https://img.shields.io/nuget/v/TouchSocket.Rpc.svg?label=TouchSocket.Rpc)](https://www.nuget.org/packages/TouchSocket.Rpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)|这是一个超轻量、高性能、可扩展的Rpc管理平台框架。<br>您可以基于该框架，快速开发出Rpc执行。<br>目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。|
+|[![NuGet version (TouchSocket.Dmtp)](https://img.shields.io/nuget/v/TouchSocket.Dmtp.svg?label=TouchSocket.Dmtp)](https://www.nuget.org/packages/TouchSocket.Dmtp)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)|DMTP（Duplex Message Transport Protocol双工消息传输协议）<br>是一个简单易用，便捷高效，且易于扩展的二进制数据协议。<br>目前基于该协议，已实现的功能包括：连接验证、同步Id、<br>Rpc（包括客户端请求服务器，服务器请求客户端、客户端请求客户端）、<br>文件传输（包括客户端向服务器请求文件、客户端向服务器推送文件、<br>服务器向客户端请求文件、服务器向客户端推送文件、<br>客户端之间请求、推送文件）、Redis等。|
+|[![NuGet version (TouchSocket.JsonRpc)](https://img.shields.io/nuget/v/TouchSocket.JsonRpc.svg?label=TouchSocket.JsonRpc)](https://www.nuget.org/packages/TouchSocket.JsonRpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)|这是一个提供JsonRpc服务器和客户端的组件库。<br>可以通过该组件创建基于Tcp、Http、WebSocket协议的<br>JsonRpc服务器和客户端，支持JsonRpc全部功能，<br>可与Web，Android等平台无缝对接。|
+|[![NuGet version (TouchSocket.XmlRpc)](https://img.shields.io/nuget/v/TouchSocket.XmlRpc.svg?label=TouchSocket.XmlRpc)](https://www.nuget.org/packages/TouchSocket.XmlRpc)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)|这是一个提供XmlRpc服务器和客户端的组件库。<br>可以通过该组件创建XmlRpc服务解析器，<br>完美支持XmlRpc数据类型，类型嵌套，Array等。<br>也能与CookComputing.XmlRpcV2完美对接。<br>不限Web，Android等平台。|
+|[![NuGet version (TouchSocket.WebApi)](https://img.shields.io/nuget/v/TouchSocket.WebApi.svg?label=TouchSocket.WebApi)](https://www.nuget.org/packages/TouchSocket.WebApi)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)|这是一个提供WebApi服务器和客户端的组件库。<br>可以通过该组件创建WebApi服务解析器和客户端，<br>让桌面端、Web端、移动端可以跨语言调用RPC函数。<br>功能支持自定义路由、Get传参、Post传参等。|
+| [![NuGet version (TouchSocket.AspNetCore)](https://img.shields.io/nuget/v/TouchSocket.AspNetCore.svg?label=TouchSocket.AspNetCore)](https://www.nuget.org/packages/TouchSocket.AspNetCore)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)<br>[说明文档](http://rrqm_home.gitee.io/touchsocket)| TouchSocket.AspNetCore是适用于AspNetCore的专属版本。|
 
 【企业版】
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[Gitee](https://gitee.com/RRQM_Home/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://rrqm_home.gitee.io/touchsocket/docs/enterprise/)|
-|[![NuGet version (TouchSocketPro.Dmtp)](https://img.shields.io/nuget/v/TouchSocketPro.Dmtp.svg?label=TouchSocketPro.Dmtp)](https://www.nuget.org/packages/TouchSocketPro.Dmtp)|[Gitee](https://gitee.com/RRQM_Home/TouchSocket)<br>[Github](https://github.com/RRQM/TouchSocket)|这是基于DMTP的企业版扩展。目前包含功能：<br>多线程文件传输、远程文件访问、远程流访问、<br>路由包传输等。|
-| [![NuGet version (TouchSocketPro.AspNetCore)](https://img.shields.io/nuget/v/TouchSocketPro.AspNetCore.svg?label=TouchSocketPro.AspNetCore)](https://www.nuget.org/packages/TouchSocketPro.AspNetCore)|[Gitee](https://gitee.com/RRQM_Home/TouchSocketPro)<br>[Github](https://github.com/RRQM/TouchSocketPro) | TouchSocketPro.AspNetCore是适用于AspNetCore的专属版本。|
+|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[说明文档](http://rrqm_home.gitee.io/touchsocket)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://rrqm_home.gitee.io/touchsocket/docs/enterprise/)|
+|[![NuGet version (TouchSocketPro.Dmtp)](https://img.shields.io/nuget/v/TouchSocketPro.Dmtp.svg?label=TouchSocketPro.Dmtp)](https://www.nuget.org/packages/TouchSocketPro.Dmtp)|[说明文档](http://rrqm_home.gitee.io/touchsocket)|这是基于DMTP的企业版扩展。目前包含功能：<br>多线程文件传输、远程文件访问、远程流访问、<br>路由包传输等。|
+| [![NuGet version (TouchSocketPro.AspNetCore)](https://img.shields.io/nuget/v/TouchSocketPro.AspNetCore.svg?label=TouchSocketPro.AspNetCore)](https://www.nuget.org/packages/TouchSocketPro.AspNetCore)|[说明文档](http://rrqm_home.gitee.io/touchsocket)| TouchSocketPro.AspNetCore是适用于AspNetCore的专属版本。|
 
 #### 特别声明
 TouchSocket项目已加入[dotNET China](https://gitee.com/dotnetchina) 组织。<br/>
@@ -114,63 +112,40 @@ TouchSocket提供多种框架模型，能够完全兼容基于TCP、UDP协议的
 
 ```
 TcpService service = new TcpService();
-service.Connecting = (client, e) => { };//有客户端正在连接
-service.Connected = (client, e) => { };//有客户端连接
-service.Disconnected = (client, e) => { };//有客户端断开连接
-service.Received = (client, byteBlock, requestInfo) =>
+service.Connecting = (client, e) => {return EasyTask.CompletedTask; };//有客户端正在连接
+service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端连接
+service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接
+service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = byteBlock.ToString();
-    Console.WriteLine($"已从{client.ID}接收到信息：{mes}");
-
-    client.Send(mes);//将收到的信息直接返回给发送方
-
-    //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
-
-    var clients = service.GetClients();
-    foreach (var targetClient in clients)//将收到的信息返回给在线的所有客户端。
-    {
-        if (targetClient.ID != client.ID)
-        {
-            targetClient.Send(mes);
-        }
-    }
+    string mes = e.ByteBlock.ToString();
+    Console.WriteLine($"已从{client.Id}接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
-
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) }))//同时监听两个地址
-    .Start();//启动
+service.Start(7789);//启动
 ```
 
  **【TcpClient】** 
 ```
 TcpClient tcpClient = new TcpClient();
-tcpClient.Connected = (client, e) => { };//成功连接到服务器
-tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-tcpClient.Received = (client, byteBlock, requestInfo) =>
+tcpClient.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
+tcpClient.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息
-    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     Console.WriteLine($"接收到信息：{mes}");
+    return EasyTask.CompletedTask;
 };
 
-//声明配置
-TouchSocketConfig config = new TouchSocketConfig();
-config.SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
-    .UsePlugin()
-    .SetBufferLength(1024 * 10);
-
-//载入配置
-tcpClient.Setup(config);
-tcpClient.Connect();
+tcpClient.Connect("127.0.0.1:7789");
 tcpClient.Send("RRQM");
 ```
 
  **【TcpClient 断线重连】**
-在Config的插件配置中，首先得启用插件，然后使用重连插件即可。
+在Config的插件配置中，使用重连插件即可。
 
 ```
-.UsePlugin()
 .ConfigurePlugins(a=> 
 {
    a.UseReconnection(5, true, 1000);
@@ -179,7 +154,7 @@ tcpClient.Send("RRQM");
 
  **【FixedHeaderPackageAdapter包模式】**
 
-该适配器主要解决TCP粘分包问题，数据格式采用简单而高效的“包头+数据体”的模式，其中包头支持：
+该适配器主要解决Tcp粘分包问题，数据格式采用简单而高效的“包头+数据体”的模式，其中包头支持：
 
 - Byte模式（1+n），一次性最大接收255字节的数据。
 - Ushort模式（2+n），一次最大接收65535字节。
