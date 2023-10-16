@@ -267,5 +267,69 @@ JsonRpc也支持代理调用。详情请看[生成代理](../docs/generateproxyf
 
 ## 七、反向Rpc（服务器主动调用客户端）
 
-框架提供了反向Rpc，即服务器主动调用客户端。该功能主要应用于服务器需要主动通知客户端的情况。具体使用方法如下：
+框架提供了反向Rpc，即服务器主动调用客户端。该功可以用于web等多端。具体使用如下：
+
+首先需要像常规Rpc一样声明一个Rpc服务。然后需要使用`JsonRpc`特性表示。
+
+```csharp
+public class ReverseJsonRpcServer : RpcServer
+{
+    [JsonRpc(MethodInvoke = true)]
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+然后在插件注册全局`RpcStore`。并注册服务。
+
+```csharp
+var jsonRpcClient = new WebSocketJsonRpcClient();
+jsonRpcClient.Setup(new TouchSocketConfig()
+    .ConfigurePlugins(a =>
+    {
+        a.UseGlobalRpcStore()
+        .ConfigureRpcStore(store =>
+        {
+            store.RegisterServer<ReverseJsonRpcServer>();
+        });
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
+jsonRpcClient.Connect();
+```
+
+在服务器端中，拿到IHttpSocketClient对象。然后调用GetJsonRpcActionClient扩展方法获取到jsonRpcClient。然后调用Invoke等。
+
+下列示例演示的是，当WebSocket连接上时，服务器主动调用客户端。
+
+```csharp
+class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>
+{
+    public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+    {
+        try
+        {
+            //获取JsonRpcActionClient，用于执行反向Rpc
+            var jsonRpcClient = client.GetJsonRpcActionClient();
+
+            var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
+            Console.WriteLine(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+:::tip
+
+反向JsonRpc也能使用代理。
+
+:::  
+
+
 

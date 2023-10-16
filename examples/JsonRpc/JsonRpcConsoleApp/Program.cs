@@ -117,7 +117,7 @@ namespace JsonRpcConsoleApp
         /// <param name="callContext"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-        [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext,MethodInvoke =true)]
+        [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext, MethodInvoke = true)]
         public string TestGetContext(ICallContext callContext, string str)
         {
             if (callContext.Caller is IHttpSocketClient socketClient)
@@ -160,6 +160,12 @@ namespace JsonRpcConsoleApp
         public string TestJsonRpc(string str)
         {
             return "RRQM" + str;
+        }
+
+        [JsonRpc(MethodInvoke = true)]
+        public string Show(int a, int b, int c)
+        {
+            return $"a={a},b={b},c={c}";
         }
     }
 }
