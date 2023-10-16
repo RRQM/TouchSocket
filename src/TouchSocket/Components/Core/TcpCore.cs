@@ -19,6 +19,7 @@ namespace TouchSocket.Sockets
         /// 初始缓存大小
         /// </summary>
         public const int BufferSize = 1024 * 10;
+
         #region 字段
 
         /// <summary>
@@ -96,7 +97,6 @@ namespace TouchSocket.Sockets
             set
             {
                 this.m_receiveBufferSize = value;
-                this.Socket.ReceiveBufferSize = value;
             }
         }
 
@@ -114,7 +114,6 @@ namespace TouchSocket.Sockets
             set
             {
                 this.m_sendBufferSize = value;
-                this.Socket.SendBufferSize = value;
             }
         }
 
@@ -476,6 +475,8 @@ namespace TouchSocket.Sockets
                     this.PrivateBreakOut(false, ex.Message);
                 }
             }
+
+            //base.OnCompleted(e);
         }
 
         /// <summary>

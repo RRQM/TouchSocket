@@ -57,7 +57,7 @@ namespace TouchSocket.Http.WebSockets
                             args.Context.Response.Build(byteBlock);
                             await client.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
-                        await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext))
+                        _ = client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext))
                             .ConfigureAwait(false);
                         return true;
                     }

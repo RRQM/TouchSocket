@@ -509,8 +509,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         /// </summary>
         /// <param name="socketClient"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
+        /// <param name="e"></param>
         protected override sealed Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnReceived((TClient)socketClient, e);
