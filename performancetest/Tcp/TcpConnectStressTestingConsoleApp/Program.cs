@@ -14,7 +14,7 @@ namespace TcpConnectStressTestingConsoleApp
             {
                 ConsoleLogger.Default.Info($"客户端数量：{service.Count}");
             });
-            var clients = new List<TcpClient>();
+            var clients = new List<System.Net.Sockets.TcpClient>();
             while (true)
             {
                 Console.WriteLine("按任意键建立1000连接");
@@ -35,20 +35,16 @@ namespace TcpConnectStressTestingConsoleApp
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()
-                .SetListenIPHosts(7789)
-                .SetReceiveType(ReceiveType.None));
+                .SetListenIPHosts(7789));
             service.Start();
             service.Logger.Info("服务器已启动");
             return service;
         }
 
-        static TcpClient GetTcpClient()
+        static System.Net.Sockets.TcpClient GetTcpClient()
         {
-            var tcpClient = new TcpClient();
-            tcpClient.Setup(new TouchSocketConfig()
-                .SetReceiveType(ReceiveType.None)//因为是测试连接，所以不投递接收请求
-                .SetRemoteIPHost("127.0.0.1:7789"));
-            tcpClient.Connect();
+            System.Net.Sockets.TcpClient tcpClient = new System.Net.Sockets.TcpClient();
+            tcpClient.Connect("127.0.0.1", 7789);
             return tcpClient;
         }
     }

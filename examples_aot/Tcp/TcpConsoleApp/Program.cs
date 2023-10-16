@@ -21,10 +21,6 @@ namespace TcpConsoleApp
         private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Connecting = (client, e) => { };//有客户端正在连接
-            service.Connected = (client, e) => { };//有客户端成功连接
-            service.Disconnected = (client, e) => { };//有客户端断开连接
-
             service.Setup(new TouchSocketConfig()//载入配置
 
                 .SetContainer(new MyContainer())
@@ -48,13 +44,12 @@ namespace TcpConsoleApp
         private static TcpClient CreateClient()
         {
             var tcpClient = new TcpClient();
-            tcpClient.Connected = (client, e) => { };//成功连接到服务器
-            tcpClient.Disconnected = (client, e) => { };//从服务器断开连接，当连接不成功时不会触发。
-            tcpClient.Received = (client, byteBlock, requestInfo) =>
+            tcpClient.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
+                return EasyTask.CompletedTask;
             };
 
             //载入配置
