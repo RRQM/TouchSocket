@@ -38,6 +38,7 @@ namespace XUnitTestProject.DataAdapter
         {
             var tester = TcpDataAdapterTester.CreateTester(new TcpDmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
             {
+              
             });//用BufferLength模拟粘包，分包
 
             var smtpMessage = new DmtpMessage();
@@ -58,6 +59,7 @@ namespace XUnitTestProject.DataAdapter
         {
             var tester = TcpDataAdapterTester.CreateTester(new TcpDmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
             {
+               
             });//用BufferLength模拟粘包，分包
 
             var smtpMessage = new DmtpMessage();
@@ -123,6 +125,7 @@ namespace XUnitTestProject.DataAdapter
                  {
                      httpRequest1.TryGetContent(out _);
                  }
+                
              });//用BufferLength模拟粘包，分包
 
             var byteBlock = BytePool.Default.GetByteBlock(1024);
@@ -150,6 +153,8 @@ namespace XUnitTestProject.DataAdapter
                  {
                      httpResponse1.TryGetContent(out _);
                  }
+
+                
              });//用BufferLength模拟粘包，分包
 
             var byteBlock = BytePool.Default.GetByteBlock(1024);
@@ -224,6 +229,7 @@ namespace XUnitTestProject.DataAdapter
                 {
                     success = false;
                 }
+               
             });
 
             this.m_output.WriteLine(tester.Run(newdata, testCount, testCount, dataLen * 5).ToString());
@@ -253,6 +259,7 @@ namespace XUnitTestProject.DataAdapter
               {
                   rev_DataFrame = (WSDataFrame)obj;
                   rev_DataFrame.PayloadData.SetHolding(true);
+                  
               });
 
             tester.Run(newdata, 1, 1, 1000);//此处模拟发送
@@ -298,6 +305,7 @@ namespace XUnitTestProject.DataAdapter
               {
                   rev_DataFrame = (WSDataFrame)obj;
                   rev_DataFrame.PayloadData.SetHolding(true);
+                 
               }
             );
 
@@ -359,6 +367,7 @@ namespace XUnitTestProject.DataAdapter
             var tester = TcpDataAdapterTester.CreateTester(new MyCustomBigFixedHeaderDataHandlingAdapter(), bufferLength,
                 receivedCallBack: (byteBlock, requestInfo) =>
                  {
+                    
                  });//用BufferLength模拟粘包，分包
 
             var block = new ByteBlock();
@@ -387,6 +396,7 @@ namespace XUnitTestProject.DataAdapter
                 new MyCustomBetweenAndDataHandlingAdapter("##", "**", Encoding.UTF8), bufferLength,
                 receivedCallBack: (byteBlock, requestInfo) =>
                  {
+                    
                  });//用BufferLength模拟粘包，分包
 
             var data = Encoding.UTF8.GetBytes("##RRQM Say Hello**");
@@ -408,6 +418,7 @@ namespace XUnitTestProject.DataAdapter
                 new MyCustomBetweenAndDataHandlingAdapter(null, "**", Encoding.UTF8), bufferLength,
                 receivedCallBack: (byteBlock, requestInfo) =>
                 {
+                    
                 });//用BufferLength模拟粘包，分包
 
             var data = Encoding.UTF8.GetBytes("RRQM Say Hello**");
@@ -433,6 +444,7 @@ namespace XUnitTestProject.DataAdapter
                     {
                         var str = Encoding.UTF8.GetString(myBetween.Data);
                     }
+                    
                 });//用BufferLength模拟粘包，分包
 
             var data = Encoding.UTF8.GetBytes("##RRQM ** Say Hello**");
@@ -457,6 +469,7 @@ namespace XUnitTestProject.DataAdapter
                     {
                         var str = Encoding.UTF8.GetString(myBetween.Data);
                     }
+                  
                 });//用BufferLength模拟粘包，分包
 
             var data = Encoding.UTF8.GetBytes("**12##12##");
@@ -494,6 +507,7 @@ namespace XUnitTestProject.DataAdapter
                 {
                     receivedCallBack = true;
                 }
+              
             };
 
             var data = Encoding.UTF8.GetBytes("RRQM");
@@ -511,19 +525,18 @@ namespace XUnitTestProject.DataAdapter
             Assert.True(receivedCallBack);
         }
 
-        [Fact]
-        public void UdpPackageAdapterShouldBeOk()
+        [Theory]
+        [InlineData(1,1,100)]
+        [InlineData(2,2,100)]
+        [InlineData(2,1024,100)]
+        [InlineData(5,1,1024)]
+        [InlineData(5,5,1024)]
+        [InlineData(10,1024,1024*1024)]
+        public void UdpPackageAdapterShouldBeOk(int multiThread, int mtu,int dataLen)
         {
-            var multiThread = 2;
-            var mtu = 20;
-            var tester = UdpDataAdapterTester.CreateTester(new UdpPackageAdapter() { MTU = mtu, Timeout = 60 * 1000 }, multiThread);//用BufferLength模拟粘包，分包
+            var tester = UdpDataAdapterTester.CreateTester(new UdpPackageAdapter() { MTU = mtu, Timeout = 60 * 1000 }, multiThread);
 
-            var data = new byte[100];
-            for (var i = 0; i < 100; i++)
-            {
-                data[i] = (byte)i;
-            }
-
+            var data = new byte[dataLen];
             this.m_output.WriteLine(tester.Run(data, 100, 100, 1000 * 60).ToString());
         }
 

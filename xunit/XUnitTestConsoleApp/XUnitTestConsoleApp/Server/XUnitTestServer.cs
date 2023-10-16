@@ -21,66 +21,14 @@ using TouchSocket.Rpc;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.WebApi;
+using TouchSocket.Http;
+using TouchSocket.Sockets;
 
 namespace XUnitTestConsoleApp.Server
 {
-    public enum MyEnum
-    {
-        T1 = 0,
-        T2 = 100,
-        T3 = 200
-    }
 
-    public struct StructArgs
-    {
-        public int P1 { get; set; }
-    }
-
-    public class Args
-    {
-        public int P1 { get; set; }
-        public double P2 { get; set; }
-        public string P3 { get; set; }
-    }
-
-    public class Class01
-    {
-        public int Age { get; set; } = 1;
-        public string Name { get; set; }
-
-        public int? P1 { get; set; } = 1;
-        public string? P2 { get; set; }
-        public (string a, int b)? P3 { get; set; }
-        public int? P4;
-        public (string a, int b)? P5;
-    }
-
-    public class Class02
-    {
-        public int Age { get; set; }
-        public List<int> list { get; set; }
-        public string Name { get; set; }
-        public int[] nums { get; set; }
-    }
-
-    public class Class03 : Class02
-    {
-        public int Length { get; set; }
-    }
-
-    public class Class04
-    {
-        public int P1 { get; set; }
-        public string P2 { get; set; }
-        public int P3 { get; set; }
-    }
-
-    public class MyClass
-    {
-        public int P1 { get; set; }
-    }
-
-    public class XUnitTestController : TransientRpcServer
+    [GeneratorRpcServer]
+    public partial class XUnitTestController : TransientRpcServer
     {
         public static bool isStart;
 
@@ -95,7 +43,6 @@ namespace XUnitTestConsoleApp.Server
             var timer = new System.Timers.Timer(1000);
             timer.Elapsed += this.Timer_Elapsed;
             timer.Start();
-
             Console.WriteLine($"{this.GetType().Name}构造函数");
         }
 
@@ -270,13 +217,18 @@ namespace XUnitTestConsoleApp.Server
         }
 
         [XunitDmtpRpc]
+        [XunitJsonRpc]
         public string Test19_CallBacktcpRpcService(string id, int age)
         {
             try
             {
-                string msg = ((IDmtpActorObject)this.CallContext.Caller).GetDmtpRpcActor().InvokeT<string>(id, "SayHello", InvokeOption.WaitInvoke, age);
-                this.ShowMsg($"TestCallBack，mes={msg}");
-                return msg;
+                if (this.CallContext.Caller is IDmtpActorObject dmtp)
+                {
+                    string msg = dmtp.GetDmtpRpcActor().InvokeT<string>(id, "SayHello", InvokeOption.WaitInvoke, age);
+                    this.ShowMsg($"TestCallBack，mes={msg}");
+                    return msg;
+                }
+                return default;
             }
             catch (Exception ex)
             {
@@ -456,6 +408,22 @@ namespace XUnitTestConsoleApp.Server
         [DmtpRpc]
         public void Test37_ListTupleElementNames2(List<(int b1, (int b2, string b3) b4)> tuple)
         {
+
+        }
+
+        [XunitJsonRpc]
+        public string Test38_CallBackJsonRpcService(string id, int age)
+        {
+            try
+            {
+                string msg = ((ISocketClient)this.CallContext.Caller).GetJsonRpcActionClient().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, age);
+                this.ShowMsg($"TestCallBack，mes={msg}");
+                return msg;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
 
         }
 

@@ -15,6 +15,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestFastSerialize
     {
         [Theory]
@@ -458,6 +459,16 @@ namespace XUnitTestProject.Core
             var newValue = SerializeConvert.FastBinaryDeserialize<DataTable>(bytes);
 
             Assert.NotNull(newValue);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void SerializeStringShouldBeOk(string value)
+        {
+            var bytes = SerializeConvert.FastBinarySerialize(value);
+            var newValue = SerializeConvert.FastBinaryDeserialize<string>(bytes);
+            Assert.Equal(newValue,value);
         }
     }
 

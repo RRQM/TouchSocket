@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 using TouchSocket.Core;
 using TouchSocket.Http;
+using TouchSocket.Sockets;
 
 namespace XUnitTestProject.Http
 {
@@ -73,8 +74,7 @@ namespace XUnitTestProject.Http
         public void HttpRequestShouldBeOk()
         {
             var client = new TouchSocket.Http.HttpClient();
-            client.Setup("127.0.0.1:7801");
-            client.Connect();
+            client.Connect("127.0.0.1:7801");
 
             for (var i = 0; i < 100000; i++)
             {

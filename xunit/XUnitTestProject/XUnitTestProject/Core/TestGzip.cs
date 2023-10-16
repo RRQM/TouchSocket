@@ -15,6 +15,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestGzip
     {
         [InlineData(1024)]

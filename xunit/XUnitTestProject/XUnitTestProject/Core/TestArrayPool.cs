@@ -1,5 +1,6 @@
 ﻿namespace XUnitTestProject.Core
 {
+    
     public class TestArrayPool
     {
         [Fact]

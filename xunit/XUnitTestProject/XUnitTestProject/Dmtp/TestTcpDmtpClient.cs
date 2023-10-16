@@ -63,12 +63,13 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async void ConnectShouldBeOk()
+        public async Task ConnectShouldBeOk()
         {
+            int waitTime = 500;
             var tasks = new List<Task>();
             for (var j = 0; j < 10; j++)
             {
-                var task = Task.Run(() =>
+                var task = Task.Run(async () =>
                   {
                       var client = this.GetClient(this.GetConfig(), false);
                       var connecting = 0;
@@ -79,14 +80,17 @@ namespace XUnitTestProject.Dmtp
                       client.Connecting = (client, e) =>
                       {
                           connecting += 1;
+                          return Task.CompletedTask;
                       };
                       client.Connected = (client, e) =>
                       {
                           connected += 1;
+                          return Task.CompletedTask;
                       };
                       client.Disconnected = (client, e) =>
                       {
                           disConnected += 1;
+                          return Task.CompletedTask;
                       };
 
                       client.PluginsManager.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), () =>
@@ -102,6 +106,8 @@ namespace XUnitTestProject.Dmtp
                           handshaked = 0;
 
                           client.Connect();
+
+                          await Task.Delay(waitTime);
                           Assert.True(client.Online);
                           Assert.True(client.IsHandshaked);
                           Assert.Equal(1, connecting);
@@ -110,6 +116,7 @@ namespace XUnitTestProject.Dmtp
 
                           client.Close("主动断开");
 
+                          await Task.Delay(waitTime);
                           //await Task.Delay(100);
                           Assert.False(client.Online);
                           Assert.False(client.IsHandshaked);
@@ -565,7 +572,7 @@ namespace XUnitTestProject.Dmtp
             var client = this.GetClient(this.GetConfig());
             Assert.True(!string.IsNullOrEmpty(client.Id));
 
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < 100000; i++)
             {
                 Assert.True(await client.PingAsync());
             }

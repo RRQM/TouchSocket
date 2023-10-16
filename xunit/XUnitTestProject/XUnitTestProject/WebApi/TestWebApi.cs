@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using RpcProxy;
+using TouchSocket.Sockets;
 using TouchSocket.WebApi;
 
 namespace XUnitTestProject.WebApi
@@ -21,8 +22,7 @@ namespace XUnitTestProject.WebApi
         public void ShouldSuccessfulCallService()
         {
             var client = new WebApiClient();
-            client.Setup("127.0.0.1:7801");
-            client.Connect();
+            client.Connect("127.0.0.1:7801");
 
             IXUnitTestController controller = new XUnitTestController(client);
 
@@ -52,7 +52,8 @@ namespace XUnitTestProject.WebApi
         public void ShouldSuccessfulCallService2()
         {
             var client = new WebApiClientSlim();
-            client.Setup("http://127.0.0.1:7801");
+            client.Setup(new TouchSocket.Core.TouchSocketConfig()
+                .SetRemoteIPHost("http://127.0.0.1:7801"));
 
             IXUnitTestController controller = new XUnitTestController(client);
 

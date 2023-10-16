@@ -229,5 +229,14 @@ namespace XUnitTestProject.Rpc
                 Assert.Equal($"我今年{i}岁了", msg);
             }
         }
+
+        public void Test38(string id, IInvokeOption invokeOption)
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                var msg = this.server.Test38_CallBackJsonRpcService(id, i, invokeOption: invokeOption);
+                Assert.Equal($"我今年{i}岁了", msg);
+            }
+        }
     }
 }

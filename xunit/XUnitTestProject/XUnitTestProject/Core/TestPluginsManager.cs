@@ -2,6 +2,7 @@
 
 namespace XUnitTestProject.Core
 {
+    
     public class TestPluginsManager
     {
         [Fact]
@@ -57,7 +58,7 @@ namespace XUnitTestProject.Core
         [Fact]
         public void RaiseGenericShouldBeOk()
         {
-            GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
+            GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Reflect;
             IPluginsManager pluginsManager = new PluginsManager(new Container())
             {
                 Enable = true
@@ -88,6 +89,7 @@ namespace XUnitTestProject.Core
             }
         }
 
+        [PluginOption(Singleton = false, NotRegister = true)]
         class MyPluginClass2 : PluginBase, IMyPlugin<int>
         {
             public int Sender { get; set; }
@@ -112,13 +114,14 @@ namespace XUnitTestProject.Core
         {
         }
 
+        [PluginOption( Singleton =false,NotRegister =true)]
         private class MyPluginClass1 : PluginBase, IMyPlugin
         {
             public object Sender { get; set; }
             public int EnterCount { get; set; }
             public int LeaveCount { get; set; }
 
-            async Task IMyPlugin<object>.Run1(object sender, PluginEventArgs e)
+            public async Task Run1(object sender, PluginEventArgs e)
             {
                 this.Sender = sender;
                 this.EnterCount++;
