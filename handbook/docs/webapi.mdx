@@ -249,9 +249,8 @@ http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20
 ```csharp
 private static WebApiClient CreateWebApiClient()
 {
-    WebApiClient client = new WebApiClient();
-    client.Setup("127.0.0.1:7789");
-    client.Connect();
+    var client = new WebApiClient();
+    client.Connect("127.0.0.1:7789");
     Console.WriteLine("连接成功");
     return client;
 }
