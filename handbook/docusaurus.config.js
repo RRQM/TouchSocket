@@ -1,3 +1,4 @@
+
 module.exports = {
   title: "TouchSocket",
   tagline: "网络开发",
@@ -49,21 +50,10 @@ module.exports = {
         },
         {
           label: "版本",
-          position: "right",
-          items: [
-            {
-              label: "Gitee（主库）",
-              href: "https://gitee.com/rrqm_home/touchsocket",
-            },
-            {
-              label: "GitHub",
-              href: "https://github.com/RRQM/TouchSocket",
-            },
-            {
-              label: "Nuget",
-              href: "https://www.nuget.org/profiles/rrqm",
-            },
-          ],
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownItemsAfter: [{ to: '/versions', label: '所有版本' }],
+          dropdownActiveClassDisabled: true,
         },
         {
           label: "源码",
@@ -149,10 +139,6 @@ module.exports = {
             current: {
               label: '2.0.0-beta',
               path: '/',
-            },
-            '1.4.0': {
-              label: '1.4.0',
-              path: '/v1.4.0',
             }
           },
           // sidebarCollapsible: true,
