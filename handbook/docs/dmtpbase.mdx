@@ -59,7 +59,7 @@ internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
 
 ### 1.4 跨语言
 
-为使Dmtp服务器支持跨语言，Dmtp在设计之初就预留了跨语言连接的便利性。诚如[Dmtp描述](.//dmtpdescription.mdx)所示，其基础数据报文为`Flags+Length+Data`。而框架内部的Handshake、Ping、Pong、Close等指令均是采用Json数据格式。但是及时如此，连接时的真正数据，还与其基础协议有关。具体如下：
+为使Dmtp服务器支持跨语言，Dmtp在设计之初就预留了跨语言连接的便利性。诚如[Dmtp描述](./dmtpdescription.mdx)所示，其基础数据报文为`Flags+Length+Data`。而框架内部的Handshake、Ping、Pong、Close等指令均是采用Json数据格式。但是及时如此，连接时的真正数据，还与其基础协议有关。具体如下：
 
 以连接、操作TcpDmtpService为例。其基础协议即为tcp，则使用常规的tcp客户端即可模拟链接。
 

@@ -38,21 +38,15 @@ module.exports = {
       hideOnScroll: true,
       items: [
         {
-          to: "docs",
-          activeBasePath: "docs",
-          label: "文档",
-          position: "left",
-        },
-        {
           label: "更新日志",
           position: "left",
-          to: "docs/upgrade"
+          to: "docs/current/upgrade"
         },
         {
           label: "版本",
           type: 'docsVersionDropdown',
           position: 'right',
-          dropdownItemsAfter: [{ to: '/versions', label: '所有版本' }],
+          dropdownItemsAfter: [],
           dropdownActiveClassDisabled: true,
         },
         {
@@ -88,11 +82,11 @@ module.exports = {
           items: [
             {
               label: "入门",
-              to: "docs",
+              to: "docs/current",
             },
             {
               label: "手册",
-              to: "docs",
+              to: "docs/current",
             },
           ],
         },
@@ -137,8 +131,8 @@ module.exports = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: '2.0.0-beta',
-              path: '/',
+              label: '最新版本',
+              path: '/current',
             }
           },
           // sidebarCollapsible: true,
@@ -160,7 +154,7 @@ module.exports = {
       "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
-        language: ["en", "zh"],
+        language: ["zh"],
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
       },
