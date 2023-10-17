@@ -15,7 +15,7 @@ Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，�
 
 ### 2.1 配置容器
 
-配置容器，即“手动”解决容器反射实例的问题。目前这部分使用源生成IOC完成。详情请看[源生成IOC](.//ioc.mdx)
+配置容器，即“手动”解决容器反射实例的问题。目前这部分使用源生成IOC完成。详情请看[源生成IOC](./ioc.mdx)
 
 ```csharp
 /// <summary>
@@ -32,7 +32,7 @@ public partial class MyContainer : ManualContainer
 
 ### 2.2 配置插件
 
-插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，详情请看[插件使用](.//pluginsmanager.mdx)。
+插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，详情请看[插件使用](./pluginsmanager.mdx)。
 
 同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
 

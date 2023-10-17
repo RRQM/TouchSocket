@@ -14,7 +14,7 @@ title: 自定义DmtpActor
 
 ## 二、使用Actor开发的优点
 
-实际上，使用[协议扩展](.//dmtpbase)即可扩展Dmtp的功能，但是使用Actor开发，则更具优点：
+实际上，使用[协议扩展](./dmtpbase)即可扩展Dmtp的功能，但是使用Actor开发，则更具优点：
 
 1. 很好的分离了协议的交互逻辑和协议的实现逻辑。可以做到一次开发，多种协议适用。
 2. 按照规范的开发，可以非常好的支持客户端到服务器、服务器到客户端、客户端到客户端的交互。
@@ -279,7 +279,7 @@ class MethodModel
 }
 ```
 
-`SimpleDmtpRpcPackage`类，用于打包Rpc请求，关于打包的使用详情，可以看[包序列化](.//ipackage)
+`SimpleDmtpRpcPackage`类，用于打包Rpc请求，关于打包的使用详情，可以看[包序列化](./ipackage)
 
 ```csharp
 class SimpleDmtpRpcPackage : WaitRouterPackage
@@ -386,7 +386,7 @@ static class SimpleDmtpRpcExtension
 
 ### 3.3 声明功能插件
 
-功能插件是为Actor提供创建时机，和必要的配置信息。如果有需要，还可以抛出插件信息（例如[文件传输](.//dmtptransferfile) ）。
+功能插件是为Actor提供创建时机，和必要的配置信息。如果有需要，还可以抛出插件信息（例如[文件传输](./dmtptransferfile) ）。
 
 ```csharp
  class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin,IDmtpReceivedPlugin
