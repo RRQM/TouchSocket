@@ -396,20 +396,12 @@ namespace TouchSocket.Sockets
         public override int ReceiveBufferSize
         {
             get => this.GetTcpCore().ReceiveBufferSize;
-            set
-            {
-                this.GetTcpCore().ReceiveBufferSize = value;
-            }
         }
 
         /// <inheritdoc/>
         public override int SendBufferSize
         {
             get => this.GetTcpCore().SendBufferSize;
-            set
-            {
-                this.GetTcpCore().SendBufferSize = value;
-            }
         }
 
         /// <inheritdoc/>

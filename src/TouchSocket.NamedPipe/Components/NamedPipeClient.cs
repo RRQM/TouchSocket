@@ -55,6 +55,7 @@ namespace TouchSocket.NamedPipe
         }
 
         #region 变量
+        private int m_receiveBufferSize = 1024 * 10;
         private volatile bool m_online;
         private NamedPipeClientStream m_pipeStream;
         private ValueCounter m_receiveCounter;
@@ -204,6 +205,8 @@ namespace TouchSocket.NamedPipe
         #endregion 事件
 
         #region 属性
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize => this.m_receiveBufferSize;
 
         /// <inheritdoc/>
         public DateTime LastReceivedTime { get; private set; }
@@ -240,6 +243,9 @@ namespace TouchSocket.NamedPipe
 
         /// <inheritdoc/>
         public bool IsClient => true;
+
+        /// <inheritdoc/>
+        public override int SendBufferSize => this.m_pipeStream.InBufferSize;
 
         #endregion 属性
 
@@ -437,7 +443,7 @@ namespace TouchSocket.NamedPipe
 
         private void OnPeriod(long value)
         {
-            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_receiveBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         /// <inheritdoc/>

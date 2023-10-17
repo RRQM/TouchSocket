@@ -66,6 +66,12 @@ namespace TouchSocket.NamedPipe
         #region 属性
 
         /// <inheritdoc/>
+        public override int SendBufferSize => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize => throw new NotImplementedException();
+
+        /// <inheritdoc/>
         public override TouchSocketConfig Config { get => this.m_config; }
 
         /// <inheritdoc/>

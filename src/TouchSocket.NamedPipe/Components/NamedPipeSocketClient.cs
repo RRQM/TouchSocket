@@ -17,7 +17,7 @@ namespace TouchSocket.NamedPipe
 
         private NamedPipeServerStream m_pipeStream;
         private ValueCounter m_receiveCounter;
-
+        private int m_receiveBufferSize = 1024 * 10;
         #endregion 字段
 
         /// <summary>
@@ -32,6 +32,12 @@ namespace TouchSocket.NamedPipe
                 OnPeriod = this.OnPeriod
             };
         }
+
+        /// <inheritdoc/>
+        public override int SendBufferSize => this.m_pipeStream.InBufferSize;
+
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize => this.m_receiveBufferSize;
 
         /// <inheritdoc/>
         public bool CanSend => this.Online;
@@ -513,7 +519,7 @@ namespace TouchSocket.NamedPipe
 
         private void OnPeriod(long value)
         {
-            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_receiveBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)

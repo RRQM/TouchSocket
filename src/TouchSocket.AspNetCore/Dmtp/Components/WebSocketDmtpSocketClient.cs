@@ -51,9 +51,15 @@ namespace TouchSocket.Dmtp.AspNetCore
         private WebSocketDmtpService m_service;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
-
+        private int m_receiveBufferSize=1024*10;
+        private int m_sendBufferSize = 1024 * 10;
         #endregion 字段
 
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize => this.m_receiveBufferSize;
+
+        /// <inheritdoc/>
+        public override int SendBufferSize => this.m_sendBufferSize;
         /// <inheritdoc/>
         public TouchSocketConfig Config { get; private set; }
 
@@ -74,16 +80,6 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         /// <inheritdoc/>
         public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
-
-        /// <summary>
-        /// 未实现
-        /// </summary>
-        public Func<ByteBlock, bool> OnHandleRawBuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        /// <summary>
-        /// 未实现
-        /// </summary>
-        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public IPluginsManager PluginsManager { get; private set; }
@@ -164,12 +160,12 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private void OnReceivePeriod(long value)
         {
-            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_receiveBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         private void OnSendPeriod(long value)
         {
-            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_sendBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         #region 内部委托绑定

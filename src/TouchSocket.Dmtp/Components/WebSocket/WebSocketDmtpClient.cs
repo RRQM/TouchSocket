@@ -43,13 +43,16 @@ namespace TouchSocket.Dmtp
 
         #region 字段
 
-        private ClientWebSocket m_client;
-        private Func<string, IDmtpActor> m_findDmtpActor;
-        private ValueCounter m_receiveCounter;
-        private ValueCounter m_sendCounter;
-        private SealedDmtpActor m_dmtpActor;
-        private TcpDmtpAdapter m_smtpAdapter;
         private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+        private ClientWebSocket m_client;
+        private SealedDmtpActor m_dmtpActor;
+        private Func<string, IDmtpActor> m_findDmtpActor;
+        private int m_receiveBufferSize = 1024 * 10;
+        private ValueCounter m_receiveCounter;
+        private int m_sendBufferSize = 1024 * 10;
+        private ValueCounter m_sendCounter;
+        private TcpDmtpAdapter m_smtpAdapter;
+
         #endregion 字段
 
         /// <inheritdoc/>
@@ -75,23 +78,13 @@ namespace TouchSocket.Dmtp
         public string Id => this.m_dmtpActor?.Id;
 
         /// <inheritdoc/>
-        public bool IsHandshaked { get;private set; }
+        public bool IsHandshaked { get; private set; }
 
         /// <inheritdoc/>
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
         public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
-
-        /// <summary>
-        /// 未实现
-        /// </summary>
-        public Func<ByteBlock, bool> OnHandleRawBuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        /// <summary>
-        /// 未实现
-        /// </summary>
-        public Func<ByteBlock, IRequestInfo, bool> OnHandleReceivedData { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public IPluginsManager PluginsManager { get; private set; }
@@ -100,7 +93,13 @@ namespace TouchSocket.Dmtp
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
 
         /// <inheritdoc/>
+        public override int ReceiveBufferSize => this.m_receiveBufferSize;
+
+        /// <inheritdoc/>
         public IPHost RemoteIPHost { get; private set; }
+
+        /// <inheritdoc/>
+        public override int SendBufferSize => this.m_sendBufferSize;
 
         /// <summary>
         /// 发送<see cref="IDmtpActor"/>关闭消息。
@@ -381,12 +380,12 @@ namespace TouchSocket.Dmtp
 
         private void OnReceivePeriod(long value)
         {
-            this.ReceiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_receiveBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         private void OnSendPeriod(long value)
         {
-            this.SendBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_sendBufferSize = TouchSocketUtility.HitBufferLength(value);
         }
 
         private void PrivateClose(string msg)
@@ -466,8 +465,7 @@ namespace TouchSocket.Dmtp
                 {
                     task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, false, CancellationToken.None);
                 }
-                task.ConfigureAwait(false);
-                task.GetAwaiter().GetResult();
+                task.GetFalseAwaitResult();
                 this.m_sendCounter.Increment(transferBytes[i].Count);
             }
         }
@@ -515,9 +513,8 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 不支持该功能
         /// </summary>
-        /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
-        public IReceiver CreateReceiver()
+        public void ClearReceiver()
         {
             throw new NotSupportedException("不支持该功能");
         }
@@ -525,12 +522,13 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 不支持该功能
         /// </summary>
+        /// <returns></returns>
         /// <exception cref="NotSupportedException"></exception>
-        public void ClearReceiver()
+        public IReceiver CreateReceiver()
         {
             throw new NotSupportedException("不支持该功能");
         }
 
-        #endregion
+        #endregion Receiver
     }
 }

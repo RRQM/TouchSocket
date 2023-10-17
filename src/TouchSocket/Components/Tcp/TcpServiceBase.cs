@@ -24,6 +24,12 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class TcpServiceBase : BaseSocket, ITcpService
     {
+        /// <inheritdoc/>
+        public override int SendBufferSize => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public override int ReceiveBufferSize => throw new NotImplementedException();
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
