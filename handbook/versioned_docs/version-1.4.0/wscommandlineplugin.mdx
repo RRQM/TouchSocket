@@ -1,0 +1,111 @@
+---
+id: wscommandlineplugin
+title: 快捷事务命令行
+---
+
+### 定义
+
+命名空间：TouchSocket.Http.WebSockets <br/>
+程序集：[TouchSocket.Http.dll](https://www.nuget.org/packages/TouchSocket.Http)
+
+## 一、说明
+
+快捷事务命令行，是用于**WebSocket**的快捷事务实现，让WS在**Text**文本中，用最简单的文字消息即可完成相关事务的执行。
+
+## 二、使用
+
+### 2.1 声明事务插件
+
+新建类型，继承自`WebSocketCommandLinePlugin`。然后在里面写一些需要的事务方法。
+
+声明的事务方法必须满足：只能是实例方法、必须是公开方法、方法名以`Command`结尾。
+
+```csharp
+/// <summary>
+/// 命令行插件。
+/// 声明的方法必须为公开实例方法、以"Command"结尾，且支持json字符串，参数之间空格隔开。
+/// </summary>
+public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
+{
+    public MyWSCommandLinePlugin(ILog logger) : base(logger)
+    {
+    }
+
+    public int AddCommand(int a, int b)
+    {
+        return a + b;
+    }
+
+    //当第一个参数，直接或间接实现ITcpClientBase接口时，会收集到当前请求的客户端，从而可以获取IP等。
+    public SumClass SumCommand(IHttpClientBase client, SumClass sumClass)
+    {
+        sumClass.Sum = sumClass.A + sumClass.B;
+        return sumClass;
+    }
+}
+```
+
+### 3.1 注册使用
+
+直接通过插件添加即可。
+
+```csharp {14}
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .SetListenIPHosts(7789)
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebSocket()//添加WebSocket功能
+                        //.SetWSUrl("/ws")//设置url直接可以连接。
+               .SetVerifyConnection(VerifyConnection)
+               .UseAutoPong();//当收到ping报文时自动回应pong
+        a.Add<MyWSCommandLinePlugin>();
+    }))
+    .Start();
+```
+
+### 3.2 调用
+
+调用数据格式：
+
+以事务方法的**方法名**为第一个参数（不包含Command），后续参数直接写，多个参数用**空格**隔开。例如：`Add 10 20`
+
+```csharp {18} 
+var client = new WebSocketClient();
+client.Setup(new TouchSocketConfig()
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
+        {
+            client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
+            await e.InvokeNext();
+        });
+    })
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
+client.Connect();
+
+client.SendWithWS("Add 10 20");
+```
+
+:::tip 提示
+
+快捷事务命令行不仅可以添加在服务器，客户端也可以添加使用。
+
+:::  
+
+:::tip 提示
+
+快捷事务参数支持Json字符串，但是需要注意的是，调用的Json字符串也不能包含空格。
+
+:::  
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket/WebSocketConsoleApp)
