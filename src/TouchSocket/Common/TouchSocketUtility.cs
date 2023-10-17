@@ -99,11 +99,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 最大BufferLength
-        /// </summary>
-        public static int MaxBufferLength { get; set; } = 1024 * 1024 * 10;
-
-        /// <summary>
         /// 命中BufferLength
         /// </summary>
         /// <param name="value"></param>
