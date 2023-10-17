@@ -1,0 +1,104 @@
+---
+id: rpcactionfilter
+title: Rpc服务AOP
+---
+
+### 定义
+
+命名空间：TouchSocket.Rpc <br/>
+程序集：[TouchSocket.Rpc.dll](https://www.nuget.org/packages/TouchSocket.Rpc)
+
+
+## 一、说明
+
+Rpc服务在被调用时，会触发一系列的Rpc筛选器AOP**IRpcActionFilter**的**特性（Attribute）**，进行相关AOP操作。所以可以利用该特性做很多有关Rpc的AOP操作。
+
+## 二、支持的特性方法
+
+|  方法名   | 触发时机  |功能|
+|  ----  | ----  |----  |
+| ExecutingAsync  | 在执行Rpc之前 |当invokeResult的InvokeStatus不为InvokeStatus.Ready。则不会执行Rpc。同时，当InvokeStatus为Success。会直接返回结果|
+| ExecutExceptionAsync  | 执行Rpc遇见异常 |如果修改invokeResult的InvokeStatus，或Result。则会影响Rpc最终结果|
+| ExecutedAsync  | 成功执行Rpc后 |如果修改invokeResult的InvokeStatus，或Result。则会影响Rpc最终结果|
+
+## 三、使用
+
+### 3.1 定义RpcActionFilterAttribute特性
+
+```csharp
+public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
+{
+    public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    {
+        //invokeResult = new InvokeResult()
+        //{
+        //    Status = InvokeStatus.UnEnable,
+        //    Message = "不允许执行",
+        //    Result = default
+        //};
+        if (callContext.Caller is ISocketClient client)
+        {
+            client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
+        }
+        return Task.FromResult(invokeResult);
+    }
+
+    public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    {
+        if (callContext.Caller is ISocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+        }
+        return Task.FromResult(invokeResult);
+    }
+
+    public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+    {
+        if (callContext.Caller is ISocketClient client)
+        {
+            client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+        }
+        return Task.FromResult(invokeResult);
+    }
+}
+```
+
+:::tip 提示
+
+使用RpcActionFilterAttribute特性，不仅可以实现日志记录，还可以实现访问权限限制、全局异常捕捉等。
+
+:::  
+
+
+### 3.2 使用
+
+RpcActionFilterAttribute 特性可以应用到任何方法上，也可以应用到类上。
+
+```csharp {1,19}
+[MyRpcActionFilter]
+class MyRpcServer : RpcServer
+{
+    private readonly ILog m_logger;
+
+    public MyRpcServer(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    [MyRpcActionFilter]
+    public int Add(int a, int b)
+    {
+        this.m_logger.Info("调用Add");
+        var sum = a + b;
+        return sum;
+    }
+}
+```

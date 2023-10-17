@@ -48,6 +48,24 @@ module.exports = {
           to: "docs/upgrade"
         },
         {
+          label: "版本",
+          position: "right",
+          items: [
+            {
+              label: "Gitee（主库）",
+              href: "https://gitee.com/rrqm_home/touchsocket",
+            },
+            {
+              label: "GitHub",
+              href: "https://github.com/RRQM/TouchSocket",
+            },
+            {
+              label: "Nuget",
+              href: "https://www.nuget.org/profiles/rrqm",
+            },
+          ],
+        },
+        {
           label: "源码",
           position: "right",
           items: [
@@ -126,6 +144,17 @@ module.exports = {
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
           sidebarCollapsed: true,
+          lastVersion: 'current',
+          versions: {
+            current: {
+              label: '2.0.0-beta',
+              path: '/',
+            },
+            '1.4.0': {
+              label: '1.4.0',
+              path: '/v1.4.0',
+            }
+          },
           // sidebarCollapsible: true,
         },
         // blog: {

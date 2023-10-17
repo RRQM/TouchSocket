@@ -1,0 +1,108 @@
+---
+id: custombetweenanddatahandlingadapter
+title: 模板解析“区间数据”数据适配器
+---
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+## 一、说明
+
+区间适配器，一般用于字符串类的消息，类似“**Hello##”，该数据，以**开头，以##结尾。当然，区间适配器也能用于二进制数据，但是会有概率发生标识重复的情况。所以，用于二进制时，应当设置较复杂的区间标识。
+
+该适配器与[终止因子分割适配器](./packageadapter.mdx)相比，可以设置开头的字符区间。
+
+
+## 二、特点
+
+1. 可以自由适配**很多**的字符串数据协议。
+2. 可以随意定制数据协议。
+3. 可以与**任意语言、框架**对接数据。
+
+
+## 三、使用
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. 声明新建类，实现**IBetweenAndRequestInfo**接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承**CustomBetweenAndDataHandlingAdapter**，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+3. TouchSocketConfig配置中设置。
+4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
+
+【MyBetweenAndRequestInfo】
+首先，新建MyBetweenAndRequestInfo类，然后实现**IBetweenAndRequestInfo**接口。
+
+```csharp
+/// <summary>
+/// 以**12##12##，Min=5为例。
+/// </summary>
+class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
+{
+    public void OnParsingBody(byte[] body)
+    {
+        //这里的Body应该为12##12
+    }
+
+    public bool OnParsingEndCode(byte[] endCode)
+    {
+        return true;//该返回值决定，是否执行Receive
+    }
+
+    public bool OnParsingStartCode(byte[] startCode)
+    {
+        return true;
+    }
+}
+
+```
+
+新建MyCustomBetweenAndDataHandlingAdapter继承**CustomBetweenAndDataHandlingAdapter**，然后对StartCode、EndCode作出赋值，以此表明起始字符与结束字符的值。
+
+```csharp
+class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
+{
+    public MyCustomBetweenAndDataHandlingAdapter()
+    {
+        this.MinSize = 5;//表示，实际数据体不会小于5，例如“**12##12##”数据，解析后会解析成“12##12”
+    }
+
+    public override byte[] StartCode => Encoding.UTF8.GetBytes("**");//可以为0长度字节，意味着没有起始标识。
+
+    public override byte[] EndCode => Encoding.UTF8.GetBytes("##");//必须为有效值。
+
+    protected override MyBetweenAndRequestInfo GetInstance()
+    {
+        return new MyBetweenAndRequestInfo();
+    }
+}
+```
+
+【接收】
+
+```csharp
+TcpService service = new TcpService();
+service.Received += (client, e) =>
+{
+    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
+    if (e.RequestInfo is MyBetweenAndRequestInfo myRequestInfo)
+    {
+        //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
+    }
+  
+};
+
+service.Setup(new TouchSocketConfig()//载入配置     
+    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
+    .SetDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); }))//配置适配器
+    .Start();//启动
+```
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  
