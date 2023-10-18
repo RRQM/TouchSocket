@@ -100,13 +100,14 @@ namespace ServiceConsoleApp
             client.Logger.Info("客户端成功连接");
 
             Console.WriteLine("输入任意内容，回车发送");
-            while (true)
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = client.CreateReceiver())
             {
-                client.Send(Console.ReadLine());
-
-                //receiver可以复用，不需要每次接收都新建
-                using (var receiver = client.CreateReceiver())
+                while (true)
                 {
+                    client.Send(Console.ReadLine());
+
+                    //receiverResult必须释放
                     using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
                         if (receiverResult.IsClosed)
