@@ -131,7 +131,7 @@ module.exports = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: '最新版本',
+              label: '2.0.0-beta',
               path: '/current',
             }
           },
