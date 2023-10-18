@@ -39,15 +39,6 @@ namespace TouchSocket.Core
         public TimeSpan Period { get; set; }
 
         /// <summary>
-        /// 重置<see cref="Count"/>和<see cref="LastIncrement"/>
-        /// </summary>
-        public void Reset()
-        {
-            this.m_count = 0;
-            this.m_lastIncrement = default;
-        }
-
-        /// <summary>
         /// 累计增加计数
         /// </summary>
         /// <param name="value"></param>
@@ -68,6 +59,24 @@ namespace TouchSocket.Core
             }
             Interlocked.Add(ref this.m_count, value);
             return isPeriod;
+        }
+
+        /// <summary>
+        /// 累计增加一个计数
+        /// </summary>
+        /// <returns></returns>
+        public bool Increment()
+        {
+            return this.Increment(1);
+        }
+
+        /// <summary>
+        /// 重置<see cref="Count"/>和<see cref="LastIncrement"/>
+        /// </summary>
+        public void Reset()
+        {
+            this.m_count = 0;
+            this.m_lastIncrement = default;
         }
     }
 }
