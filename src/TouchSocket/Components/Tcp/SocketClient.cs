@@ -225,6 +225,15 @@ namespace TouchSocket.Sockets
             tcpCore.Reset(socket);
             tcpCore.OnReceived = this.HandleReceived;
             tcpCore.OnBreakOut = this.BreakOut;
+            if (this.Config.GetValue(TouchSocketConfigExtension.MinBufferSizeProperty) is int minValue)
+            {
+                tcpCore.MinBufferSize = minValue;
+            }
+
+            if (this.Config.GetValue(TouchSocketConfigExtension.MaxBufferSizeProperty) is int maxValue)
+            {
+                tcpCore.MaxBufferSize = maxValue;
+            }
             this.m_tcpCore = tcpCore;
         }
 
@@ -386,7 +395,7 @@ namespace TouchSocket.Sockets
             {
                 var tcp = this.m_tcpCore;
                 this.m_tcpCore = null;
-                this.Service?.ReturnTcpCore(tcp);
+                this.Service.ReturnTcpCore(tcp);
             }
         }
 

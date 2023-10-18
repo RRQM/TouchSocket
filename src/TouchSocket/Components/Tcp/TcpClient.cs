@@ -955,10 +955,19 @@ namespace TouchSocket.Sockets
             {
                 this.m_delaySender = new DelaySender(delaySenderOption, this.MainSocket.AbsoluteSend);
             }
+
             this.m_tcpCore.Reset(socket);
             this.m_tcpCore.OnReceived = this.HandleReceived;
             this.m_tcpCore.OnBreakOut = this.BreakOut;
+            if (this.Config.GetValue(TouchSocketConfigExtension.MinBufferSizeProperty) is int minValue)
+            {
+                this.m_tcpCore.MinBufferSize = minValue;
+            }
 
+            if (this.Config.GetValue(TouchSocketConfigExtension.MaxBufferSizeProperty) is int maxValue)
+            {
+                this.m_tcpCore.MaxBufferSize = maxValue;
+            }
         }
 
         private void HandleReceived(TcpCore core, ByteBlock byteBlock)

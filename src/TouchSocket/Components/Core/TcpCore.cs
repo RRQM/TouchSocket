@@ -506,7 +506,7 @@ namespace TouchSocket.Sockets
 
         private void OnReceivePeriod(long value)
         {
-            this.m_receiveBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
+            this.m_receiveBufferSize =Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
             if (this.m_socket != null)
             {
                 this.m_socket.ReceiveBufferSize = this.m_receiveBufferSize;
