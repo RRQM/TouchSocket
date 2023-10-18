@@ -17,7 +17,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TouchSocketConfig配置扩展
+    /// TouchSocketConfigExtension
     /// </summary>
     public static class TouchSocketConfigExtension
     {
@@ -52,18 +52,50 @@ namespace TouchSocket.Sockets
         public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = DependencyProperty<Func<UdpDataHandlingAdapter>>.Register("UdpDataHandlingAdapter", () => { return new NormalUdpDataHandlingAdapter(); });
 
         /// <summary>
-        /// 接收缓存容量，默认1024*64，其作用有两个：
+        /// 最小缓存池尺寸
+        /// 所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty<int?> MinBufferSizeProperty = DependencyProperty<int?>.Register("MinBufferSize", default);
+
+        /// <summary>
+        /// 最大缓存池尺寸
+        /// 所需类型<see cref="int"/>
+        /// </summary>
+        public static readonly DependencyProperty<int?> MaxBufferSizeProperty = DependencyProperty<int?>.Register("MinBufferSize", default);
+
+        /// <summary>
+        /// 最小缓存容量，默认缺省。
         /// <list type="number">
-        /// <item>指示单次可接受的最大数据量</item>
-        /// <item>指示常规申请内存块的长度</item>
         /// </list>
         /// </summary>
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        [Obsolete("此配置已不可用，内部的接收缓存池会根据接收数据的大小，自动调节", true)]
-        public static TouchSocketConfig SetBufferLength(this TouchSocketConfig config, int value)
+        public static TouchSocketConfig MinBufferSize(this TouchSocketConfig config, int value)
         {
+            if (value<1024)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value),value,"数值不能小于1024");
+            }
+            config.SetValue(MinBufferSizeProperty,value);
+            return config;
+        }
+
+        /// <summary>
+        /// 最大缓存容量，默认缺省。
+        /// <list type="number">
+        /// </list>
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig MaxBufferSize(this TouchSocketConfig config, int value)
+        {
+            if (value < 1024)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "数值不能小于1024");
+            }
+            config.SetValue(MaxBufferSizeProperty, value);
             return config;
         }
 

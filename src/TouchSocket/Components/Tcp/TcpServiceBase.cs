@@ -154,6 +154,11 @@ namespace TouchSocket.Sockets
         /// <param name="tcpCore"></param>
         public void ReturnTcpCore(TcpCore tcpCore)
         {
+            if (this.DisposedValue)
+            {
+                tcpCore.SafeDispose();
+                return;
+            }
             this.m_tcpCores.Push(tcpCore);
         }
 
