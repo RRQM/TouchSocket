@@ -198,7 +198,7 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected virtual Task OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
         {
-            if (this.Disconnected != null)
+            if (this.Disconnecting != null)
             {
                 return this.Disconnecting.Invoke(socketClient, e);
             }
