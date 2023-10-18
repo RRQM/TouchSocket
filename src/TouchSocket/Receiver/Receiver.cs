@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -10,6 +12,13 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class Receiver : DisposableObject, IReceiver
     {
+        /// <summary>
+        /// Receiver
+        /// </summary>
+        ~Receiver()
+        {
+            this.Dispose(false);
+        }
         private readonly IClient m_client;
         private readonly AutoResetEvent m_resetEventForComplateRead = new AutoResetEvent(false);
         private readonly AsyncAutoResetEvent m_resetEventForRead = new AsyncAutoResetEvent(false);
@@ -67,9 +76,15 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_client.ClearReceiver();
-            this.m_resetEventForComplateRead.SafeDispose();
-            this.m_resetEventForRead.SafeDispose();
+            if (disposing)
+            {
+                this.m_client.ClearReceiver();
+            }
+            else
+            {
+                this.m_resetEventForComplateRead.SafeDispose();
+                this.m_resetEventForRead.SafeDispose();
+            }
             this.m_byteBlock = null;
             base.Dispose(disposing);
         }

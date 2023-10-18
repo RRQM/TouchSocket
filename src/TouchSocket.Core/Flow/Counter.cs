@@ -62,6 +62,15 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 累计增加一个计数
+        /// </summary>
+        /// <returns></returns>
+        public bool Increment()
+        {
+            return this.Increment(1);
+        }
+
+        /// <summary>
         /// 重置<see cref="Count"/>和<see cref="LastIncrement"/>
         /// </summary>
         public void Reset()
