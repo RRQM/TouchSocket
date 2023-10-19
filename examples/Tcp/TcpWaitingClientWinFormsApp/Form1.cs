@@ -41,13 +41,9 @@ namespace TcpWaitingClientWinFormsApp
             try
             {
                 this.IsConnected();
-                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
-                {
-                    BreakTrigger = true,
-                    ThrowBreakException = true
-                });
+                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions());
 
-                var bytes =waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
+                var bytes = waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
                     MessageBox.Show($"收到等待数据：{Encoding.UTF8.GetString(bytes)}");
@@ -66,8 +62,6 @@ namespace TcpWaitingClientWinFormsApp
                 this.IsConnected();
                 var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
-                    BreakTrigger = true,
-                    ThrowBreakException = true,
                     FilterFunc = (response) =>
                     {
                         if (response.Data != null)
@@ -83,6 +77,44 @@ namespace TcpWaitingClientWinFormsApp
                 });
 
                 var bytes = waitingClient.SendThenReturn(this.textBox3.Text.ToUTF8Bytes());
+                if (bytes != null)
+                {
+                    MessageBox.Show($"收到等待数据：{Encoding.UTF8.GetString(bytes)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.m_tcpClient?.Close();
+        }
+
+        private async void button4_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                this.IsConnected();
+                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
+                {
+                    FilterFunc = (response) =>
+                    {
+                        if (response.Data != null)
+                        {
+                            var str = Encoding.UTF8.GetString(response.Data);
+                            if (str.Contains(this.textBox4.Text))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+
+                var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
                     MessageBox.Show($"收到等待数据：{Encoding.UTF8.GetString(bytes)}");

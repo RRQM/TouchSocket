@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -37,6 +38,26 @@ namespace TouchSocket.Core
         public static void GetFalseAwaitResult(this Task task)
         {
             task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 配置ConfigureAwait为false。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <returns></returns>
+        public static ConfiguredTaskAwaitable<T> ConfigureFalseAwait<T>(this Task<T> task)
+        {
+            return task.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 配置ConfigureAwait为false。
+        /// </summary>
+        /// <param name="task"></param>
+        public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
+        {
+            return task.ConfigureAwait(false);
         }
     }
 }

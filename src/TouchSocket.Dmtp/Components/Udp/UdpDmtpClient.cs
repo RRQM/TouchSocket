@@ -37,16 +37,17 @@ namespace TouchSocket.Dmtp.Rpc
         {
             this.Id = endPoint.ToString();
             this.OutputSend = this.RpcActorSend;
-            this.OnCreateChannel = this.OnDmtpActorCreateChannel;
+            this.OutputSendAsync = this.RpcActorSendAsync;
+            this.CreatedChannel = this.OnDmtpActorCreatedChannel;
             this.m_udpSession = udpSession;
             this.m_endPoint = endPoint;
             this.Logger = logger;
             this.Client = this;
         }
 
-        private void OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
+        private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            this.pluginsManager.Raise(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            return this.pluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         public bool Created(IPluginsManager pluginsManager)
@@ -108,6 +109,11 @@ namespace TouchSocket.Dmtp.Rpc
         private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
         {
             this.m_udpSession.Send(this.m_endPoint, transferBytes);
+        }
+
+        private Task RpcActorSendAsync(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        {
+            return this.m_udpSession.SendAsync(this.m_endPoint, transferBytes);
         }
     }
 }

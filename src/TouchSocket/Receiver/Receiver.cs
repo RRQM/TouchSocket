@@ -38,7 +38,7 @@ namespace TouchSocket.Sockets
         public async Task<ReceiverResult> ReadAsync(CancellationToken token)
         {
             this.ThrowIfDisposed();
-            await this.m_resetEventForRead.WaitOneAsync(token);
+            await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
             return new ReceiverResult(this.ComplateRead, this.m_byteBlock, this.m_requestInfo);
         }
 
@@ -47,7 +47,7 @@ namespace TouchSocket.Sockets
         public async ValueTask<ReceiverResult> ValueReadAsync(CancellationToken token)
         {
             this.ThrowIfDisposed();
-            await this.m_resetEventForRead.WaitOneAsync(token);
+            await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
             return new ReceiverResult(this.ComplateRead, this.m_byteBlock, this.m_requestInfo);
         }
 #endif

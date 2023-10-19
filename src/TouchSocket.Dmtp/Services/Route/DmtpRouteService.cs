@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Dmtp
 {
@@ -8,8 +9,8 @@ namespace TouchSocket.Dmtp
     public class DmtpRouteService : IDmtpRouteService
     {
         /// <summary>
-        /// 查找路由的委托
+        /// <inheritdoc/>
         /// </summary>
-        public Func<string, IDmtpActor> FindDmtpActor { get; set; }
+        public Func<string, Task<IDmtpActor>> FindDmtpActor { get ; set ; }
     }
 }

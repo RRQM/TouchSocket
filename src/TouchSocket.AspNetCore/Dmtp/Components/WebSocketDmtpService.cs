@@ -290,18 +290,18 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             return new SealedDmtpActor(true)
             {
-                OnFindDmtpActor = this.OnServiceFindDmtpActor,
+                FindDmtpActor = this.OnServiceFindDmtpActor,
                 Id = client.Id
             };
         }
 
-        private IDmtpActor OnServiceFindDmtpActor(string id)
+        private Task<IDmtpActor> OnServiceFindDmtpActor(string id)
         {
             if (this.TryGetSocketClient(id, out var client))
             {
-                return client.DmtpActor;
+                return Task.FromResult(client.DmtpActor);
             }
-            return null;
+            return Task.FromResult<IDmtpActor>(default);
         }
     }
 }

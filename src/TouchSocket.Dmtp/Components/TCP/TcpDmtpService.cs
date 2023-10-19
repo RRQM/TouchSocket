@@ -33,7 +33,7 @@ namespace TouchSocket.Dmtp
         #region 字段
 
         private bool m_allowRoute;
-        private Func<string, IDmtpActor> m_findDmtpActor;
+        private Func<string, Task<IDmtpActor>> m_findDmtpActor;
 
         #endregion 字段
 
@@ -65,14 +65,25 @@ namespace TouchSocket.Dmtp
             socketClient.SetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
             {
                 Id = e.Id,
-                OnFindDmtpActor = this.m_allowRoute ? (this.m_findDmtpActor ?? this.OnServiceFindDmtpActor) : null
+                FindDmtpActor = this.FindDmtpActor
             });
             await base.OnConnecting(socketClient, e);
         }
 
-        private IDmtpActor OnServiceFindDmtpActor(string id)
+        private async Task<IDmtpActor> FindDmtpActor(string id)
         {
-            return this.TryGetSocketClient(id, out var client) ? client.DmtpActor : null;
+            if (this.m_allowRoute)
+            {
+                if (this.m_findDmtpActor != null)
+                {
+                    return await this.m_findDmtpActor.Invoke(id);
+                }
+                return this.TryGetSocketClient(id, out var client) ? client.DmtpActor : null;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

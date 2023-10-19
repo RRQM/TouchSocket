@@ -56,6 +56,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当Client为Tcp系时。是否在断开连接时立即触发结果。默认会返回null。当<see cref="ThrowBreakException"/>为<see langword="true"/>时，会触发异常。
         /// </summary>
+        [Obsolete("该配置已被弃用，当断线时会立即返回异常",true)]
         public bool BreakTrigger { get; set; }
 
         /// <summary>
@@ -66,6 +67,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当Client为Tcp系时。是否在断开连接时以异常返回结果。
         /// </summary>
+        [Obsolete("该配置已被弃用，当断线时会立即返回异常", true)]
         public bool ThrowBreakException { get; set; } = true;
 
         /// <summary>

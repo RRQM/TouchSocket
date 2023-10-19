@@ -87,9 +87,9 @@ namespace TouchSocket.Dmtp.Rpc
             return this.ActionMap.GetMethodInstance(name);
         }
 
-        private DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor smtpActor)
+        private DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor)
         {
-            return new DmtpRpcActor(smtpActor);
+            return new DmtpRpcActor(dmtpActor);
         }
 
         #region Rpc配置
@@ -124,35 +124,34 @@ namespace TouchSocket.Dmtp.Rpc
         protected override void Loaded(IPluginsManager pluginsManager)
         {
             base.Loaded(pluginsManager);
-            pluginsManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking),this.OnDmtpHandshaking);
-            pluginsManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(nameof(IDmtpReceivedPlugin.OnDmtpReceived),this.OnDmtpReceived);
+            pluginsManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this.OnDmtpHandshaking);
+            pluginsManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this.OnDmtpReceived);
         }
 
-        private Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        private async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            var smtpRpcActor = CreateDmtpRpcActor(client.DmtpActor);
-            smtpRpcActor.RpcStore = this.RpcStore;
-            smtpRpcActor.SerializationSelector = this.SerializationSelector;
-            smtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
+            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor);
+            dmtpRpcActor.RpcStore = this.RpcStore;
+            dmtpRpcActor.SerializationSelector = this.SerializationSelector;
+            dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 
-            smtpRpcActor.SetProtocolFlags(this.StartProtocol);
-            client.DmtpActor.SetDmtpRpcActor(smtpRpcActor);
+            dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
+            client.DmtpActor.SetDmtpRpcActor(dmtpRpcActor);
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
-        private Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        private async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
-            if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor smtpRpcActor)
+            if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor dmtpRpcActor)
             {
-                if (smtpRpcActor.InputReceivedData(e.DmtpMessage))
+                if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureFalseAwait())
                 {
                     e.Handled = true;
-                    return EasyTask.CompletedTask;
+                    return;
                 }
             }
-
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
         #endregion Config
