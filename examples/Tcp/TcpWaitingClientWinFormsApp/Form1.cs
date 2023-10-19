@@ -47,7 +47,7 @@ namespace TcpWaitingClientWinFormsApp
                     ThrowBreakException = true
                 });
 
-                var bytes = waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
+                var bytes =waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
                     MessageBox.Show($"收到等待数据：{Encoding.UTF8.GetString(bytes)}");
