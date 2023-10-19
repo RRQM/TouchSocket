@@ -12,8 +12,8 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
     class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
     {
-        private ushort m_invoke_Request=1000;
-        private ushort m_invoke_Response=1001;
+        private ushort m_invoke_Request = 1000;
+        private ushort m_invoke_Response = 1001;
 
         public IDmtpActor DmtpActor { get; private set; }
         public Func<string, MethodModel> TryFindMethod { get; set; }
@@ -23,7 +23,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             this.DmtpActor = dmtpActor;
         }
 
-        public bool InputReceivedData(DmtpMessage message)
+        public async Task<bool> InputReceivedData(DmtpMessage message)
         {
             var byteBlock = message.BodyByteBlock;
             if (message.ProtocolFlags == this.m_invoke_Request)
@@ -34,9 +34,9 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                     rpcPackage.UnpackageRouter(byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (this.DmtpActor.TryRoute(new RouteType("SimpleRpc"), rpcPackage))
+                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(new RouteType("SimpleRpc"), rpcPackage)))
                         {
-                            if (this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId, out var actor))
+                            if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                             {
                                 actor.Send(this.m_invoke_Request, byteBlock);
                                 return true;
@@ -60,7 +60,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                     else
                     {
                         rpcPackage.UnpackageBody(byteBlock);
-                        Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                        _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -77,7 +77,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                     rpcPackage.UnpackageRouter(byteBlock);
                     if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                     {
-                        if (this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId, out var actor))
+                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                         {
                             actor.Send(this.m_invoke_Response, byteBlock);
                         }
@@ -104,7 +104,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             var methodModel = this.TryFindMethod.Invoke(package.MethodName);
             if (methodModel == null)
             {
-                using (var byteBlock=new ByteBlock())
+                using (var byteBlock = new ByteBlock())
                 {
                     package.Status = 4;
                     package.SwitchId();
@@ -116,7 +116,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 
             try
             {
-                methodModel.Method.Invoke(methodModel.Target,default);
+                methodModel.Method.Invoke(methodModel.Target, default);
                 using (var byteBlock = new ByteBlock())
                 {
                     package.Status = 1;
@@ -140,31 +140,27 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             }
         }
 
-        private bool TryFindDmtpRpcActor(string targetId, out SimpleDmtpRpcActor rpcActor)
+        private async Task<SimpleDmtpRpcActor> TryFindDmtpRpcActor(string targetId)
         {
             if (targetId == this.DmtpActor.Id)
             {
-                rpcActor = this;
-                return true;
+                return this;
             }
-            if (this.DmtpActor.TryFindDmtpActor(targetId, out var smtpActor))
+            if (await this.DmtpActor.TryFindDmtpActor(targetId) is DmtpActor dmtpActor)
             {
-                if (smtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor newActor)
+                if (dmtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor newActor)
                 {
-                    rpcActor = newActor;
-                    return true;
+                    return newActor;
                 }
             }
-
-            rpcActor = default;
-            return false;
+            return default;
         }
 
         public void Invoke(string methodName)
         {
             this.PrivateInvoke(default, methodName);
         }
-        public void Invoke(string targetId, string methodName)
+        public async void Invoke(string targetId, string methodName)
         {
             if (string.IsNullOrEmpty(targetId))
             {
@@ -176,13 +172,13 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                 throw new ArgumentException($"“{nameof(methodName)}”不能为 null 或空。", nameof(methodName));
             }
 
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var actor))
+            if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId) is SimpleDmtpRpcActor actor)
             {
                 actor.Invoke(methodName);
                 return;
             }
 
-            this.PrivateInvoke(targetId,methodName);
+            this.PrivateInvoke(targetId, methodName);
         }
 
         private void PrivateInvoke(string id, string methodName)
