@@ -45,8 +45,8 @@ interface ISimpleDmtpRpcActor : IActor
 
 class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
 {
-    private ushort m_invoke_Request=1000;
-    private ushort m_invoke_Response=1001;
+    private ushort m_invoke_Request = 1000;
+    private ushort m_invoke_Response = 1001;
 
     public IDmtpActor DmtpActor { get; private set; }
     public Func<string, MethodModel> TryFindMethod { get; set; }
@@ -56,7 +56,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         this.DmtpActor = dmtpActor;
     }
 
-    public bool InputReceivedData(DmtpMessage message)
+    public async Task<bool> InputReceivedData(DmtpMessage message)
     {
         var byteBlock = message.BodyByteBlock;
         if (message.ProtocolFlags == this.m_invoke_Request)
@@ -67,9 +67,9 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 rpcPackage.UnpackageRouter(byteBlock);
                 if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                 {
-                    if (this.DmtpActor.TryRoute(new RouteType("SimpleRpc"), rpcPackage))
+                    if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(new RouteType("SimpleRpc"), rpcPackage)))
                     {
-                        if (this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId, out var actor))
+                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                         {
                             actor.Send(this.m_invoke_Request, byteBlock);
                             return true;
@@ -93,7 +93,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 else
                 {
                     rpcPackage.UnpackageBody(byteBlock);
-                    Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                    _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                 }
             }
             catch (Exception ex)
@@ -110,7 +110,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 rpcPackage.UnpackageRouter(byteBlock);
                 if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                 {
-                    if (this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId, out var actor))
+                    if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                     {
                         actor.Send(this.m_invoke_Response, byteBlock);
                     }
@@ -137,7 +137,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         var methodModel = this.TryFindMethod.Invoke(package.MethodName);
         if (methodModel == null)
         {
-            using (var byteBlock=new ByteBlock())
+            using (var byteBlock = new ByteBlock())
             {
                 package.Status = 4;
                 package.SwitchId();
@@ -149,7 +149,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
 
         try
         {
-            methodModel.Method.Invoke(methodModel.Target,default);
+            methodModel.Method.Invoke(methodModel.Target, default);
             using (var byteBlock = new ByteBlock())
             {
                 package.Status = 1;
@@ -173,31 +173,27 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
         }
     }
 
-    private bool TryFindDmtpRpcActor(string targetId, out SimpleDmtpRpcActor rpcActor)
+    private async Task<SimpleDmtpRpcActor> TryFindDmtpRpcActor(string targetId)
     {
         if (targetId == this.DmtpActor.Id)
         {
-            rpcActor = this;
-            return true;
+            return this;
         }
-        if (this.DmtpActor.TryFindDmtpActor(targetId, out var smtpActor))
+        if (await this.DmtpActor.TryFindDmtpActor(targetId) is DmtpActor dmtpActor)
         {
-            if (smtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor newActor)
+            if (dmtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor newActor)
             {
-                rpcActor = newActor;
-                return true;
+                return newActor;
             }
         }
-
-        rpcActor = default;
-        return false;
+        return default;
     }
 
     public void Invoke(string methodName)
     {
         this.PrivateInvoke(default, methodName);
     }
-    public void Invoke(string targetId, string methodName)
+    public async void Invoke(string targetId, string methodName)
     {
         if (string.IsNullOrEmpty(targetId))
         {
@@ -209,13 +205,13 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
             throw new ArgumentException($"“{nameof(methodName)}”不能为 null 或空。", nameof(methodName));
         }
 
-        if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId, out var actor))
+        if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId) is SimpleDmtpRpcActor actor)
         {
             actor.Invoke(methodName);
             return;
         }
 
-        this.PrivateInvoke(targetId,methodName);
+        this.PrivateInvoke(targetId, methodName);
     }
 
     private void PrivateInvoke(string id, string methodName)
@@ -228,7 +224,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
             TargetId = id
         };
 
-        var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+        var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(package);
 
         try
         {
@@ -389,55 +385,54 @@ static class SimpleDmtpRpcExtension
 功能插件是为Actor提供创建时机，和必要的配置信息。如果有需要，还可以抛出插件信息（例如[文件传输](./dmtptransferfile) ）。
 
 ```csharp
- class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin,IDmtpReceivedPlugin
- {
-     readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
-     public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
-     {
-         var actor = new SimpleDmtpRpcActor(client.DmtpActor)
-         {
-             TryFindMethod = this.TryFindMethod
-         };
-         client.DmtpActor.SetSimpleDmtpRpcActor(actor);
-         await e.InvokeNext();
-     }
+class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
+{
+    readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
+    public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+    {
+        var actor = new SimpleDmtpRpcActor(client.DmtpActor)
+        {
+            TryFindMethod = this.TryFindMethod
+        };
+        client.DmtpActor.SetSimpleDmtpRpcActor(actor);
+        await e.InvokeNext();
+    }
 
-     private MethodModel TryFindMethod(string methodName)
-     {
-         if (this.m_pairs.TryGetValue(methodName,out var methodModel))
-         {
-             return methodModel;
-         }
-         return default;
-     }
+    private MethodModel TryFindMethod(string methodName)
+    {
+        if (this.m_pairs.TryGetValue(methodName, out var methodModel))
+        {
+            return methodModel;
+        }
+        return default;
+    }
 
-     public void RegisterRpc(object server)
-     {
-         if (server is null)
-         {
-             throw new ArgumentNullException(nameof(server));
-         }
+    public void RegisterRpc(object server)
+    {
+        if (server is null)
+        {
+            throw new ArgumentNullException(nameof(server));
+        }
 
-         foreach (var item in server.GetType().GetMethods( BindingFlags.Default|BindingFlags.Instance | BindingFlags.Public))
-         {
-             m_pairs.Add(item.Name,new MethodModel(item,server));
-         }
-     }
+        foreach (var item in server.GetType().GetMethods(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public))
+        {
+            m_pairs.Add(item.Name, new MethodModel(item, server));
+        }
+    }
 
-     public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
-     {
-         if (client.DmtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor actor)
-         {
-             if (actor.InputReceivedData(e.DmtpMessage))
-             {
-                 e.Handled = true;
-                 return;
-             }
-         }
-
-         await e.InvokeNext();
-     }
- }
+    public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+    {
+        if (client.DmtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor actor)
+        {
+            if (await actor.InputReceivedData(e.DmtpMessage))
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+        await e.InvokeNext();
+    }
+}
 ```
 
 ## 四、使用

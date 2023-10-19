@@ -10,7 +10,7 @@ using TouchSocket.Dmtp.Rpc;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin,IDmtpReceivedPlugin
+    class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
     {
         readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
         public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
@@ -25,7 +25,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 
         private MethodModel TryFindMethod(string methodName)
         {
-            if (this.m_pairs.TryGetValue(methodName,out var methodModel))
+            if (this.m_pairs.TryGetValue(methodName, out var methodModel))
             {
                 return methodModel;
             }
@@ -39,9 +39,9 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                 throw new ArgumentNullException(nameof(server));
             }
 
-            foreach (var item in server.GetType().GetMethods( BindingFlags.Default|BindingFlags.Instance | BindingFlags.Public))
+            foreach (var item in server.GetType().GetMethods(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public))
             {
-                m_pairs.Add(item.Name,new MethodModel(item,server));
+                m_pairs.Add(item.Name, new MethodModel(item, server));
             }
         }
 
@@ -49,13 +49,12 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
         {
             if (client.DmtpActor.GetSimpleDmtpRpcActor() is SimpleDmtpRpcActor actor)
             {
-                if (actor.InputReceivedData(e.DmtpMessage))
+                if (await actor.InputReceivedData(e.DmtpMessage))
                 {
                     e.Handled = true;
                     return;
                 }
             }
-
             await e.InvokeNext();
         }
     }
