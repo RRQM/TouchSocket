@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket" Version="2.0.0-beta.201" />
+		<PackageReference Include="TouchSocket" Version="2.0.0-beta.206" />
 	</ItemGroup>
 	<!--<ItemGroup>
 		<Reference Include="Newtonsoft.Json">
