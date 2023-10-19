@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
@@ -10,13 +11,13 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public class TcpDmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
     {
-        private SpinLock m_locker = new SpinLock();
+        private SemaphoreSlim m_locker = new SemaphoreSlim(1, 1);
 
         /// <inheritdoc/>
         public override bool CanSendRequestInfo => true;
 
         /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
+        public override bool CanSplicingSend => true;
 
         /// <inheritdoc/>
         public override int HeaderLength => 6;
@@ -34,13 +35,32 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
+        protected override async Task PreviewSendAsync(IRequestInfo requestInfo)
+        {
+            if (!(requestInfo is DmtpMessage message))
+            {
+                throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
+            }
+            if (message.BodyByteBlock != null && message.BodyByteBlock.Length > this.MaxPackageSize)
+            {
+                throw new Exception("发送的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
+            }
+            using (var byteBlock = new ByteBlock(message.GetLength()))
+            {
+                message.Build(byteBlock);
+                await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            }
+        }
+
+
+        /// <inheritdoc/>
         protected override void PreviewSend(IRequestInfo requestInfo)
         {
             if (!(requestInfo is DmtpMessage message))
             {
                 throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
             }
-            if (message.BodyByteBlock!=null&&message.BodyByteBlock.Length>this.MaxPackageSize)
+            if (message.BodyByteBlock != null && message.BodyByteBlock.Length > this.MaxPackageSize)
             {
                 throw new Exception("发送的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
             }
@@ -48,6 +68,39 @@ namespace TouchSocket.Dmtp
             {
                 message.Build(byteBlock);
                 this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override async Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
+        {
+            if (transferBytes.Count == 0)
+            {
+                return;
+            }
+
+            var length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Count;
+            }
+
+            if (length > this.MaxPackageSize)
+            {
+                throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+
+            try
+            {
+                await this.m_locker.WaitAsync();
+                foreach (var item in transferBytes)
+                {
+                    await this.GoSendAsync(item.Array, item.Offset, item.Count);
+                }
+            }
+            finally
+            {
+                this.m_locker.Release();
             }
         }
 
@@ -70,10 +123,9 @@ namespace TouchSocket.Dmtp
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            var lockTaken = false;
             try
             {
-                this.m_locker.Enter(ref lockTaken);
+                this.m_locker.Wait();
                 foreach (var item in transferBytes)
                 {
                     this.GoSend(item.Array, item.Offset, item.Count);
@@ -81,10 +133,7 @@ namespace TouchSocket.Dmtp
             }
             finally
             {
-                if (lockTaken)
-                {
-                    this.m_locker.Exit(false);
-                }
+                this.m_locker.Release();
             }
         }
     }

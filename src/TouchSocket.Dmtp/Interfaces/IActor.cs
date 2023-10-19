@@ -1,4 +1,6 @@
-﻿namespace TouchSocket.Dmtp
+﻿using System.Threading.Tasks;
+
+namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// IActor
@@ -15,6 +17,6 @@
         /// </summary>
         /// <param name="message"></param>
         /// <returns>当满足本协议时，应当返回<see langword="true"/>，其他时候应该返回<see langword="false"/>.</returns>
-        public bool InputReceivedData(DmtpMessage message);
+        public Task<bool> InputReceivedData(DmtpMessage message);
     }
 }

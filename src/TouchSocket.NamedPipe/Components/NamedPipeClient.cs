@@ -265,7 +265,12 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        private void BreakOut(bool manual, string msg)
+        /// <summary>
+        /// 中断链接
+        /// </summary>
+        /// <param name="manual"></param>
+        /// <param name="msg"></param>
+        protected void BreakOut(bool manual, string msg)
         {
             lock (this.SyncRoot)
             {

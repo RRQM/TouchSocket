@@ -23,7 +23,7 @@ namespace TouchSocket.Dmtp.AspNetCore
     {
         private readonly RequestDelegate m_next;
         private readonly IWebSocketDmtpService m_websocketDmtpService;
-        private string m_url = "/websocketsmtp";
+        private string m_url = "/websocketdmtp";
 
         /// <summary>
         /// 实例化一个中间件
@@ -44,7 +44,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         public string Url
         {
             get => this.m_url;
-            set => this.m_url = string.IsNullOrEmpty(value) ? "/websocketsmtp" : value;
+            set => this.m_url = string.IsNullOrEmpty(value) ? "/websocketdmtp" : value;
         }
 
         /// <summary>

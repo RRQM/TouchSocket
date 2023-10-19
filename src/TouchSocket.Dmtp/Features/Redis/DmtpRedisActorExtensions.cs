@@ -42,16 +42,16 @@ namespace TouchSocket.Dmtp.Redis
         /// <summary>
         /// 从<see cref="DmtpActor"/>中获得<see cref="IDmtpRedisActor"/>
         /// </summary>
-        /// <param name="smtpActor"></param>
+        /// <param name="dmtpActor"></param>
         /// <returns></returns>
-        public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor smtpActor)
+        public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor dmtpActor)
         {
-            return smtpActor.GetValue(DmtpRedisActorProperty);
+            return dmtpActor.GetValue(DmtpRedisActorProperty);
         }
 
-        internal static void SetStmpRedisActor(this IDmtpActor smtpActor, DmtpRedisActor redisClient)
+        internal static void SetStmpRedisActor(this IDmtpActor dmtpActor, DmtpRedisActor redisClient)
         {
-            smtpActor.SetValue(DmtpRedisActorProperty, redisClient);
+            dmtpActor.SetValue(DmtpRedisActorProperty, redisClient);
         }
 
         /// <summary>

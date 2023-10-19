@@ -77,7 +77,7 @@ namespace TouchSocket.Dmtp.Rpc
             }
 
             var message = DmtpMessage.CreateFrom(e.ByteBlock);
-            if (!client.InputReceivedData(message))
+            if (!await client.InputReceivedData(message))
             {
                 if (this.PluginsManager.Enable)
                 {

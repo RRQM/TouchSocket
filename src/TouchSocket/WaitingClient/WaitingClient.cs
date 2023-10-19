@@ -46,7 +46,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                this.m_semaphoreSlim.Wait();
+                this.m_semaphoreSlim.Wait(token);
                 this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
@@ -56,7 +56,7 @@ namespace TouchSocket.Sockets
                 {
                     this.m_cancellationTokenSource = new CancellationTokenSource(5000);
                 }
-                using (m_cancellationTokenSource)
+                using (this.m_cancellationTokenSource)
                 {
                     if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
@@ -105,10 +105,6 @@ namespace TouchSocket.Sockets
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : default(ResponsedData);
             }
             finally
             {
@@ -180,10 +176,6 @@ namespace TouchSocket.Sockets
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                return this.WaitingOptions.ThrowBreakException && this.m_breaked ? throw new Exception("等待已终止。可能是客户端已掉线，或者被注销。") : default(ResponsedData);
             }
             finally
             {

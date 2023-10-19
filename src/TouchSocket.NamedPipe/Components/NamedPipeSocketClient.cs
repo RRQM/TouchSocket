@@ -466,7 +466,12 @@ namespace TouchSocket.NamedPipe
             this.DataHandlingAdapter = adapter;
         }
 
-        private void BreakOut(string msg, bool manual)
+        /// <summary>
+        /// 中断连接
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="manual"></param>
+        protected void BreakOut(string msg, bool manual)
         {
             if (this.GetSocketCliectCollection().TryRemove(this.Id, out _))
             {

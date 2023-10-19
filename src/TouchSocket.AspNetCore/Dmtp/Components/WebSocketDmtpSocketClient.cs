@@ -46,13 +46,14 @@ namespace TouchSocket.Dmtp.AspNetCore
         #region 字段
 
         private WebSocket m_client;
-        private DmtpActor m_smtpActor;
-        private TcpDmtpAdapter m_smtpAdapter;
+        private DmtpActor m_dmtpActor;
+        private TcpDmtpAdapter m_dmtpAdapter;
         private WebSocketDmtpService m_service;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
-        private int m_receiveBufferSize=1024*10;
+        private int m_receiveBufferSize = 1024 * 10;
         private int m_sendBufferSize = 1024 * 10;
+        private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
         #endregion 字段
 
         /// <inheritdoc/>
@@ -91,7 +92,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         public IWebSocketDmtpService Service { get => this.m_service; }
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => this.m_smtpActor; }
+        public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
 
         /// <inheritdoc/>
         public int VerifyTimeout => this.Config.GetValue(DmtpConfigExtension.VerifyTimeoutProperty);
@@ -128,13 +129,13 @@ namespace TouchSocket.Dmtp.AspNetCore
         internal void InternalSetConfig(TouchSocketConfig config)
         {
             this.Config = config;
-            this.m_smtpAdapter = new TcpDmtpAdapter()
+            this.m_dmtpAdapter = new TcpDmtpAdapter()
             {
                 ReceivedCallBack = this.PrivateHandleReceivedData,
                 Logger = this.Logger
             };
 
-            this.m_smtpAdapter.Config(config);
+            this.m_dmtpAdapter.Config(config);
         }
 
         internal void InternalSetContainer(IContainer container)
@@ -170,36 +171,23 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         #region 内部委托绑定
 
-        private void OnDmtpActorClose(DmtpActor actor, string arg2)
+        private Task OnDmtpActorClose(DmtpActor actor, string msg)
         {
-            this.Close(arg2);
+            this.BreakOut(msg, true);
+            return EasyTask.CompletedTask;
         }
 
-        private void OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
+        private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            this.OnCreateChannel(e);
-            if (e.Handled)
-            {
-                return;
-            }
-
-            this.PluginsManager.Raise(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            return this.OnCreateChannel(e);
         }
 
-        private void OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
+        private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
         {
-            this.OnHandshaked(e);
-            if (e.Handled)
-            {
-                return;
-            }
-            if (this.PluginsManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e))
-            {
-                return;
-            }
+            return this.OnHandshaked(e);
         }
 
-        private void OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
+        private async Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
         {
             if (e.Token == this.VerifyToken)
             {
@@ -209,45 +197,65 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 e.Message = "Token不受理";
             }
-            if (this.PluginsManager.Raise(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e))
-            {
-                return;
-            }
-            this.OnHandshaking(e);
+            await this.OnHandshaking(e);
         }
 
-        private void OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
+        private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
         {
-            this.OnRouting(e);
-            if (e.Handled)
-            {
-                return;
-            }
-            if (this.PluginsManager.Raise(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e))
-            {
-                return;
-            }
+            return this.OnRouting(e);
         }
 
         private void OnDmtpActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
         {
-            for (var i = 0; i < transferBytes.Length; i++)
+            try
             {
-                Task task;
-                if (i == transferBytes.Length - 1)
+                this.m_semaphoreForSend.Wait();
+                for (var i = 0; i < transferBytes.Length; i++)
                 {
-                    task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, true, CancellationToken.None);
+                    Task task;
+                    if (i == transferBytes.Length - 1)
+                    {
+                        task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, true, CancellationToken.None);
+                    }
+                    else
+                    {
+                        task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, false, CancellationToken.None);
+                    }
+                    task.GetFalseAwaitResult();
+                    this.m_sendCounter.Increment(transferBytes[i].Count);
                 }
-                else
-                {
-                    task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, false, CancellationToken.None);
-                }
-                task.ConfigureAwait(false);
-                task.GetAwaiter().GetResult();
-
-                this.m_sendCounter.Increment(transferBytes[i].Count);
+            }
+            finally
+            {
+                this.m_semaphoreForSend.Release();
             }
         }
+
+        private async Task OnDmtpActorSendAsync(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        {
+            try
+            {
+                await this.m_semaphoreForSend.WaitAsync();
+                for (var i = 0; i < transferBytes.Length; i++)
+                {
+                    if (i == transferBytes.Length - 1)
+                    {
+                        await this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, true, CancellationToken.None);
+                    }
+                    else
+                    {
+                        await this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, false, CancellationToken.None);
+                    }
+                    this.m_sendCounter.Increment(transferBytes[i].Count);
+                }
+            }
+            finally
+            {
+                this.m_semaphoreForSend.Release();
+            }
+
+        }
+
 
         #endregion 内部委托绑定
 
@@ -257,32 +265,53 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// 当创建通道
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnCreateChannel(CreateChannelEventArgs e)
+        protected virtual async Task OnCreateChannel(CreateChannelEventArgs e)
         {
+            if (e.Handled)
+            {
+                return;
+            }
+
+            await this.PluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         /// <summary>
         /// 在完成握手连接时
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnHandshaked(DmtpVerifyEventArgs e)
+        protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
         {
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
         }
 
         /// <summary>
         /// 在验证Token时
         /// </summary>
         /// <param name="e">参数</param>
-        protected virtual void OnHandshaking(DmtpVerifyEventArgs e)
+        protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
         {
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
         }
 
         /// <summary>
         /// 在需要转发路由包时。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnRouting(PackageRouterEventArgs e)
+        protected virtual async Task OnRouting(PackageRouterEventArgs e)
         {
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginsManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
         }
 
         #endregion 事件
@@ -312,16 +341,17 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         internal void SetDmtpActor(DmtpActor actor)
         {
-            actor.OnResetId = this.ThisOnResetId;
+            actor.IdChanged = this.ThisOnResetId;
+            actor.OutputSendAsync = this.OnDmtpActorSendAsync;
             actor.OutputSend = this.OnDmtpActorSend;
             actor.Client = this;
-            actor.OnClose = this.OnDmtpActorClose;
-            actor.OnRouting = this.OnDmtpActorRouting;
-            actor.OnHandshaked = this.OnDmtpActorHandshaked;
-            actor.OnHandshaking = this.OnDmtpActorHandshaking;
-            actor.OnCreateChannel = this.OnDmtpActorCreateChannel;
+            actor.Closed = this.OnDmtpActorClose;
+            actor.Routing = this.OnDmtpActorRouting;
+            actor.Handshaked = this.OnDmtpActorHandshaked;
+            actor.Handshaking = this.OnDmtpActorHandshaking;
+            actor.CreatedChannel = this.OnDmtpActorCreateChannel;
             actor.Logger = this.Logger;
-            this.m_smtpActor = actor;
+            this.m_dmtpActor = actor;
         }
 
         internal async Task Start(WebSocket webSocket, HttpContext context)
@@ -342,7 +372,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        this.m_smtpAdapter.ReceivedInput(byteBlock);
+                        this.m_dmtpAdapter.ReceivedInput(byteBlock);
                     }
                 }
 
@@ -426,15 +456,16 @@ namespace TouchSocket.Dmtp.AspNetCore
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var message = (DmtpMessage)requestInfo;
-            if (!this.m_smtpActor.InputReceivedData(message))
+            if (!this.m_dmtpActor.InputReceivedData(message).GetFalseAwaitResult())
             {
                 this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
             }
         }
 
-        private void ThisOnResetId(DmtpActor actor, WaitSetId waitSetId)
+        private Task ThisOnResetId(DmtpActor actor, IdChangedEventArgs e)
         {
-            this.DirectResetId(waitSetId.NewId);
+            this.DirectResetId(e.NewId);
+            return EasyTask.CompletedTask;
         }
     }
 }
