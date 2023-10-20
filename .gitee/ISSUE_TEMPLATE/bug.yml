@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        <img src="https://gitee.com/dotnetchina/Furion/raw/v4/handbook/static/img/tip.png" width="100%" />
+        <img src="https://gitee.com/RRQM_Home/TouchSocket/blob/master/handbook/static/img/tip.png" width="100%" />
 
         ## 💢 特别说明：如果 Issue 没有严格按照模板编写且未提供测试源码下载或 Git 测试仓库地址，则视为无效 `Issue`，将无法得到答复。
   - type: dropdown
@@ -46,7 +46,7 @@ body:
       label: .NET SDK
       description: 请选择项目使用的 .NET SDK 版本？
       options:
-        - .NET Framework45以上
+        - .NET Framework 45 以上
         - .NET6
         - .NET7
         - .NET8
