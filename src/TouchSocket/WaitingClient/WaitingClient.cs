@@ -20,7 +20,6 @@ namespace TouchSocket.Sockets
     internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, ISender
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        private volatile bool m_breaked;
         private CancellationTokenSource m_cancellationTokenSource;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
@@ -47,7 +46,6 @@ namespace TouchSocket.Sockets
             try
             {
                 this.m_semaphoreSlim.Wait(token);
-                this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
                     this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -84,7 +82,6 @@ namespace TouchSocket.Sockets
                                 {
                                     if (receiverResult.IsClosed)
                                     {
-                                        this.m_breaked = true;
                                         this.Cancel();
                                     }
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
@@ -118,7 +115,6 @@ namespace TouchSocket.Sockets
             try
             {
                 await this.m_semaphoreSlim.WaitAsync();
-                this.m_breaked = false;
                 if (token.CanBeCanceled)
                 {
                     this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -155,7 +151,6 @@ namespace TouchSocket.Sockets
                                 {
                                     if (receiverResult.IsClosed)
                                     {
-                                        this.m_breaked = true;
                                         this.Cancel();
                                     }
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);

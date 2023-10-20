@@ -11,7 +11,7 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public class TcpDmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
     {
-        private SemaphoreSlim m_locker = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim m_locker = new SemaphoreSlim(1, 1);
 
         /// <inheritdoc/>
         public override bool CanSendRequestInfo => true;
@@ -21,6 +21,11 @@ namespace TouchSocket.Dmtp
 
         /// <inheritdoc/>
         public override int HeaderLength => 6;
+
+        /// <summary>
+        /// 最大拼接
+        /// </summary>
+        public const int MaxSplicing = 1024 * 64;
 
         /// <inheritdoc/>
         protected override DmtpMessage GetInstance()
@@ -89,19 +94,34 @@ namespace TouchSocket.Dmtp
             {
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-
-            try
+            if (length > this.MaxPackageSize)
             {
-                await this.m_locker.WaitAsync();
-                foreach (var item in transferBytes)
+                try
                 {
-                    await this.GoSendAsync(item.Array, item.Offset, item.Count);
+
+                    await this.m_locker.WaitAsync();
+                    foreach (var item in transferBytes)
+                    {
+                        await this.GoSendAsync(item.Array, item.Offset, item.Count);
+                    }
+                }
+                finally
+                {
+                    this.m_locker.Release();
                 }
             }
-            finally
+            else
             {
-                this.m_locker.Release();
+                using (var byteBlock = new ByteBlock(length))
+                {
+                    foreach (var item in transferBytes)
+                    {
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
+                    }
+                    await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
+
         }
 
         /// <inheritdoc/>
@@ -123,17 +143,32 @@ namespace TouchSocket.Dmtp
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            try
+            if (length > this.MaxPackageSize)
             {
-                this.m_locker.Wait();
-                foreach (var item in transferBytes)
+                try
                 {
-                    this.GoSend(item.Array, item.Offset, item.Count);
+
+                    this.m_locker.Wait();
+                    foreach (var item in transferBytes)
+                    {
+                        this.GoSend(item.Array, item.Offset, item.Count);
+                    }
+                }
+                finally
+                {
+                    this.m_locker.Release();
                 }
             }
-            finally
+            else
             {
-                this.m_locker.Release();
+                using (var byteBlock = new ByteBlock(length))
+                {
+                    foreach (var item in transferBytes)
+                    {
+                        byteBlock.Write(item.Array, item.Offset, item.Count);
+                    }
+                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                }
             }
         }
     }
