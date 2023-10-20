@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 使用文档
+    url: http://rrqm_home.gitee.io/touchsocket/
+    about: 一款简单易用的基础网络通讯组件库。
+  - name: 慷慨赞助
+    url: http://rrqm_home.gitee.io/touchsocket/docs/current/donate
+    about: 慷慨赞助
