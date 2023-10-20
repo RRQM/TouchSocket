@@ -1,5 +1,3 @@
-![输入图片说明](https://gitee.com/RRQM_Home/TouchSocket/blob/master/handbook/static/img/tip.png)
-
 ## 💢 特别说明：如果 Issue 没有严格按照模板编写且未提供测试源码下载或 Git 测试仓库地址，则视为无效 `Issue`，将无法得到答复。
 
 ### TouchSocket(Pro) 版本号
