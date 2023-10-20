@@ -59,6 +59,14 @@ System.Int32 Performance(System.Int32 a,IInvokeOption invokeOption = default);
 /// <exception cref="System.Exception">其他异常</exception>
 Task<System.Int32> PerformanceAsync(System.Int32 a,IInvokeOption invokeOption = default);
 
+///<summary>
+///测试out
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.Boolean OutBytes(out System.Byte[] bytes,IInvokeOption invokeOption = default);
+
 }
 public class MyRpcServer :IMyRpcServer
 {
@@ -154,6 +162,32 @@ object[] parameters = new object[]{a};
 return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"Performance",invokeOption, parameters);
 }
 
+///<summary>
+///测试out
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.Boolean OutBytes(out System.Byte[] bytes,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{default(System.Byte[])};
+Type[] types = new Type[]{typeof(System.Byte[])};
+System.Boolean returnData=(System.Boolean)Client.Invoke(typeof(System.Boolean),"OutBytes",invokeOption,ref parameters,types);
+if(parameters!=null)
+{
+bytes=(System.Byte[])parameters[0];
+}
+else
+{
+bytes=default(System.Byte[]);
+}
+return returnData;
+}
+
 }
 public static class MyRpcServerExtensions
 {
@@ -218,6 +252,28 @@ public static async Task<System.Int32> PerformanceAsync<TClient>(this TClient cl
 TouchSocket.Rpc.IRpcClient{
 object[] parameters = new object[]{a};
 return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"Performance",invokeOption, parameters);
+}
+
+///<summary>
+///测试out
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.Boolean OutBytes<TClient>(this TClient client,out System.Byte[] bytes,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{default(System.Byte[])};
+Type[] types = new Type[]{typeof(System.Byte[])};
+System.Boolean returnData=(System.Boolean)client.Invoke(typeof(System.Boolean),"OutBytes",invokeOption,ref parameters,types);
+if(parameters!=null)
+{
+bytes=(System.Byte[])parameters[0];
+}
+else
+{
+bytes=default(System.Byte[]);
+}
+return returnData;
 }
 
 }
