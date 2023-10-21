@@ -159,7 +159,7 @@ module.exports = {
       "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
-        language: ["zh"],
+        language: ["zh","en"],
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
       },
