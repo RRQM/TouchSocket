@@ -43,6 +43,11 @@ module.exports = {
           to: "docs/current/upgrade"
         },
         {
+          label: "博客",
+          position: "left",
+          to: "docs/current/blog"
+        },
+        {
           label: "版本",
           type: 'docsVersionDropdown',
           position: 'right',

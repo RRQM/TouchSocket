@@ -248,7 +248,7 @@ module.exports = {
           {
             type: "doc",
             id: "resetid",
-            label: "7.6 服务器重置ID"
+            label: "7.6 服务器重置Id"
           },
           {
             type: "doc",
@@ -262,18 +262,8 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "tcpheartbeat",
-            label: "7.9 心跳设计"
-          },
-          {
-            type: "doc",
-            id: "tcpother",
-            label: "7.10 其他场景应用"
-          },
-          {
-            type: "doc",
             id: "tcpaot",
-            label: "7.11 AOT模式"
+            label: "7.9 AOT模式"
           },
         ]
     },
