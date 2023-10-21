@@ -3,12 +3,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
 
 namespace TouchSocket
 {
-    
+
     internal sealed class ContainerSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorContainerAttributeTypeName = "TouchSocket.Core.GeneratorContainerAttribute";

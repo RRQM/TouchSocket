@@ -1,12 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection.Emit;
 
 namespace TouchSocket
 {
-    
+
     [Generator]
     public class ContainerSourceGenerator : ISourceGenerator
     {
@@ -165,7 +163,7 @@ namespace TouchSocket.Core
 
 ";
 
-        
+
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForPostInitialization(a =>
@@ -175,7 +173,7 @@ namespace TouchSocket.Core
             context.RegisterForSyntaxNotifications(() => new ContainerSyntaxReceiver());
         }
 
-       
+
         public void Execute(GeneratorExecutionContext context)
         {
             var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);
@@ -187,7 +185,7 @@ namespace TouchSocket.Core
 
                 var builders = receiver
                     .GetContainerClassTypes(context.Compilation)
-                    .Select(i => new ContainerCodeBuilder(i,types1, types2))
+                    .Select(i => new ContainerCodeBuilder(i, types1, types2))
                     .Distinct();
                 //Debugger.Launch();
 

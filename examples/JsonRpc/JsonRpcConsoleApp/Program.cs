@@ -117,7 +117,7 @@ namespace JsonRpcConsoleApp
         /// <param name="callContext"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-        [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext, MethodInvoke = true)]
+        [JsonRpc(MethodInvoke = true)]
         public string TestGetContext(ICallContext callContext, string str)
         {
             if (callContext.Caller is IHttpSocketClient socketClient)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
-using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TouchSocket
 {
@@ -7,6 +8,11 @@ namespace TouchSocket
     {
         public static bool IsInheritFrom(this ITypeSymbol typeSymbol, string baseType)
         {
+            if (typeSymbol.ToDisplayString() == baseType)
+            {
+                return true;
+            }
+
             if (typeSymbol.BaseType == null)
             {
                 return false;
@@ -35,13 +41,13 @@ namespace TouchSocket
             return new string(name);
         }
 
-       
+
         public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
         {
             foreach (var attr in symbol.GetAttributes())
             {
                 var attrClass = attr.AttributeClass;
-                if (attrClass != null && attrClass.ToDisplayString()==attribute.ToDisplayString())
+                if (attrClass != null && attrClass.ToDisplayString() == attribute.ToDisplayString())
                 {
                     return true;
                 }
@@ -49,12 +55,12 @@ namespace TouchSocket
             return false;
         }
 
-        public static bool HasAttribute(this ISymbol symbol, string attribute,out AttributeData attributeData)
+        public static bool HasAttribute(this ISymbol symbol, string attribute, out AttributeData attributeData)
         {
             foreach (var attr in symbol.GetAttributes())
             {
                 var attrClass = attr.AttributeClass;
-                if (attrClass != null && attrClass.ToDisplayString()==attribute)
+                if (attrClass != null && attrClass.ToDisplayString() == attribute)
                 {
                     attributeData = attr;
                     return true;
@@ -68,5 +74,16 @@ namespace TouchSocket
         {
             return (value & flag) == flag;
         }
+
+       
+        public static bool HasReturn(this IMethodSymbol method)
+        {
+            if (method.ReturnsVoid || method.ReturnType.ToDisplayString() == typeof(Task).FullName)
+            {
+                return false;
+            }
+            return true;
+        }
+
     }
 }

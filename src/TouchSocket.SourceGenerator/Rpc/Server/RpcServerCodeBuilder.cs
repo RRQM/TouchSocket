@@ -1,29 +1,20 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket
 {
-   
     internal sealed class RpcServerCodeBuilder
     {
-      
         private readonly INamedTypeSymbol m_rpcServer;
 
-        
         public RpcServerCodeBuilder(INamedTypeSymbol rpcApi)
         {
             this.m_rpcServer = rpcApi;
         }
 
-       
         public IEnumerable<string> Usings
         {
             get
@@ -42,14 +33,12 @@ namespace TouchSocket
             return this.m_rpcServer.ToDisplayString() + "Generator";
         }
 
-       
         public SourceText ToSourceText()
         {
             var code = this.ToString();
             return SourceText.From(code, Encoding.UTF8);
         }
 
-        
         public override string ToString()
         {
             var codeString = new StringBuilder();
@@ -67,12 +56,12 @@ namespace TouchSocket
             codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
             codeString.AppendLine($"partial class {this.m_rpcServer.Name}");
             codeString.AppendLine("{");
-            var methods = FindMethods();
+            var methods = this.FindMethods();
 
             foreach (var item in methods)
             {
-                BuildMethodFunc(codeString, item);
-                BuildMethod(codeString, item);
+                this.BuildMethodFunc(codeString, item);
+                this.BuildMethod(codeString, item);
             }
             codeString.AppendLine("}");
             codeString.AppendLine("}");
@@ -86,8 +75,8 @@ namespace TouchSocket
             codeString.AppendLine($"private static object {this.GetMethodName(method)}(object obj, object[] ps)");
             codeString.AppendLine("{");
 
-            List<string> ps = new List<string>();
-            for (int i = 0; i < method.Parameters.Length; i++)
+            var ps = new List<string>();
+            for (var i = 0; i < method.Parameters.Length; i++)
             {
                 var parameter = method.Parameters[i];
                 codeString.AppendLine($"var {parameter.Name}=({parameter.Type.ToDisplayString()})ps[{i}];");
@@ -115,7 +104,6 @@ namespace TouchSocket
                 {
                     codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})obj).{method.Name}({string.Join(",", ps)});");
                 }
-               
             }
             else
             {
@@ -127,13 +115,12 @@ namespace TouchSocket
                 {
                     codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})obj).{method.Name}();");
                 }
-                
             }
-            for (int i = 0; i < method.Parameters.Length; i++)
+            for (var i = 0; i < method.Parameters.Length; i++)
             {
                 var parameter = method.Parameters[i];
-                
-                if (parameter.RefKind == RefKind.Ref|| parameter.RefKind== RefKind.Out)
+
+                if (parameter.RefKind == RefKind.Ref || parameter.RefKind == RefKind.Out)
                 {
                     codeString.AppendLine($"ps[{i}]={parameter.Name};");
                 }
@@ -152,12 +139,7 @@ namespace TouchSocket
 
         private void BuildMethodFunc(StringBuilder codeString, IMethodSymbol method)
         {
-            codeString.AppendLine($"private static Func<object, object[], object> {GetMethodName(method)}Func => {GetMethodName(method)};");
-        }
-
-        private string GetMethodName(IMethodSymbol method)
-        {
-            return $"{method.ContainingType.Name}{method.Name}";
+            codeString.AppendLine($"private static Func<object, object[], object> {this.GetMethodName(method)}Func => {this.GetMethodName(method)};");
         }
 
         private IEnumerable<IMethodSymbol> FindMethods()
@@ -183,6 +165,11 @@ namespace TouchSocket
                 methods.Add(item);
             }
             return methods;
+        }
+
+        private string GetMethodName(IMethodSymbol method)
+        {
+            return $"{method.ContainingType.Name}{method.Name}";
         }
     }
 }

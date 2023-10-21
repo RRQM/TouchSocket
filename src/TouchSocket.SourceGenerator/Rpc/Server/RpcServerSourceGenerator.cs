@@ -1,11 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 
 namespace TouchSocket
 {
-    
+
     [Generator]
     public class RpcServerSourceGenerator : ISourceGenerator
     {
@@ -23,17 +22,17 @@ namespace TouchSocket.Rpc
     }
 }
 ";
-       
+
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForPostInitialization(a => 
+            context.RegisterForPostInitialization(a =>
             {
                 a.AddSource(nameof(this.m_generatorAttribute), this.m_generatorAttribute);
             });
             context.RegisterForSyntaxNotifications(() => new RpcServerSyntaxReceiver());
         }
 
-       
+
         public void Execute(GeneratorExecutionContext context)
         {
             var s = context.Compilation.GetMetadataReference(context.Compilation.Assembly);

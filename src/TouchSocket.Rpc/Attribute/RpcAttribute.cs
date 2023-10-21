@@ -30,7 +30,6 @@ namespace TouchSocket.Rpc
         /// </summary>
         public RpcAttribute()
         {
-            this.MethodFlags = MethodFlags.None;
             this.Exceptions.Add(typeof(TimeoutException), "调用超时");
             this.Exceptions.Add(typeof(RpcInvokeException), "Rpc调用异常");
             this.Exceptions.Add(typeof(Exception), "其他异常");
@@ -66,6 +65,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 函数标识
         /// </summary>
+        [Obsolete("此枚举值已被弃用，当第一个参数是ICallContext时，自动识别。", true)]
         public MethodFlags MethodFlags { get; set; }
 
         /// <summary>
@@ -765,7 +765,7 @@ namespace TouchSocket.Rpc
             isOut = false;
             isRef = false;
 
-            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+            if (methodInstance.IncludeCallContext)
             {
                 var infos = new List<ParameterInfo>(methodInstance.Parameters);
                 infos.RemoveAt(0);

@@ -87,7 +87,7 @@ namespace ConsoleApp2
             /// <param name="callContext"></param>
             /// <param name="channelID"></param>
             [Description("测试客户端请求，服务器响应大量流数据")]
-            [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+            [DmtpRpc]
             public int RpcPullChannel(ICallContext callContext, int channelID)
             {
                 var size = 0;
@@ -113,7 +113,7 @@ namespace ConsoleApp2
             /// <param name="callContext"></param>
             /// <param name="channelID"></param>
             [Description("测试客户端推送流数据")]
-            [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+            [DmtpRpc]
             public int RpcPushChannel(ICallContext callContext, int channelID)
             {
                 var size = 0;

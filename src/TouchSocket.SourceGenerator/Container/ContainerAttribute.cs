@@ -35,7 +35,7 @@
 //    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Interface, AllowMultiple = true)]
 //    internal class AutoInjectForSingletonAttribute : BaseInjectAttribute
 //    {
-        
+
 //    }
 
 //    /// <summary>
@@ -44,7 +44,7 @@
 //    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
 //    internal class AutoInjectForTransientAttribute : BaseInjectAttribute
 //    {
-        
+
 //    }
 
 //    /// <summary>

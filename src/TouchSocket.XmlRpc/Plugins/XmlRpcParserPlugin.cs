@@ -136,7 +136,7 @@ namespace TouchSocket.XmlRpc
                                 };
                                 ps = new object[methodInstance.ParameterNames.Length];
                                 var paramsNode = xml.SelectSingleNode("methodCall/params");
-                                if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                                if (methodInstance.IncludeCallContext)
                                 {
                                     ps[0] = callContext;
                                     var index = 1;
