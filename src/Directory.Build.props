@@ -3,7 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>Sign.snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.207</Version>
+		<Version>2.0.0-beta.208</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>

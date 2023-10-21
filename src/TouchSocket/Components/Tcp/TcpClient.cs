@@ -511,6 +511,7 @@ namespace TouchSocket.Sockets
         {
             this.BreakOut(manual,msg);
         }
+
         /// <summary>
         /// BreakOut。
         /// </summary>

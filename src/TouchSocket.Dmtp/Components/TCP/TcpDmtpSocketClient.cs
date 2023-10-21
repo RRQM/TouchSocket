@@ -154,22 +154,31 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public override void Close(string msg = "")
         {
-            this.m_dmtpActor?.SendClose(msg);
-            this.m_dmtpActor?.Close(msg);
+            if (this.IsHandshaked)
+            {
+                this.m_dmtpActor?.SendClose(msg);
+                this.m_dmtpActor?.Close(msg);
+            }
             base.Close(msg);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_dmtpActor?.SafeDispose();
+            if (this.IsHandshaked)
+            {
+                this.m_dmtpActor?.SafeDispose();
+            }
             base.Dispose(disposing);
         }
 
         /// <inheritdoc/>
         protected override async Task OnDisconnected(DisconnectEventArgs e)
         {
-            this.m_dmtpActor?.Close(e.Message);
+            if (this.IsHandshaked)
+            {
+                this.m_dmtpActor?.Close(e.Message);
+            }
             await base.OnDisconnected(e).ConfigureFalseAwait();
         }
 

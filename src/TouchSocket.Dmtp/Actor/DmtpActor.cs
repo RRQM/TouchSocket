@@ -115,26 +115,6 @@ namespace TouchSocket.Dmtp
         {
         }
 
-        /// <inheritdoc/>
-        public void Close(string msg)
-        {
-            this.OnClosed(true, msg);
-        }
-
-        /// <inheritdoc/>
-        public bool SendClose(string msg)
-        {
-            try
-            {
-                this.SendString(0, msg);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         /// <summary>
         /// 建立对点
         /// </summary>
@@ -305,7 +285,6 @@ namespace TouchSocket.Dmtp
             }
             return EasyTask.CompletedTask;
         }
-
 
         /// <summary>
         /// 正在握手连接
@@ -1043,7 +1022,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        #region 重写
+        #region 断开
 
         /// <summary>
         /// <inheritdoc/>
@@ -1061,6 +1040,26 @@ namespace TouchSocket.Dmtp
             this.OnClosed(true, nameof(Dispose));
             this.WaitHandlePool.SafeDispose();
             base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        public void Close(string msg)
+        {
+            this.OnClosed(true, msg);
+        }
+
+        /// <inheritdoc/>
+        public bool SendClose(string msg)
+        {
+            try
+            {
+                this.SendString(0, msg);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion 重写

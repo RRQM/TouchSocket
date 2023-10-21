@@ -33,10 +33,10 @@ namespace TouchSocket.Dmtp
         #endregion 字段
 
         /// <inheritdoc cref="IDmtpActor.Id"/>
-        public string Id => this.DmtpActor.Id;
+        public string Id => this.m_dmtpActor.Id;
 
         /// <inheritdoc cref="IDmtpActor.IsHandshaked"/>
-        public bool IsHandshaked => this.DmtpActor != null && this.DmtpActor.IsHandshaked;
+        public bool IsHandshaked => this.m_dmtpActor != null && this.m_dmtpActor.IsHandshaked;
 
         /// <inheritdoc/>
         public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
@@ -213,7 +213,10 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_dmtpActor?.SafeDispose();
+            if (this.IsHandshaked)
+            {
+                this.m_dmtpActor?.SafeDispose();
+            }
             base.Dispose(disposing);
         }
 
@@ -224,7 +227,7 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public override void Close(string msg = "")
         {
-            if (this.m_dmtpActor!=null)
+            if (this.IsHandshaked)
             {
                 this.m_dmtpActor.SendClose(msg);
                 this.m_dmtpActor.Close(msg);
@@ -269,7 +272,6 @@ namespace TouchSocket.Dmtp
             }
         }
 
-
         #region ResetId
 
         ///<inheritdoc cref="IDmtpActor.ResetId(string)"/>
@@ -297,7 +299,7 @@ namespace TouchSocket.Dmtp
                 Routing = this.OnDmtpActorRouting,
                 Handshaking = this.OnDmtpActorHandshaking,
                 Handshaked = this.OnDmtpActorHandshaked,
-                Closed = OnDmtpActorClose,
+                Closed = this.OnDmtpActorClose,
                 CreatedChannel = this.OnDmtpActorCreateChannel,
                 Logger = this.Logger,
                 Client = this,
