@@ -12,6 +12,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -24,7 +26,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        public NotConnectedException()
+        public NotConnectedException():this(TouchSocketResource.NotConnected.GetDescription())
         { }
 
         /// <summary>
