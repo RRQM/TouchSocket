@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 
 namespace TouchSocket
 {
-    
+
     internal sealed class PluginCodeBuilder
     {
-        
+
         private readonly INamedTypeSymbol m_pluginClass;
 
         private const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
         private const string PluginBaseString = "TouchSocket.Core.PluginBase";
         private const string IPluginsManagerString = "TouchSocket.Core.IPluginsManager";
 
-       
+
         public PluginCodeBuilder(INamedTypeSymbol pluginClass)
         {
             this.m_pluginClass = pluginClass;
@@ -26,7 +26,7 @@ namespace TouchSocket
 
         public string Prefix { get; set; }
 
-        
+
         public IEnumerable<string> Usings
         {
             get
@@ -43,7 +43,7 @@ namespace TouchSocket
             return this.m_pluginClass.ToDisplayString() + "Generator";
         }
 
-        
+
         public bool TryToSourceText(out SourceText sourceText)
         {
             var code = this.ToString();
@@ -56,7 +56,7 @@ namespace TouchSocket
             return true;
         }
 
-     
+
         public override string ToString()
         {
             var methods = this.FindMethods().ToList();
@@ -105,7 +105,7 @@ namespace TouchSocket
                 return;
             }
 
-            if (HasOverrideMethod())
+            if (this.HasOverrideMethod())
             {
                 return;
             }

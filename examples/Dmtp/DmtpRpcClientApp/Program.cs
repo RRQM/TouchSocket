@@ -61,7 +61,7 @@ namespace DmtpClientApp
     public class MyRpcServer : TransientRpcServer
     {
         [Description("登录")]
-        [DmtpRpc(MethodInvoke = true, MethodFlags = MethodFlags.IncludeCallContext)]//使用调用上才文
+        [DmtpRpc(MethodInvoke = true)]//使用调用上才文
         [MyRpcActionFilter]
         public bool Login(ICallContext callContext, string account, string password)
         {

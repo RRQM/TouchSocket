@@ -105,7 +105,7 @@ namespace TouchSocket.WebApi
                     {
                         ps = new object[methodInstance.Parameters.Length];
                         var i = 0;
-                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                        if (methodInstance.IncludeCallContext)
                         {
                             ps[i] = callContext;
                             i++;
@@ -221,7 +221,7 @@ namespace TouchSocket.WebApi
                         int index;
                         ps = new object[methodInstance.Parameters.Length];
                         var i = 0;
-                        if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                        if (methodInstance.IncludeCallContext)
                         {
                             ps[i] = callContext;
                             i++;
@@ -257,7 +257,7 @@ namespace TouchSocket.WebApi
                         if (index >= 0)
                         {
                             var str = e.Context.Request.GetBody();
-                            if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                            if (methodInstance.IncludeCallContext)
                             {
                                 index++;
                             }

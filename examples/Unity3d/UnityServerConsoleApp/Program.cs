@@ -143,7 +143,7 @@ namespace UnityServerConsoleApp
         private readonly ILog m_logger;
 
         [Description("登录")]
-        [DmtpRpc(true, MethodFlags = MethodFlags.IncludeCallContext)]
+        [DmtpRpc(true)]
         public MyLoginModelResult Login(ICallContext callContext, MyLoginModel model)
         {
             if (model.Account == "123" && model.Password == "abc")

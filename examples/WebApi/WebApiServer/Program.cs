@@ -76,7 +76,7 @@ namespace WebApiServerApp
         /// 使用调用上下文，响应文件下载。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
+        [WebApi(HttpMethodType.GET)]
         public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
         {
             if (id == "rrqm")
@@ -91,7 +91,7 @@ namespace WebApiServerApp
         /// 使用调用上下文，获取实际请求体。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]
+        [WebApi(HttpMethodType.POST)]
         [Router("[api]/[action]")]
         public Task<string> PostContent(IWebApiCallContext callContext)
         {

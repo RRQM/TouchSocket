@@ -109,7 +109,7 @@ namespace TouchSocket.JsonRpc
                 callContext.MethodInstance = methodInstance;
                 if (requestContext.Params == null)
                 {
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                    if (methodInstance.IncludeCallContext)
                     {
                         requestContext.Parameters = methodInstance.ParameterNames.Length > 1 ? throw new RpcException("调用参数计数不匹配") : (new object[] { callContext });
                     }
@@ -126,7 +126,7 @@ namespace TouchSocket.JsonRpc
                     requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
                     //内联
                     var i = 0;
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                    if (methodInstance.IncludeCallContext)
                     {
                         requestContext.Parameters[0] = callContext;
                         i = 1;
@@ -153,7 +153,7 @@ namespace TouchSocket.JsonRpc
                 }
                 else if (requestContext.Params is JArray array)
                 {
-                    if (methodInstance.MethodFlags.HasFlag(MethodFlags.IncludeCallContext))
+                    if (methodInstance.IncludeCallContext)
                     {
                         if (array.Count != methodInstance.ParameterNames.Length - 1)
                         {

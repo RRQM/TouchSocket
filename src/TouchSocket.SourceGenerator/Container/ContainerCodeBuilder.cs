@@ -190,7 +190,7 @@ namespace TouchSocket
             codeString.AppendLine("{");
             foreach (var item in descriptions)
             {
-                codeString.AppendLine($"this.{this.GetFieldName(item)} = new Lazy<{item.From.ToDisplayString()}>(this.{GetMethodName(item)});");
+                codeString.AppendLine($"this.{this.GetFieldName(item)} = new Lazy<{item.From.ToDisplayString()}>(this.{this.GetMethodName(item)});");
             }
 
             codeString.AppendLine("}");
@@ -200,7 +200,7 @@ namespace TouchSocket
 
         private void BuildSingletonInjectField(StringBuilder codeString, InjectDescription description)
         {
-            codeString.AppendLine($"private Lazy<{description.From.ToDisplayString()}> {GetFieldName(description)};");
+            codeString.AppendLine($"private Lazy<{description.From.ToDisplayString()}> {this.GetFieldName(description)};");
         }
 
         private IMethodSymbol GetConstructor(INamedTypeSymbol namedTypeSymbol)
@@ -316,7 +316,7 @@ namespace TouchSocket
 
                      INamedTypeSymbol fromTypedConstant = null;
                      INamedTypeSymbol toTypedConstant = null;
-                     string key = string.Empty;
+                     var key = string.Empty;
                      if (list.Length == 1)
                      {
                          fromTypedConstant = (INamedTypeSymbol)list[0].Value;
@@ -353,7 +353,7 @@ namespace TouchSocket
 
                      INamedTypeSymbol fromTypedConstant = null;
                      INamedTypeSymbol toTypedConstant = null;
-                     string key = string.Empty;
+                     var key = string.Empty;
                      if (list.Length == 1)
                      {
                          fromTypedConstant = (INamedTypeSymbol)list[0].Value;

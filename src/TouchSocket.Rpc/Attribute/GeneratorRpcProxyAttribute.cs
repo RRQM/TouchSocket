@@ -29,7 +29,7 @@ namespace TouchSocket.Rpc
         public string Namespace { get; set; }
 
         /// <summary>
-        /// 生成的类名，不要包含“I”，生成接口时会自动家。
+        /// 生成的类名，不要包含“I”，生成接口时会自动添加。
         /// </summary>
         public string ClassName { get; set; }
 
@@ -41,6 +41,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 函数标识
         /// </summary>
+        [Obsolete("此枚举值已被弃用，当第一个参数是ICallContext时，自动识别。", true)]
         public MethodFlags MethodFlags { get; set; }
 
         /// <summary>

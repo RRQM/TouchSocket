@@ -7,11 +7,11 @@ namespace RpcClassLibrary.ServerInterface
     /// <summary>
     /// 定义服务接口。
     /// </summary>
-    [GeneratorRpcProxy(MethodFlags = MethodFlags.IncludeCallContext)]
+    [GeneratorRpcProxy]
     public interface IUserServer : IRpcServer
     {
         [GeneratorRpcMethod]
-        [DmtpRpc(MethodFlags = MethodFlags.IncludeCallContext)]
+        [DmtpRpc]
         LoginResponse Login(ICallContext callContext, LoginRequest request);
     }
 }

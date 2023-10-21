@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace TouchSocket
 {
-
     internal sealed class RpcClientCodeBuilder
     {
         private readonly INamedTypeSymbol m_rpcApi;
@@ -730,31 +729,24 @@ namespace TouchSocket
             return method.ReturnType.ToDisplayString();
         }
 
-        private bool HasFlags(int value, int flag)
-        {
-            return (value & flag) == flag;
-        }
-
-        private bool HasReturn(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
-        {
-            if (method.ReturnsVoid || method.ReturnType.ToDisplayString() == typeof(Task).FullName)
-            {
-                return false;
-            }
-            return true;
-        }
-
+        
         private bool IsIncludeCallContext(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
         {
-            if (namedArguments.TryGetValue("MethodFlags", out var typedConstant))
+            if (method.Parameters.Length>0)
             {
-                return typedConstant.Value is int value && this.HasFlags(value, 2);
-            }
-            else if (this.m_rpcApiNamedArguments.TryGetValue("MethodFlags", out typedConstant))
-            {
-                return typedConstant.Value is int value && this.HasFlags(value, 2);
+                var parameter = method.Parameters[0];
+                return parameter.Type.IsInheritFrom("TouchSocket.Rpc.ICallContext");
             }
             return false;
+            //if (namedArguments.TryGetValue("MethodFlags", out var typedConstant))
+            //{
+            //    return typedConstant.Value is int value && this.HasFlags(value, 2);
+            //}
+            //else if (this.m_rpcApiNamedArguments.TryGetValue("MethodFlags", out typedConstant))
+            //{
+            //    return typedConstant.Value is int value && this.HasFlags(value, 2);
+            //}
+            //return false;
         }
 
         private bool IsInheritedInterface()

@@ -6,16 +6,16 @@ using System.Linq;
 
 namespace TouchSocket
 {
-    
+
     internal sealed class RpcClientSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorRpcProxyAttributeTypeName = "TouchSocket.Rpc.GeneratorRpcProxyAttribute";
         public const string RpcMethodAttributeTypeName = "TouchSocket.Rpc.GeneratorRpcMethodAttribute";
 
-       
+
         private readonly List<InterfaceDeclarationSyntax> interfaceSyntaxList = new List<InterfaceDeclarationSyntax>();
 
-        
+
         void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (syntaxNode is InterfaceDeclarationSyntax syntax)
@@ -26,7 +26,7 @@ namespace TouchSocket
 
         public static INamedTypeSymbol GeneratorRpcProxyAttribute { get; private set; }
 
-       
+
         public IEnumerable<INamedTypeSymbol> GetRpcApiTypes(Compilation compilation)
         {
             //Debugger.Launch();
