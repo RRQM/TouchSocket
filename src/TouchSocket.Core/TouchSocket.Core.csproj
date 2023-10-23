@@ -9,19 +9,24 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core</PackageOutputPath>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
-		<Reference Include="Microsoft.CSharp" />
-	</ItemGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
-		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-	</ItemGroup>
-
-	<ItemGroup>
+		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" PrivateAssets="All"/>
+		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" PrivateAssets="All"/>
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" PrivateAssets="All"/>
 		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
 	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'!='net45'and'$(TargetFramework)'!='netstandard2.0'">
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
+
+	<!--<ItemGroup Condition="'$(TargetFramework)'=='net7.0'">
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>-->
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<DebugSymbols>True</DebugSymbols>
