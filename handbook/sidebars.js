@@ -505,13 +505,18 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "generateproxyfromdispatchproxy",
+            label: "13.4 从DispatchProxy获取代理"
+          },
+          {
+            type: "doc",
             id: "generateproxysourcegeneratordemo",
-            label: "13.4 SG代理推荐写法"
+            label: "13.5 SG代理推荐写法"
           },
           {
             type: "doc",
             id: "rpcactionfilter",
-            label: "13.5 Rpc服务AOP"
+            label: "13.6 Rpc服务AOP"
           }
         ]
     },

@@ -11,43 +11,55 @@ title: 从服务端生成代理
 
 ## 一、生成代理
 
-在开发过程中，如果服务器和客户端，都是我们自己开发的话（在同一个电脑），就可以使用本地代理生成。
+在开发过程中，如果服务器和客户端，都是我们自己开发的话（在同一个电脑），则使用本地代理生成非常方便。如果不在一起，也没关系，可以直接把生成的cs文件直接复制到客户端项目。
 
-调用下列代码，会将已注册的所有服务，导出代理为字符串。
+使用的基本步骤如下：
 
-RpcStore是**实例**，或者是IRpcParser的**属性**。
-
-```csharp
-string code=RpcStore.GetProxyCodes("MyNameSpace"));
-```
+1. 在服务端生成.cs的代理文件。
+2. 将生成的.cs文件，复制到客户端项目（如果是同一电脑开发，则可以使用添加链接的方式编译）。
+3. 在客户端调用代理。
 
 【示例1】
 将代理字符串，写成.cs文件，然后通过链接的形式，将代码添加到客户端项目。
 
-服务器代码，在服务器执行后，会在运行路径下，生成一个**WhisperServers.cs**的文件。
+服务器代码，在服务器`启动`后，会在运行路径下，生成一个**RpcProxy.cs**的文件。
 
-```csharp {14}
-var service = new TcpTouchRpcService();
-var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+```csharp {16-17}
+            var service = new TcpDmtpService();
+            var config = new TouchSocketConfig()//配置
+                   .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {
+                       a.AddDmtpRouteService();
                        a.AddConsoleLogger();
-                       a.AddFileLogger();
                    })
-                   .ConfigureRpcStore(a =>
+                   .ConfigurePlugins(a =>
                    {
-                       a.RegisterServer<MyRpcServer>();//注册服务
-
+                       a.UseDmtpRpc()
+                       .ConfigureRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
 #if DEBUG
-                       File.WriteAllText("../../../WhisperServers.cs", a.GetProxyCodes("WhisperServers",new Type[] { typeof(TouchRpcAttribute) }));
+                           File.WriteAllText("RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
+                           ConsoleLogger.Default.Info("成功生成代理");
 #endif
+                       });
+
+                       a.Add<MyTouchRpcPlugin>();
                    })
-                   .SetVerifyToken("TouchRpc");
+                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
 
             service.Setup(config)
                 .Start();
 ```
+
+:::tip
+
+`RpcProxy.cs`字符串是代理文件路径，可以传入相对路径，也可以传入绝对路径。`RpcProxy`是生成的代理代码的命名空间。`typeof(DmtpRpcAttribute)`是需要生成的代理的服务类型。此处是以`DmtpRpcAttribute`为标记的Rpc服务。如果是其他标记，请替换为对应标记的类型。
+
+最后，生成代理的操作，最好使用`DEBUG`预编译，因为这个功能仅在DEBUG模式我们才用得上。
+
+:::  
 
 然后打开需要引入的**客户端**解决方案。选择需要添加代理的项目，依次执行：
 
@@ -81,7 +93,7 @@ var config = new TouchSocketConfig()//配置
 上述行为，均是导出所有已注册的服务，当需要直接生成多个不同代理的源码时，可通过CodeGenerator静态类的相关方法直接生成。例如：
 
 ```csharp {1}
-string codes=CodeGenerator.GetProxyCodes("Namespace",new Type[]{typeof(RpcServer) },new Type[] { typeof(TouchRpcAttribute)});
+string codes=CodeGenerator.GetProxyCodes("Namespace",new Type[]{typeof(MyRpcServer) },new Type[] { typeof(DmtpRpcAttribute)});
 ```
 
 :::  

@@ -232,6 +232,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReverseJsonRpcConsoleApp", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncWebSocketConsoleApp", "WebSocket\AsyncWebSocketConsoleApp\AsyncWebSocketConsoleApp.csproj", "{AA2FB4A6-5F8E-4D56-BC26-F99CB2B5D0AD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DispatchProxy", "DispatchProxy", "{685CB97B-83A6-4941-B29F-646A1A17F540}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DispatchProxyDmtpRpcConsoleApp", "Dmtp\DispatchProxyDmtpRpcConsoleApp\DispatchProxyDmtpRpcConsoleApp.csproj", "{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -510,6 +514,10 @@ Global
 		{AA2FB4A6-5F8E-4D56-BC26-F99CB2B5D0AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA2FB4A6-5F8E-4D56-BC26-F99CB2B5D0AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA2FB4A6-5F8E-4D56-BC26-F99CB2B5D0AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -611,6 +619,8 @@ Global
 		{9F264382-A7D8-49A9-B351-E28107C1EEEF} = {969A695E-BEB5-45B8-93D8-B31640FA495D}
 		{9C9C5679-B802-48E8-8159-1B205C1793DB} = {9F264382-A7D8-49A9-B351-E28107C1EEEF}
 		{AA2FB4A6-5F8E-4D56-BC26-F99CB2B5D0AD} = {84D1227F-3419-4BCD-9331-8B61B2C19784}
+		{685CB97B-83A6-4941-B29F-646A1A17F540} = {63EE2247-0A5B-47F9-B8AA-AED5BC8FC873}
+		{F2BD1D83-499E-4EA7-95D0-BC7CC235DD7F} = {685CB97B-83A6-4941-B29F-646A1A17F540}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

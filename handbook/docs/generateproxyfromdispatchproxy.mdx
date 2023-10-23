@@ -1,0 +1,111 @@
+---
+id: generateproxyfromdispatchproxy
+title: 从DispatchProxy生成代理
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Rpc <br/>
+程序集：[TouchSocket.Rpc.dll](https://www.nuget.org/packages/TouchSocket.Rpc)<br/>
+
+
+## 一、生成代理
+
+使用DispatchProxy生成代理，是对源代码生成代理的一个补充，他也是仅凭一个接口，自己生成代理服务，并且隐藏连接客户端。
+
+例如：对于下列服务
+
+```csharp
+public class MyRpcServer : RpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        this.m_logger.Info("调用Add");
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+我们需要设置接口，如下：
+
+```csharp
+interface IMyRpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+```
+
+并且需要构建基类：
+
+```csharp
+/// <summary>
+/// 新建一个类，按照需要，继承DmtpRpcDispatchProxy，亦或者预设的JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
+{
+    private readonly TcpDmtpClient m_client;
+
+    public MyDmtpRpcDispatchProxy()
+    {
+        this.m_client = GetTcpDmtpClient();
+    }
+
+    private static TcpDmtpClient GetTcpDmtpClient()
+    {
+        var client = new TcpDmtpClient();
+        client.Setup(new TouchSocketConfig()
+            .ConfigureContainer(a =>
+            {
+                a.AddConsoleLogger();
+            })
+            .ConfigurePlugins(a =>
+            {
+                a.UseDmtpRpc();
+            })
+            .SetRemoteIPHost("127.0.0.1:7789")
+        .SetVerifyToken("Dmtp"));
+        client.Connect();
+        client.Logger.Info($"连接成功，Id={client.Id}");
+        return client;
+    }
+
+    public override IDmtpRpcActor GetClient()
+    {
+        return m_client.GetDmtpRpcActor();
+    }
+}
+```
+
+然后生成代理，并直接调用
+
+```csharp
+IMyRpcServer myRpcServer = DmtpRpcDispatchProxy.Create<IMyRpcServer, MyDmtpRpcDispatchProxy>();
+
+var result = myRpcServer.Add(10, 20);
+Console.WriteLine(result);
+```
+
+:::info 说明
+
+使用该方案，无法在限制IL的场景使用，例如：unity-ilcpp，native-aot等。
+
+:::  
