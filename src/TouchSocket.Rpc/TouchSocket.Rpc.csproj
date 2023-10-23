@@ -8,14 +8,14 @@
 		<Title>TouchSocket.Rpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
-	</ItemGroup>
-
+	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<DebugSymbols>True</DebugSymbols>
 		<DebugType>Embedded</DebugType>
 		<EmbedAllSources>True</EmbedAllSources>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
+	</ItemGroup>
 </Project>

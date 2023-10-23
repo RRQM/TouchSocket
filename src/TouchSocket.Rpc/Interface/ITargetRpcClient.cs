@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Rpc
 {
@@ -30,7 +29,6 @@ namespace TouchSocket.Rpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
@@ -44,7 +42,6 @@ namespace TouchSocket.Rpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
         Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
@@ -58,7 +55,6 @@ namespace TouchSocket.Rpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
@@ -72,7 +68,6 @@ namespace TouchSocket.Rpc
         /// <param name="parameters">参数</param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
         object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
@@ -87,7 +82,6 @@ namespace TouchSocket.Rpc
         /// <param name="types"></param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
 
@@ -102,7 +96,6 @@ namespace TouchSocket.Rpc
         /// <param name="types"></param>
         /// <exception cref="TimeoutException">调用超时</exception>
         /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="ClientNotFindException">没有找到Id对应的客户端</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回值</returns>
         object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);

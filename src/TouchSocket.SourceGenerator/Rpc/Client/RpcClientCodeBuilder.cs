@@ -137,9 +137,17 @@ namespace TouchSocket
 
         private bool AllowAsync(CodeGeneratorFlag flag, IMethodSymbol method = default, Dictionary<string, TypedConstant> namedArguments = default)
         {
-            if (method != null && method.Name.EndsWith("Async"))
+            if (method != null)
             {
-                return true;
+                if (method.Name.EndsWith("Async"))
+                {
+                    return true;
+                }
+
+                if (method.ReturnType != null && method.ReturnType.IsInheritFrom(typeof(Task).FullName))
+                {
+                    return true;
+                }
             }
             if (namedArguments != null && namedArguments.TryGetValue("GeneratorFlag", out var typedConstant))
             {
@@ -244,7 +252,8 @@ namespace TouchSocket
             var isIncludeCallContext = this.IsIncludeCallContext(method, namedArguments);
             var allowSync = this.AllowSync(CodeGeneratorFlag.ExtensionSync, method, namedArguments);
             var allowAsync = this.AllowAsync(CodeGeneratorFlag.ExtensionAsync, method, namedArguments);
-            var returnType = this.GetReturnType(method, namedArguments);
+            var returnType = this.GetReturnType(method);
+            var taskType = this.GetTaskType(method);
 
             var parameters = method.Parameters;
             if (isIncludeCallContext)
@@ -274,7 +283,7 @@ namespace TouchSocket
                     {
                         codeString.Append(",");
                     }
-                    codeString.Append($"{parameters[i].Type.ToDisplayString()} {parameters[i].Name}");
+                    codeString.Append($"{parameters[i].ToDisplayString()}");
                 }
                 if (parameters.Length > 0)
                 {
@@ -327,7 +336,7 @@ namespace TouchSocket
                     }
                 }
 
-                if (!method.ReturnsVoid)
+                if (method.HasReturn())
                 {
                     if (parameters.Length == 0)
                     {
@@ -400,7 +409,7 @@ namespace TouchSocket
                     }
                 }
 
-                if (!method.ReturnsVoid)
+                if (method.HasReturn())
                 {
                     codeString.AppendLine("return returnData;");
                 }
@@ -408,10 +417,10 @@ namespace TouchSocket
                 codeString.AppendLine("}");
             }
 
-            if (isOut || isRef)
-            {
-                return codeString.ToString();
-            }
+            //if (isOut || isRef)
+            //{
+            //    return codeString.ToString();
+            //}
 
             if (allowAsync)
             {
@@ -419,13 +428,20 @@ namespace TouchSocket
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{this.GetDescription(method)}");
                 codeString.AppendLine("///</summary>");
-                if (method.ReturnsVoid)
+                if (!method.HasReturn())
                 {
                     codeString.Append($"public static Task {methodName}Async");
                 }
                 else
                 {
-                    codeString.Append($"public static async Task<{returnType}> {methodName}Async");
+                    if (isOut || isRef)
+                    {
+                        codeString.Append($"public static Task<{returnType}> {methodName}Async");
+                    }
+                    else
+                    {
+                        codeString.Append($"public static async Task<{returnType}> {methodName}Async");
+                    }
                 }
 
                 codeString.Append("<TClient>(");//方法参数
@@ -439,7 +455,7 @@ namespace TouchSocket
                     {
                         codeString.Append(",");
                     }
-                    codeString.Append($"{parameters[i].Type.ToDisplayString()} {parameters[i].Name}");
+                    codeString.Append($"{parameters[i].ToDisplayString()}");
                 }
                 if (parameters.Length > 0)
                 {
@@ -454,18 +470,46 @@ namespace TouchSocket
                 {
                     codeString.Append($"object[] parameters = new object[]");
                     codeString.Append("{");
+
                     foreach (var parameter in parameters)
                     {
-                        codeString.Append(parameter.Name);
+                        if (parameter.RefKind == RefKind.Ref)
+                        {
+                            isRef = true;
+                        }
+                        if (parameter.RefKind == RefKind.Out)
+                        {
+                            isOut = true;
+                            codeString.Append($"default({this.GetRealTypeString(parameter)})");
+                        }
+                        else
+                        {
+                            codeString.Append(parameter.Name);
+                        }
                         if (!parameter.Equals(parameters[parameters.Length - 1], SymbolEqualityComparer.Default))
                         {
                             codeString.Append(",");
                         }
                     }
                     codeString.AppendLine("};");
+
+                    if (isOut || isRef)
+                    {
+                        codeString.Append($"Type[] types = new Type[]");
+                        codeString.Append("{");
+                        foreach (var parameter in parameters)
+                        {
+                            codeString.Append($"typeof({this.GetRealTypeString(parameter)})");
+                            if (!parameter.Equals(parameters[parameters.Length - 1], SymbolEqualityComparer.Default))
+                            {
+                                codeString.Append(",");
+                            }
+                        }
+                        codeString.AppendLine("};");
+                    }
                 }
 
-                if (!method.ReturnsVoid)
+                if (method.HasReturn())
                 {
                     if (parameters.Length == 0)
                     {
@@ -474,6 +518,14 @@ namespace TouchSocket
                         codeString.Append(string.Format("typeof({0}),", returnType));
                         codeString.Append($"\"{invokeKey}\"");
                         codeString.AppendLine(",invokeOption, null);");
+                    }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append(string.Format("{0} returnData=({0})client.Invoke", returnType));
+                        codeString.Append("(");
+                        codeString.Append(string.Format("typeof({0}),", returnType));
+                        codeString.Append($"\"{invokeKey}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
                     }
                     else
                     {
@@ -492,11 +544,50 @@ namespace TouchSocket
                         codeString.Append($"\"{invokeKey}\"");
                         codeString.AppendLine(",invokeOption, null);");
                     }
+                    else if (isOut || isRef)
+                    {
+                        codeString.Append("client.Invoke(");
+                        codeString.Append($"\"{invokeKey}\"");
+                        codeString.AppendLine(",invokeOption,ref parameters,types);");
+                    }
                     else
                     {
                         codeString.Append("return client.InvokeAsync(");
                         codeString.Append($"\"{invokeKey}\"");
                         codeString.AppendLine(",invokeOption, parameters);");
+                    }
+                }
+
+                if (isOut || isRef)
+                {
+                    codeString.AppendLine("if(parameters!=null)");
+                    codeString.AppendLine("{");
+                    for (var i = 0; i < parameters.Length; i++)
+                    {
+                        codeString.AppendLine(string.Format("{0}=({1})parameters[{2}];", parameters[i].Name, this.GetRealTypeString(parameters[i]), i));
+                    }
+                    codeString.AppendLine("}");
+                    if (isOut)
+                    {
+                        codeString.AppendLine("else");
+                        codeString.AppendLine("{");
+                        for (var i = 0; i < parameters.Length; i++)
+                        {
+                            if (parameters[i].RefKind == RefKind.Out)
+                            {
+                                codeString.AppendLine(string.Format("{0}=default({1});", parameters[i].Name, this.GetRealTypeString(parameters[i])));
+                            }
+                        }
+                        codeString.AppendLine("}");
+                    }
+
+                    if (method.HasReturn())
+                    {
+                        codeString.AppendLine(string.Format("return Task.FromResult<{0}>(returnData);", returnType));
+                    }
+                    else
+                    {
+                        codeString.AppendLine(string.Format("return  EasyTask.CompletedTask;"));
                     }
                 }
                 codeString.AppendLine("}");
@@ -524,8 +615,8 @@ namespace TouchSocket
             var isIncludeCallContext = this.IsIncludeCallContext(method, namedArguments);
             var allowSync = this.AllowSync(CodeGeneratorFlag.InterfaceSync, method, namedArguments);
             var allowAsync = this.AllowAsync(CodeGeneratorFlag.InterfaceAsync, method, namedArguments);
-            var returnType = this.GetReturnType(method, namedArguments);
-
+            var returnType = this.GetReturnType(method);
+          
             var parameters = method.Parameters;
             if (isIncludeCallContext)
             {
@@ -551,7 +642,7 @@ namespace TouchSocket
                         codeString.Append(",");
                     }
 
-                    codeString.Append($"{parameters[i].Type.ToDisplayString()} {parameters[i].Name}");
+                    codeString.Append($"{parameters[i].ToDisplayString()}");
                 }
                 if (parameters.Length > 0)
                 {
@@ -572,7 +663,8 @@ namespace TouchSocket
                 codeString.AppendLine("///<summary>");
                 codeString.AppendLine($"///{this.GetDescription(method)}");
                 codeString.AppendLine("///</summary>");
-                if (method.ReturnsVoid)
+
+                if (!method.HasReturn())
                 {
                     codeString.Append($"Task {methodName}Async");
                 }
@@ -588,7 +680,7 @@ namespace TouchSocket
                     {
                         codeString.Append(",");
                     }
-                    codeString.Append($"{parameters[i].Type.ToDisplayString()} {parameters[i].Name}");
+                    codeString.Append($"{parameters[i].ToDisplayString()}");
                 }
                 if (parameters.Length > 0)
                 {
@@ -706,33 +798,63 @@ namespace TouchSocket
             switch (parameterSymbol.RefKind)
             {
                 case RefKind.Ref:
-                    return parameterSymbol.ToDisplayString().Replace("ref", string.Empty);
+                    return parameterSymbol.Type.ToDisplayString().Replace("ref", string.Empty);
 
                 case RefKind.Out:
-                    return parameterSymbol.ToDisplayString().Replace("out", string.Empty);
+                    return parameterSymbol.Type.ToDisplayString().Replace("out", string.Empty);
 
                 case RefKind.None:
                 case RefKind.In:
                 default:
-                    return parameterSymbol.ToDisplayString();
+                    return parameterSymbol.Type.ToDisplayString();
             }
         }
 
-        private string GetReturnType(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
+        private string GetReturnType(IMethodSymbol method)
         {
-            if (method.ReturnType.ToDisplayString().Contains(typeof(Task).FullName))
+            if (method.HasReturn())
             {
-                var methodname = method.ReturnType.ToDisplayString().Trim().Replace($"{typeof(Task).FullName}<", string.Empty);
-                methodname = methodname.Remove(methodname.Length - 1);
-                return methodname;
+                if (method.ReturnType.ToDisplayString().Contains($"{typeof(Task).FullName}<"))
+                {
+                    var methodname = method.ReturnType.ToDisplayString().Trim().Replace($"{typeof(Task).FullName}<", string.Empty);
+                    methodname = methodname.Remove(methodname.Length - 1);
+                    return methodname;
+                }
+                return method.ReturnType.ToDisplayString();
             }
-            return method.ReturnType.ToDisplayString();
+            else
+            {
+                return "void";
+            }
         }
 
-        
+        private TaskType GetTaskType(IMethodSymbol method)
+        {
+            if (method.ReturnType.ToDisplayString().Contains($"{typeof(Task).FullName}<"))
+            {
+                return TaskType.TaskT;
+            }
+            else if (method.ReturnType.ToDisplayString().Contains($"{typeof(Task).FullName}"))
+            {
+                return TaskType.Task;
+            }
+            else
+            {
+                return TaskType.None;
+            }
+        }
+
+        enum TaskType
+        {
+            None,
+            Task,
+            TaskT
+        }
+
+
         private bool IsIncludeCallContext(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
         {
-            if (method.Parameters.Length>0)
+            if (method.Parameters.Length > 0)
             {
                 var parameter = method.Parameters[0];
                 return parameter.Type.IsInheritFrom("TouchSocket.Rpc.ICallContext");
