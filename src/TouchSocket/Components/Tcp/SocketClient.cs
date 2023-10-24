@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -47,14 +46,8 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
-
-        //private ValueCounter m_receiveCounter;
-        //private ValueCounter m_sendCounter;
-        //private long m_bufferRate = 1;
         private DelaySender m_delaySender;
-
         private TcpCore m_tcpCore;
-
         #endregion 变量
 
         #region 属性
@@ -127,6 +120,11 @@ namespace TouchSocket.Sockets
 
         #region Internal
 
+        internal Task AuthenticateAsync(ServiceSslOption sslOption)
+        {
+            return this.m_tcpCore.AuthenticateAsync(sslOption);
+        }
+
         internal void BeginReceive()
         {
             try
@@ -152,10 +150,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        internal Task AuthenticateAsync(ServiceSslOption sslOption)
-        {
-            return this.m_tcpCore.AuthenticateAsync(sslOption);
-        }
         internal Task BeginReceiveSsl()
         {
             return this.m_tcpCore.BeginSslReceive();
@@ -219,7 +213,7 @@ namespace TouchSocket.Sockets
 
             if (this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty) is DelaySenderOption senderOption)
             {
-                this.m_delaySender = new DelaySender(senderOption, this.MainSocket.AbsoluteSend);
+                this.m_delaySender = new DelaySender(senderOption, this.GetTcpCore().Send);
             }
 
             var tcpCore = this.Service.RentTcpCore();
@@ -236,11 +230,6 @@ namespace TouchSocket.Sockets
                 tcpCore.MaxBufferSize = maxValue;
             }
             this.m_tcpCore = tcpCore;
-        }
-
-        private void TcpCoreBreakOut(TcpCore core, bool manual, string msg)
-        {
-            this.BreakOut(manual, msg);
         }
 
         /// <summary>
@@ -290,6 +279,11 @@ namespace TouchSocket.Sockets
             {
                 this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
             }
+        }
+
+        private void TcpCoreBreakOut(TcpCore core, bool manual, string msg)
+        {
+            this.BreakOut(manual, msg);
         }
 
         #endregion Internal
@@ -386,11 +380,6 @@ namespace TouchSocket.Sockets
             return EasyTask.CompletedTask;
         }
 
-        private Task PrivateOnDisconnecting(object obj)
-        {
-            return this.OnDisconnecting((DisconnectEventArgs)obj);
-        }
-
         private async Task PrivateOnDisconnected(object obj)
         {
             this.m_receiver?.TryInputReceive(default, default);
@@ -408,6 +397,11 @@ namespace TouchSocket.Sockets
                 this.m_tcpCore = null;
                 this.Service.ReturnTcpCore(tcp);
             }
+        }
+
+        private Task PrivateOnDisconnecting(object obj)
+        {
+            return this.OnDisconnecting((DisconnectEventArgs)obj);
         }
 
         #endregion 事件&委托
@@ -546,24 +540,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
-        protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
-        {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
-            {
-                var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureAwait(false);
-                return args.IsPermitOperation;
-            }
-            return true;
-        }
-
-        /// <summary>
         /// 当Id更新的时候触发
         /// </summary>
         /// <param name="oldId"></param>
@@ -602,6 +578,24 @@ namespace TouchSocket.Sockets
                 return this.PluginsManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
             }
             return Task.FromResult(false);
+        }
+
+        /// <summary>
+        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
+        /// </summary>
+        /// <param name="buffer">数据缓存区</param>
+        /// <param name="offset">偏移</param>
+        /// <param name="length">长度</param>
+        /// <returns>返回值表示是否允许发送</returns>
+        protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
+        {
+            if (this.PluginsManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
+            {
+                var args = new SendingEventArgs(buffer, offset, length);
+                await this.PluginsManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureAwait(false);
+                return args.IsPermitOperation;
+            }
+            return true;
         }
 
         /// <summary>
@@ -658,6 +652,11 @@ namespace TouchSocket.Sockets
         {
             if (this.SendingData(buffer, offset, length).GetFalseAwaitResult())
             {
+                if (this.m_delaySender != null)
+                {
+                    this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                    return;
+                }
                 this.GetTcpCore().Send(buffer, offset, length);
             }
         }
@@ -890,17 +889,17 @@ namespace TouchSocket.Sockets
         private Receiver m_receiver;
 
         /// <inheritdoc/>
-        public IReceiver CreateReceiver()
-        {
-            return this.m_receiver ??= new Receiver(this);
-        }
-
-        /// <inheritdoc/>
         public void ClearReceiver()
         {
             this.m_receiver = null;
         }
 
-        #endregion
+        /// <inheritdoc/>
+        public IReceiver CreateReceiver()
+        {
+            return this.m_receiver ??= new Receiver(this);
+        }
+
+        #endregion Receiver
     }
 }

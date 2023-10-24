@@ -62,7 +62,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 最大传输速度。
         /// </summary>
-        public long MaxSpeed { get => this.m_flowGate.Maximum; set => this.m_flowGate.Maximum = value; }
+        public virtual long MaxSpeed { get => this.m_flowGate.Maximum; set => this.m_flowGate.Maximum = value; }
 
         /// <summary>
         /// 元数据

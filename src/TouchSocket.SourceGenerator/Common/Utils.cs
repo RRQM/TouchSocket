@@ -13,17 +13,26 @@ namespace TouchSocket
                 return true;
             }
 
-            if (typeSymbol.BaseType == null)
+
+            if (typeSymbol.BaseType != null)
             {
-                return false;
+                var b= IsInheritFrom(typeSymbol.BaseType, baseType);
+                if (b)
+                {
+                    return true;
+                }
             }
 
-            if (typeSymbol.BaseType.ToDisplayString() == baseType)
+            foreach (var item in typeSymbol.AllInterfaces)
             {
-                return true;
+                var b = IsInheritFrom(item, baseType);
+                if (b)
+                {
+                    return true;
+                }
             }
 
-            return IsInheritFrom(typeSymbol.BaseType, baseType);
+            return false;
         }
 
         public static string RenameCamelCase(this string str)
