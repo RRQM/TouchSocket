@@ -88,7 +88,7 @@ namespace ConsoleApp2
             /// <param name="channelID"></param>
             [Description("测试客户端请求，服务器响应大量流数据")]
             [DmtpRpc]
-            public int RpcPullChannel(ICallContext callContext, int channelID)
+            public int RpcPullChannel(IDmtpRpcCallContext callContext, int channelID)
             {
                 var size = 0;
                 var package = 1024 * 64;
