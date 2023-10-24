@@ -573,8 +573,8 @@ module.exports = {
           },
           {
             type: "doc",
-            id: "remotefilecontrol",
-            label: "14.8 远程文件操作"
+            id: "dmtpremoteaccess",
+            label: "14.8 远程文件系统"
           },
           {
             type: "doc",
