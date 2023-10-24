@@ -48,24 +48,26 @@ namespace RemoteAccessApp
             return service;
         }
 
-        private class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin<ITcpDmtpSocketClient>
+        public class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin
         {
-            public Task OnRemoteAccessing(ITcpDmtpSocketClient client, RemoteAccessingEventArgs e)
+            public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)
             {
-                Console.WriteLine($"有客户端正在请求远程操作");
-                Console.WriteLine($"类型：{e.AccessType}，模式：{e.AccessMode}");
-                Console.WriteLine($"请求路径：{e.Path}");
-                Console.WriteLine($"目标路径：{e.TargetPath}");
+                //Console.WriteLine($"有客户端正在请求远程操作");
+                //Console.WriteLine($"类型：{e.AccessType}，模式：{e.AccessMode}");
+                //Console.WriteLine($"请求路径：{e.Path}");
+                //Console.WriteLine($"目标路径：{e.TargetPath}");
 
-                Console.WriteLine("请输入y/n决定是否允许其操作?");
+                //Console.WriteLine("请输入y/n决定是否允许其操作?");
 
-                var input = Console.ReadLine();
-                if (input == "y")
-                {
-                    e.IsPermitOperation = true;
-                }
+                //var input = Console.ReadLine();
+                //if (input == "y")
+                //{
+                //    e.IsPermitOperation = true;
+                //    return;
+                //}
 
-                return e.InvokeNext();
+                //如果当前插件无法处理，转至下一个插件
+                await e.InvokeNext();
             }
         }
     }
