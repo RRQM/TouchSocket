@@ -70,7 +70,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                         {
                             if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId) is DmtpActor actor)
                             {
-                                await actor.SendAsync(this.m_pullFileResourceInfo_Request, byteBlock);
+                                actor.Send(this.m_pullFileResourceInfo_Request, byteBlock);
                                 return true;
                             }
                             else
@@ -85,12 +85,13 @@ namespace TouchSocket.Dmtp.FileTransfer
                         waitFileResource.SwitchId();
                         byteBlock.Reset();
                         waitFileResource.Package(byteBlock);
-                        await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, byteBlock);
+                        this.DmtpActor.Send(this.m_pullFileResourceInfo_Response, byteBlock);
                     }
                     else
                     {
                         waitFileResource.UnpackageBody(byteBlock);
-                        _ = this.RequestPullFileResourceInfo(waitFileResource);
+
+                        _=Task.Factory.StartNew(this.RequestPullFileResourceInfo, waitFileResource);
                     }
                 }
                 catch (Exception ex)
@@ -109,7 +110,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_pullFileResourceInfo_Response, byteBlock);
+                            actor.Send(this.m_pullFileResourceInfo_Response, byteBlock);
                         }
                     }
                     else
@@ -399,7 +400,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     else
                     {
                         waitSmallFilePackage.UnpackageBody(byteBlock);
-                        _ = this.RequestPullSmallFile(waitSmallFilePackage);
+                        _=Task.Factory.StartNew(this.RequestPullSmallFile, waitSmallFilePackage);
                     }
                 }
                 catch (Exception ex)
@@ -1317,7 +1318,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     waitFileResource.SwitchId();
                     waitFileResource.Package(byteBlock);
-                    await this.DmtpActor.SendAsync(this.m_pullFileResourceInfo_Response, byteBlock);
+                    this.DmtpActor.Send(this.m_pullFileResourceInfo_Response, byteBlock);
                 }
             }
             catch

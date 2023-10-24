@@ -44,6 +44,11 @@ namespace TouchSocket.Sockets
         public int DelayLength { get; private set; }
 
         /// <summary>
+        /// 队列长度
+        /// </summary>
+        public int QueueCount => this.m_queueDatas.Count;
+
+        /// <summary>
         /// 发送
         /// </summary>
         public void Send(in QueueDataBytes dataBytes)

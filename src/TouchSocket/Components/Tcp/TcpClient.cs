@@ -933,6 +933,11 @@ namespace TouchSocket.Sockets
         {
             if (this.SendingData(buffer, offset, length).GetFalseAwaitResult())
             {
+                if (this.m_delaySender!=null)
+                {
+                    this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
+                    return;
+                }
                 this.GetTcpCore().Send(buffer, offset, length);
             }
         }
@@ -963,7 +968,7 @@ namespace TouchSocket.Sockets
             var delaySenderOption = this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty);
             if (delaySenderOption != null)
             {
-                this.m_delaySender = new DelaySender(delaySenderOption, this.MainSocket.AbsoluteSend);
+                this.m_delaySender = new DelaySender(delaySenderOption, this.GetTcpCore().Send);
             }
 
             this.m_tcpCore.Reset(socket);

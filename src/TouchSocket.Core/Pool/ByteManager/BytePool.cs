@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 内存池
     /// </summary>
-    public class BytePool : ArrayPool<byte>
+    public sealed class BytePool : ArrayPool<byte>
     {
         private readonly Timer m_timer;
 

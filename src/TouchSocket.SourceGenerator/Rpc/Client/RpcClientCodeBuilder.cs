@@ -249,7 +249,7 @@ namespace TouchSocket
             var invokeKey = this.GetInvokeKey(method, namedArguments);
             var methodName = this.GetMethodName(method, namedArguments);
             var genericConstraintTypes = this.GetGenericConstraintTypes(method, namedArguments);
-            var isIncludeCallContext = this.IsIncludeCallContext(method, namedArguments);
+            var isIncludeCallContext = this.IsIncludeCallContext(method);
             var allowSync = this.AllowSync(CodeGeneratorFlag.ExtensionSync, method, namedArguments);
             var allowAsync = this.AllowAsync(CodeGeneratorFlag.ExtensionAsync, method, namedArguments);
             var returnType = this.GetReturnType(method);
@@ -612,7 +612,7 @@ namespace TouchSocket
             var invokeKey = this.GetInvokeKey(method, namedArguments);
             var methodName = this.GetMethodName(method, namedArguments);
             var genericConstraintTypes = this.GetGenericConstraintTypes(method, namedArguments);
-            var isIncludeCallContext = this.IsIncludeCallContext(method, namedArguments);
+            var isIncludeCallContext = this.IsIncludeCallContext(method);
             var allowSync = this.AllowSync(CodeGeneratorFlag.InterfaceSync, method, namedArguments);
             var allowAsync = this.AllowAsync(CodeGeneratorFlag.InterfaceAsync, method, namedArguments);
             var returnType = this.GetReturnType(method);
@@ -852,7 +852,7 @@ namespace TouchSocket
         }
 
 
-        private bool IsIncludeCallContext(IMethodSymbol method, Dictionary<string, TypedConstant> namedArguments)
+        private bool IsIncludeCallContext(IMethodSymbol method)
         {
             if (method.Parameters.Length > 0)
             {
