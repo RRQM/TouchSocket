@@ -10,7 +10,6 @@ namespace RpcClassLibrary.ServerInterface
     [GeneratorRpcProxy]
     public interface IUserServer : IRpcServer
     {
-        [GeneratorRpcMethod]
         [DmtpRpc]
         LoginResponse Login(ICallContext callContext, LoginRequest request);
     }
