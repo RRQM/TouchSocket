@@ -15,6 +15,7 @@ import Tag from "@site/src/components/Tag.js";
 
 使用DispatchProxy生成代理，是对源代码生成代理的一个补充，他也是仅凭一个接口，自己生成代理服务，并且隐藏连接客户端。
 
+
 例如：对于下列服务
 
 ```csharp
@@ -104,9 +105,9 @@ var result = myRpcServer.Add(10, 20);
 Console.WriteLine(result);
 ```
 
-:::info 说明
+:::caution 注意
 
-使用该方案，无法在限制IL的场景使用，例如：unity-ilcpp，native-aot等。
+该功能仅在net6以上才可以使用，并使用该方案，无法在限制IL的场景使用，例如：unity-ilcpp，native-aot等。
 
 :::  
 
