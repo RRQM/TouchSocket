@@ -27,7 +27,7 @@ JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关*
 
 ## 三、定义服务
 
-在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**JsonRpc**属性标签标记，如果方法有**重载**，需要重新指定**函数键**。
+在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**JsonRpc**属性标签标记。
 
 
 ```csharp
@@ -40,7 +40,7 @@ public class JsonRpcServer : RpcServer
     /// <param name="callContext"></param>
     /// <param name="str"></param>
     /// <returns></returns>
-    [JsonRpc(MethodFlags = MethodFlags.IncludeCallContext,MethodInvoke =true)]
+    [JsonRpc(MethodInvoke =true)]
     public string TestGetContext(ICallContext callContext, string str)
     {
         if (callContext.Caller is IHttpSocketClient socketClient)

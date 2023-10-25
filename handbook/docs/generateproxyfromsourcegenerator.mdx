@@ -165,7 +165,7 @@ public interface IUserServer:IRpcServer
 函数标识，可以声明该函数支持调用上下文，即在生成代理时，会忽略第一个参数项。
 
 ```csharp {1,6} 
-[GeneratorRpcProxy(MethodFlags = MethodFlags.IncludeCallContext)]
+[GeneratorRpcProxy]
 public interface IUserServer:IRpcServer
 {
     [GeneratorRpcMethod]
@@ -204,10 +204,10 @@ public interface IB:IA
 ### 2.2 GeneratorRpcMethodAttribute配置
 
 ```csharp {4} 
-[GeneratorRpcProxy(MethodFlags = MethodFlags.IncludeCallContext)]
+[GeneratorRpcProxy]
 public interface IUserServer:IRpcServer
 {
-    [GeneratorRpcMethod(MethodFlags = MethodFlags.IncludeCallContext)]
+    [GeneratorRpcMethod]
     LoginResponse Login(ICallContext callContext,LoginRequest request);
 }
 ```

@@ -3,19 +3,63 @@ id: troubleshootsourcecode
 title: 疑难解答
 ---
 
-## 一、源码相关
+## 一、源码编译
 
-### 1.1 【问】我下载了源码，编译不过？
+TouchSocket是基于Apache License 2.0免费开源的，源码托管在Gitee、Github上，如果需要编译源码，请参考以下步骤：
 
-【描述】
+### 1.1 下载源码
 
-<img src={require('@site/static/img/docs/troubleshoot-1.png').default} width="500" />
+下载源码的方式有多种。
 
-【解决】
-第一个错误是因为，TouchSocket是一个程序集类库，并不能自己运行，所以请创建其他可运行项目，然后引用本程序集。
-第二个错误是，编译电脑直接使用的vs2022及以上版本，且没有安装net45的sdk所导致的。解决方法也很简单：
+1. 直接下载源码包，下载地址：[TouchSocket最新源码](https://gitee.com/RRQM_Home/TouchSocket/repository/archive/master.zip)
+2. 使用Fork，Clone到本地。这个的优点是，可以随时提交PR，随时更新源码。
+
+### 1.2 编译源码
+
+编译工具我们使用VS，一般来说vs2017以上版本只需要简单配置就可以编译。如果是再低版本，则需要新建个项目，把源码复制进去，然后编译即可。
+
+下列我们只讲说vs2017以上版本编译源码。
+
+首先，把下载好的源码解压（如果是clone的则不用），一般目录如下：
+
+```
+├─.gitee
+├─benchmark
+├─Build
+├─examples
+├─examples_aot
+├─handbook
+├─images
+├─performancetest
+├─src
+├─xunit
+```
+
+我们需要找到src目录，然后打开TouchSocket.sln的解决方案。
+
+然后，先试下右键解决方案，选择“重新生成解决方案”。看下能否直接生成。一般的，如果你的vs是2022版本，且安装了net45，net6.0，net7.0的sdk，则可以直接生成。
+
+如果生成成功，则生成的所有dll在Build文件夹下。
+
+如果不能生成，则需要进行修改。
+
+例如：
+
+编译电脑直接使用的vs2022及以上版本，且没有安装net45的sdk所导致的。
+
+<img src={require('@site/static/img/docs/troubleshoot-1.png').default} />
+
+解决方法也很简单：
+
 1. 安装net45，详情自行网络。
 2. 或者取消net45的编译（删除“net45;”包括分号）。如下图：
 
-双击TouchSocket项目，打开项目编辑。
-<img src={require('@site/static/img/docs/troubleshoot-2.png').default} width="500" />
+如果要取消net45的编译，则双击项目，打开项目编辑。然后删除`net45;`
+
+<img src={require('@site/static/img/docs/troubleshoot-2.png').default}  />
+
+同理，如果你的vs是2017或者2019，那就需要删除net6.0，net7.0的编译。方法同上。
+
+至此，基本上就能解决TouchSocket编译的问题了。
+
+不过需要注意的是，即使您自己编译TouchSocket，也不能删除任何作者信息及项目名称。因为一来代码里面可能有判断程序集名称及命名空间的代码。二来，作者信息及项目名称是作者的标识，所以我们也希望您能尊重作者。
