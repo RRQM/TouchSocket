@@ -97,7 +97,7 @@
 	"imgLink": {
 		"prefix": "imgLink",
 		"body": [
-			"<img src={require('$0').default} width=\"500\" />",
+			"<img src={require('@site/static/img/docs/$0').default} width=\"500\" />",
 		],
 		"description": "imgLink"
 	},
@@ -118,7 +118,7 @@
 	"importHighlight": {
 		"prefix": "importHighlight",
 		"body": [
-			"import Highlight from '../src/components/Highlight.js';"
+			"import Highlight from '@site/src/components/Highlight.js';"
 		],
 		"description": "importHighlight"
 	},

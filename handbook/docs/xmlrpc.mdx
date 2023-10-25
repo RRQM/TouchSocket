@@ -24,7 +24,7 @@ XmlRpc是**通用**的工作在**Internet**上的RPC。一个[XML-RPC](https://b
 
 ### 3.1 定义服务
 
-在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记，如果方法有**重载**，需要重新指定**函数键**。
+在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记。
 
 ```csharp
 public class XmlServer : RpcServer

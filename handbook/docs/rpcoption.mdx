@@ -71,7 +71,7 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 public class ElapsedTimeRpcServer : ServerProvider
 {
     [Description("测试可取消的调用")]
-    [TouchRpc(MethodFlags.IncludeCallContext)]
+    [DmtpRpc]
     public bool DelayInvoke(ICallContext serverCallContext,int tick)//同步服务
     {
         for (int i = 0; i < tick; i++)
