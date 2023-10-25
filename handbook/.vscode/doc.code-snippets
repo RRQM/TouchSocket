@@ -111,7 +111,7 @@
 	"linkstatic": {
 		"prefix": "linkstatic",
 		"body": [
-			"[$1](\"../docs$0\")",
+			"[$1](\"./$0\")",
 		],
 		"description": "linkstatic"
 	},

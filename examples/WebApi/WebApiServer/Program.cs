@@ -58,8 +58,8 @@ namespace WebApiServerApp
         }
 
         [Origin(AllowOrigin = "*")]//跨域设置
-        [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
-        [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
+        [Router("[api]/[action]ab")]//此路由会以"/ApiServer/Sumab"实现
+        [Router("[api]/[action]")]//此路由会以"/ApiServer/Sum"实现
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {

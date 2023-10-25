@@ -298,5 +298,104 @@ Console.WriteLine($"Post调用成功，结果：{sum2}");
 
 :::  
 
+### 6.4 生成代理调用
+
+在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./generateproxyfromserver.mdx)
+
+```csharp {8-9}
+a.UseWebApi()
+.ConfigureRpcStore(store =>
+{
+    store.RegisterServer<ApiServer>();//注册服务
+
+#if DEBUG
+    //下列代码，会生成客户端的调用代码。
+    var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
+    File.WriteAllText("../../../WebApiProxy.cs", codeString);
+#endif
+});
+```
+
+然后把生成的.cs文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
+
+```csharp
+var sum3 = client.Sum(10,20);
+```
+
+### 6.5 使用DispatchProxy代理调用
+
+使用DispatchProxy代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./generateproxyfromdispatchproxy.mdx)
+
+首先，需要声明一个基类，用于通讯基础。
+
+```csharp
+/// <summary>
+/// 新建一个类，继承WebApiDispatchProxy，亦或者RpcDispatchProxy基类。
+/// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
+/// </summary>
+class MyWebApiDispatchProxy : WebApiDispatchProxy
+{
+    private readonly WebApiClient m_client;
+
+    public MyWebApiDispatchProxy()
+    {
+        this.m_client = CreateWebApiClient();
+    }
+
+    private static WebApiClient CreateWebApiClient()
+    {
+        var client = new WebApiClient();
+        client.Setup(new TouchSocketConfig()
+            .SetRemoteIPHost("127.0.0.1:7789")
+            .ConfigurePlugins(a =>
+            {
+                a.UseReconnection();
+            }));
+        client.Connect();
+        Console.WriteLine("连接成功");
+        return client;
+    }
+
+    public override IWebApiClientBase GetClient()
+    {
+        return m_client;
+    }
+}
+```
+
+然后按照服务，定义一个相同的代理接口。
+
+```csharp
+interface IApiServer
+{
+    [Router("ApiServer/[action]")]
+    [WebApi(HttpMethodType.GET)]
+    int Sum(int a, int b);
+}
+```
+
+:::tip 提示
+
+路由规则和服务端相同。
+
+:::  
+
+最后生成代理，并按照接口调用。
+
+```csharp {1}
+IApiServer api = MyWebApiDispatchProxy.Create<IApiServer, MyWebApiDispatchProxy>();
+while (true)
+{
+    Console.WriteLine("请输入两个数，中间用空格隔开，回车确认");
+    string str = Console.ReadLine();
+    var strs = str.Split(' ');
+    int a = int.Parse(strs[0]);
+    int b = int.Parse(strs[1]);
+
+    var sum = api.Sum(a, b);
+    Console.WriteLine(sum);
+}
+```
+
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebApi)
 
