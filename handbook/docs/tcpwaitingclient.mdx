@@ -28,8 +28,6 @@ client.Connect("tcp://127.0.0.1:7789");
 //调用CreateWaitingClient获取到IWaitingClient的对象。
 var waitClient = client.CreateWaitingClient(new WaitingOptions()
 {
-    BreakTrigger = true,//表示当连接断开时，会立即触发
-    ThrowBreakException = true,//表示当连接断开时，是否触发异常
     FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
     {
         if (response.Data.Length == 1)
@@ -58,8 +56,6 @@ service.Received = async (client, e) =>
     //调用CreateWaitingClient获取到IWaitingClient的对象。
     var waitClient = client.CreateWaitingClient(new WaitingOptions()
     {
-        BreakTrigger = true,//表示当连接断开时，会立即触发
-        ThrowBreakException = true,//表示当连接断开时，是否触发异常
         FilterFunc =response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
         {
             if (response.Data.Length == 1)
