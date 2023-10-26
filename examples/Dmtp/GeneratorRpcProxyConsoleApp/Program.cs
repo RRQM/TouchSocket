@@ -74,7 +74,7 @@ namespace GeneratorRpcProxyConsoleApp
     internal interface Test
     {
         [Description("这是登录方法")]//该作用是生成注释
-        [GeneratorRpcMethod]//表明该方法应该被代理，也可以通过参数，直接设置调用键
+        [DmtpRpc]//表明该方法应该被代理，也可以通过参数，直接设置调用键
         public bool Login(string account, string password);
     }
 }

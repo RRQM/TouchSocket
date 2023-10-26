@@ -95,7 +95,7 @@ namespace SerializationSelectorConsoleApp
         /// <param name="loginModel"></param>
         /// <returns></returns>
         [Description("登录")]
-        [GeneratorRpcMethod]
+        [DmtpRpc]
         string Login(LoginModel loginModel);
     }
 }
