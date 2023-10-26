@@ -152,7 +152,7 @@ namespace TouchSocket.Core
                 {
                     var r = inStream.Read(byteIn, 0, byteIn.Length);
                     encStream.Write(byteIn, 0, r);
-                    readLen = readLen + r;
+                    readLen += r;
                 }
                 encStream.Close();
             }

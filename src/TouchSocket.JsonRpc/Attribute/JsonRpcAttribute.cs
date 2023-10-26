@@ -26,9 +26,17 @@ namespace TouchSocket.JsonRpc
         ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
         /// </summary>
         /// <param name="methodInvoke"></param>
-        public JsonRpcAttribute(bool methodInvoke = false)
+        public JsonRpcAttribute(bool methodInvoke)
         {
             this.MethodInvoke = methodInvoke;
+        }
+
+        /// <summary>
+        /// 适用于JsonRpc的标记
+        /// </summary>
+        public JsonRpcAttribute()
+        {
+
         }
 
         /// <summary>

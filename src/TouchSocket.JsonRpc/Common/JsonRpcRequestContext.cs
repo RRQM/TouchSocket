@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
@@ -23,9 +22,6 @@ namespace TouchSocket.JsonRpc
         /// parameters
         /// </summary>
         [Newtonsoft.Json.JsonIgnore]
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonIgnore]
-#endif
         public object[] Parameters { get; set; }
     }
 }

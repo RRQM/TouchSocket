@@ -178,7 +178,7 @@ tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
 
 ```csharp
 var tcpClient = new TcpClient();
-tcpClient.Received += (client, e) =>
+tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息
     string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);

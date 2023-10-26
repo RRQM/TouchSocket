@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 
@@ -20,7 +19,7 @@ namespace TouchSocket.JsonRpc
         /// <param name="pluginsManager"></param>
         public HttpJsonRpcParserPlugin(IContainer container, IPluginsManager pluginsManager) : base(container)
         {
-            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), OnHttpRequest);
+            pluginsManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -44,7 +43,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected sealed override void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {

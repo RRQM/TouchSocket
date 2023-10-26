@@ -6,15 +6,12 @@ using System.Linq;
 
 namespace TouchSocket
 {
-
     internal sealed class RpcServerSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorRpcServerAttributeTypeName = "TouchSocket.Rpc.GeneratorRpcServerAttribute";
         public const string IRpcServerTypeName = "TouchSocket.Rpc.IRpcServer";
 
-
         private readonly List<ClassDeclarationSyntax> interfaceSyntaxList = new List<ClassDeclarationSyntax>();
-
 
         void ISyntaxReceiver.OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
@@ -25,7 +22,6 @@ namespace TouchSocket
         }
 
         public static INamedTypeSymbol GeneratorRpcServerAttribute { get; private set; }
-
 
         public IEnumerable<INamedTypeSymbol> GetRpcServerTypes(Compilation compilation)
         {
@@ -44,7 +40,6 @@ namespace TouchSocket
                 }
             }
         }
-
 
         public static bool IsRpcServer(INamedTypeSymbol @class)
         {

@@ -117,7 +117,7 @@ namespace TouchSocket.Sockets
             this.m_internalDis?.Invoke(this, (ITcpClient)client, e);
         }
 
-        private async Task TcpClient_Received(TcpClient client,ReceivedDataEventArgs e)
+        private async Task TcpClient_Received(TcpClient client, ReceivedDataEventArgs e)
         {
             await EasyTask.CompletedTask;
             if (this.DisposedValue)

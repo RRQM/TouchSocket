@@ -70,7 +70,7 @@ namespace TouchSocket.Sockets
                     }
                     else
                     {
-                        await m_resetEvent.WaitOneAsync();
+                        await this.m_resetEvent.WaitOneAsync();
                     }
                 }
                 catch

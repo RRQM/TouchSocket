@@ -23,12 +23,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 发送缓存区大小。最小值=1024。
         /// </summary>
-        int SendBufferSize { get;}
+        int SendBufferSize { get; }
 
         /// <summary>
         /// 接收缓存区大小。最小值=1024。
         /// </summary>
-        int ReceiveBufferSize { get;}
+        int ReceiveBufferSize { get; }
 
         /// <summary>
         /// 日志记录器

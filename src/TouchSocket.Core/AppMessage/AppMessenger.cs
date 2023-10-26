@@ -13,8 +13,6 @@
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Resources;
 
@@ -64,7 +62,6 @@ namespace TouchSocket.Core
         /// <exception cref="MessageRegisteredException"></exception>
         public void Add(string token, MessageInstance messageInstance)
         {
-
             if (this.m_tokenAndInstance.TryGetValue(token, out var value))
             {
                 if (!this.AllowMultiple)
@@ -116,7 +113,7 @@ namespace TouchSocket.Core
         /// <param name="token"></param>
         public void Remove(string token)
         {
-            this.m_tokenAndInstance.TryRemove(token,out _);
+            this.m_tokenAndInstance.TryRemove(token, out _);
         }
 
         /// <summary>
@@ -144,7 +141,7 @@ namespace TouchSocket.Core
 
             foreach (var item in key)
             {
-                this.m_tokenAndInstance.TryRemove(item,out _);
+                this.m_tokenAndInstance.TryRemove(item, out _);
             }
         }
 

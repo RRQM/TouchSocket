@@ -501,7 +501,6 @@ namespace TouchSocket.Rpc
                 }
             }
 
-           
             if (typeof(ITransientRpcServer).IsAssignableFrom(serverFromType))
             {
                 this.Container.RegisterTransient(serverFromType, serverToType);

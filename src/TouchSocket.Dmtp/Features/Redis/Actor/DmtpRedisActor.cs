@@ -27,6 +27,7 @@ namespace TouchSocket.Dmtp.Redis
 
         /// <inheritdoc/>
         public ICache<string, byte[]> ICache { get; set; }
+
         /// <inheritdoc/>
         public int Timeout { get; set; } = 30 * 1000;
 

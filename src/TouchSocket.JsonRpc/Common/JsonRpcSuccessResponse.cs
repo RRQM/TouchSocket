@@ -18,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpcSuccessResponse
     /// </summary>
-    public class JsonRpcSuccessResponse: JsonRpcResponseBase
+    public class JsonRpcSuccessResponse : JsonRpcResponseBase
     {
         /// <summary>
         /// result
@@ -26,6 +26,7 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("result")]
 #endif
+
         [JsonProperty("result")]
         public object Result { get; set; }
     }

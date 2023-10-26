@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TouchSocket.Core
+﻿namespace TouchSocket.Core
 {
     /// <summary>
     /// 动态构建类型

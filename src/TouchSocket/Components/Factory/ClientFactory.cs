@@ -85,18 +85,6 @@ namespace TouchSocket.Sockets
         /// 清理池中的所有客户端。
         /// </summary>
         /// <returns></returns>
-        public virtual Task<int> ClearAsync()
-        {
-            return Task.Run(() =>
-             {
-                 return this.Clear();
-             });
-        }
-
-        /// <summary>
-        /// 清理池中的所有客户端。
-        /// </summary>
-        /// <returns></returns>
         public virtual int Clear()
         {
             var count = 0;
@@ -107,6 +95,18 @@ namespace TouchSocket.Sockets
             }
             this.FreeClients.Clear();
             return count;
+        }
+
+        /// <summary>
+        /// 清理池中的所有客户端。
+        /// </summary>
+        /// <returns></returns>
+        public virtual Task<int> ClearAsync()
+        {
+            return Task.Run(() =>
+             {
+                 return this.Clear();
+             });
         }
 
         /// <summary>
@@ -141,6 +141,16 @@ namespace TouchSocket.Sockets
         public abstract TClient GetTransferClient(TimeSpan waitTime);
 
         /// <summary>
+        /// 获取用于传输的客户端结果。可以支持<see cref="IDisposable"/>。
+        /// </summary>
+        /// <param name="waitTime"></param>
+        /// <returns></returns>
+        public virtual ClientFactoryResult<TClient> GetTransferClientResult(TimeSpan waitTime)
+        {
+            return new ClientFactoryResult<TClient>(this.GetTransferClient(waitTime), this.ReleaseTransferClient);
+        }
+
+        /// <summary>
         /// 判断客户端是不是存活状态。
         /// </summary>
         /// <param name="client"></param>
@@ -152,19 +162,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client"></param>
         public abstract void ReleaseTransferClient(TClient client);
-
-        /// <summary>
-        /// 释放使用完成的客户端
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        public virtual Task ReleaseTransferClientAsync(TClient client)
-        {
-            return Task.Run(() =>
-              {
-                  this.ReleaseTransferClient(client);
-              });
-        }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

@@ -15,7 +15,7 @@ namespace TouchSocket.Core
 
         public Task Run(object sender, PluginEventArgs e)
         {
-            return Method.InvokeAsync(this.Plugin, sender, e);
+            return this.Method.InvokeAsync(this.Plugin, sender, e);
         }
     }
 }

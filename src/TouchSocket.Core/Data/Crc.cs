@@ -728,7 +728,7 @@ namespace TouchSocket.Core
                     if ((crc & 1) > 0)
                         crc = (crc >> 1) ^ 0xEDB88320;// 0xEDB88320= reverse 0x04C11DB7
                     else
-                        crc = crc >> 1;
+                        crc >>= 1;
                 }
             }
             var ret = BitConverter.GetBytes(~crc);

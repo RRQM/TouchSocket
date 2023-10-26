@@ -40,6 +40,7 @@ namespace TouchSocket.Sockets
                 }
             };
         }
+
         /// <inheritdoc/>
         protected override void Loaded(IPluginsManager pluginsManager)
         {
@@ -47,6 +48,7 @@ namespace TouchSocket.Sockets
             pluginsManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
             pluginsManager.Add<TClient, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this.OnTcpDisconnected);
         }
+
         private bool m_polling;
 
         /// <summary>

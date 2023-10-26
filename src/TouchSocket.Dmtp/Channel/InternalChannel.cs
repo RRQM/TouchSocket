@@ -44,11 +44,11 @@ namespace TouchSocket.Dmtp
             this.m_dataQueue = new IntelligentDataQueue<ChannelPackage>(this.m_cacheCapacity)
             {
                 OverflowWait = false,
-                OnQueueChanged = OnQueueChanged
+                OnQueueChanged = this.OnQueueChanged
             };
             this.m_canFree = true;
             this.m_maxSpeed = int.MaxValue;
-            this.m_flowGate = new FlowGate() { Maximum = m_maxSpeed };
+            this.m_flowGate = new FlowGate() { Maximum = this.m_maxSpeed };
             this.Metadata = metadata;
         }
 

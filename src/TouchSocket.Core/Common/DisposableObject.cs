@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -63,18 +62,17 @@ namespace TouchSocket.Core
         }
     }
 
-//#if NET6_0_OR_GREATER
-//    public partial class DisposableObject : IAsyncDisposable
-//    {
-//        public ValueTask DisposeAsync()
-//        {
-//            throw new NotImplementedException();
-//        }
-//    }
-//    public class DisposableObject1 : IAsyncDisposable
-//    {
-        
-//    }
+    //#if NET6_0_OR_GREATER
+    //    public partial class DisposableObject : IAsyncDisposable
+    //    {
+    //        public ValueTask DisposeAsync()
+    //        {
+    //            throw new NotImplementedException();
+    //        }
+    //    }
+    //    public class DisposableObject1 : IAsyncDisposable
+    //    {
+    //    }
 
-//#endif
+    //#endif
 }

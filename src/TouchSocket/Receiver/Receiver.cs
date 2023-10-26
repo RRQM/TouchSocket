@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,6 +17,7 @@ namespace TouchSocket.Sockets
         {
             this.Dispose(false);
         }
+
         private readonly IClient m_client;
         private readonly AutoResetEvent m_resetEventForComplateRead = new AutoResetEvent(false);
         private readonly AsyncAutoResetEvent m_resetEventForRead = new AsyncAutoResetEvent(false);

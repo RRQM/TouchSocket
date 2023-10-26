@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
@@ -82,6 +81,7 @@ namespace TouchSocket.JsonRpc
                                     throw new TimeoutException("等待结果超时");
                                 case WaitDataStatus.Canceled:
                                     return default;
+
                                 case WaitDataStatus.Default:
                                 case WaitDataStatus.Disposed:
                                 default:
@@ -147,6 +147,7 @@ namespace TouchSocket.JsonRpc
                                     throw new TimeoutException("等待结果超时");
                                 case WaitDataStatus.Canceled:
                                     return;
+
                                 case WaitDataStatus.Default:
                                 case WaitDataStatus.Disposed:
                                 default:
@@ -224,6 +225,7 @@ namespace TouchSocket.JsonRpc
                                     throw new TimeoutException("等待结果超时");
                                 case WaitDataStatus.Canceled:
                                     return;
+
                                 case WaitDataStatus.Default:
                                 case WaitDataStatus.Disposed:
                                 default:
@@ -297,6 +299,7 @@ namespace TouchSocket.JsonRpc
                                     throw new TimeoutException("等待结果超时");
                                 case WaitDataStatus.Canceled:
                                     return default;
+
                                 case WaitDataStatus.Default:
                                 case WaitDataStatus.Disposed:
                                 default:
@@ -332,7 +335,6 @@ namespace TouchSocket.JsonRpc
         /// JsonRpc的调用键。
         /// </summary>
         public ActionMap ActionMap { get; private set; } = new ActionMap(true);
-
 
         void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
         {

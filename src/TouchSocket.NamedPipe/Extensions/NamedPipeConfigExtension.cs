@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.NamedPipe.Plugins;
-using System.Threading.Tasks;
-
 
 namespace TouchSocket.NamedPipe
 {
@@ -145,6 +144,5 @@ namespace TouchSocket.NamedPipe
             pluginsManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
-
     }
 }

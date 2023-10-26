@@ -18,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpcErrorResponse
     /// </summary>
-    public class JsonRpcErrorResponse: JsonRpcResponseBase
+    public class JsonRpcErrorResponse : JsonRpcResponseBase
     {
         /// <summary>
         /// error
@@ -26,6 +26,7 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("error")]
 #endif
+
         [JsonProperty("error")]
         public JsonRpcError Error { get; set; }
     }

@@ -86,7 +86,7 @@ class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandli
 
 ```csharp
 TcpService service = new TcpService();
-service.Received += (client, e) =>
+service.Received = (client, e) =>
 {
     //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
     if (e.RequestInfo is MyBigFixedHeaderRequestInfo myRequestInfo)

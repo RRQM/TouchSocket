@@ -12,7 +12,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -60,7 +59,6 @@ namespace TouchSocket.Core
             this.Owner = owner;
         }
 
-       
         /// <summary>
         /// 在解析时发生错误。
         /// </summary>
@@ -79,7 +77,6 @@ namespace TouchSocket.Core
             }
         }
 
-        
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>

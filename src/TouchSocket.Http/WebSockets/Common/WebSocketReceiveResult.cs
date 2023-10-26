@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
@@ -25,11 +20,10 @@ namespace TouchSocket.Http.WebSockets
             this.DataFrame = dataFrame;
         }
 
-       
         /// <inheritdoc/>
         public void Dispose()
         {
-            m_disAction?.Invoke();
+            this.m_disAction?.Invoke();
         }
 
         /// <summary>

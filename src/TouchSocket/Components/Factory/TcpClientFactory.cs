@@ -110,13 +110,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        /// 在主客户端加载配置之前
-        /// </summary>
-        protected virtual void OnMainClientSetuping()
-        {
-        }
-
         /// <inheritdoc/>
         public override void DisposeClient(TClient client)
         {
@@ -242,6 +235,13 @@ namespace TouchSocket.Sockets
         protected override TouchSocketConfig GetTransferConfig()
         {
             return this.OnGetTransferConfig?.Invoke();
+        }
+
+        /// <summary>
+        /// 在主客户端加载配置之前
+        /// </summary>
+        protected virtual void OnMainClientSetuping()
+        {
         }
 
         private TClient CreateTransferClient()

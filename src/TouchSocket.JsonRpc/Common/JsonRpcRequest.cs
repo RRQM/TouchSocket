@@ -24,36 +24,24 @@ namespace TouchSocket.JsonRpc
         /// jsonrpc
         /// </summary>
         [JsonProperty("jsonrpc")]
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("jsonrpc")]
-#endif
         public string Jsonrpc { get; set; } = "2.0";
 
         /// <summary>
         /// method
         /// </summary>
         [JsonProperty("method")]
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("method")]
-#endif
         public string Method { get; set; }
 
         /// <summary>
         /// @params
         /// </summary>
         [JsonProperty("params")]
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("params")]
-#endif
         public object Params { get; set; }
 
         /// <summary>
         /// id
         /// </summary>
         [JsonProperty("id")]
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-#endif
         public long? Id { get; set; }
     }
 }

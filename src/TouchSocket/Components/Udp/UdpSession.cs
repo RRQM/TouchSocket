@@ -35,9 +35,9 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override async Task ReceivedData(UdpReceivedDataEventArgs e)
         {
-            if (this.Received!=null)
+            if (this.Received != null)
             {
-                await this.Received.Invoke(this,e);
+                await this.Received.Invoke(this, e);
                 if (e.Handled)
                 {
                     return;
@@ -66,10 +66,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public override int ReceiveBufferSize => 64*1024;
+        public override int ReceiveBufferSize => 64 * 1024;
 
         /// <inheritdoc/>
         public override int SendBufferSize => 64 * 1024;
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -382,7 +383,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected virtual Task ReceivedData(UdpReceivedDataEventArgs e)
         {
-           return this.PluginsManager.RaiseAsync(nameof(IUdpReceivedPlugin.OnUdpReceived), this, e);
+            return this.PluginsManager.RaiseAsync(nameof(IUdpReceivedPlugin.OnUdpReceived), this, e);
         }
 
         /// <summary>
@@ -487,7 +488,6 @@ namespace TouchSocket.Sockets
 
             this.Monitor = new UdpNetworkMonitor(iPHost, socket);
 
-
 #if NET45_OR_GREATER || NET6_0_OR_GREATER
             for (var i = 0; i < threadCount; i++)
             {
@@ -528,7 +528,6 @@ namespace TouchSocket.Sockets
                 thread.Start();
             }
 #endif
-
         }
 
         private void Received()
@@ -892,6 +891,6 @@ namespace TouchSocket.Sockets
             this.m_receiver = null;
         }
 
-        #endregion
+        #endregion Receiver
     }
 }

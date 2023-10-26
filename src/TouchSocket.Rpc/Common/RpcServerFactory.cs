@@ -27,7 +27,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="container"></param>
         /// <param name="logger"></param>
-        public RpcServerFactory(IContainer container,ILog logger)
+        public RpcServerFactory(IContainer container, ILog logger)
         {
             this.m_container = container;
             this.m_logger = logger;

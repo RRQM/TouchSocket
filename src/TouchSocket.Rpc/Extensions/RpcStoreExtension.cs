@@ -13,7 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
@@ -26,6 +26,7 @@ namespace TouchSocket.Rpc
     public static class RpcStoreExtension
     {
 #if !NET6_0_OR_GREATER
+
         /// <summary>
         /// 注册所有服务
         /// </summary>
@@ -52,8 +53,8 @@ namespace TouchSocket.Rpc
             }
             return types.Count;
         }
-#endif
 
+#endif
 
         /// <summary>
         /// 注册服务
@@ -63,6 +64,7 @@ namespace TouchSocket.Rpc
 #if NET6_0_OR_GREATER
         public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this RpcStore rpcStore) where T : IRpcServer
 #else
+
         public static void RegisterServer<T>(this RpcStore rpcStore) where T : IRpcServer
 #endif
 
@@ -79,6 +81,7 @@ namespace TouchSocket.Rpc
 #if NET6_0_OR_GREATER
         public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type providerType)
 #else
+
         public static void RegisterServer(this RpcStore rpcStore, Type providerType)
 #endif
         {
@@ -94,6 +97,7 @@ namespace TouchSocket.Rpc
 #if NET6_0_OR_GREATER
         public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
 #else
+
         public static void RegisterServer<TFrom, TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
 #endif
 
@@ -109,6 +113,7 @@ namespace TouchSocket.Rpc
 #if NET6_0_OR_GREATER
         public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom rpcServer) where TFrom : class, IRpcServer
 #else
+
         public static void RegisterServer<TFrom>(this RpcStore rpcStore, TFrom rpcServer) where TFrom : class, IRpcServer
 #endif
 

@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace TouchSocket
 {
-
     [Generator]
     public class PluginSourceGenerator : ISourceGenerator
     {
@@ -33,7 +32,6 @@ namespace TouchSocket.Core
 
 ";
 
-
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForPostInitialization(a =>
@@ -42,7 +40,6 @@ namespace TouchSocket.Core
             });
             context.RegisterForSyntaxNotifications(() => new PluginSyntaxReceiver());
         }
-
 
         public void Execute(GeneratorExecutionContext context)
         {

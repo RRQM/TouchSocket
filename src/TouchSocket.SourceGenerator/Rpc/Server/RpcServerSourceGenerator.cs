@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace TouchSocket
 {
-
     [Generator]
     public class RpcServerSourceGenerator : ISourceGenerator
     {
@@ -31,7 +30,6 @@ namespace TouchSocket.Rpc
             });
             context.RegisterForSyntaxNotifications(() => new RpcServerSyntaxReceiver());
         }
-
 
         public void Execute(GeneratorExecutionContext context)
         {

@@ -25,7 +25,7 @@ namespace TouchSocket.WebApi
     public class WebApiAttribute : RpcAttribute
     {
         /// <summary>
-        /// 构造函数。
+        /// 使用指定函数的WebApi特性。
         /// </summary>
         /// <param name="method"></param>
         public WebApiAttribute(HttpMethodType method)
@@ -33,10 +33,19 @@ namespace TouchSocket.WebApi
             this.Method = method;
         }
 
+
         /// <summary>
-        /// 函数类型。
+        /// 使用Get函数的WebApi特性
         /// </summary>
-        public HttpMethodType Method { get; private set; }
+        public WebApiAttribute()
+        {
+
+        }
+
+        /// <summary>
+        /// 请求函数类型。
+        /// </summary>
+        public HttpMethodType Method { get; set; }
 
         /// <summary>
         /// <inheritdoc/>

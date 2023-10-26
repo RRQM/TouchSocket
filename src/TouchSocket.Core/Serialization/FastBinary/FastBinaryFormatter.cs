@@ -15,12 +15,11 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
 using System.IO;
-using System.Runtime;
 using System.Text;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
-
 
 namespace TouchSocket.Core
 {
@@ -35,6 +34,7 @@ namespace TouchSocket.Core
         /// </summary>
         public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.All;
 #endif
+
         static FastBinaryFormatter()
         {
             AddFastBinaryConverter(typeof(string), new StringFastBinaryConverter());
@@ -54,6 +54,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType, [DynamicallyAccessedMembers(DynamicallyAccessed)] TConverter>() where TConverter : IFastBinaryConverter, new()
 #else
+
         public static void AddFastBinaryConverter<TType, TConverter>() where TConverter : IFastBinaryConverter, new()
 #endif
 
@@ -69,7 +70,8 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType>(IFastBinaryConverter converter)
 #else
-       public static void AddFastBinaryConverter<TType>(IFastBinaryConverter converter)
+
+        public static void AddFastBinaryConverter<TType>(IFastBinaryConverter converter)
 #endif
         {
             AddFastBinaryConverter(typeof(TType), converter);
@@ -83,6 +85,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter([DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
 #else
+
         public static void AddFastBinaryConverter(Type type, IFastBinaryConverter converter)
 #endif
         {
@@ -100,7 +103,8 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph)
 #else
-        public static void Serialize<T>(ByteBlock byteBlock,in T graph)
+
+        public static void Serialize<T>(ByteBlock byteBlock, in T graph)
 #endif
         {
             byteBlock.Position = 1;
@@ -406,6 +410,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static object Deserialize(byte[] data, int offset, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type)
 #else
+
         public static object Deserialize(byte[] data, int offset, Type type)
 #endif
         {

@@ -46,7 +46,7 @@ namespace TouchSocket.WebApi.Swagger
         /// <inheritdoc/>
         public async Task OnServerStarted(IService sender, ServiceStateEventArgs e)
         {
-            if (e.ServerState!= ServerState.Running)
+            if (e.ServerState != ServerState.Running)
             {
                 return;
             }
@@ -503,10 +503,10 @@ namespace TouchSocket.WebApi.Swagger
                 return type.Name;
             }
 
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
             foreach (var item in type.GetGenericArguments())
             {
-                stringBuilder.Append(GetSchemaName(item));
+                stringBuilder.Append(this.GetSchemaName(item));
             }
             stringBuilder.Append(type.Name.Substring(0, type.Name.IndexOf('`')));
             return stringBuilder.ToString();

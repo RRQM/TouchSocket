@@ -16,7 +16,7 @@ namespace TouchSocket.Dmtp.Rpc
     /// <typeparam name="TAttribute"></typeparam>
     public abstract class DmtpRpcDispatchProxy<TClient, TAttribute> : RpcDispatchProxy<TClient, TAttribute> where TClient : IDmtpRpcActor where TAttribute : DmtpRpcAttribute
     {
-       
+
     }
 
     /// <summary>
@@ -24,8 +24,8 @@ namespace TouchSocket.Dmtp.Rpc
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     public abstract class DmtpRpcDispatchProxy<TClient> : DmtpRpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
-    { 
-    
+    {
+
     }
 
     /// <summary>

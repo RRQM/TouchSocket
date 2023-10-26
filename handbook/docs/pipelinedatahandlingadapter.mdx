@@ -21,7 +21,7 @@ Pipeline适配器，是结合IOCP与管道模型结合的产物。功能类似�
 ```csharp
 TcpService service = new TcpService();
 
-service.Received += (client, e) =>
+service.Received = (client, e) =>
 {
     if (e.RequestInfo is Pipeline pipeline)//实际上Pipeline继承自Stream
     {

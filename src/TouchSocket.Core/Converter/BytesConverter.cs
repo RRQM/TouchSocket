@@ -77,7 +77,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source = JsonConvert.SerializeObject(target, JsonSettings).ToUTF8Bytes();
+                source = JsonConvert.SerializeObject(target, this.JsonSettings).ToUTF8Bytes();
                 return true;
             }
             catch (Exception)

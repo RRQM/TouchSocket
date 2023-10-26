@@ -68,6 +68,7 @@ namespace TouchSocket.Sockets
         private volatile bool m_online;
         private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         private readonly InternalTcpCore m_tcpCore;
+
         #endregion 变量
 
         #region 事件
@@ -282,7 +283,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -428,7 +428,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                m_semaphore.Release();
+                this.m_semaphore.Release();
             }
         }
 #else
@@ -505,11 +505,11 @@ namespace TouchSocket.Sockets
             this.m_receiver = null;
         }
 
-        #endregion
+        #endregion Receiver
 
         private void TcpCoreBreakOut(TcpCore core, bool manual, string msg)
         {
-            this.BreakOut(manual,msg);
+            this.BreakOut(manual, msg);
         }
 
         /// <summary>
@@ -631,9 +631,9 @@ namespace TouchSocket.Sockets
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.m_receiver!=null)
+            if (this.m_receiver != null)
             {
-                if (this.m_receiver.TryInputReceive(byteBlock,requestInfo))
+                if (this.m_receiver.TryInputReceive(byteBlock, requestInfo))
                 {
                     return;
                 }
@@ -933,7 +933,7 @@ namespace TouchSocket.Sockets
         {
             if (this.SendingData(buffer, offset, length).GetFalseAwaitResult())
             {
-                if (this.m_delaySender!=null)
+                if (this.m_delaySender != null)
                 {
                     this.m_delaySender.Send(new QueueDataBytes(buffer, offset, length));
                     return;
@@ -1024,7 +1024,5 @@ namespace TouchSocket.Sockets
             }
             return Task.FromResult(false);
         }
-
-
     }
 }

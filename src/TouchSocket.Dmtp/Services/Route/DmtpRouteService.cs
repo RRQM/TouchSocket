@@ -11,6 +11,6 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public Func<string, Task<IDmtpActor>> FindDmtpActor { get ; set ; }
+        public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
     }
 }

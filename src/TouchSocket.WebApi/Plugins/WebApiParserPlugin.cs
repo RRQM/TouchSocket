@@ -281,7 +281,7 @@ namespace TouchSocket.WebApi
                     {
                         transientRpcServer.CallContext = callContext;
                     }
-                    invokeResult =await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
+                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
                 }
 
                 if (e.Context.Response.Responsed)

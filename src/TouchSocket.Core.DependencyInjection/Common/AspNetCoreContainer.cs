@@ -134,7 +134,7 @@ namespace TouchSocket.Core.AspNetCore
         }
 
         /// <inheritdoc/>
-        public object Resolve(Type fromType,string key = "")
+        public object Resolve(Type fromType, string key = "")
         {
             if (key.HasValue())
             {

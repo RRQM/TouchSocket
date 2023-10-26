@@ -17,8 +17,8 @@ namespace TouchSocket.JsonRpc
         /// <param name="pluginsManager"></param>
         public TcpJsonRpcParserPlugin(IContainer container, IPluginsManager pluginsManager) : base(container)
         {
-            pluginsManager.Add<ITcpClientBase, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), OnTcpConnected);
-            pluginsManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived), OnTcpReceived);
+            pluginsManager.Add<ITcpClientBase, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), this.OnTcpConnected);
+            pluginsManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived), this.OnTcpReceived);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected sealed override void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {

@@ -132,7 +132,7 @@ namespace TouchSocket.Rpc
                 //    }
                 //}
 
-                if (this.Parameters.Length>0&& typeof(ICallContext).IsAssignableFrom(this.Parameters[0].ParameterType))
+                if (this.Parameters.Length > 0 && typeof(ICallContext).IsAssignableFrom(this.Parameters[0].ParameterType))
                 {
                     this.IncludeCallContext = true;
                 }
@@ -156,7 +156,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 是否包含调用上下文
         /// </summary>
-        public bool IncludeCallContext {  get;private set; }
+        public bool IncludeCallContext { get; private set; }
 
         /// <summary>
         /// 筛选器

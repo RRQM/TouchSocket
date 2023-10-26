@@ -113,7 +113,7 @@ namespace TouchSocket.Core
 
         private List<string> SearchPluginMethod(IPlugin plugin)
         {
-            List<string> pluginMethodNames = new List<string>();
+            var pluginMethodNames = new List<string>();
             var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
             foreach (var type in pluginInterfacetypes)
             {
@@ -159,13 +159,13 @@ namespace TouchSocket.Core
             IPlugin plugin;
             if (this.m_container.IsRegistered(pluginType))
             {
-                plugin = (IPlugin)this.m_container.Resolve(pluginType); 
+                plugin = (IPlugin)this.m_container.Resolve(pluginType);
             }
             else
             {
                 plugin = (IPlugin)this.m_container.ResolveWithoutRoot(pluginType);
             }
-            
+
             ((IPluginsManager)this).Add(plugin);
             return plugin;
         }

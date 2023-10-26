@@ -24,6 +24,7 @@ namespace TouchSocket.Core
         private readonly AutoResetEvent m_waitHandle;
         private volatile WaitDataStatus m_status;
         private CancellationTokenRegistration m_tokenRegistration;
+
         /// <summary>
         /// WaitData
         /// </summary>
@@ -80,7 +81,7 @@ namespace TouchSocket.Core
                 else
                 {
                     this.m_tokenRegistration.Dispose();
-                    this.m_tokenRegistration=cancellationToken.Register(this.Cancel);
+                    this.m_tokenRegistration = cancellationToken.Register(this.Cancel);
                 }
             }
         }

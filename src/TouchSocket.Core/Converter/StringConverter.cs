@@ -127,7 +127,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                source = JsonConvert.SerializeObject(target, JsonSettings);
+                source = JsonConvert.SerializeObject(target, this.JsonSettings);
                 return true;
             }
             catch (Exception)
