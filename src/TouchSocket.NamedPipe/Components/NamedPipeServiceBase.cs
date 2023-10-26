@@ -117,7 +117,7 @@ namespace TouchSocket.NamedPipe
             return this.OnClientDisconnecting(socketClient, e);
         }
 
-        internal Task OnInternalReceivedData(INamedPipeSocketClient socketClient,ReceivedDataEventArgs e)
+        internal Task OnInternalReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnClientReceivedData(socketClient, e);
         }
@@ -157,7 +157,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected abstract Task OnClientReceivedData(INamedPipeSocketClient socketClient,ReceivedDataEventArgs e);
+        protected abstract Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e);
 
         #region Id发送
 

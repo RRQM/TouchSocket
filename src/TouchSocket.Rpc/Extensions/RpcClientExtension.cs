@@ -27,6 +27,7 @@ namespace TouchSocket.Rpc
         {
             return (T)await client.InvokeAsync(typeof(T), invokeKey, invokeOption, parameters);
         }
+
         #endregion RpcClient
 
         #region ITargetRpcClient

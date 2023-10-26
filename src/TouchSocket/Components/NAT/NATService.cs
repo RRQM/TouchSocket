@@ -46,7 +46,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed async Task OnReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
+        protected sealed override async Task OnReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
         {
             await EasyTask.CompletedTask;
             var data = this.OnNATReceived(socketClient, e);

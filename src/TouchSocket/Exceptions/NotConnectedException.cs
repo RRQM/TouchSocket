@@ -26,7 +26,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        public NotConnectedException():this(TouchSocketResource.NotConnected.GetDescription())
+        public NotConnectedException() : this(TouchSocketResource.NotConnected.GetDescription())
         { }
 
         /// <summary>

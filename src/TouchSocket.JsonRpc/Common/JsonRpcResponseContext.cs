@@ -12,14 +12,13 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
-using TouchSocket.Core;
 
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
     /// JsonRpc响应器
     /// </summary>
-    public class JsonRpcResponseContext:JsonRpcResponseBase
+    public class JsonRpcResponseContext : JsonRpcResponseBase
     {
         /// <summary>
         /// result
@@ -27,6 +26,7 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("result")]
 #endif
+
         [JsonProperty("result")]
         public object Result { get; set; }
 
@@ -36,6 +36,7 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("error")]
 #endif
+
         [JsonProperty("error")]
         public JsonRpcError Error { get; set; }
     }

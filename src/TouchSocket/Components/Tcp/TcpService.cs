@@ -104,7 +104,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientConnected(ISocketClient socketClient, ConnectedEventArgs e)
+        protected sealed override Task OnClientConnected(ISocketClient socketClient, ConnectedEventArgs e)
         {
             return this.OnConnected((TClient)socketClient, e);
         }
@@ -114,7 +114,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientConnecting(ISocketClient socketClient, ConnectingEventArgs e)
+        protected sealed override Task OnClientConnecting(ISocketClient socketClient, ConnectingEventArgs e)
         {
             return this.OnConnecting((TClient)socketClient, e);
         }
@@ -124,7 +124,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
+        protected sealed override Task OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnected((TClient)socketClient, e);
         }
@@ -134,7 +134,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
+        protected sealed override Task OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnecting((TClient)socketClient, e);
         }
@@ -144,7 +144,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
+        protected sealed override Task OnClientReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnReceived((TClient)socketClient, e);
         }
@@ -740,7 +740,7 @@ namespace TouchSocket.Sockets
                             try
                             {
                                 await client.AuthenticateAsync(monitor.Option.ServiceSslOption);
-                                _= client.BeginReceiveSsl();
+                                _ = client.BeginReceiveSsl();
                             }
                             catch (Exception ex)
                             {

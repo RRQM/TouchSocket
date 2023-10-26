@@ -784,7 +784,6 @@ namespace TouchSocket.Rpc
                 codeString.AppendLine("}");
             }
 
-
             return codeString.ToString();
         }
 

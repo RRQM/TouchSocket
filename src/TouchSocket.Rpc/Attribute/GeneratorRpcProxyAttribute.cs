@@ -3,7 +3,7 @@
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// 标识该接口将自动生成调用的代理类
+    /// 标识该接口将使用源生成自动生成调用的代理类
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
     public sealed class GeneratorRpcProxyAttribute : Attribute

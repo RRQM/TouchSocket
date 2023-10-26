@@ -21,11 +21,11 @@ namespace TouchSocket.WebApi
         /// 使用<see cref="HttpClient"/>为基础的WebApi客户端。
         /// </summary>
         /// <param name="httpClient"></param>
-        public WebApiClientSlim(HttpClient httpClient = default):base(httpClient)
+        public WebApiClientSlim(HttpClient httpClient = default) : base(httpClient)
         {
             this.StringConverter = new StringConverter();
         }
-       
+
         /// <summary>
         /// 字符串转化器
         /// </summary>
@@ -92,7 +92,7 @@ namespace TouchSocket.WebApi
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>( response.Content.ReadAsStringAsync().GetAwaiter().GetResult()).Message);
+                    throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.Content.ReadAsStringAsync().GetAwaiter().GetResult()).Message);
                 }
                 else
                 {

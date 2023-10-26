@@ -41,7 +41,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public void Dispose()
         {
-            m_disAction?.Invoke();
+            this.m_disAction?.Invoke();
         }
     }
 }

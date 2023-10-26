@@ -101,9 +101,11 @@ namespace TouchSocket.Http.WebSockets
                                     await method.InvokeAsync(this, os);
                                     result = default;
                                     break;
+
                                 case TaskReturnType.TaskObject:
                                     result = await method.InvokeObjectAsync(this, os);
                                     break;
+
                                 case TaskReturnType.None:
                                 default:
                                     result = method.Invoke(this, os);

@@ -397,8 +397,6 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        
-
         /// <inheritdoc/>
         protected override Task ReceivedData(ReceivedDataEventArgs e)
         {

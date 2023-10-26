@@ -35,7 +35,7 @@ adapter.SendCallBack = (buffer, offset, length) =>
     }
 };
 
-adapter.ReceivedCallBack += (byteBlock, requestInfo) =>
+adapter.ReceivedCallBack = (byteBlock, requestInfo) =>
 {
     //此处会回调接收的最终触发，例如：此处使用的固定包头，会解析4+n的数据为n。
 

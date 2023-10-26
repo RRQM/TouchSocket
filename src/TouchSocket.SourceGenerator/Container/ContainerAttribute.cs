@@ -35,7 +35,6 @@
 //    [AttributeUsage(AttributeTargets.Class| AttributeTargets.Interface, AllowMultiple = true)]
 //    internal class AutoInjectForSingletonAttribute : BaseInjectAttribute
 //    {
-
 //    }
 
 //    /// <summary>
@@ -44,7 +43,6 @@
 //    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
 //    internal class AutoInjectForTransientAttribute : BaseInjectAttribute
 //    {
-
 //    }
 
 //    /// <summary>
@@ -81,7 +79,6 @@
 //        /// <param name="type">注册类型与实例类型一致</param>
 //        public AddSingletonInjectAttribute(Type type) : this(type, type, null)
 //        {
-
 //        }
 
 //        /// <summary>
@@ -94,7 +91,6 @@
 //        /// <param name="toType">实例类型</param>
 //        public AddSingletonInjectAttribute(Type fromType, Type toType) : this(fromType, toType, null)
 //        {
-
 //        }
 //    }
 
@@ -132,7 +128,6 @@
 //        /// <param name="type">注册类型与实例类型一致</param>
 //        public AddTransientInjectAttribute(Type type) : this(type, type, null)
 //        {
-
 //        }
 
 //        /// <summary>
@@ -145,7 +140,6 @@
 //        /// <param name="toType">实例类型</param>
 //        public AddTransientInjectAttribute(Type fromType, Type toType) : this(fromType, toType, null)
 //        {
-
 //        }
 //    }
 //}

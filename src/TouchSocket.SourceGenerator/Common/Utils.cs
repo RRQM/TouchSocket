@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace TouchSocket
@@ -13,10 +12,9 @@ namespace TouchSocket
                 return true;
             }
 
-
             if (typeSymbol.BaseType != null)
             {
-                var b= IsInheritFrom(typeSymbol.BaseType, baseType);
+                var b = IsInheritFrom(typeSymbol.BaseType, baseType);
                 if (b)
                 {
                     return true;
@@ -49,7 +47,6 @@ namespace TouchSocket
 
             return new string(name);
         }
-
 
         public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
         {
@@ -84,7 +81,6 @@ namespace TouchSocket
             return (value & flag) == flag;
         }
 
-       
         public static bool HasReturn(this IMethodSymbol method)
         {
             if (method.ReturnsVoid || method.ReturnType.ToDisplayString() == typeof(Task).FullName)
@@ -93,6 +89,5 @@ namespace TouchSocket
             }
             return true;
         }
-
     }
 }

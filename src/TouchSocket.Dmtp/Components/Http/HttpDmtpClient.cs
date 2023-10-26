@@ -30,6 +30,7 @@ namespace TouchSocket.Dmtp
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
         private DmtpActor m_dmtpActor;
         private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
+
         #endregion 字段
 
         /// <inheritdoc cref="IDmtpActor.Id"/>
@@ -210,6 +211,7 @@ namespace TouchSocket.Dmtp
         #endregion 连接
 
         #region 断开
+
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
@@ -242,7 +244,7 @@ namespace TouchSocket.Dmtp
             await base.OnDisconnected(e);
         }
 
-        #endregion
+        #endregion 断开
 
         /// <inheritdoc/>
         protected override async Task ReceivedData(ReceivedDataEventArgs e)

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
@@ -20,14 +17,15 @@ namespace TouchSocket.JsonRpc
             }
             this.m_client = client;
         }
+
         protected override void SendJsonString(string jsonString)
         {
-            m_client.SendWithWS(jsonString);
+            this.m_client.SendWithWS(jsonString);
         }
 
         protected override Task SendJsonStringAsync(string jsonString)
         {
-            return m_client.SendWithWSAsync(jsonString);
+            return this.m_client.SendWithWSAsync(jsonString);
         }
     }
 }

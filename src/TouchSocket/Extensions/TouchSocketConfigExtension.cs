@@ -73,11 +73,11 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static TouchSocketConfig MinBufferSize(this TouchSocketConfig config, int value)
         {
-            if (value<1024)
+            if (value < 1024)
             {
-                throw new ArgumentOutOfRangeException(nameof(value),value,"数值不能小于1024");
+                throw new ArgumentOutOfRangeException(nameof(value), value, "数值不能小于1024");
             }
-            config.SetValue(MinBufferSizeProperty,value);
+            config.SetValue(MinBufferSizeProperty, value);
             return config;
         }
 

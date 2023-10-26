@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -15,7 +11,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 构造函数
         /// </summary>
-        
+
         Constructor = 0,
 
         /// <summary>

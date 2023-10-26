@@ -18,6 +18,7 @@ namespace TouchSocket.NamedPipe
         private NamedPipeServerStream m_pipeStream;
         private ValueCounter m_receiveCounter;
         private int m_receiveBufferSize = 1024 * 10;
+
         #endregion 字段
 
         /// <summary>

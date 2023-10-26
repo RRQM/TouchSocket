@@ -64,7 +64,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public object Resolve(Type fromType,string key = "")
+        public object Resolve(Type fromType, string key = "")
         {
             if (fromType == typeof(IContainer))
             {
@@ -99,11 +99,11 @@ namespace TouchSocket.Core
                             {
                                 if (descriptor.ToType.IsGenericType)
                                 {
-                                    return (descriptor.ToInstance = this.Create(descriptor,descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
+                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
                                 }
                                 else
                                 {
-                                    return descriptor.ToInstance = this.Create(descriptor,descriptor.ToType);
+                                    return descriptor.ToInstance = this.Create(descriptor, descriptor.ToType);
                                 }
                             }
                         }
@@ -111,11 +111,11 @@ namespace TouchSocket.Core
 
                     if (descriptor.ToType.IsGenericType)
                     {
-                        return this.Create(descriptor,descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
+                        return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
                     }
                     else
                     {
-                        return this.Create(descriptor,descriptor.ToType);
+                        return this.Create(descriptor, descriptor.ToType);
                     }
                 }
             }
@@ -134,10 +134,10 @@ namespace TouchSocket.Core
                     }
                     lock (descriptor)
                     {
-                        return descriptor.ToInstance ??= this.Create(descriptor,descriptor.ToType);
+                        return descriptor.ToInstance ??= this.Create(descriptor, descriptor.ToType);
                     }
                 }
-                return this.Create(descriptor,descriptor.ToType);
+                return this.Create(descriptor, descriptor.ToType);
             }
             else
             {
@@ -163,7 +163,7 @@ namespace TouchSocket.Core
             this.m_registrations.TryRemove(k, out _);
         }
 
-        private object Create(DependencyDescriptor descriptor,Type toType)
+        private object Create(DependencyDescriptor descriptor, Type toType)
         {
             var ctor = toType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
             if (ctor is null)
@@ -175,7 +175,7 @@ namespace TouchSocket.Core
                 }
                 ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }
-           
+
             DependencyTypeAttribute dependencyTypeAttribute = null;
             if (toType.IsDefined(typeof(DependencyTypeAttribute), true))
             {
@@ -199,7 +199,7 @@ namespace TouchSocket.Core
                         {
                             var attribute = parameters[i].GetCustomAttribute<DependencyInjectAttribute>();
                             var type = attribute.Type ?? parameters[i].ParameterType;
-                            ps[i] = this.Resolve(type,attribute.Key);
+                            ps[i] = this.Resolve(type, attribute.Key);
                         }
                         else
                         {

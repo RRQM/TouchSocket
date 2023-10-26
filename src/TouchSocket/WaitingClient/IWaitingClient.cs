@@ -45,7 +45,6 @@ namespace TouchSocket.Sockets
         /// <returns>返回的数据</returns>
         ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token);
 
-        
         /// <summary>
         /// 异步发送
         /// </summary>

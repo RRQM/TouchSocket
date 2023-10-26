@@ -1228,7 +1228,6 @@ namespace TouchSocket.Core
             }
         }
 
-
         /// <summary>
         /// 写入一个标识非Null值
         /// </summary>

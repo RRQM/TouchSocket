@@ -23,7 +23,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 生成扩展同步代码
         /// </summary>
-        ExtensionSync =1,
+        ExtensionSync = 1,
 
         /// <summary>
         /// 生成扩展异步代码
@@ -31,29 +31,23 @@ namespace TouchSocket.Rpc
         ExtensionAsync = 2,
 
         /// <summary>
-        /// 包含扩展（源代码生成无效）
-        /// </summary>
-        [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-        IncludeExtension = 4,
-
-        /// <summary>
         /// 生成实例类同步代码（源代码生成无效）
         /// </summary>
-        InstanceSync = 8,
+        InstanceSync = 4,
 
         /// <summary>
         /// 生成实例类异步代码（源代码生成无效）
         /// </summary>
-        InstanceAsync = 16,
+        InstanceAsync = 8,
 
         /// <summary>
         /// 生成接口同步代码
         /// </summary>
-        InterfaceSync = 32,
+        InterfaceSync = 16,
 
         /// <summary>
         /// 生成接口异步代码
         /// </summary>
-        InterfaceAsync = 64,
+        InterfaceAsync = 32
     }
 }

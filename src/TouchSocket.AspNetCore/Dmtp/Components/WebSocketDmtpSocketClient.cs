@@ -54,6 +54,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         private int m_receiveBufferSize = 1024 * 10;
         private int m_sendBufferSize = 1024 * 10;
         private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
+
         #endregion 字段
 
         /// <inheritdoc/>
@@ -61,6 +62,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         /// <inheritdoc/>
         public override int SendBufferSize => this.m_sendBufferSize;
+
         /// <inheritdoc/>
         public TouchSocketConfig Config { get; private set; }
 
@@ -253,9 +255,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 this.m_semaphoreForSend.Release();
             }
-
         }
-
 
         #endregion 内部委托绑定
 
@@ -337,7 +337,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             throw new NotSupportedException("不支持该功能");
         }
 
-        #endregion
+        #endregion Receiver
 
         internal void SetDmtpActor(DmtpActor actor)
         {

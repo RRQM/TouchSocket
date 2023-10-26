@@ -26,9 +26,17 @@ namespace TouchSocket.XmlRpc
         ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
         /// </summary>
         /// <param name="methodInvoke"></param>
-        public XmlRpcAttribute(bool methodInvoke = false)
+        public XmlRpcAttribute(bool methodInvoke)
         {
             this.MethodInvoke = methodInvoke;
+        }
+
+        /// <summary>
+        /// 适用于XmlRpc的标记
+        /// </summary>
+        public XmlRpcAttribute()
+        {
+
         }
 
         /// <summary>

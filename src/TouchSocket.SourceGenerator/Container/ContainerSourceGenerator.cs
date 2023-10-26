@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace TouchSocket
 {
-
     [Generator]
     public class ContainerSourceGenerator : ISourceGenerator
     {
@@ -46,7 +45,6 @@ namespace TouchSocket.Core
     [AttributeUsage(AttributeTargets.Class| AttributeTargets.Interface, AllowMultiple = true)]
     internal class AutoInjectForSingletonAttribute : BaseInjectAttribute
     {
-        
     }
 
     /// <summary>
@@ -55,7 +53,6 @@ namespace TouchSocket.Core
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
     internal class AutoInjectForTransientAttribute : BaseInjectAttribute
     {
-        
     }
 
     /// <summary>
@@ -92,7 +89,6 @@ namespace TouchSocket.Core
         /// <param name=""type"">注册类型与实例类型一致</param>
         public AddSingletonInjectAttribute(Type type) : this(type, type, null)
         {
-
         }
 
         /// <summary>
@@ -105,7 +101,6 @@ namespace TouchSocket.Core
         /// <param name=""toType"">实例类型</param>
         public AddSingletonInjectAttribute(Type fromType, Type toType) : this(fromType, toType, null)
         {
-
         }
     }
 
@@ -143,7 +138,6 @@ namespace TouchSocket.Core
         /// <param name=""type"">注册类型与实例类型一致</param>
         public AddTransientInjectAttribute(Type type) : this(type, type, null)
         {
-
         }
 
         /// <summary>
@@ -156,13 +150,11 @@ namespace TouchSocket.Core
         /// <param name=""toType"">实例类型</param>
         public AddTransientInjectAttribute(Type fromType, Type toType) : this(fromType, toType, null)
         {
-
         }
     }
 }
 
 ";
-
 
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -172,7 +164,6 @@ namespace TouchSocket.Core
             });
             context.RegisterForSyntaxNotifications(() => new ContainerSyntaxReceiver());
         }
-
 
         public void Execute(GeneratorExecutionContext context)
         {

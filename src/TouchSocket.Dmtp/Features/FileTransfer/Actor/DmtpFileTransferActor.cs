@@ -91,7 +91,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     {
                         waitFileResource.UnpackageBody(byteBlock);
 
-                        _=Task.Factory.StartNew(this.RequestPullFileResourceInfo, waitFileResource);
+                        _ = Task.Factory.StartNew(this.RequestPullFileResourceInfo, waitFileResource);
                     }
                 }
                 catch (Exception ex)
@@ -400,7 +400,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     else
                     {
                         waitSmallFilePackage.UnpackageBody(byteBlock);
-                        _=Task.Factory.StartNew(this.RequestPullSmallFile, waitSmallFilePackage);
+                        _ = Task.Factory.StartNew(this.RequestPullSmallFile, waitSmallFilePackage);
                     }
                 }
                 catch (Exception ex)

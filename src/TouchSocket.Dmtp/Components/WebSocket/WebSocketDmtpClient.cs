@@ -439,7 +439,6 @@ namespace TouchSocket.Dmtp
             {
                 this.m_semaphoreForSend.Release();
             }
-
         }
 
         #endregion 内部委托绑定

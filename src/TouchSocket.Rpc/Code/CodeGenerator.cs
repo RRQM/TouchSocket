@@ -471,7 +471,7 @@ namespace TouchSocket.Rpc
                 var attributes = method.GetCustomAttributes<RpcAttribute>(true);
                 if (attributes.Any())
                 {
-                    instances.Add(new MethodInstance(method,serverFromType,serverToType));
+                    instances.Add(new MethodInstance(method, serverFromType, serverToType));
                 }
             }
 

@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 指定依赖类型。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method| AttributeTargets.Parameter)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Parameter)]
     public class DependencyInjectAttribute : Attribute
     {
         /// <summary>
@@ -25,7 +25,6 @@ namespace TouchSocket.Core
         /// </summary>
         public DependencyInjectAttribute()
         {
-
         }
 
         /// <summary>

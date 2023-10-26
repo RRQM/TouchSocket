@@ -57,7 +57,6 @@ namespace TouchSocket.Dmtp
             }
         }
 
-
         /// <inheritdoc/>
         protected override void PreviewSend(IRequestInfo requestInfo)
         {
@@ -98,7 +97,6 @@ namespace TouchSocket.Dmtp
             {
                 try
                 {
-
                     await this.m_locker.WaitAsync();
                     foreach (var item in transferBytes)
                     {
@@ -121,7 +119,6 @@ namespace TouchSocket.Dmtp
                     await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
-
         }
 
         /// <inheritdoc/>
@@ -147,7 +144,6 @@ namespace TouchSocket.Dmtp
             {
                 try
                 {
-
                     this.m_locker.Wait();
                     foreach (var item in transferBytes)
                     {

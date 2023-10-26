@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using Newtonsoft.Json.Linq;
 using System;
 using System.Net;
 using System.Text;
@@ -353,6 +352,7 @@ namespace TouchSocket.Sockets
         #endregion IUdpClientSender
 
         #region IWaitSender
+
         /// <summary>
         /// 发送字节流
         /// </summary>
@@ -406,7 +406,6 @@ namespace TouchSocket.Sockets
                 return client.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, tokenSource.Token);
             }
         }
-
 
         /// <summary>
         /// 异步发送
@@ -474,7 +473,6 @@ namespace TouchSocket.Sockets
             return client.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, token);
         }
 
-
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -489,6 +487,7 @@ namespace TouchSocket.Sockets
         {
             return client.SendThenReturnAsync(buffer, 0, buffer.Length, token);
         }
-        #endregion
+
+        #endregion IWaitSender
     }
 }

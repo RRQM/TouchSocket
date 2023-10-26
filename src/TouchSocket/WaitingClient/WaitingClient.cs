@@ -41,6 +41,7 @@ namespace TouchSocket.Sockets
         public WaitingOptions WaitingOptions { get; set; }
 
         #region 发送
+
         public ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
         {
             try
@@ -105,7 +106,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                this.m_cancellationTokenSource= null;
+                this.m_cancellationTokenSource = null;
                 this.m_semaphoreSlim.Release();
             }
         }
@@ -123,7 +124,7 @@ namespace TouchSocket.Sockets
                 {
                     this.m_cancellationTokenSource = new CancellationTokenSource(5000);
                 }
-                using (m_cancellationTokenSource)
+                using (this.m_cancellationTokenSource)
                 {
                     if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                     {
@@ -133,7 +134,7 @@ namespace TouchSocket.Sockets
 
                             while (true)
                             {
-                                using (var receiverResult = await receiver.ReadAsync(m_cancellationTokenSource.Token))
+                                using (var receiverResult = await receiver.ReadAsync(this.m_cancellationTokenSource.Token))
                                 {
                                     var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
                                 }
@@ -189,7 +190,7 @@ namespace TouchSocket.Sockets
             return (await this.SendThenResponseAsync(buffer, offset, length, token)).Data;
         }
 
-        #endregion
+        #endregion 发送
 
         protected override void Dispose(bool disposing)
         {

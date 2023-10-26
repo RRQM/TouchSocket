@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
 
@@ -54,7 +53,7 @@ namespace TouchSocket.JsonRpc
                 return actionClient;
             }
 
-            if (socketClient.Protocol== Sockets.Protocol.Tcp)
+            if (socketClient.Protocol == Sockets.Protocol.Tcp)
             {
                 actionClient = new TcpServerJsonRpcClient(socketClient);
                 socketClient.SetValue(JsonRpcActionClientProperty, actionClient);
@@ -70,7 +69,6 @@ namespace TouchSocket.JsonRpc
             {
                 throw new System.Exception("SocketClient必须是Tcp协议，或者完成WebSocket连接");
             }
-           
         }
     }
 }

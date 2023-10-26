@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
@@ -18,12 +14,12 @@ namespace TouchSocket.JsonRpc
 
         protected override void SendJsonString(string jsonString)
         {
-            m_client.Send(jsonString);
+            this.m_client.Send(jsonString);
         }
 
         protected override Task SendJsonStringAsync(string jsonString)
         {
-            return m_client.SendAsync(jsonString);
+            return this.m_client.SendAsync(jsonString);
         }
     }
 }

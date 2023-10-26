@@ -235,6 +235,7 @@ namespace TouchSocket.Sockets
                 return client.SendThenResponseAsync(Encoding.UTF8.GetBytes(msg), tokenSource.Token);
             }
         }
+
         #endregion 发送
     }
 }

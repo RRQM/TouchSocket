@@ -33,21 +33,13 @@ namespace TouchSocket.Sockets
         public SocketClient()
         {
             this.Protocol = Protocol.Tcp;
-            //this.m_receiveCounter = new ValueCounter
-            //{
-            //    Period = TimeSpan.FromSeconds(1),
-            //    OnPeriod = this.OnReceivePeriod
-            //};
-            //m_sendCounter = new ValueCounter
-            //{
-            //    Period = TimeSpan.FromSeconds(1),
-            //    OnPeriod = this.OnSendPeriod
-            //};
         }
 
         #region 变量
+
         private DelaySender m_delaySender;
         private TcpCore m_tcpCore;
+
         #endregion 变量
 
         #region 属性
@@ -130,19 +122,6 @@ namespace TouchSocket.Sockets
             try
             {
                 this.m_tcpCore.BeginIocpReceive();
-                //if (this.ReceiveType == ReceiveType.Iocp)
-                //{
-                //    //var eventArgs = new SocketAsyncEventArgs();
-                //    //eventArgs.Completed += this.EventArgs_Completed;
-                //    //var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
-                //    //eventArgs.UserToken = byteBlock;
-                //    //eventArgs.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-                //    //if (!this.MainSocket.ReceiveAsync(eventArgs))
-                //    //{
-                //    //    this.ProcessReceived(eventArgs);
-                //    //}
-
-                //}
             }
             catch (Exception ex)
             {
@@ -263,7 +242,7 @@ namespace TouchSocket.Sockets
                     return;
                 }
 
-                if (this.ReceivingData(byteBlock).ConfigureAwait(false).GetAwaiter().GetResult())
+                if (this.ReceivingData(byteBlock).GetFalseAwaitResult())
                 {
                     return;
                 }
@@ -556,6 +535,11 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task ReceivedData(ReceivedDataEventArgs e)
         {
+            if (e.Handled)
+            {
+                return;
+            }
+
             await this.PluginsManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
 
             if (e.Handled)

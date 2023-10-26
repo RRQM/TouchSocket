@@ -3,7 +3,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
@@ -40,7 +39,6 @@ namespace TouchSocket.JsonRpc
 #else
             return jsonString.FromJsonString<JsonRpcWaitResult>();
 #endif
-
         }
 
         /// <summary>
@@ -71,7 +69,6 @@ namespace TouchSocket.JsonRpc
 #else
             return JsonConvert.SerializeObject(response);
 #endif
-
         }
 
         /// <summary>
@@ -80,7 +77,7 @@ namespace TouchSocket.JsonRpc
         /// <param name="result"></param>
         /// <param name="returnType"></param>
         /// <returns></returns>
-        public static object ResultParseToType(object result,Type returnType)
+        public static object ResultParseToType(object result, Type returnType)
         {
             if (returnType.IsPrimitive || returnType == typeof(string))
             {

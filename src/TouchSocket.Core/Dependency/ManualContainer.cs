@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace TouchSocket.Core
@@ -22,15 +22,15 @@ namespace TouchSocket.Core
             throw new NotImplementedException();
         }
 
-       /// <summary>
-       /// 判断指定的类型是否已在容器中注册。
-       /// <para>
-       /// 在本容器中，一般均会返回<see langword="true"/>。
-       /// </para>
-       /// </summary>
-       /// <param name="fromType"></param>
-       /// <param name="key"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// 判断指定的类型是否已在容器中注册。
+        /// <para>
+        /// 在本容器中，一般均会返回<see langword="true"/>。
+        /// </para>
+        /// </summary>
+        /// <param name="fromType"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public virtual bool IsRegistered(Type fromType, string key = "")
         {
             return true;
@@ -57,7 +57,7 @@ namespace TouchSocket.Core
 
         /// <inheritdoc/>
         /// <exception cref="Exception"></exception>
-        public object Resolve(Type fromType,string key = "")
+        public object Resolve(Type fromType, string key = "")
         {
             if (fromType.FullName == "TouchSocket.Core.IContainer")
             {
@@ -92,7 +92,7 @@ namespace TouchSocket.Core
         /// <param name="instance"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        protected virtual bool TryResolve(Type fromType, out object instance,string key = "")
+        protected virtual bool TryResolve(Type fromType, out object instance, string key = "")
         {
             if (key.IsNullOrEmpty())
             {

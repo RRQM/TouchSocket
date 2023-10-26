@@ -16,10 +16,10 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
-
 
 namespace TouchSocket.Core
 {
@@ -193,6 +193,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static void FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ByteBlock stream, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
 #else
+
         public static void FastBinarySerialize<T>(ByteBlock stream, in T obj)
 #endif
         {
@@ -207,6 +208,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
 #else
+
         public static byte[] FastBinarySerialize<T>(in T obj)
 #endif
         {
@@ -231,6 +233,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data, int offset)
 #else
+
         public static T FastBinaryDeserialize<T>(byte[] data, int offset)
 #endif
         {
@@ -247,6 +250,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static object FastBinaryDeserialize(byte[] data, int offset, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)
 #else
+
         public static object FastBinaryDeserialize(byte[] data, int offset, Type type)
 #endif
         {
@@ -262,6 +266,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data)
 #else
+
         public static T FastBinaryDeserialize<T>(byte[] data)
 #endif
         {

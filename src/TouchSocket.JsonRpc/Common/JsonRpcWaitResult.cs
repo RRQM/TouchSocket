@@ -18,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpcWaitResult
     /// </summary>
-    public class JsonRpcWaitResult : JsonRpcResponseBase,IWaitResult
+    public class JsonRpcWaitResult : JsonRpcResponseBase, IWaitResult
     {
         /// <summary>
         /// Result
@@ -26,6 +26,7 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("result")]
 #endif
+
         [JsonProperty("result")]
         public object Result { get; set; }
 
@@ -35,29 +36,32 @@ namespace TouchSocket.JsonRpc
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonPropertyName("error")]
 #endif
+
         [JsonProperty("error")]
         public JsonRpcError Error { get; set; }
 
+        /// <inheritdoc/>
+#if NET6_0_OR_GREATER
+        [System.Text.Json.Serialization.JsonIgnore]
+#endif
+
+        [JsonIgnore]
+        public string Message { get; set; }
 
         /// <inheritdoc/>
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonIgnore]
 #endif
+
         [JsonIgnore]
-        public string Message { get ; set ; }
+        public long Sign { get => (long)this.Id; set => this.Id = value; }
 
         /// <inheritdoc/>
 #if NET6_0_OR_GREATER
         [System.Text.Json.Serialization.JsonIgnore]
 #endif
-        [JsonIgnore]
-        public long Sign { get=> (long)this.Id ; set=>this.Id=value ; }
 
-        /// <inheritdoc/>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonIgnore]
-#endif
         [JsonIgnore]
-        public byte Status { get ; set ; }
+        public byte Status { get; set; }
     }
 }

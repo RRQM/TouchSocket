@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,11 +54,13 @@ namespace TouchSocket.NamedPipe
         }
 
         #region 变量
+
         private int m_receiveBufferSize = 1024 * 10;
         private volatile bool m_online;
         private NamedPipeClientStream m_pipeStream;
         private ValueCounter m_receiveCounter;
         private SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
+
         #endregion 变量
 
         #region 事件
@@ -158,7 +159,6 @@ namespace TouchSocket.NamedPipe
         {
             try
             {
-
                 if (this.Disconnected != null)
                 {
                     await this.Disconnected.Invoke(this, e);
@@ -205,6 +205,7 @@ namespace TouchSocket.NamedPipe
         #endregion 事件
 
         #region 属性
+
         /// <inheritdoc/>
         public override int ReceiveBufferSize => this.m_receiveBufferSize;
 
@@ -444,7 +445,7 @@ namespace TouchSocket.NamedPipe
             this.m_receiver = null;
         }
 
-        #endregion
+        #endregion Receiver
 
         private void OnPeriod(long value)
         {

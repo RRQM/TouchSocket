@@ -211,10 +211,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     case FilterResult.Cache:
                         {
-                            if (this.m_tempByteBlock == null)
-                            {
-                                this.m_tempByteBlock = new ByteBlock();
-                            }
+                            this.m_tempByteBlock ??= new ByteBlock();
                             this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
                             return;
                         }

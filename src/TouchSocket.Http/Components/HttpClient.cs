@@ -206,7 +206,6 @@ namespace TouchSocket.Http
             base.Dispose(disposing);
         }
 
-        
         /// <inheritdoc/>
         protected override Task ReceivedData(ReceivedDataEventArgs e)
         {

@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc
     /// 函数标识
     /// </summary>
     [Flags]
-    [Obsolete("此枚举值已被弃用，当第一个参数是ICallContext时，自动识别。",true)]
+    [Obsolete("此枚举值已被弃用，当第一个参数是ICallContext时，自动识别。", true)]
     public enum MethodFlags
     {
         /// <summary>

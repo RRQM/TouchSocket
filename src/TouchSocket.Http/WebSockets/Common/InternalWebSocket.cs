@@ -47,7 +47,7 @@ namespace TouchSocket.Http.WebSockets
 
         public Task PingAsync()
         {
-           return this.m_client.PingWSAsync();
+            return this.m_client.PingWSAsync();
         }
 
         public void Pong()
@@ -57,7 +57,7 @@ namespace TouchSocket.Http.WebSockets
 
         public Task PongAsync()
         {
-           return this.m_client.PongWSAsync();
+            return this.m_client.PongWSAsync();
         }
 
         public async Task<WebSocketReceiveResult> ReadAsync(CancellationToken token)
@@ -69,6 +69,7 @@ namespace TouchSocket.Http.WebSockets
             await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
             return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
         }
+
 #if NET6_0_OR_GREATER
         public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
         {
@@ -80,7 +81,9 @@ namespace TouchSocket.Http.WebSockets
             return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
         }
 #endif
+
         #region 发送
+
         public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
         {
             this.m_client.SendWithWS(dataFrame, endOfMessage);
@@ -126,7 +129,7 @@ namespace TouchSocket.Http.WebSockets
             return this.m_client.SendWithWSAsync(dataFrame, endOfMessage);
         }
 
-        #endregion
+        #endregion 发送
 
         public async Task<bool> TryInputReceiveAsync(WSDataFrame dataFrame)
         {

@@ -13,6 +13,8 @@ namespace TouchSocket
 {
     internal sealed class RpcClientCodeBuilder
     {
+        public const string RpcMethodAttributeTypeName = "TouchSocket.Rpc.RpcAttribute";
+
         private readonly INamedTypeSymbol m_rpcApi;
 
         private readonly Dictionary<string, TypedConstant> m_rpcApiNamedArguments;
@@ -51,30 +53,24 @@ namespace TouchSocket
             ExtensionAsync = 2,
 
             /// <summary>
-            /// 包含扩展（源代码生成无效）
-            /// </summary>
-            [Obsolete("该值已被弃用，请使用颗粒度更小的配置", true)]
-            IncludeExtension = 4,
-
-            /// <summary>
             /// 生成实例类同步代码（源代码生成无效）
             /// </summary>
-            InstanceSync = 8,
+            InstanceSync = 4,
 
             /// <summary>
             /// 生成实例类异步代码（源代码生成无效）
             /// </summary>
-            InstanceAsync = 16,
+            InstanceAsync = 8,
 
             /// <summary>
             /// 生成接口同步代码
             /// </summary>
-            InterfaceSync = 32,
+            InterfaceSync = 16,
 
             /// <summary>
             /// 生成接口异步代码
             /// </summary>
-            InterfaceAsync = 64,
+            InterfaceAsync = 32
         }
 
         public string Prefix { get; set; }
@@ -233,10 +229,22 @@ namespace TouchSocket
             codeString.AppendLine("}");
         }
 
+        public static AttributeData GetRpcAttribute(IMethodSymbol method)
+        {
+            return method.GetAttributes().FirstOrDefault(a =>
+             {
+                 if (a.AttributeClass.IsInheritFrom(RpcMethodAttributeTypeName))
+                 {
+                     return true;
+                 }
+                 return false;
+             });
+        }
+
         private string BuildMethod(IMethodSymbol method)
         {
             //Debugger.Launch();
-            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcClientSyntaxReceiver.RpcMethodAttributeTypeName);
+            var attributeData = GetRpcAttribute(method);
             if (attributeData is null)
             {
                 return string.Empty;
@@ -599,7 +607,14 @@ namespace TouchSocket
         private string BuildMethodInterface(IMethodSymbol method)
         {
             //Debugger.Launch();
-            var attributeData = method.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == RpcClientSyntaxReceiver.RpcMethodAttributeTypeName);
+            var attributeData = method.GetAttributes().FirstOrDefault(a =>
+            {
+                if (a.AttributeClass.IsInheritFrom(RpcMethodAttributeTypeName))
+                {
+                    return true;
+                }
+                return false;
+            });
             if (attributeData is null)
             {
                 return string.Empty;
@@ -616,7 +631,7 @@ namespace TouchSocket
             var allowSync = this.AllowSync(CodeGeneratorFlag.InterfaceSync, method, namedArguments);
             var allowAsync = this.AllowAsync(CodeGeneratorFlag.InterfaceAsync, method, namedArguments);
             var returnType = this.GetReturnType(method);
-          
+
             var parameters = method.Parameters;
             if (isIncludeCallContext)
             {
@@ -844,13 +859,12 @@ namespace TouchSocket
             }
         }
 
-        enum TaskType
+        private enum TaskType
         {
             None,
             Task,
             TaskT
         }
-
 
         private bool IsIncludeCallContext(IMethodSymbol method)
         {

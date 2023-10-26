@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 
 namespace TouchSocket
 {
-
     internal sealed class ContainerSyntaxReceiver : ISyntaxReceiver
     {
         public const string GeneratorContainerAttributeTypeName = "TouchSocket.Core.GeneratorContainerAttribute";
@@ -158,6 +157,7 @@ namespace TouchSocket
             }
             return false;
         }
+
         public static bool IsAutoInjectForTransientClass(INamedTypeSymbol @class, out AttributeData attributeData)
         {
             if (AutoInjectForTransientAttribute is null)
@@ -173,6 +173,5 @@ namespace TouchSocket
             }
             return false;
         }
-
     }
 }

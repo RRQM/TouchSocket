@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe.Plugins
@@ -22,6 +18,7 @@ namespace TouchSocket.NamedPipe.Plugins
             pluginsManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
             pluginsManager.Add<NamedPipeClientBase, DisconnectEventArgs>(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this.OnNamedPipeDisconnected);
         }
+
         private bool m_polling;
 
         /// <summary>

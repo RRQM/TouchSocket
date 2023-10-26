@@ -54,16 +54,16 @@ namespace TouchSocket.Core
         /// 初始化一个动态调用方法
         /// </summary>
         /// <param name="method"></param>
-        public Method(MethodInfo method):this(method,true)
-        { 
-        
+        public Method(MethodInfo method) : this(method, true)
+        {
         }
+
         /// <summary>
         /// 初始化一个动态调用方法
         /// </summary>
         /// <param name="method">方法信息</param>
         /// <param name="build">是否直接使用IL构建调用</param>
-        public Method(MethodInfo method,bool build)
+        public Method(MethodInfo method, bool build)
         {
             this.Info = method ?? throw new ArgumentNullException(nameof(method));
             this.Name = method.Name;
@@ -268,7 +268,7 @@ namespace TouchSocket.Core
                 case TaskReturnType.TaskObject:
                     {
                         Task task;
-                        if (GlobalEnvironment.DynamicBuilderType== DynamicBuilderType.Reflect)
+                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
                         {
                             task = (Task)this.Info.Invoke(instance, parameters);
                         }
@@ -364,7 +364,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="methodInfo"></param>
         /// <returns></returns>
-        protected  Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
+        protected Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
         {
             var dynamicMethod = new DynamicMethod(string.Empty, typeof(object), new Type[] { typeof(object), typeof(object[])
     }, methodInfo.DeclaringType.Module);

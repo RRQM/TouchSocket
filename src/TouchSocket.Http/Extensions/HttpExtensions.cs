@@ -394,8 +394,8 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static TResponse UrlNotFind<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
-            response.SetContent("<html><body><h1>404 -RRQM Not Found</h1></body></html>");
-            response.StatusCode = 404;
+            response.SetContent("<html><body><h1>404 -Not Found</h1></body></html>");
+            response.SetStatus(404, "Not Found");
             response.ContentType = "text/html;charset=utf-8";
             return response;
         }

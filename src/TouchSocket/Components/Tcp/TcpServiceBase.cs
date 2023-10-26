@@ -179,12 +179,12 @@ namespace TouchSocket.Sockets
 
         internal Task OnInternalDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
         {
-          return  this.OnClientDisconnecting(socketClient, e);
+            return this.OnClientDisconnecting(socketClient, e);
         }
 
         internal Task OnInternalReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
         {
-           return this.OnClientReceivedData(socketClient, e);
+            return this.OnClientReceivedData(socketClient, e);
         }
 
         /// <summary>

@@ -70,7 +70,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            if (this.IsHandshaked) 
+            if (this.IsHandshaked)
             {
                 this.m_dmtpActor?.SafeDispose();
             }

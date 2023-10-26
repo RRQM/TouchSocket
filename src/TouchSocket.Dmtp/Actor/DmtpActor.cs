@@ -351,7 +351,8 @@ namespace TouchSocket.Dmtp
         {
             this.OnCreatedChannel((CreateChannelEventArgs)obj);
         }
-        #endregion
+
+        #endregion 委托触发
 
         #region const
 
@@ -543,7 +544,6 @@ namespace TouchSocket.Dmtp
 
                             if (this.AllowRoute && waitPing.Route)
                             {
-
                                 if (await this.TryRoute(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureFalseAwait())
                                 {
                                     if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureFalseAwait() is DmtpActor actor)
@@ -945,7 +945,7 @@ namespace TouchSocket.Dmtp
             var waitPing = new WaitPing
             {
                 TargetId = targetId,
-                SourceId = Id,
+                SourceId = this.Id,
                 Route = targetId.HasValue()
             };
             var waitData = this.WaitHandlePool.GetWaitData(waitPing);
@@ -986,7 +986,7 @@ namespace TouchSocket.Dmtp
             var waitPing = new WaitPing
             {
                 TargetId = targetId,
-                SourceId = Id,
+                SourceId = this.Id,
                 Route = targetId.HasValue()
             };
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
@@ -1062,7 +1062,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        #endregion 重写
+        #endregion 断开
 
         #region 协议同步发送
 
@@ -1433,7 +1433,6 @@ namespace TouchSocket.Dmtp
                 }
             }
         }
-
 
         #endregion IDmtpChannel
     }

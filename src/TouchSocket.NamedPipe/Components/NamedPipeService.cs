@@ -476,7 +476,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
+        protected sealed override Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
         {
             return this.OnConnected((TClient)socketClient, e);
         }
@@ -486,7 +486,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
+        protected sealed override Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
         {
             return this.OnConnecting((TClient)socketClient, e);
         }
@@ -496,7 +496,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected sealed override Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnected((TClient)socketClient, e);
         }
@@ -506,7 +506,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected sealed override Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnecting((TClient)socketClient, e);
         }
@@ -516,7 +516,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected override sealed Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
+        protected sealed override Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnReceived((TClient)socketClient, e);
         }

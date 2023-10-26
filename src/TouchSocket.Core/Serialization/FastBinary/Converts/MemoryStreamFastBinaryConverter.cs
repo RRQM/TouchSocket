@@ -17,7 +17,7 @@ namespace TouchSocket.Core
 #if !NET45
             if (obj.TryGetBuffer(out var array))
             {
-                byteBlock.Write(array.Array,array.Offset,array.Count);
+                byteBlock.Write(array.Array, array.Offset, array.Count);
                 return array.Count;
             }
 #endif
