@@ -1,0 +1,46 @@
+name: 版本升级说明
+description: 当你从旧版本升级到某个新版本时，如果有不兼容问题或说明，可以提交该Issue。
+title:
+labels: ["upgradation"]
+body:
+  - type: textarea
+    attributes:
+      label: 上个组件库及版本？
+      description: 请输入您使用的上个版本的版本号。
+    validations:
+      required: true
+  - type: markdown
+  - type: checkboxes
+    attributes:
+      label: 受影响组件
+      options:
+        - Tcp
+        - Udp
+        - NamedPipe
+        - WebSocket
+        - Http
+        - Redis
+        - Dmtp-Tcp
+        - Dmtp-Udp
+        - Dmtp-WebSocket
+        - Dmtp-Http
+        - Dmtp-NamedPipe
+        - 其他
+  - type: textarea
+    attributes:
+      label: 改动内容？
+      description: 请清晰并简洁地描述版本之间的差异性。
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: 这个问题是否已经存在？
+      options:
+        - label: 我已经搜索过现有的问题 (https://gitee.com/RRQM_Home/TouchSocket/issues)
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 友好承诺
+      options:
+        - label: 我承诺将本着相互尊重、理解和友善的态度进行交流，共同维护好 TouchSocket 来之不易的良好的社区氛围。
+          required: true
