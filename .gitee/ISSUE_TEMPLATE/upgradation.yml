@@ -1,5 +1,5 @@
 name: 版本升级说明
-description: 当你从旧版本升级到某个新版本时，如果有不兼容问题或说明，可以提交该Issue。
+description: 当从旧版本升级到某个新版本时，如果有不兼容情况，可以创建该Issue以帮助其他人更快的升级。（注意：该issue的作用不是提问，而是解答）
 title:
 labels: ["upgradation"]
 body:
