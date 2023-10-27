@@ -3,13 +3,12 @@ description: 当你从旧版本升级到某个新版本时，如果有不兼容�
 title:
 labels: ["upgradation"]
 body:
-  - type: textarea
+  - type: input
     attributes:
       label: 上个组件库及版本？
       description: 请输入您使用的上个版本的版本号。
     validations:
       required: true
-  - type: markdown
   - type: checkboxes
     attributes:
       label: 受影响组件
