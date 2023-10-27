@@ -81,7 +81,6 @@ body:
     validations:
       required: true
    - type: textarea
-    id: desired-solution
     attributes:
       label: 你的需求是什么？
       description: 清晰并简洁地描述你希望发生的事情。
@@ -93,7 +92,6 @@ body:
       options:
         - label: 我已经搜索过现有的问题 (https://gitee.com/RRQM_Home/TouchSocket/issues)
           required: true
-  
   - type: checkboxes
     attributes:
       label: 友好承诺
