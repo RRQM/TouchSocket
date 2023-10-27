@@ -13,18 +13,21 @@ body:
     attributes:
       label: 受影响组件
       options:
-        - Tcp
-        - Udp
-        - NamedPipe
-        - WebSocket
-        - Http
-        - Redis
-        - Dmtp-Tcp
-        - Dmtp-Udp
-        - Dmtp-WebSocket
-        - Dmtp-Http
-        - Dmtp-NamedPipe
-        - 其他
+        - label: Core（一般当Core受影响时，整个体系都会受影响）
+        - label: Tcp
+        - label: Udp
+        - label: NamedPipe
+        - label: WebSocket
+        - label: Http
+        - label: Redis
+        - label: Dmtp-Tcp
+        - label: Dmtp-Udp
+        - label: Dmtp-WebSocket
+        - label: Dmtp-Http
+        - label: Dmtp-NamedPipe
+        - label: 其他
+      validations:
+      required: true
   - type: textarea
     attributes:
       label: 改动内容？
