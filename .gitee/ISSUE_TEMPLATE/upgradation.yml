@@ -5,15 +5,17 @@ labels: ["upgradation"]
 body:
   - type: input
     attributes:
-      label: 上个组件库及版本？
+      label: 上个版本？
       description: 请输入您使用的上个版本的版本号。
+      placeholder: 例如：v2.0.0-beta
     validations:
       required: true
   - type: checkboxes
     attributes:
       label: 受影响组件
       options:
-        - label: Core（一般当Core受影响时，整个体系都会受影响）
+        - label: All
+        - label: Core
         - label: Tcp
         - label: Udp
         - label: NamedPipe
