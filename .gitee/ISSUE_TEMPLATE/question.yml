@@ -80,7 +80,7 @@ body:
         - 其他
     validations:
       required: true
-   - type: textarea
+  - type: textarea
     attributes:
       label: 你的需求是什么？
       description: 清晰并简洁地描述你希望发生的事情。
