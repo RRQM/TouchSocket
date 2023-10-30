@@ -78,7 +78,35 @@ DefaultHttpServicePlugin插件最好添加在插件中，如果没有添加的�
 
 :::  
 
-### 6.2 使用插件处理Get请求
+### 6.2 使用插件处理请求参数
+
+#### 6.2.1 Query参数
+
+```csharp
+string value = e.Context.Request.Query["key"];
+```
+
+#### 6.2.2 Header参数
+
+```csharp
+string value = e.Context.Request.Headers["key"];
+```
+
+亦或者
+
+```csharp
+string value = e.Context.Request.Headers[HttpHeaders.Cookie];
+```
+
+#### 6.2.3 Form参数
+
+```csharp
+string value = e.Context.Request.Forms["key"];
+```
+
+### 6.3 使用插件处理请求
+
+#### 6.3.1 Get请求
 
 ```csharp
 public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
@@ -102,7 +130,7 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
 }
 ```
 
-### 6.3 使用插件处理Get文件请求
+#### 6.3.2 Get文件请求
 
 ```csharp
 public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
@@ -135,7 +163,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
 }
 ```
 
-### 6.4 使用插件处理Get页面请求
+#### 6.3.3 Get页面请求
 
 ```csharp
 public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
@@ -177,7 +205,7 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
 }
 ```
 
-### 6.5 使用插件处理Post文件请求
+#### 6.3.4 Post文件请求
 
 ```csharp
 public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSocketClient>
