@@ -3,15 +3,35 @@ id: startguide
 title: 入门指南
 ---
 
+
 ## 一、说明
 
-TouchSocket（Pro）是基于.Net发布的程序集，所以它可以被用于对应.Net版本的C#、F#、VB.net等语言项目。它不区分您的项目是控制台、Winform、Wpf、或者是Aspnetcore，它统统都支持。
+TouchSocket（Pro）系是基于.Net发布的程序集系列，所以它可以被用于对应.Net版本的C#、F#、VB.net等语言项目。它不区分您的项目是控制台、Winform、Wpf、或者是Aspnetcore，它统统都支持。
 
 下面我们将以最简单的`C# 控制台`程序作为入门，让您最直观的感受ToucSocket的强大。
 
-## 二、创建项目
+## 二、发布平台说明
 
-由于TouchSocket（Pro）是基于net45、netstandard2.0、netcoreapp3.1三个平台作为常期支持平台，net7.0作为最新发布平台的程序，所以您可以用vs2012及以上的任意版本创建项目。
+TouchSocket（Pro）系是基于`net45`、`net481`、`netstandard2.0`三个平台作为长期发布平台。net6.0作为最新稳定版支持平台。net7.0（目前）作为最新发布平台。
+
+其中细节如下：
+
+- net45：保证了在.Net Framework上的最低支持版本。基本上支持全系99%的功能。
+- net481：这是在net45的依赖基础之上，额外添加了一些微软官方库，以支持达到net6.0一样的功能（例如：Span、ValueTuple、ValueTask等）。
+- netstandard2.0：这是保证了在一些通用平台上的最低依赖。基本上支持全系99%的功能。
+- net6.0：这是目前最新的稳定版发布平台，它在最低依赖的前提下，还保证了全部功能。
+- net7.0：这是目前最新的发布平台，我们会在该平台上开发最能尝鲜的功能（例如：AOT等）。
+
+:::tip 提示
+
+一般来说，这些版本的发布平台，您不需要关心如何选择。因为如果你是使用Nuget包，那么它将自动选择最合适的版本。如果您是使用dll，或者源码编译，那么您需要根据您的项目选择对应的最低发布平台。
+
+对于Unity3d的用户朋友，我们建议您使用`net45`或者`netstandard2.0`作为发布平台。当然如果您能自行解决较高版本的依赖问题，那么您也可以使用`net481`。
+
+:::  
+
+
+## 三、创建项目
 
 下面我们将以vs2022作为示例：
 
@@ -35,9 +55,9 @@ TouchSocket（Pro）是基于.Net发布的程序集，所以它可以被用于�
 <img src={require('@site/static/img/docs/startguide-4.png').default} />
 <img src={require('@site/static/img/docs/startguide-5.png').default} />
 
-## 三、安装
+## 四、安装
 
-### 3.1 Nuget安装
+### 4.1 Nuget安装
 
 右击项目=》点击“管理Nuget程序包”。
 
@@ -47,7 +67,7 @@ TouchSocket（Pro）是基于.Net发布的程序集，所以它可以被用于�
 
 <img src={require('@site/static/img/docs/startguide-7.png').default} />
 
-### 3.2 PackageReference 
+### 4.2 PackageReference 
 
 单击项目，打开项目编辑，然后在空白根内部引用。
 
@@ -64,7 +84,7 @@ TouchSocket（Pro）是基于.Net发布的程序集，所以它可以被用于�
 
 <img src={require('@site/static/img/docs/startguide-8.png').default} />
 
-### 3.3 Dll直接引用
+### 4.3 Dll直接引用
 
 在[Nuget官网](https://www.nuget.org/packages?q=TouchSocket)中，选择需要的，然后选择“Download package”，即可下载一个后缀为`.nupkg`文件。
 
@@ -113,7 +133,7 @@ TouchSocket（Pro）是基于.Net发布的程序集，所以它可以被用于�
 <img src={require('@site/static/img/docs/startguide-12.png').default} />
 
 
-## 四、结束
+## 无、毕业
 
 恭喜你，到这里，你就完成了入门的教学，你可能会好奇，做了这么多，还是什么都没有做啊。这是因为TouchSocket并不是一个单功能的，而是一个多功能程序库。所以，你必须在其他模块中查看你所需要的内容。
 
