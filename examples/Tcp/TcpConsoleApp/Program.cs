@@ -40,6 +40,12 @@ namespace ServiceConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
+                    a.UseCheckClear()
+                    .SetOnClose((c,t) => 
+                    {
+                        c.TryShutdown();
+                        c.SafeClose("超时无数据");
+                    });
                     a.Add<ClosePlugin>();
                     a.Add<TcpServiceReceivedPlugin>();
                     a.Add<MyServicePluginClass>();
