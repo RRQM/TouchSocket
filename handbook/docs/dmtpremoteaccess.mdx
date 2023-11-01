@@ -12,7 +12,7 @@ import Tag from "@site/src/components/Tag.js";
 
 该功能由`RemoteAccessFeature`功能插件提供。所以需要`客户端`和`服务器`都需要`UseRemoteAccess`。
 
-```csharp
+```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
     a.UseRemoteAccess();
@@ -27,7 +27,7 @@ import Tag from "@site/src/components/Tag.js";
 
 同时可以传递一个元数据组。用于载入自定义消息。
 
-```csharp
+```csharp showLineNumbers
 var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync("c:/新建文件夹", timeout: 30 * 1000);
 
 //然后通过DirectoryInfo属性，可以获取到请求文件夹的信息，包括创建时间、修改时间、子文件夹、子文件等。
@@ -44,7 +44,7 @@ var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync("c
 
 响应端定义一个插件，实现`IDmtpRemoteAccessingPlugin`，然后实现接口。
 
-```csharp
+```csharp showLineNumbers
 public class MyRemoteAccessPlugin : PluginBase, IDmtpRemoteAccessingPlugin
 {
     public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)

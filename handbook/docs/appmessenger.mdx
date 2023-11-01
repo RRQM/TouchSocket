@@ -16,7 +16,7 @@ title: 应用信使
 
 【声明主体】
 实现IMessageObject接口，然后增加AppMessage标记的公共方法。
-```csharp
+```csharp showLineNumbers
 public class MessageObject : IMessageObject
 {
 
@@ -36,13 +36,13 @@ public class MessageObject : IMessageObject
 ```
 【注册】
 下列演示时，是新实例化的AppMessenger，实际上，用户可以直接使用AppMessenger.Default默认实例。
-```csharp
+```csharp showLineNumbers
 AppMessenger appMessenger = new AppMessenger();
 appMessenger.Register<MessageObject>();
 ```
 【触发】
 触发时，泛型类型，即时返回值类型。
-```csharp
+```csharp showLineNumbers
 int add = appMessenger.Send<int>("Add", 20, 10);
 Assert.Equal(30,add);
 

@@ -21,7 +21,7 @@ title: 同步请求
 
 ### 2.1 以TcpClient为例
 
-```csharp
+```csharp showLineNumbers
 var client = new TcpClient();
 client.Connect("tcp://127.0.0.1:7789");
 
@@ -49,7 +49,7 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 ### 2.2 以TcpService为例
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpService();
 service.Received = async (client, e) =>
 {

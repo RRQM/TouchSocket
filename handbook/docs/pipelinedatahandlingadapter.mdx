@@ -18,7 +18,7 @@ Pipeline适配器，是结合IOCP与管道模型结合的产物。功能类似�
 
 下列示例代码实现，当读到换行时，结束本次接收。
 
-```csharp
+```csharp showLineNumbers
 TcpService service = new TcpService();
 
 service.Received = (client, e) =>

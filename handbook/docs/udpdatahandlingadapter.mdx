@@ -15,7 +15,7 @@ sidebar_label: a.原始自定义适配器
 
 Udp的适配器，主要承担组包和解析数据。其基本逻辑和Tcp相似。但是需要注意的是，Udp适配器是**多线程**操作。在解析数据时，应当充分考虑并发问题。
 
-```csharp
+```csharp showLineNumbers
 class MyUdpAdatper : UdpDataHandlingAdapter
 {
     public override bool CanSplicingSend => false;

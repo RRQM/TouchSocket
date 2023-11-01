@@ -36,7 +36,7 @@ title: 原始适配器
 
 具体代码如下：
 
-```csharp
+```csharp showLineNumbers
 internal class MyDataHandleAdapter : SingleStreamDataHandlingAdapter
 {
     /// <summary>
@@ -234,7 +234,7 @@ private static TcpService CreateService()
 
 面对上述情况，我们可以封装以下函数使用：
 
-```csharp
+```csharp showLineNumbers
 public class MySocketClient : SimpleSocketClient
 {
     public void Up_Go_Send(byte[] data)
@@ -308,7 +308,7 @@ public class MySocketClient : SimpleSocketClient
 
 所以我们在封装时，可以使用分片发送，但是同时也需要适配器支持。不然内部会出错。
 
-```csharp
+```csharp showLineNumbers
 protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
 {
     int dataLen = 0;
@@ -338,7 +338,7 @@ protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
 
 ***重新封装函数。。。***
 
-```csharp
+```csharp showLineNumbers
 public void Up_Go_SplicingSend(byte[] data)
 {
     List<TransferByte> transferBytes = new List<TransferByte>();
@@ -381,7 +381,7 @@ public void Down_Hold_SplicingSend(byte[] data)
 
 首先声明对象
 
-```csharp
+```csharp showLineNumbers
 class MyClass : IRequestInfo
 {
     public OrderType OrderType { get; set; }
@@ -405,7 +405,7 @@ enum OrderType : byte
 
 然后重写`PreviewSend(IRequestInfo requestInfo)`函数
 
-```csharp
+```csharp showLineNumbers
 protected override void PreviewSend(IRequestInfo requestInfo)
 {
     //使用对象发送，在发送流式数据之前

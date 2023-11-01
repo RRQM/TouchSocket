@@ -48,7 +48,7 @@ unity提示：由于以下错误，将不会加载程序集“Assets/Plugins/Tou
 
 下列仅示例部分，如果是其他组件，则添加相应程序集名称。
 
-```csharp xml
+```csharp showLineNumbers xml
 <linker>
 	<assembly fullname="TouchSocket" />
 </linker>
@@ -56,7 +56,7 @@ unity提示：由于以下错误，将不会加载程序集“Assets/Plugins/Tou
 
 然后在程序运作最开始时调用全局设置
 
-```csharp
+```csharp showLineNumbers
 GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
 ```
 
@@ -83,7 +83,7 @@ Operation is not supported on this platform.
 
 其中表达式树可能需要你的unity是较高版本，且使用.netstandard2.1的SDK。
 
-```csharp
+```csharp showLineNumbers
 GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Reflect;
 ```
 

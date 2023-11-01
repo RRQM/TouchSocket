@@ -17,7 +17,7 @@ TouchSocket可通过简单设置，实现该功能。
 
 只需要在配置中，设置其适配器为**UdpPackageAdapter**类型即可（默认为**NormalUdpDataHandlingAdapter**）。同时可以根据传输数据的大小，修改相关属性，如：**MTU**，**Timeout**等。
 
-```csharp
+```csharp showLineNumbers
 UdpSession udpSession = new UdpSession();
 udpSession.Received = (endpoint, byteBlock, requestInfo) =>
 {

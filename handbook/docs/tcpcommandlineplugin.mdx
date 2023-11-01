@@ -14,7 +14,7 @@ title: 命令行执行插件
 
 ## 二、创建快捷执行插件
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 命令执行插件。方法必须以Command结尾。
 /// </summary>
@@ -66,7 +66,7 @@ class MyCommandLinePlugin : TcpCommandLinePlugin
 
 ## 三、创建服务器
 
-```csharp
+```csharp showLineNumbers
 TcpService service = new TcpService();
 
 var config = new TouchSocketConfig();

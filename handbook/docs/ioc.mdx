@@ -34,7 +34,7 @@ TouchSocket内置了**Container**容器。只需要引入TouchSocket.Core即可�
 
 【定义类型】
 
-```csharp
+```csharp showLineNumbers
 class MyClass1
 {
 
@@ -53,7 +53,7 @@ class MyClass2
 
 【注册和获取】
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 构造函数注入
 /// </summary>
@@ -75,7 +75,7 @@ static void ConstructorInject()
 
 【定义类型】
 
-```csharp
+```csharp showLineNumbers
 class MyClass3
 {
     /// <summary>
@@ -99,7 +99,7 @@ class MyClass3
 ```
 
 【注册和获取】
-```csharp
+```csharp showLineNumbers
 static void PropertyInject()
 {
     var container = GetContainer();
@@ -125,7 +125,7 @@ static void PropertyInject()
 使用**DependencyInject**标记属性，即可对方法注入。
 
 【定义类型】
-```csharp
+```csharp showLineNumbers
 class MyClass4
 {
     public MyClass1 MyClass1 { get;private set; }
@@ -140,7 +140,7 @@ class MyClass4
 ```
 
 【注册和获取】
-```csharp
+```csharp showLineNumbers
 static void MethodInject()
 {
     var container = GetContainer();
@@ -186,7 +186,7 @@ Constructor构造函数配置不管配不配置，默认都是支持的。
 
 例如：对于`MyClass5`，我们希望在**瞬时注入**后，获取其实例时，我们可以手动的重新指定`a`、`b`以及`MyClass1`的值。
 
-```csharp
+```csharp showLineNumbers
 class MyClass5
 {
     public MyClass5(int a, string b, MyClass1 myClass1)
@@ -204,7 +204,7 @@ class MyClass5
 
 那么我们可以这样实现。
 
-```csharp
+```csharp showLineNumbers
 var container = GetContainer();
 container.RegisterSingleton<MyClass1>();
 container.RegisterTransient<MyClass5>();//默认参数只在瞬时生命有效
@@ -238,7 +238,7 @@ var b2 = myClass5_1.MyClass1 == myClass5_3.MyClass1;
 2. 必须使用`partial`修饰为部分类。
 3. 必须添加特性`GeneratorContainer`。
 
-```csharp
+```csharp showLineNumbers
  [GeneratorContainer]
  partial class MyContainer : ManualContainer
  {
@@ -250,7 +250,7 @@ var b2 = myClass5_1.MyClass1 == myClass5_3.MyClass1;
 
 注册类型，可以直接添加特性即可：
 
-```csharp 
+```csharp showLineNumbers 
 [AutoInjectForSingleton]//将声明的类型直接标识为单例注入
 class MyClass12
 {
@@ -268,7 +268,7 @@ class MyClass13
 
 现有类型已经完成声明，所以无法直接添加特性。所以只能将特性添加在`ManualContainer`的继承类上。
 
-```csharp
+```csharp showLineNumbers
 [AddSingletonInject(typeof(IInterface10), typeof(MyClass10))]//直接添加现有类型为单例
 [AddTransientInject(typeof(IInterface11), typeof(MyClass11))]//直接添加现有类型为瞬态
 [GeneratorContainer]
@@ -300,7 +300,7 @@ partial class MyContainer : ManualContainer
 
 然后直接使用`AspNetCoreContainer`替代`Container`。
 
-```csharp
+```csharp showLineNumbers
 static IContainer GetContainer()
 {
     //return new Container();//默认IOC容器
@@ -311,7 +311,7 @@ static IContainer GetContainer()
 
 Config使用
 
-```csharp
+```csharp showLineNumbers
 var config=new TouchSocketConfig()//载入配置
                 .UseAspNetCoreContainer(new ServiceCollection());//ServiceCollection可以使用现有的
 ```

@@ -94,7 +94,7 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 
 代码如下：
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
 service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端成功连接
@@ -151,7 +151,7 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 
 （1）建立`NamedPipeSocketClient`继承类。
 
-```csharp
+```csharp showLineNumbers
 public class MySocketClient : NamedPipeSocketClient
 {
     protected override async Task ReceivedData(ReceivedDataEventArgs e)
@@ -168,7 +168,7 @@ public class MySocketClient : NamedPipeSocketClient
 
 （2）建立`NamedPipeService`继承类。实际上如果业务不涉及服务器配置的话，可以省略该步骤，使用**NamedPipeService的泛型**直接创建。
 
-```csharp
+```csharp showLineNumbers
 public class MyService : NamedPipeService<MySocketClient>
 {
     protected override void LoadConfig(TouchSocketConfig config)
@@ -192,7 +192,7 @@ public class MyService : NamedPipeService<MySocketClient>
 
 （3）创建服务器（包含MyService）。
 
-```csharp
+```csharp showLineNumbers
 var service = new MyService();
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
@@ -209,7 +209,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 （4）创建服务器（不含MyService）。
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeService<MySocketClient>();
 
 service.Setup(new TouchSocketConfig()//载入配置     
@@ -237,7 +237,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 服务器在配置监听时，有多种方式实现。其中最简单、最常见的配置方式就是通过Config直接配置。
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Setup(new TouchSocketConfig()//载入配置
     .SetPipeName("TouchSocketPipe"))//设置命名管道名称
@@ -248,7 +248,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 直接添加监听配置是更加个性化的监听配置，它可以单独控制指定监听地址的具体配置，例如：使用何种适配器等。
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Setup(new TouchSocketConfig()//载入配置
     .SetPipeName("TouchSocketPipe")//设置默认命名管道名称
@@ -315,7 +315,7 @@ foreach (var item in service.Monitors)
 
 当使用NamedPipeService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Received = (client, e) =>
 {
@@ -342,7 +342,7 @@ service.Start("TouchSocketPipe");//启动
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp
+```csharp showLineNumbers
 class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
 {
     private readonly ILog m_logger;
@@ -409,7 +409,7 @@ service.Setup(new TouchSocketConfig()
 
 （1）声明插件
 
-```csharp
+```csharp showLineNumbers
 class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
 {
     private readonly ILog m_logger;
@@ -442,7 +442,7 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisco
 
 （2）注入服务
 
-```csharp
+```csharp showLineNumbers
 public void ConfigureServices(IServiceCollection services)
 {
     var tcpService = services.AddNamedPipeService(config =>
@@ -484,7 +484,7 @@ UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
-```csharp
+```csharp showLineNumbers
 var socketClients = service.GetClients();
 ```
 
@@ -498,7 +498,7 @@ var socketClients = service.GetClients();
 
 先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
 
-```csharp
+```csharp showLineNumbers
 var ids = service.GetIds();
 if (service.TryGetSocketClient(ids.First(), out var socketClient))
 {
@@ -510,7 +510,7 @@ if (service.TryGetSocketClient(ids.First(), out var socketClient))
 【同步发送】
 
 NamedPipeSocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
-```csharp
+```csharp showLineNumbers
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
 public virtual void Send(byte[] buffer, int offset, int length);
@@ -520,7 +520,7 @@ public virtual void Send(byte[] buffer, int offset, int length);
 
 NamedPipeClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
 
-```csharp
+```csharp showLineNumbers
 public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(ByteBlock byteBlock);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
@@ -536,7 +536,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 通过Id发送数据。
 
-```csharp
+```csharp showLineNumbers
 public virtual void Send(string id, ByteBlock byteBlock);
 public virtual void Send(string id, byte[] buffer, int offset, int length);
 public virtual void Send(string id, byte[] buffer);

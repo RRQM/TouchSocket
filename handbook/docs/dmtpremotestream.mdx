@@ -27,7 +27,7 @@ import Tag from "@site/src/components/Tag.js";
 
 该功能由`DmtpRemoteStreamFeature`功能插件提供。所以需要`客户端`和`服务器`都需要`UseDmtpRemoteStream`。
 
-```csharp
+```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
     a.UseDmtpRemoteStream();
@@ -39,7 +39,7 @@ import Tag from "@site/src/components/Tag.js";
 任意Dmtp终端均可以调用LoadRemoteStream创建一个流数据映射。
 同时可以传递一个元数据组。用于载入自定义消息。
 
-```csharp
+```csharp showLineNumbers
 var metadata = new Metadata();
 metadata.Add("tag", "tag1");
 
@@ -49,7 +49,7 @@ var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(metadata);
 【响应端】
 响应端定义一个插件，实现`IDmtpRemoteStreamPlugin`，然后实现需要载入的具体流信息。示例中是以`MemoryStream`作为流主体。
 
-```csharp
+```csharp showLineNumbers
 internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>
 {
     public async Task OnLoadingStream(ITcpDmtpSocketClient client, LoadingStreamEventArgs e)
@@ -80,7 +80,7 @@ internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDm
 
 当RemoteStream被成功创建以后，即可直接Read、Write。因为RemoteStream继承自Stream。
 
-```csharp
+```csharp showLineNumbers
 var client = GetClient();
 var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(new Metadata().AddOrUpdate("1", "1"));
 

@@ -18,7 +18,7 @@ import Tag from "@site/src/components/Tag.js";
 
 例如：对于下列服务
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : RpcServer
 {
     /// <summary>
@@ -40,7 +40,7 @@ public class MyRpcServer : RpcServer
 
 我们需要设置接口，如下：
 
-```csharp
+```csharp showLineNumbers
 interface IMyRpcServer
 {
     /// <summary>
@@ -56,7 +56,7 @@ interface IMyRpcServer
 
 并且需要构建基类：
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 新建一个类，按照需要，继承DmtpRpcDispatchProxy，亦或者预设的JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
@@ -98,7 +98,7 @@ class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
 
 然后生成代理，并直接调用
 
-```csharp
+```csharp showLineNumbers
 IMyRpcServer myRpcServer = DmtpRpcDispatchProxy.Create<IMyRpcServer, MyDmtpRpcDispatchProxy>();
 
 var result = myRpcServer.Add(10, 20);

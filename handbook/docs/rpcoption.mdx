@@ -21,7 +21,7 @@ RPC在调用时，的调用状态有三种状态可选，分别为：`OnlySend`�
 
 同样的，在InvokeOption中可以直接赋值使用。
 
-```csharp
+```csharp showLineNumbers
 InvokeOption invokeOption = new InvokeOption();
 invokeOption.FeedbackType = FeedbackType.WaitInvoke;
 //invokeOption.FeedbackType = FeedbackType.OnlySend;
@@ -43,7 +43,7 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 
 直接对`InvokeOption`的`Timeout` 属性赋值即可，单位为`毫秒`。
 
-```csharp
+```csharp showLineNumbers
 InvokeOption invokeOption = new InvokeOption();
 invokeOption.Timeout = 1000 * 10;//10秒后无反应，则抛出RRQMTimeoutException异常
 string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
@@ -53,7 +53,7 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 
 在RPC调用时，计时器是一个好的选择，但是还不够完美，有时候我们希望能手动终结某个调用任务。这时候，计时器就不堪重任，需要能主动取消任务的功能。熟悉.net的小伙伴都知道，CancellationToken是具备这个功能的。同样的，只需要对`InvokeOption`的`CancellationToken` 赋值即可。
 
-```csharp
+```csharp showLineNumbers
 InvokeOption invokeOption = new InvokeOption();
 CancellationTokenSource tokenSource = new CancellationTokenSource();
 invokeOption.CancellationToken = tokenSource.Token;
@@ -67,7 +67,7 @@ string returnString = client.Invoke<string>("TestOne", invokeOption, "10");
 
 此处的取消，有可能是调用者主动取消。也有可能是调用者已经掉线。
 
-```csharp
+```csharp showLineNumbers
 public class ElapsedTimeRpcServer : ServerProvider
 {
     [Description("测试可取消的调用")]

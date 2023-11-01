@@ -48,7 +48,7 @@ HttpService的相关事务，会通过**插件**触发。
 
 ### 6.1 创建HttpService
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
@@ -82,25 +82,25 @@ DefaultHttpServicePlugin插件最好添加在插件中，如果没有添加的�
 
 #### 6.2.1 Query参数
 
-```csharp
+```csharp showLineNumbers
 string value = e.Context.Request.Query["key"];
 ```
 
 #### 6.2.2 Header参数
 
-```csharp
+```csharp showLineNumbers
 string value = e.Context.Request.Headers["key"];
 ```
 
 亦或者
 
-```csharp
+```csharp showLineNumbers
 string value = e.Context.Request.Headers[HttpHeaders.Cookie];
 ```
 
 #### 6.2.3 Form参数
 
-```csharp
+```csharp showLineNumbers
 string value = e.Context.Request.Forms["key"];
 ```
 
@@ -108,7 +108,7 @@ string value = e.Context.Request.Forms["key"];
 
 #### 6.3.1 Get请求
 
-```csharp
+```csharp showLineNumbers
 public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
 {
     public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
@@ -132,7 +132,7 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
 
 #### 6.3.2 Get文件请求
 
-```csharp
+```csharp showLineNumbers
 public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
 {
     public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
@@ -165,7 +165,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
 
 #### 6.3.3 Get页面请求
 
-```csharp
+```csharp showLineNumbers
 public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
 {
     public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
@@ -207,7 +207,7 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
 
 #### 6.3.4 Post文件请求
 
-```csharp
+```csharp showLineNumbers
 public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSocketClient>
 {
     public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
@@ -284,7 +284,7 @@ public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSocketClient>
 
 Https服务器，和http服务器几乎一样，只不过增加了一个Ssl的配置。
 
-```csharp
+```csharp showLineNumbers
 .SetServiceSslOption(new ServiceSslOption() 
 { 
     Certificate = new X509Certificate2("Socket.pfx", "Socket"), 

@@ -40,7 +40,7 @@ title: 插件系统
 
 #### 5.1 声明插件接口及事件类
 
-```csharp
+```csharp showLineNumbers
 public class MyPluginEventArgs : PluginEventArgs
 {
     public string Words { get; set; }
@@ -77,7 +77,7 @@ public interface ISayPlugin : IPlugin
 
 #### 5.2 实现插件接口
 
-```csharp 
+```csharp showLineNumbers 
  public class SayHelloPlugin : PluginBase, ISayPlugin
  {
      public async Task Say(object sender, MyPluginEventArgs e)
@@ -247,7 +247,7 @@ SayHelloPlugin------Leave
 
 注册委托，使用委托，可以提升插件性能。
 
-```csharp
+```csharp showLineNumbers
 //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
 pluginsManager.Add(nameof(ISayPlugin.Say), () => 
 {
@@ -257,7 +257,7 @@ pluginsManager.Add(nameof(ISayPlugin.Say), () =>
 
 其次，不仅可以直接使用委托，还可以在插件里面注册方法为委托。
 
-```csharp 
+```csharp showLineNumbers 
 public class SayHelloAction: PluginBase
 {
     protected override void Loaded(IPluginsManager pluginsManager)
@@ -300,7 +300,7 @@ public class SayHelloAction: PluginBase
 
 然后使用`GeneratorPlugin`特性标记所需方法即可。
 
-```csharp
+```csharp showLineNumbers
 public partial class SayHelloGenerator : PluginBase
 {
     //如果在代码里，继承了PluginBase，并且没有显示重写Loaded

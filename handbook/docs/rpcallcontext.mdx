@@ -26,7 +26,7 @@ title: 调用上下文
 
 定义的服务方法的`第一个参数`使用`ICallContext`或其派生类（例如：DmtpRpc可以使用IDmtpRpcCallContext）。
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : RpcServer
 {
     [Description("登录")]
@@ -55,7 +55,7 @@ public class MyRpcServer : RpcServer
 
 1. 继承TransientRpcServer或者实现ITransientRpcServer接口。
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : TransientRpcServer
 {
     [Description("登录")]

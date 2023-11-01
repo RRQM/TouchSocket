@@ -28,7 +28,7 @@ HttpClient是Http客户端类。主要用于请求Http报文。与.net的HttpCli
 ## 四、使用HttpClient
 
 ### 4.1 创建HttpClient
-```csharp
+```csharp showLineNumbers
 HttpClient client = new HttpClient();
 
 client.Setup(new TouchSocketConfig()
@@ -38,7 +38,7 @@ client.Setup(new TouchSocketConfig()
 
 ### 4.2 常规请求
 
-```csharp
+```csharp showLineNumbers
 HttpRequest request = new HttpRequest();
 request
     .InitHeaders()
@@ -52,7 +52,7 @@ Console.WriteLine(respose.GetBody());
 
 ### 4.3 请求流数据
 
-```csharp
+```csharp showLineNumbers
 var request = new HttpRequest();
 request.InitHeaders()
     .SetUrl("/WeatherForecast")
@@ -82,13 +82,13 @@ Console.WriteLine(respose.GetBody());
 
 如果服务器证书是由**证书机构颁发**，则只需填充**TargetHost**和**SslProtocols**。
 
-```csharp
+```csharp showLineNumbers
 SetClientSslOption(new ClientSslOption() { TargetHost = "localhost", SslProtocols = SslProtocols.Tls12 })
 ```
 
 如果服务器证书是由**自己制作的**，则需要加载证书文件，和必要的**验证**。
 
-```csharp
+```csharp showLineNumbers
 .SetClientSslOption(new ClientSslOption()
 {
     ClientCertificates = new X509CertificateCollection() { new X509Certificate2("RRQMSocket.pfx", "RRQMSocket") },

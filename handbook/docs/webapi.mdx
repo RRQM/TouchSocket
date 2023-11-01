@@ -24,7 +24,7 @@ WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统�
 
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记。
 
-```csharp
+```csharp showLineNumbers
 public class ApiServer : RpcServer
 {
     private readonly ILog m_logger;
@@ -97,7 +97,7 @@ public class MyClass
 
 使用Get进行请求时，服务方法可以声明多个参数，但是每个参数都必须是基础类型或者字符串类型。
 
-```csharp
+```csharp showLineNumbers
 [WebApi(HttpMethodType.GET)]
 public int Get(int a)
 {
@@ -113,7 +113,7 @@ public int Sum(int a, int b)
 
 如果想要获取实际请求的调用上下文（在上下文中可以获取IP，端口等信息），可以将第一个参数声明为`IWebApiCallContext`类型。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 使用调用上下文，响应文件下载。
 // </summary>
@@ -136,7 +136,7 @@ public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
 
 
 以下参数依然来自Query，Body为空也可以。
-```csharp
+```csharp showLineNumbers
 [WebApi(HttpMethodType.Post)]
 public int Sum(int a, int b)
 {
@@ -145,7 +145,7 @@ public int Sum(int a, int b)
 ```
 
 以下参数，前两个来自Query，MyClass将从Body解析。
-```csharp
+```csharp showLineNumbers
 [WebApi(HttpMethodType.Post)]
 public int Sum(int a, int b, MyClass myClass)
 {
@@ -163,7 +163,7 @@ public int Sum(int a, int b, MyClass myClass)
 
 将会以`/ApiServer/Sum`为请求url（不区分大小写）。
 
-```csharp
+```csharp showLineNumbers
 public class ApiServer : RpcServer
 {
     [WebApi(HttpMethodType.GET)]
@@ -180,7 +180,7 @@ public class ApiServer : RpcServer
 
 将会以`user/ApiServer/test/Sum`为请求url（不区分大小写）。
 
-```csharp
+```csharp showLineNumbers
 [Router("/user/[api]/test/[action]")]
 public class ApiServer : RpcServer
 {
@@ -200,7 +200,7 @@ public class ApiServer : RpcServer
 
 ## 五、启动服务器
 
-```csharp
+```csharp showLineNumbers
  var service = new HttpService();
 service.Setup(new TouchSocketConfig()
    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -246,7 +246,7 @@ http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20
 
 内置WebApi的客户端和大家所**熟识**的有一些差距，TouchSocket的WebApi使用的是**先连接**，**后请求**的逻辑。请求时，先标记**GET/POST**的函数。如果是**GET**，则必须**留空URL**，如果是**POST**，则只写URL即可。
 
-```csharp
+```csharp showLineNumbers
 private static WebApiClient CreateWebApiClient()
 {
     var client = new WebApiClient();
@@ -256,7 +256,7 @@ private static WebApiClient CreateWebApiClient()
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 var client = CreateWebApiClient();
 
 int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
@@ -270,7 +270,7 @@ Console.WriteLine($"Post调用成功，结果：{sum2}");
 
 Dotnet自带HttpClient则是通过连接池的方式访问。详情看[HttpClient](https://learn.microsoft.com/zh-cn/dotnet/api/system.net.http.httpclient)
 
-```csharp
+```csharp showLineNumbers
 private static WebApiClientSlim CreateWebApiClientSlim()
 {
     var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
@@ -282,7 +282,7 @@ private static WebApiClientSlim CreateWebApiClientSlim()
     return client;
 }
 ```
-```csharp
+```csharp showLineNumbers
 var client = CreateWebApiClientSlim();
 
 int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
@@ -318,7 +318,7 @@ a.UseWebApi()
 
 然后把生成的.cs文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
 
-```csharp
+```csharp showLineNumbers
 var sum3 = client.Sum(10,20);
 ```
 
@@ -328,7 +328,7 @@ var sum3 = client.Sum(10,20);
 
 首先，需要声明一个基类，用于通讯基础。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 新建一个类，继承WebApiDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
@@ -365,7 +365,7 @@ class MyWebApiDispatchProxy : WebApiDispatchProxy
 
 然后按照服务，定义一个相同的代理接口。
 
-```csharp
+```csharp showLineNumbers
 interface IApiServer
 {
     [Router("ApiServer/[action]")]

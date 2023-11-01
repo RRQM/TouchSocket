@@ -15,7 +15,7 @@ title: SG代理推荐写法
 
 （1）新建类库项目，命名为`RpcClassLibrary`。然后在该程序集中，定义服务接口，和接口参数实体类。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 定义服务接口。
 /// </summary>
@@ -28,7 +28,7 @@ public interface IUserServer:IRpcServer
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 public class LoginRequest:RequestBase
 {
     public string Account { get; set; }
@@ -54,7 +54,7 @@ public class ResponseBase
 
 新建类库项目，命名`RpcImplementationClassLibrary`，引用`RpcClassLibrary`项目，然后用于实现接口。
 
-```csharp
+```csharp showLineNumbers
 public class UserServer : IUserServer
 {
     public LoginResponse Login(LoginRequest request)
@@ -71,7 +71,7 @@ public class UserServer : IUserServer
 
 如果作为服务器，需要按接口注册服务
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpTouchRpcService();
 var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
