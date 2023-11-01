@@ -378,12 +378,17 @@ private static HttpService CreateHttpService()
 }
 ```
 
+:::info 信息
+
+`ReadAsync`的方式是属于**同步不阻塞**的接收方式（和当下Aspnetcore模式一样）。他不会单独占用线程，只会阻塞当前`Task`。所以可以大量使用，不需要考虑性能问题。同时，`ReadAsync`的好处就是单线程访问上下文，这样在处理ws分包时是非常方便的。
+
+:::  
+
 :::caution 注意
 
 使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。并且被调用`GetWebSocket`的客户端，在收到`WebSocket`消息的时候，不会再触发插件。
 
 ::: 
-
 
 ## 六、回复、响应数据
 
@@ -401,7 +406,7 @@ foreach (var item in socketClients)
 {
     if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
     {
-        if (item.ID == "id")//再按指定id发送，或者直接广播发送
+        if (item.Id == "id")//再按指定id发送，或者直接广播发送
         {
 
         }
