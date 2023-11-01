@@ -113,14 +113,14 @@ Rpc规范了两种方式来添加实体模型的复刻。
 
 在服务注册之前，任意时刻，可调用CodeGenerator.AddProxyType静态方法，添加代理类型，同时可传入一个bool值，表明是否深度搜索，比如，假如ProxyClass1中还有其他类型，则参数为True时，依然会代理。
 
-```csharp
+```csharp showLineNumbers
 CodeGenerator.AddProxyType<ProxyClass1>();
 CodeGenerator.AddProxyType<ProxyClass2>(deepSearch:true);
 ```
 
 或者直接按程序集添加
 
-```csharp
+```csharp showLineNumbers
 CodeGenerator.AddProxyAssembly(typeof(Program).Assembly);
 ```
 
@@ -128,7 +128,7 @@ CodeGenerator.AddProxyAssembly(typeof(Program).Assembly);
 
 在需要代理的类上面声明RpcProxy标签，然后也可以重新指定代理类名。
 
-```csharp
+```csharp showLineNumbers
 [RpcProxy("MyArgs")]
 public class Args
 {
@@ -145,13 +145,13 @@ public class Args
 
 默认情况下，与声明服务相同的自定义类型，会被代理复刻成结构相同的类型。但是有时候，我们希望服务端与客户端公用一个dll，所以就不需要复刻，那么可以排除代理类型。
 
-```csharp
+```csharp showLineNumbers
 CodeGenerator.AddIgnoreProxyType(typeof(Program));
 ```
 
 或者直接按程序集排除
 
-```csharp
+```csharp showLineNumbers
 CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
 ```
 
@@ -172,7 +172,7 @@ CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
 
 例如：
 
-```csharp
+```csharp showLineNumbers
 class MyRpcAttribute : RpcAttribute
 {
     public override Type[] GetGenericConstraintTypes()
@@ -206,7 +206,7 @@ where TClient:IRpcClient
 
 例如：下列示例，只会生成**异步扩展**调用，和**异步接口**代码。
 
-```csharp
+```csharp showLineNumbers
 class MyRpcAttribute : RpcAttribute
 {
     public MyRpcAttribute()

@@ -30,7 +30,7 @@ JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关*
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**JsonRpc**属性标签标记。
 
 
-```csharp
+```csharp showLineNumbers
 public class JsonRpcServer : RpcServer
 {
     /// <summary>
@@ -104,7 +104,7 @@ JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
 
 下列代码创建的就是一个最普通Tcp协议下的JsonRpc服务器。该服务支持任何未处理的Tcp协议的JsonRpc数据包调用。
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpService();
 service.Setup(new TouchSocketConfig()
     .SetListenIPHosts(7705)
@@ -136,7 +136,7 @@ service.Setup(new TouchSocketConfig()
 
 创建后，如果想使用Http调用，只需要以Post方式，将调用Json字符串路由到设定路由地址即可（下文示例“/jsonRpc”）。
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
@@ -157,7 +157,7 @@ service.Setup(new TouchSocketConfig()
 
 如果想使用Websocket调用，只需要以**文本**形式，传递到服务器即可。
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
@@ -198,7 +198,7 @@ service.Setup(new TouchSocketConfig()
 
 在Tcp协议时，按照适配器，选择性的是否以\r\n结尾。
 
-```csharp
+```csharp showLineNumbers
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
 ```
 
@@ -206,7 +206,7 @@ service.Setup(new TouchSocketConfig()
 
 在Http协议时，以`Url+Post`方式即可
 
-```csharp
+```csharp showLineNumbers
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
 ```
 
@@ -214,7 +214,7 @@ service.Setup(new TouchSocketConfig()
 
 在Websocket协议时，以`文本类型`，直接发送到服务器即可。
 
-```csharp
+```csharp showLineNumbers
 {"jsonrpc": "2.0", "method": "testjsonrpc", "params":["RRQM"], "id": 1}
 ```
 
@@ -225,7 +225,7 @@ service.Setup(new TouchSocketConfig()
 
 ### 6.1 Tcp协议
 
-```csharp
+```csharp showLineNumbers
 var jsonRpcClient = new TcpJsonRpcClient();
 jsonRpcClient.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7705"));
@@ -236,7 +236,7 @@ string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitIn
 
 ### 6.2 Http协议
 
-```csharp
+```csharp showLineNumbers
 var jsonRpcClient = new HttpJsonRpcClient();
 jsonRpcClient.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
@@ -247,7 +247,7 @@ string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitIn
 
 ### 6.3 Websocket协议
 
-```csharp
+```csharp showLineNumbers
 var jsonRpcClient = new WebSocketJsonRpcClient();
 jsonRpcClient.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
@@ -276,7 +276,7 @@ a.UseTcpJsonRpc()
 
 然后把生成的.cs文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
 
-```csharp
+```csharp showLineNumbers
 var sum3 = client.TestJsonRpc("RRQM");
 ```
 
@@ -286,7 +286,7 @@ var sum3 = client.TestJsonRpc("RRQM");
 
 首先，需要声明一个基类，用于通讯基础。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
@@ -327,7 +327,7 @@ class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
 
 然后按照服务，定义一个相同的代理接口。
 
-```csharp
+```csharp showLineNumbers
 interface IJsonRpcServer
 {
     [JsonRpc(MethodInvoke = true)]
@@ -353,7 +353,7 @@ while (true)
 
 首先需要像常规Rpc一样声明一个Rpc服务。然后需要使用`JsonRpc`特性表示。
 
-```csharp
+```csharp showLineNumbers
 public class ReverseJsonRpcServer : RpcServer
 {
     [JsonRpc(MethodInvoke = true)]
@@ -366,7 +366,7 @@ public class ReverseJsonRpcServer : RpcServer
 
 然后在插件注册全局`RpcStore`。并注册服务。
 
-```csharp
+```csharp showLineNumbers
 var jsonRpcClient = new WebSocketJsonRpcClient();
 jsonRpcClient.Setup(new TouchSocketConfig()
     .ConfigurePlugins(a =>
@@ -385,7 +385,7 @@ jsonRpcClient.Connect();
 
 下列示例演示的是，当WebSocket连接上时，服务器主动调用客户端。
 
-```csharp
+```csharp showLineNumbers
 class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>
 {
     public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)

@@ -38,7 +38,7 @@ UDP组件是基于UDP协议的最基础组件，其功能简单，易用。它�
 
 ### 5.1 作为服务器使用
 
-```csharp
+```csharp showLineNumbers
 var udpService = new UdpSession();
 udpService.Received = (c,e) =>
 {
@@ -53,7 +53,7 @@ Console.WriteLine("等待接收");
 
 ### 5.2 作为客户端使用
 
-```csharp
+```csharp showLineNumbers
 var udpClient = new UdpSession();
 udpClient.Setup(new TouchSocketConfig()
     //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
@@ -74,13 +74,13 @@ udpClient.Setup(new TouchSocketConfig()
 
 带`EndPoint`，即表示可以发送到任意终结点。
 
-```csharp
+```csharp showLineNumbers
 public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
 ```
 
 不带`EndPoint`，即表示直接发送到默认（通过`SetRemoteIPHost`设置）的终结点。这一般在Udp作为客户端时是有用的。
 
-```csharp
+```csharp showLineNumbers
 public virtual void Send(byte[] buffer, int offset, int length)
 ```
 
@@ -90,7 +90,7 @@ public virtual void Send(byte[] buffer, int offset, int length)
 
 委托接收，则是直接订阅Received即可。
 
-```csharp
+```csharp showLineNumbers
 var udpService = new UdpSession();
 udpService.Received = (c, e) =>
 {
@@ -106,7 +106,7 @@ udpService.Start(7789);
 
 声明插件
 
-```csharp
+```csharp showLineNumbers
 class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
 {
     public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
@@ -144,7 +144,7 @@ class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
 
 使用插件
 
-```csharp {6-7}
+```csharp showLineNumbers {6-7}
 var udpService = new UdpSession();
 udpService.Setup(new TouchSocketConfig()
     .SetBindIPHost(new IPHost(7789))

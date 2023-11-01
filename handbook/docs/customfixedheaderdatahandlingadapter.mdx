@@ -35,7 +35,7 @@ title: 模板解析“固定包头”数据适配器
 
 其中，`BodyLength`属性是接口必须的，用于标识后续数据长度。所以该值应该在`OnParsingHeader`时得到有效赋值。
 
-```csharp 
+```csharp showLineNumbers 
 public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
 {
     /// <summary>
@@ -87,7 +87,7 @@ public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
 
 在本案例中，我们是以前三个字节作为固定包头长度，所以`HeaderLength`的赋值是3。
 
-```csharp
+```csharp showLineNumbers
 public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyFixedHeaderRequestInfo>
 {
     /// <summary>

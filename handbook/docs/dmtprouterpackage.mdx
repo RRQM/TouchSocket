@@ -28,7 +28,7 @@ import Tag from "@site/src/components/Tag.js";
 
 路由包传输模式是由DmtpRouterPackageFeature功能插件提供的，所以需要添加`UseDmtpRouterPackage`。
 
-```csharp
+```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
     a.UseDmtpRouterPackage();//添加路由包功能插件
@@ -37,7 +37,7 @@ import Tag from "@site/src/components/Tag.js";
 
 其次，要完成路由包传输，就得自己定义请求包和响应包。此处简单定义两个包用于测试。具体关于包的打包、解包详细操作可以看[包序列化](./ipackage.mdx)
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 定义请求包
 /// </summary>
@@ -80,7 +80,7 @@ class MyResponsePackage : DmtpRouterPackage
 
 【请求端】
 
-```csharp
+```csharp showLineNumbers
 using (ByteBlock byteBlock = new ByteBlock(1024*512))
 {
     byteBlock.SetLength(byteBlock.Capacity);//此处模拟一个大数据块
@@ -99,7 +99,7 @@ using (ByteBlock byteBlock = new ByteBlock(1024*512))
 
 响应端除了`UseDmtpRouterPackage`之外，还需要添加一个插件，实现`IDmtpRouterPackagePlugin`功能，主要在里面实现响应的动作。
 
-```csharp 
+```csharp showLineNumbers 
 class MyPlugin : PluginBase, IDmtpRouterPackagePlugin
 {
     private readonly ILog m_logger;

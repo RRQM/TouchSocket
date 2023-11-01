@@ -17,7 +17,7 @@ Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，�
 
 配置容器，即“手动”解决容器反射实例的问题。目前这部分使用源生成IOC完成。详情请看[源生成IOC](./ioc.mdx)
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// IOC容器
 /// </summary>
@@ -36,7 +36,7 @@ public partial class MyContainer : ManualContainer
 
 同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
 
-```csharp
+```csharp showLineNumbers
 [AutoInjectForSingleton]
 internal partial class MyServicePluginClass : PluginBase
 {

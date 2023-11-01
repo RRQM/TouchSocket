@@ -18,7 +18,7 @@ title: 文件流池
 
 使用完成后，可以随时释放。
 
-```csharp
+```csharp showLineNumbers
 int len = 0;
 byte[] buffer = new byte[1024 * 1024];
 
@@ -44,7 +44,7 @@ Console.WriteLine(len);
 使用完成后，可以随时释放。
 
 注意默认调用**Dispose**后，文件会根据创建类型是否为**单一访问**而决定是否立即释放。
-```csharp
+```csharp showLineNumbers
 byte[] buffer = new byte[1024];
 
 using (var writer = FilePool.GetWriter(path,true))
@@ -67,7 +67,7 @@ Console.WriteLine("完成");
 减少引用的意思是，当某个文件，被创建多个访问器时，会递增其引用数，当引用数不为0时，是不会释放的。所以当调用FilePool.TryReleaseFile时，首先会减少引用，然后才会判断是否可以释放。
 
 当需要强制释放某个文件时，可以采取下列措施。
-```csharp
+```csharp showLineNumbers
 while (FilePool.TryReleaseFile(fileName, 0).ResultCode!= ResultCode.Success)
 {
 

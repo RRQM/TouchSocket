@@ -41,6 +41,8 @@ namespace ServiceConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear()
+                    .SetCheckClearType( CheckClearType.All)
+                    .SetTick(TimeSpan.FromSeconds(60))
                     .SetOnClose((c,t) => 
                     {
                         c.TryShutdown();

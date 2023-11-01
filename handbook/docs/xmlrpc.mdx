@@ -26,7 +26,7 @@ XmlRpc是**通用**的工作在**Internet**上的RPC。一个[XML-RPC](https://b
 
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**XmlRpc**属性标签标记。
 
-```csharp
+```csharp showLineNumbers
 public class XmlServer : RpcServer
 {
     [XmlRpc(true)]
@@ -53,7 +53,7 @@ public class MyClass
 ### 3.2 启动服务
 
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
@@ -116,7 +116,7 @@ service.Logger.Info("服务器已启动");
 
 使用客户端调用，则是使用RPC的范式进行调用，使用比较简单。
 
-```csharp
+```csharp showLineNumbers
 private static void Main(string[] args)
 {
     var client = GetXmlRpcClient();
@@ -160,7 +160,7 @@ a.UseXmlRpc()
 
 然后把生成的.cs文件复制（或链接）到客户端项目。然后客户端直接使用同名`扩展方法`即可调用。
 
-```csharp
+```csharp showLineNumbers
 var sum3 = client.Sum(10,20);
 ```
 
@@ -170,7 +170,7 @@ var sum3 = client.Sum(10,20);
 
 首先，需要声明一个基类，用于通讯基础。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 新建一个类，继承XmlRpcDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
@@ -200,7 +200,7 @@ class MyXmlRpcDispatchProxy : XmlRpcDispatchProxy
 
 然后按照服务，定义一个相同的代理接口。
 
-```csharp
+```csharp showLineNumbers
 interface IXmlRpcServer
 {
     [XmlRpc(true)]

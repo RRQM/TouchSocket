@@ -87,7 +87,7 @@ TouchSocket的适配器，在初始阶段（原始Tcp），会收到一个ByteBl
 ### 4.1 在Config配置中使用
 
 在Config配置使用时，相当于初始化赋值。比较单一，但是很可靠。
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig();
 config.SetTcpDataHandlingAdapter(() => new NormalDataHandlingAdapter());
 ```
@@ -96,7 +96,7 @@ config.SetTcpDataHandlingAdapter(() => new NormalDataHandlingAdapter());
 
 直接设置适配器，可以在任意时刻进行。
 
-```csharp
+```csharp showLineNumbers
  client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
 ```
 
@@ -105,7 +105,7 @@ config.SetTcpDataHandlingAdapter(() => new NormalDataHandlingAdapter());
 Udp使用的插件，只能从Config配置。
 
 【**UdpSession**】
-```csharp
+```csharp showLineNumbers
  m_udpSession.Setup(new TouchSocketConfig()
       .SetBindIPHost(new IPHost(this.textBox2.Text))
       .SetUdpDataHandlingAdapter(()=> 
@@ -129,7 +129,7 @@ Udp使用的插件，只能从Config配置。
 
 限制使用的场景应用于自定义封装。例如：自己封装一个服务器，然后适配器仅**特定使用**，不允许外部随意赋值，那么可以如下实现：
 
-```csharp
+```csharp showLineNumbers
 public class MySocketClient : SocketClient
 {
     /// <summary>

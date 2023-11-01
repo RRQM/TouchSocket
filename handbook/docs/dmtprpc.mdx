@@ -31,7 +31,7 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 2. 继承于RpcServer类、或实现IRpcServer。亦或者将服务器声明为**瞬时生命**的服务，继承TransientRpcServer、或ITransientRpcServer。
 3. 在该类中写**公共方法**，并用**DmtpRpc**属性标签标记。
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : RpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
@@ -48,7 +48,7 @@ public class MyRpcServer : RpcServer
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : TransientRpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
@@ -75,7 +75,7 @@ public class MyRpcServer : TransientRpcServer
 
 以下仅示例基于Tcp协议Dmtp。其他协议的服务器请看[创建Dmtp服务器](./dmtpservice.mdx)
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(7789)
@@ -103,7 +103,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 下列以TcpDmtpClient为例，其他客户端请看[创建Dmtp客户端](./dmtpclient.mdx)。
 
-```csharp
+```csharp showLineNumbers
 var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
@@ -125,7 +125,7 @@ bool result =(bool) client.GetDmtpRpcActor().Invoke(typeof(bool),"Login", Invoke
 
 或者使用`InvokeT`的扩展方法调用。在有返回值时，可以直接泛型传参。
 
-```csharp
+```csharp showLineNumbers
 bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitInvoke, "123", "abc");
 ```
 
@@ -146,7 +146,7 @@ bool result =client.GetDmtpRpcActor().InvokeT<bool>("Login", InvokeOption.WaitIn
 
 【生成的代理】
 
-```csharp
+```csharp showLineNumbers
 using System;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -241,7 +241,7 @@ namespace RpcProxy
 
 使用代理扩展直接调用。
 
-```csharp
+```csharp showLineNumbers
 var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
@@ -276,7 +276,7 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 1. 在**客户端项目**中定义Rpc服务，名为`ReverseCallbackServer`。
 2. 用**DmtpRpc**标记需要公开的公共方法。
 
-```csharp
+```csharp showLineNumbers
 public class ReverseCallbackServer : RpcServer
 {
     [DmtpRpc(true)]//使用方法名作为调用键
@@ -289,7 +289,7 @@ public class ReverseCallbackServer : RpcServer
 
 **【客户端注册发布服务】**
 
-```csharp
+```csharp showLineNumbers
 var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
@@ -321,7 +321,7 @@ client.Logger.Info($"连接成功，Id={client.Id}");
 
 可以获取所有`TcpDmtpSocketClient`，进行广播式调用。
 
-```csharp
+```csharp showLineNumbers
 foreach (var item in service.GetClients())
 {
     item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
@@ -330,7 +330,7 @@ foreach (var item in service.GetClients())
 
 也可以先筛选Id，然后再调用。
 
-```csharp
+```csharp showLineNumbers
 var id = service.GetIds().FirstOrDefault(a => a.Equals("特定id"));
 if (service.TryGetSocketClient(id, out var socketClient))
 {
@@ -346,7 +346,7 @@ if (service.TryGetSocketClient(id, out var socketClient))
 
 使用该方式可以实现，当客户端调用服务器的Add接口的时候，服务器又回调客户端的SayHello接口。
 
-```csharp
+```csharp showLineNumbers
 class MyRpcServer : TransientRpcServer
 {
     [DmtpRpc(true)]//使用函数名直接调用
@@ -377,7 +377,7 @@ class MyRpcServer : TransientRpcServer
 
 客户端1调用客户端2的方法，需要知道对方的**Id**。然后和调用Rpc方法一致。然后使用下列函数调用即可。
 
-```csharp
+```csharp showLineNumbers
 var client1 = GetTcpDmtpClient();
 var client2 = GetTcpDmtpClient();
 
@@ -386,7 +386,7 @@ client1.GetDmtpRpcActor().InvokeT<bool>(client2.Id,"Notice",InvokeOption.WaitInv
 
 亦或者
 
-```csharp
+```csharp showLineNumbers
 var targetRpcClient = client1.CreateTargetDmtpRpcActor(client2.Id);
 targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
 ```
@@ -421,7 +421,7 @@ targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
 
 同意转发路由数据。
 
-```csharp
+```csharp showLineNumbers
 internal class MyPlugin : PluginBase,IDmtpRoutingPlugin
 {
     public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
@@ -471,7 +471,7 @@ Dmtp除了上述的4中内置序列化，还支持自定义序列化。
 
 首先，需要实现序列化转换器。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 序列化选择器
 /// </summary>
@@ -611,7 +611,7 @@ CancellationToken是取消令箭源，可用于取消Rpc的调用。
 
 :::  
 
-```csharp
+```csharp showLineNumbers
 var client = GetTcpDmtpClient();
 
 //设置调用配置
@@ -641,7 +641,7 @@ client.Logger.Info($"调用Add方法成功，结果：{sum}");
 该方法简单粗暴，能够解决一定程度的大数据问题，但并不建议这么做。
 
 
-```csharp
+```csharp showLineNumbers
 TouchSocketConfig config = new TouchSocketConfig()//配置
                 .SetMaxPackageSize(1024 * 1024 * 10)
 ```
@@ -663,7 +663,7 @@ TouchSocketConfig config = new TouchSocketConfig()//配置
 
 【Service端】
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 测试客户端请求，服务器响应大量流数据
 /// </summary>
@@ -693,7 +693,7 @@ public int RpcPullChannel(ICallContext callContext, int channelID)
 
 【Client端】
 
-```csharp
+```csharp showLineNumbers
 using var client = GetTcpDmtpClient();
 ChannelStatus status = ChannelStatus.Default;
 int size = 0;
@@ -720,7 +720,7 @@ Console.WriteLine($"状态：{status}，size={size}");
 
 【Service端】
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// "测试推送"
 /// </summary>
@@ -748,7 +748,7 @@ public int RpcPushChannel(ICallContext callContext, int channelID)
 
 【Client端】
 
-```csharp
+```csharp showLineNumbers
 using var client = GetTcpDmtpClient();
 ChannelStatus status = ChannelStatus.Default;
 int size = 0;
@@ -784,7 +784,7 @@ Console.WriteLine($"状态：{status}，result={result}");
 
 然后新建类，命名为`MyDmtpRpcActor`，继承`DmtpRpcActor`，然后分别实现`IRpcClient1`与`IRpcClient2`两个接口。
 
-```csharp
+```csharp showLineNumbers
 interface IRpcClient1:IDmtpRpcActor
 {
 
@@ -820,7 +820,7 @@ client.Connect();
 
 最后在获得RpcActor时，就可以按接口获取。然后配合服务器代码接口约束，就可以实现我们所期望的功能。
 
-```csharp
+```csharp showLineNumbers
 IRpcClient1 rpcClient1= client.GetDmtpRpcActor<IRpcClient1>();
 IRpcClient2 rpcClient2= client.GetDmtpRpcActor<IRpcClient2>();
 ```

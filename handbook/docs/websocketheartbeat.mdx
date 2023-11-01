@@ -62,13 +62,13 @@ client.Connect();
 ## 三、直接发送心跳
 
 直接发送心跳，可以直接使用扩展方法。
-```csharp 
+```csharp showLineNumbers 
 client.PingWS();
 client.PongWS();
 ```
 
 或者自己构建数据帧
-```csharp
+```csharp showLineNumbers
 WSDataFrame dataFrame = new WSDataFrame()
 {
     FIN = true,

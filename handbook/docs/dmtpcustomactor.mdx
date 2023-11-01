@@ -36,7 +36,7 @@ title: 自定义DmtpActor
 
 声明`TryFindMethod`委托，用于向外面插件通过方法名搜索Rpc方法。
 
-```csharp
+```csharp showLineNumbers
 interface ISimpleDmtpRpcActor : IActor
 {
     void Invoke(string methodName);
@@ -261,7 +261,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
 
 `MethodModel`用于储存反射调用相关。
 
-```csharp
+```csharp showLineNumbers
 class MethodModel
 {
     public MethodModel(MethodInfo method, object target)
@@ -277,7 +277,7 @@ class MethodModel
 
 `SimpleDmtpRpcPackage`类，用于打包Rpc请求，关于打包的使用详情，可以看[包序列化](./ipackage)
 
-```csharp
+```csharp showLineNumbers
 class SimpleDmtpRpcPackage : WaitRouterPackage
 {
     protected override bool IncludedRouter => true;
@@ -316,7 +316,7 @@ class SimpleDmtpRpcPackage : WaitRouterPackage
 
 扩展方法是为`IPluginsManager`、`IDmtpActor`、`IDmtpActorObject`等提供扩展功能的静态方法。
 
-```csharp
+```csharp showLineNumbers
 static class SimpleDmtpRpcExtension
 {
     #region DependencyProperty
@@ -384,7 +384,7 @@ static class SimpleDmtpRpcExtension
 
 功能插件是为Actor提供创建时机，和必要的配置信息。如果有需要，还可以抛出插件信息（例如[文件传输](./dmtptransferfile) ）。
 
-```csharp
+```csharp showLineNumbers
 class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
 {
     readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
@@ -495,7 +495,7 @@ private static TcpDmtpClient GetTcpDmtpClient()
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 static void Main(string[] args)
 {
     var service = GetTcpDmtpService();

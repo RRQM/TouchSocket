@@ -153,7 +153,7 @@ config.ConfigurePlugins(a =>
 
 声明`MyPlugin`插件，是为了方便处理`OnDmtpFileTransfering`和`OnDmtpFileTransfered`函数。
 
-```csharp
+```csharp showLineNumbers
 internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin
 {
     private readonly ILog m_logger;
@@ -207,7 +207,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTrans
 
 【客户端代码】
 
-```csharp
+```csharp showLineNumbers
 var filePath = "ClientPullFileFromService.Test";
 var saveFilePath = "SaveClientPullFileFromService.Test";
 
@@ -245,7 +245,7 @@ IResult result = client.GetDmtpFileTransferActor().PullFile(fileOperator);
 
 ### 5.2 客户端向服务器推送文件
 
-```csharp
+```csharp showLineNumbers
 var filePath = "ClientPushFileFromService.Test";
 var saveFilePath = "SaveClientPushFileFromService.Test";
 
@@ -285,7 +285,7 @@ IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
 
 服务器主动向客户端请求文件，必须通过Id，找到其`SocketClient`的派生类。
 
-```csharp
+```csharp showLineNumbers
 string targetId="targetId";
 if (!service.TryGetSocketClient(targetId, out var socketClient))
 {
@@ -331,7 +331,7 @@ IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 
 服务器主动向客户端推送文件，必须通过Id，找到其`SocketClient`的派生类。
 
-```csharp
+```csharp showLineNumbers
 if (!service.TryGetSocketClient(targetId, out var socketClient))
 {
     throw new Exception($"没有找到Id={targetId}的客户端");
@@ -443,7 +443,7 @@ internal class MyPlugin : PluginBase, IDmtpRoutingPlugin
 1. 直接调用PullSmallFile或者PullSmallFileAsync，获取到实际的文件数据。
 2. 通过Save方法，将数据写入文件。也可以自行保存。
 
-```csharp
+```csharp showLineNumbers
 var filePath = "PullSmallFileFromService.Test";
 var saveFilePath = "SavePullSmallFileFromService.Test";
 
@@ -464,7 +464,7 @@ result.Save(saveFilePath,overwrite:true);//将数据保存到指定路径。
 1. 直接调用PushSmallFile或者PushSmallFileAsync。
 2. 返回值即表示是否成功。
 
-```csharp
+```csharp showLineNumbers
 var filePath = "PushSmallFileFromService.Test";
 var saveFilePath = "SavePushSmallFileFromService.Test";
 if (!File.Exists(filePath))//创建测试文件
@@ -512,7 +512,7 @@ ClientFactory的通信模型使用的是一个主通信端+多个传输客户端
 
 对于客户端的配置，请详细参考[创建DmtpClient工厂](./dmtpclient.mdx)
 
-```csharp
+```csharp showLineNumbers
 var clientFactory = new TcpDmtpClientFactory()
 {
     MinCount = 5,
@@ -539,7 +539,7 @@ clientFactory.MainConfig//配置主通信
 
 ### 8.2 多线程请求文件
 
-```csharp
+```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
 Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
 if (!resultCon.IsSuccess())
@@ -588,7 +588,7 @@ ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 
 ### 8.3 多线程推送文件
 
-```csharp
+```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
 Result resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
 
@@ -644,7 +644,7 @@ IResult result = clientFactory.PushFile(fileOperator);
 【获取目标传输客户端的Id集合】
 在TcpDmtpClientFactory属性中，有个OnFindTransferIds。通过实现该属性，使其能够获取到对应客户端的传输客户端Id集合（下列代码为模拟值，要具体实现该功能，还得自行实现）。
 
-```csharp
+```csharp showLineNumbers
 clientFactory.SetFindTransferIds((client, targetId) =>
 {
     //此处的操作不唯一，可能需要rpc实现。

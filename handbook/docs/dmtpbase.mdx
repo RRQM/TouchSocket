@@ -15,7 +15,7 @@ title: 连接及Id同步
 ### 1.1 Token验证
 在服务器或客户端的配置上，设置VerifyToken，即可实现字符串Token验证。
 
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig()
     .SetVerifyToken("Dmtp");
 ```
@@ -26,13 +26,13 @@ var config = new TouchSocketConfig()
 
 设置元数据。
 
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig()
     .SetVerifyToken("Dmtp")
     .SetMetadata(new Metadata().Add("a","a"));
 ```
 
-```csharp
+```csharp showLineNumbers
 internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
 {
 
@@ -63,7 +63,7 @@ internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
 
 以连接、操作TcpDmtpService为例。其基础协议即为tcp，则使用常规的tcp客户端即可模拟链接。
 
-```csharp
+```csharp showLineNumbers
 using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
 tcpClient.Received = (client, e) =>
 {
@@ -139,7 +139,7 @@ await Task.Delay(2000);
 使用起来是非常简单的，每个DmtpActor，都实现了Send方法接口。
 第一个参数为ushort类型，使用者可以**约定任意大于20数值**。
 
-```csharp
+```csharp showLineNumbers
 client.Send(20,Encoding.UTF8.GetBytes("RRQM"));
 ```
 
@@ -151,7 +151,7 @@ Flags不要使用小于20的，因为框架内部在使用。并且小于100的�
 
 在**接收方**订阅`IDmtpReceivedPlugin`，已经包含了协议参数，所以直接自行筛选即可。
 
-```csharp
+```csharp showLineNumbers
 internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 {
     public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)

@@ -18,7 +18,7 @@ import Tag from "@site/src/components/Tag.js";
 
 例如：对于下列服务
 
-```csharp
+```csharp showLineNumbers
 public class MyRpcServer : RpcServer
 {
     [DmtpRpc]
@@ -34,7 +34,7 @@ public class MyRpcServer : RpcServer
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 public interface IMyRpcServer
 {
     public bool Login(string account, string password);
@@ -43,7 +43,7 @@ public interface IMyRpcServer
 
 我们需要设置接口，如下：
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// GeneratorRpcProxy的标识，表明这个接口应该被生成其他源代码。
 /// ConsoleApp2.MyRpcServer参数是整个rpc调用的前缀，即：除方法名的所有，包括服务的类名。

@@ -124,7 +124,7 @@ Ssl配置，为Null时则不启用。
 
 代码如下：
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpService();
 service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
 service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
@@ -182,7 +182,7 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 
 （1）建立SocketClient继承类。
 
-```csharp
+```csharp showLineNumbers
 public class MySocketClient : SocketClient
 {
     protected override async Task ReceivedData(ReceivedDataEventArgs e)
@@ -199,7 +199,7 @@ public class MySocketClient : SocketClient
 
 （2）建立TcpService继承类。实际上如果业务不涉及服务器配置的话，可以省略该步骤，使用**TcpService的泛型**直接创建。
 
-```csharp
+```csharp showLineNumbers
 public class MyService : TcpService<MySocketClient>
 {
     protected override void LoadConfig(TouchSocketConfig config)
@@ -223,7 +223,7 @@ public class MyService : TcpService<MySocketClient>
 
 （3）创建服务器（包含MyService）。
 
-```csharp
+```csharp showLineNumbers
 MyService service = new MyService();
 
 service.Setup(new TouchSocketConfig()//载入配置     
@@ -241,7 +241,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 （4）创建服务器（不含MyService）。
 
-```csharp
+```csharp showLineNumbers
 TcpService<MySocketClient> service = new TcpService<MySocketClient>();
 
 service.Setup(new TouchSocketConfig()//载入配置     
@@ -269,7 +269,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 服务器在配置监听时，有多种方式实现。其中最简单、最常见的配置方式就是通过Config直接配置。
 
-```csharp
+```csharp showLineNumbers
 TcpService service = new TcpService();
 
 service.Setup(new TouchSocketConfig()//载入配置
@@ -281,7 +281,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 直接添加监听配置是更加个性化的监听配置，它可以单独控制指定监听地址的具体配置，例如：是否启用Ssl加密、使用何种适配器等。
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpService();
 
 service.Setup(new TouchSocketConfig()//载入配置
@@ -347,7 +347,7 @@ foreach (var item in service.Monitors)
 
 当使用TcpService（非泛型）创建服务器时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpService();
 service.Received = (client, e) =>
 {
@@ -380,7 +380,7 @@ service.Setup(new TouchSocketConfig()//载入配置
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp
+```csharp showLineNumbers
 public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
     public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
@@ -433,7 +433,7 @@ service.Setup(new TouchSocketConfig()
 
 （1）声明插件
 
-```csharp
+```csharp showLineNumbers
 public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
 {
     private ILogger<MyTcpPlugin> m_logger;
@@ -463,7 +463,7 @@ public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
 
 （2）注入服务
 
-```csharp
+```csharp showLineNumbers
 public void ConfigureServices(IServiceCollection services)
 {
     var tcpService = services.AddTcpService(config =>
@@ -505,7 +505,7 @@ UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
-```csharp
+```csharp showLineNumbers
 var socketClients = service.GetClients();
 ```
 
@@ -519,7 +519,7 @@ var socketClients = service.GetClients();
 
 先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
 
-```csharp
+```csharp showLineNumbers
 var ids = service.GetIds();
 if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
 {
@@ -531,7 +531,7 @@ if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
 【同步发送】
 
 SocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
-```csharp
+```csharp showLineNumbers
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
 public virtual void Send(byte[] buffer, int offset, int length);
@@ -541,7 +541,7 @@ public virtual void Send(byte[] buffer, int offset, int length);
 
 TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
 
-```csharp
+```csharp showLineNumbers
 public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(ByteBlock byteBlock);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
@@ -557,7 +557,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 通过Id发送数据。
 
-```csharp
+```csharp showLineNumbers
 public virtual void Send(string id, ByteBlock byteBlock);
 public virtual void Send(string id, byte[] buffer, int offset, int length);
 public virtual void Send(string id, byte[] buffer);

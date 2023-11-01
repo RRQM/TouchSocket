@@ -33,7 +33,7 @@ WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器
 
 通过插件创建的话，只能指定一个特殊url路由。如果想获得连接前的Http请求，也必须再添加一个实现IWebSocketPlugin接口的插件，然后从OnHandshaking方法中捕获。
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
@@ -56,7 +56,7 @@ service.Logger.Info("服务器已启动");
 
 可以对连接的Url、Query、Header等参数进行验证，然后决定是否执行WebSocket连接。
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
@@ -75,7 +75,7 @@ service.Setup(new TouchSocketConfig()//加载配置
 service.Logger.Info("服务器已启动");
 ```
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 验证websocket的连接
 /// </summary>
@@ -130,7 +130,7 @@ private static bool VerifyConnection(IHttpSocketClient client, HttpContext conte
 1. 必须配置ConfigureRpcStore，和注册MyServer
 2. 必须添加WebApiParserPlugin
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpService();
 service.Setup(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
@@ -151,7 +151,7 @@ service.Setup(new TouchSocketConfig()//加载配置
 service.Logger.Info("服务器已启动");
 ```
 
-```csharp
+```csharp showLineNumbers
 public class MyServer : RpcServer
 {
     private readonly ILog m_logger;
@@ -180,7 +180,7 @@ public class MyServer : RpcServer
 
 使用上下文直接创建的优点在于能更加个性化的实现WebSocket的连接。
 
-```csharp
+```csharp showLineNumbers
 class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 {
     public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
@@ -199,7 +199,7 @@ class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 
 创建WSs服务器时，其他配置不变，只需要在config中配置SslOption代码即可，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
 
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig();
 config.SetServiceSslOption(new ServiceSslOption() //Ssl配置，当为null的时候，相当于创建了ws服务器，当赋值的时候，相当于wss服务器。
       { 
@@ -217,7 +217,7 @@ WebSocket服务器接收消息，目前有两种方式。第一种就是通过�
 
 【定义插件】
 
-```csharp
+```csharp showLineNumbers
 public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
 {
     public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
@@ -312,7 +312,7 @@ service.Setup(new TouchSocketConfig()//加载配置
 
 WebSocket显式ReadAsync数据，实际上也要用到插件，但是，使用的仅仅是`IWebSocketHandshakedPlugin`，因为我们只需要拦截`握手成功`的消息。
 
-```csharp
+```csharp showLineNumbers
 class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 {
     private readonly ILog m_logger;
@@ -400,7 +400,7 @@ private static HttpService CreateHttpService()
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
-```csharp
+```csharp showLineNumbers
 HttpSocketClient[] socketClients = service.GetClients();
 foreach (var item in socketClients)
 {
@@ -424,7 +424,7 @@ foreach (var item in socketClients)
 
 先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
 
-```csharp
+```csharp showLineNumbers
 string[] ids = service.GetIDs();
 if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
 {
@@ -433,13 +433,13 @@ if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
 
 ### 6.2 发送文本类消息
 
-```csharp
+```csharp showLineNumbers
 socketClient.SendWithWS("Text");
 ```
 
 ### 6.3 发送二进制消息
 
-```csharp
+```csharp showLineNumbers
 socketClient.SendWithWS(new byte[10]);
 ```
 
@@ -447,13 +447,13 @@ socketClient.SendWithWS(new byte[10]);
 
 例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
 
-```csharp
+```csharp showLineNumbers
 byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 socketClient.SubSendWithWS(data, 5);
 ```
 
 ### 6.5 直接发送自定义构建的数据帧
-```csharp
+```csharp showLineNumbers
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
 frame.FIN= true;
@@ -481,7 +481,7 @@ Websocket的所有发送，都是形如**SendWithWS**的扩展方法。不可直
 
 ## 七、服务器广播发送
 
-```csharp
+```csharp showLineNumbers
 //广播给所有人
 foreach (var item in service.GetClients())
 {

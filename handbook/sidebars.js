@@ -262,8 +262,13 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "tcpcommonplugins",
+            label: "7.9 其他常用插件"
+          },
+          {
+            type: "doc",
             id: "tcpaot",
-            label: "7.9 AOT模式"
+            label: "7.10 AOT模式"
           },
         ]
     },

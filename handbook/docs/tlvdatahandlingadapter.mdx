@@ -43,7 +43,7 @@ TLV适配器，定义了一种简单高效的三元组编码，简称TLV编码�
 【适配器使用】
 设置的FixedHeaderType类型后，实际的支持最大数据还受SetMaxPackageSize影响。默认为1024*1024*10字节。
 
-```csharp
+```csharp showLineNumbers
 .SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//如果使用TLVPlugin插件，此步骤可省略。
 ```
 
@@ -53,7 +53,7 @@ TLV适配器，定义了一种简单高效的三元组编码，简称TLV编码�
 
 使用插件，相当于自动设置适配器，并且主动回应Ping。
 
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig();
 
 config.UsePlugin()
@@ -73,7 +73,7 @@ config.UsePlugin()
 - 实际上，在插件中，已经做了Ping，Pong的处理。客户端可以直接调用。
 - 该操作，服务器也可以直接ping客户端。
 
-```csharp
+```csharp showLineNumbers
 bool result=this.m_client.Ping();//返回值为true时，对端一定在线。此方法服务器也可以主动ping客户端。
 ```
 
@@ -90,13 +90,13 @@ bool result=this.m_client.Ping();//返回值为true时，对端一定在线。�
 构建数据时，可用TLVDataFrame构建。或者其值类型构建，此处推荐**ValueTLVDataFrame**
 【直接构造】
 
-```csharp
+```csharp showLineNumbers
 ValueTLVDataFrame requestInfo = new ValueTLVDataFrame(10, new byte[] { 0, 1, 2, 3 });
 ```
 
 【追加型构建】
 
-```csharp
+```csharp showLineNumbers
  ValueTLVDataFrame requestInfo = new ValueTLVDataFrame();
  requestInfo.AppendValue(new byte[] { 0, 1, 2, 3 });
  requestInfo.AppendValue(new byte[] { 4, 5, 6, 7 });
@@ -107,7 +107,7 @@ ValueTLVDataFrame requestInfo = new ValueTLVDataFrame(10, new byte[] { 0, 1, 2, 
 
 构建完数据后，直接发送。
 
-```csharp
+```csharp showLineNumbers
 client.Send(new ValueTLVDataFrame(10,Encoding.UTF8.GetBytes("rrqm")));//推荐写法，如果使用自己Build，则需要明确指出FixedHeaderType的值。
 ```
 

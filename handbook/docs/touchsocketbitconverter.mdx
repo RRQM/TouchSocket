@@ -18,13 +18,13 @@ title: 大小端转换器
 
 ## 二、绝对大端
 
-```csharp
+```csharp showLineNumbers
 byte[] data= TouchSocketBitConverter.BigEndian.GetBytes(10);
 //结果 {0,0,0,10}
 ```
 ## 三、绝对小端
 
-```csharp
+```csharp showLineNumbers
 byte[] data= TouchSocketBitConverter.LittleEndian.GetBytes(10);
 //结果 {10,0,0,0}
 ```
@@ -33,7 +33,7 @@ byte[] data= TouchSocketBitConverter.LittleEndian.GetBytes(10);
 
 TouchSocket系全采用默认“小端”模式。可通过DefaultEndianType属性，修改为大端。
 
-```csharp
+```csharp showLineNumbers
 TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
 byte[] data= TouchSocketBitConverter.Default.GetBytes(10);
 ```

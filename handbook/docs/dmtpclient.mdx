@@ -63,7 +63,7 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 
 `TcpDmtpClient`对应`TcpDmtpService`服务器。基本创建如下，支持[创建TcpClient](./tcpclient.mdx)的所有配置。
 
-```csharp
+```csharp showLineNumbers
 var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
@@ -101,7 +101,7 @@ var client = new UdpDmtp();
 
 `HttpDmtpClient`对应`HttpDmtpService`，或者`HttpMiddlewareDmtpService`服务器。基本创建如下，支持[创建HttpClient](./httpclient.mdx)的所有配置。
 
-```csharp
+```csharp showLineNumbers
 var client = new HttpDmtpClient();
 client.Setup(new TouchSocketConfig()
    .SetRemoteIPHost("127.0.0.1:7789")
@@ -111,7 +111,7 @@ client.Connect();
 
 ### 4.4 WebSocketDmtpClient
 
-```csharp
+```csharp showLineNumbers
 var websocketDmtpClient = new WebSocketDmtpClient();
 websocketDmtpClient.Setup(new TouchSocketConfig()
     .SetVerifyToken("Dmtp")
@@ -125,7 +125,7 @@ await websocketDmtpClient.ConnectAsync();
 DmtpClient工厂工作模式是一种，由单个主通讯连接和多个传输通讯连接组成的连接池。默认提供了两种类型的客户端工厂，分别为`TcpDmtpClientFactory`，`HttpDmtpClientFactory`。两者工作流程及配置基本相同，下面以`TcpDmtpClientFactory`为例。
 
 【创建】
-```csharp
+```csharp showLineNumbers
 var clientFactory = new TcpDmtpClientFactory()
 {
     MinCount = 5,//最小数量，在主连接器成功建立以后，会检测可用连接是否大于该值，否的话会自动建立。
@@ -158,7 +158,7 @@ Result result = clientFactory.CheckStatus();
 
 【使用】
 
-```csharp
+```csharp showLineNumbers
 var clientFactory = CreateTcpClientFactory();
 var client = clientFactory.GetTransferClient();
 try
@@ -176,7 +176,7 @@ finally
 
 `NamedPipeDmtpClient`对应`NamedPipeDmtpService`服务器。基本创建如下，支持[创建NamedPipeClient](./namedpipeclient.mdx)的所有配置。
 
-```csharp
+```csharp showLineNumbers
 var client = new NamedPipeDmtpClient();
 client.Setup(new TouchSocketConfig()
       .SetPipeName("TouchSocketPipe")//设置管道名称

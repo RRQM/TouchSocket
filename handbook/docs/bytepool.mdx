@@ -32,7 +32,7 @@ title: 内存池
 - AutoZero属性，在回收内存时，是否清空内存。
 - MaxBucketsToTry是最大梯度跨度。例如：当梯度为16、32、64、128、512、1024时，MaxBucketsToTry为2，则当请求的长度是16时，且16的内存块均已派出，则会请求32，最大会请求到64，如果均已派出，则直接新建。
 
-```csharp
+```csharp showLineNumbers
 BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
 {
     AutoZero = false,//在回收内存时，是否清空内存
@@ -44,7 +44,7 @@ BytePool defaultBytePool = BytePool.Default;//使用默认的
 
 在内存池创建以后，可以直观的查看它的各个属性。包括：
 
-```csharp
+```csharp showLineNumbers
 Console.WriteLine($"内存池容量={bytePool.Capacity}");
 Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
 ```
@@ -55,7 +55,7 @@ Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
 
 - byteSize：用于申请的最小字节尺寸。例如：当申请100长度时，可能会得到100，1000，甚至更大尺寸的内存，但绝不会小于100.
 
-```csharp
+```csharp showLineNumbers
 ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);//从默认内存池获得
 byteBlock1.Dispose();
 
@@ -83,7 +83,7 @@ using (ByteBlock byteBlock3 = new ByteBlock())//通过using创建及释放时，
 
 基本使用和`MemoryStream`一致。
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
@@ -97,7 +97,7 @@ using (var byteBlock = new ByteBlock())
 
 ### 3.3 基础类型的写入和读取
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     byteBlock.Write(byte.MaxValue);//写入byte类型
@@ -124,7 +124,7 @@ using (var byteBlock = new ByteBlock())
 
 数据对象的写入和读取，需要指定序列化类型。因为他的实质是序列化和反序列化。
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     //将实例写入，实际上是序列化
@@ -141,7 +141,7 @@ using (var byteBlock = new ByteBlock())
 
 数组包的写入和读取，也是可以按序排入的。
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
@@ -154,7 +154,7 @@ using (var byteBlock = new ByteBlock())
 
 不过，在性能极致要求的情况下，使用`ReadBytesPackage`，实际上会创建额外的内存，所以可以使用下面用法：
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
@@ -173,7 +173,7 @@ using (var byteBlock = new ByteBlock())
 
 [包类型](./ipackage.mdx)是最高效的数据结构转换方案。所以内存池也支持按序排入。
 
-```csharp
+```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
     byteBlock.WritePackage(new MyPackage()
@@ -187,7 +187,7 @@ using (var byteBlock = new ByteBlock())
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 class MyPackage : PackageBase
 {
     public int Property { get; set; }
@@ -212,7 +212,7 @@ class MyPackage : PackageBase
 
 **原因非常简单，byteBlock对象在到达HandleReceivedData时，触发Task异步，此时触发线程会立即返回，并释放byteBlock，而Task异步线程会滞后，然后试图从已释放的byteBlock中获取数据，所以，必定发生异常。**
 
-```csharp
+```csharp showLineNumbers
 public class MyTClient : TcpClient
 {
     protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
@@ -229,7 +229,7 @@ public class MyTClient : TcpClient
 
 解决方法也非常简单，只需要在异步前锁定，然后使用完成后取消锁定，且不用再调用Dispose。
 
-```csharp
+```csharp showLineNumbers
 public class MyTClient : TcpClient
 {
     protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)

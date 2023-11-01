@@ -11,7 +11,7 @@ title: Json序列化
 
 ## 一、说明
 在TouchSocket中，内置了Json序列化与反序列化。
-```csharp
+```csharp showLineNumbers
 string jsonstr=SerializeConvert.ToJson(new object());//序列化
 object obj=SerializeConvert.FromJson<object>(jsonstr);//反序列化
 ```
@@ -25,7 +25,7 @@ object obj=SerializeConvert.FromJson<object>(jsonstr);//反序列化
 当应用中加载了Newtonsoft.Json的程序集后，所有的平台的序列化，均会使用Newtonsoft.Json。可通过`**SerializeConvert.NewtonsoftJsonIsSupported**`静态属性获取当前是否支持Newtonsoft.Json。
 
 也可以手动加载Newtonsoft.Json（一般在**Unity3d**中需要手动加载）。
-```csharp
+```csharp showLineNumbers
 bool IsSupported=SerializeConvert.LoadNewtonsoftJson(typeof(JsonConvert));//返回值指示是否成功加载
 ```
 
@@ -35,14 +35,14 @@ bool IsSupported=SerializeConvert.LoadNewtonsoftJson(typeof(JsonConvert));//返�
 ## 三、JsonFast性能
 
 【简单数据对象】
-```csharp
+```csharp showLineNumbers
 public class SimpleObject 
 {
     public int Age { get; set; }
     public string Name { get; set; }
 }
 ```
-```csharp
+```csharp showLineNumbers
 [Benchmark]
 public void JsonFast_SimpleObject()
 {
@@ -58,7 +58,7 @@ public void JsonFast_SimpleObject()
 ![image.png](@site/static/img/docs/jsonserialize-1.png)
 
 【复杂对象】
-```csharp
+```csharp showLineNumbers
 public class ComplexObject
 {
     public Dictionary<int, int> Dic1 { get; set; }
@@ -92,7 +92,7 @@ public class Arg
 }
 ```
 初始化
-```csharp
+```csharp showLineNumbers
 private ComplexObject GetComplexObject()
 {
     ComplexObject complexObject = new ComplexObject();
@@ -144,7 +144,7 @@ private ComplexObject GetComplexObject()
     return complexObject;
 }
 ```
-```csharp
+```csharp showLineNumbers
 [Benchmark]
 public void JsonFast_ComplexObject()
 {

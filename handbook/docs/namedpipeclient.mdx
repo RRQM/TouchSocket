@@ -74,7 +74,7 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 
 代码如下：
 
-```csharp
+```csharp showLineNumbers
 var client = new NamedPipeClient();
 client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建管道，但是还未建立连接
 client.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
@@ -113,7 +113,7 @@ client.Send("RRQM");
 
 一般继承实现的话，可以从NamedPipeClientBase继承。
 
-```csharp
+```csharp showLineNumbers
 class MyNamedPipeClient : NamedPipeClientBase
 {
     protected override async Task ReceivedData(ReceivedDataEventArgs e)
@@ -129,7 +129,7 @@ class MyNamedPipeClient : NamedPipeClientBase
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 var client = new MyNamedPipeClient();
 //载入配置
 client.Setup(new TouchSocketConfig()
@@ -150,7 +150,7 @@ client.Connect();//调用连接，当连接不成功时，会抛出异常。
 
 当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
-```csharp
+```csharp showLineNumbers
 var client = new NamedPipeClient();
 client.Received =(client, e) =>
 {
@@ -172,7 +172,7 @@ client.Connect("TouchSocketPipe");
 
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
-```csharp
+```csharp showLineNumbers
 public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
 {
     public async Task OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
@@ -191,7 +191,7 @@ public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
 
 （2）创建使用插件处理的客户端
 
-```csharp
+```csharp showLineNumbers
 var client = new NamedPipeClient();
 client.Setup(new TouchSocketConfig()
     .SetPipeName("TouchSocketPipe")//设置命名管道名称
@@ -212,7 +212,7 @@ client.Setup(new TouchSocketConfig()
 
 NamedPipeClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
 
-```csharp
+```csharp showLineNumbers
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
 public virtual void Send(byte[] buffer, int offset, int length);
@@ -222,7 +222,7 @@ public virtual void Send(byte[] buffer, int offset, int length);
 
 TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
 
-```csharp
+```csharp showLineNumbers
 public virtual Task SendAsync(byte[] buffer);
 public virtual Task SendAsync(byte[] buffer, int offset, int length);
 ```

@@ -22,7 +22,7 @@ REmote DIctionary Server(Redis) 是一个key-value存储系统，也是一个简
 
 Redis是由RedisFeature功能插件提供的，所以需要添加`UseDmtpRedis`。
 
-```csharp
+```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
     a.UseDmtpRedis();//添加Redis功能插件
@@ -31,7 +31,7 @@ Redis是由RedisFeature功能插件提供的，所以需要添加`UseDmtpRedis`�
 
 【请求端】
 
-```csharp
+```csharp showLineNumbers
 var client = GetTcpDmtpClient();
 
 //获取Redis
@@ -56,7 +56,7 @@ redis.ClearCache();
 
 默认情况下，Redis组件会使用`MemoryCache<string, byte[]>`作为实际储存。所以要实现缓存持久化，只需要替换该缓存、或者保存该缓存即可。
 
-```csharp
+```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
     a.UseDmtpRedis()//必须添加Redis访问插件

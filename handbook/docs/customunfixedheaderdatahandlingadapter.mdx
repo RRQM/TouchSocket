@@ -35,7 +35,7 @@ title: 模板解析“非固定包头”数据适配器
 首先，新建MyFixedHeaderRequestInfo类，然后实现**IUnfixedHeaderRequestInfo**用户自定义固定包头接口。
 然后在**OnParsingHeader**函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为Body 。
 
-```csharp
+```csharp showLineNumbers
 public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
 {
     private int bodyLength;
@@ -103,7 +103,7 @@ public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
 
 新建MyCustomUnfixedHeaderDataHandlingAdapter继承**CustomUnfixedHeaderDataHandlingAdapter**。
 
-```csharp
+```csharp showLineNumbers
 public class MyCustomUnfixedHeaderDataHandlingAdapter : CustomUnfixedHeaderDataHandlingAdapter<MyUnfixedHeaderRequestInfo>
 {
     protected override MyUnfixedHeaderRequestInfo GetInstance()
@@ -115,7 +115,7 @@ public class MyCustomUnfixedHeaderDataHandlingAdapter : CustomUnfixedHeaderDataH
 
 【接收】
 
-```csharp
+```csharp showLineNumbers
 TcpService service = new TcpService();
 service.Received = (client, e) =>
 {

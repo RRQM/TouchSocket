@@ -61,7 +61,7 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 
 `TcpDmtpService`是基于`Tcp`协议的Dmtp。在可配置的基础之上，还可以配置与[TcpService可配置项](./tcpservice.mdx)相关的配置。
 
-```csharp
+```csharp showLineNumbers
 var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(7789)
@@ -81,7 +81,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 `UdpDmtp`是基于`Udp`协议Dmtp。在可配置的基础之上，还可以配置与[UdpSession可配置项](./udpsession.mdx)相关的配置。
 
-```csharp
+```csharp showLineNumbers
 var udpDmtp = new UdpDmtp();
 
 var config = new TouchSocketConfig();
@@ -107,7 +107,7 @@ udpDmtp.Start();
 
 `HttpDmtpService`是基于`Http`升级协议。在该解析器中，配置设置[HttpService](./httpservice.mdx)一致。
 
-```csharp
+```csharp showLineNumbers
 var service = new HttpDmtpService();
 TouchSocketConfig config = new TouchSocketConfig()//配置
        .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -134,7 +134,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
-```csharp
+```csharp showLineNumbers
 builder.Services.AddWebSocketDmtpService(() =>
 {
     return new TouchSocketConfig()
@@ -155,7 +155,7 @@ builder.Services.AddWebSocketDmtpService(() =>
 
 首先必须先启用`WebSocket`。其次使用`UseWebSocketDmtp`即可。
 
-```csharp
+```csharp showLineNumbers
 var app = builder.Build();
 app.UseWebSockets();
 app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
@@ -171,7 +171,7 @@ app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之�
 
 在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
-```csharp
+```csharp showLineNumbers
 //企业版功能
 builder.Services.AddHttpMiddlewareDmtpService(() =>
 {
@@ -193,7 +193,7 @@ builder.Services.AddHttpMiddlewareDmtpService(() =>
 
 使用`UseWebSocketDmtp`即可。
 
-```csharp
+```csharp showLineNumbers
 var app = builder.Build();
 app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
 ```
@@ -202,7 +202,7 @@ app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。不需要其他。
 
 这是基于`NamedPipe`的Dmtp。在可配置的基础之上，还可以配置与[NamedPipeService可配置项](./namedpipeservice.mdx)相关的配置。
 
-```csharp
+```csharp showLineNumbers
 var service = new NamedPipeDmtpService();
 var config = new TouchSocketConfig()//配置
        .SetPipeName("TouchSocketPipe")//设置管道名称

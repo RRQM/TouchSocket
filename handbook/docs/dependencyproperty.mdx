@@ -16,7 +16,7 @@ title: 依赖属性
 ## 二、什么是依赖属性？
 
 我们知道常规属性，就是拥有get，set访问器的字段，叫做属性。
-```csharp
+```csharp showLineNumbers
 class MyClass
 {
     public int MyProperty { get; set; }
@@ -32,7 +32,7 @@ class MyClass
 
 1. 继承**DependencyObject**
 2. 按如下格式生成属性项（propdp代码块可快速实现）
-```csharp
+```csharp showLineNumbers
 class MyDependencyObject: DependencyObject
 {
     /// <summary>
@@ -59,7 +59,7 @@ class MyDependencyObject: DependencyObject
 
 下列示例声明一个MyProperty的属性扩展。
 
-```csharp
+```csharp showLineNumbers
 public static class DependencyExtensions
 {
    /// <summary>
@@ -127,7 +127,7 @@ int value=obj.GetValue(DependencyExtensions.MyPropertyProperty2);
 
 而重新编译，带来的问题就更大了，总不能把属性都声明在父类吧。何况还有dll版本依赖问题，同事推脱问题，巴拉巴拉。
 
-```csharp
+```csharp showLineNumbers
 public class Person
 {
     /// <summary>
@@ -141,7 +141,7 @@ public class Person
 
 我们可以在一开始，就将Person类按如下声明。继承DependencyObject。
 
-```csharp
+```csharp showLineNumbers
 public class Person : DependencyObject
 {
     /// <summary>
@@ -161,7 +161,7 @@ public class Person : DependencyObject
 
 这样，你就可以随意的往**Person**类中添加属性了。
 
-```csharp
+```csharp showLineNumbers
 public static class DependencyExtensions
 {
    /// <summary>

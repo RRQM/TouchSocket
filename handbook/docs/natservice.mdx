@@ -20,7 +20,7 @@ NATService是具有转发功能的TCP服务器。他的职能是将收到的TCP�
 
 ## 三、创建NATService
 
-```csharp
+```csharp showLineNumbers
 static void Main(string[] args)
 {
     MyNATService service = new MyNATService();
@@ -40,7 +40,7 @@ NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
 
 :::  
 
-```csharp
+```csharp showLineNumbers
  class MyNATService : NATService
  {
      protected override void OnConnected(NATSocketClient socketClient, RRQMEventArgs e)
@@ -84,7 +84,7 @@ NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
 
 ## 四、转发断线重连 <Tag>企业版</Tag>
 
-```csharp
+```csharp showLineNumbers
 try
 {
     //此处模拟的是只要连接到NAT服务器，就转发。

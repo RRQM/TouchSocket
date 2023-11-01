@@ -36,7 +36,7 @@ title: 模板解析“区间数据”数据适配器
 【MyBetweenAndRequestInfo】
 首先，新建MyBetweenAndRequestInfo类，然后实现**IBetweenAndRequestInfo**接口。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 以**12##12##，Min=5为例。
 /// </summary>
@@ -62,7 +62,7 @@ class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
 
 新建MyCustomBetweenAndDataHandlingAdapter继承**CustomBetweenAndDataHandlingAdapter**，然后对StartCode、EndCode作出赋值，以此表明起始字符与结束字符的值。
 
-```csharp
+```csharp showLineNumbers
 class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapter<MyBetweenAndRequestInfo>
 {
     public MyCustomBetweenAndDataHandlingAdapter()
@@ -83,7 +83,7 @@ class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapte
 
 【接收】
 
-```csharp
+```csharp showLineNumbers
 TcpService service = new TcpService();
 service.Received = (client, e) =>
 {

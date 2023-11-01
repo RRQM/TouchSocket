@@ -123,7 +123,7 @@ import Tag from "@site/src/components/Tag.js";
 
 当购买密钥后，您会获得类似“D1D1D1D1D1D1D1D1D1D1D1D1D1D1D1D1D1D1”这样的密钥。然后在程序**初始化**(例如Main函数)时。使用以下代码即可。
 
-```csharp
+```csharp showLineNumbers
  Enterprise.LicenceKey = "密钥";
 ```
 
@@ -137,7 +137,7 @@ AspNetCore中使用时，建议自定义服务注入的方式实现。步骤如�
 
 部分代码示例如下：
 
-```csharp
+```csharp showLineNumbers
 public static class ServiceCollectionExtension
 {
     public static void AddLicence(this IServiceCollection service)
@@ -147,7 +147,7 @@ public static class ServiceCollectionExtension
 }
 ```
 
-```csharp
+```csharp showLineNumbers
 public void ConfigureServices(IServiceCollection services)
 {
     services.AddLicence();
@@ -161,7 +161,7 @@ public void ConfigureServices(IServiceCollection services)
 
 **调用ForTest时，会抛出可控异常。如果坚持使用企业版，使用Try拦截即可。**
 
-```csharp
+```csharp showLineNumbers
 try
 {
     Enterprise.ForTest();

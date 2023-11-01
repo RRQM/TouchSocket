@@ -20,7 +20,7 @@ title: 服务器重置id
 
 下列示例，就是使用Guid作为初始Id。
 
-```csharp
+```csharp showLineNumbers
 var config = new TouchSocketConfig();
 config.SetGetDefaultNewId(()=>Guid.NewGuid().ToString());
 ```
@@ -33,7 +33,7 @@ config.SetGetDefaultNewId(()=>Guid.NewGuid().ToString());
 
 那这时候，**服务器**可以订阅**Connecting**，然后，为新连接的SocketClient，设置与之有关联信息的id。
 
-```csharp
+```csharp showLineNumbers
 m_service.Connecting = (client, e) => //有客户端正在连接
 {
     e.Id = $"{client.IP}:{client.Port}";
@@ -52,12 +52,12 @@ m_service.Connecting = (client, e) => //有客户端正在连接
 
 ### 4.1 通过Service直接修改
 
-```csharp
+```csharp showLineNumbers
 service.ResetId("oldId","newId");
 ```
 
 ### 4.2 通过SocketClient修改
-```csharp
+```csharp showLineNumbers
 socketClient.ResetId("newId");
 ```
 

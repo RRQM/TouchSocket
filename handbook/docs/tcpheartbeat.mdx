@@ -31,7 +31,7 @@ title: 心跳设计
 
 下列代码主要实现对上述数据格式的解析
 
-```csharp
+```csharp showLineNumbers
 
 internal class MyFixedHeaderDataHandlingAdapter : CustomFixedHeaderDataHandlingAdapter<MyRequestInfo>
 {
@@ -113,7 +113,7 @@ internal enum DataType : byte
 
 下列代码可选，主要实现对Client增加Ping的扩展方法。方便调用。
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 一个心跳计数器扩展。
 /// </summary>
@@ -158,7 +158,7 @@ internal static class DependencyExtensions
 
 下列代码主要实现心跳插件的功能。默认每五秒自动触发一次。且接收方收到Ping后，直接会回复Pong。
 
-```csharp
+```csharp showLineNumbers
 internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>, ITcpReceivedPlugin<ITcpClientBase>
 {
     private readonly int m_timeTick;
@@ -219,7 +219,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
 
 ## 五、测试、启动
 
-```csharp
+```csharp showLineNumbers
 /// <summary>
 /// 示例心跳。
 /// 博客地址<see href="https://blog.csdn.net/qq_40374647/article/details/125598921"/>

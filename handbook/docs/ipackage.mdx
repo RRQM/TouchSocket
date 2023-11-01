@@ -25,7 +25,7 @@ title: 包序列化模式
 
 ## 三、使用
 【实体类】
-```csharp
+```csharp showLineNumbers
 class MyClass : IPackage
 {
     public int P1 { get; set; }
@@ -122,7 +122,7 @@ class MyClassModel : PackageBase
 }
 ```
 【打包和解包】
-```csharp
+```csharp showLineNumbers
 var myClass = new MyClass();
 myClass.P1 = 1;
 myClass.P2 = "若汝棋茗";
