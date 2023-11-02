@@ -68,3 +68,13 @@ Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于
 | **Http版** | 基于Http握手连接，数据交互仍然使用TCP。连接性能一般，但兼容性强，支持JsonRpc，WebApi，XmlRpc，WebSocket等一系列Http组件，且执行效率和TCP版一样高，支持Dmtp所有功能。 |
 | **WebSocket版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的是WebSocket，所有效率只有Tcp版的80%。支持Dmtp所有功能 |
 | **Http中间件版** | 该版本是仅适用于Asp.Net Core的版本，特点就是和Asp.Net Core共用端口。但是执行数据使用的Http自升级协议，所有效率介于WebSocket与Tcp版之间。支持Dmtp所有功能 |
+
+## 四、注意事项
+
+### 4.1 连接注意事项
+
+Dmtp拥有独立的连接机制，在连接前后会依次触发`IDmtpHandshakingPlugin`与`IDmtpHandshakedPlugin`插件。当完成连接时，其`IDmtpActor.IsHandshaked`方为`true`，此后才可以进行后续操作。
+
+例如：Dmtp-Tcp组件，这是基于Tcp协议的Dmtp，因为它是继承实现，所以会拥有`Online`和`IsHandshaked`两个属性。其中Online仅仅表示已经建立Tcp连接，IsHandshaked才表示Dmtp是否完成握手。
+
+所以，在一些情况下，可能可能需要判断`IsHandshaked`完成，才能进行后续操作。
