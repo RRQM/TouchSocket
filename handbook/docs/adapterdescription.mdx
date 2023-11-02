@@ -106,7 +106,7 @@ Udp使用的插件，只能从Config配置。
 
 【**UdpSession**】
 ```csharp showLineNumbers
- m_udpSession.Setup(new TouchSocketConfig()
+m_udpSession.Setup(new TouchSocketConfig()
       .SetBindIPHost(new IPHost(this.textBox2.Text))
       .SetUdpDataHandlingAdapter(()=> 
       {
@@ -115,8 +115,8 @@ Udp使用的插件，只能从Config配置。
       .ConfigureContainer(a =>
       {
          
-      }))
-      .Start();
+      }));
+m_udpSession.Start();
 ```
 
 :::caution 注意

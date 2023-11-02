@@ -229,8 +229,9 @@ client.Setup(new TouchSocketConfig()
     .ConfigurePlugins(a =>
     {
         a.Add<MyPlugin>();
-    }))
-    .Connect();
+    }));
+
+client.Connect();
 ```
 
 ## 八、发送数据

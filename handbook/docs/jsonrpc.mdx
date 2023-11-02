@@ -121,8 +121,9 @@ service.Setup(new TouchSocketConfig()
         {
             store.RegisterServer<JsonRpcServer>();
         });
-    }))
-    .Start();
+    }));
+
+service.Start();
 ```
 
 :::caution 注意
@@ -149,8 +150,9 @@ service.Setup(new TouchSocketConfig()
              store.RegisterServer<JsonRpcServer>();
          })
          .SetJsonRpcUrl("/jsonRpc");
-     }))
-    .Start();
+     }));
+
+service.Start();
 ```
 
 ### 4.3 使用WebSocket协议服务器
@@ -178,8 +180,9 @@ service.Setup(new TouchSocketConfig()
          {
              store.RegisterServer<JsonRpcServer>();
          });
-     }))
-    .Start();
+     }));
+
+service.Start();
 ```
 
 :::tip 提示

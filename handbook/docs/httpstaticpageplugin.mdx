@@ -24,7 +24,9 @@ config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
 
     });
 
-service.Setup(config)
-.Start();
+service.Setup(config);
+
+service.Start();
+
 Console.WriteLine("Http服务器已启动");
 ```

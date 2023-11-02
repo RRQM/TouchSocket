@@ -31,8 +31,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.UseWebSocket()//添加WebSocket功能
                .SetWSUrl("/ws")
                .UseAutoPong();//当收到ping报文时自动回应pong
-    }))
-    .Start();
+    }));
+
+service.Start();
 ```
 
 :::tip 提示

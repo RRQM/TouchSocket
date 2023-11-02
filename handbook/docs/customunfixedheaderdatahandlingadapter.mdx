@@ -130,8 +130,9 @@ service.Received = (client, e) =>
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }))//配置适配器
-    .Start();//启动
+    .SetDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }));//配置适配器
+
+service.Start();//启动
 ```
 
 :::tip 提示

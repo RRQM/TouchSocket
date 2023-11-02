@@ -68,8 +68,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         //1、为找不到的路由返回404
         //2、处理header为Option的探视跨域请求。
         a.UseDefaultHttpServicePlugin();
-    }))
-    .Start();
+    }));
+    
+service.Start();
 ```
 
 :::tip 提示

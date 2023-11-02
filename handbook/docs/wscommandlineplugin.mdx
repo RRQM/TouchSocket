@@ -64,8 +64,9 @@ service.Setup(new TouchSocketConfig()//加载配置
                .SetVerifyConnection(VerifyConnection)
                .UseAutoPong();//当收到ping报文时自动回应pong
         a.Add<MyWSCommandLinePlugin>();
-    }))
-    .Start();
+    }));
+
+service.Start();
 ```
 
 ### 3.2 调用
