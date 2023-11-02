@@ -8,7 +8,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道终端接口
     /// </summary>
-    public interface INamedPipeClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
+    public interface INamedPipeClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender,IConfigObject
     {
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
@@ -19,11 +19,6 @@ namespace TouchSocket.NamedPipe
         /// 用于通讯的管道流。
         /// </summary>
         public PipeStream PipeStream { get; }
-
-        /// <summary>
-        /// 客户端配置
-        /// </summary>
-        TouchSocketConfig Config { get; }
 
         /// <summary>
         /// 数据处理适配器

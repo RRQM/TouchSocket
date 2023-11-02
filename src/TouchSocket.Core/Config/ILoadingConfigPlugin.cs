@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 当正在配置Config时触发。
     /// </summary>
-    public interface ILoadingConfigPlugin<in TSender> : IPlugin
+    public interface ILoadingConfigPlugin<in TSender> : IPlugin where TSender:IConfigObject
     {
         /// <summary>
         /// 当载入配置时
@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ILoadingConfigPlugin
     /// </summary>
-    public interface ILoadingConfigPlugin : ILoadingConfigPlugin<object>
+    public interface ILoadingConfigPlugin : ILoadingConfigPlugin<IConfigObject>
     {
     }
 }

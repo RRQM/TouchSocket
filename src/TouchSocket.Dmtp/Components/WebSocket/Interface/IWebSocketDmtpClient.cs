@@ -12,13 +12,14 @@
 //------------------------------------------------------------------------------
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase
+    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase,ISetupConfigObject
     {
         /// <summary>
         /// 异步连接

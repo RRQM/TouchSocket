@@ -142,8 +142,6 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.LoadConfig(this.Config);
             this.PluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
 
-            this.VerifyToken = config.GetValue(DmtpConfigExtension.VerifyTokenProperty);
-
             if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
             {
                 this.GetDefaultNewId = fun;
@@ -177,7 +175,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public string VerifyToken { get; private set; }
+        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <inheritdoc/>
         public void ResetId(string oldId, string newId)

@@ -11,7 +11,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器辅助客户端类
     /// </summary>
-    public class NamedPipeSocketClient : BaseSocket, INamedPipeSocketClient
+    public class NamedPipeSocketClient : ConfigObject, INamedPipeSocketClient
     {
         #region 字段
 
@@ -35,19 +35,13 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        public override int SendBufferSize => this.m_pipeStream.InBufferSize;
-
-        /// <inheritdoc/>
-        public override int ReceiveBufferSize => this.m_receiveBufferSize;
-
-        /// <inheritdoc/>
         public bool CanSend => this.Online;
 
         /// <inheritdoc/>
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <inheritdoc/>
-        public TouchSocketConfig Config { get; private set; }
+        public override TouchSocketConfig Config => m_config;
 
         /// <inheritdoc/>
         public IContainer Container { get; private set; }
@@ -105,7 +99,7 @@ namespace TouchSocket.NamedPipe
 
         internal void InternalSetConfig(TouchSocketConfig config)
         {
-            this.Config = config;
+            this.m_config = config;
         }
 
         internal void InternalSetContainer(IContainer container)
@@ -244,7 +238,7 @@ namespace TouchSocket.NamedPipe
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
+                var byteBlock = new ByteBlock(this.m_receiveBufferSize);
                 try
                 {
                     var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
@@ -282,6 +276,8 @@ namespace TouchSocket.NamedPipe
         #region Receiver
 
         private Receiver m_receiver;
+        private TouchSocketConfig m_config;
+        private object SyncRoot = new object();
 
         /// <inheritdoc/>
         public void ClearReceiver()

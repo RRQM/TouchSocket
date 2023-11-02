@@ -9,3 +9,4 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
 Rpc0001 |   Rpc    |  Warning | Rpc0001_AnalyzerName
 Rpc0002 |   Rpc    |  Error   | Rpc0002_AnalyzerName
+Rpc0003 |   Rpc    |  Error   | Rpc0003_AnalyzerName

@@ -227,7 +227,7 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("请先完成Ssl验证授权");
             }
-            while (true)
+            while (this.m_online)
             {
                 var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
@@ -333,16 +333,16 @@ namespace TouchSocket.Sockets
         public virtual void Send(byte[] buffer, int offset, int length)
         {
             this.ThrowIfNotConnected();
-            if (this.UseSsl)
+            try
             {
-                this.SslStream.Write(buffer, offset, length);
-            }
-            else
-            {
-                //var lockTaken = false;
-                try
+                this.m_semaphoreForSend.Wait();
+                if (this.UseSsl)
                 {
-                    this.m_semaphoreForSend.Wait();
+                    this.SslStream.Write(buffer, offset, length);
+                }
+                else
+                {
+
                     while (length > 0)
                     {
                         var r = this.m_socket.Send(buffer, offset, length, SocketFlags.None);
@@ -353,13 +353,14 @@ namespace TouchSocket.Sockets
                         offset += r;
                         length -= r;
                     }
+
                 }
-                finally
-                {
-                    this.m_semaphoreForSend.Release();
-                }
+                this.m_sendCounter.Increment(length);
             }
-            this.m_sendCounter.Increment(length);
+            finally
+            {
+                this.m_semaphoreForSend.Release();
+            }
         }
 
         /// <summary>
@@ -376,17 +377,16 @@ namespace TouchSocket.Sockets
         public virtual async Task SendAsync(byte[] buffer, int offset, int length)
         {
             this.ThrowIfNotConnected();
+            try
+            {
+                await this.m_semaphoreForSend.WaitAsync();
 #if NET6_0_OR_GREATER
-            if (this.UseSsl)
-            {
-                await this.SslStream.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, length), CancellationToken.None);
-            }
-            else
-            {
-                try
+                if (this.UseSsl)
                 {
-                    await this.m_semaphoreForSend.WaitAsync();
-
+                    await this.SslStream.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, length), CancellationToken.None);
+                }
+                else
+                {
                     while (length > 0)
                     {
                         var r = await this.m_socket.SendAsync(new ArraySegment<byte>(buffer, offset, length), SocketFlags.None, CancellationToken.None);
@@ -398,22 +398,13 @@ namespace TouchSocket.Sockets
                         length -= r;
                     }
                 }
-                finally
-                {
-                    this.m_semaphoreForSend.Release();
-                }
-            }
 #else
-            if (this.UseSsl)
-            {
-                await this.SslStream.WriteAsync(buffer, offset, length, CancellationToken.None);
-            }
-            else
-            {
-                try
+                if (this.UseSsl)
                 {
-                    await this.m_semaphoreForSend.WaitAsync();
-
+                    await this.SslStream.WriteAsync(buffer, offset, length, CancellationToken.None);
+                }
+                else
+                {
                     while (length > 0)
                     {
                         var r = this.m_socket.Send(buffer, offset, length, SocketFlags.None);
@@ -425,14 +416,14 @@ namespace TouchSocket.Sockets
                         length -= r;
                     }
                 }
-                finally
-                {
-                    this.m_semaphoreForSend.Release();
-                }
-            }
 #endif
 
-            this.m_sendCounter.Increment(length);
+                this.m_sendCounter.Increment(length);
+            }
+            finally
+            {
+                this.m_semaphoreForSend.Release();
+            }
         }
 
         /// <summary>

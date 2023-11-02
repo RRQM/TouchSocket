@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0;</TargetFrameworks>
-		<PackageTags>rpc,analyzer</PackageTags>
+		<TargetFrameworks>net481;net45;netstandard2.0;</TargetFrameworks>
+		<PackageTags>Rpc;SourceGenerator;Analyzer;TouchSocket</PackageTags>
 		<Description>这是一个为TouchSocket全系提供语法分析、源生成的库。目前包含Rpc源生成、插件源生成、IOC容器源生成。	</Description>
 		<Title>TouchSocket.CodeAnalyzer</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.CodeAnalyzer</PackageOutputPath>
 		<DevelopmentDependency>true</DevelopmentDependency>
+		<BaseOutputPath>bin</BaseOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

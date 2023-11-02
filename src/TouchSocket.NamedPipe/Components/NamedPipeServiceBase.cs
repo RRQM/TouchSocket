@@ -10,18 +10,8 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器基类
     /// </summary>
-    public abstract class NamedPipeServiceBase : BaseSocket, INamedPipeService
+    public abstract class NamedPipeServiceBase : SetupConfigObject, INamedPipeService
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract TouchSocketConfig Config { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract IContainer Container { get; }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -31,11 +21,6 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         /// </summary>
         public abstract IEnumerable<NamedPipeMonitor> Monitors { get; }
-
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        public abstract IPluginsManager PluginsManager { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -77,13 +62,6 @@ namespace TouchSocket.NamedPipe
         /// <param name="oldId"></param>
         /// <param name="newId"></param>
         public abstract void ResetId(string oldId, string newId);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        /// <returns></returns>
-        public abstract IService Setup(TouchSocketConfig serverConfig);
 
         /// <summary>
         /// <inheritdoc/>

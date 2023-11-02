@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
-		<PackageTags>JsonRpc</PackageTags>
+		<TargetFrameworks>net481;net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>JsonRpc;TouchSocket</PackageTags>
 		<Description>这是一个提供JsonRpc服务器和客户端的组件库。可以通过该组件创建基于Tcp、Http、WebSocket协议的JsonRpc服务器和客户端，支持JsonRpc全部功能，可与Web，Android等平台无缝对接。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
@@ -18,4 +18,8 @@
 		<DebugType>Embedded</DebugType>
 		<EmbedAllSources>True</EmbedAllSources>
 	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
+		<PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1"/>
+	</ItemGroup>
 </Project>

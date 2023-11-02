@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// <summary>
     /// WebSocketDmtpSocketClient
     /// </summary>
-    public class WebSocketDmtpSocketClient : BaseSocket, IWebSocketDmtpSocketClient
+    public class WebSocketDmtpSocketClient : ConfigObject, IWebSocketDmtpSocketClient
     {
         /// <summary>
         /// WebSocketDmtpSocketClient
@@ -54,17 +54,12 @@ namespace TouchSocket.Dmtp.AspNetCore
         private int m_receiveBufferSize = 1024 * 10;
         private int m_sendBufferSize = 1024 * 10;
         private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
+        private TouchSocketConfig m_config;
 
         #endregion 字段
 
         /// <inheritdoc/>
-        public override int ReceiveBufferSize => this.m_receiveBufferSize;
-
-        /// <inheritdoc/>
-        public override int SendBufferSize => this.m_sendBufferSize;
-
-        /// <inheritdoc/>
-        public TouchSocketConfig Config { get; private set; }
+        public override TouchSocketConfig Config { get => m_config;}
 
         /// <inheritdoc/>
         public IContainer Container { get; private set; }
@@ -97,10 +92,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
 
         /// <inheritdoc/>
-        public int VerifyTimeout => this.Config.GetValue(DmtpConfigExtension.VerifyTimeoutProperty);
+        public TimeSpan VerifyTimeout => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyTimeout;
 
         /// <inheritdoc/>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty);
+        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <summary>
         /// 关闭通信
@@ -130,7 +125,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         internal void InternalSetConfig(TouchSocketConfig config)
         {
-            this.Config = config;
+            this.m_config = config;
             this.m_dmtpAdapter = new TcpDmtpAdapter()
             {
                 ReceivedCallBack = this.PrivateHandleReceivedData,
@@ -362,7 +357,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 while (true)
                 {
-                    using (var byteBlock = new ByteBlock(this.ReceiveBufferSize))
+                    using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
                         var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer, 0, byteBlock.Capacity), default);
                         if (result.Count == 0)
@@ -432,7 +427,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private void BreakOut(string msg, bool manual)
         {
-            lock (this.SyncRoot)
+            lock (this.m_semaphoreForSend)
             {
                 if (this.DisposedValue)
                 {

@@ -37,6 +37,33 @@ namespace TouchSocket.Http
 
         #region HttpBase
 
+        /// <summary>
+        /// 添加Header参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TRequest AddHeader<TRequest>(this TRequest request, string key, string value) where TRequest : HttpBase
+        {
+            request.Headers.Add(key, value);
+            return request;
+        }
+
+        /// <summary>
+        /// 添加Header参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TRequest AddHeader<TRequest>(this TRequest request, HttpHeaders key, string value) where TRequest : HttpBase
+        {
+            request.Headers.Add(key, value);
+            return request;
+        }
+
+
         #region 设置内容
 
         /// <summary>
@@ -213,6 +240,19 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 添加Query参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TRequest AddQuery<TRequest>(this TRequest request, string key, string value) where TRequest : HttpRequest
+        {
+            request.Query.Add(key, value);
+            return request;
+        }
+
+        /// <summary>
         /// 对比不包含参数的Url。其中有任意一方为null，则均返回False。
         /// </summary>
         /// <param name="request"></param>
@@ -220,9 +260,14 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static bool UrlEquals<TRequest>(this TRequest request, string url) where TRequest : HttpRequest
         {
-            return string.IsNullOrEmpty(request.RelativeURL) || string.IsNullOrEmpty(url)
-                ? false
-                : request.RelativeURL.Equals(url, StringComparison.CurrentCultureIgnoreCase);
+            if (string.IsNullOrEmpty(request.RelativeURL) || string.IsNullOrEmpty(url))
+            {
+                return false;
+            }
+            else
+            {
+                return request.RelativeURL.Equals(url, StringComparison.CurrentCultureIgnoreCase);
+            }
         }
 
         #region 设置函数
@@ -369,6 +414,27 @@ namespace TouchSocket.Http
             var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName);
             response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
             return response;
+        }
+
+        /// <summary>
+        /// 判断返回的状态码是否为成功。
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="status">
+        /// 当不指定具体的状态码时，只要状态码在200-299之间则为<see langword="true"/>。
+        /// 当指定时，状态码不仅必须要在200-299之间，还必须是指定的状态码才会返回<see langword="true"/>。
+        /// </param>
+        /// <returns></returns>
+        public static bool IsSuccess<TResponse>(this TResponse response, int? status = default) where TResponse : HttpResponse
+        {
+            if (status.HasValue)
+            {
+                return response.StatusCode == status && response.StatusCode >= 200 && response.StatusCode < 300;
+            }
+            else
+            {
+                return response.StatusCode >= 200 && response.StatusCode < 300;
+            }
         }
 
         /// <summary>

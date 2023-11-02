@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 终端接口
     /// </summary>
-    public interface IClient : IDependencyObject, IDisposable, ISocket
+    public interface IClient : IDependencyObject, IDisposable,ILoggerObject
     {
         /// <summary>
         /// 获取一个同步数据接收器

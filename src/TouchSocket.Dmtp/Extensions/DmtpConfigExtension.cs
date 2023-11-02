@@ -1,4 +1,5 @@
-﻿using TouchSocket.Core;
+﻿using System;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
@@ -11,23 +12,27 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 默认使用Id。
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static readonly DependencyProperty<string> DefaultIdProperty =
             DependencyProperty<string>.Register("DefaultId", null);
 
         /// <summary>
         /// DmtpClient连接时的元数据, 所需类型<see cref="Metadata"/>
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static readonly DependencyProperty<Metadata> MetadataProperty = DependencyProperty<Metadata>.Register("Metadata", null);
 
         /// <summary>
         /// 验证超时时间,默认为3000ms, 所需类型<see cref="int"/>
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static readonly DependencyProperty<int> VerifyTimeoutProperty =
             DependencyProperty<int>.Register("VerifyTimeout", 3000);
 
         /// <summary>
         /// 连接令箭,当为null或空时，重置为默认值“rrqm”, 所需类型<see cref="string"/>
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static readonly DependencyProperty<string> VerifyTokenProperty =
             DependencyProperty<string>.Register("VerifyToken", "rrqm");
 
@@ -40,6 +45,7 @@ namespace TouchSocket.Dmtp
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static TouchSocketConfig SetDefaultId(this TouchSocketConfig config, string value)
         {
             config.SetValue(DefaultIdProperty, value);
@@ -53,6 +59,7 @@ namespace TouchSocket.Dmtp
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static TouchSocketConfig SetMetadata(this TouchSocketConfig config, Metadata value)
         {
             config.SetValue(MetadataProperty, value);
@@ -65,6 +72,7 @@ namespace TouchSocket.Dmtp
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static TouchSocketConfig SetVerifyTimeout(this TouchSocketConfig config, int value)
         {
             config.SetValue(VerifyTimeoutProperty, value);
@@ -77,9 +85,28 @@ namespace TouchSocket.Dmtp
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用SetDmtpOption配置替代。", true)]
         public static TouchSocketConfig SetVerifyToken(this TouchSocketConfig config, string value)
         {
             config.SetValue(VerifyTokenProperty, value);
+            return config;
+        }
+
+        /// <summary>
+        /// 设置Dmtp相关配置。
+        /// </summary>
+        public static readonly DependencyProperty<DmtpOption> DmtpOptionProperty =
+            DependencyProperty<DmtpOption>.Register("DmtpOption", new DmtpOption());
+
+        /// <summary>
+        /// 设置Dmtp相关配置。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetDmtpOption(this TouchSocketConfig config, DmtpOption value)
+        {
+            config.SetValue(DmtpOptionProperty, value);
             return config;
         }
 

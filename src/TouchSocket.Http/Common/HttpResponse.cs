@@ -190,6 +190,18 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 输出
+        /// </summary>
+        public override string ToString()
+        {
+            using (var byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock,false);
+                return byteBlock.ToString();
+            }
+        }
+
+        /// <summary>
         /// 构建数据为字节数组。
         /// </summary>
         /// <returns></returns>

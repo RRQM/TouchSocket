@@ -375,6 +375,23 @@ namespace TouchSocket.Dmtp.Rpc
             return default;
         }
 
+        private static void CheckWaitDataStatus(WaitDataStatus status)
+        {
+            switch (status)
+            {
+                case WaitDataStatus.SetRunning:
+                    return;
+                case WaitDataStatus.Canceled: throw new OperationCanceledException();
+                case WaitDataStatus.Overtime: throw new TimeoutException();
+                case WaitDataStatus.Disposed:
+                case WaitDataStatus.Default:
+                default:
+                    {
+                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                    }
+            }
+        }
+
         #region Rpc
 
         /// <inheritdoc/>
@@ -421,53 +438,33 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            if (resultContext.IsByRef)
                             {
-                                case WaitDataStatus.SetRunning:
+                                try
+                                {
+                                    for (var i = 0; i < parameters.Length; i++)
                                     {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        if (resultContext.IsByRef)
-                                        {
-                                            try
-                                            {
-                                                for (var i = 0; i < parameters.Length; i++)
-                                                {
-                                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                                }
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                throw new Exception(e.Message);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            parameters = null;
-                                        }
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+                                        parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                     }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    throw new Exception(e.Message);
+                                }
                             }
-                            return returnType.GetDefault();
+                            else
+                            {
+                                parameters = null;
+                            }
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
                     default:
                         return returnType.GetDefault();
@@ -523,44 +520,24 @@ namespace TouchSocket.Dmtp.Rpc
 
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             break;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            if (resultContext.IsByRef)
                             {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        if (resultContext.IsByRef)
-                                        {
-                                            for (var i = 0; i < parameters.Length; i++)
-                                            {
-                                                parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            parameters = null;
-                                        }
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
+                                for (var i = 0; i < parameters.Length; i++)
+                                {
+                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+                                }
+                            }
+                            else
+                            {
+                                parameters = null;
                             }
                             break;
                         }
@@ -622,33 +599,14 @@ namespace TouchSocket.Dmtp.Rpc
 
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    break;
-
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             break;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
                             break;
                         }
                     default:
@@ -711,31 +669,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
-                            return returnType.GetDefault();
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
 
                     default:
@@ -786,7 +728,7 @@ namespace TouchSocket.Dmtp.Rpc
                     }
 
                     rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
                 }
 
                 switch (invokeOption.FeedbackType)
@@ -796,33 +738,14 @@ namespace TouchSocket.Dmtp.Rpc
 
                     case FeedbackType.WaitSend:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    break;
-
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             break;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
                             break;
                         }
                     default:
@@ -873,7 +796,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                     rpcPackage.Package(byteBlock);
 
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
                 }
 
                 switch (invokeOption.FeedbackType)
@@ -884,31 +807,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
-                            return returnType.GetDefault();
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
 
                     default:
@@ -992,33 +899,14 @@ namespace TouchSocket.Dmtp.Rpc
 
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    break;
-
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             break;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
                             break;
                         }
                     default:
@@ -1097,31 +985,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
-                            return returnType.GetDefault();
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
 
                     default:
@@ -1198,40 +1070,24 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             return;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            if (resultContext.IsByRef)
                             {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        if (resultContext.IsByRef)
-                                        {
-                                            for (var i = 0; i < parameters.Length; i++)
-                                            {
-                                                parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            parameters = null;
-                                        }
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
+                                for (var i = 0; i < parameters.Length; i++)
+                                {
+                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+                                }
+                            }
+                            else
+                            {
+                                parameters = null;
                             }
                             return;
                         }
@@ -1307,42 +1163,26 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (waitData.Wait(invokeOption.Timeout))
+                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            if (resultContext.IsByRef)
                             {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        if (resultContext.IsByRef)
-                                        {
-                                            for (var i = 0; i < parameters.Length; i++)
-                                            {
-                                                parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            parameters = null;
-                                        }
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
+                                for (var i = 0; i < parameters.Length; i++)
+                                {
+                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+                                }
                             }
-                            return returnType.GetDefault();
+                            else
+                            {
+                                parameters = null;
+                            }
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
 
                     default:
@@ -1412,7 +1252,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                     rpcPackage.Package(byteBlock);
 
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
                 }
 
                 switch (invokeOption.FeedbackType)
@@ -1422,33 +1262,14 @@ namespace TouchSocket.Dmtp.Rpc
 
                     case FeedbackType.WaitSend:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    break;
-
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             break;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        break;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
                             break;
                         }
                     default:
@@ -1516,7 +1337,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                     rpcPackage.Package(byteBlock);
 
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
                 }
 
                 switch (invokeOption.FeedbackType)
@@ -1527,31 +1348,15 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                                        resultContext.ThrowStatus();
-                                        return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    {
-                                        throw new TimeoutException("等待结果超时");
-                                    }
-                            }
-                            return returnType.GetDefault();
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+                            resultContext.ThrowStatus();
+                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
 
                     default:

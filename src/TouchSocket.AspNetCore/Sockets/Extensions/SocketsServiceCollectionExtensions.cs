@@ -47,8 +47,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static TService AddTcpService<TService>(this IServiceCollection service, Func<TouchSocketConfig> configFunc) where TService : class, ITcpService, new()
         {
             var tcpService = new TService();
-            tcpService.Setup(configFunc.Invoke())
-                .Start();
+            tcpService.Setup(configFunc.Invoke());
+            tcpService.Start();
 
             return (TService)AddTcpService<ITcpService>(service, tcpService);
         }
