@@ -8,7 +8,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器接口
     /// </summary>
-    public interface INamedPipeService : IService, IIdSender, IIdRequsetInfoSender, IPluginObject
+    public interface INamedPipeService : IService, IIdSender, IIdRequsetInfoSender
     {
         /// <summary>
         /// 当前在线客户端数量

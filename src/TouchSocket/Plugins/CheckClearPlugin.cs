@@ -61,13 +61,13 @@ namespace TouchSocket.Sockets
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
         /// <inheritdoc/>
-        public Task OnTcpConnected(TClient client, ConnectedEventArgs e)
+        public async Task OnTcpConnected(TClient client, ConnectedEventArgs e)
         {
-            Task.Run(async () =>
+            _=Task.Run(async () =>
             {
                 while (true)
                 {
-                    await Task.Delay(this.Tick);
+                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
                     if (!client.Online)
                     {
                         return;
@@ -96,7 +96,7 @@ namespace TouchSocket.Sockets
                 }
             });
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
         /// <summary>

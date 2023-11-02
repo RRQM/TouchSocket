@@ -22,23 +22,9 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : BaseSocket, ITcpService
+    public abstract class TcpServiceBase : SetupConfigObject, ITcpService
     {
-        /// <inheritdoc/>
-        public override int SendBufferSize => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public override int ReceiveBufferSize => throw new NotImplementedException();
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract TouchSocketConfig Config { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract IContainer Container { get; }
+        private readonly ConcurrentStack<TcpCore> m_tcpCores = new ConcurrentStack<TcpCore>();
 
         /// <summary>
         /// <inheritdoc/>
@@ -48,12 +34,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract IEnumerable<TcpNetworkMonitor> Monitors { get; }
+        public abstract int MaxCount { get; }
 
         /// <summary>
-        /// 插件管理器
+        /// <inheritdoc/>
         /// </summary>
-        public abstract IPluginsManager PluginsManager { get; }
+        public abstract IEnumerable<TcpNetworkMonitor> Monitors { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -71,9 +57,10 @@ namespace TouchSocket.Sockets
         public abstract ISocketClientCollection SocketClients { get; }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 添加一个地址监听。支持在服务器运行过程中动态添加。
         /// </summary>
-        public abstract int MaxCount { get; }
+        /// <param name="options"></param>
+        public abstract void AddListen(TcpListenOption options);
 
         /// <summary>
         /// <inheritdoc/>
@@ -90,39 +77,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 移除一个地址监听。支持在服务器运行过程中动态移除。
         /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        public abstract void ResetId(string oldId, string newId);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="serverConfig"></param>
-        /// <returns></returns>
-        public abstract IService Setup(TouchSocketConfig serverConfig);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="port"></param>
-        /// <returns></returns>
-        public abstract IService Setup(int port);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public abstract IService Start();
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public abstract IService Stop();
-
-        private ConcurrentStack<TcpCore> m_tcpCores = new ConcurrentStack<TcpCore>();
+        /// <param name="monitor">监听器</param>
+        /// <returns>返回是否已成功移除</returns>
+        public abstract bool RemoveListen(TcpNetworkMonitor monitor);
 
         /// <summary>
         /// 租用TcpCore
@@ -138,15 +97,12 @@ namespace TouchSocket.Sockets
             return new InternalTcpCore();
         }
 
+        /// <summary>
         /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            while (this.m_tcpCores.TryPop(out var tcpCore))
-            {
-                tcpCore.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
+        /// </summary>
+        /// <param name="oldId"></param>
+        /// <param name="newId"></param>
+        public abstract void ResetId(string oldId, string newId);
 
         /// <summary>
         /// 归还TcpCore
@@ -161,6 +117,25 @@ namespace TouchSocket.Sockets
             }
             this.m_tcpCores.Push(tcpCore);
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public abstract bool SocketClientExist(string id);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public abstract IService Start();
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public abstract IService Stop();
 
         internal Task OnInternalConnected(ISocketClient socketClient, ConnectedEventArgs e)
         {
@@ -185,6 +160,16 @@ namespace TouchSocket.Sockets
         internal Task OnInternalReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnClientReceivedData(socketClient, e);
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            while (this.m_tcpCores.TryPop(out var tcpCore))
+            {
+                tcpCore.SafeDispose();
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -295,25 +280,5 @@ namespace TouchSocket.Sockets
         }
 
         #endregion Id发送
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public abstract bool SocketClientExist(string id);
-
-        /// <summary>
-        /// 添加一个地址监听。支持在服务器运行过程中动态添加。
-        /// </summary>
-        /// <param name="options"></param>
-        public abstract void AddListen(TcpListenOption options);
-
-        /// <summary>
-        /// 移除一个地址监听。支持在服务器运行过程中动态移除。
-        /// </summary>
-        /// <param name="monitor">监听器</param>
-        /// <returns>返回是否已成功移除</returns>
-        public abstract bool RemoveListen(TcpNetworkMonitor monitor);
     }
 }

@@ -52,39 +52,20 @@ namespace TouchSocket.NamedPipe
         #region 字段
 
         private readonly List<NamedPipeMonitor> m_monitors = new List<NamedPipeMonitor>();
-        private TouchSocketConfig m_config;
-        private IContainer m_container;
         private Func<string> m_getDefaultNewId;
         private int m_maxCount;
         private long m_nextId;
-        private IPluginsManager m_pluginsManager;
         private ServerState m_serverState;
         private NamedPipeSocketClientCollection m_socketClients = new NamedPipeSocketClientCollection();
 
         #endregion 字段
 
         #region 属性
-
-        /// <inheritdoc/>
-        public override int SendBufferSize => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public override int ReceiveBufferSize => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public override TouchSocketConfig Config { get => this.m_config; }
-
-        /// <inheritdoc/>
-        public override IContainer Container { get => this.m_container; }
-
         /// <inheritdoc/>
         public override int MaxCount { get => this.m_maxCount; }
 
         /// <inheritdoc/>
         public override IEnumerable<NamedPipeMonitor> Monitors => this.m_monitors;
-
-        /// <inheritdoc/>
-        public override IPluginsManager PluginsManager { get => this.m_pluginsManager; }
 
         /// <inheritdoc/>
         public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
@@ -194,26 +175,6 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        /// <inheritdoc/>
-        public override IService Setup(TouchSocketConfig config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            this.ThrowIfDisposed();
-
-            this.BuildConfig(config);
-
-            this.m_pluginsManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
-            this.LoadConfig(this.m_config);
-            this.m_pluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
-
-            this.Logger ??= this.m_container.Resolve<ILog>();
-            return this;
-        }
-
         /// <summary>
         ///<inheritdoc/>
         /// </summary>
@@ -227,7 +188,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public override IService Start()
         {
-            if (this.m_config is null)
+            if (this.Config is null)
             {
                 throw new ArgumentNullException(nameof(this.Config), "Config为null，请先执行Setup");
             }
@@ -280,14 +241,14 @@ namespace TouchSocket.NamedPipe
                 }
                 this.m_serverState = ServerState.Running;
 
-                this.m_pluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
                 return this;
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                this.m_pluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
+                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
                 throw;
             }
         }
@@ -320,11 +281,8 @@ namespace TouchSocket.NamedPipe
             return new TClient();
         }
 
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="config"></param>
-        protected virtual void LoadConfig(TouchSocketConfig config)
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
         {
             if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
             {
@@ -341,57 +299,14 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        private void BuildConfig(TouchSocketConfig config)
-        {
-            this.m_config = config;
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.ContainerProperty) is IContainer container))
-            {
-                container = new Container();
-            }
-
-            if (!container.IsRegistered(typeof(ILog)))
-            {
-                container.RegisterSingleton<ILog, LoggerGroup>();
-            }
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.PluginsManagerProperty) is IPluginsManager pluginsManager))
-            {
-                pluginsManager = new PluginsManager(container);
-            }
-
-            if (container.IsRegistered(typeof(IPluginsManager)))
-            {
-                pluginsManager = container.Resolve<IPluginsManager>();
-            }
-            else
-            {
-                container.RegisterSingleton<IPluginsManager>(pluginsManager);
-            }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IContainer> actionContainer)
-            {
-                actionContainer.Invoke(container);
-            }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginsManager> actionPluginsManager)
-            {
-                pluginsManager.Enable = true;
-                actionPluginsManager.Invoke(pluginsManager);
-            }
-
-            this.m_container = container;
-            this.m_pluginsManager = pluginsManager;
-        }
-
         private async Task OnClientSocketInit(NamedPipeServerStream namedPipe, NamedPipeMonitor monitor)
         {
             var client = this.GetClientInstence(namedPipe, monitor);
-            client.InternalSetConfig(this.m_config);
-            client.InternalSetContainer(this.m_container);
+            client.InternalSetConfig(this.Config);
+            client.InternalSetContainer(this.Container);
             client.InternalSetService(this);
             client.InternalSetNamedPipe(namedPipe);
-            client.InternalSetPluginsManager(this.m_pluginsManager);
+            client.InternalSetPluginsManager(this.PluginsManager);
 
             if (client.CanSetDataHandlingAdapter)
             {

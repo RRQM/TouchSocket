@@ -112,8 +112,8 @@ namespace TouchSocket.Sockets
 
         #region 连接
 
-        /// <inheritdoc cref="ITcpClient.Connect(int)"/>
-        public static TClient Connect<TClient>(this TClient client, string ipHost, int timeout = 5000) where TClient : ITcpClient
+        /// <inheritdoc cref="IConnectObject.Connect(int, System.Threading.CancellationToken)"/>
+        public static TClient Connect<TClient>(this TClient client, IPHost ipHost, int timeout = 5000) where TClient : ITcpClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -131,8 +131,8 @@ namespace TouchSocket.Sockets
             return client;
         }
 
-        /// <inheritdoc cref="ITcpClient.ConnectAsync(int)"/>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string ipHost, int timeout = 5000) where TClient : ITcpClient
+        /// <inheritdoc cref="IConnectObject.ConnectAsync(int, System.Threading.CancellationToken)"/>
+        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, IPHost ipHost, int timeout = 5000) where TClient : ITcpClient
         {
             TouchSocketConfig config;
             if (client.Config == null)

@@ -2,19 +2,15 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// IWebSocket
     /// </summary>
-    public interface IWebSocket : IDisposable
+    public interface IWebSocket : IDisposable, IHandshakeObject
     {
-        /// <summary>
-        /// 表示当前WebSocket是否已经完成连接。
-        /// </summary>
-        bool IsHandshaked { get; }
-
         /// <summary>
         /// WebSocket版本
         /// </summary>

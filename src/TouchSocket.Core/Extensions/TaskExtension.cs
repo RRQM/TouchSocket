@@ -10,7 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -58,6 +60,49 @@ namespace TouchSocket.Core
         public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
         {
             return task.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 异步等待指定最大时间
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="task"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+        {
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                var delayTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);
+                if (await Task.WhenAny(task, delayTask) == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    return await task;
+                }
+                throw new TimeoutException();
+            }
+        }
+
+        /// <summary>
+        /// 异步等待指定最大时间
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public static async Task WaitAsync(this Task task, TimeSpan timeout)
+        {
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                var delayTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);
+                if (await Task.WhenAny(task, delayTask) == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    await task;
+                }
+                throw new TimeoutException();
+            }
         }
     }
 }

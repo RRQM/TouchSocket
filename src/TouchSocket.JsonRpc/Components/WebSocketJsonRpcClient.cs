@@ -436,8 +436,9 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override async Task OnReceivedWSDataFrame(WSDataFrame dataFrame)
+        protected override async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
         {
+            var dataFrame = e.DataFrame;
             string jsonString = null;
             if (dataFrame.Opcode == WSDataType.Text)
             {
@@ -446,7 +447,7 @@ namespace TouchSocket.JsonRpc
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                await base.OnReceivedWSDataFrame(dataFrame);
+                await base.OnReceivedWSDataFrame(e);
                 return;
             }
 
@@ -464,7 +465,7 @@ namespace TouchSocket.JsonRpc
                 }
             }
 
-            await base.OnReceivedWSDataFrame(dataFrame);
+            await base.OnReceivedWSDataFrame(e);
         }
     }
 }

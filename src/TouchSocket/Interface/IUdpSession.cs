@@ -18,13 +18,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP会话
     /// </summary>
-    public interface IUdpSession : IService, IClient, IClientSender, IUdpClientSender, IDefaultSender, IUdpDefaultSender
+    public interface IUdpSession : IService, IClient, IClientSender, IUdpClientSender, IDefaultSender, IUdpDefaultSender,ISetupConfigObject
     {
-        /// <summary>
-        /// 插件管理器
-        /// </summary>
-        IPluginsManager PluginsManager { get; }
-
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
         /// </summary>

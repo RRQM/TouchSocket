@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -127,12 +128,12 @@ namespace TouchSocket.Http
         /// <summary>
         /// 相对路径（不含参数）
         /// </summary>
-        public string RelativeURL { get; private set; }
+        public string RelativeURL { get; private set; } = "/";
 
         /// <summary>
         /// Url全地址，包含参数
         /// </summary>
-        public string URL { get; private set; }
+        public string URL { get; private set; } = "/";
 
         /// <summary>
         ///  构建响应数据。
@@ -168,28 +169,26 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 设置Url，必须以“/”开头，可带参数
+        /// 设置Url，可带参数
         /// </summary>
         /// <param name="url"></param>
-        /// <param name="justValue"></param>
         /// <returns></returns>
-        public HttpRequest SetUrl(string url, bool justValue = false)
+        public HttpRequest SetUrl(string url)
         {
-            this.URL = justValue || url.StartsWith("/") ? url : "/" + url;
+            this.URL = url.StartsWith("/") ? url : $"/{url}";
             this.ParseUrl();
             return this;
         }
 
         /// <summary>
-        /// 输出
+        /// 设置代理Host
         /// </summary>
-        public override string ToString()
+        /// <param name="host"></param>
+        /// <returns></returns>
+        public HttpRequest SetProxyHost(string host)
         {
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToString();
-            }
+            this.URL = host;
+            return this;
         }
 
         /// <summary>
@@ -405,12 +404,34 @@ namespace TouchSocket.Http
                 }
                 if (urls.Length > 1)
                 {
-                    this.m_query = GetParameters(urls[1]);
+                    if (this.m_query == null)
+                    {
+                        this.m_query = GetParameters(urls[1]);
+                    }
+                    else
+                    {
+                        foreach (var item in GetParameters(urls[1]))
+                        {
+                            this.m_query.Add(item.Key, item.Value);
+                        }
+                    }
                 }
             }
             else
             {
                 this.RelativeURL = this.URL;
+            }
+        }
+
+        /// <summary>
+        /// 输出
+        /// </summary>
+        public override string ToString()
+        {
+            using (var byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock);
+                return byteBlock.ToString();
             }
         }
     }

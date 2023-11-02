@@ -34,13 +34,12 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 连接令箭
         /// </summary>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.VerifyTokenProperty);
+        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         #region 字段
 
         private bool m_allowRoute;
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-
         #endregion 字段
 
         /// <inheritdoc/>

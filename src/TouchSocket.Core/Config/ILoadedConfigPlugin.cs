@@ -10,27 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-using TouchSocket.Core;
+using System.Threading.Tasks;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Core
 {
     /// <summary>
-    /// ConfigEventArgs
+    /// 当配置Config完成时触发。
     /// </summary>
-    public class ConfigEventArgs : PluginEventArgs
+    public interface ILoadedConfigPlugin<in TSender> : IPlugin where TSender : IConfigObject
     {
         /// <summary>
-        /// 实例化2ConfigEventArgs
+        /// 当完成配置载入时
         /// </summary>
-        /// <param name="config"></param>
-        public ConfigEventArgs(TouchSocketConfig config)
-        {
-            this.Config = config;
-        }
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        Task OnLoadedConfig(TSender sender, ConfigEventArgs e);
+    }
 
-        /// <summary>
-        /// 具体配置
-        /// </summary>
-        public TouchSocketConfig Config { get; }
+    /// <summary>
+    /// 当配置Config完成时触发。
+    /// </summary>
+    public interface ILoadedConfigPlugin : ILoadedConfigPlugin<IConfigObject>
+    {
     }
 }

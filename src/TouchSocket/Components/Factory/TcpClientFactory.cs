@@ -99,7 +99,7 @@ namespace TouchSocket.Sockets
                             this.m_first = false;
                         }
                         this.MainClient.Close();
-                        this.MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds);
+                        this.MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds,CancellationToken.None);
                     }
                     return Result.Success;
                 }

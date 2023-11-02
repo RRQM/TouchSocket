@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// 提供Dmtp协议的最基础功能件
     /// </summary>
-    public interface IDmtpActor : IDependencyObject
+    public interface IDmtpActor : IDependencyObject, IHandshakeObject
     {
         #region 属性
 
@@ -30,11 +31,6 @@ namespace TouchSocket.Dmtp
         /// 本节点Id
         /// </summary>
         string Id { get; }
-
-        /// <summary>
-        /// 获取当前功能件是否已经完成握手连接状态。
-        /// </summary>
-        bool IsHandshaked { get; }
 
         /// <summary>
         /// 最后一次活动时间。

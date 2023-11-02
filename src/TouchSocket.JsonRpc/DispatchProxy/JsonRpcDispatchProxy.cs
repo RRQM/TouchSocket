@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if NET6_0_OR_GREATER || NET481_OR_GREATER
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc

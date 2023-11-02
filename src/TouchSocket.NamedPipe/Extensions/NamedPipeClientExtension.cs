@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -11,7 +12,14 @@ namespace TouchSocket.NamedPipe
     {
         #region 连接
 
-        /// <inheritdoc cref="INamedPipeClient.Connect(int)"/>
+        /// <summary>
+        /// 连接到指定的命名管道
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="client"></param>
+        /// <param name="pipeName">管道名称</param>
+        /// <param name="timeout">超时设定</param>
+        /// <returns></returns>
         public static TClient Connect<TClient>(this TClient client, string pipeName, int timeout = 5000) where TClient : INamedPipeClient
         {
             TouchSocketConfig config;
@@ -26,11 +34,18 @@ namespace TouchSocket.NamedPipe
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            client.Connect(timeout);
+            client.Connect(timeout,CancellationToken.None);
             return client;
         }
 
-        /// <inheritdoc cref="INamedPipeClient.ConnectAsync(int)"/>
+        /// <summary>
+        /// 异步连接到指定的命名管道
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="client"></param>
+        /// <param name="pipeName">管道名称</param>
+        /// <param name="timeout">超时设定</param>
+        /// <returns></returns>
         public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int timeout = 5000) where TClient : INamedPipeClient
         {
             TouchSocketConfig config;
@@ -45,50 +60,9 @@ namespace TouchSocket.NamedPipe
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            await client.ConnectAsync(timeout);
+            await client.ConnectAsync(timeout,CancellationToken.None);
             return client;
         }
-
-        /// <summary>
-        /// 尝试连接。不会抛出异常。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public static Result TryConnect<TClient>(this TClient client, int timeout = 5000) where TClient : INamedPipeClient
-        {
-            try
-            {
-                client.Connect(timeout);
-                return new Result(ResultCode.Success);
-            }
-            catch (Exception ex)
-            {
-                return new Result(ResultCode.Exception, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// 尝试连接。不会抛出异常。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int timeout = 5000) where TClient : INamedPipeClient
-        {
-            try
-            {
-                await client.ConnectAsync(timeout);
-                return new Result(ResultCode.Success);
-            }
-            catch (Exception ex)
-            {
-                return new Result(ResultCode.Exception, ex.Message);
-            }
-        }
-
         #endregion 连接
     }
 }

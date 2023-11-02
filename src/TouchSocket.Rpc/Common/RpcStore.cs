@@ -69,7 +69,7 @@ namespace TouchSocket.Rpc
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         invokeResult = callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                            .GetFalseAwaitResult();
                     }
                 }
 
@@ -84,14 +84,14 @@ namespace TouchSocket.Rpc
                     case TaskReturnType.Task:
                         {
                             callContext.MethodInstance.InvokeAsync(rpcServer, ps)
-                                .ConfigureAwait(false).GetAwaiter().GetResult();
+                                .GetFalseAwaitResult();
                         }
                         break;
 
                     case TaskReturnType.TaskObject:
                         {
                             invokeResult.Result = callContext.MethodInstance.InvokeObjectAsync(rpcServer, ps)
-                                 .ConfigureAwait(false).GetAwaiter().GetResult();
+                                 .GetFalseAwaitResult();
                         }
                         break;
 
@@ -116,7 +116,7 @@ namespace TouchSocket.Rpc
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
                         invokeResult = callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, invokeResult)
-                            .ConfigureAwait(false).GetAwaiter().GetResult();
+                            .GetFalseAwaitResult();
                     }
                 }
             }
@@ -128,8 +128,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex)
-                             .ConfigureAwait(false).GetAwaiter().GetResult();
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                     }
                 }
             }
@@ -141,7 +140,7 @@ namespace TouchSocket.Rpc
                 {
                     for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
                     {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false).GetAwaiter().GetResult();
+                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                     }
                 }
             }

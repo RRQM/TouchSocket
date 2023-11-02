@@ -25,17 +25,12 @@ namespace TouchSocket.Sockets
     /// 注意：该接口并不仅表示客户端。<see cref="SocketClient"/>也实现了该接口。
     /// </para>
     /// </summary>
-    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender
+    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender,IConfigObject, IOnlineClient
     {
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
         /// </summary>
         bool CanSetDataHandlingAdapter { get; }
-
-        /// <summary>
-        /// 客户端配置
-        /// </summary>
-        TouchSocketConfig Config { get; }
 
         /// <summary>
         /// 数据处理适配器
@@ -68,12 +63,6 @@ namespace TouchSocket.Sockets
         /// 主通信器
         /// </summary>
         Socket MainSocket { get; }
-
-        /// <summary>
-        /// 判断是否在线
-        /// <para>该属性仅表示Tcp状态是否在线</para>
-        /// </summary>
-        bool Online { get; }
 
         /// <summary>
         /// 端口号

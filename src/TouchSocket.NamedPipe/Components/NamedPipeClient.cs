@@ -38,7 +38,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道客户端客户端基类
     /// </summary>
-    public class NamedPipeClientBase : BaseSocket, INamedPipeClient
+    public class NamedPipeClientBase : SetupConfigObject, INamedPipeClient
     {
         /// <summary>
         /// 命名管道客户端客户端基类
@@ -59,8 +59,7 @@ namespace TouchSocket.NamedPipe
         private volatile bool m_online;
         private NamedPipeClientStream m_pipeStream;
         private ValueCounter m_receiveCounter;
-        private SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
-
+        private readonly SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
         #endregion 变量
 
         #region 事件
@@ -207,22 +206,13 @@ namespace TouchSocket.NamedPipe
         #region 属性
 
         /// <inheritdoc/>
-        public override int ReceiveBufferSize => this.m_receiveBufferSize;
-
-        /// <inheritdoc/>
         public DateTime LastReceivedTime { get; private set; }
 
         /// <inheritdoc/>
         public DateTime LastSendTime { get; private set; }
 
         /// <inheritdoc/>
-        public IContainer Container { get; private set; }
-
-        /// <inheritdoc/>
         public virtual bool CanSetDataHandlingAdapter => true;
-
-        /// <inheritdoc/>
-        public TouchSocketConfig Config { get; private set; }
 
         /// <inheritdoc/>
         public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
@@ -237,16 +227,10 @@ namespace TouchSocket.NamedPipe
         public bool CanSend => this.m_online;
 
         /// <inheritdoc/>
-        public IPluginsManager PluginsManager { get; private set; }
-
-        /// <inheritdoc/>
         public Protocol Protocol { get; set; }
 
         /// <inheritdoc/>
         public bool IsClient => true;
-
-        /// <inheritdoc/>
-        public override int SendBufferSize => this.m_pipeStream.InBufferSize;
 
         #endregion 属性
 
@@ -255,7 +239,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
         {
-            lock (this.SyncRoot)
+            lock (this.m_semaphoreSlimForConnect)
             {
                 if (this.m_online)
                 {
@@ -273,7 +257,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="msg"></param>
         protected void BreakOut(bool manual, string msg)
         {
-            lock (this.SyncRoot)
+            lock (this.m_semaphoreSlimForConnect)
             {
                 if (this.m_online)
                 {
@@ -292,7 +276,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            lock (this.SyncRoot)
+            lock (this.m_semaphoreSlimForConnect)
             {
                 if (this.m_online)
                 {
@@ -311,15 +295,16 @@ namespace TouchSocket.NamedPipe
         /// 建立管道的连接。
         /// </summary>
         /// <param name="timeout"></param>
+        /// <param name="token"></param>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected void PipeConnect(int timeout)
+        protected void PipeConnect(int timeout, CancellationToken token)
         {
             try
             {
-                this.m_semaphoreSlimForConnect.Wait();
+                this.m_semaphoreSlimForConnect.Wait(token);
 
                 if (this.m_online)
                 {
@@ -362,15 +347,16 @@ namespace TouchSocket.NamedPipe
         /// 建立管道的连接。
         /// </summary>
         /// <param name="timeout"></param>
+        /// <param name="token"></param>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected async Task PipeConnectAsync(int timeout)
+        protected async Task PipeConnectAsync(int timeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreSlimForConnect.WaitAsync();
+                await this.m_semaphoreSlimForConnect.WaitAsync(timeout, token);
 
                 if (this.m_online)
                 {
@@ -394,9 +380,8 @@ namespace TouchSocket.NamedPipe
 #if NET45
                 namedPipe.Connect(timeout);
 #else
-                await namedPipe.ConnectAsync(timeout);
+                await namedPipe.ConnectAsync(timeout, token);
 #endif
-
                 if (namedPipe.IsConnected)
                 {
                     this.m_pipeStream = namedPipe;
@@ -414,17 +399,15 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        public virtual INamedPipeClient Connect(int timeout = 5000)
+        public virtual void Connect(int timeout, CancellationToken token)
         {
-            this.PipeConnect(timeout);
-            return this;
+            this.PipeConnect(timeout, token);
         }
 
         /// <inheritdoc/>
-        public async Task<INamedPipeClient> ConnectAsync(int timeout = 5000)
+        public virtual async Task ConnectAsync(int timeout, CancellationToken token)
         {
-            await this.PipeConnectAsync(timeout);
-            return this;
+            await this.PipeConnectAsync(timeout, token);
         }
 
         #endregion Connect
@@ -461,67 +444,6 @@ namespace TouchSocket.NamedPipe
             }
 
             this.SetAdapter(adapter);
-        }
-
-        /// <inheritdoc/>
-        public INamedPipeClient Setup(TouchSocketConfig config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            this.ThrowIfDisposed();
-
-            this.BuildConfig(config);
-
-            this.PluginsManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
-            this.LoadConfig(this.Config);
-            this.PluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
-
-            return this;
-        }
-
-        private void BuildConfig(TouchSocketConfig config)
-        {
-            this.Config = config;
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.ContainerProperty) is IContainer container))
-            {
-                container = new Container();
-            }
-
-            if (!container.IsRegistered(typeof(ILog)))
-            {
-                container.RegisterSingleton<ILog, LoggerGroup>();
-            }
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.PluginsManagerProperty) is IPluginsManager pluginsManager))
-            {
-                pluginsManager = new PluginsManager(container);
-            }
-
-            if (container.IsRegistered(typeof(IPluginsManager)))
-            {
-                pluginsManager = container.Resolve<IPluginsManager>();
-            }
-            else
-            {
-                container.RegisterSingleton<IPluginsManager>(pluginsManager);
-            }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IContainer> actionContainer)
-            {
-                actionContainer.Invoke(container);
-            }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginsManager> actionPluginsManager)
-            {
-                pluginsManager.Enable = true;
-                actionPluginsManager.Invoke(pluginsManager);
-            }
-            this.Container = container;
-            this.PluginsManager = pluginsManager;
         }
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
@@ -567,15 +489,6 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="config"></param>
-        protected virtual void LoadConfig(TouchSocketConfig config)
-        {
-            this.Logger ??= this.Container.Resolve<ILog>();
-        }
-
-        /// <summary>
         /// 在延迟发生错误
         /// </summary>
         /// <param name="ex"></param>
@@ -618,7 +531,7 @@ namespace TouchSocket.NamedPipe
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
+                var byteBlock = new ByteBlock(this.m_receiveBufferSize);
                 try
                 {
                     var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
@@ -691,6 +604,11 @@ namespace TouchSocket.NamedPipe
             {
                 byteBlock.Dispose();
             }
+        }
+
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
+        {
         }
 
         #region 发送
@@ -882,7 +800,6 @@ namespace TouchSocket.NamedPipe
                 this.LastSendTime = DateTime.Now;
             }
         }
-
         #endregion 发送
     }
 }

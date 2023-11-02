@@ -23,7 +23,7 @@ namespace TouchSocket.Sockets
     {
         private readonly IntelligentDataQueue<QueueDataBytes> m_queueDatas;
         private readonly Action<byte[], int, int> m_action;
-        private AsyncAutoResetEvent m_resetEvent = new AsyncAutoResetEvent(false);
+        private readonly AsyncAutoResetEvent m_resetEvent = new AsyncAutoResetEvent(false);
 
         /// <summary>
         /// 延迟发送器
