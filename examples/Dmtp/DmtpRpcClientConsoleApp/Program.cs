@@ -136,6 +136,10 @@ namespace ClientConsoleApp
                     {
                         store.RegisterServer<MyClientRpcServer>();
                     });
+
+                    a.UseDmtpHeartbeat()
+                    .SetTick(TimeSpan.FromSeconds(3))
+                    .SetMaxFailCount(3);
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .SetVerifyToken("Dmtp"));
