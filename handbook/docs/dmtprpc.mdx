@@ -87,7 +87,10 @@ var config = new TouchSocketConfig()//配置
                store.RegisterServer<MyRpcServer>();//注册服务
            });
        })
-       .SetVerifyToken("Rpc");
+       .SetDmtpOption(new DmtpOption()
+       {
+            VerifyToken = "Rpc"//连接验证口令。
+       });
 
 service.Setup(config);
 
@@ -112,7 +115,10 @@ client.Setup(new TouchSocketConfig()
     {
         a.UseDmtpRpc();
     })
-    .SetVerifyToken("Rpc"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 
 bool result =(bool) client.GetDmtpRpcActor().Invoke(typeof(bool),"Login", InvokeOption.WaitInvoke, "123", "abc");
@@ -250,7 +256,10 @@ client.Setup(new TouchSocketConfig()
     {
         a.UseDmtpRpc();
     })
-    .SetVerifyToken("Rpc"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 
 bool result = client.GetDmtpRpcActor().Login("123", "abc", InvokeOption.WaitInvoke);//Login是生成的代理扩展方法。可能需要额外添加命名空间。
@@ -306,7 +315,10 @@ client.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("Rpc"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 client.Logger.Info($"连接成功，Id={client.Id}");
 ```
@@ -570,7 +582,10 @@ client.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("Dmtp"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 ```
 
@@ -815,7 +830,10 @@ client.Setup(new TouchSocketConfig()
         .SetCreateDmtpRpcActor((actor)=>new MyDmtpRpcActor(actor));
     })
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("Dmtp"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 ```
 

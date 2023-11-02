@@ -17,7 +17,10 @@ title: 连接及Id同步
 
 ```csharp showLineNumbers
 var config = new TouchSocketConfig()
-    .SetVerifyToken("Dmtp");
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Dmtp"
+    });
 ```
 
 ### 1.2 动态验证
@@ -28,8 +31,11 @@ var config = new TouchSocketConfig()
 
 ```csharp showLineNumbers
 var config = new TouchSocketConfig()
-    .SetVerifyToken("Dmtp")
-    .SetMetadata(new Metadata().Add("a","a"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Dmtp",
+        Metadata=new Metadata().Add("a","a")
+    });
 ```
 
 ```csharp showLineNumbers

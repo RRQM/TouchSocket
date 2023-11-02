@@ -521,7 +521,10 @@ var clientFactory = new TcpDmtpClientFactory()
     {
         return new TouchSocketConfig()
         .SetRemoteIPHost("127.0.0.1:7789")
-        .SetVerifyToken("File")
+        .SetDmtpOption(new DmtpOption()
+        {
+             VerifyToken = "File"//连接验证口令。
+        })
         .ConfigurePlugins(a =>
         {
             a.UseDmtpFileTransfer();
@@ -530,7 +533,10 @@ var clientFactory = new TcpDmtpClientFactory()
 };
 clientFactory.MainConfig//配置主通信
              .SetRemoteIPHost("127.0.0.1:7789")
-             .SetVerifyToken("File")
+             .SetDmtpOption(new DmtpOption()
+             {
+                 VerifyToken = "Rpc"//连接验证口令。
+             })
              .ConfigurePlugins(a =>
              {
                  a.UseDmtpFileTransfer();

@@ -21,17 +21,12 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 <summary>可配置项</summary>
 <div>
 
-#### SetVerifyTimeout
-设置验证超时时间，默认3000ms。
+#### SetDmtpOption
+设置Dmtp相关配置。其中包含：
 
-#### SetVerifyToken
-设置验证口令。 
-
-#### SetDefaultId
-设置客户端的默认Id
-
-#### SetMetadata
-设置连接时的元数据组
+- VerifyToken：设置验证口令。 
+- Id：连接时指定Id。
+- Metadata：连接时指定元数据。可以在连接时，指定一些字符串键值对。
 
 </div>
 </details>
@@ -64,7 +59,10 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 var client = new TcpDmtpClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("Dmtp"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Dmtp"
+    }));
 client.Connect();
 ```
 
@@ -78,7 +76,10 @@ var client = new UdpDmtp();
  client.Setup(new TouchSocketConfig()
      .SetRemoteIPHost("127.0.0.1:7797")
      .UseUdpReceive()
-     .SetVerifyToken("123RPC")
+     .SetDmtpOption(new DmtpOption()
+     {
+         VerifyToken = "Dmtp"
+     })
      .ConfigureContainer(a =>
      {
      })
@@ -102,7 +103,10 @@ var client = new UdpDmtp();
 var client = new HttpDmtpClient();
 client.Setup(new TouchSocketConfig()
    .SetRemoteIPHost("127.0.0.1:7789")
-   .SetVerifyToken("Dmtp"));
+   .SetDmtpOption(new DmtpOption()
+   {
+       VerifyToken = "Dmtp"
+   }));
 client.Connect();
 ```
 
@@ -111,7 +115,10 @@ client.Connect();
 ```csharp showLineNumbers
 var websocketDmtpClient = new WebSocketDmtpClient();
 websocketDmtpClient.Setup(new TouchSocketConfig()
-    .SetVerifyToken("Dmtp")
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Dmtp"
+    })
     .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
 await websocketDmtpClient.ConnectAsync();
 ```
@@ -177,7 +184,10 @@ finally
 var client = new NamedPipeDmtpClient();
 client.Setup(new TouchSocketConfig()
       .SetPipeName("TouchSocketPipe")//设置管道名称
-      .SetVerifyToken("Dmtp"));
+      .SetDmtpOption(new DmtpOption()
+      {
+           VerifyToken = "Dmtp"
+      }));
 client.Connect();
 ```
 

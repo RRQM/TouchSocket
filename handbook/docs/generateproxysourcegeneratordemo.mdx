@@ -84,8 +84,10 @@ var config = new TouchSocketConfig()//配置
        {
            a.RegisterServer<IUserServer, UserServer>();
        })
-       .SetVerifyToken("Rpc");//设定连接口令，作用类似账号密码
-
+       .SetDmtpOption(new DmtpOption()
+       {
+            VerifyToken = "Rpc"//连接验证口令。
+       });
 service.Setup(config);
 
 service.Start();
@@ -101,7 +103,10 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 TcpTouchRpcClient client = new TcpTouchRpcClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
-    .SetVerifyToken("Rpc"));
+    .SetDmtpOption(new DmtpOption()
+    {
+        VerifyToken = "Rpc"//连接验证口令。
+    }));
 client.Connect();
 
 //Loging即为在RpcClassLibrary中自动生成的项目

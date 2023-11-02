@@ -47,7 +47,10 @@ title: 从服务端生成代理
 
                        a.Add<MyTouchRpcPlugin>();
                    })
-                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                        VerifyToken = "Rpc"//连接验证口令。
+                   });
 
             service.Setup(config);
             service.Start();
