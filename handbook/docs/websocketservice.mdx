@@ -46,8 +46,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.UseWebSocket()//添加WebSocket功能
         .SetWSUrl("/ws")//设置url直接可以连接。
         .UseAutoPong();//当收到ping报文时自动回应pong
-    }))
-    .Start();
+    }));
+
+service.Start();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -69,8 +70,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.UseWebSocket()//添加WebSocket功能
                .SetVerifyConnection(VerifyConnection)
                .UseAutoPong();//当收到ping报文时自动回应pong
-    }))
-    .Start();
+    }));
+
+service.Start();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -145,8 +147,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         {
             store.RegisterServer<MyServer>();
         });
-    }))
-    .Start();
+    }));
+
+service.Start();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -298,8 +301,9 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.UseWebSocket()//添加WebSocket功能
                .SetWSUrl("/ws");
         a.Add<MyWebSocketPlugin>();//自定义插件。
-    }))
-    .Start();
+    }));
+
+service.Start();
 ```
 
 :::tip 提示
@@ -369,8 +373,9 @@ private static HttpService CreateHttpService()
               .UseAutoPong();//当收到ping报文时自动回应pong
 
             a.Add<MyReadWebSocketPlugin>();
-        }))
-        .Start();
+        }));
+    
+    service.Start();
 
     service.Logger.Info("服务器已启动");
     service.Logger.Info("直接连接地址=>ws://127.0.0.1:7789/ws");

@@ -61,8 +61,9 @@ client.Setup(new TouchSocketConfig()
         SslProtocols = SslProtocols.Tls12,
         TargetHost = "127.0.0.1",
         CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-    }))
-    .Connect();
+    }));
+
+client.Connect();
 
 Console.WriteLine("连接成功");
 ```

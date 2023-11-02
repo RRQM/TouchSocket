@@ -46,8 +46,8 @@ udpService.Received = (c,e) =>
     return EasyTask.CompletedTask;
 };
 udpService.Setup(new TouchSocketConfig()
-    .SetBindIPHost(new IPHost(7789)))
-    .Start();
+    .SetBindIPHost(new IPHost(7789)));
+udpService.Start();
 Console.WriteLine("等待接收");
 ```
 
@@ -57,8 +57,8 @@ Console.WriteLine("等待接收");
 var udpClient = new UdpSession();
 udpClient.Setup(new TouchSocketConfig()
     //.UseUdpReceive()//作为客户端时，如果需要接收数据，那么需要绑定端口。要么使用SetBindIPHost指定端口，要么调用UseUdpReceive绑定随机端口。
-    .SetBindIPHost(new IPHost(7788)))
-    .Start();
+    .SetBindIPHost(new IPHost(7788)));
+udpClient.Start();
 ```
 
 :::caution 注意
@@ -152,8 +152,8 @@ udpService.Setup(new TouchSocketConfig()
     {
         a.Add<MyPluginClass1>();
         a.Add<MyPluginClass2>();
-    }))
-    .Start();
+    }));
+udpService.Start();
 ```
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Udp)

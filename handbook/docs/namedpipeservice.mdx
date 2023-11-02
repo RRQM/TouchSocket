@@ -133,8 +133,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
+    }));
+
+service.Start();//启动
 ```
 
 :::info 温馨提示
@@ -203,8 +204,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
+    }));
+
+service.Start();//启动
 ```
 
 （4）创建服务器（不含MyService）。
@@ -221,8 +223,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
+    }));
+
+service.Start();//启动
 ```
 
 :::tip 建议
@@ -240,8 +243,9 @@ service.Setup(new TouchSocketConfig()//载入配置
 ```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Setup(new TouchSocketConfig()//载入配置
-    .SetPipeName("TouchSocketPipe"))//设置命名管道名称
-    .Start();//启动
+    .SetPipeName("TouchSocketPipe"));//设置命名管道名称
+    
+service.Start();//启动
 ```
 
 ### 8.2 直接添加监听配置
@@ -274,8 +278,9 @@ service.Setup(new TouchSocketConfig()//载入配置
     .ConfigurePlugins(a =>
     {
         //a.Add();//此处可以添加插件
-    }))
-    .Start();//启动
+    }));
+
+service.Start();//启动
 service.Logger.Info("服务器已启动");
 ```
 
@@ -292,8 +297,9 @@ service.Logger.Info("服务器已启动");
 
 ```csharp {5,16}
 var service = new NamedPipeService();
-service.Setup(new TouchSocketConfig())
-    .Start();//启动
+service.Setup(new TouchSocketConfig());
+
+service.Start();//启动
 
 service.AddListen(new  NamedPipeListenOption()//在Service运行时，可以调用，直接添加监听
 {
@@ -386,8 +392,9 @@ service.Setup(new TouchSocketConfig()
     .ConfigurePlugins(a =>
     {
         a.Add<MyNamedPipePlugin>();
-    }))
-    .Start();
+    }));
+    
+service.Start();
 ```
 
 ## 十、AspNetCore中创建 （暂未实现）

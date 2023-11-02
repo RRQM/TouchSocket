@@ -49,8 +49,8 @@ title: 从服务端生成代理
                    })
                    .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 ```
 
 :::tip
