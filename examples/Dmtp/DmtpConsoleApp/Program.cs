@@ -20,7 +20,7 @@ namespace DmtpConsoleApp
         static async Task Connect_2()
         {
             using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
-            tcpClient.Received = (client,e) =>
+            tcpClient.Received = (client, e) =>
             {
                 //此处接收服务器返回的消息
                 var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
@@ -72,9 +72,12 @@ namespace DmtpConsoleApp
                     a.AddConsoleLogger();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDefaultId("defaultId")//设置默认Id
-                .SetMetadata(new Metadata().Add("a", "a"))//设置Metadata，可以传递更多的验证信息
-                .SetVerifyToken("Dmtp"));//设置Token验证连接
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp",//设置Token验证连接
+                    Id = "defaultId",//设置默认Id
+                    Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                }));
             client.Connect();
 
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
@@ -93,10 +96,13 @@ namespace DmtpConsoleApp
                    {
                        a.Add<MyVerifyPlugin>();
                    })
-                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;

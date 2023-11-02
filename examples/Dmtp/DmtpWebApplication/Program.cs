@@ -21,7 +21,10 @@ namespace DmtpWebApplication
             builder.Services.AddWebSocketDmtpService(() =>
             {
                 return new TouchSocketConfig()
-                    .SetVerifyToken("Dmtp")
+                    .SetDmtpOption(new DmtpOption()
+                    {
+                        VerifyToken = "Dmtp"
+                    })
                     .UseAspNetCoreContainer(builder.Services)
                     .ConfigureContainer(a =>
                     {
@@ -37,7 +40,10 @@ namespace DmtpWebApplication
             builder.Services.AddHttpMiddlewareDmtpService(() =>
             {
                 return new TouchSocketConfig()
-                        .SetVerifyToken("Dmtp")
+                        .SetDmtpOption(new DmtpOption()
+                        {
+                            VerifyToken = "Dmtp"
+                        })
                         .UseAspNetCoreContainer(builder.Services)
                         .ConfigureContainer(a =>
                         {
@@ -60,14 +66,20 @@ namespace DmtpWebApplication
             //WebSocketDmtpClient连接
             var websocketDmtpClient = new WebSocketDmtpClient();
             websocketDmtpClient.Setup(new TouchSocketConfig()
-                .SetVerifyToken("Dmtp")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                })
                 .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
             await websocketDmtpClient.ConnectAsync();
             Console.WriteLine("WebSocketDmtpClient连接成功");
 
             var httpDmtpClient = new HttpDmtpClient();
             httpDmtpClient.Setup(new TouchSocketConfig()
-                .SetVerifyToken("Dmtp")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                })
                 .SetRemoteIPHost("http://127.0.0.1:5174"));
             httpDmtpClient.Connect();
             Console.WriteLine("HttpDmtpClient连接成功");

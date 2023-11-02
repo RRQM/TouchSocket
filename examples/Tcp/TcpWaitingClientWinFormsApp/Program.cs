@@ -31,8 +31,8 @@ namespace TcpWaitingClientWinFormsApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyPlugin1>();//此处可以添加插件
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
 
             service.Logger.Info("服务器已启动");
         }

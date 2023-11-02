@@ -6,8 +6,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.215" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.215" />
+		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.220" />
+		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.220" />
 	</ItemGroup>
 
 </Project>

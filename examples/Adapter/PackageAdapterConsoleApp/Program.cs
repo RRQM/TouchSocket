@@ -60,8 +60,8 @@ namespace PackageAdapterConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     //a.Add();//此处可以添加插件
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }

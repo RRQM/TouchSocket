@@ -37,10 +37,13 @@ namespace RecommendRpcConsoleApp
                                store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
                            });
                    })
-                   .SetVerifyToken("Rpc");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"
+                   });//设定连接口令，作用类似账号密码
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
 
@@ -51,7 +54,10 @@ namespace RecommendRpcConsoleApp
                 {
                     a.UseDmtpRpc();
                 })
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
 
             //Login即为在RpcClassLibrary中自动生成的项目

@@ -60,7 +60,10 @@ namespace RemoteStreamConsoleApp
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetVerifyToken("Dmtp")
+               .SetDmtpOption(new DmtpOption()
+               {
+                   VerifyToken = "Dmtp"
+               })
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
@@ -90,7 +93,10 @@ namespace RemoteStreamConsoleApp
                        a.UseDmtpRemoteStream();//必须添加远程流访问插件
                        a.Add<MyRemoteStreamPlugin>();
                    })
-                   .SetVerifyToken("Dmtp")//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//连接验证口令。
+                   })
                    .BuildWithTcpDmtpService();//此处build相当于new TcpDmtpService，然后Setup，然后Start。
             service.Logger.Info("服务器成功启动");
             return service;

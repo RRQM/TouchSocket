@@ -6,12 +6,12 @@
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.9.16" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.215" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.215" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.215" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.215" />
-    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.215" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.215" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.220" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.220" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.220" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.220" />
+    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.220" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.220" />
   </ItemGroup>
 
 </Project>

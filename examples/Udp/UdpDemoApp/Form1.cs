@@ -18,7 +18,7 @@ namespace UdpDemoApp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            this.m_udpSession.Received = (remote,e) =>
+            this.m_udpSession.Received = (remote, e) =>
             {
                 if (e.ByteBlock.Len > 1024)
                 {
@@ -50,8 +50,8 @@ namespace UdpDemoApp
                  .ConfigureContainer(a =>
                  {
                      a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
-                 }))
-                 .Start();
+                 }));
+            m_udpSession.Start();
             this.m_udpSession.Logger.Info("等待接收");
         }
 

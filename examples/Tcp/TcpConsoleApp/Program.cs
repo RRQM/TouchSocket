@@ -41,9 +41,9 @@ namespace ServiceConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear()
-                    .SetCheckClearType( CheckClearType.All)
+                    .SetCheckClearType(CheckClearType.All)
                     .SetTick(TimeSpan.FromSeconds(60))
-                    .SetOnClose((c,t) => 
+                    .SetOnClose((c, t) =>
                     {
                         c.TryShutdown();
                         c.SafeClose("超时无数据");
@@ -52,8 +52,8 @@ namespace ServiceConsoleApp
                     a.Add<TcpServiceReceivedPlugin>();
                     a.Add<MyServicePluginClass>();
                     //a.Add();//此处可以添加插件
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             return service;
         }
 

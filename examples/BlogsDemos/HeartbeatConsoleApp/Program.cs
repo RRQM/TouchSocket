@@ -30,8 +30,8 @@ namespace HeartbeatConsoleApp
                     .ConfigurePlugins(a =>
                     {
                         a.Add<HeartbeatAndReceivePlugin>();
-                    }))
-                    .Start();//启动
+                    }));
+            service.Start();//启动
             service.Logger.Info("服务器成功启动");
 
             //客户端

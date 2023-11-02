@@ -18,7 +18,10 @@ namespace RemoteAccessApp
         {
             this.m_client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("Dmtp")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                })
                 .ConfigureContainer(a =>
                 {
                     a.AddEasyLogger((msg =>

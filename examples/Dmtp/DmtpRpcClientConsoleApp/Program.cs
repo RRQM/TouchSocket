@@ -142,7 +142,10 @@ namespace ClientConsoleApp
                     .SetMaxFailCount(3);
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("Dmtp"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
 
             IRpcClient1 rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();

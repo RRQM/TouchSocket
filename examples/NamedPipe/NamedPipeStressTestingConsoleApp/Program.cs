@@ -15,10 +15,10 @@ namespace NamedPipeStressTestingConsoleApp
             var service = CreateService(name);
             var client = CreateClient(name);
 
-           
 
-            byte[] buffer = new byte[1024*1024];
-            while (true) 
+
+            byte[] buffer = new byte[1024 * 1024];
+            while (true)
             {
                 client.Send(buffer);
             }
@@ -38,8 +38,8 @@ namespace NamedPipeStressTestingConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Connect();
+                }));
+            client.Connect();
             client.Logger.Info("客户端成功连接");
             return client;
         }
@@ -48,16 +48,16 @@ namespace NamedPipeStressTestingConsoleApp
         {
             var service = new NamedPipeService();
             service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
-            service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端成功连接
-            service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接\
+            service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+            service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接\
 
             long count = 0;
             DateTime dateTime = DateTime.Now;
-            service.Received = (client,e) =>
+            service.Received = (client, e) =>
             {
-                if (DateTime.Now-dateTime>TimeSpan.FromSeconds(1))
+                if (DateTime.Now - dateTime > TimeSpan.FromSeconds(1))
                 {
-                    Console.WriteLine((count/(1048576.0)).ToString("0.00"));
+                    Console.WriteLine((count / (1048576.0)).ToString("0.00"));
                     count = 0;
                     dateTime = DateTime.Now;
                 }
@@ -73,8 +73,8 @@ namespace NamedPipeStressTestingConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     //a.Add();//此处可以添加插件
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }

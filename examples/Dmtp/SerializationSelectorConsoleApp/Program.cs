@@ -39,7 +39,10 @@ namespace SerializationSelectorConsoleApp
                     a.UseDmtpRpc()
                         .SetSerializationSelector(new MemoryPackSerializationSelector());
                 })
-                .SetVerifyToken("Dmtp"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
             return client;
         }
@@ -62,10 +65,13 @@ namespace SerializationSelectorConsoleApp
                    {
                        a.AddConsoleLogger();
                    })
-                   .SetVerifyToken("Dmtp");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }
