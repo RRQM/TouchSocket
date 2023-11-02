@@ -83,7 +83,10 @@ class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
                 a.UseDmtpRpc();
             })
             .SetRemoteIPHost("127.0.0.1:7789")
-        .SetVerifyToken("Dmtp"));
+            .SetDmtpOption(new DmtpOption()
+            {
+                VerifyToken = "Dmtp"//连接验证口令。
+            }));
         client.Connect();
         client.Logger.Info($"连接成功，Id={client.Id}");
         return client;

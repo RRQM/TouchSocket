@@ -459,7 +459,10 @@ private static TcpDmtpService GetTcpDmtpService()
                a.UseSimpleDmtpRpc()
                .RegisterRpc(new MyServer());
            })
-           .SetVerifyToken("File");//连接验证口令。
+           .SetDmtpOption(new DmtpOption()
+           {
+                VerifyToken = "Dmtp"//连接验证口令。
+           });
 
     service.Setup(config);
     service.Start();
@@ -475,7 +478,10 @@ private static TcpDmtpClient GetTcpDmtpClient()
 {
     var client = new TouchSocketConfig()
            .SetRemoteIPHost("127.0.0.1:7789")
-           .SetVerifyToken("File")
+           .SetDmtpOption(new DmtpOption()
+           {
+                VerifyToken = "Dmtp"//连接验证口令。
+           })
            .ConfigureContainer(a =>
            {
                a.AddConsoleLogger();

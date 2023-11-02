@@ -27,11 +27,11 @@ Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基�
 <summary>可配置项</summary>
 <div>
 
-#### SetVerifyTimeout
-设置验证超时时间，默认3000ms。（仅Dmtp可用） 。
+#### SetDmtpOption
+设置Dmtp相关配置。其中包含：
 
-#### SetVerifyToken
-设置验证口令。 
+- VerifyToken：设置验证口令。 
+- VerifyTimeout：验证连接超时时间。仅用于服务器。意为：当服务器收到基础链接，在指定的时间内如果没有收到握手信息，则直接视为无效链接，直接断开。
 
 </div>
 </details>
@@ -69,7 +69,10 @@ var config = new TouchSocketConfig()//配置
        {
            a.AddConsoleLogger();
        })
-       .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+       .SetDmtpOption(new DmtpOption()
+       {
+           VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+       });
 
 service.Setup(config);
 
@@ -110,13 +113,16 @@ udpDmtp.Start();
 
 ```csharp showLineNumbers
 var service = new HttpDmtpService();
-TouchSocketConfig config = new TouchSocketConfig()//配置
+var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
        .ConfigureContainer(a =>
        {
            a.AddConsoleLogger();
        })
-       .SetVerifyToken("Dmtp");
+       .SetDmtpOption(new DmtpOption()
+       {
+           VerifyToken = "Dmtp"
+       });
 
 service.Setup(config);
 
@@ -140,7 +146,10 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 builder.Services.AddWebSocketDmtpService(() =>
 {
     return new TouchSocketConfig()
-        .SetVerifyToken("Dmtp")
+        .SetDmtpOption(new DmtpOption()
+        {
+            VerifyToken = "Dmtp"
+        })
         .UseAspNetCoreContainer(builder.Services)
         .ConfigureContainer(a =>
         {
@@ -178,7 +187,10 @@ app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之�
 builder.Services.AddHttpMiddlewareDmtpService(() =>
 {
     return new TouchSocketConfig()
-            .SetVerifyToken("Dmtp")
+            .SetDmtpOption(new DmtpOption()
+            {
+                VerifyToken = "Dmtp"
+            })
             .UseAspNetCoreContainer(builder.Services)
             .ConfigureContainer(a =>
             {
@@ -212,7 +224,10 @@ var config = new TouchSocketConfig()//配置
        {
            a.AddConsoleLogger();
        })
-       .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+       .SetDmtpOption(new DmtpOption()
+        {
+            VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+        });
 
 service.Setup(config);
 
