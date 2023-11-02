@@ -40,8 +40,8 @@ namespace UnityServerConsoleApp
                  .ConfigureContainer(a =>
                  {
                      a.AddConsoleLogger();//添加一个日志注入
-                 }))
-                 .Start();
+                 }));
+            udpService.Start();
 
             udpService.Logger.Info($"UdpService已启动，端口：{port}");
         }
@@ -70,10 +70,13 @@ namespace UnityServerConsoleApp
 
                        a.Add<MyTcpRpcPlguin>();
                    })
-                   .SetVerifyToken("Dmtp");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
         }
@@ -91,8 +94,8 @@ namespace UnityServerConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info($"Tcp服务器已启动，端口{port}");
         }
     }

@@ -33,10 +33,13 @@ namespace ConsoleApp2
 
                        a.Add<MyTouchRpcPlugin>();
                    })
-                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
 
             service.Logger.Info($"{service.GetType().Name}已启动");

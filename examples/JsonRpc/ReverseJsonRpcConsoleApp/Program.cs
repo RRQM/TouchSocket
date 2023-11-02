@@ -57,8 +57,8 @@ namespace ReverseJsonRpcConsoleApp
                      });
 
                      a.Add<MyPluginClass>();
-                 }))
-                .Start();
+                 }));
+            service.Start();
             return service;
         }
     }

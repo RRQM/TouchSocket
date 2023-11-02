@@ -28,10 +28,13 @@ namespace GeneratorRpcProxyConsoleApp
                                store.RegisterServer<MyRpcServer>();
                            });
                    })
-                   .SetVerifyToken("Dmtp");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
 
@@ -43,7 +46,10 @@ namespace GeneratorRpcProxyConsoleApp
                 {
                     a.UseDmtpRpc();
                 })
-                .SetVerifyToken("Dmtp"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
 
             //此处的Login方法则是vs源代码自动生成的，可以f12查看。

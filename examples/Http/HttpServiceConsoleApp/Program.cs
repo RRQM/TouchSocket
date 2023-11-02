@@ -37,8 +37,8 @@ namespace ConsoleApp
                     //1、为找不到的路由返回404
                     //2、处理header为Option的探视跨域请求。
                     a.UseDefaultHttpServicePlugin();
-                }))
-                .Start();
+                }));
+            service.Start();
 
             Console.WriteLine("Http服务器已启动");
             Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");

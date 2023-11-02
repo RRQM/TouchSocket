@@ -28,7 +28,10 @@ namespace RpcStreamConsoleApp
                 {
                     a.UseDmtpRpc();
                 })
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
             return client;
         }
@@ -50,10 +53,13 @@ namespace RpcStreamConsoleApp
                            store.RegisterServer<MyRpcServer>();
                        });
                    })
-                   .SetVerifyToken("Rpc");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Rpc"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }

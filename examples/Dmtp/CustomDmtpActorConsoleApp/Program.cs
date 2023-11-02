@@ -39,7 +39,10 @@ namespace CustomDmtpActorConsoleApp
         {
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
-                   .SetVerifyToken("File")
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "File"
+                   })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -75,10 +78,13 @@ namespace CustomDmtpActorConsoleApp
                        a.UseSimpleDmtpRpc()
                        .RegisterRpc(new MyServer());
                    })
-                   .SetVerifyToken("File");//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "File"//连接验证口令。
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
             service.Logger.Info("服务器成功启动");
             return service;
         }

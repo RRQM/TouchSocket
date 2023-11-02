@@ -58,8 +58,8 @@ namespace SyncWebSocketConsoleApp
                       .UseAutoPong();//当收到ping报文时自动回应pong
 
                     a.Add<MyReadWebSocketPlugin>();
-                }))
-                .Start();
+                }));
+            service.Start();
 
             service.Logger.Info("服务器已启动");
             service.Logger.Info("直接连接地址=>ws://127.0.0.1:7789/ws");

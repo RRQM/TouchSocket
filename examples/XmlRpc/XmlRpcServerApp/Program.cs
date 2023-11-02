@@ -33,8 +33,8 @@ namespace XmlRpcServerApp
 #endif
                     });
                 })
-                .SetListenIPHosts(7789))
-                .Start();
+                .SetListenIPHosts(7789));
+            service.Start();
 
             service.Logger.Info("服务器已启动");
             Console.ReadKey();

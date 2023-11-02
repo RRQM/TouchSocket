@@ -93,7 +93,10 @@ namespace DmtpClientApp
                     })
                     .SetTick(TimeSpan.FromSeconds(3));
                 })
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Rpc"
+                }));
                 this.m_client.Connect();
 
                 MessageBox.Show("连接成功");

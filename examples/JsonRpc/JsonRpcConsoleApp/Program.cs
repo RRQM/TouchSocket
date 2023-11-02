@@ -48,8 +48,8 @@ namespace JsonRpcConsoleApp
                          store.RegisterServer<JsonRpcServer>();
                      })
                      .SetJsonRpcUrl("/jsonRpc");
-                 }))
-                .Start();
+                 }));
+            service.Start();
 
             ConsoleLogger.Default.Info($"Http服务器已启动");
         }
@@ -76,8 +76,8 @@ namespace JsonRpcConsoleApp
                      {
                          store.RegisterServer<JsonRpcServer>();
                      });
-                 }))
-                .Start();
+                 }));
+            service.Start();
 
             ConsoleLogger.Default.Info($"WebSocket服务器已启动");
         }
@@ -101,8 +101,8 @@ namespace JsonRpcConsoleApp
                     {
                         store.RegisterServer<JsonRpcServer>();
                     });
-                }))
-                .Start();
+                }));
+            service.Start();
         }
 
 

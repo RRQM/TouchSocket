@@ -22,7 +22,7 @@ namespace TLVWinFormsApp
         private void button1_Click(object sender, EventArgs e)
         {
             //订阅收到消息事件
-            this.m_tcpService.Received = (client,e) =>
+            this.m_tcpService.Received = (client, e) =>
             {
                 if (e.RequestInfo is TLVDataFrame frame)
                 {
@@ -56,7 +56,10 @@ namespace TLVWinFormsApp
         private void button2_Click(object sender, EventArgs e)
         {
             this.m_client.Setup(new TouchSocketConfig()
-                  .SetMaxPackageSize(1024 * 1024 * 10)
+                  .SetAdapterOption(new AdapterOption()
+                  {
+                      MaxPackageSize = 1024 * 1024 * 10
+                  })
                   .ConfigureContainer(a =>
                   {
                       a.SetSingletonLogger(new EasyLogger(this.ShowMsg));

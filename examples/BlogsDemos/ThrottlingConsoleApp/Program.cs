@@ -16,7 +16,7 @@ namespace ThrottlingConsoleApp
         private static void Main(string[] args)
         {
             var service = new TcpService();
-            service.Received = (client,e) =>
+            service.Received = (client, e) =>
             {
                 //从客户端收到信息
                 var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
@@ -33,8 +33,8 @@ namespace ThrottlingConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyThrottlingPlugin>();
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info("服务器已启动");
             Console.ReadLine();
         }

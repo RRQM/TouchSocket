@@ -35,8 +35,8 @@ namespace Log4netConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddLogger(new Mylog4netLogger());//添加Mylog4netLogger日志
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info("服务器成功启动");
             return service;
         }

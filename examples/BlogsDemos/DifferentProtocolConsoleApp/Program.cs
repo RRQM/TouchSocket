@@ -20,8 +20,8 @@ namespace DifferentProtocolConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<DifferentProtocolPlugin>();
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
 
             service.Logger.Info("服务器成功启动");
             Console.ReadKey();

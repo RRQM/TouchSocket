@@ -37,7 +37,10 @@ namespace DmtpRedisConsoleApp
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                .SetRemoteIPHost("127.0.0.1:7789")
-               .SetVerifyToken("Dmtp")
+               .SetDmtpOption(new DmtpOption()
+               {
+                   VerifyToken = "Dmtp"
+               })
                .ConfigureContainer(a =>
                {
                    a.AddConsoleLogger();
@@ -63,7 +66,10 @@ namespace DmtpRedisConsoleApp
                        a.UseDmtpRedis()//必须添加Redis访问插件
                        .SetCache(new MemoryCache<string, byte[]>());//这里可以设置缓存持久化，此处仍然是使用内存缓存。
                    })
-                   .SetVerifyToken("Dmtp")//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//连接验证口令。
+                   })
                    .BuildWithTcpDmtpService();//此处build相当于new TcpDmtpService，然后Setup，然后Start。
             service.Logger.Info("服务器成功启动");
             return service;

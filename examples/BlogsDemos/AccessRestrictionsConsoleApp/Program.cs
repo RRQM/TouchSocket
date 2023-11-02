@@ -33,8 +33,9 @@ namespace AccessRestrictionsConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<AccessRestrictionsPlugin>();//添加访问限制插件
-                }))
-                .Start();//启动
+                }));
+
+            service.Start();//启动
 
             service.Logger.Info("服务器成功启动");
             Console.ReadKey();

@@ -73,7 +73,7 @@ namespace WebSocketConsoleApp
             for (int i = 0; i < 10; i++)
             {
                 var msg = Encoding.UTF8.GetBytes("hello");
-                client.SendWithWS( "Hello",i == 9);
+                client.SendWithWS("Hello", i == 9);
             }
         }
 
@@ -203,8 +203,8 @@ namespace WebSocketConsoleApp
                     {
                         store.RegisterServer<MyServer>();
                     });
-                }))
-                .Start();
+                }));
+            service.Start();
 
             service.Logger.Info("服务器已启动");
             service.Logger.Info("直接连接地址=>ws://127.0.0.1:7789/ws");
@@ -287,7 +287,7 @@ namespace WebSocketConsoleApp
 
             //此处使用字典，原因是插件是多客户端并发的，所以需要字典找到对应客户端的缓存
             Dictionary<IHttpClientBase, StringBuilder> m_stringBuilders = new Dictionary<IHttpClientBase, StringBuilder>();//接收临时Text
-          
+
             public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
             {
                 switch (e.DataFrame.Opcode)
@@ -308,7 +308,7 @@ namespace WebSocketConsoleApp
                                 }
                             }
                         }
-                        
+
                         return;
 
                     case WSDataType.Text:
@@ -328,9 +328,9 @@ namespace WebSocketConsoleApp
 
                             var stringBuilder = new StringBuilder();
                             stringBuilder.Append(e.DataFrame.ToText());
-                            this.m_stringBuilders.Add(client,stringBuilder);
+                            this.m_stringBuilders.Add(client, stringBuilder);
                         }
-                        
+
                         return;
 
                     case WSDataType.Binary:

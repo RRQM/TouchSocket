@@ -18,14 +18,14 @@ namespace ConsulConsoleApp
                 return Task.CompletedTask;
             };//有客户端正在连接
 
-            service.Connected = (client, e) => 
-            { 
+            service.Connected = (client, e) =>
+            {
                 service.Logger.Info("Connected");
                 return Task.CompletedTask;
             };//有客户端连接
 
-            service.Disconnected = (client, e) => 
-            { 
+            service.Disconnected = (client, e) =>
+            {
                 service.Logger.Info("Disconnected");
                 return Task.CompletedTask;
             };//有客户端断开连接
@@ -42,8 +42,8 @@ namespace ConsulConsoleApp
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                )
-                .Start();//启动
+                );
+            service.Start();//启动
 
             RegisterConsul(7789);
             Console.ReadKey();

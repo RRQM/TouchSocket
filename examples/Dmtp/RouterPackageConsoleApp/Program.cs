@@ -80,7 +80,10 @@ namespace RouterPackageConsoleApp
         {
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
-                   .SetVerifyToken("Dmtp")
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"
+                   })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -114,10 +117,13 @@ namespace RouterPackageConsoleApp
                        a.Add<MyPlugin1>();
                        a.Add<MyPlugin2>();
                    })
-                   .SetVerifyToken("Dmtp");//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//连接验证口令。
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
             service.Logger.Info("服务器成功启动");
             return service;
         }

@@ -48,10 +48,13 @@ namespace DmtpClientApp
                    {
                        a.AddConsoleLogger();
                    })
-                   .SetVerifyToken("Rpc");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Rpc"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}ÒÑÆô¶¯£¬¼àÌý¶Ë¿Ú£º{port}");
             return service;

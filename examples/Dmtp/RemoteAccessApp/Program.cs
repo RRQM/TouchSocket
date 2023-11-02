@@ -42,7 +42,10 @@ namespace RemoteAccessApp
                        a.UseDmtpRemoteAccess();//必须添加远程访问插件
                        a.Add<MyRemoteAccessPlugin>();
                    })
-                   .SetVerifyToken("Dmtp")//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"//连接验证口令。
+                   })
                    .BuildWithTcpDmtpService();//此处build相当于new TcpDmtpService，然后Setup，然后Start。
             service.Logger.Info("服务器成功启动");
             return service;

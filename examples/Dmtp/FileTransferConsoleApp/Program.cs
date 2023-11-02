@@ -629,7 +629,10 @@ namespace FileTransferConsoleApp
         {
             var client = new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
-                   .SetVerifyToken("File")
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "File"
+                   })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -669,10 +672,13 @@ namespace FileTransferConsoleApp
                        .SetMaxSmallFileLength(1024 * 1024);//设置小文件的最大限制长度
                        a.Add<MyPlugin>();
                    })
-                   .SetVerifyToken("File");//连接验证口令。
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "File"//连接验证口令。
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
             service.Logger.Info("服务器成功启动");
             return service;
         }
@@ -695,7 +701,10 @@ namespace FileTransferConsoleApp
                 {
                     return new TouchSocketConfig()
                     .SetRemoteIPHost("127.0.0.1:7789")
-                    .SetVerifyToken("File")
+                    .SetDmtpOption(new DmtpOption()
+                    {
+                        VerifyToken = "File"
+                    })
                     .ConfigurePlugins(a =>
                     {
                         a.UseDmtpFileTransfer();
@@ -704,7 +713,10 @@ namespace FileTransferConsoleApp
             };
             clientFactory.MainConfig//配置主通信
                          .SetRemoteIPHost("127.0.0.1:7789")
-                         .SetVerifyToken("File")
+                         .SetDmtpOption(new DmtpOption()
+                         {
+                             VerifyToken = "File"
+                         })
                          .ConfigurePlugins(a =>
                          {
                              a.UseDmtpFileTransfer();

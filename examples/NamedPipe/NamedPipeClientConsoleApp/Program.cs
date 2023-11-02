@@ -51,8 +51,8 @@ namespace NamedPipeClientConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Connect();
+                }));
+            client.Connect();
             client.Logger.Info("客户端成功连接");
             return client;
         }

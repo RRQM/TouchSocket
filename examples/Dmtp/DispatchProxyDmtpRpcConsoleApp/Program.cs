@@ -48,7 +48,10 @@ namespace DispatchProxyDmtpRpcConsoleApp
                         a.UseDmtpRpc();
                     })
                     .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("Dmtp"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
                 client.Connect();
                 client.Logger.Info($"连接成功，Id={client.Id}");
                 return client;

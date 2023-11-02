@@ -39,10 +39,13 @@ namespace ReverseRpcConsoleApp
                    {
                        a.UseDmtpRpc();
                    })
-                   .SetVerifyToken("Dmtp");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Dmtp"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
             return service;
@@ -65,7 +68,10 @@ namespace ReverseRpcConsoleApp
                          store.RegisterServer<ReverseCallbackServer>();
                      });
                  })
-                .SetVerifyToken("Dmtp"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                }));
             client.Connect();
 
             return client;

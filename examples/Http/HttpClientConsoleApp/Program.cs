@@ -11,8 +11,8 @@ namespace ClientConsoleApp
         {
             var client = new HttpClient();
             client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost(new IPHost("http://localhost:7219")))
-                .Connect();//先做连接
+                .SetRemoteIPHost(new IPHost("http://localhost:7219")));
+            client.Connect();//先做连接
 
             {
                 var request = new HttpRequest();

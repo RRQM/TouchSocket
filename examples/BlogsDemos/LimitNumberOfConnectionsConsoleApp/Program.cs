@@ -26,8 +26,8 @@ namespace LimitNumberOfConnectionsConsoleApp
                 .ConfigurePlugins(a =>
                 {
                     a.Add<LimitNumberOfConnectionsPlugin>();
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             service.Logger.Info("服务器已启动");
             Console.ReadKey();
         }
@@ -60,7 +60,7 @@ namespace LimitNumberOfConnectionsConsoleApp
         private readonly ILog m_logger;
 
         [DependencyInject]
-        public LimitNumberOfConnectionsPlugin(ILog logger, int max=2)
+        public LimitNumberOfConnectionsPlugin(ILog logger, int max = 2)
         {
             this.Max = max;
             this.m_logger = logger;
