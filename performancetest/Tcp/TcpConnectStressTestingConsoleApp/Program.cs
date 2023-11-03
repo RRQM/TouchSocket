@@ -35,6 +35,11 @@ namespace TcpConnectStressTestingConsoleApp
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()
+                .ConfigurePlugins(a => 
+                {
+                    a.UseCheckClear()
+                    .SetTick(TimeSpan.FromSeconds(60));
+                })
                 .SetListenIPHosts(7789));
             service.Start();
             service.Logger.Info("服务器已启动");

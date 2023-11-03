@@ -65,9 +65,19 @@ namespace TouchSocket.Sockets
         {
             _=Task.Run(async () =>
             {
+                var first = true;
                 while (true)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                    if (first)
+                    {
+                        await Task.Delay(this.Tick).ConfigureFalseAwait();
+                        first = false;
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                    }
+                    
                     if (!client.Online)
                     {
                         return;
