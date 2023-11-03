@@ -100,6 +100,7 @@ namespace TouchSocket.Core
                 {
                     timeoutCancellationTokenSource.Cancel();
                     await task;
+                    return;
                 }
                 throw new TimeoutException();
             }
