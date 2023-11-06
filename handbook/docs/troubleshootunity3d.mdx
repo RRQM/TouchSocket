@@ -3,7 +3,7 @@ id: troubleshootunity3d
 title: Unity3D相关
 ---
 
-## 【问】TouchSocket系列是否能用于Unity3D？
+## 一、【问】TouchSocket系列是否能用于Unity3D？
 
 TouchSocket系列是否能用于Unity3D
 
@@ -17,7 +17,7 @@ TouchSocket系列是否能用于Unity3D
 
 TouchSocket提供一个简单的示例demo，包含一个服务器和unity包。以供大家下载试用。 [TouchSocket For Unity](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Unity3d)
 
-## 【问】用于Unity 3D时，显示有dll不兼容，或者找不到？
+## 二、【问】用于Unity 3D时，显示有dll不兼容，或者找不到？
 
 【描述】
 
@@ -29,11 +29,22 @@ unity提示：由于以下错误，将不会加载程序集“Assets/Plugins/Tou
 
 当然有时候我们对具体依赖不了解时，可以直接在vs看依赖关系。
 
-## 【问】程序集用于Unity 3D时，有莫名其妙的异常？
 
-【描述】
+## 三、【问】程序集用于Unity 3D时，Json序列化有问题？
 
-我将TouchSocket程序集引入到U3D中后，使用了相关功能，或者其他组件功能，在编辑器界面正常，但是发布到PC、Android等平台时无法使用？
+### 【解决】
+这是因为unity中不支持代码生成的Json序列化，所以必须用IL2cpp版的json。下面提供参考博客。
+
+在git上下载Newtonsoft.Json-for-Unity-master的压缩文件（.zip），解压之后，复制到unity3D工程的Asset/Plugins文件夹下就可以用了，
+
+[Unity版Newtonsoft.Json](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
+
+## 四、【问】程序集用于Unity 3D时，显示操作不被支持？
+
+Operation is not supported on this platform.或者我将TouchSocket程序集引入到U3D中后，使用了相关功能，或者其他组件功能，在编辑器界面正常，但是发布到PC、Android等平台时无法使用？
+
+<img src={require('@site/static/img/docs/troubleshootunity3d-2.png').default} />
+
 
 ### 【解决1】
 
@@ -43,39 +54,6 @@ unity提示：由于以下错误，将不会加载程序集“Assets/Plugins/Tou
 
 
 ### 【解决2】
-
-需要unity内link.xml设置(放置在Assets文件夹内)。 [unity官方文档 托管代码剥离](https://docs.unity3d.com/cn/current/Manual/ManagedCodeStripping.html#LinkXML)
-
-下列仅示例部分，如果是其他组件，则添加相应程序集名称。
-
-```csharp showLineNumbers xml
-<linker>
-	<assembly fullname="TouchSocket" />
-</linker>
-```
-
-然后在程序运作最开始时调用全局设置
-
-```csharp showLineNumbers
-GlobalEnvironment.OptimizedPlatforms = OptimizedPlatforms.Unity;
-```
-
-## 【问】程序集用于Unity 3D时，Json序列化有问题？
-
-### 【解决】
-这是因为unity中不支持代码生成的Json序列化，所以必须用IL2cpp版的json。下面提供参考博客。
-
-在git上下载Newtonsoft.Json-for-Unity-master的压缩文件（.zip），解压之后，复制到unity3D工程的Asset/Plugins文件夹下就可以用了，
-
-[Unity版Newtonsoft.Json](https://github.com/jilleJr/Newtonsoft.Json-for-Unity)
-
-## 【问】程序集用于Unity 3D时，显示操作不被支持？
-
-Operation is not supported on this platform.
-
-<img src={require('@site/static/img/docs/troubleshootunity3d-2.png').default} />
-
-### 【解决】
 
 这是因为unity中不支持IL生成，所以必须把所有的动态调用转换为反射。
 
@@ -94,3 +72,19 @@ GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Reflect;
 所以序列化则可以考虑使用其他序列化作为替代（因为目前Fast序列化暂不支持生成器）。
 
 而对于插件，则最好使用委托接收，详情请看 [插件系统](./pluginsmanager.mdx)
+
+其次，Il2cpp会对程序进行裁剪，所以需要unity内link.xml设置(放置在Assets文件夹内)。 [unity官方文档 托管代码剥离](https://docs.unity3d.com/cn/current/Manual/ManagedCodeStripping.html#LinkXML)
+
+
+```csharp showLineNumbers xml
+<linker>
+	<assembly fullname="TouchSocket.Core" />
+	<assembly fullname="TouchSocket" />
+</linker>
+```
+
+:::info 备注
+
+上述仅示例部分，如果是其他组件库，则添加相应**程序集名称**。
+
+:::  
