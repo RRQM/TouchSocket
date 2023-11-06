@@ -24,7 +24,8 @@ namespace TcpServiceForWebApi
         {
             var tcpService = services.AddTcpService(() =>
               {
-                  return new TouchSocketConfig().SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                  return new TouchSocketConfig()
+                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                    .UseAspNetCoreContainer(services)
                    .ConfigurePlugins(a =>
                    {
