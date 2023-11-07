@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 具有释放的对象。内部实现了GC.SuppressFinalize，但不包括析构函数相关。
     /// </summary>
-    public partial class DisposableObject : IDisposable
+    public partial class DisposableObject : IDisposableObject
     {
         /// <summary>
         /// 判断是否已释放。
@@ -27,7 +27,7 @@ namespace TouchSocket.Core
         private volatile bool m_disposedValue;
 
         /// <summary>
-        /// 标识该对象是否已被释放
+        /// <inheritdoc/>
         /// </summary>
         public bool DisposedValue { get => this.m_disposedValue; }
 
@@ -64,7 +64,7 @@ namespace TouchSocket.Core
     }
 
 #if NET6_0_OR_GREATER
-    public partial class DisposableObject : IAsyncDisposable
+    public partial class DisposableObject
     {
         /// <summary>
         /// 异步释放资源。内部已经处理了<see cref="GC.SuppressFinalize(object)"/>
@@ -72,8 +72,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public async ValueTask DisposeAsync()
         {
-            await DisposeAsyncCore().ConfigureAwait(false);
-            Dispose(disposing: false);
+            await this.DisposeAsyncCore().ConfigureAwait(false);
+            this.Dispose(disposing: false);
             GC.SuppressFinalize(this);
         }
 

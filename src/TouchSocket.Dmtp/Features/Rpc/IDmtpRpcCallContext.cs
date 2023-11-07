@@ -36,5 +36,10 @@ namespace TouchSocket.Dmtp.Rpc
         /// 序列化类型
         /// </summary>
         public SerializationType SerializationType { get; }
+
+        /// <summary>
+        /// 调用元数据
+        /// </summary>
+        Metadata Metadata { get; }
     }
 }

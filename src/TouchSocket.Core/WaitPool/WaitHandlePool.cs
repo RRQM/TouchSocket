@@ -12,6 +12,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace TouchSocket.Core
@@ -20,7 +21,7 @@ namespace TouchSocket.Core
     /// 等待处理数据
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class WaitHandlePool<T> : DisposableObject where T : IWaitResult
+    public class WaitHandlePool<T> : DisposableObject where T : IWaitHandle
     {
         private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
         private readonly ConcurrentDictionary<long, WaitDataAsync<T>> m_waitDicAsync;
@@ -113,7 +114,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                    result.Sign = this.GetSign(true);
                 }
                 waitData.SetResult(result);
                 this.m_waitDic.TryAdd(result.Sign, waitData);
@@ -123,10 +124,32 @@ namespace TouchSocket.Core
             waitData = new WaitData<T>();
             if (autoSign)
             {
-                result.Sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                result.Sign = this.GetSign(true);
             }
             waitData.SetResult(result);
             this.m_waitDic.TryAdd(result.Sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
+        /// 获取一个Sign为负数的可等待对象
+        /// </summary>
+        /// <param name="sign"></param>
+        /// <returns></returns>
+        public WaitData<T> GetReverseWaitData(out long sign)
+        {
+            if (this.m_waitQueue.TryDequeue(out var waitData))
+            {
+                sign = this.GetSign(true);
+                waitData.SetResult(default);
+                this.m_waitDic.TryAdd(sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitData<T>();
+            sign = this.GetSign(true);
+            waitData.SetResult(default);
+            this.m_waitDic.TryAdd(sign, waitData);
             return waitData;
         }
 
@@ -142,7 +165,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                    result.Sign = this.GetSign(true);
                 }
                 waitData.SetResult(result);
                 this.m_waitDicAsync.TryAdd(result.Sign, waitData);
@@ -152,10 +175,31 @@ namespace TouchSocket.Core
             waitData = new WaitDataAsync<T>();
             if (autoSign)
             {
-                result.Sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                result.Sign = this.GetSign(true);
             }
             waitData.SetResult(result);
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
+        ///  获取一个Sign为负数的可等待对象
+        /// </summary>
+        /// <returns></returns>
+        public WaitDataAsync<T> GetReverseWaitDataAsync(out long sign)
+        {
+            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+            {
+                sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                waitData.SetResult(default);
+                this.m_waitDicAsync.TryAdd(sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitDataAsync<T>();
+            sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+            waitData.SetResult(default);
+            this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
         }
 
@@ -189,6 +233,28 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 获取一个可等待对象。并out返回标识。
+        /// </summary>
+        /// <param name="sign"></param>
+        /// <returns></returns>
+        public WaitData<T> GetWaitData(out long sign)
+        {
+            if (this.m_waitQueue.TryDequeue(out var waitData))
+            {
+                sign = Interlocked.Increment(ref this.m_waitCount);
+                waitData.SetResult(default);
+                this.m_waitDic.TryAdd(sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitData<T>();
+            sign = Interlocked.Increment(ref this.m_waitCount);
+            waitData.SetResult(default);
+            this.m_waitDic.TryAdd(sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
         ///  获取一个可等待对象
         /// </summary>
         /// <param name="result"></param>
@@ -214,6 +280,28 @@ namespace TouchSocket.Core
             }
             waitData.SetResult(result);
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
+            return waitData;
+        }
+
+        /// <summary>
+        ///  获取一个可等待对象
+        /// </summary>
+        /// <param name="sign"></param>
+        /// <returns></returns>
+        public WaitDataAsync<T> GetWaitDataAsync(out long sign)
+        {
+            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
+            {
+                sign = Interlocked.Increment(ref this.m_waitCount);
+                waitData.SetResult(default);
+                this.m_waitDicAsync.TryAdd(sign, waitData);
+                return waitData;
+            }
+
+            waitData = new WaitDataAsync<T>();
+            sign = Interlocked.Increment(ref this.m_waitCount);
+            waitData.SetResult(default);
+            this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
         }
 
@@ -279,6 +367,19 @@ namespace TouchSocket.Core
                 result = true;
             }
             return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long GetSign(bool reverse)
+        {
+            if (reverse)
+            {
+                return Interlocked.Decrement(ref this.m_waitReverseCount);
+            }
+            else
+            {
+                return Interlocked.Increment(ref this.m_waitCount);
+            }
         }
 
         /// <summary>
