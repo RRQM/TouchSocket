@@ -19,19 +19,29 @@ namespace TouchSocket.Core
     {
         protected override Metadata Read(byte[] buffer, int offset, int len)
         {
-            var byteBlock = new ByteBlock(buffer);
+            var byteBlock = new ValueByteBlock(buffer);
             byteBlock.Pos = offset;
-            var metadata = new Metadata();
-            while (byteBlock.Pos < offset + len)
+
+            var isNull=byteBlock.ReadIsNull();
+            if (isNull)
             {
-                metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
+                return null;
             }
-            return metadata;
+            else
+            {
+                var metadata = new Metadata();
+                while (byteBlock.Pos < offset + len)
+                {
+                    metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
+                }
+                return metadata;
+            }
         }
 
         protected override int Write(ByteBlock byteBlock, Metadata obj)
         {
             var pos = byteBlock.Pos;
+            byteBlock.WriteIsNull(obj);
             foreach (var item in obj.Keys)
             {
                 byteBlock.Write(item);

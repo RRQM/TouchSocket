@@ -225,12 +225,7 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         if (methodInstance.IsEnable)
                         {
-                            callContext = new DmtpRpcCallContext()
-                            {
-                                Caller = this.DmtpActor.Client,
-                                MethodInstance = methodInstance,
-                                DmtpRpcPackage = rpcPackage
-                            };
+                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client,methodInstance,rpcPackage);
                             this.TryAdd(rpcPackage.Sign, callContext);
                             if (methodInstance.IncludeCallContext)
                             {
