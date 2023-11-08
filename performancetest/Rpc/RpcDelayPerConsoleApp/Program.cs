@@ -54,10 +54,13 @@ namespace RpcDelayPerConsoleApp
                            store.RegisterServer<MyRpcServer>();//注册服务
                        });
                    })
-                   .SetVerifyToken("Rpc");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Rpc"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;
@@ -68,11 +71,14 @@ namespace RpcDelayPerConsoleApp
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc();
+                .ConfigurePlugins(a => 
+                { 
+                    a.UseDmtpRpc(); 
                 })
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption() 
+                { 
+                    VerifyToken = "Rpc" 
+                }));
             client.Connect();
 
 
