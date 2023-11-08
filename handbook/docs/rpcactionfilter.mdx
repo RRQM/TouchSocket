@@ -102,3 +102,78 @@ class MyRpcServer : RpcServer
     }
 }
 ```
+
+### 3.3 规则
+
+1. 标签添加在`方法`、`注册接口`或`注册服务`上均会生效。
+2. 标签生效顺序为`接口方法（如果有）`、`服务方法`、`注册接口（如果有`）、`服务`。
+3. 同一类型的标签仅生效一次。
+4. 继承的特性，可以通过`MutexAccessTypes`属性来标识以哪个类型作为同一特性标识。
+
+第1、2条规则，以下代码为例，执行顺序依次为`MyRpcActionFilter1`、`MyRpcActionFilter3`、`MyRpcActionFilter2`、`MyRpcActionFilter4`。
+
+```csharp showLineNumbers
+[MyRpcActionFilter2]
+interface IMyRpcServer : IRpcServer
+{
+    [MyRpcActionFilter1]
+    int Add(int a, int b);
+}
+
+[MyRpcActionFilter4]
+class MyRpcServer :RpcServer, IMyRpcServer
+{
+    [MyRpcActionFilter3]
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+第3条规则，以下代码为例，只会将`MyRpcActionFilter`执行一次。
+
+```csharp showLineNumbers
+[MyRpcActionFilter]
+interface IMyRpcServer : IRpcServer
+{
+    [MyRpcActionFilter]
+    int Add(int a, int b);
+}
+
+[MyRpcActionFilter]
+class MyRpcServer :RpcServer, IMyRpcServer
+{
+    [MyRpcActionFilter]
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+第4条规则，以下代码为例。在`MyBaseAttribute`中指定`MutexAccessTypes`为`MyBaseAttribute`，则`MyAttribute`和`My2Attribute`都继承`MyBaseAttribute`时，即为互斥，在生效时会按照优先等级有且只有一个生效。
+
+```csharp showLineNumbers
+interface IInterface
+{
+    [My]
+    [My2]
+    void Test();
+}
+
+class MyBaseAttribute:RpcActionFilterAttribute
+{
+    public override Type[] MutexAccessTypes => new Type[] {typeof(MyBaseAttribute) };
+}
+
+class MyAttribute: MyBaseAttribute
+{
+
+}
+
+class My2Attribute : MyBaseAttribute
+{
+
+}
+```
