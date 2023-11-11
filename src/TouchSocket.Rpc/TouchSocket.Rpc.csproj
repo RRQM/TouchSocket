@@ -20,6 +20,6 @@
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
-	  <PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1"/>
+	  <PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
 	</ItemGroup>
 </Project>
