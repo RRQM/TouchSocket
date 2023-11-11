@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET45_OR_GREATER || NET481_OR_GREATER
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -98,7 +99,7 @@ namespace TouchSocket.Rpc
         {
             var client = BuilderClient();
             OnBefore(method, ref args);
-            object result = client.InvokeT<T>(method, BuilderOption(), args);
+            object result = client.Invoke(typeof(T), method, BuilderOption(), args);
             OnAfter(method, ref args, ref result);
             return (T)result;
         }
@@ -113,7 +114,7 @@ namespace TouchSocket.Rpc
         {
             var client = BuilderClient();
             OnBefore(method, ref args);
-            object result = await client.InvokeTAsync<T>(method, BuilderOption(), args);
+            object result = await client.InvokeAsync(typeof(T), method, BuilderOption(), args);
             OnAfter(method, ref args, ref result);
             return (T)result;
         }
@@ -156,3 +157,4 @@ namespace TouchSocket.Rpc
 
     }
 }
+#endif
