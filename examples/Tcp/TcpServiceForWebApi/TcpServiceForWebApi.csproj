@@ -6,12 +6,12 @@
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.222" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.222" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.225" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.225" />
   </ItemGroup>
 </Project>

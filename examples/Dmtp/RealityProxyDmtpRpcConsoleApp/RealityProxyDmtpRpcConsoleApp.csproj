@@ -6,24 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\TouchSocket.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\TouchSocket.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Dmtp">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\TouchSocket.Dmtp.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.NamedPipe">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\TouchSocket.NamedPipe.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Rpc">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net45\TouchSocket.Rpc.dll</HintPath>
-    </Reference>
+    <PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.225" />
   </ItemGroup>
 
 </Project>
