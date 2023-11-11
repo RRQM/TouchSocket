@@ -1,131 +1,152 @@
-﻿#if NET45_OR_GREATER || NET481_OR_GREATER
+﻿#if NET45_OR_GREATER
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Proxies;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// 透明代理
+    /// Rpc透明代理
     /// </summary>
-    public abstract class RpcRealityProxy : RealProxy
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TAttribute"></typeparam>
+    public abstract class RpcRealityProxy<T,TClient, TAttribute> : RpcRealityProxyBase<T> where TClient : IRpcClient where TAttribute : RpcAttribute
     {
-        protected static IRpcClient RpcClient;
+        private readonly ConcurrentDictionary<MethodInfo, DispatchProxyModel> m_methods = new ConcurrentDictionary<MethodInfo, DispatchProxyModel>();
+        private readonly MethodInfo m_fromResultMethod;
 
-        public RpcRealityProxy() { }
-        private RpcRealityProxy(Type t) : base(t) { }
+        /// <summary>
+        /// RpcRealityProxy
+        /// </summary>
+        public RpcRealityProxy()
+        {
+            this.m_fromResultMethod = typeof(Task).GetMethod("FromResult");
+        }
 
+        /// <summary>
+        /// 获取调用Rpc的客户端。
+        /// </summary>
+        public abstract TClient GetClient();
+
+       
         /// <summary>
         /// 调用过程
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        protected sealed override IMessage Invoke(IMessage msg)
+        public override IMessage Invoke(IMessage msg)
         {
             //方法信息
-            IMethodMessage methodMessage = msg as IMethodMessage;
-            IMethodCallMessage methodCall = msg as IMethodCallMessage;
-            MethodInfo method = methodCall.MethodBase as MethodInfo;
+            var methodCall = msg as IMethodCallMessage;
+            var targetMethod = methodCall.MethodBase as MethodInfo;
+            var args = methodCall.Args;
 
-            //获取调用方法
-            var rpcOption = method.GetCustomAttribute<RpcOptionAttribute>() as RpcOptionAttribute;
-            var rpcRoute = method.GetCustomAttribute<RpcRouteAttribute>() as RpcRouteAttribute;
-            var invokeKey = rpcRoute == null ? method.Name : rpcRoute.Route;
-            var client = BuilderClient();
-            var option = BuilderOption(rpcOption == null ? default : rpcOption.Option, rpcOption == null ? 5000 : rpcOption.Timeout);
+            var value = this.m_methods.GetOrAdd(targetMethod, this.AddMethod);
+            var methodInstance = value.MethodInstance;
+            var invokeKey = value.InvokeKey;
 
-            //获取参数信息
-            object result = default;
-            var args = methodCall.Args.ToArray();
-            var argsTypes = method.GetParameters().Select(x => x.ParameterType.GetRefOutType()).ToArray();
+            var invokeOption = value.InvokeOption ? (IInvokeOption)args.Last() : InvokeOption.WaitInvoke;
 
-            OnBefore(invokeKey, ref args);
-
-            //开始执行调用
-            if (method.ReturnType == typeof(Task))
+            object[] ps;
+            if (value.InvokeOption)
             {
-                client.Invoke(invokeKey, option, ref args, argsTypes);
-                result = Task.CompletedTask;
-            }
-            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-            {
-                var returnType = method.ReturnType.GetGenericArguments()[0];
-                var taskValue = client.Invoke(returnType, invokeKey, option, ref args, argsTypes);
-                var taskMethod = new Method(typeof(Task).GetMethod("FromResult").MakeGenericMethod(returnType));
-                result = taskMethod.Invoke(default, taskValue);
-            }
-            else if (method.ReturnType == typeof(void))
-            {
-                client.Invoke(invokeKey, option, ref args, argsTypes);
+                var pslist = new List<object>();
+
+                for (var i = 0; i < args.Length; i++)
+                {
+                    if (i < args.Length - 1)
+                    {
+                        pslist.Add(args[i]);
+                    }
+                }
+
+                ps = pslist.ToArray();
             }
             else
             {
-                result = client.Invoke(method.ReturnType, invokeKey, option, ref args, argsTypes);
+                ps = args;
             }
 
-            OnAfter(invokeKey, ref args, ref result);
+            this.OnBefore(targetMethod, value.InvokeKey,ref ps);
+
+            object result = default;
+
+            switch (methodInstance.TaskType)
+            {
+                case TaskReturnType.Task:
+                    {
+                        this.GetClient().Invoke(invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        result = EasyTask.CompletedTask;
+                        break;
+                    }
+                case TaskReturnType.TaskObject:
+                    {
+                        var obj = this.GetClient().Invoke(methodInstance.ReturnType, invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        result = value.GenericMethod.Invoke(default, obj);
+                        break;
+                    }
+                case TaskReturnType.None:
+                default:
+                    {
+                        if (methodInstance.HasReturn)
+                        {
+                            result = this.GetClient().Invoke(methodInstance.ReturnType, invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        }
+                        else
+                        {
+                            this.GetClient().Invoke(invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        }
+                        break;
+                    }
+            }
+            if (methodInstance.IsByRef)
+            {
+                for (var i = 0; i < ps.Length; i++)
+                {
+                    args[i] = ps[i];
+                }
+            }
+
+            this.OnAfter(targetMethod,invokeKey, ref args, ref result);
 
             return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
         }
 
-        /// <summary>
-        /// 创建代理对象
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Create<T>()
+        private DispatchProxyModel AddMethod(MethodInfo info)
         {
-            var proxy = new RpcRealityProxy(typeof(T));
-            return (T)proxy.GetTransparentProxy();
-        }
-
-        /// <summary>
-        /// 创建代理对象
-        /// </summary>
-        /// <returns></returns>
-        public static RpcRealityProxy Create()
-        {
-            return new RpcRealityProxy();
-        }
-
-        /// <summary>
-        /// 调用方法
-        /// </summary>
-        /// <param name="method">方法名称</param>
-        /// <param name="args">参数集合</param>
-        public virtual T Invoke<T>(string method, params object[] args)
-        {
-            var client = BuilderClient();
-            OnBefore(method, ref args);
-            object result = client.Invoke(typeof(T), method, BuilderOption(), args);
-            OnAfter(method, ref args, ref result);
-            return (T)result;
-        }
-
-        /// <summary>
-        /// 异步调用方法
-        /// </summary>
-        /// <param name="method">方法名称</param>
-        /// <param name="args">参数集合</param>
-        /// <returns></returns>
-        public virtual async Task<T> InvokeAsync<T>(string method, params object[] args)
-        {
-            var client = BuilderClient();
-            OnBefore(method, ref args);
-            object result = await client.InvokeAsync(typeof(T), method, BuilderOption(), args);
-            OnAfter(method, ref args, ref result);
-            return (T)result;
+            var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
+            var methodInstance = new MethodInstance(info);
+            var invokeKey = attribute.GetInvokenKey(methodInstance);
+            var invokeOption = false;
+            if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
+            {
+                invokeOption = true;
+            }
+            return new DispatchProxyModel()
+            {
+                InvokeKey = invokeKey,
+                MethodInstance = methodInstance,
+                InvokeOption = invokeOption,
+                GenericMethod = methodInstance.TaskType == TaskReturnType.TaskObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(methodInstance.ReturnType)) : default
+            };
         }
 
         /// <summary>
         /// 方法调用前
         /// </summary>
         /// <param name="method"></param>
+        /// <param name="invokeKey"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        protected virtual void OnBefore(string method, ref object[] args)
+        protected virtual void OnBefore(MethodInfo method, string invokeKey, ref object[] args)
         {
 
         }
@@ -134,27 +155,13 @@ namespace TouchSocket.Rpc
         /// 方法调用后
         /// </summary>
         /// <param name="method"></param>
+        /// <param name="invokeKey"></param>
         /// <param name="args"></param>
-        /// <returns></returns>
-        protected virtual void OnAfter(string method, ref object[] args, ref object result)
+        /// <param name="result"></param>
+        protected virtual void OnAfter(MethodInfo method, string invokeKey, ref object[] args, ref object result)
         {
 
         }
-
-        /// <summary>
-        /// 构建RPC客户端
-        /// </summary>
-        /// <returns></returns>
-        protected abstract override IRpcClient BuilderClient();
-
-        /// <summary>
-        /// 构建RPC选项值
-        /// </summary>
-        /// <param name="rpcOption"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        protected abstract override InvokeOption BuilderOption(IInvokeOption rpcOption = InvokeOption.WaitInvoke, int timeout = 5000);
-
     }
 }
 #endif
