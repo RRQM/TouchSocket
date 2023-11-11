@@ -515,18 +515,23 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "generateproxyfromrealityproxy",
+            label: "13.5 从RealityProxy生成透明代理"
+          },
+          {
+            type: "doc",
             id: "generateproxysourcegeneratordemo",
-            label: "13.5 SG代理推荐写法"
+            label: "13.6 SG代理推荐写法"
           },
           {
             type: "doc",
             id: "rpcactionfilter",
-            label: "13.6 Rpc服务AOP"
+            label: "13.7 Rpc服务AOP"
           },
           {
             type: "doc",
             id: "rpcallcontext",
-            label: "13.7 调用上下文"
+            label: "13.8 调用上下文"
           }
         ]
     },
