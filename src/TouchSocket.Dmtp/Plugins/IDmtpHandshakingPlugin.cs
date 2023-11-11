@@ -4,13 +4,13 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IDmtpHandshakedPlugin
+    /// IDmtpHandshakingPlugin
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     public interface IDmtpHandshakingPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
     {
         /// <summary>
-        /// 在验证Token时
+        /// 在Dmtp建立握手连接之前。
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>

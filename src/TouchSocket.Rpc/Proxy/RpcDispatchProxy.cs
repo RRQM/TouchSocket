@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if NET6_0_OR_GREATER || NET481_OR_GREATER
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace TouchSocket.Rpc
         {
             this.m_fromResultMethod = typeof(Task).GetMethod("FromResult");
         }
+
         /// <summary>
         /// 获取调用Rpc的客户端。
         /// </summary>
@@ -57,6 +58,8 @@ namespace TouchSocket.Rpc
             {
                 ps = args;
             }
+
+            this.OnBefore(targetMethod, value.InvokeKey, ref ps);
 
             object result = default;
 
@@ -95,6 +98,9 @@ namespace TouchSocket.Rpc
                     args[i] = ps[i];
                 }
             }
+
+            this.OnAfter(targetMethod, invokeKey, ref args, ref result);
+
             return result;
         }
 
@@ -118,12 +124,28 @@ namespace TouchSocket.Rpc
             };
         }
 
-        private class DispatchProxyModel
+        /// <summary>
+        /// 方法调用前
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="invokeKey"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        protected virtual void OnBefore(MethodInfo method, string invokeKey, ref object[] args)
         {
-            public MethodInstance MethodInstance { get; set; }
-            public string InvokeKey { get; set; }
-            public bool InvokeOption { get; set; }
-            public Method GenericMethod { get; set; }
+
+        }
+
+        /// <summary>
+        /// 方法调用后
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="invokeKey"></param>
+        /// <param name="args"></param>
+        /// <param name="result"></param>
+        protected virtual void OnAfter(MethodInfo method, string invokeKey, ref object[] args, ref object result)
+        {
+
         }
     }
 }
