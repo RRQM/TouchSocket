@@ -14,7 +14,7 @@ namespace TouchSocket.Rpc
     /// </summary>
     public abstract class RpcDispatchProxy<TClient, TAttribute> : DispatchProxy where TClient : IRpcClient where TAttribute : RpcAttribute
     {
-        private readonly ConcurrentDictionary<MethodInfo, DispatchProxyModel> m_methods = new ConcurrentDictionary<MethodInfo, DispatchProxyModel>();
+        private readonly ConcurrentDictionary<MethodInfo, ProxyModel> m_methods = new ConcurrentDictionary<MethodInfo, ProxyModel>();
         private readonly MethodInfo m_fromResultMethod;
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace TouchSocket.Rpc
         }
 
 
-        private DispatchProxyModel AddMethod(MethodInfo info)
+        private ProxyModel AddMethod(MethodInfo info)
         {
             var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
             var methodInstance = new MethodInstance(info);
@@ -115,7 +115,7 @@ namespace TouchSocket.Rpc
             {
                 invokeOption = true;
             }
-            return new DispatchProxyModel()
+            return new ProxyModel()
             {
                 InvokeKey = invokeKey,
                 MethodInstance = methodInstance,
