@@ -7,7 +7,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
-    internal class DispatchProxyModel
+    internal class ProxyModel
     {
         public MethodInstance MethodInstance { get; set; }
         public string InvokeKey { get; set; }

@@ -455,10 +455,6 @@ namespace TouchSocket.Dmtp.Rpc
                                     throw new Exception(e.Message);
                                 }
                             }
-                            else
-                            {
-                                parameters = null;
-                            }
                             return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
                     default:
@@ -529,10 +525,6 @@ namespace TouchSocket.Dmtp.Rpc
                                 {
                                     parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                 }
-                            }
-                            else
-                            {
-                                parameters = null;
                             }
                             break;
                         }
@@ -1080,10 +1072,6 @@ namespace TouchSocket.Dmtp.Rpc
                                     parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                 }
                             }
-                            else
-                            {
-                                parameters = null;
-                            }
                             return;
                         }
 
@@ -1172,10 +1160,6 @@ namespace TouchSocket.Dmtp.Rpc
                                 {
                                     parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
                                 }
-                            }
-                            else
-                            {
-                                parameters = null;
                             }
                             return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
                         }
