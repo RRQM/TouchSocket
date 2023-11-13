@@ -10,11 +10,7 @@ namespace XUnitTestProject.Tcp
             var tcpClient = new TcpClient();
             tcpClient.Connect("tcp://127.0.0.1:7789");
 
-            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
-            {
-                BreakTrigger = true,
-                ThrowBreakException = true
-            });
+            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions());
 
             var len = Random.Shared.Next(10, 100);
             var buffer = new byte[len];
@@ -29,11 +25,7 @@ namespace XUnitTestProject.Tcp
             var tcpClient = new TcpClient();
             await tcpClient.ConnectAsync("tcp://127.0.0.1:7789");
 
-            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
-            {
-                BreakTrigger = true,
-                ThrowBreakException = true
-            });
+            var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions());
 
             var len = Random.Shared.Next(10, 100);
             var buffer = new byte[len];
@@ -54,8 +46,6 @@ namespace XUnitTestProject.Tcp
 
                 var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
-                    BreakTrigger = true,
-                    ThrowBreakException = true,
                     FilterFunc = (response) =>
                     {
                         if (response.Data != null)
@@ -100,8 +90,6 @@ namespace XUnitTestProject.Tcp
 
                 var waitingClient = tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
-                    BreakTrigger = true,
-                    ThrowBreakException = true,
                     FilterFunc = (response) =>
                     {
                         if (response.Data != null)

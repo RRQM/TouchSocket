@@ -61,8 +61,9 @@ namespace XUnitTestProject.Dmtp
         }
 
         [Fact]
-        public async Task  ConnectShouldBeOk()
+        public async Task ConnectShouldBeOk()
         {
+            int waitTime = 500;
             var tasks = new List<Task>();
             for (var j = 0; j < 10; j++)
             {
@@ -90,11 +91,14 @@ namespace XUnitTestProject.Dmtp
 
                           await client.ConnectAsync();
                           Assert.True(client.IsHandshaked);
+
+                          await Task.Delay(waitTime);
+
                           Assert.Equal(1, handshaked);
 
                           client.Close("主动断开");
 
-                          await Task.Delay(100);
+                          await Task.Delay(waitTime);
                           Assert.False(client.IsHandshaked);
                           Assert.Equal(1, disConnected);
                       }
@@ -292,8 +296,8 @@ namespace XUnitTestProject.Dmtp
         {
             var config = this.GetConfig();
 
-            var client1 =await this.GetClient(config);
-            var client2 =await this.GetClient(config);
+            var client1 = await this.GetClient(config);
+            var client2 = await this.GetClient(config);
 
             var invokeOption = new DmtpInvokeOption()
             {
@@ -338,7 +342,7 @@ namespace XUnitTestProject.Dmtp
         [InlineData(SerializationType.FastBinary)]
         [InlineData(SerializationType.Json)]
         [InlineData(SerializationType.Xml)]
-        public async void InvokeServiceShouldBeOk(SerializationType serializationType)
+        public async Task InvokeServiceShouldBeOk(SerializationType serializationType)
         {
             var client = await this.GetClient(this.GetConfig());
 
@@ -376,6 +380,7 @@ namespace XUnitTestProject.Dmtp
             //remoteTest.Test19(client.ID);
             remoteTest.Test22(invokeOption);
             remoteTest.Test25(invokeOption);
+            remoteTest.Test40();
         }
 
         [Fact]
@@ -1285,7 +1290,7 @@ namespace XUnitTestProject.Dmtp
         {
             var client = await this.GetClient(this.GetConfig());
 
-           
+
             var invokeOption = new DmtpInvokeOption()
             {
                 FeedbackType = FeedbackType.WaitInvoke,
@@ -1313,9 +1318,11 @@ namespace XUnitTestProject.Dmtp
         private TouchSocketConfig GetConfig()
         {
             return new TouchSocketConfig()
-                .SetRemoteIPHost("ws://127.0.0.1:7806/websocketsmtp")
-                .SetVerifyToken("123RPC")
-                .SetCacheTimeoutEnable(false)
+                .SetRemoteIPHost("ws://127.0.0.1:7806/websocketdmtp")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "123RPC"
+                })
                 .ConfigureContainer(a =>
                 {
                 })

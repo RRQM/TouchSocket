@@ -138,6 +138,7 @@ namespace XUnitTestProject.Dmtp
             //remoteTest.Test19(client.ID);
             remoteTest.Test22(invokeOption);
             remoteTest.Test25(invokeOption);
+            remoteTest.Test40();
         }
 
         [Fact]
@@ -569,8 +570,10 @@ namespace XUnitTestProject.Dmtp
             return new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7797")
                 .UseUdpReceive()
-                .SetVerifyToken("123RPC")
-                .SetCacheTimeoutEnable(false)
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "123RPC"
+                })
                 .ConfigureContainer(a =>
                 {
                 })

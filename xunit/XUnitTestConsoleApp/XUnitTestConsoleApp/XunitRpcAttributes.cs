@@ -30,7 +30,6 @@ namespace XUnitTestConsoleApp
     {
         public XunitDmtpRpcAttribute()
         {
-            //this.MethodName = "TouchRpc_{0}";//实现：如果是DmtpRpc，则函数以DmtpRpc开头.
         }
     }
 

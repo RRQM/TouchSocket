@@ -54,6 +54,7 @@ namespace XUnitTestConsoleApp
 
             CreateTcpDmtp(7794);
             CreateUdpRpcParser(7797);
+            //CreateMultipathTcpService(7802);
             CreateTcpJsonRpcParser(7803);
 
             CreateTLVTcpService(7805);
@@ -73,9 +74,11 @@ namespace XUnitTestConsoleApp
                 builder.Services.AddWebSocketDmtpService(() =>
                 {
                     return new TouchSocketConfig()
-                        .SetVerifyToken("123RPC")
+                        .SetDmtpOption(new DmtpOption()
+                        {
+                            VerifyToken = "123RPC"
+                        })
                         .UseAspNetCoreContainer(builder.Services)
-                        .SetCacheTimeoutEnable(false)
                         .ConfigureContainer(a =>
                         {
                             a.AddDmtpRouteService();
@@ -103,9 +106,11 @@ namespace XUnitTestConsoleApp
                 builder.Services.AddHttpMiddlewareDmtpService(() =>
                 {
                     return new TouchSocketConfig()
-                            .SetVerifyToken("123RPC")
+                            .SetDmtpOption(new DmtpOption()
+                            {
+                                VerifyToken = "123RPC"
+                            })
                             .UseAspNetCoreContainer(builder.Services)
-                            .SetCacheTimeoutEnable(false)
                             .ConfigureContainer(a =>
                             {
                                 a.AddDmtpRouteService();
@@ -148,13 +153,36 @@ namespace XUnitTestConsoleApp
             }
         }
 
+        //private static void CreateMultipathTcpService(int port)
+        //{
+        //    var service = new MultipathTcpService();
+
+        //    var config = new TouchSocketConfig();
+        //    config.SetListenIPHosts(port)
+        //        .SetContainer(GetContainer())
+        //        .ConfigurePlugins(a =>
+        //        {
+        //            a.UseCheckClear();
+        //        });
+
+        //    //载入配置
+        //    service.Setup(config);
+
+        //    //启动
+        //    service.Start();
+        //    Console.WriteLine($"{service.GetType().Name}已启动,端口：{port}");
+        //}
+
         private static void CreateHttpService(int port)
         {
             m_httpService = new HttpDmtpService();
             m_httpService.Setup(new TouchSocketConfig()
                  .SetContainer(GetContainer())
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                .SetVerifyToken("123RPC")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "123RPC"
+                })
                 .ConfigureContainer(a =>
                 {
                     a.AddDmtpRouteService();
@@ -233,8 +261,8 @@ namespace XUnitTestConsoleApp
 
                     a.Add<MyDmtpPlugin>();
                     a.Add<MyHttpPlugin>();
-                }))
-                .Start();
+                }));
+            m_httpService.Start();
             Console.WriteLine($"HttpService已启动,端口：{port}");
         }
 
@@ -253,8 +281,9 @@ namespace XUnitTestConsoleApp
                         store.RegisterServer<XUnitTestController>();
                         store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
                     });
-                }))
-                .Start();
+                }));
+
+            service.Start();
         }
 
         private static NamedPipeService CreateNamedPipeService(string name)
@@ -310,8 +339,10 @@ namespace XUnitTestConsoleApp
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(port)
                 .SetContainer(GetContainer())
-                .SetVerifyToken("123RPC")
-                .SetCacheTimeoutEnable(false)
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "123RPC"
+                })
                 .ConfigureContainer(a =>
                 {
                     a.AddDmtpRouteService();
@@ -348,8 +379,10 @@ namespace XUnitTestConsoleApp
             var config = new TouchSocketConfig();
             config.SetPipeName(name)
                 .SetContainer(GetContainer())
-                .SetVerifyToken("123RPC")
-                .SetCacheTimeoutEnable(false)
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "123RPC"
+                })
                 .ConfigureContainer(a =>
                 {
                     a.AddDmtpRouteService();
@@ -700,12 +733,11 @@ namespace XUnitTestConsoleApp
             return Task.CompletedTask;
         }
 
-        Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+        async Task IDmtpRoutingPlugin<IDmtpActorObject>.OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
         {
             Console.WriteLine(e.RouterType);
             e.IsPermitOperation = true;
-
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
         public class TestPackage : DmtpRouterPackage

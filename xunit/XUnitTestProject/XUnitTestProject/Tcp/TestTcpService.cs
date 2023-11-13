@@ -21,8 +21,8 @@ namespace XUnitTestProject.Tcp
         public void AddOrRemoveShouleBeOk()
         {
             var service = new TcpService();
-            service.Setup(new TouchSocketConfig())
-                .Start();//启动
+            service.Setup(new TouchSocketConfig());
+            service.Start();//启动
 
             service.AddListen(new TcpListenOption()//在Service运行时，可以调用，直接添加监听
             {
@@ -30,7 +30,7 @@ namespace XUnitTestProject.Tcp
                 Name = "server3",//名称用于区分监听
                 ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
                 Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                                   //还有其他可配置项，都是单独对当前地址有效。
+                                                                //还有其他可配置项，都是单独对当前地址有效。
             });
 
             foreach (var item in service.Monitors)

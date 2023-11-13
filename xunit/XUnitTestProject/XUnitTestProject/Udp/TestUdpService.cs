@@ -74,8 +74,8 @@ namespace XUnitTestProject.Udp
             udpSender.Setup(new TouchSocketConfig()//加载配置
                 .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())
                 .SetRemoteIPHost(new IPHost($"127.0.0.1:{port1}"))
-                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")))
-                .Start();
+                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")));
+            udpSender.Start();
 
             var udpReceiver = new UdpSession();
             udpReceiver.Received += (c, e) =>
@@ -122,7 +122,7 @@ namespace XUnitTestProject.Udp
         {
             var udpSender = new UdpSession();
             var revCount = 0;
-            udpSender.Received += (c,e) =>
+            udpSender.Received += (c, e) =>
             {
                 Interlocked.Increment(ref revCount);
                 return Task.CompletedTask;
@@ -135,11 +135,11 @@ namespace XUnitTestProject.Udp
             udpSender.Setup(new TouchSocketConfig()//加载配置
                 .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
                 .SetRemoteIPHost(new IPHost($"127.0.0.1:{port1}"))
-                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")))
-                .Start();
+                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")));
+            udpSender.Start();
 
             var udpReceiver = new UdpSession();
-            udpReceiver.Received += (c,e) =>
+            udpReceiver.Received += (c, e) =>
             {
                 lock (udpReceiver)
                 {
@@ -179,10 +179,10 @@ namespace XUnitTestProject.Udp
         {
             var udpSender = new UdpSession();
             var revCount = 0;
-            udpSender.Received += (c,e) =>
+            udpSender.Received = async (c, e) =>
             {
                 Interlocked.Increment(ref revCount);
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
 
             var port1 = new Random().Next(10000, 60000);
@@ -192,18 +192,18 @@ namespace XUnitTestProject.Udp
             udpSender.Setup(new TouchSocketConfig()//加载配置
                 .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
                 .SetRemoteIPHost(new IPHost($"127.0.0.1:{port1}"))
-                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")))
-                .Start();
+                .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")));
+            udpSender.Start();
 
             var udpReceiver = new UdpSession();
-            udpReceiver.Received += (c,e) =>
+            udpReceiver.Received = async (c, e) =>
             {
                 lock (udpReceiver)
                 {
                     udpReceiver.Send(e.EndPoint, e.ByteBlock);//将接收到的数据发送至默认终端
                 }
 
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
 
             var config = new TouchSocketConfig();

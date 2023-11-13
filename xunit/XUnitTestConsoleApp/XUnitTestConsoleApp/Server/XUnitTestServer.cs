@@ -393,19 +393,19 @@ namespace XUnitTestConsoleApp.Server
             return tuple;
         }
 
-        [DmtpRpc]
+        [XunitDmtpRpc]
         public void Test35_ListTupleElementNames(List<(int a1, (int a2, string a3) a4)> tuple)
         {
 
         }
 
-        [DmtpRpc]
+        [XunitDmtpRpc]
         public void Test36_ListRefTupleElementNames(ref List<(int a1, (int a2, string a3) a4)> tuple)
         {
 
         }
 
-        [DmtpRpc]
+        [XunitDmtpRpc]
         public void Test37_ListTupleElementNames2(List<(int b1, (int b2, string b3) b4)> tuple)
         {
 
@@ -425,6 +425,21 @@ namespace XUnitTestConsoleApp.Server
                 return null;
             }
 
+        }
+
+        [XunitXmlRpc]
+        [XunitJsonRpc]
+        [XunitWebApi(HttpMethodType.POST)]
+        [XunitDmtpRpc]
+        public Task Test39_Task()
+        {
+            return Task.CompletedTask;
+        }
+
+        [XunitDmtpRpc]
+        public Metadata Test40_CallContextMetadata(IDmtpRpcCallContext callContext)
+        {
+            return callContext.Metadata;
         }
 
         private void ShowMsg(string msg)

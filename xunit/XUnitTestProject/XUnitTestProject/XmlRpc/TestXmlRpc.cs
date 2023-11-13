@@ -12,8 +12,9 @@
 //------------------------------------------------------------------------------
 using TouchSocket.Sockets;
 using TouchSocket.XmlRpc;
+using XUnitTestProject.Rpc;
 
-namespace XUnitTestProject.Rpc.Xml
+namespace XUnitTestProject.XmlRpc
 {
     public class TestXmlRpc : UnitBase
     {
