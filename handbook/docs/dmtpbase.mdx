@@ -175,3 +175,30 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
     }
 }
 ```
+
+## 四、使用心跳
+
+Dmtp组件自带了`Ping`（或者`PingAsync`）方法。这个方法强制要求被`Ping`的一方无条件响应的。
+
+所以，如果`Ping`返回`true`，则说明对方**必在线**。但是如果返回`false`，则**不一定代表对方不在线**。因为有可能是`Ping`超时，或者当前传输链路正在忙。
+
+总之，使用者可以在业务中调用这个方法，来检测通讯是否通畅。
+
+同时，库中基于此方法，封装了一个可用心跳插件。
+
+其中可以配置**心跳间隔**和**最大失败次数**。
+
+```csharp {3} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseDmtpHeartbeat()
+    .SetTick(TimeSpan.FromSeconds(3))
+    .SetMaxFailCount(3);
+})
+```
+
+:::tip 提示
+
+`Ping`可以由客户端或服务器任意一端发起，然后要求对方回应。但是一般我们建议由客户端发起。由服务器响应即可。如果有特殊要求，则自行解决即可。
+
+:::  

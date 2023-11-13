@@ -39,8 +39,8 @@ namespace HttpPerformanceConsoleApp
 
                    //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                    a.UseDefaultHttpServicePlugin();
-               }))
-               .Start();
+               }));
+            service.Start();
 
             ConsoleLogger.Default.Info($"TouchSokcetHttp已启动，请求连接：http://127.0.0.1:7790/ApiServer/Add?a=10&b=20");
         }
@@ -56,10 +56,10 @@ namespace HttpPerformanceConsoleApp
             builder.Services.AddEndpointsApiExplorer();
             var app = builder.Build();
             app.MapControllers();
-           
+
             app.RunAsync("http://127.0.0.1:7789");
             ConsoleLogger.Default.Info("Aspnet已启动，请求连接：http://127.0.0.1:7789/ApiServer/Add?a=10&b=20");
-            
+
         }
     }
 }
