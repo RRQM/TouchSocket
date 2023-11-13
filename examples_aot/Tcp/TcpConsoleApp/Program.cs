@@ -36,8 +36,8 @@ namespace TcpConsoleApp
                     a.Add<TcpServiceReceivedPlugin>();
                     a.Add<MyServicePluginClass>();
                     //a.Add();//此处可以添加插件
-                }))
-                .Start();//启动
+                }));
+            service.Start();//启动
             return service;
         }
 
@@ -65,8 +65,8 @@ namespace TcpConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
-                }))
-                .Connect();
+                }));
+            tcpClient.Connect();
             tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
         }
@@ -75,12 +75,12 @@ namespace TcpConsoleApp
     /// <summary>
     /// IOC容器
     /// </summary>
-    [AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
-    [AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
+    [AddSingletonInject(typeof(IPluginsManager), typeof(PluginsManager))]
+    [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
-      
+
     }
 
     [AutoInjectForSingleton]

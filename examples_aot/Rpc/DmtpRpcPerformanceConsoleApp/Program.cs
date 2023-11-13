@@ -58,10 +58,13 @@ namespace RpcPerformanceConsoleApp
                            store.RegisterServer<TestController>();
                        });
                    })
-                   .SetVerifyToken("Rpc");//设定连接口令，作用类似账号密码
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Rpc"//设定连接口令，作用类似账号密码
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }
@@ -97,7 +100,10 @@ namespace RpcPerformanceConsoleApp
                     a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Rpc"
+                }));
             client.Connect();
             return client;
         }

@@ -31,12 +31,12 @@ namespace DmtpRpcConsoleApp
                     Console.WriteLine($"结果：{result}");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ConsoleLogger.Default.Exception(ex);
                 Console.ReadKey();
             }
-           
+
         }
         static TcpDmtpClient GetClient()
         {
@@ -52,7 +52,10 @@ namespace DmtpRpcConsoleApp
                 {
                     a.UseDmtpRpc();
                 })
-                .SetVerifyToken("Rpc"));
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Rpc"
+                }));
             client.Connect();
             client.Logger.Info($"客户端已连接");
             return client;
@@ -63,7 +66,7 @@ namespace DmtpRpcConsoleApp
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
                    .SetContainer(new MyContainer())
-                   .ConfigureContainer(a => 
+                   .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
                    })
@@ -75,10 +78,13 @@ namespace DmtpRpcConsoleApp
                            store.RegisterServer<IMyRpcServer, MyRpcServer>();//注册服务
                        });
                    })
-                   .SetVerifyToken("Rpc");
+                   .SetDmtpOption(new DmtpOption()
+                   {
+                       VerifyToken = "Rpc"
+                   });
 
-            service.Setup(config)
-                .Start();
+            service.Setup(config);
+            service.Start();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;
@@ -87,16 +93,15 @@ namespace DmtpRpcConsoleApp
 
     #region Rpc服务
     [GeneratorRpcProxy]
-    [AutoInjectForSingleton(ToType =typeof(MyRpcServer))]
+    [AutoInjectForSingleton(ToType = typeof(MyRpcServer))]
     public interface IMyRpcServer : IRpcServer
     {
-        [GeneratorRpcMethod(InvokeKey = "Login")]
-        [DmtpRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
+        [DmtpRpc(MethodInvoke =true)]
         [Description("登录")]//服务描述，在生成代理时，会变成注释。
         bool Login(string account, string password);
     }
 
-    
+
     [GeneratorRpcServer]
     public partial class MyRpcServer : IMyRpcServer
     {
@@ -127,7 +132,7 @@ namespace DmtpRpcConsoleApp
     {
         public override bool IsRegistered(Type fromType, string key = "")
         {
-            if (fromType==typeof(IDmtpRouteService))
+            if (fromType == typeof(IDmtpRouteService))
             {
                 return false;
             }
