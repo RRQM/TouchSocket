@@ -15,7 +15,7 @@ using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
 {
-    
+
     public class TestFastSerialize
     {
         [Theory]
@@ -210,23 +210,43 @@ namespace XUnitTestProject.Core
         [Fact]
         public void ShouldSerializeMetadataBeOk()
         {
-            var metadata = new Metadata();//传递到服务器的元数据
-            metadata.Add("1", "1");
-            metadata.Add("2", "2");
-            foreach (var item in metadata)
+            using (var byteBlock = new ByteBlock())
             {
-            }
-            var byteBlock = new ByteBlock(1024 * 512);
-            SerializeConvert.FastBinarySerialize(byteBlock, metadata);
-            var newMetadata = SerializeConvert.FastBinaryDeserialize<Metadata>(byteBlock.Buffer, 0);
-            byteBlock.Dispose();
+                Metadata metadata = default;
 
-            Assert.NotNull(newMetadata);
-            Assert.Equal(metadata.Count, newMetadata.Count);
-            foreach (var item in metadata.Keys)
-            {
-                Assert.Equal(metadata[item], newMetadata[item]);
+                SerializeConvert.FastBinarySerialize(byteBlock, metadata);
+                var newMetadata = SerializeConvert.FastBinaryDeserialize<Metadata>(byteBlock.Buffer, 0);
+
+                Assert.Null(newMetadata);
+
+                byteBlock.Reset();
+
+                metadata = new Metadata();
+                SerializeConvert.FastBinarySerialize(byteBlock, metadata);
+                newMetadata = SerializeConvert.FastBinaryDeserialize<Metadata>(byteBlock.Buffer, 0);
+                Assert.NotNull(newMetadata);
+                Assert.True(newMetadata.Count==0);
+
+                byteBlock.Reset();
+                metadata = new Metadata
+                {
+                    { "1", "1" },
+                    { "2", "2" }
+                };
+                foreach (var item in metadata)
+                {
+                }
+                SerializeConvert.FastBinarySerialize(byteBlock, metadata);
+                newMetadata = SerializeConvert.FastBinaryDeserialize<Metadata>(byteBlock.Buffer, 0);
+
+                Assert.NotNull(newMetadata);
+                Assert.Equal(metadata.Count, newMetadata.Count);
+                foreach (var item in metadata.Keys)
+                {
+                    Assert.Equal(metadata[item], newMetadata[item]);
+                }
             }
+            
         }
 
         [Fact]
@@ -468,7 +488,7 @@ namespace XUnitTestProject.Core
         {
             var bytes = SerializeConvert.FastBinarySerialize(value);
             var newValue = SerializeConvert.FastBinaryDeserialize<string>(bytes);
-            Assert.Equal(newValue,value);
+            Assert.Equal(newValue, value);
         }
     }
 

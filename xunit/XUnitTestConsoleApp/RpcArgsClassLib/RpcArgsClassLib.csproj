@@ -5,24 +5,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.201">
+    <PackageReference Include="TouchSocket" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.226">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.201" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.201" />
+    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocketPro" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.226" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.226" />
   </ItemGroup>
 
+  
 </Project>

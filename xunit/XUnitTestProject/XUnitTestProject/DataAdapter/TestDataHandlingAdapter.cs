@@ -41,12 +41,12 @@ namespace XUnitTestProject.DataAdapter
               
             });//用BufferLength模拟粘包，分包
 
-            var smtpMessage = new DmtpMessage();
-            smtpMessage.ProtocolFlags = 10;
-            smtpMessage.BodyByteBlock = new ByteBlock();
-            smtpMessage.BodyByteBlock.Write("Dmtp");
+            var dmtpMessage = new DmtpMessage();
+            dmtpMessage.ProtocolFlags = 10;
+            dmtpMessage.BodyByteBlock = new ByteBlock();
+            dmtpMessage.BodyByteBlock.Write("Dmtp");
 
-            var data = smtpMessage.BuildAsBytes();
+            var data = dmtpMessage.BuildAsBytes();
             this.m_output.WriteLine(tester.Run(data, inputCount, inputCount, 1000 * 60).ToString());
         }
 
@@ -62,12 +62,12 @@ namespace XUnitTestProject.DataAdapter
                
             });//用BufferLength模拟粘包，分包
 
-            var smtpMessage = new DmtpMessage();
-            smtpMessage.ProtocolFlags = 10;
-            smtpMessage.BodyByteBlock = new ByteBlock();
-            smtpMessage.BodyByteBlock.SetLength(1024);
+            var dmtpMessage = new DmtpMessage();
+            dmtpMessage.ProtocolFlags = 10;
+            dmtpMessage.BodyByteBlock = new ByteBlock();
+            dmtpMessage.BodyByteBlock.SetLength(1024);
 
-            var data = smtpMessage.BuildAsBytes();
+            var data = dmtpMessage.BuildAsBytes();
             this.m_output.WriteLine(tester.Run(data, inputCount, inputCount, 1000 * 60).ToString());
         }
 

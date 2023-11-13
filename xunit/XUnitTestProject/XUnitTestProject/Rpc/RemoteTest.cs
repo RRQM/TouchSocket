@@ -215,8 +215,8 @@ namespace XUnitTestProject.Rpc
                       await Task.Delay(t * 1000);
                       tokenSource.Cancel();
                   });
-                  var result2 = this.server.Test26_TestCancellationToken(invokeOption2);
-                  Assert.Equal(0, result2);
+
+                  Assert.Throws<OperationCanceledException>(() => { this.server.Test26_TestCancellationToken(invokeOption2); });
               });
             Assert.True(timeSpan > TimeSpan.FromSeconds(t));
         }
@@ -237,6 +237,41 @@ namespace XUnitTestProject.Rpc
                 var msg = this.server.Test38_CallBackJsonRpcService(id, i, invokeOption: invokeOption);
                 Assert.Equal($"我今年{i}岁了", msg);
             }
+        }
+
+        public void Test40()
+        {
+            Metadata metadata = default;
+            var invokeOption = new DmtpInvokeOption()
+            {
+                FeedbackType = FeedbackType.WaitInvoke,
+                Metadata = metadata,
+                SerializationType = SerializationType.FastBinary,
+                Timeout = 10000
+            };
+            var result = this.server.Test40_CallContextMetadata(invokeOption);
+            Assert.Null(result);
+
+            metadata = new Metadata();
+            invokeOption.Metadata = metadata;
+
+            result = this.server.Test40_CallContextMetadata(invokeOption);
+            Assert.NotNull(result);
+            Assert.True(result.Count == 0);
+
+            metadata = new Metadata()
+            {
+                {"a","a" },
+                {"b","b"},
+                {"c","c"}
+            };
+            invokeOption.Metadata = metadata;
+
+            result = this.server.Test40_CallContextMetadata(invokeOption);
+            Assert.NotNull(result);
+            Assert.True(result["a"]=="a");
+            Assert.True(result["b"]=="b");
+            Assert.True(result["c"]=="c");
         }
     }
 }

@@ -90,6 +90,25 @@ namespace XUnitTestProject.Http
         }
 
         [Fact]
+        public async Task HttpRequestAsyncShouldBeOk()
+        {
+            var client = new TouchSocket.Http.HttpClient();
+            await client.ConnectAsync("127.0.0.1:7801");
+
+            for (var i = 0; i < 100000; i++)
+            {
+                var httpRequest = new HttpRequest();
+                httpRequest
+                    .InitHeaders()
+                    .SetUrl("/xunit")
+                    .AsGet();
+
+                var response = await client.RequestAsync(httpRequest);
+                Assert.Equal("OK", response.GetBody());
+            }
+        }
+
+        [Fact]
         public void HttpHeaderShouldBeOk()
         {
             var httpRequest = new HttpRequest();
