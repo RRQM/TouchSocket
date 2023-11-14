@@ -11,14 +11,12 @@ namespace TcpFlowStressTestingConsoleApp
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Console.WriteLine("按任意键开始...");
-            Console.ReadKey();
-
             var service = GetTcpService();
 
             var client = GetTcpClient();
 
-            var bytes = new byte[1024 * 1024];
+            Console.WriteLine("请输入BufferLength");
+            var bytes = new byte[int.Parse(Console.ReadLine())];
             Random.Shared.NextBytes(bytes);
             while (true)
             {
