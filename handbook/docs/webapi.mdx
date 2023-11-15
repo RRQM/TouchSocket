@@ -91,9 +91,43 @@ public class MyClass
     public int B { get; set; }
 }
 ```
-## 四、规则
 
-### 4.1 Get规则
+## 四、启动服务器
+
+```csharp showLineNumbers
+ var service = new HttpService();
+service.Setup(new TouchSocketConfig()
+   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+   .ConfigurePlugins(a =>
+   {
+       a.UseCheckClear();
+
+       a.UseWebApi()
+       .ConfigureRpcStore(store =>
+       {
+           store.RegisterServer<ApiServer>();//注册服务
+
+
+           //下列代码，会生成客户端的调用代码。
+           var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
+           File.WriteAllText("../../../WebApiProxy.cs", codeString);
+
+       });
+
+       //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+       a.UseDefaultHttpServicePlugin();
+   }));
+
+service.Start();
+
+Console.WriteLine("以下连接用于测试webApi");
+Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
+```
+
+
+## 五、规则
+
+### 5.1 Get规则
 
 使用Get进行请求时，服务方法可以声明多个参数，但是每个参数都必须是基础类型或者字符串类型。
 
@@ -130,7 +164,7 @@ public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
 }
 ```
 
-### 4.2 Post规则
+### 5.2 Post规则
 
 使用`Post`进行请求时，服务方法可以声明多个参数，但是当参数是基础类型或者字符串类型时，它也会来源于`Query`参数，同时，有且只有当最后一个参数为其他类型时，才会从`Body`解析。
 
@@ -155,7 +189,7 @@ public int Sum(int a, int b, MyClass myClass)
 
 如果想要获取实际请求的调用上下文（在上下文中可以获取IP，端口等信息），可以将第一个参数声明为`IWebApiCallContext`类型。
 
-### 4.3 路由规则
+### 5.3 路由规则
 
 框架的路由规则比较简单，默认情况下，以服务的名称+方法名称作为路由。
 
@@ -197,38 +231,6 @@ public class ApiServer : RpcServer
 `Router`特性不仅可以用于服务，也可以用于方法。而且可以多个使用。
 
 :::  
-
-## 五、启动服务器
-
-```csharp showLineNumbers
- var service = new HttpService();
-service.Setup(new TouchSocketConfig()
-   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-   .ConfigurePlugins(a =>
-   {
-       a.UseCheckClear();
-
-       a.UseWebApi()
-       .ConfigureRpcStore(store =>
-       {
-           store.RegisterServer<ApiServer>();//注册服务
-
-
-           //下列代码，会生成客户端的调用代码。
-           var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
-           File.WriteAllText("../../../WebApiProxy.cs", codeString);
-
-       });
-
-       //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
-       a.UseDefaultHttpServicePlugin();
-   }));
-
-service.Start();
-
-Console.WriteLine("以下连接用于测试webApi");
-Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
-```
 
 
 ## 六、调用服务
