@@ -18,7 +18,7 @@ function Home() {
   const context = useDocusaurusContext();
   const { siteConfig = {} } = context;
 
-  React.useEffect(() => {}, []);
+  React.useEffect(() => { }, []);
 
   return (
     <Layout
@@ -32,21 +32,24 @@ function Home() {
 }
 
 function Banner() {
+
+  const { colorMode, setLightTheme, setDarkTheme } = useColorMode();
+  const isDarkTheme = colorMode === "dark";
+
   return (
-    <div className="TouchSocket-banner">
+    <div className={"TouchSocket-banner" + (isDarkTheme ? " dark" : "")}>
       <div className="TouchSocket-banner-container">
         <div className="TouchSocket-banner-item">
           <div className="TouchSocket-banner-project">
-            TouchSocket{" "}
-            <span
-              style={{ fontSize: 14, fontWeight: "normal", color: "#8759ff" }}
-            ></span>
+            <span style={{ fontSize: 20, fontWeight: "Blod", color: "#FFFFFF" }}>
+              TouchSocket
+            </span>
           </div>
           <div style={{ color: "#82aaff", position: "relative", fontSize: 14 }}>
             一款简单易用的基础网络通讯组件库。
           </div>
-          <div className="TouchSocket-banner-description">
-          三十功名尘与土，八千里路云和月。
+          <div className={"TouchSocket-banner-description"+ (isDarkTheme ? " dark" : "")}>
+            三十功名尘与土，八千里路云和月。
           </div>
           <ul className="TouchSocket-banner-spec">
             <li> Apache-2.0 宽松开源协议，商业免费授权</li>
