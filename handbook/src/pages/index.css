@@ -1,8 +1,13 @@
 .TouchSocket-banner {
   padding: 4rem 2rem;
   align-items: center;
-  background-color: #211b50;
-  color: #fff;
+  background-image: linear-gradient(to bottom, #211b50, #0a3e75, #006194, #0084ab, #00a8bc, #15b5c8, #23c3d4, #2fd1e0, #3ecaee, #60c2f5, #82b8f4, #a0aeec);
+}
+
+.TouchSocket-banner.dark {
+  padding: 4rem 2rem;
+  align-items: center;
+  background-image: linear-gradient(to bottom, #211b50, #002d5b, #003956, #004248, #004838, #004b39, #004e3a, #00513b, #005250, #005060, #144d68, #384968);
 }
 
 .TouchSocket-banner-container {
@@ -32,6 +37,17 @@
   -webkit-text-fill-color: transparent;
 }
 
+.TouchSocket-banner-description.dark {
+  margin: 24px 0;
+  font-size: 2.2em;
+  font-weight: 700;
+  line-height: 1.25;
+  background-image: linear-gradient(to left top, #e0def1, #d6e1f9, #c9e6fe, #bbebfe, #b0eff8, #9ef0ef, #93efe0, #90eecc, #87e9af, #8ae28d, #96da66, #a8cf39);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .TouchSocket-banner-spec {
   padding: 0;
   opacity: 0.7;
@@ -39,6 +55,7 @@
   font-size: 1em;
   font-weight: 500;
   line-height: 1.33;
+  color: #fff;
 }
 
 .TouchSocket-banner-spec li {
