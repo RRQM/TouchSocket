@@ -21,10 +21,7 @@ function Home() {
   React.useEffect(() => { }, []);
 
   return (
-    <Layout
-      title={`TouchSocket说明文档。 ${siteConfig.title}`}
-      description="TouchSocket说明文档"
-    >
+    <Layout title={`TouchSocket说明文档。 ${siteConfig.title}`} description="TouchSocket说明文档">
       <Banner />
       <Gitee />
     </Layout>
