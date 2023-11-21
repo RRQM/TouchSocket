@@ -98,7 +98,7 @@ namespace WebSocketConsoleApp
         /// <summary>
         /// 通过/ws直接连接
         /// </summary>
-        private static void ConnectWith_ws()
+        private static async void ConnectWith_ws()
         {
             using var client = new WebSocketClient();
             client.Setup(new TouchSocketConfig()
@@ -106,10 +106,17 @@ namespace WebSocketConsoleApp
                 {
                     a.AddConsoleLogger();
                 })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseWebSocketHeartbeat()
+                    .SetTick(TimeSpan.FromSeconds(1));
+                })
                 .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
             client.Connect();
 
             client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
+
+            await Task.Delay(10000);
         }
 
         /// <summary>
@@ -193,7 +200,8 @@ namespace WebSocketConsoleApp
                     a.UseWebSocket()//添加WebSocket功能
                                     //.SetWSUrl("/ws")//设置url直接可以连接。
                            .SetVerifyConnection(VerifyConnection)
-                           .UseAutoPong();//当收到ping报文时自动回应pong
+                           //.UseAutoPong()//当收到ping报文时自动回应pong
+                           ;
 
                     a.Add<MyWSCommandLinePlugin>();
                     a.Add<MyWebSocketPlugin>();
@@ -352,9 +360,11 @@ namespace WebSocketConsoleApp
                         return;
 
                     case WSDataType.Ping:
+                        client.Logger.Info("Ping");
                         break;
 
                     case WSDataType.Pong:
+                        client.Logger.Info("Pong");
                         break;
 
                     default:
