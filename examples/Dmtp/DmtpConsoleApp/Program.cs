@@ -8,16 +8,71 @@ namespace DmtpConsoleApp
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
+            ConsoleAction action = new ConsoleAction();
+            action.Add("1","测试连接", Connect_1);
+            action.Add("2","测试以普通Tcp连接", Connect_2);
+            action.Add("3","发送消息", Send);
+            action.OnException += Action_OnException;
             var service = CreateTcpDmtpService();
-            Connect_1();
-            await Connect_2();
 
-            Console.ReadKey();
+            action.ShowAll();
+
+            action.RunCommandLine();
         }
 
-        static async Task Connect_2()
+        private static void Action_OnException(Exception obj)
+        {
+            Console.WriteLine(  obj.Message);
+        }
+
+        static void Send()
+        {
+            using var client = new TcpDmtpClient();
+          
+            client.Setup(new TouchSocketConfig()
+                .ConfigureContainer(a =>
+                {
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a => 
+                {
+                    //此处使用委托注册插件。和类插件功能一样
+                    a.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), async (object s, DmtpMessageEventArgs e) => 
+                    {
+                        string msg = e.DmtpMessage.BodyByteBlock.ToString();
+                        await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
+                        await e.InvokeNext();
+                    });
+                })
+                .SetRemoteIPHost("127.0.0.1:7789")
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp",//设置Token验证连接
+                    Id = "defaultId",//设置默认Id
+                    Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                }));
+            client.Connect();
+
+            client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
+
+            //使用Dmtp送消息。必须指定一个protocol，这是一个ushort类型的值。
+            //20以内的值，框架在使用，所以在发送时要指定一个大于20的值
+            //同时需要注意，当Dmtp添加其他功能组件的时候，可能也会占用协议。
+            //例如：
+            //DmtpRpc会用[20,25)的协议。
+            //文件传输会用[25,35)的协议。
+
+            //此处使用1000，基本就不会冲突。
+            client.Send(1000,Encoding.UTF8.GetBytes("hello"));
+        }
+
+        /// <summary>
+        /// 使用普通tcp连接
+        /// </summary>
+        /// <returns></returns>
+        static async void Connect_2()
         {
             using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
             tcpClient.Received = (client, e) =>
@@ -95,6 +150,7 @@ namespace DmtpConsoleApp
                    .ConfigurePlugins(a =>
                    {
                        a.Add<MyVerifyPlugin>();
+                       a.Add<MyFlagsPlugin>();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -135,11 +191,14 @@ namespace DmtpConsoleApp
     {
         public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
-            if (e.DmtpMessage.ProtocolFlags == 10)
+            if (e.DmtpMessage.ProtocolFlags == 1000)
             {
                 //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
                 string msg = e.DmtpMessage.BodyByteBlock.ToString();
+                await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
+                //向客户端回发消息
+                client.Send(1001,Encoding.UTF8.GetBytes("收到"));
                 return;
             }
 
