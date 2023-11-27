@@ -31,6 +31,11 @@ namespace ConsoleApp
                     a.Add<MyHttpPlug4>();
 
                     a.UseHttpStaticPage()
+                    .SetNavigateAction(request =>
+                    {
+                        //此处可以设置重定向
+                        return request.RelativeURL;
+                    })
                     .SetResponseAction(response =>
                     {
                         //可以设置响应头
