@@ -406,5 +406,66 @@ while (true)
 }
 ```
 
+## 七、鉴权、授权
+
+### 7.1 请求插件实现
+
+在Aspnetcore中，鉴权与授权是通过中间件实现的。而TouchSocket的WebApi（HttpService）在设计时也可以使用类似方式实现该功能。下列就以伪代码jwt鉴权示例。
+
+首先声明一个鉴权插件。用于判断当前请求header中是否包含授权header。
+
+```csharp showLineNumbers
+/// <summary>
+/// 鉴权插件
+/// </summary>
+class AuthenticationPlugin : PluginBase, IHttpPlugin
+{
+    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    {
+        string aut = e.Context.Request.Headers["Authorization"];
+        if (aut.IsNullOrEmpty())//授权header为空
+        {
+           await e.Context.Response
+                .SetStatus(401, "授权失败")
+                .AnswerAsync();
+            return;
+        }
+
+        //伪代码，假设使用jwt解码成功。那就执行下一个插件。
+        //if (jwt.Encode(aut))
+        //{
+        //   此处可以做一些授权相关的。
+        //}
+        await e.InvokeNext();
+    }
+}
+```
+
+然后添加使用插件即可。
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseCheckClear();
+
+    a.Add<AuthenticationPlugin>();
+
+    a.UseWebApi();
+
+    ...
+})
+```
+
+:::caution 注意
+
+鉴权插件的添加，应该在UseWebApi之前。这样才能保证api的安全性。
+
+:::  
+
+
+### 7.2 Rpc Aop实现
+
+WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实现鉴权。具体请看[Rpc服务AOP](./rpcactionfilter.mdx)
+
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebApi)
 

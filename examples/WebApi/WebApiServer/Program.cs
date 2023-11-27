@@ -21,6 +21,8 @@ namespace WebApiServerApp
                {
                    a.UseCheckClear();
 
+                   a.Add<AuthenticationPlugin>();
+
                    a.UseWebApi()
                    .ConfigureRpcStore(store =>
                    {
@@ -112,5 +114,30 @@ namespace WebApiServerApp
     {
         public int A { get; set; }
         public int B { get; set; }
+    }
+
+    /// <summary>
+    /// 鉴权插件
+    /// </summary>
+    class AuthenticationPlugin : PluginBase, IHttpPlugin
+    {
+        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        {
+            string aut = e.Context.Request.Headers["Authorization"];
+            if (aut.IsNullOrEmpty())//授权header为空
+            {
+               await e.Context.Response
+                    .SetStatus(401, "授权失败")
+                    .AnswerAsync();
+                return;
+            }
+
+            //伪代码，假设使用jwt解码成功。那就执行下一个插件。
+            //if (jwt.Encode(aut))
+            //{
+            //   此处可以做一些授权相关的。
+            //}
+            await e.InvokeNext();
+        }
     }
 }
