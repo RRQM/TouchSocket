@@ -32,8 +32,8 @@ HttpClient是Http客户端类。主要用于请求Http报文。与.net的HttpCli
 HttpClient client = new HttpClient();
 
 client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost(new IPHost("http://localhost:7219")))
-    .Connect();//先做连接
+    .SetRemoteIPHost(new IPHost("http://localhost:7219")));
+    client.Connect();//先做连接
 ```
 
 ### 4.2 常规请求
