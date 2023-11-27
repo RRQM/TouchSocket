@@ -31,7 +31,11 @@ namespace ConsoleApp
                     a.Add<MyHttpPlug4>();
 
                     a.UseHttpStaticPage()
-                    .AddFolder("api");//添加静态页面文件夹
+                    .SetResponseAction(response =>
+                    {
+                        //可以设置响应头
+                    })
+                    .AddFolder("api/");//添加静态页面文件夹
 
                     //default插件应该最后添加，其作用是
                     //1、为找不到的路由返回404
