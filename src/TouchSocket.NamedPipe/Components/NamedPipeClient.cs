@@ -113,7 +113,7 @@ namespace TouchSocket.NamedPipe
 
             if (this.CanSetDataHandlingAdapter)
             {
-                this.SetDataHandlingAdapter(this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty).Invoke());
+                this.SetDataHandlingAdapter(this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty).Invoke());
             }
 
             return this.OnConnecting(e);
