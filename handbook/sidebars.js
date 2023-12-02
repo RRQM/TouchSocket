@@ -322,18 +322,23 @@ module.exports = {
         ]
     },
     {
+      type: "doc",
+      id: "serialportclient",
+      label: "10、串口组件",
+    },
+    {
       type: "category",
-      label: "10、数据处理适配器",
+      label: "11、数据处理适配器",
       items:
         [
           {
             type: "doc",
             id: "adapterdescription",
-            label: "10.1 介绍及使用"
+            label: "11.1 介绍及使用"
           },
           {
             type: "category",
-            label: "10.2 Tcp适配器",
+            label: "11.2 Tcp适配器",
             items:
               [
                 {
@@ -385,7 +390,7 @@ module.exports = {
           },
           {
             type: "category",
-            label: "10.3 Udp适配器",
+            label: "11.3 Udp适配器",
             items:
               [
                 {
@@ -397,7 +402,7 @@ module.exports = {
           },
           {
             type: "category",
-            label: "10.4 适配器案例赏析",
+            label: "11.4 适配器案例赏析",
             items:
               [
                 {
@@ -425,144 +430,144 @@ module.exports = {
           {
             type: "doc",
             id: "independentusedatahandlingadapter",
-            label: "10.5 独立使用适配器"
+            label: "11.5 独立使用适配器"
           },
           {
             type: "doc",
             id: "dataadaptertester",
-            label: "10.6 适配器完整性、性能测试"
+            label: "11.6 适配器完整性、性能测试"
           },
         ]
     },
     {
       type: "category",
-      label: "11、Http组件",
+      label: "12、Http组件",
       items:
         [
           {
             type: "doc",
             id: "httpservice",
-            label: "11.1 创建HttpService"
+            label: "12.1 创建HttpService"
           },
           {
             type: "doc",
             id: "httpclient",
-            label: "11.2 创建HttpClient"
+            label: "12.2 创建HttpClient"
           },
           {
             type: "doc",
             id: "httpstaticpageplugin",
-            label: "11.3 静态页面插件"
+            label: "12.3 静态页面插件"
           }
         ]
     },
     {
       type: "category",
-      label: "12、WebSocket组件",
+      label: "13、WebSocket组件",
       items:
         [
           {
             type: "doc",
             id: "websocketdescription",
-            label: "12.1 产品及架构介绍"
+            label: "13.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "websocketservice",
-            label: "12.2 创建WebSocket服务器"
+            label: "13.2 创建WebSocket服务器"
           },
           {
             type: "doc",
             id: "websocketclient",
-            label: "12.3 创建WebSocket客户端"
+            label: "13.3 创建WebSocket客户端"
           },
           {
             type: "doc",
             id: "websocketheartbeat",
-            label: "12.4 心跳设置"
+            label: "13.4 心跳设置"
           },
           {
             type: "doc",
             id: "wscommandlineplugin",
-            label: "12.5 快捷事务命令行"
+            label: "13.5 快捷事务命令行"
           }
         ]
     },
     {
       type: "category",
-      label: "13、Rpc组件",
+      label: "14、Rpc组件",
       items:
         [
           {
             type: "doc",
             id: "generateproxydescription",
-            label: "13.1 为什么要生成代理"
+            label: "14.1 为什么要生成代理"
           },
           {
             type: "doc",
             id: "generateproxyfromserver",
-            label: "13.2 从服务端生成代理"
+            label: "14.2 从服务端生成代理"
           },
           {
             type: "doc",
             id: "generateproxyfromsourcegenerator",
-            label: "13.3 从SourceGenerator获取代理"
+            label: "14.3 从SourceGenerator获取代理"
           },
           {
             type: "doc",
             id: "generateproxyfromdispatchproxy",
-            label: "13.4 从DispatchProxy获取代理"
+            label: "14.4 从DispatchProxy获取代理"
           },
           {
             type: "doc",
             id: "generateproxyfromrealityproxy",
-            label: "13.5 从RealityProxy生成透明代理"
+            label: "14.5 从RealityProxy生成透明代理"
           },
           {
             type: "doc",
             id: "generateproxysourcegeneratordemo",
-            label: "13.6 SG代理推荐写法"
+            label: "14.6 SG代理推荐写法"
           },
           {
             type: "doc",
             id: "rpcactionfilter",
-            label: "13.7 Rpc服务AOP"
+            label: "14.7 Rpc服务AOP"
           },
           {
             type: "doc",
             id: "rpcallcontext",
-            label: "13.8 调用上下文"
+            label: "14.8 调用上下文"
           }
         ]
     },
     {
       type: "category",
-      label: "14、Dmtp组件",
+      label: "15、Dmtp组件",
       items:
         [
           {
             type: "doc",
             id: "dmtpdescription",
-            label: "14.1 产品及架构介绍"
+            label: "15.1 产品及架构介绍"
           },
           {
             type: "doc",
             id: "dmtpservice",
-            label: "14.2 创建Dmtp服务器"
+            label: "15.2 创建Dmtp服务器"
           },
           {
             type: "doc",
             id: "dmtplient",
-            label: "14.3 创建Dmtp客户端"
+            label: "15.3 创建Dmtp客户端"
           },
           {
             type: "doc",
-            label: "14.4 基础功能",
+            label: "15.4 基础功能",
             id: "dmtpbase"
           },
           {
             type: "category",
-            label: "14.5 进阶功能",
+            label: "15.5 进阶功能",
             items: [
               {
                 type: "doc",
@@ -573,49 +578,49 @@ module.exports = {
           },
           {
             type: "doc",
-            label: "14.6 Rpc功能",
+            label: "15.6 Rpc功能",
             id: "dmtprpc"
           },
           {
             type: "doc",
-            label: "14.7 文件传输",
+            label: "15.7 文件传输",
             id: "dmtptransferfile"
           },
           {
             type: "doc",
             id: "dmtpremoteaccess",
-            label: "14.8 远程文件系统"
+            label: "15.8 远程文件系统"
           },
           {
             type: "doc",
             id: "dmtpremotestream",
-            label: "14.9 远程流映射"
+            label: "15.9 远程流映射"
           },
           {
             type: "doc",
             id: "dmtprouterpackage",
-            label: "14.10 路由包传输"
+            label: "15.10 路由包传输"
           },
           {
             type: "doc",
             id: "dmtpredis",
-            label: "14.11 Redis缓存"
+            label: "15.11 Redis缓存"
           }
         ]
     },
     {
       type: "category",
-      label: "15、WebApi组件",
+      label: "16、WebApi组件",
       items:
         [
           {
             type: "doc",
-            label: "15.1 WebApi",
+            label: "16.1 WebApi",
             id: "webapi"
           },
           {
             type: "doc",
-            label: "15.2 Swagger页面",
+            label: "16.2 Swagger页面",
             id: "swagger"
           },
         ]
@@ -623,12 +628,12 @@ module.exports = {
 
     {
       type: "doc",
-      label: "16、JsonRpc组件",
+      label: "17、JsonRpc组件",
       id: "jsonrpc"
     },
     {
       type: "doc",
-      label: "17、XmlRpc组件",
+      label: "18、XmlRpc组件",
       id: "xmlrpc"
     }
   ]
