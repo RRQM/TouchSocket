@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net481;net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Serial;SerialPort;TouchSocket</PackageTags>
+		<Description>这是.Net(包括 C# 、VB.Net、F#)的一个整合性的串口通信框架。包含了串口连接、断开等一系列的通信事务。同时能一键式解决数据黏分包问题。使用协议模板，可快速实现「固定包头」、「固定长度」、「区间字符」等一系列的数据报文解析。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+		<Title>TouchSocket.SerialPorts</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.SerialPorts</PackageOutputPath>
+		<Authors>若汝棋茗;Diego</Authors>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(TargetFramework)'!='net45' AND '$(TargetFramework)'!='net481'">
+		<PackageReference Include="System.IO.Ports" Version="6.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+</Project>

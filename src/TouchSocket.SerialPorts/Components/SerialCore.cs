@@ -1,51 +1,33 @@
-﻿
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
 using System;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
-
 using TouchSocket.Core;
 using TouchSocket.Sockets;
-namespace TouchSocket.Serial
-{
-    internal sealed class InternalSerialCore : SerialCore
-    {
 
-    }
+namespace TouchSocket.SerialPorts
+{
     /// <summary>
     /// Serial核心
     /// </summary>
-    public class SerialCore : IDisposable, ISender
+    public class SerialCore : DisposableObject, ISender
     {
-        /// <summary>
-        /// 最小缓存尺寸
-        /// </summary>
-        public int MinBufferSize { get; set; } = 1024 * 10;
+        private const string m_msg1 = "远程终端已关闭";
 
         /// <summary>
-        /// 最大缓存尺寸
-        /// </summary>
-        public int MaxBufferSize { get; set; } = 1024 * 1024 * 10;
-        #region 字段
-
-        /// <summary>
-        /// 同步根
-        /// </summary>
-        public readonly object SyncRoot = new object();
-
-        private long m_bufferRate;
-        private bool m_online => m_serialPort?.IsOpen == true;
-        private int m_receiveBufferSize = 1024 * 10;
-        private ValueCounter m_receiveCounter;
-        private int m_sendBufferSize = 1024 * 10;
-        private ValueCounter m_sendCounter;
-        private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
-        private SerialPort m_serialPort;
-
-        #endregion 字段
-
-        /// <summary>
-        /// Tcp核心
+        /// Serial核心
         /// </summary>
         public SerialCore()
         {
@@ -74,7 +56,39 @@ namespace TouchSocket.Serial
         public bool CanSend => this.m_online;
 
         /// <summary>
-        /// 当中断Tcp的时候。当为<see langword="true"/>时，意味着是调用<see cref="Close(string)"/>。当为<see langword="false"/>时，则是其他中断。
+        /// SerialPort
+        /// </summary>
+        public SerialPort MainSerialPort { get => this.m_serialPort; }
+
+        /// <summary>
+        /// 最大缓存尺寸
+        /// </summary>
+        public int MaxBufferSize { get; set; } = 1024 * 1024 * 10;
+
+        /// <summary>
+        /// 最小缓存尺寸
+        /// </summary>
+        public int MinBufferSize { get; set; } = 1024 * 10;
+
+        #region 字段
+
+        /// <summary>
+        /// 同步根
+        /// </summary>
+        public readonly object SyncRoot = new object();
+
+        private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
+        private bool m_online;
+        private int m_receiveBufferSize = 1024 * 10;
+        private ValueCounter m_receiveCounter;
+        private int m_sendBufferSize = 1024 * 10;
+        private ValueCounter m_sendCounter;
+        private SerialPort m_serialPort;
+
+        #endregion 字段
+
+        /// <summary>
+        /// 当中断Serial的时候。当为<see langword="true"/>时，意味着是调用<see cref="Close(string)"/>。当为<see langword="false"/>时，则是其他中断。
         /// </summary>
         public Action<SerialCore, bool, string> OnBreakOut { get; set; }
 
@@ -87,10 +101,6 @@ namespace TouchSocket.Serial
         /// 在线状态
         /// </summary>
         public bool Online { get => this.m_online; }
-        /// <summary>
-        /// UserToken
-        /// </summary>
-        public ByteBlock UserToken { get; set; }
 
         /// <summary>
         /// 当收到数据的时候
@@ -124,37 +134,31 @@ namespace TouchSocket.Serial
         public ValueCounter SendCounter { get => this.m_sendCounter; }
 
         /// <summary>
-        /// SerialPort
+        /// 开始接收。
         /// </summary>
-        public SerialPort MainSerialPort { get => this.m_serialPort; }
-
-
-        /// <summary>
-        /// 开始以Iocp方式接收
-        /// </summary>
-        public virtual void BeginIocpReceive()
+        /// <returns></returns>
+        public virtual async Task BeginReceive()
         {
-            var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
-            this.UserToken = byteBlock;
-            byteBlock.SetLength(0);
-            if (this.m_serialPort.BytesToRead > 0)
+            while (this.m_online)
             {
-                this.m_bufferRate += 2;
-                this.ProcessReceived();
-            }
-            m_serialPort.DataReceived += MainSerialPort_DataReceived;
-        }
+                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
+                try
+                {
+                    var r = await Task<int>.Factory.FromAsync(this.m_serialPort.BaseStream.BeginRead, this.m_serialPort.BaseStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default);
+                    if (r == 0)
+                    {
+                        this.PrivateBreakOut(false, m_msg1);
+                        return;
+                    }
 
-        private void MainSerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            try
-            {
-                this.m_bufferRate = 1;
-                this.ProcessReceived();
-            }
-            catch (Exception ex)
-            {
-                this.PrivateBreakOut(false, ex.ToString());
+                    byteBlock.SetLength(r);
+                    this.HandleBuffer(byteBlock);
+                }
+                catch (Exception ex)
+                {
+                    byteBlock.Dispose();
+                    this.PrivateBreakOut(false, ex.Message);
+                }
             }
         }
 
@@ -168,31 +172,23 @@ namespace TouchSocket.Serial
         }
 
         /// <summary>
-        /// 释放对象
+        /// 重置环境，并设置新的<see cref="SerialPort"/>。
         /// </summary>
-        public void Dispose()
+        /// <param name="serialPort"></param>
+        public virtual void Reset(SerialPort serialPort)
         {
-            GC.SuppressFinalize(this);
-            UserToken.SafeDispose();
-        }
-
-        /// <summary>
-        /// 重置环境，并设置新的<see cref="m_serialPort"/>。
-        /// </summary>
-        /// <param name="socket"></param>
-        public virtual void Reset(SerialPort socket)
-        {
-            if (socket is null)
+            if (serialPort is null)
             {
-                throw new ArgumentNullException(nameof(socket));
+                throw new ArgumentNullException(nameof(serialPort));
             }
 
-            if (!socket.IsOpen)
+            if (!serialPort.IsOpen)
             {
                 throw new Exception("新的SerialPort必须在连接状态。");
             }
             this.Reset();
-            this.m_serialPort = socket;
+            this.m_serialPort = serialPort;
+            this.m_online = true;
         }
 
         /// <summary>
@@ -200,26 +196,14 @@ namespace TouchSocket.Serial
         /// </summary>
         public virtual void Reset()
         {
+            this.m_online = false;
             this.m_receiveCounter.Reset();
             this.m_sendCounter.Reset();
             this.m_serialPort = null;
             this.OnReceived = null;
             this.OnBreakOut = null;
-            this.UserToken = null;
-            this.m_bufferRate = 1;
             this.m_receiveBufferSize = this.MinBufferSize;
             this.m_sendBufferSize = this.MinBufferSize;
-        }
-        /// <summary>
-        /// 判断，当不在连接状态时触发异常。
-        /// </summary>
-        /// <exception cref="NotConnectedException"></exception>
-        protected void ThrowIfNotConnected()
-        {
-            if (!this.m_online)
-            {
-                throw new NotConnectedException();
-            }
         }
 
         /// <summary>
@@ -268,11 +252,10 @@ namespace TouchSocket.Serial
             {
                 this.m_semaphoreForSend.Release();
             }
-
         }
 
         /// <summary>
-        /// 当中断Tcp时。
+        /// 当中断Serial时。
         /// </summary>
         /// <param name="manual">当为<see langword="true"/>时，意味着是调用<see cref="Close(string)"/>。当为<see langword="false"/>时，则是其他中断。</param>
         /// <param name="msg"></param>
@@ -280,8 +263,6 @@ namespace TouchSocket.Serial
         {
             this.OnBreakOut?.Invoke(this, manual, msg);
         }
-
-
 
         /// <summary>
         /// 当发生异常的时候
@@ -299,6 +280,18 @@ namespace TouchSocket.Serial
         protected virtual void Received(ByteBlock byteBlock)
         {
             this.OnReceived?.Invoke(this, byteBlock);
+        }
+
+        /// <summary>
+        /// 判断，当不在连接状态时触发异常。
+        /// </summary>
+        /// <exception cref="NotConnectedException"></exception>
+        protected void ThrowIfNotConnected()
+        {
+            if (!this.m_online)
+            {
+                throw new NotConnectedException();
+            }
         }
 
         private void HandleBuffer(ByteBlock byteBlock)
@@ -321,7 +314,7 @@ namespace TouchSocket.Serial
         private void OnReceivePeriod(long value)
         {
             this.m_receiveBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            if (this.MainSerialPort != null && !MainSerialPort.IsOpen)
+            if (this.MainSerialPort != null && !this.MainSerialPort.IsOpen)
             {
                 this.MainSerialPort.ReadBufferSize = this.m_receiveBufferSize;
             }
@@ -330,10 +323,6 @@ namespace TouchSocket.Serial
         private void OnSendPeriod(long value)
         {
             this.m_sendBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            if (this.MainSerialPort != null && !MainSerialPort.IsOpen)
-            {
-                this.MainSerialPort.WriteBufferSize = this.m_sendBufferSize;
-            }
         }
 
         private void PrivateBreakOut(bool manual, string msg)
@@ -342,43 +331,14 @@ namespace TouchSocket.Serial
             {
                 if (this.m_online)
                 {
+                    this.m_online = false;
                     this.BreakOut(manual, msg);
                 }
             }
         }
+    }
 
-        private void ProcessReceived()
-        {
-            if (!this.m_online)
-            {
-                UserToken?.SafeDispose();
-                return;
-            }
-            if (m_serialPort.BytesToRead > 0)
-            {
-                var byteBlock = UserToken;
-                byte[] buffer = BytePool.Default.Rent(m_serialPort.BytesToRead);
-                int num = m_serialPort.Read(buffer, 0, m_serialPort.BytesToRead);
-                byteBlock.Write(buffer, 0, num);
-                byteBlock.SetLength(num);
-                this.HandleBuffer(byteBlock);
-                try
-                {
-                    var newByteBlock = BytePool.Default.GetByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, this.MaxBufferSize));
-                    newByteBlock.SetLength(0);
-                    UserToken = newByteBlock;
-
-                    if (m_serialPort.BytesToRead > 0)
-                    {
-                        this.m_bufferRate += 2;
-                        this.ProcessReceived();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.PrivateBreakOut(false, ex.ToString());
-                }
-            }
-        }
+    internal sealed class InternalSerialCore : SerialCore
+    {
     }
 }

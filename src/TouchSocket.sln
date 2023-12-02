@@ -36,7 +36,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SourceGenerator
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.WebApi.Swagger", "TouchSocket.WebApi.Swagger\TouchSocket.WebApi.Swagger.csproj", "{02401902-0085-4ACA-B997-A79FDCD766F9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Serial", "TouchSocket.Serial\TouchSocket.Serial.csproj", "{F40F91F7-C1C2-4B8E-A05B-BFDC8615846D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SerialPorts", "TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj", "{0111FE77-3B41-4994-AD3D-16257BEE6BC6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Hosting", "TouchSocket.Hosting\TouchSocket.Hosting.csproj", "{2F1E9315-21B5-498C-9B8F-62E7386665EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -100,10 +102,14 @@ Global
 		{02401902-0085-4ACA-B997-A79FDCD766F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02401902-0085-4ACA-B997-A79FDCD766F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02401902-0085-4ACA-B997-A79FDCD766F9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F40F91F7-C1C2-4B8E-A05B-BFDC8615846D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F40F91F7-C1C2-4B8E-A05B-BFDC8615846D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F40F91F7-C1C2-4B8E-A05B-BFDC8615846D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F40F91F7-C1C2-4B8E-A05B-BFDC8615846D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0111FE77-3B41-4994-AD3D-16257BEE6BC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0111FE77-3B41-4994-AD3D-16257BEE6BC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0111FE77-3B41-4994-AD3D-16257BEE6BC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0111FE77-3B41-4994-AD3D-16257BEE6BC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

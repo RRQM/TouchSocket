@@ -1,24 +1,33 @@
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
-
 using TouchSocket.Core;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
-namespace TouchSocket.Serial
+
+namespace TouchSocket.SerialPorts
 {
-
-
-    /// <inheritdoc cref="SerialSessionBase"/>
-    public class SerialSession : SerialSessionBase
+    /// <inheritdoc cref="SerialPortClientBase"/>
+    public class SerialPortClient : SerialPortClientBase
     {
         /// <summary>
         /// 接收到数据
         /// </summary>
-        public ReceivedEventHandler<SerialSession> Received { get; set; }
+        public ReceivedEventHandler<SerialPortClient> Received { get; set; }
 
         /// <inheritdoc/>
         protected override Task ReceivedData(ReceivedDataEventArgs e)
@@ -32,52 +41,40 @@ namespace TouchSocket.Serial
     }
 
     /// <summary>
-    /// 串口管理
+    /// 串口客户端基类
     /// </summary>
-    public class SerialSessionBase : SetupConfigObject, ISerialSession
+    public class SerialPortClientBase : SetupConfigObject, ISerialPortClient
     {
-        static readonly Protocol SerialPort = new Protocol("SerialSession");
         /// <summary>
-        /// 构造函数
+        /// 串口客户端基类
         /// </summary>
-        public SerialSessionBase()
+        public SerialPortClientBase()
         {
-            this.Protocol = SerialPort;
+            this.Protocol = SerialPortUtility.SerialPort;
         }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return SerialProperty?.ToString();
-        }
+
         #region 变量
 
-        private DelaySender m_delaySender;
-        private bool m_online => MainSerialPort?.IsOpen == true;
         private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
         private readonly InternalSerialCore m_serialCore = new InternalSerialCore();
+        private DelaySender m_delaySender;
+        private bool m_online;
+
         #endregion 变量
 
         #region 事件
 
         /// <inheritdoc/>
-        public ConnectedEventHandler<ISerialSession> Connected { get; set; }
+        public ConnectedEventHandler<ISerialPortClient> Connected { get; set; }
 
         /// <inheritdoc/>
-        public SerialConnectingEventHandler<ISerialSession> Connecting { get; set; }
+        public SerialConnectingEventHandler<ISerialPortClient> Connecting { get; set; }
 
         /// <inheritdoc/>
-        public DisconnectEventHandler<ISerialSessionBase> Disconnected { get; set; }
+        public DisconnectEventHandler<ISerialPortClient> Disconnected { get; set; }
 
         /// <inheritdoc/>
-        public DisconnectEventHandler<ISerialSessionBase> Disconnecting { get; set; }
-
-        private async Task PrivateOnConnected(ConnectedEventArgs o)
-        {
-            await this.OnConnected(o);
-        }
+        public DisconnectEventHandler<ISerialPortClient> Disconnecting { get; set; }
 
         /// <summary>
         /// 已经建立连接
@@ -95,22 +92,12 @@ namespace TouchSocket.Serial
                         return;
                     }
                 }
-                await this.PluginsManager.RaiseAsync(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e);
+                await this.PluginManager.RaiseAsync(nameof(ISerialConnectedPlugin.OnSerialConnected), this, e);
             }
             catch (Exception ex)
             {
                 this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
-        }
-
-        private async Task PrivateOnConnecting(SerialConnectingEventArgs e)
-        {
-            if (this.CanSetDataHandlingAdapter)
-            {
-                this.SetDataHandlingAdapter(this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty).Invoke());
-            }
-
-            await this.OnConnecting(e);
         }
 
         /// <summary>
@@ -129,18 +116,12 @@ namespace TouchSocket.Serial
                         return;
                     }
                 }
-                await this.PluginsManager.RaiseAsync(nameof(ITcpConnectingPlugin.OnTcpConnecting), this, e);
+                await this.PluginManager.RaiseAsync(nameof(ISerialConnectingPlugin.OnSerialConnecting), this, e);
             }
             catch (Exception ex)
             {
                 this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
-        }
-
-        private async Task PrivateOnDisconnected(object obj)
-        {
-            this.m_receiver?.TryInputReceive(default, default);
-            await this.OnDisconnected((DisconnectEventArgs)obj);
         }
 
         /// <summary>
@@ -160,17 +141,12 @@ namespace TouchSocket.Serial
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ISerialDisconnectedPlugin.OnSerialDisconnected), this, e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
-        }
-
-        private async Task PrivateOnDisconnecting(object obj)
-        {
-            await this.OnDisconnecting((DisconnectEventArgs)obj);
         }
 
         /// <summary>
@@ -190,7 +166,7 @@ namespace TouchSocket.Serial
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectingPlugin.OnTcpDisconnecting), this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ISerialDisconnectingPlugin.OnSerialDisconnecting), this, e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -198,15 +174,38 @@ namespace TouchSocket.Serial
             }
         }
 
+        private async Task PrivateOnConnected(ConnectedEventArgs o)
+        {
+            await this.OnConnected(o);
+        }
+
+        private async Task PrivateOnConnecting(SerialConnectingEventArgs e)
+        {
+            if (this.CanSetDataHandlingAdapter)
+            {
+                this.SetDataHandlingAdapter(this.Config.GetValue(SerialPortConfigExtension.SerialDataHandlingAdapterProperty).Invoke());
+            }
+
+            await this.OnConnecting(e);
+        }
+
+        private async Task PrivateOnDisconnected(object obj)
+        {
+            this.m_receiver?.TryInputReceive(default, default);
+            await this.OnDisconnected((DisconnectEventArgs)obj);
+        }
+
+        private async Task PrivateOnDisconnecting(object obj)
+        {
+            await this.OnDisconnecting((DisconnectEventArgs)obj);
+        }
+
         #endregion 事件
 
         #region 属性
 
         /// <inheritdoc/>
-        public DateTime LastReceivedTime => this.GetSerialCore().ReceiveCounter.LastIncrement;
-
-        /// <inheritdoc/>
-        public DateTime LastSendTime => this.GetSerialCore().SendCounter.LastIncrement;
+        public bool CanSend => this.m_online;
 
         /// <inheritdoc/>
         public virtual bool CanSetDataHandlingAdapter => true;
@@ -215,7 +214,11 @@ namespace TouchSocket.Serial
         public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
 
         /// <inheritdoc/>
-        public SerialProperty SerialProperty { get; private set; }
+        public DateTime LastReceivedTime => this.GetSerialCore().ReceiveCounter.LastIncrement;
+
+        /// <inheritdoc/>
+        public DateTime LastSendTime => this.GetSerialCore().SendCounter.LastIncrement;
+
         /// <inheritdoc/>
         public SerialPort MainSerialPort { get; private set; }
 
@@ -223,12 +226,7 @@ namespace TouchSocket.Serial
         public bool Online { get => this.m_online; }
 
         /// <inheritdoc/>
-        public bool CanSend => this.m_online;
-
-        /// <inheritdoc/>
         public Protocol Protocol { get; set; }
-
-
 
         #endregion 属性
 
@@ -247,7 +245,6 @@ namespace TouchSocket.Serial
                 }
             }
         }
-
 
         /// <summary>
         /// <inheritdoc/>
@@ -270,6 +267,18 @@ namespace TouchSocket.Serial
 
         #region Connect
 
+        /// <inheritdoc/>
+        public void Connect(int timeout, CancellationToken token)
+        {
+            this.Open();
+        }
+
+        /// <inheritdoc/>
+        public Task ConnectAsync(int timeout, CancellationToken token)
+        {
+            return Task.Run(this.Open);
+        }
+
         /// <summary>
         /// 打开串口
         /// </summary>
@@ -277,26 +286,24 @@ namespace TouchSocket.Serial
         {
             try
             {
-                ThrowIfDisposed();
+                this.ThrowIfDisposed();
                 this.m_semaphore.Wait();
                 if (this.m_online)
                 {
                     return;
                 }
-                if (this.DisposedValue)
-                {
-                    throw new ObjectDisposedException(this.GetType().FullName);
-                }
                 if (this.Config == null)
                 {
                     throw new ArgumentNullException(nameof(this.Config), "配置文件不能为空。");
                 }
-                var serialProperty = this.Config.GetValue(SerialConfigExtension.SerialProperty) ?? throw new ArgumentNullException("串口配置不能为空。");
+                var serialPortOption = this.Config.GetValue(SerialPortConfigExtension.SerialPortOptionProperty) ?? throw new ArgumentNullException("串口配置不能为空。");
                 this.MainSerialPort.SafeDispose();
-                var serialPort = CreateSerial(serialProperty);
+                var serialPort = CreateSerial(serialPortOption);
                 this.PrivateOnConnecting(new SerialConnectingEventArgs(serialPort)).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 serialPort.Open();
+
+                this.m_online = true;
 
                 this.SetSerialPort(serialPort);
                 this.BeginReceive();
@@ -309,27 +316,9 @@ namespace TouchSocket.Serial
             }
         }
 
-
         private void BeginReceive()
         {
-            this.GetSerialCore().BeginIocpReceive();
-        }
-
-
-        /// <inheritdoc/>
-        public virtual ISerialSession Connect()
-        {
-            this.Open();
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public async Task<ISerialSession> ConnectAsync()
-        {
-            return await Task.Run(() =>
-            {
-                return this.Connect();
-            });
+            _ = this.GetSerialCore().BeginReceive();
         }
 
         #endregion Connect
@@ -339,48 +328,18 @@ namespace TouchSocket.Serial
         private Receiver m_receiver;
 
         /// <inheritdoc/>
-        public IReceiver CreateReceiver()
-        {
-            return this.m_receiver ??= new Receiver(this);
-        }
-
-        /// <inheritdoc/>
         public void ClearReceiver()
         {
             this.m_receiver = null;
         }
 
-        #endregion
-
-        private void SerialCoreBreakOut(SerialCore core, bool manual, string msg)
+        /// <inheritdoc/>
+        public IReceiver CreateReceiver()
         {
-            this.BreakOut(manual, msg);
-        }
-        /// <summary>
-        /// BreakOut。
-        /// </summary>
-        /// <param name="manual"></param>
-        /// <param name="msg"></param>
-        protected void BreakOut(bool manual, string msg)
-        {
-            lock (this.GetSerialCore())
-            {
-                if (this.m_online)
-                {
-                    this.MainSerialPort.SafeDispose();
-                    this.m_delaySender.SafeDispose();
-                    this.DataHandlingAdapter.SafeDispose();
-                    Task.Factory.StartNew(this.PrivateOnDisconnected, new DisconnectEventArgs(manual, msg));
-                }
-            }
+            return this.m_receiver ??= new Receiver(this);
         }
 
-        private SerialCore GetSerialCore()
-        {
-            this.ThrowIfDisposed();
-            return this.m_serialCore ?? throw new ObjectDisposedException(this.GetType().Name);
-        }
-
+        #endregion Receiver
 
         /// <inheritdoc/>
         public virtual void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter)
@@ -393,17 +352,24 @@ namespace TouchSocket.Serial
             this.SetAdapter(adapter);
         }
 
-
-        private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        /// <summary>
+        /// BreakOut。
+        /// </summary>
+        /// <param name="manual"></param>
+        /// <param name="msg"></param>
+        protected void BreakOut(bool manual, string msg)
         {
-            if (this.m_receiver != null)
+            lock (this.GetSerialCore())
             {
-                if (this.m_receiver.TryInputReceive(byteBlock, requestInfo))
+                if (this.m_online)
                 {
-                    return;
+                    this.m_online = false;
+                    this.MainSerialPort.SafeDispose();
+                    this.m_delaySender.SafeDispose();
+                    this.DataHandlingAdapter.SafeDispose();
+                    Task.Factory.StartNew(this.PrivateOnDisconnected, new DisconnectEventArgs(manual, msg));
                 }
             }
-            this.ReceivedData(new ReceivedDataEventArgs(byteBlock, requestInfo)).GetFalseAwaitResult();
         }
 
         /// <summary>
@@ -413,7 +379,21 @@ namespace TouchSocket.Serial
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task ReceivedData(ReceivedDataEventArgs e)
         {
-            return this.PluginsManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
+            return this.PluginManager.RaiseAsync(nameof(ISerialReceivedPlugin.OnSerialReceived), this, e);
+        }
+
+        /// <summary>
+        /// 当收到原始数据
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
+        protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
+        {
+            if (this.PluginManager.GetPluginCount(nameof(ISerialReceivingPlugin.OnSerialReceiving)) > 0)
+            {
+                return this.PluginManager.RaiseAsync(nameof(ISerialReceivingPlugin.OnSerialReceiving), this, new ByteBlockEventArgs(byteBlock));
+            }
+            return Task.FromResult(false);
         }
 
         /// <summary>
@@ -425,20 +405,13 @@ namespace TouchSocket.Serial
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(ISerialSendingPlugin.OnSerialSending)) > 0)
             {
                 var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ISerialSendingPlugin.OnSerialSending), this, args).ConfigureAwait(false);
                 return args.IsPermitOperation;
             }
             return true;
-        }
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            this.SerialProperty = config.GetValue(SerialConfigExtension.SerialProperty);
-            this.Logger ??= this.Container.Resolve<ILog>();
         }
 
         /// <summary>
@@ -466,14 +439,59 @@ namespace TouchSocket.Serial
             this.DataHandlingAdapter = adapter;
         }
 
-        private static SerialPort CreateSerial(SerialProperty serialProperty)
+        private static SerialPort CreateSerial(SerialPortOption serialPortOption)
         {
-            SerialPort serialPort = new SerialPort(serialProperty.PortName, serialProperty.BaudRate, serialProperty.Parity, serialProperty.DataBits, serialProperty.StopBits)
-            {
-                DtrEnable = true,
-                RtsEnable = true
-            };
+            var serialPort = new SerialPort(serialPortOption.PortName, serialPortOption.BaudRate, serialPortOption.Parity, serialPortOption.DataBits, serialPortOption.StopBits);
             return serialPort;
+        }
+
+        private SerialCore GetSerialCore()
+        {
+            this.ThrowIfDisposed();
+            return this.m_serialCore ?? throw new ObjectDisposedException(this.GetType().Name);
+        }
+
+        private void HandleReceived(SerialCore core, ByteBlock byteBlock)
+        {
+            try
+            {
+                if (this.DisposedValue)
+                {
+                    return;
+                }
+                if (this.ReceivingData(byteBlock).GetFalseAwaitResult())
+                {
+                    return;
+                }
+
+                if (this.DataHandlingAdapter == null)
+                {
+                    this.Logger.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
+                    return;
+                }
+                this.DataHandlingAdapter.ReceivedInput(byteBlock);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
+            }
+        }
+
+        private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+        {
+            if (this.m_receiver != null)
+            {
+                if (this.m_receiver.TryInputReceive(byteBlock, requestInfo))
+                {
+                    return;
+                }
+            }
+            this.ReceivedData(new ReceivedDataEventArgs(byteBlock, requestInfo)).GetFalseAwaitResult();
+        }
+
+        private void SerialCoreBreakOut(SerialCore core, bool manual, string msg)
+        {
+            this.BreakOut(manual, msg);
         }
 
         #region 发送
@@ -664,10 +682,6 @@ namespace TouchSocket.Serial
 
         #endregion 发送
 
-
-        #region 自定义
-
-
         private void SetSerialPort(SerialPort serialPort)
         {
             if (serialPort == null)
@@ -676,17 +690,10 @@ namespace TouchSocket.Serial
             }
 
             this.MainSerialPort = serialPort;
-            this.SerialProperty ??= new SerialProperty();
-            this.SerialProperty.Parity = serialPort.Parity;
-            this.SerialProperty.PortName = serialPort.PortName;
-            this.SerialProperty.StopBits = serialPort.StopBits;
-            this.SerialProperty.DataBits = serialPort.DataBits;
-            this.SerialProperty.BaudRate = serialPort.BaudRate;
-
             var delaySenderOption = this.Config.GetValue(TouchSocketConfigExtension.DelaySenderProperty);
             if (delaySenderOption != null)
             {
-                this.m_delaySender = new DelaySender(delaySenderOption, this.MainSerialPort.AbsoluteSend);
+                this.m_delaySender = new DelaySender(delaySenderOption, this.GetSerialCore().Send);
             }
             this.m_serialCore.Reset(serialPort);
             this.m_serialCore.OnReceived = this.HandleReceived;
@@ -701,47 +708,5 @@ namespace TouchSocket.Serial
                 this.m_serialCore.MaxBufferSize = maxValue;
             }
         }
-
-        private void HandleReceived(SerialCore core, ByteBlock byteBlock)
-        {
-            try
-            {
-                if (this.DisposedValue)
-                {
-                    return;
-                }
-                if (this.ReceivingData(byteBlock).GetFalseAwaitResult())
-                {
-                    return;
-                }
-
-                if (this.DataHandlingAdapter == null)
-                {
-                    this.Logger.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
-                    return;
-                }
-                this.DataHandlingAdapter.ReceivedInput(byteBlock);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
-            }
-        }
-
-        /// <summary>
-        /// 当收到原始数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
-        {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpReceivingPlugin.OnTcpReceiving)) > 0)
-            {
-                return this.PluginsManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
-            }
-            return Task.FromResult(false);
-        }
-
-        #endregion
     }
 }
