@@ -27,15 +27,15 @@ namespace RecommendRpcConsoleApp
                    {
                        a.AddConsoleLogger();
                        a.AddFileLogger();
+                       a.AddRpcStore(store =>
+                       {
+                           //此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+                           store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+                       });
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc()
-                           .ConfigureRpcStore(store =>
-                           {
-                               //此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
-                               store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
-                           });
+                       a.UseDmtpRpc();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {

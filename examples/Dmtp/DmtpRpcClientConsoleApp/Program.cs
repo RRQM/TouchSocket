@@ -126,16 +126,16 @@ namespace ClientConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc()
-                    //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                    .SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor))
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<MyClientRpcServer>();
                     });
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
+                    //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
+                    //.SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor));
 
                     a.UseDmtpHeartbeat()
                     .SetTick(TimeSpan.FromSeconds(3))
@@ -167,7 +167,7 @@ namespace ClientConsoleApp
 
         class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
         {
-            public MyDmtpRpcActor(IDmtpActor smtpActor) : base(smtpActor)
+            public MyDmtpRpcActor(IDmtpActor smtpActor,IRpcServerProvider rpcServerProvider) : base(smtpActor, rpcServerProvider)
             {
             }
         }

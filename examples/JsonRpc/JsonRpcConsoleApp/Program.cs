@@ -40,13 +40,16 @@ namespace JsonRpcConsoleApp
 
             service.Setup(new TouchSocketConfig()
                  .SetListenIPHosts(7706)
+                 .ConfigureContainer(a => 
+                 {
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<JsonRpcServer>();
+                     });
+                 })
                  .ConfigurePlugins(a =>
                  {
                      a.UseHttpJsonRpc()
-                     .ConfigureRpcStore(store =>
-                     {
-                         store.RegisterServer<JsonRpcServer>();
-                     })
                      .SetJsonRpcUrl("/jsonRpc");
                  }));
             service.Start();
@@ -60,6 +63,13 @@ namespace JsonRpcConsoleApp
 
             service.Setup(new TouchSocketConfig()
                  .SetListenIPHosts(7707)
+                 .ConfigureContainer(a => 
+                 {
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<JsonRpcServer>();
+                     });
+                 })
                  .ConfigurePlugins(a =>
                  {
                      a.UseWebSocket()
@@ -71,10 +81,6 @@ namespace JsonRpcConsoleApp
                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
                          //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
                          return true;
-                     })
-                     .ConfigureRpcStore(store =>
-                     {
-                         store.RegisterServer<JsonRpcServer>();
                      });
                  }));
             service.Start();
@@ -88,6 +94,13 @@ namespace JsonRpcConsoleApp
             service.Setup(new TouchSocketConfig()
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetListenIPHosts(7705)
+                .ConfigureContainer(a => 
+                {
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<JsonRpcServer>();
+                    });
+                })
                 .ConfigurePlugins(a =>
                 {
                     /*
@@ -95,12 +108,7 @@ namespace JsonRpcConsoleApp
                      这样所有的数据都会被尝试解释为JsonRpc。
                      如果不需要该功能，可以调用NoSwitchProtocol()。
                      */
-                    a.UseTcpJsonRpc()
-                    //.NoSwitchProtocol()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<JsonRpcServer>();
-                    });
+                    a.UseTcpJsonRpc();
                 }));
             service.Start();
         }

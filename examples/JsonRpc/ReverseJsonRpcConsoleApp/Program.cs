@@ -23,10 +23,9 @@ namespace ReverseJsonRpcConsoleApp
         {
             var jsonRpcClient = new WebSocketJsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
-                .ConfigurePlugins(a =>
+                .ConfigureContainer(a =>
                 {
-                    a.UseGlobalRpcStore()
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<ReverseJsonRpcServer>();
                     });

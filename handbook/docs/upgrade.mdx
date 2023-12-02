@@ -29,6 +29,7 @@ import Highlight from '@site/src/components/Highlight.js';
 **升级指南：**
 
 - 由2.0.0-beta.200至2.0.0-beta.220 [#I8DE1D](https://gitee.com/RRQM_Home/TouchSocket/issues/I8DE1D)
+- 由2.0.0-beta.220至2.0.0-beta.230 [#I8LAX4](https://gitee.com/RRQM_Home/TouchSocket/issues/I8LAX4)
 
 **更新详情：**
 
@@ -37,6 +38,7 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>优化</Tag> FileLogger支持指定不同目录。
 - &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。同时e.Handled功能依然有效。
 - &nbsp;<Tag>调整</Tag> Log项。LogType调整为LogLevel，并且不需要位运算。直接按日志等级输出。
+- &nbsp;<Tag>调整</Tag> 修改IPluginsManager名称为IPluginsManager。
 - &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
 - &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
 - &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会影响内存池的效率。
@@ -71,6 +73,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - &nbsp;<Tag>移除</Tag> 整体功能迁移至TouchSokcet(Pro).Dmtp。
 - &nbsp;<Tag>调整</Tag> [RpcActionFilter](./rpcactionfilter.mdx#33-规则)执行策略和顺序 
+- &nbsp;<Tag>调整</Tag> 修改ConfigureRpcStore为AddRpcStore。 
 - &nbsp;<Tag>新增</Tag> [RealityProxy](./generateproxyfromrealityproxy.mdx)透明代理方式。 
 - &nbsp;<Tag>新增</Tag> [DispatchProxy](./generateproxyfromdispatchproxy.mdx)添加OnBefore和OnAfter的AOP调用。
 
@@ -100,6 +103,10 @@ import Highlight from '@site/src/components/Highlight.js';
 #### 【TouchSokcet.XmlRpc】
 
 - &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### 【TouchSokcet(Pro).Hosting
+
+- &nbsp;<Tag>新增</Tag> 新发布Hosting的包，用于构建更加强壮的运行程序。
 ---
 
 
