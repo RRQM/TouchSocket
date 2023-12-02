@@ -7,22 +7,19 @@ namespace SerialPortClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async void Main(string[] args)
         {
             var client = new SerialPortClient();
-            var tcpClient = new TcpClient();
-            tcpClient.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
-            tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
-            tcpClient.Disconnecting = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
-            tcpClient.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
-            tcpClient.Received = (client, e) =>
+            client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到端口
+            client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到端口
+            client.Disconnecting = (client, e) => { return EasyTask.CompletedTask; };//即将从端口断开连接。此处仅主动断开才有效。
+            client.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从端口断开连接，当连接不成功时不会触发。
+            client.Received = async (c, e) =>
             {
-                //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
-                tcpClient.Logger.Info($"客户端接收到信息：{mes}");
-                return EasyTask.CompletedTask;
+                await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(e.ByteBlock, 0, e.ByteBlock.Len));
             };
-            client.Setup(new TouchSocket.Core.TouchSocketConfig()
+
+            client.Setup(new TouchSocketConfig()
                 .SetSerialPortOption(new SerialPortOption()
                 {
                     BaudRate = 9600,//波特率
@@ -30,14 +27,30 @@ namespace SerialPortClientConsoleApp
                     Parity = System.IO.Ports.Parity.None,//校验位
                     PortName = "COM1",//COM
                     StopBits = System.IO.Ports.StopBits.One//停止位
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.Add<MyPlugin>();
                 }));
 
-            client.Received = async (c, e) =>
-            {
-                await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(e.ByteBlock,0,e.ByteBlock.Len));
-            };
-
             client.Connect();
+
+            //using (var receiver = client.CreateReceiver())
+            //{
+            //    while (true)
+            //    {
+            //        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+            //        {
+            //            if (receiverResult.IsClosed)
+            //            {
+            //                //断开
+            //            }
+            //            //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
+            //            await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(receiverResult.ByteBlock, 0, receiverResult.ByteBlock.Len));
+            //        }
+            //    }
+            //}
+
             Console.WriteLine("连接成功");
 
             while (true)
@@ -51,6 +64,21 @@ namespace SerialPortClientConsoleApp
     {
         public async Task OnSerialConnected(ISerialPortClient client, ConnectedEventArgs e)
         {
+            await e.InvokeNext();
+        }
+    }
+
+    public class MyPlugin : PluginBase, ISerialReceivedPlugin<ISerialPortClient>
+    {
+        public async Task OnSerialReceived(ISerialPortClient client, ReceivedDataEventArgs e)
+        {
+            //这里处理数据接收
+            //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
+            ByteBlock byteBlock = e.ByteBlock;
+            IRequestInfo requestInfo = e.RequestInfo;
+
+            //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
+
             await e.InvokeNext();
         }
     }
