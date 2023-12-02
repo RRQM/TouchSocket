@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -24,26 +24,20 @@ namespace TouchSocket.XmlRpc
     /// <summary>
     /// XmlRpc解析器
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = false)]
-    public class XmlRpcParserPlugin : PluginBase, IRpcParser, IHttpPlugin
+    [PluginOption(Singleton = true)]
+    public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     {
+        private readonly IRpcServerProvider m_rpcServerProvider;
         private string m_xmlRpcUrl = "/xmlrpc";
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRpcParserPlugin(IContainer container)
+        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider)
         {
-            if (container.IsRegistered(typeof(RpcStore)))
-            {
-                this.RpcStore = container.Resolve<RpcStore>();
-            }
-            else
-            {
-                this.RpcStore = new RpcStore(container);
-            }
             this.ActionMap = new ActionMap(true);
-            this.RpcStore.AddRpcParser(this);
+            this.RegisterServer(rpcServerProvider.GetMethods());
+            this.m_rpcServerProvider = rpcServerProvider;
         }
 
         /// <summary>
@@ -63,43 +57,6 @@ namespace TouchSocket.XmlRpc
         {
             get => this.m_xmlRpcUrl;
             set => this.m_xmlRpcUrl = string.IsNullOrEmpty(value) ? "/" : value;
-        }
-
-        #region Rpc解析器
-
-        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
-                {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
-                }
-            }
-        }
-
-        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
-                {
-                    this.ActionMap.Remove(attribute.GetInvokenKey(methodInstance));
-                }
-            }
-        }
-
-        #endregion Rpc解析器
-
-        /// <summary>
-        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
-        /// </summary>
-        /// <param name="xmlRpcUrl"></param>
-        /// <returns></returns>
-        public XmlRpcParserPlugin SetXmlRpcUrl(string xmlRpcUrl)
-        {
-            this.XmlRpcUrl = xmlRpcUrl;
-            return this;
         }
 
         /// <inheritdoc/>
@@ -178,12 +135,7 @@ namespace TouchSocket.XmlRpc
 
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        var rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
-                        if (rpcServer is ITransientRpcServer transientRpcServer)
-                        {
-                            transientRpcServer.CallContext = callContext;
-                        }
-                        invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
                     }
 
                     var httpResponse = e.Context.Response;
@@ -216,6 +168,28 @@ namespace TouchSocket.XmlRpc
             }
 
             await e.InvokeNext();
+        }
+
+        /// <summary>
+        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+        /// </summary>
+        /// <param name="xmlRpcUrl"></param>
+        /// <returns></returns>
+        public XmlRpcParserPlugin SetXmlRpcUrl(string xmlRpcUrl)
+        {
+            this.XmlRpcUrl = xmlRpcUrl;
+            return this;
+        }
+
+        private void RegisterServer(MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
+                {
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
         }
     }
 }

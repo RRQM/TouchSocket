@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,20 +21,20 @@ namespace TouchSocket.Core
     /// <summary>
     /// 表示插件管理器。
     /// </summary>
-    public class PluginsManager : DisposableObject, IPluginsManager
+    public class PluginManager : DisposableObject, IPluginManager
     {
-        private readonly IContainer m_container;
         private readonly object m_locker = new object();
         private readonly Dictionary<string, PluginModel> m_pluginMethods = new Dictionary<string, PluginModel>();
         private readonly List<IPlugin> m_plugins = new List<IPlugin>();
+        private readonly IResolver m_resolver;
 
         /// <summary>
         /// 表示插件管理器
         /// </summary>
-        /// <param name="container"></param>
-        public PluginsManager(IContainer container)
+        /// <param name="resolver"></param>
+        public PluginManager(IResolver resolver)
         {
-            this.m_container = container;
+            this.m_resolver = resolver;
         }
 
         /// <inheritdoc/>
@@ -43,7 +43,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public IEnumerable<IPlugin> Plugins => this.m_plugins;
 
-        void IPluginsManager.Add(IPlugin plugin)
+        void IPluginManager.Add(IPlugin plugin)
         {
             if (plugin is null)
             {
@@ -66,14 +66,6 @@ namespace TouchSocket.Core
                             }
                         }
                     }
-                    if (!optionAttribute.NotRegister)
-                    {
-                        this.m_container.RegisterSingleton(plugin);
-                    }
-                }
-                else
-                {
-                    this.m_container.RegisterSingleton(plugin);
                 }
 
                 var list = this.SearchPluginMethod(plugin);
@@ -95,12 +87,6 @@ namespace TouchSocket.Core
                             var pluginModel = this.GetPluginModel(name);
                             var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
                             pluginModel.Funcs.Add(pluginEntity.Run);
-
-                            //pluginModel.PluginEntities.Add(new PluginEntity(new Method(methodInfo), plugin));
-                            //pluginModel.PluginEntities.Sort(delegate (PluginEntity x, PluginEntity y)
-                            //{
-                            //    return x.Plugin.Order == y.Plugin.Order ? 0 : x.Plugin.Order < y.Plugin.Order ? 1 : -1;
-                            //});
                         }
                         pairs.Add(name);
                     }
@@ -110,37 +96,7 @@ namespace TouchSocket.Core
             }
         }
 
-        private List<string> SearchPluginMethod(IPlugin plugin)
-        {
-            var pluginMethodNames = new List<string>();
-            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
-            foreach (var type in pluginInterfacetypes)
-            {
-                var pairs = new List<string>();
-
-                var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-                foreach (var methodInfo in methodInfos)
-                {
-                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-                    {
-                        var name = methodInfo.GetName();
-                        if (pairs.Contains(name))
-                        {
-                            throw new Exception("插件的接口方法不允许重载");
-                        }
-                        if (!pluginMethodNames.Contains(name))
-                        {
-                            pluginMethodNames.Add(name);
-                        }
-
-                        pairs.Add(name);
-                    }
-                }
-            }
-            return pluginMethodNames;
-        }
-
-        object IPluginsManager.Add(Type pluginType)
+        object IPluginManager.Add(Type pluginType)
         {
             if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
             {
@@ -156,20 +112,20 @@ namespace TouchSocket.Core
                 }
             }
             IPlugin plugin;
-            if (this.m_container.IsRegistered(pluginType))
+            if (this.m_resolver.IsRegistered(pluginType))
             {
-                plugin = (IPlugin)this.m_container.Resolve(pluginType);
+                plugin = (IPlugin)this.m_resolver.Resolve(pluginType);
             }
             else
             {
-                plugin = (IPlugin)this.m_container.ResolveWithoutRoot(pluginType);
+                plugin = (IPlugin)this.m_resolver.ResolveWithoutRoot(pluginType);
             }
 
-            ((IPluginsManager)this).Add(plugin);
+            ((IPluginManager)this).Add(plugin);
             return plugin;
         }
 
-        void IPluginsManager.Add(string name, Func<object, PluginEventArgs, Task> func)
+        void IPluginManager.Add(string name, Func<object, PluginEventArgs, Task> func)
         {
             lock (this.m_locker)
             {
@@ -178,7 +134,17 @@ namespace TouchSocket.Core
             }
         }
 
-        bool IPluginsManager.Raise(string name, object sender, PluginEventArgs e)
+        /// <inheritdoc/>
+        public int GetPluginCount(string name)
+        {
+            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            {
+                return pluginModel.Funcs.Count;
+            }
+            return 0;
+        }
+
+        bool IPluginManager.Raise(string name, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
@@ -193,7 +159,7 @@ namespace TouchSocket.Core
             return false;
         }
 
-        async Task<bool> IPluginsManager.RaiseAsync(string name, object sender, PluginEventArgs e)
+        async Task<bool> IPluginManager.RaiseAsync(string name, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
@@ -232,14 +198,34 @@ namespace TouchSocket.Core
             return pluginModel;
         }
 
-        /// <inheritdoc/>
-        public int GetPluginCount(string name)
+        private List<string> SearchPluginMethod(IPlugin plugin)
         {
-            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            var pluginMethodNames = new List<string>();
+            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
+            foreach (var type in pluginInterfacetypes)
             {
-                return pluginModel.Funcs.Count;
+                var pairs = new List<string>();
+
+                var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+                foreach (var methodInfo in methodInfos)
+                {
+                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
+                    {
+                        var name = methodInfo.GetName();
+                        if (pairs.Contains(name))
+                        {
+                            throw new Exception("插件的接口方法不允许重载");
+                        }
+                        if (!pluginMethodNames.Contains(name))
+                        {
+                            pluginMethodNames.Add(name);
+                        }
+
+                        pairs.Add(name);
+                    }
+                }
             }
-            return 0;
+            return pluginMethodNames;
         }
     }
 }

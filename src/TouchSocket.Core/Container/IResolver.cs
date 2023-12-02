@@ -9,23 +9,29 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
+using System;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 注入项的生命周期。
+    /// IResolver
     /// </summary>
-    public enum Lifetime
+    public interface IResolver : IServiceProvider, IRegistered
     {
         /// <summary>
-        /// 单例对象
+        /// 创建目标类型的对应实例。
         /// </summary>
-        Singleton,
+        /// <param name="fromType"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        object Resolve(Type fromType, string key);
 
         /// <summary>
-        /// 瞬时对象
+        /// 创建目标类型的对应实例。
         /// </summary>
-        Transient
+        /// <param name="fromType"></param>
+        /// <returns></returns>
+        object Resolve(Type fromType);
     }
 }

@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -21,7 +21,7 @@ namespace TouchSocket.Http.WebSockets
     /// 基于Http的WebSocket的扩展。
     /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = false)]
+    [PluginOption(Singleton = true)]
     public sealed class WebSocketFeature : PluginBase, ITcpReceivedPlugin, IHttpPlugin, ITcpDisconnectedPlugin
     {
         /// <summary>
@@ -36,17 +36,15 @@ namespace TouchSocket.Http.WebSockets
         public static readonly DependencyProperty<string> WebSocketVersionProperty =
             DependencyProperty<string>.Register("WebSocketVersion", "13");
 
-        private readonly IPluginsManager m_pluginsManager;
+        private IPluginManager m_pluginManager;
 
         private string m_wSUrl = "/ws";
 
         /// <summary>
         /// WebSocketFeature
         /// </summary>
-        /// <param name="pluginsManager"></param>
-        public WebSocketFeature(IPluginsManager pluginsManager)
+        public WebSocketFeature()
         {
-            this.m_pluginsManager = pluginsManager ?? throw new ArgumentNullException(nameof(pluginsManager));
             this.VerifyConnection = this.ThisVerifyConnection;
         }
 
@@ -179,12 +177,19 @@ namespace TouchSocket.Http.WebSockets
             return this;
         }
 
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            base.Loaded(pluginManager);
+            this.m_pluginManager = pluginManager;
+        }
+
         private async Task OnHandleWSDataFrame(ITcpClientBase client, WSDataFrame dataFrame)
         {
             if (this.AutoClose && dataFrame.IsClose)
             {
                 var msg = dataFrame.PayloadData?.ToString();
-                await this.m_pluginsManager.RaiseAsync(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), client, new MsgPermitEventArgs() { Message = msg });
+                await this.m_pluginManager.RaiseAsync(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), client, new MsgPermitEventArgs() { Message = msg });
                 client.Close(msg);
                 return;
             }
@@ -200,7 +205,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.m_pluginsManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), client, new WSDataFrameEventArgs(dataFrame));
+            await this.m_pluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), client, new WSDataFrameEventArgs(dataFrame));
         }
 
         private async Task<bool> ThisVerifyConnection(IHttpSocketClient client, HttpContext context)

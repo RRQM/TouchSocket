@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,8 +61,8 @@ namespace TouchSocket.Sockets
 
         private DelaySender m_delaySender;
         private volatile bool m_online;
-        private readonly SemaphoreSlim m_semaphore = new SemaphoreSlim(1, 1);
-        private readonly InternalTcpCore m_tcpCore=new InternalTcpCore();
+        private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
+        private readonly InternalTcpCore m_tcpCore = new InternalTcpCore();
 
         #endregion 变量
 
@@ -101,7 +101,7 @@ namespace TouchSocket.Sockets
                         return;
                     }
                 }
-                await this.PluginsManager.RaiseAsync(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e);
+                await this.PluginManager.RaiseAsync(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e);
             }
             catch (Exception ex)
             {
@@ -135,7 +135,7 @@ namespace TouchSocket.Sockets
                         return;
                     }
                 }
-                await this.PluginsManager.RaiseAsync(nameof(ITcpConnectingPlugin.OnTcpConnecting), this, e);
+                await this.PluginManager.RaiseAsync(nameof(ITcpConnectingPlugin.OnTcpConnecting), this, e);
             }
             catch (Exception ex)
             {
@@ -166,7 +166,7 @@ namespace TouchSocket.Sockets
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -196,7 +196,7 @@ namespace TouchSocket.Sockets
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectingPlugin.OnTcpDisconnecting), this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ITcpDisconnectingPlugin.OnTcpDisconnecting), this, e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -303,8 +303,8 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                ThrowIfDisposed();
-                this.m_semaphore.Wait(token);
+                this.ThrowIfDisposed();
+                this.m_semaphoreForConnect.Wait(token);
                 if (this.m_online)
                 {
                     return;
@@ -336,7 +336,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                this.m_semaphore.Release();
+                this.m_semaphoreForConnect.Release();
             }
         }
 
@@ -368,8 +368,8 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                ThrowIfDisposed();
-                await this.m_semaphore.WaitAsync();
+                this.ThrowIfDisposed();
+                await this.m_semaphoreForConnect.WaitAsync();
                 if (this.m_online)
                 {
                     return;
@@ -408,7 +408,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                this.m_semaphore.Release();
+                this.m_semaphoreForConnect.Release();
             }
         }
 #else
@@ -423,7 +423,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await this.m_semaphore.WaitAsync();
+                await this.m_semaphoreForConnect.WaitAsync();
                 if (this.m_online)
                 {
                     return;
@@ -440,7 +440,7 @@ namespace TouchSocket.Sockets
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
                 await this.PrivateOnConnecting(new ConnectingEventArgs(socket));
-                var task= Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
+                var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
                 await task.WaitAsync(TimeSpan.FromMilliseconds(timeout));
                 this.m_online = true;
                 this.SetSocket(socket);
@@ -449,7 +449,7 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                this.m_semaphore.Release();
+                this.m_semaphoreForConnect.Release();
             }
         }
 
@@ -552,10 +552,9 @@ namespace TouchSocket.Sockets
         /// 当收到适配器处理的数据时。
         /// </summary>
         /// <param name="e"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task ReceivedData(ReceivedDataEventArgs e)
         {
-            return this.PluginsManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
+            return this.PluginManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
         }
 
         /// <summary>
@@ -579,10 +578,10 @@ namespace TouchSocket.Sockets
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
             {
                 var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureFalseAwait();
                 return args.IsPermitOperation;
             }
             return true;
@@ -592,7 +591,6 @@ namespace TouchSocket.Sockets
         protected override void LoadConfig(TouchSocketConfig config)
         {
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            this.Logger ??= this.Container.Resolve<ILog>();
         }
 
         /// <summary>
@@ -922,9 +920,9 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpReceivingPlugin.OnTcpReceiving)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(ITcpReceivingPlugin.OnTcpReceiving)) > 0)
             {
-                return this.PluginsManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
+                return this.PluginManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
             }
             return Task.FromResult(false);
         }

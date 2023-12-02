@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Linq;
 using System.Text;
@@ -196,7 +196,7 @@ namespace TouchSocket.Http
         {
             using (var byteBlock = new ByteBlock())
             {
-                this.Build(byteBlock,false);
+                this.Build(byteBlock, false);
                 return byteBlock.ToString();
             }
         }

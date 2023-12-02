@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Security.Principal;
@@ -99,7 +111,7 @@ namespace TouchSocket.NamedPipe
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(INamedPipeConnectedPlugin.OnNamedPipeConnected), this, e);
+                await this.PluginManager.RaiseAsync(nameof(INamedPipeConnectedPlugin.OnNamedPipeConnected), this, e);
             }
             catch (Exception ex)
             {
@@ -136,7 +148,7 @@ namespace TouchSocket.NamedPipe
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(INamedPipeConnectingPlugin.OnNamedPipeConnecting), this, e);
+                await this.PluginManager.RaiseAsync(nameof(INamedPipeConnectingPlugin.OnNamedPipeConnecting), this, e);
             }
             catch (Exception ex)
             {
@@ -167,7 +179,7 @@ namespace TouchSocket.NamedPipe
                     }
                 }
 
-                await this.PluginsManager.RaiseAsync(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this, e);
+                await this.PluginManager.RaiseAsync(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this, e);
             }
             catch (Exception ex)
             {
@@ -182,7 +194,7 @@ namespace TouchSocket.NamedPipe
             {
                 return;
             }
-            this.PluginsManager.Raise(nameof(INamedPipeDisconnectingPlugin.OnNamedPipeDisconnecting), this, e);
+            this.PluginManager.Raise(nameof(INamedPipeDisconnectingPlugin.OnNamedPipeDisconnecting), this, e);
         }
 
         /// <summary>
@@ -466,7 +478,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task ReceivedData(ReceivedDataEventArgs e)
         {
-            return this.PluginsManager.RaiseAsync(nameof(INamedPipeReceivedPlugin.OnNamedPipeReceived), this, e);
+            return this.PluginManager.RaiseAsync(nameof(INamedPipeReceivedPlugin.OnNamedPipeReceived), this, e);
         }
 
         /// <summary>
@@ -478,10 +490,10 @@ namespace TouchSocket.NamedPipe
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
         {
-            if (this.PluginsManager.Enable)
+            if (this.PluginManager.Enable)
             {
                 var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(INamedPipeSendingPlugin.OnNamedPipeSending), this, args)
+                await this.PluginManager.RaiseAsync(nameof(INamedPipeSendingPlugin.OnNamedPipeSending), this, args)
                      .ConfigureAwait(false);
                 return args.IsPermitOperation;
             }
@@ -565,9 +577,9 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving)) > 0)
             {
-                return this.PluginsManager.RaiseAsync(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving), this, new ByteBlockEventArgs(byteBlock));
+                return this.PluginManager.RaiseAsync(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving), this, new ByteBlockEventArgs(byteBlock));
             }
             return Task.FromResult(false);
         }

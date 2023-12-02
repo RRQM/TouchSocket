@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -50,9 +50,10 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP基类服务器。
     /// </summary>
-    public class UdpSessionBase : SetupConfigObject, IUdpSession, IPluginObject
+    public class UdpSessionBase : ServiceBase, IUdpSession, IPluginObject
     {
         private readonly ConcurrentList<SocketAsyncEventArgs> m_socketAsyncs;
+        private ServerState m_serverState;
 
         /// <summary>
         /// 构造函数
@@ -68,7 +69,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool CanSend => this.ServerState == ServerState.Running;
+        public bool CanSend => this.m_serverState == ServerState.Running;
 
         /// <summary>
         /// <inheritdoc/>
@@ -108,12 +109,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 服务器名称
         /// </summary>
-        public string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
+        public override string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
         /// <summary>
         /// 获取服务器状态
         /// </summary>
-        public ServerState ServerState { get; private set; }
+        public override ServerState ServerState => this.m_serverState;
 
         /// <summary>
         /// 退出组播
@@ -185,19 +186,17 @@ namespace TouchSocket.Sockets
             this.SetAdapter(adapter);
         }
 
-        /// <summary>
-        /// 启动服务
-        /// </summary>
-        public IService Start()
+        /// <inheritdoc/>
+        public override void Start()
         {
             try
             {
-                if (this.ServerState == ServerState.Disposed)
+                if (this.m_serverState == ServerState.Disposed)
                 {
                     throw new Exception("无法重新利用已释放对象");
                 }
 
-                switch (this.ServerState)
+                switch (this.m_serverState)
                 {
                     case ServerState.None:
                         {
@@ -209,7 +208,7 @@ namespace TouchSocket.Sockets
                             break;
                         }
                     case ServerState.Running:
-                        return this;
+                        return;
 
                     case ServerState.Stopped:
                         {
@@ -225,35 +224,98 @@ namespace TouchSocket.Sockets
                         }
                 }
 
-                this.ServerState = ServerState.Running;
+                this.m_serverState = ServerState.Running;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.ServerState, default));
-                return this;
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                return;
             }
             catch (Exception ex)
             {
-                this.ServerState = ServerState.Exception;
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.ServerState, ex) { Message = ex.Message });
+                this.m_serverState = ServerState.Exception;
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
                 throw;
             }
         }
 
-        /// <summary>
-        /// 停止服务器
-        /// </summary>
-        public IService Stop()
+        /// <inheritdoc/>
+        public override async Task StartAsync()
+        {
+            try
+            {
+                if (this.m_serverState == ServerState.Disposed)
+                {
+                    throw new Exception("无法重新利用已释放对象");
+                }
+
+                switch (this.m_serverState)
+                {
+                    case ServerState.None:
+                        {
+                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
+                            {
+                                this.BeginReceive(iPHost);
+                            }
+
+                            break;
+                        }
+                    case ServerState.Running:
+                        return;
+
+                    case ServerState.Stopped:
+                        {
+                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
+                            {
+                                this.BeginReceive(iPHost);
+                            }
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new Exception("无法再次利用已释放对象");
+                        }
+                }
+
+                this.m_serverState = ServerState.Running;
+
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                return;
+            }
+            catch (Exception ex)
+            {
+                this.m_serverState = ServerState.Exception;
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureFalseAwait();
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Stop()
         {
             this.Monitor?.Socket.Dispose();
             this.Monitor = null;
-            this.ServerState = ServerState.Stopped;
+            this.m_serverState = ServerState.Stopped;
             foreach (var item in this.m_socketAsyncs)
             {
                 item.SafeDispose();
             }
             this.m_socketAsyncs.Clear();
 
-            this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.ServerState, default));
-            return this;
+            this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopAsync()
+        {
+            this.Monitor?.Socket.Dispose();
+            this.Monitor = null;
+            this.m_serverState = ServerState.Stopped;
+            foreach (var item in this.m_socketAsyncs)
+            {
+                item.SafeDispose();
+            }
+            this.m_socketAsyncs.Clear();
+
+            await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -268,14 +330,14 @@ namespace TouchSocket.Sockets
                 {
                     this.Monitor?.Socket.Dispose();
                     this.Monitor = null;
-                    this.ServerState = ServerState.Disposed;
+                    this.m_serverState = ServerState.Disposed;
                     foreach (var item in this.m_socketAsyncs)
                     {
                         item.SafeDispose();
                     }
                     this.m_socketAsyncs.Clear();
 
-                    this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.ServerState, default));
+                    this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
                 }
             }
             base.Dispose(disposing);
@@ -286,7 +348,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected virtual Task ReceivedData(UdpReceivedDataEventArgs e)
         {
-            return this.PluginsManager.RaiseAsync(nameof(IUdpReceivedPlugin.OnUdpReceived), this, e);
+            return this.PluginManager.RaiseAsync(nameof(IUdpReceivedPlugin.OnUdpReceived), this, e);
         }
 
         /// <summary>
@@ -305,7 +367,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
-            this.Logger = this.Container.Resolve<ILog>();
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
             if (this.CanSetDataHandlingAdapter)
             {
@@ -392,7 +453,7 @@ namespace TouchSocket.Sockets
                 var eventArg = new SocketAsyncEventArgs();
                 this.m_socketAsyncs.Add(eventArg);
                 eventArg.Completed += this.IO_Completed;
-                var byteBlock = new ByteBlock(1024*64);
+                var byteBlock = new ByteBlock(1024 * 64);
                 eventArg.UserToken = byteBlock;
                 eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
                 eventArg.RemoteEndPoint = iPHost.EndPoint;
@@ -612,7 +673,7 @@ namespace TouchSocket.Sockets
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
         {
-            if (this.ServerState != ServerState.Running)
+            if (this.m_serverState != ServerState.Running)
             {
                 e.SafeDispose();
                 return;

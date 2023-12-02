@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,7 +19,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http静态内容插件
     /// </summary>
-    [PluginOption(Singleton = false, NotRegister = true)]
+    [PluginOption(Singleton = false)]
     public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     {
         /// <summary>

@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -352,13 +352,8 @@ namespace TouchSocket.Sockets
             return this.SocketClients.SocketClientExist(id);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="System.Exception"></exception>
-        public override IService Start()
+        public override void Start()
         {
             if (this.Config is null)
             {
@@ -392,10 +387,6 @@ namespace TouchSocket.Sockets
                     }
                 }
 
-                if (optionList.Count == 0)
-                {
-                    return this;
-                }
                 switch (this.m_serverState)
                 {
                     case ServerState.None:
@@ -405,7 +396,7 @@ namespace TouchSocket.Sockets
                         }
                     case ServerState.Running:
                         {
-                            return this;
+                            return;
                         }
                     case ServerState.Stopped:
                         {
@@ -419,22 +410,90 @@ namespace TouchSocket.Sockets
                 }
                 this.m_serverState = ServerState.Running;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
-                return this;
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                return;
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
                 throw;
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public override IService Stop()
+        public override async Task StartAsync()
+        {
+            if (this.Config is null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "Config为null，请先执行Setup");
+            }
+            try
+            {
+                var optionList = new List<TcpListenOption>();
+                if (this.Config.GetValue(TouchSocketConfigExtension.ListenOptionsProperty) is Action<List<TcpListenOption>> action)
+                {
+                    action.Invoke(optionList);
+                }
+
+                var iPHosts = this.Config.GetValue(TouchSocketConfigExtension.ListenIPHostsProperty);
+                if (iPHosts != null)
+                {
+                    foreach (var item in iPHosts)
+                    {
+                        var option = new TcpListenOption
+                        {
+                            IpHost = item,
+                            ServiceSslOption = this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) as ServiceSslOption,
+                            ReuseAddress = this.Config.GetValue(TouchSocketConfigExtension.ReuseAddressProperty),
+                            NoDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty),
+                            Adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty),
+                        };
+                        option.Backlog = this.Config.GetValue(TouchSocketConfigExtension.BacklogProperty) ?? option.Backlog;
+                        option.SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty);
+
+                        optionList.Add(option);
+                    }
+                }
+
+                switch (this.m_serverState)
+                {
+                    case ServerState.None:
+                        {
+                            this.BeginListen(optionList);
+                            break;
+                        }
+                    case ServerState.Running:
+                        {
+                            return;
+                        }
+                    case ServerState.Stopped:
+                        {
+                            this.BeginListen(optionList);
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new ObjectDisposedException(this.GetType().Name);
+                        }
+                }
+                this.m_serverState = ServerState.Running;
+
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                return;
+            }
+            catch (Exception ex)
+            {
+                this.m_serverState = ServerState.Exception;
+
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureFalseAwait();
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Stop()
         {
             foreach (var item in this.m_monitors)
             {
@@ -447,8 +506,25 @@ namespace TouchSocket.Sockets
             this.Clear();
 
             this.m_serverState = ServerState.Stopped;
-            this.PluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
-            return this;
+            this.PluginManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+            return;
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopAsync()
+        {
+            foreach (var item in this.m_monitors)
+            {
+                item.Socket.SafeDispose();
+                item.SocketAsyncEvent.SafeDispose();
+            }
+
+            this.m_monitors.Clear();
+
+            this.Clear();
+
+            this.m_serverState = ServerState.Stopped;
+            await this.PluginManager.RaiseAsync(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
         }
 
         /// <summary>
@@ -486,8 +562,8 @@ namespace TouchSocket.Sockets
                 this.Clear();
 
                 this.m_serverState = ServerState.Disposed;
-                this.PluginsManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
-                this.PluginsManager.SafeDispose();
+                this.PluginManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+                this.PluginManager.SafeDispose();
             }
             base.Dispose(disposing);
         }
@@ -605,10 +681,10 @@ namespace TouchSocket.Sockets
 
                 var client = this.GetClientInstence(socket, monitor);
                 client.InternalSetService(this);
-                client.InternalSetContainer(this.Container);
+                client.InternalSetContainer(this.Resolver);
                 client.InternalSetListenOption(monitor.Option);
                 client.InternalSetSocket(socket);
-                client.InternalSetPluginsManager(this.PluginsManager);
+                client.InternalSetPluginManager(this.PluginManager);
 
                 if (client.CanSetDataHandlingAdapter)
                 {

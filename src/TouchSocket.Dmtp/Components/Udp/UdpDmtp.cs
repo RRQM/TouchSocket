@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Concurrent;
 using System.Net;
@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// UdpDmtpService
@@ -79,9 +79,9 @@ namespace TouchSocket.Dmtp.Rpc
             var message = DmtpMessage.CreateFrom(e.ByteBlock);
             if (!await client.InputReceivedData(message))
             {
-                if (this.PluginsManager.Enable)
+                if (this.PluginManager.Enable)
                 {
-                    await this.PluginsManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), client, new DmtpMessageEventArgs(message));
+                    await this.PluginManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), client, new DmtpMessageEventArgs(message));
                 }
             }
         }
@@ -96,11 +96,11 @@ namespace TouchSocket.Dmtp.Rpc
         {
             if (!this.m_udpDmtpClients.TryGetValue(endPoint, out var udpRpcActor))
             {
-                udpRpcActor = new UdpDmtpClient(this, endPoint, this.Container.Resolve<ILog>())
+                udpRpcActor = new UdpDmtpClient(this, endPoint, this.Resolver.Resolve<ILog>())
                 {
                     Client = this,
                 };
-                if (udpRpcActor.Created(this.PluginsManager))
+                if (udpRpcActor.Created(this.PluginManager))
                 {
                     this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
                 }

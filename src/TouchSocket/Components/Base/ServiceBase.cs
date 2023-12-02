@@ -9,32 +9,33 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
-using System;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
-namespace TouchSocket.Rpc
+namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// Rpc解析器
+    /// 服务器基类
     /// </summary>
-    public interface IRpcParser : IDisposable
+    public abstract class ServiceBase : SetupConfigObject, IService
     {
-        /// <summary>
-        /// Rpc仓库。
-        /// </summary>
-        public RpcStore RpcStore { get; }
+        /// <inheritdoc/>
+        public abstract string ServerName { get; }
 
-        /// <summary>
-        /// 注册服务
-        /// </summary>
-        /// <param name="methodInstances"></param>
-        void OnRegisterServer(MethodInstance[] methodInstances);
+        /// <inheritdoc/>
+        public abstract ServerState ServerState { get; }
 
-        /// <summary>
-        /// 取消注册服务
-        /// </summary>
-        /// <param name="methodInstances"></param>
-        void OnUnregisterServer(MethodInstance[] methodInstances);
+        /// <inheritdoc/>
+        public abstract void Start();
+
+        /// <inheritdoc/>
+        public abstract Task StartAsync();
+
+        /// <inheritdoc/>
+        public abstract void Stop();
+
+        /// <inheritdoc/>
+        public abstract Task StopAsync();
     }
 }

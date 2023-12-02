@@ -1,4 +1,16 @@
-﻿using Microsoft.CodeAnalysis;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +26,7 @@ namespace TouchSocket
 
         private const string PluginEventArgsString = "TouchSocket.Core.PluginEventArgs";
         private const string PluginBaseString = "TouchSocket.Core.PluginBase";
-        private const string IPluginsManagerString = "TouchSocket.Core.IPluginsManager";
+        private const string IPluginManagerString = "TouchSocket.Core.IPluginManager";
 
         public PluginCodeBuilder(INamedTypeSymbol pluginClass)
         {
@@ -76,7 +88,7 @@ namespace TouchSocket
             codeString.AppendLine($"[global::System.CodeDom.Compiler.GeneratedCode(\"TouchSocket.SourceGenerator\",\"{Assembly.GetExecutingAssembly().GetName().Version.ToString()}\")]");
             codeString.AppendLine($"partial class {this.m_pluginClass.Name}");
             codeString.AppendLine("{");
-            codeString.AppendLine("private int RegisterPlugins(IPluginsManager pluginsManager)");
+            codeString.AppendLine("private int RegisterPlugins(IPluginManager pluginManager)");
             codeString.AppendLine("{");
             foreach (var item in methods)
             {
@@ -104,10 +116,10 @@ namespace TouchSocket
                 return;
             }
 
-            stringBuilder.AppendLine("protected override void Loaded(IPluginsManager pluginsManager)");
+            stringBuilder.AppendLine("protected override void Loaded(IPluginManager pluginManager)");
             stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine("base.Loaded(pluginsManager);");
-            stringBuilder.AppendLine("this.RegisterPlugins(pluginsManager);");
+            stringBuilder.AppendLine("base.Loaded(pluginManager);");
+            stringBuilder.AppendLine("this.RegisterPlugins(pluginManager);");
             stringBuilder.AppendLine("}");
         }
 
@@ -116,7 +128,7 @@ namespace TouchSocket
             // Debugger.Launch();
             var attributeData = methodSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass.ToDisplayString() == PluginSyntaxReceiver.GeneratorPluginAttributeTypeName);
             stringBuilder.AppendLine();
-            stringBuilder.Append("pluginsManager.Add<");
+            stringBuilder.Append("pluginManager.Add<");
             stringBuilder.Append($"{methodSymbol.Parameters[0].Type.ToDisplayString()},");
             stringBuilder.Append($"{methodSymbol.Parameters[1].Type.ToDisplayString()}>(");
             stringBuilder.Append($"\"{attributeData.ConstructorArguments[0].Value}\",this.");
@@ -131,7 +143,7 @@ namespace TouchSocket
                 .OfType<IMethodSymbol>()
                 .Any(m =>
                 {
-                    if (m.Name == "Loaded" && m.IsOverride && m.Parameters.Length == 1 && m.Parameters[0].Type.ToDisplayString() == IPluginsManagerString)
+                    if (m.Name == "Loaded" && m.IsOverride && m.Parameters.Length == 1 && m.Parameters[0].Type.ToDisplayString() == IPluginManagerString)
                     {
                         return true;
                     }

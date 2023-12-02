@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,7 +33,7 @@ namespace TouchSocket.Rpc
         /// <param name="methodInfo"></param>
         public MethodInstance(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType, methodInfo.DeclaringType)
         {
-            
+
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 筛选器
         /// </summary>
-        public IRpcActionFilter[] Filters { get;}
+        public IRpcActionFilter[] Filters { get; }
 
         /// <summary>
         /// 是否包含调用上下文
@@ -145,11 +145,6 @@ namespace TouchSocket.Rpc
                 return this.m_rpcAttributes;
             }
         }
-
-        /// <summary>
-        /// 服务实例工厂
-        /// </summary>
-        public IRpcServerFactory ServerFactory { get; internal set; }
 
         /// <summary>
         /// 注册类型

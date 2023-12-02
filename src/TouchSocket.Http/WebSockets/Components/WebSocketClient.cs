@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,7 +82,7 @@ namespace TouchSocket.Http.WebSockets
                 this.SetAdapter(new WebSocketDataHandlingAdapter());
                 this.SetValue(WebSocketFeature.HandshakedProperty, true);
                 response.Flag = true;
-                Task.Factory.StartNew(PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
+                Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
             }
             finally
             {
@@ -122,7 +122,7 @@ namespace TouchSocket.Http.WebSockets
                 this.SetAdapter(new WebSocketDataHandlingAdapter());
                 this.SetValue(WebSocketFeature.HandshakedProperty, true);
                 response.Flag = true;
-                _ = Task.Factory.StartNew(PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
+                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
             }
             finally
             {
@@ -172,7 +172,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), this, e).ConfigureFalseAwait();
         }
 
         #endregion 事件
@@ -251,7 +251,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         protected virtual async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
         {
-            await this.PluginsManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, e).ConfigureFalseAwait();
         }
     }
 }

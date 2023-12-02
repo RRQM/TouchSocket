@@ -9,14 +9,14 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Net;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Dmtp.Rpc
+namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// UdpDmtp终端客户端
@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.Rpc
     {
         private readonly EndPoint m_endPoint;
         private readonly UdpSessionBase m_udpSession;
-        private IPluginsManager pluginsManager;
+        private IPluginManager pluginManager;
 
         /// <summary>
         /// UdpDmtp终端客户端
@@ -47,18 +47,18 @@ namespace TouchSocket.Dmtp.Rpc
 
         private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            return this.pluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            return this.pluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
-        public bool Created(IPluginsManager pluginsManager)
+        public bool Created(IPluginManager pluginManager)
         {
-            this.pluginsManager = pluginsManager;
+            this.pluginManager = pluginManager;
             var args = new DmtpVerifyEventArgs()
             {
                 Id = this.Id,
                 IsPermitOperation = true
             };
-            pluginsManager.Raise(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, args);
+            pluginManager.Raise(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, args);
 
             if (args.IsPermitOperation == false)
             {
@@ -71,7 +71,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 Id = this.Id
             };
-            pluginsManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, args);
+            pluginManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, args);
 
             return true;
         }

@@ -9,44 +9,44 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.JsonRpc;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// JsonRpcPluginsManagerExtension
+    /// JsonRpcPluginManagerExtension
     /// </summary>
-    public static class JsonRpcPluginsManagerExtension
+    public static class JsonRpcPluginManagerExtension
     {
         /// <summary>
         /// 使用基于Tcp协议的JsonRpc的插件。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static TcpJsonRpcParserPlugin UseTcpJsonRpc(this IPluginsManager pluginsManager)
+        public static TcpJsonRpcParserPlugin UseTcpJsonRpc(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<TcpJsonRpcParserPlugin>();
+            return pluginManager.Add<TcpJsonRpcParserPlugin>();
         }
 
         /// <summary>
         /// 使用基于Http协议的JsonRpc的插件。仅服务器有用。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static HttpJsonRpcParserPlugin UseHttpJsonRpc(this IPluginsManager pluginsManager)
+        public static HttpJsonRpcParserPlugin UseHttpJsonRpc(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<HttpJsonRpcParserPlugin>();
+            return pluginManager.Add<HttpJsonRpcParserPlugin>();
         }
 
         /// <summary>
         /// 使用基于WebSocket协议的JsonRpc的插件。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static WebSocketJsonRpcParserPlugin UseWebSocketJsonRpc(this IPluginsManager pluginsManager)
+        public static WebSocketJsonRpcParserPlugin UseWebSocketJsonRpc(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<WebSocketJsonRpcParserPlugin>();
+            return pluginManager.Add<WebSocketJsonRpcParserPlugin>();
         }
     }
 }

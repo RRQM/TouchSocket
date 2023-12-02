@@ -9,25 +9,23 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace TouchSocket.Core.AspNetCore
 {
     /// <summary>
     /// AspNetCoreContainer
     /// </summary>
-    public class AspNetCoreContainer : IContainer
+    public class AspNetCoreContainer : IRegistrator, IResolver
     {
         private readonly IServiceCollection m_services;
-        private readonly Timer m_timer;
-        private int m_count;
         private IServiceProvider m_serviceProvider;
+
+        //private AspNetCoreResolver m_resolver;
 
         /// <summary>
         /// 初始化一个IServiceCollection的容器。
@@ -35,62 +33,60 @@ namespace TouchSocket.Core.AspNetCore
         /// <param name="services"></param>
         public AspNetCoreContainer(IServiceCollection services)
         {
-            services.AddSingleton<IContainer>(this);
-            this.m_services = services;
-            this.m_serviceProvider = this.m_services.BuildServiceProvider();
-            this.m_timer = new Timer(state =>
-            {
-                if (this.m_services.Count != this.m_count)
-                {
-                    this.m_serviceProvider = this.m_services.BuildServiceProvider();
-                    this.m_count = this.m_services.Count;
-                }
-            }, null, 1000, 1000);
+            this.m_services = services ?? throw new ArgumentNullException(nameof(services));
+            services.AddSingleton<IResolver>(this);
         }
 
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~AspNetCoreContainer()
+        /// <inheritdoc/>
+        public IResolver BuildResolver()
         {
-            this.m_timer.Dispose();
+            this.m_serviceProvider = this.m_services.BuildServiceProvider();
+            return this;
         }
 
         /// <summary>
-        /// 返回迭代器
+        /// 以传入的<see cref="IServiceProvider"/>作为服务提供
         /// </summary>
+        /// <param name="provider"></param>
         /// <returns></returns>
-        public IEnumerator<DependencyDescriptor> GetEnumerator()
+        public IResolver BuildResolver(IServiceProvider provider)
+        {
+            this.m_serviceProvider = provider;
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<DependencyDescriptor> GetDescriptors()
         {
             return this.m_services.Select(s =>
-              {
-                  var descriptor = new DependencyDescriptor(s.ServiceType, s.ImplementationType, (Lifetime)((int)s.Lifetime))
-                  {
-                      ToInstance = s.ImplementationInstance
-                  };
-                  return descriptor;
-              }).GetEnumerator();
+            {
+                var descriptor = new DependencyDescriptor(s.ServiceType, s.ImplementationType, (Lifetime)((int)s.Lifetime))
+                {
+                    ToInstance = s.ImplementationInstance
+                };
+                return descriptor;
+            });
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
-
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool IsRegistered(Type fromType, string key = "")
+        public bool IsRegistered(Type fromType, string key)
         {
+            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+        }
+
+        /// <inheritdoc/>
+        public bool IsRegistered(Type fromType)
+        {
+            if (typeof(IResolver) == fromType)
+            {
+                return true;
+            }
             if (fromType.IsGenericType)
             {
                 fromType = fromType.GetGenericTypeDefinition();
             }
-            var array = this.m_services.ToArray();
-            foreach (var item in array)
+
+            foreach (var item in this.m_services)
             {
                 if (item.ServiceType == fromType)
                 {
@@ -100,17 +96,15 @@ namespace TouchSocket.Core.AspNetCore
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <param name="key"></param>
-        public void Register(DependencyDescriptor descriptor, string key = "")
+        public void Register(DependencyDescriptor descriptor, string key)
         {
-            if (!key.IsNullOrEmpty())
-            {
-                throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的多实现注入");
-            }
+            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+        }
+
+        /// <inheritdoc/>
+        public void Register(DependencyDescriptor descriptor)
+        {
             switch (descriptor.Lifetime)
             {
                 case Lifetime.Singleton:
@@ -129,26 +123,16 @@ namespace TouchSocket.Core.AspNetCore
                     this.m_services.AddTransient(descriptor.FromType, descriptor.ToType);
                     break;
             }
-            this.m_serviceProvider = this.m_services.BuildServiceProvider();
-            this.m_count = this.m_services.Count;
         }
 
         /// <inheritdoc/>
-        public object Resolve(Type fromType, string key = "")
+        public void Unregister(DependencyDescriptor descriptor, string key)
         {
-            if (key.HasValue())
-            {
-                throw new InvalidOperationException("当前容器不支持Key构建");
-            }
-            return this.m_serviceProvider.GetService(fromType);
+            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="descriptor"></param>
-        /// <param name="key"></param>
-        public void Unregister(DependencyDescriptor descriptor, string key = "")
+        public void Unregister(DependencyDescriptor descriptor)
         {
             var array = this.m_services.ToArray();
             foreach (var item in array)
@@ -160,5 +144,27 @@ namespace TouchSocket.Core.AspNetCore
                 }
             }
         }
+
+        #region Resolve
+
+        /// <inheritdoc/>
+        public object GetService(Type serviceType)
+        {
+            return this.m_serviceProvider.GetService(serviceType);
+        }
+
+        /// <inheritdoc/>
+        public object Resolve(Type fromType, string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public object Resolve(Type fromType)
+        {
+            return this.m_serviceProvider.GetService(fromType);
+        }
+
+        #endregion Resolve
     }
 }

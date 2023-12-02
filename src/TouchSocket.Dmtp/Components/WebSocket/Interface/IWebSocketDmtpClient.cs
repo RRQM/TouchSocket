@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase,ISetupConfigObject
+    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject
     {
         /// <summary>
         /// 异步连接

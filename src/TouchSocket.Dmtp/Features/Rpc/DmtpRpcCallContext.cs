@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -37,13 +37,13 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public Metadata Metadata =>this.DmtpRpcPackage.Metadata;
+        public Metadata Metadata => this.DmtpRpcPackage.Metadata;
 
         /// <inheritdoc/>
         public object Caller { get; }
 
         /// <inheritdoc/>
-        public MethodInstance MethodInstance { get;}
+        public MethodInstance MethodInstance { get; }
 
         /// <inheritdoc/>
         public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;

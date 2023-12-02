@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// 初始化一个适用于WebSocket的心跳插件
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = true)]
+    [PluginOption(Singleton = true)]
     public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
     {
         /// <inheritdoc/>

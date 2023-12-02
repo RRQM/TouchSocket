@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using System;
 using System.IO;
@@ -25,18 +24,8 @@ namespace TouchSocket.Sockets
     /// 注意：该接口并不仅表示客户端。<see cref="SocketClient"/>也实现了该接口。
     /// </para>
     /// </summary>
-    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender,IConfigObject, IOnlineClient
+    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, IConfigObject, IOnlineClient, IAdapterObject, ICloseObject
     {
-        /// <summary>
-        /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。
-        /// </summary>
-        bool CanSetDataHandlingAdapter { get; }
-
-        /// <summary>
-        /// 数据处理适配器
-        /// </summary>
-        SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
-
         /// <summary>
         /// 断开连接
         /// </summary>
@@ -81,23 +70,10 @@ namespace TouchSocket.Sockets
         bool UseSsl { get; }
 
         /// <summary>
-        /// 关闭客户端。
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <exception cref="Exception"></exception>
-        void Close(string msg = TouchSocketCoreUtility.Empty);
-
-        /// <summary>
         /// 获取流，在正常模式下为<see cref="NetworkStream"/>，在Ssl模式下为<see cref="SslStream"/>。
         /// </summary>
         /// <returns></returns>
         [Obsolete("该方法已被弃用，正式版发布时会直接删除", true)]
         Stream GetStream();
-
-        /// <summary>
-        /// 设置数据处理适配器
-        /// </summary>
-        /// <param name="adapter"></param>
-        void SetDataHandlingAdapter(SingleStreamDataHandlingAdapter adapter);
     }
 }

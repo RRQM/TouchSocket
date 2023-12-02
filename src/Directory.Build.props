@@ -2,8 +2,8 @@
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>Sign.snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.228</Version>
+		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
+		<Version>2.0.0-beta.230</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Company>若汝棋茗</Company>

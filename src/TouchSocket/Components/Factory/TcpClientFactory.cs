@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -99,7 +99,7 @@ namespace TouchSocket.Sockets
                             this.m_first = false;
                         }
                         this.MainClient.Close();
-                        this.MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds,CancellationToken.None);
+                        this.MainClient.Connect((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None);
                     }
                     return Result.Success;
                 }

@@ -1,10 +1,19 @@
-﻿using System;
-using System.Collections;
-using System.Linq.Expressions;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 
 namespace TouchSocket.Core
 {
-#if NET6_0_OR_GREATER
     /// <summary>
     /// 实例生成
     /// </summary>
@@ -14,42 +23,11 @@ namespace TouchSocket.Core
         /// 根据对象类型创建对象实例
         /// </summary>
         /// <param name="key">对象类型</param>
+        /// <param name="args"></param>
         /// <returns></returns>
-        public static object Create(Type key)
+        public static object Create(Type key, object[] args)
         {
-            return Activator.CreateInstance(key);
+            return Activator.CreateInstance(key, args);
         }
     }
-#else
-
-    /// <summary>
-    /// 实例生成
-    /// </summary>
-    public static class InstanceCreater
-    {
-        private static readonly Hashtable m_paramCache = Hashtable.Synchronized(new Hashtable());//缓存
-
-        /// <summary>
-        /// 根据对象类型创建对象实例
-        /// </summary>
-        /// <param name="key">对象类型</param>
-        /// <returns></returns>
-        public static object Create(Type key)
-        {
-            var value = (Func<object>)m_paramCache[key];
-            if (value == null)
-            {
-                value = CreateInstanceByType(key);
-                m_paramCache[key] = value;
-            }
-            return value();
-        }
-
-        private static Func<object> CreateInstanceByType(Type type)
-        {
-            return Expression.Lambda<Func<object>>(Expression.New(type), null).Compile();
-        }
-    }
-
-#endif
 }

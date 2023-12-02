@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -104,7 +104,7 @@ namespace TouchSocket.Sockets
         private async Task TcpClient_Disconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             await EasyTask.CompletedTask;
-            foreach (var item in client.PluginsManager.Plugins)
+            foreach (var item in client.PluginManager.Plugins)
             {
                 if (typeof(ReconnectionPlugin<>) == item.GetType().GetGenericTypeDefinition())
                 {

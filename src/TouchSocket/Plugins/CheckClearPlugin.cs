@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 检查清理连接插件。服务器与客户端均适用。
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = true)]
+    [PluginOption(Singleton = true)]
     public sealed class CheckClearPlugin<TClient> : PluginBase, ITcpConnectedPlugin<TClient> where TClient : ITcpClientBase
     {
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public async Task OnTcpConnected(TClient client, ConnectedEventArgs e)
         {
-            _=Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 var first = true;
                 while (true)
@@ -77,7 +77,7 @@ namespace TouchSocket.Sockets
                     {
                         await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
                     }
-                    
+
                     if (!client.Online)
                     {
                         return;

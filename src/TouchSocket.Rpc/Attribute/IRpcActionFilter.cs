@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 
@@ -26,7 +26,7 @@ namespace TouchSocket.Rpc
         /// 当互斥访问类型或其派生类和本类型同时添加特性时，只有优先级更高的会生效。
         /// </para>
         /// </summary>
-        Type[] MutexAccessTypes { get;}
+        Type[] MutexAccessTypes { get; }
 
         /// <summary>
         /// 成功执行Rpc后。

@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using TouchSocket.Core;
 
@@ -18,7 +17,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP会话
     /// </summary>
-    public interface IUdpSession : IService, IClient, IClientSender, IUdpClientSender, IDefaultSender, IUdpDefaultSender,ISetupConfigObject
+    public interface IUdpSession : IService, IClient, IClientSender, IUdpClientSender, IDefaultSender, IUdpDefaultSender, ISetupConfigObject
     {
         /// <summary>
         /// 是否允许自由调用<see cref="SetDataHandlingAdapter"/>进行赋值。

@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using TouchSocket.Core;
 using TouchSocket.Dmtp.AspNetCore;
@@ -24,12 +24,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// 添加<see cref="WebSocketDmtpService"/>服务。
         /// </summary>
-        /// <param name="service"></param>
+        /// <param name="services"></param>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection service, Func<TouchSocketConfig> config)
+        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection services, Func<TouchSocketConfig> config)
         {
-            return service.AddSingleton<IWebSocketDmtpService>(new WebSocketDmtpService(config.Invoke()));
+            var service = new WebSocketDmtpService();
+            service.Setup(config.Invoke());
+            return services.AddSingleton<IWebSocketDmtpService>(service);
         }
     }
 }

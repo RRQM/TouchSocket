@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 
 namespace TouchSocket.Core
@@ -21,13 +21,14 @@ namespace TouchSocket.Core
     public sealed class PluginOptionAttribute : Attribute
     {
         /// <summary>
-        /// 标识该插件在一个<see cref="IPluginsManager"/>中仅仅只会有一个实例。
+        /// 标识该插件在一个<see cref="IPluginManager"/>中仅仅只会有一个实例。
         /// </summary>
         public bool Singleton { get; set; }
 
         /// <summary>
         /// 标识该插件不需要注册到容器。可能是功能性插件。
         /// </summary>
+        [Obsolete("插件的使用时机应该在容器构建之后，所以不应该再注入容器。", true)]
         public bool NotRegister { get; set; }
     }
 }

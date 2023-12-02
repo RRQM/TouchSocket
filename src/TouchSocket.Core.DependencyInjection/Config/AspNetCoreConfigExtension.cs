@@ -9,8 +9,9 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using TouchSocket.Core.AspNetCore;
 
 namespace TouchSocket.Core
@@ -28,8 +29,21 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static TouchSocketConfig UseAspNetCoreContainer(this TouchSocketConfig config, IServiceCollection services)
         {
-            config.SetContainer(new AspNetCoreContainer(services));
+            config.SetRegistrator(new AspNetCoreContainer(services));
             return config;
+        }
+
+        /// <summary>
+        /// 配置容器。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static IServiceCollection ConfigureContainer(this IServiceCollection services, Action<IRegistrator> action)
+        {
+            var container = new AspNetCoreContainer(services);
+            action.Invoke(container);
+            return services;
         }
     }
 }

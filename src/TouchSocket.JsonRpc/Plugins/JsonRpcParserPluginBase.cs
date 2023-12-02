@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
@@ -21,36 +20,25 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpcParser解析器插件
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = false)]
-    public abstract class JsonRpcParserPluginBase : PluginBase, IRpcParser
+    [PluginOption(Singleton = true)]
+    public abstract class JsonRpcParserPluginBase : PluginBase
     {
+        private readonly IRpcServerProvider m_rpcServerProvider;
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcParserPluginBase(IContainer container)
+        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider)
         {
-            if (container.IsRegistered(typeof(RpcStore)))
-            {
-                this.RpcStore = container.Resolve<RpcStore>();
-            }
-            else
-            {
-                this.RpcStore = new RpcStore(container);
-            }
-
             this.ActionMap = new ActionMap(true);
-            this.RpcStore.AddRpcParser(this);
+            this.RegisterServer(rpcServerProvider.GetMethods());
+            this.m_rpcServerProvider = rpcServerProvider;
         }
 
         /// <summary>
         /// JsonRpc的调用键。
         /// </summary>
         public ActionMap ActionMap { get; private set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public RpcStore RpcStore { get; private set; }
 
         /// <summary>
         /// 处理响应结果。
@@ -92,13 +80,7 @@ namespace TouchSocket.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                var rpcServer = callContext.MethodInstance.ServerFactory.Create(callContext, callContext.JsonRpcContext.Parameters);
-                if (rpcServer is ITransientRpcServer transientRpcServer)
-                {
-                    transientRpcServer.CallContext = callContext;
-                }
-
-                invokeResult = await RpcStore.ExecuteAsync(rpcServer, callContext.JsonRpcContext.Parameters, callContext);
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters);
             }
 
             if (!callContext.JsonRpcContext.Id.HasValue)
@@ -109,9 +91,7 @@ namespace TouchSocket.JsonRpc
             this.Response(callContext, invokeResult.Result, error);
         }
 
-        #region Rpc解析器
-
-        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
+        private void RegisterServer(MethodInstance[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {
@@ -121,18 +101,5 @@ namespace TouchSocket.JsonRpc
                 }
             }
         }
-
-        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Remove(attribute.GetInvokenKey(methodInstance));
-                }
-            }
-        }
-
-        #endregion Rpc解析器
     }
 }
