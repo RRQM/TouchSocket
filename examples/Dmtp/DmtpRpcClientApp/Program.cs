@@ -32,16 +32,19 @@ namespace DmtpClientApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//ÅäÖÃ
                    .SetListenIPHosts(port)
-                   .ConfigurePlugins(a =>
+                   .ConfigureContainer(a => 
                    {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
+                       a.AddRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();//×¢²á·þÎñ
 #if DEBUG
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
 #endif
                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
                        //a.Add<MyDmtpPlugin>();
                    })
                    .ConfigureContainer(a =>

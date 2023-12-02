@@ -25,11 +25,11 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
         /// <summary>
         /// 使用SimpleDmtpRpc插件
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static SimpleDmtpRpcFeature UseSimpleDmtpRpc(this IPluginsManager pluginsManager)
+        public static SimpleDmtpRpcFeature UseSimpleDmtpRpc(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<SimpleDmtpRpcFeature>();
+            return pluginManager.Add<SimpleDmtpRpcFeature>();
         }
         #endregion 插件扩展
 

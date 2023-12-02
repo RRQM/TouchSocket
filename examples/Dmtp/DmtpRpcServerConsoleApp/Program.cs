@@ -18,11 +18,8 @@ namespace ConsoleApp2
                    {
                        a.AddDmtpRouteService();
                        a.AddConsoleLogger();
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
+
+                       a.AddRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
@@ -30,8 +27,12 @@ namespace ConsoleApp2
                            ConsoleLogger.Default.Info("成功生成代理");
 #endif
                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
 
-                       a.Add<MyTouchRpcPlugin>();
+                       a.Add<MyRpcPlugin>();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -135,7 +136,7 @@ namespace ConsoleApp2
             }
         }
 
-        internal class MyTouchRpcPlugin : PluginBase, IDmtpRoutingPlugin
+        internal class MyRpcPlugin : PluginBase, IDmtpRoutingPlugin
         {
             public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
             {

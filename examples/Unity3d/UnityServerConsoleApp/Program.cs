@@ -54,11 +54,7 @@ namespace UnityServerConsoleApp
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();//注册一个日志组
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
+                       a.AddRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
@@ -67,6 +63,10 @@ namespace UnityServerConsoleApp
 #endif
 
                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
 
                        a.Add<MyTcpRpcPlguin>();
                    })

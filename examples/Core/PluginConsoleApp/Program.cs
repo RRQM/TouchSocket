@@ -8,24 +8,24 @@ namespace PluginConsoleApp
     {
         private static void Main(string[] args)
         {
-            IPluginsManager pluginsManager = new PluginsManager(new Container())
+            IPluginManager pluginManager = new PluginManager(new Container())
             {
                 Enable = true//必须启用
             };
 
-            pluginsManager.Add<SayHelloPlugin>();
-            pluginsManager.Add<SayHelloAction>();
-            pluginsManager.Add<SayHelloGenerator>();
-            pluginsManager.Add<SayHiPlugin>();
-            pluginsManager.Add<LastSayPlugin>();
+            pluginManager.Add<SayHelloPlugin>();
+            pluginManager.Add<SayHelloAction>();
+            pluginManager.Add<SayHelloGenerator>();
+            pluginManager.Add<SayHiPlugin>();
+            pluginManager.Add<LastSayPlugin>();
 
             //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
-            pluginsManager.Add(nameof(ISayPlugin.Say), () =>
+            pluginManager.Add(nameof(ISayPlugin.Say), () =>
             {
                 Console.WriteLine("在Action1中获得");
             });
 
-            pluginsManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
+            pluginManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
             {
                 Console.WriteLine("在Action2中获得");
                 await e.InvokeNext();
@@ -34,7 +34,7 @@ namespace PluginConsoleApp
             while (true)
             {
                 Console.WriteLine("请输入hello、helloaction、hellogenerator、hi或者其他");
-                pluginsManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+                pluginManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
                 {
                     Words = Console.ReadLine()
                 });
@@ -115,12 +115,12 @@ namespace PluginConsoleApp
 
     public class SayHelloAction : PluginBase
     {
-        protected override void Loaded(IPluginsManager pluginsManager)
+        protected override void Loaded(IPluginManager pluginManager)
         {
-            base.Loaded(pluginsManager);
+            base.Loaded(pluginManager);
 
             //注册本地方法为委托
-            pluginsManager.Add<object, MyPluginEventArgs>(nameof(ISayPlugin.Say), this.Say);
+            pluginManager.Add<object, MyPluginEventArgs>(nameof(ISayPlugin.Say), this.Say);
         }
 
         public async Task Say(object sender, MyPluginEventArgs e)
@@ -145,10 +145,10 @@ namespace PluginConsoleApp
         //如果在代码里，继承了PluginBase，并且没有显示重写Loaded
         //则在源生成时，会自己生成重写代码。
         //如果显示重写了Loaded。就需要自己手动调用RegisterPlugins。不然插件不会生效的。
-        //protected override void Loaded(IPluginsManager pluginsManager)
+        //protected override void Loaded(pluginManager pluginManager)
         //{
-        //    base.Loaded(pluginsManager);
-        //    this.RegisterPlugins(pluginsManager);
+        //    base.Loaded(pluginManager);
+        //    this.RegisterPlugins(pluginManager);
         //}
 
         /// <summary>

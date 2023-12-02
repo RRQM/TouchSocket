@@ -17,14 +17,9 @@ namespace WebApiServerApp
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .SetListenIPHosts(7789)
-               .ConfigurePlugins(a =>
+               .ConfigureContainer(a => 
                {
-                   a.UseCheckClear();
-
-                   a.Add<AuthenticationPlugin>();
-
-                   a.UseWebApi()
-                   .ConfigureRpcStore(store =>
+                   a.AddRpcStore(store =>
                    {
                        store.RegisterServer<ApiServer>();//注册服务
 
@@ -34,6 +29,14 @@ namespace WebApiServerApp
                        File.WriteAllText("../../../WebApiProxy.cs", codeString);
 #endif
                    });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseCheckClear();
+
+                   a.Add<AuthenticationPlugin>();
+
+                   a.UseWebApi();
 
                    a.UseSwagger()//使用Swagger页面
                    .UseLaunchBrowser();//启动浏览器

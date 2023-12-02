@@ -44,14 +44,14 @@ namespace RpcStreamConsoleApp
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
+                       a.AddRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {

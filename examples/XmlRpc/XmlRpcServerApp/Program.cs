@@ -18,12 +18,7 @@ namespace XmlRpcServerApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseXmlRpc()
-                    .SetXmlRpcUrl("/xmlRpc")
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<XmlServer>();
 
@@ -32,6 +27,11 @@ namespace XmlRpcServerApp
                         ConsoleLogger.Default.Info("成功生成代理");
 #endif
                     });
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseXmlRpc()
+                    .SetXmlRpcUrl("/xmlRpc");
                 })
                 .SetListenIPHosts(7789));
             service.Start();

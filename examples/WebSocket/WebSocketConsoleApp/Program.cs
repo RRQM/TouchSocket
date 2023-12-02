@@ -194,6 +194,10 @@ namespace WebSocketConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<MyServer>();
+                    });
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -206,11 +210,7 @@ namespace WebSocketConsoleApp
                     a.Add<MyWSCommandLinePlugin>();
                     a.Add<MyWebSocketPlugin>();
 
-                    a.UseWebApi()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<MyServer>();
-                    });
+                    a.UseWebApi();
                 }));
             service.Start();
 

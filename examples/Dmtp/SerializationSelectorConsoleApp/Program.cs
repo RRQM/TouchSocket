@@ -55,15 +55,15 @@ namespace SerializationSelectorConsoleApp
                    .ConfigurePlugins(a =>
                    {
                        a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
-                       {
-                           store.RegisterServer<MyRpcServer>();
-                       })
-                           .SetSerializationSelector(new MemoryPackSerializationSelector());
+                       .SetSerializationSelector(new MemoryPackSerializationSelector());
                    })
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
+                       a.AddRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+                       });
                    })
                    .SetDmtpOption(new DmtpOption()
                    {

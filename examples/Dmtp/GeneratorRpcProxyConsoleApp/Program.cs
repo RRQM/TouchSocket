@@ -15,18 +15,18 @@ namespace GeneratorRpcProxyConsoleApp
             //创建服务器
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                   .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
+                       a.AddRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+                       });
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc()
-                           .ConfigureRpcStore(store =>
-                           {
-                               store.RegisterServer<MyRpcServer>();
-                           });
+                       a.UseDmtpRpc();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {

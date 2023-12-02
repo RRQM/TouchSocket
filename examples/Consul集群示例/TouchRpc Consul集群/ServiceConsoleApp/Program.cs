@@ -28,15 +28,13 @@ namespace ServiceConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<MyServer>();
+                    });
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseGlobalRpcStore()//配置全局的rpc
-                    .ConfigureRpcStore(a =>
-                    {
-                        a.RegisterServer<MyServer>();
-                    });
-
                     a.UseDmtpRpc();
                     a.UseXmlRpc().SetXmlRpcUrl("/xmlrpc");
                     a.UseWebApi();
