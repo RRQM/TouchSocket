@@ -9,5 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    <PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.230" />
+    <PackageReference Include="TouchSocketPro.Hosting" Version="2.0.0-beta.230" />
   </ItemGroup>
 </Project>
