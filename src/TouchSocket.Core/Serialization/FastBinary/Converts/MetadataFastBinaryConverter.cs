@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -22,7 +22,7 @@ namespace TouchSocket.Core
             var byteBlock = new ValueByteBlock(buffer);
             byteBlock.Pos = offset;
 
-            var isNull=byteBlock.ReadIsNull();
+            var isNull = byteBlock.ReadIsNull();
             if (isNull)
             {
                 return null;

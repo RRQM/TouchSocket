@@ -9,9 +9,9 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -19,17 +19,17 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 服务器接口
     /// </summary>
-    public interface IService : IDisposable,ISetupConfigObject
+    public interface IService : IDisposable, ISetupConfigObject
     {
-        /// <summary>
-        /// 服务器状态
-        /// </summary>
-        ServerState ServerState { get; }
-
         /// <summary>
         /// 名称
         /// </summary>
         string ServerName { get; }
+
+        /// <summary>
+        /// 服务器状态
+        /// </summary>
+        ServerState ServerState { get; }
 
         /// <summary>
         /// 启动
@@ -37,14 +37,26 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        /// <returns>设置的服务实例</returns>
-        IService Start();
+        void Start();
+
+        /// <summary>
+        /// 异步启动
+        /// </summary>
+        /// <exception cref="Exception"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        Task StartAsync();
 
         /// <summary>
         /// 停止
         /// </summary>
         /// <exception cref="Exception"></exception>
-        /// <returns>设置的服务实例</returns>
-        IService Stop();
+        void Stop();
+
+        /// <summary>
+        /// 异步停止
+        /// </summary>
+        /// <exception cref="Exception"></exception>
+        Task StopAsync();
     }
 }

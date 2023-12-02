@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 namespace TouchSocket.Core
 {
@@ -19,13 +18,8 @@ namespace TouchSocket.Core
     public interface IPluginObject
     {
         /// <summary>
-        /// IOC容器
-        /// </summary>
-        IContainer Container { get; }
-
-        /// <summary>
         /// 插件管理器
         /// </summary>
-        IPluginsManager PluginsManager { get; }
+        IPluginManager PluginManager { get; }
     }
 }

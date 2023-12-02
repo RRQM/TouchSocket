@@ -9,40 +9,29 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 注入容器接口
+    /// 容器注册器
     /// </summary>
-    public interface IContainer : IEnumerable<DependencyDescriptor>
+    public interface IRegistrator : IRegistered
     {
-        /// <summary>
-        /// 创建目标类型的对应实例。
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        object Resolve(Type fromType, string key = "");
-
-        /// <summary>
-        /// 判断某类型是否已经注册
-        /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        bool IsRegistered(Type fromType, string key = "");
 
         /// <summary>
         /// 添加类型描述符。
         /// </summary>
         /// <param name="key"></param>
         /// <param name="descriptor"></param>
-        void Register(DependencyDescriptor descriptor, string key = "");
+        void Register(DependencyDescriptor descriptor, string key);
+
+        /// <summary>
+        /// 添加类型描述符
+        /// </summary>
+        /// <param name="descriptor"></param>
+        void Register(DependencyDescriptor descriptor);
 
         /// <summary>
         /// 移除注册信息。
@@ -50,6 +39,24 @@ namespace TouchSocket.Core
         /// <param name="descriptor"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        void Unregister(DependencyDescriptor descriptor, string key = "");
+        void Unregister(DependencyDescriptor descriptor, string key);
+
+        /// <summary>
+        /// 移除注册信息
+        /// </summary>
+        /// <param name="descriptor"></param>
+        void Unregister(DependencyDescriptor descriptor);
+
+        /// <summary>
+        /// 获取已注册的所有类型描述
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<DependencyDescriptor> GetDescriptors();
+
+        /// <summary>
+        /// 构建一个服务获取器
+        /// </summary>
+        /// <returns></returns>
+        IResolver BuildResolver();
     }
 }

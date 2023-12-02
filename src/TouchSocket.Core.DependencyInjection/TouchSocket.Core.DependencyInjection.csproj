@@ -8,6 +8,11 @@
 		<Title>TouchSocket.Core.DependencyInjection</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core.DependencyInjection</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="Common\**" />
+	  <EmbeddedResource Remove="Common\**" />
+	  <None Remove="Common\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />

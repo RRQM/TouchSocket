@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Threading.Tasks;
@@ -41,10 +53,10 @@ namespace TouchSocket.NamedPipe
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <inheritdoc/>
-        public override TouchSocketConfig Config => m_config;
+        public override TouchSocketConfig Config => this.m_config;
 
         /// <inheritdoc/>
-        public IContainer Container { get; private set; }
+        public IResolver Resolver { get; private set; }
 
         /// <inheritdoc/>
         public string Id { get; private set; }
@@ -65,7 +77,7 @@ namespace TouchSocket.NamedPipe
         public PipeStream PipeStream => this.m_pipeStream;
 
         /// <inheritdoc/>
-        public IPluginsManager PluginsManager { get; private set; }
+        public IPluginManager PluginManager { get; private set; }
 
         /// <inheritdoc/>
         public Protocol Protocol { get; set; }
@@ -102,10 +114,10 @@ namespace TouchSocket.NamedPipe
             this.m_config = config;
         }
 
-        internal void InternalSetContainer(IContainer container)
+        internal void InternalSetContainer(IResolver containerProvider)
         {
-            this.Container = container;
-            this.Logger ??= container.Resolve<ILog>();
+            this.Resolver = containerProvider;
+            this.Logger ??= containerProvider.Resolve<ILog>();
         }
 
         internal void InternalSetId(string id)
@@ -118,9 +130,9 @@ namespace TouchSocket.NamedPipe
             this.m_pipeStream = namedPipe;
         }
 
-        internal void InternalSetPluginsManager(IPluginsManager pluginsManager)
+        internal void InternalSetPluginManager(IPluginManager pluginManager)
         {
-            this.PluginsManager = pluginsManager;
+            this.PluginManager = pluginManager;
         }
 
         internal void InternalSetService(NamedPipeServiceBase serviceBase)
@@ -147,7 +159,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnConnected(ConnectedEventArgs e)
         {
-            if (await this.PluginsManager.RaiseAsync(nameof(INamedPipeConnectedPlugin.OnNamedPipeConnected), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(INamedPipeConnectedPlugin.OnNamedPipeConnected), this, e))
             {
                 return;
             }
@@ -159,7 +171,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         protected virtual async Task OnConnecting(ConnectingEventArgs e)
         {
-            if (await this.PluginsManager.RaiseAsync(nameof(INamedPipeConnectingPlugin.OnNamedPipeConnecting), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(INamedPipeConnectingPlugin.OnNamedPipeConnecting), this, e))
             {
                 return;
             }
@@ -190,7 +202,7 @@ namespace TouchSocket.NamedPipe
                 }
             }
 
-            if (await this.PluginsManager.RaiseAsync(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this, e))
             {
                 return;
             }
@@ -214,7 +226,7 @@ namespace TouchSocket.NamedPipe
                     }
                 }
 
-                if (await this.PluginsManager.RaiseAsync(nameof(INamedPipeDisconnectingPlugin.OnNamedPipeDisconnecting), this, e))
+                if (await this.PluginManager.RaiseAsync(nameof(INamedPipeDisconnectingPlugin.OnNamedPipeDisconnecting), this, e))
                 {
                     return;
                 }
@@ -352,10 +364,10 @@ namespace TouchSocket.NamedPipe
                 socketClient.Id = newId;
                 if (this.GetSocketCliectCollection().TryAdd(socketClient))
                 {
-                    if (this.PluginsManager.Enable)
+                    if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(oldId, newId);
-                        this.PluginsManager.Raise(nameof(IIdChangedPlugin.OnIdChanged), socketClient, e);
+                        this.PluginManager.Raise(nameof(IIdChangedPlugin.OnIdChanged), socketClient, e);
                     }
                     return;
                 }
@@ -402,10 +414,10 @@ namespace TouchSocket.NamedPipe
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(INamedPipeSendingPlugin.OnNamedPipeSending)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(INamedPipeSendingPlugin.OnNamedPipeSending)) > 0)
             {
                 var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(INamedPipeSendingPlugin.OnNamedPipeSending), this, args).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(INamedPipeSendingPlugin.OnNamedPipeSending), this, args).ConfigureAwait(false);
                 return args.IsPermitOperation;
             }
             return true;
@@ -422,7 +434,7 @@ namespace TouchSocket.NamedPipe
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(INamedPipeReceivedPlugin.OnNamedPipeReceived), this, e);
+            await this.PluginManager.RaiseAsync(nameof(INamedPipeReceivedPlugin.OnNamedPipeReceived), this, e);
         }
 
         /// <summary>
@@ -432,9 +444,9 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving)) > 0)
             {
-                return this.PluginsManager.RaiseAsync(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving), this, new ByteBlockEventArgs(byteBlock));
+                return this.PluginManager.RaiseAsync(nameof(INamedPipeReceivingPlugin.OnNamedPipeReceiving), this, new ByteBlockEventArgs(byteBlock));
             }
             return Task.FromResult(false);
         }

@@ -9,41 +9,33 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
+using System;
 using TouchSocket.Core;
+
+#if NET6_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// RpcServerFactory
+    /// ContainerExtension
     /// </summary>
-    public class RpcServerFactory : IRpcServerFactory
+    public static class ContainerExtension
     {
-        private readonly IContainer m_container;
-        private readonly ILog m_logger;
-
         /// <summary>
-        /// 构造函数
+        /// 向容器中添加<see cref="RpcStore"/>。
         /// </summary>
-        /// <param name="container"></param>
-        /// <param name="logger"></param>
-        public RpcServerFactory(IContainer container, ILog logger)
+        /// <param name="registrator"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public static IRegistrator AddRpcStore(this IRegistrator registrator, Action<RpcStore> action)
         {
-            this.m_container = container;
-            this.m_logger = logger;
-        }
-
-        IRpcServer IRpcServerFactory.Create(ICallContext callContext, object[] ps)
-        {
-            try
-            {
-                return (IRpcServer)this.m_container.Resolve(callContext.MethodInstance.ServerFromType);
-            }
-            catch (System.Exception ex)
-            {
-                this.m_logger.Exception(ex);
-                throw;
-            }
+            var rpcStore = new RpcStore(registrator);
+            action.Invoke(rpcStore);
+            registrator.RegisterSingleton(rpcStore);
+            return registrator;
         }
     }
 }

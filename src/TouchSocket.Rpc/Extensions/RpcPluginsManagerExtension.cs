@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using System;
 using TouchSocket.Rpc;
@@ -17,30 +16,30 @@ using TouchSocket.Rpc;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// RpcPluginsManagerExtension
+    /// RpcPluginManagerExtension
     /// </summary>
-    public static class RpcPluginsManagerExtension
+    public static class RpcPluginManagerExtension
     {
         /// <summary>
         /// 使用全局Rpc服务注入。
         /// </summary>
-        /// <param name="pluginsManager"></param>
-        public static GlobalRpcStorePlugin UseGlobalRpcStore(this IPluginsManager pluginsManager)
+        /// <param name="pluginManager"></param>
+        [Obsolete("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
+        public static object UseGlobalRpcStore(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<GlobalRpcStorePlugin>();
+            return default;
         }
 
         /// <summary>
         /// 使用全局Rpc服务注入。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="action"></param>
         /// <returns></returns>
-        public static GlobalRpcStorePlugin UseGlobalRpcStore(this IPluginsManager pluginsManager, Action<RpcStore> action)
+        [Obsolete("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
+        public static object UseGlobalRpcStore(this IPluginManager pluginManager, Action<RpcStore> action)
         {
-            var plugin = pluginsManager.Add<GlobalRpcStorePlugin>();
-            plugin.ConfigureRpcStore(action);
-            return plugin;
+            return default;
         }
     }
 }

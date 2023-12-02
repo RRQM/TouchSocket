@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Concurrent;
@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// <summary>
     /// WebSocketDmtpService
     /// </summary>
-    public class WebSocketDmtpService : DisposableObject, IWebSocketDmtpService
+    public class WebSocketDmtpService : SetupConfigObject, IWebSocketDmtpService
     {
         #region SocketClient
 
@@ -124,53 +124,9 @@ namespace TouchSocket.Dmtp.AspNetCore
         private long m_idCount;
 
         /// <summary>
-        /// 创建一个基于WebSocket的Dmtp服务器。
-        /// </summary>
-        /// <param name="config"></param>
-        public WebSocketDmtpService(TouchSocketConfig config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            this.ThrowIfDisposed();
-
-            this.BuildConfig(config);
-
-            this.PluginsManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
-            this.LoadConfig(this.Config);
-            this.PluginsManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
-
-            if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
-            {
-                this.GetDefaultNewId = fun;
-            }
-            else
-            {
-                this.GetDefaultNewId = () => { return Interlocked.Increment(ref this.m_idCount).ToString(); };
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public TouchSocketConfig Config { get; private set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public IContainer Container { get; private set; }
-
-        /// <summary>
         /// 获取默认新Id。
         /// </summary>
         public Func<string> GetDefaultNewId { get; private set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public IPluginsManager PluginsManager { get; private set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -222,9 +178,9 @@ namespace TouchSocket.Dmtp.AspNetCore
                 }
                 client.InternalSetService(this);
                 client.InternalSetConfig(this.Config);
-                client.InternalSetContainer(this.Container);
+                client.InternalSetContainer(this.Resolver);
                 client.InternalSetId(id);
-                client.InternalSetPluginsManager(this.PluginsManager);
+                client.InternalSetPluginManager(this.PluginManager);
                 client.SetDmtpActor(this.CreateDmtpActor(client));
                 await client.Start(webSocket, context);
             }
@@ -234,54 +190,18 @@ namespace TouchSocket.Dmtp.AspNetCore
             }
         }
 
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="config"></param>
-        protected virtual void LoadConfig(TouchSocketConfig config)
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
         {
-        }
-
-        private void BuildConfig(TouchSocketConfig config)
-        {
-            this.Config = config;
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.ContainerProperty) is IContainer container))
+            base.LoadConfig(config);
+            if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
             {
-                container = new Container();
-            }
-
-            if (!container.IsRegistered(typeof(ILog)))
-            {
-                container.RegisterSingleton<ILog, LoggerGroup>();
-            }
-
-            if (!(config.GetValue(TouchSocketCoreConfigExtension.PluginsManagerProperty) is IPluginsManager pluginsManager))
-            {
-                pluginsManager = new PluginsManager(container);
-            }
-
-            if (container.IsRegistered(typeof(IPluginsManager)))
-            {
-                pluginsManager = container.Resolve<IPluginsManager>();
+                this.GetDefaultNewId = fun;
             }
             else
             {
-                container.RegisterSingleton<IPluginsManager>(pluginsManager);
+                this.GetDefaultNewId = () => { return Interlocked.Increment(ref this.m_idCount).ToString(); };
             }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IContainer> actionContainer)
-            {
-                actionContainer.Invoke(container);
-            }
-
-            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginsManager> actionPluginsManager)
-            {
-                pluginsManager.Enable = true;
-                actionPluginsManager.Invoke(pluginsManager);
-            }
-            this.Container = container;
-            this.PluginsManager = pluginsManager;
         }
 
         private DmtpActor CreateDmtpActor(WebSocketDmtpSocketClient client)

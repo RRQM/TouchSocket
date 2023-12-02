@@ -9,21 +9,19 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
-namespace TouchSocket.Rpc
-{
-    /// <summary>
-    /// IRpcServerFactory
-    /// </summary>
-    public interface IRpcServerFactory
-    {
-        /// <summary>
-        /// 创建rpc实例
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
-        IRpcServer Create(ICallContext callContext, object[] ps);
-    }
-}
+//namespace TouchSocket.Rpc
+//{
+//    /// <summary>
+//    /// IRpcServerFactory
+//    /// </summary>
+//    public interface IRpcServerFactory
+//    {
+//        /// <summary>
+//        /// 获取rpc服务实例
+//        /// </summary>
+//        /// <param name="callContext"></param>
+//        /// <returns></returns>
+//        IRpcServer GetRpcServer(in ICallContext callContext);
+//    }
+//}

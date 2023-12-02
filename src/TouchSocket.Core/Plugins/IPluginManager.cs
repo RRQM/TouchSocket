@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 插件管理器接口
     /// </summary>
-    public interface IPluginsManager : IDisposable
+    public interface IPluginManager : IDisposable
     {
         /// <summary>
         /// 标识该插件管理器是否可用。

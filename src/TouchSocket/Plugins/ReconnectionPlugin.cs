@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,13 +19,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 重连插件
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = true)]
+    [PluginOption(Singleton = true)]
     public sealed class ReconnectionPlugin<TClient> : PluginBase where TClient : class, ITcpClient
     {
         private bool m_polling;
 
         /// <summary>
-        /// 重连插件
+        /// 重连插件我才
         /// </summary>
         public ReconnectionPlugin()
         {
@@ -135,11 +135,11 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        protected override void Loaded(IPluginsManager pluginsManager)
+        protected override void Loaded(IPluginManager pluginManager)
         {
-            base.Loaded(pluginsManager);
-            pluginsManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
-            pluginsManager.Add<TClient, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this.OnTcpDisconnected);
+            base.Loaded(pluginManager);
+            pluginManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
+            pluginManager.Add<TClient, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this.OnTcpDisconnected);
         }
 
         private Task OnLoadedConfig(object sender, ConfigEventArgs e)

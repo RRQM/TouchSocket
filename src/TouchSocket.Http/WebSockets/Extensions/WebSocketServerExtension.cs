@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -40,7 +40,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         IsPermitOperation = true
                     };
-                    await client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), client, args).ConfigureAwait(false);
+                    await client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), client, args).ConfigureAwait(false);
 
                     if (args.Context.Response.Responsed)
                     {
@@ -57,7 +57,7 @@ namespace TouchSocket.Http.WebSockets
                             args.Context.Response.Build(byteBlock);
                             await client.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
-                        _ = client.PluginsManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext))
+                        _ = client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), client, new HttpContextEventArgs(httpContext))
                             .ConfigureAwait(false);
                         return true;
                     }

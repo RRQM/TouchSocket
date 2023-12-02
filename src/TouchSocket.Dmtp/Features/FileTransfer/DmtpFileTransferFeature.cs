@@ -1,4 +1,16 @@
-﻿using System.Threading.Tasks;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
@@ -9,19 +21,24 @@ namespace TouchSocket.Dmtp.FileTransfer
     public sealed class DmtpFileTransferFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin, IDmtpFeature
     {
         private readonly IFileResourceController m_fileResourceController;
-        private readonly IPluginsManager m_pluginsManager;
+        private IPluginManager m_pluginManager;
 
         /// <summary>
         /// 能够基于Dmtp协议，提供文件传输的能力
         /// </summary>
-        /// <param name="pluginsManager"></param>
-        /// <param name="container"></param>
-        public DmtpFileTransferFeature(IPluginsManager pluginsManager, IContainer container)
+        /// <param name="resolver"></param>
+        public DmtpFileTransferFeature(IResolver resolver)
         {
-            this.m_fileResourceController = container.TryResolve<IFileResourceController>() ?? new FileResourceController();
-            this.m_pluginsManager = pluginsManager;
+            this.m_fileResourceController = resolver.TryResolve<IFileResourceController>() ?? new FileResourceController();
             this.MaxSmallFileLength = 1024 * 1024;
             this.SetProtocolFlags(30);
+        }
+
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            base.Loaded(pluginManager);
+            this.m_pluginManager = pluginManager;
         }
 
         /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
@@ -49,7 +66,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             };
             dmtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpFileTransferActor(dmtpFileTransferActor);
-
             return e.InvokeNext();
         }
 
@@ -98,12 +114,12 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         private Task OnFileTransfered(IDmtpActor actor, FileTransferedEventArgs e)
         {
-            return this.m_pluginsManager.RaiseAsync(nameof(IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered), actor.Client, e);
+            return this.m_pluginManager.RaiseAsync(nameof(IDmtpFileTransferedPlugin<IDmtpActorObject>.OnDmtpFileTransfered), actor.Client, e);
         }
 
         private Task OnFileTransfering(IDmtpActor actor, FileTransferingEventArgs e)
         {
-            return this.m_pluginsManager.RaiseAsync(nameof(IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering), actor.Client, e);
+            return this.m_pluginManager.RaiseAsync(nameof(IDmtpFileTransferingPlugin<IDmtpActorObject>.OnDmtpFileTransfering), actor.Client, e);
         }
     }
 }

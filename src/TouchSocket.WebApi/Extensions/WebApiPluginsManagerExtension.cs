@@ -9,24 +9,24 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.WebApi;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// WebApiPluginsManagerExtension
+    /// WebApiPluginManagerExtension
     /// </summary>
-    public static class WebApiPluginsManagerExtension
+    public static class WebApiPluginManagerExtension
     {
         /// <summary>
         /// 使用WebApi的插件。仅服务器可用。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static WebApiParserPlugin UseWebApi(this IPluginsManager pluginsManager)
+        public static WebApiParserPlugin UseWebApi(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<WebApiParserPlugin>();
+            return pluginManager.Add<WebApiParserPlugin>();
         }
     }
 }

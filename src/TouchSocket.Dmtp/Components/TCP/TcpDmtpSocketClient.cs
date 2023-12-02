@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -101,7 +101,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
         }
 
         #endregion 事件
@@ -221,7 +221,7 @@ namespace TouchSocket.Dmtp
             var message = (DmtpMessage)e.RequestInfo;
             if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
             {
-                await this.PluginsManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
             }
             await base.ReceivedData(e).ConfigureFalseAwait();
         }

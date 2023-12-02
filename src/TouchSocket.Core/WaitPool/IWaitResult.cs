@@ -9,14 +9,13 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 等待返回类
     /// </summary>
-    public interface IWaitResult:IWaitHandle
+    public interface IWaitResult : IWaitHandle
     {
         /// <summary>
         /// 消息

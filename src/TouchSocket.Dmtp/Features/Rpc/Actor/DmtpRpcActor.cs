@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,9 +29,11 @@ namespace TouchSocket.Dmtp.Rpc
         /// 创建一个DmtpRpcActor
         /// </summary>
         /// <param name="dmtpActor"></param>
-        public DmtpRpcActor(IDmtpActor dmtpActor)
+        /// <param name="rpcServerProvider"></param>
+        public DmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider)
         {
             this.DmtpActor = dmtpActor;
+            this.m_rpcServerProvider = rpcServerProvider;
         }
 
         /// <inheritdoc/>
@@ -43,9 +45,6 @@ namespace TouchSocket.Dmtp.Rpc
         public Func<string, MethodInstance> GetInvokeMethod { get; set; }
 
         /// <inheritdoc/>
-        public RpcStore RpcStore { get; set; }
-
-        /// <inheritdoc/>
         public SerializationSelector SerializationSelector { get; set; }
 
         #region 字段
@@ -53,6 +52,7 @@ namespace TouchSocket.Dmtp.Rpc
         private ushort m_cancelInvoke;
         private ushort m_invoke_Request;
         private ushort m_invoke_Response;
+        private readonly IRpcServerProvider m_rpcServerProvider;
 
         #endregion 字段
 
@@ -225,7 +225,7 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         if (methodInstance.IsEnable)
                         {
-                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client,methodInstance,rpcPackage);
+                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage);
                             this.TryAdd(rpcPackage.Sign, callContext);
                             if (methodInstance.IncludeCallContext)
                             {
@@ -263,12 +263,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    var rpcServer = methodInstance.ServerFactory.Create(callContext, ps);
-                    if (rpcServer is ITransientRpcServer transientRpcServer)
-                    {
-                        transientRpcServer.CallContext = callContext;
-                    }
-                    invokeResult = await RpcStore.ExecuteAsync(rpcServer, ps, callContext).ConfigureFalseAwait();
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
                 }
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)

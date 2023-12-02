@@ -1,4 +1,16 @@
-﻿#if NET45_OR_GREATER
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+#if NET45_OR_GREATER
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +30,7 @@ namespace TouchSocket.Rpc
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TClient"></typeparam>
     /// <typeparam name="TAttribute"></typeparam>
-    public abstract class RpcRealityProxy<T,TClient, TAttribute> : RpcRealityProxyBase<T> where TClient : IRpcClient where TAttribute : RpcAttribute
+    public abstract class RpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxyBase<T> where TClient : IRpcClient where TAttribute : RpcAttribute
     {
         private readonly ConcurrentDictionary<MethodInfo, ProxyModel> m_methods = new ConcurrentDictionary<MethodInfo, ProxyModel>();
         private readonly MethodInfo m_fromResultMethod;
@@ -36,7 +48,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         public abstract TClient GetClient();
 
-       
+
         /// <summary>
         /// 调用过程
         /// </summary>
@@ -75,7 +87,7 @@ namespace TouchSocket.Rpc
                 ps = args;
             }
 
-            this.OnBefore(targetMethod, value.InvokeKey,ref ps);
+            this.OnBefore(targetMethod, value.InvokeKey, ref ps);
 
             object result = default;
 
@@ -115,7 +127,7 @@ namespace TouchSocket.Rpc
                 }
             }
 
-            this.OnAfter(targetMethod,invokeKey, ref args, ref result);
+            this.OnAfter(targetMethod, invokeKey, ref args, ref result);
 
             return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
         }

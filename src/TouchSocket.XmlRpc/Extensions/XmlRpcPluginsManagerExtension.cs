@@ -9,24 +9,24 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.XmlRpc;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// XmlRpcPluginsManagerExtension
+    /// XmlRpcPluginManagerExtension
     /// </summary>
-    public static class XmlRpcPluginsManagerExtension
+    public static class XmlRpcPluginManagerExtension
     {
         /// <summary>
         /// 使用XmlRpc的插件。仅服务器可用。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static XmlRpcParserPlugin UseXmlRpc(this IPluginsManager pluginsManager)
+        public static XmlRpcParserPlugin UseXmlRpc(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<XmlRpcParserPlugin>();
+            return pluginManager.Add<XmlRpcParserPlugin>();
         }
     }
 }

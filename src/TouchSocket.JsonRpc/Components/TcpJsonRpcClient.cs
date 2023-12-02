@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -11,10 +23,13 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public class TcpJsonRpcClient : TcpClientBase, ITcpJsonRpcClient
     {
-        /// <inheritdoc/>
-        public RpcStore RpcStore { get; private set; }
-
         private readonly WaitHandlePool<IWaitResult> m_waitHandle = new WaitHandlePool<IWaitResult>();
+        private IRpcServerProvider m_rpcServerProvider;
+
+        /// <summary>
+        /// JsonRpc的调用键。
+        /// </summary>
+        public ActionMap ActionMap { get; private set; } = new ActionMap(true);
 
         /// <inheritdoc/>
         public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
@@ -280,120 +295,11 @@ namespace TouchSocket.JsonRpc
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
-            if (this.Container.IsRegistered(typeof(RpcStore)))
+            if (this.Resolver.IsRegistered(typeof(IRpcServerProvider)))
             {
-                this.RpcStore = this.Container.Resolve<RpcStore>();
-            }
-            else
-            {
-                this.RpcStore = new RpcStore(this.Container);
-            }
-            this.RpcStore.AddRpcParser(this);
-        }
-
-        #region Rpc解析器
-
-        /// <summary>
-        /// JsonRpc的调用键。
-        /// </summary>
-        public ActionMap ActionMap { get; private set; } = new ActionMap(true);
-
-        void IRpcParser.OnRegisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
-                }
-            }
-        }
-
-        void IRpcParser.OnUnregisterServer(MethodInstance[] methodInstances)
-        {
-            foreach (var methodInstance in methodInstances)
-            {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Remove(attribute.GetInvokenKey(methodInstance));
-                }
-            }
-        }
-
-        #endregion Rpc解析器
-
-        private void ThisInvoke(object obj)
-        {
-            var callContext = (JsonRpcCallContextBase)obj;
-            var invokeResult = new InvokeResult();
-
-            try
-            {
-                JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
-            }
-            catch (Exception ex)
-            {
-                invokeResult.Status = InvokeStatus.Exception;
-                invokeResult.Message = ex.Message;
-            }
-
-            if (callContext.MethodInstance != null)
-            {
-                if (!callContext.MethodInstance.IsEnable)
-                {
-                    invokeResult.Status = InvokeStatus.UnEnable;
-                }
-            }
-            else
-            {
-                invokeResult.Status = InvokeStatus.UnFound;
-            }
-
-            if (invokeResult.Status == InvokeStatus.Ready)
-            {
-                var rpcServer = callContext.MethodInstance.ServerFactory.Create(callContext, callContext.JsonRpcContext.Parameters);
-                if (rpcServer is ITransientRpcServer transientRpcServer)
-                {
-                    transientRpcServer.CallContext = callContext;
-                }
-
-                invokeResult = RpcStore.Execute(rpcServer, callContext.JsonRpcContext.Parameters, callContext);
-            }
-
-            if (!callContext.JsonRpcContext.Id.HasValue)
-            {
-                return;
-            }
-            var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            this.Response(callContext, invokeResult.Result, error);
-        }
-
-        private void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
-        {
-            try
-            {
-                JsonRpcResponseBase response;
-                if (error == null)
-                {
-                    response = new JsonRpcSuccessResponse
-                    {
-                        Result = result,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                else
-                {
-                    response = new JsonRpcErrorResponse
-                    {
-                        Error = error,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                this.Send(str);
-            }
-            catch
-            {
+                var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
+                this.RegisterServer(rpcServerProvider.GetMethods());
+                this.m_rpcServerProvider = rpcServerProvider;
             }
         }
 
@@ -438,6 +344,86 @@ namespace TouchSocket.JsonRpc
             {
             }
             return base.ReceivedData(e);
+        }
+
+        private void RegisterServer(MethodInstance[] methodInstances)
+        {
+            foreach (var methodInstance in methodInstances)
+            {
+                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
+                {
+                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                }
+            }
+        }
+
+        private void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        {
+            try
+            {
+                JsonRpcResponseBase response;
+                if (error == null)
+                {
+                    response = new JsonRpcSuccessResponse
+                    {
+                        Result = result,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                else
+                {
+                    response = new JsonRpcErrorResponse
+                    {
+                        Error = error,
+                        Id = callContext.JsonRpcContext.Id
+                    };
+                }
+                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
+                this.Send(str);
+            }
+            catch
+            {
+            }
+        }
+
+        private void ThisInvoke(object obj)
+        {
+            var callContext = (JsonRpcCallContextBase)obj;
+            var invokeResult = new InvokeResult();
+
+            try
+            {
+                JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
+            }
+            catch (Exception ex)
+            {
+                invokeResult.Status = InvokeStatus.Exception;
+                invokeResult.Message = ex.Message;
+            }
+
+            if (callContext.MethodInstance != null)
+            {
+                if (!callContext.MethodInstance.IsEnable)
+                {
+                    invokeResult.Status = InvokeStatus.UnEnable;
+                }
+            }
+            else
+            {
+                invokeResult.Status = InvokeStatus.UnFound;
+            }
+
+            if (invokeResult.Status == InvokeStatus.Ready)
+            {
+                invokeResult = this.m_rpcServerProvider.Execute(callContext, callContext.JsonRpcContext.Parameters);
+            }
+
+            if (!callContext.JsonRpcContext.Id.HasValue)
+            {
+                return;
+            }
+            var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
+            this.Response(callContext, invokeResult.Result, error);
         }
     }
 }

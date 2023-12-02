@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -48,10 +48,10 @@ namespace TouchSocket.Dmtp
             config.SetTcpDataHandlingAdapter(() => new TcpDmtpAdapter());
             base.LoadConfig(config);
 
-            if (this.Container.IsRegistered(typeof(IDmtpRouteService)))
+            if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
             {
                 this.m_allowRoute = true;
-                this.m_findDmtpActor = this.Container.Resolve<IDmtpRouteService>().FindDmtpActor;
+                this.m_findDmtpActor = this.Resolver.Resolve<IDmtpRouteService>().FindDmtpActor;
             }
         }
 

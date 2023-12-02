@@ -9,7 +9,6 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
@@ -17,18 +16,18 @@ using System.Threading.Tasks;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// PluginsManagerExtension
+    /// PluginManagerExtension
     /// </summary>
-    public static class PluginsManagerExtension
+    public static class PluginManagerExtension
     {
         /// <summary>
         /// 添加插件
         /// </summary>
         /// <typeparam name="TPlugin">插件类型</typeparam>
         /// <returns>插件类型实例</returns>
-        public static TPlugin Add<TPlugin>(this IPluginsManager pluginsManager) where TPlugin : class, IPlugin
+        public static TPlugin Add<TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
         {
-            return (TPlugin)pluginsManager.Add(typeof(TPlugin));
+            return (TPlugin)pluginManager.Add(typeof(TPlugin));
         }
 
         /// <summary>
@@ -36,57 +35,57 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TSender"></typeparam>
         /// <typeparam name="TEventArgs"></typeparam>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="func"></param>
-        public static void Add<TSender, TEventArgs>(this IPluginsManager pluginsManager, string name, Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
+        public static void Add<TSender, TEventArgs>(this IPluginManager pluginManager, string name, Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
         {
             Task newFunc(object sender, TouchSocketEventArgs e)
             {
                 return func((TSender)sender, (TEventArgs)e);
             }
-            pluginsManager.Add(name, newFunc);
+            pluginManager.Add(name, newFunc);
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
         /// <typeparam name="TEventArgs"></typeparam>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="func"></param>
-        public static void Add<TEventArgs>(this IPluginsManager pluginsManager, string name, Func<TEventArgs, Task> func) where TEventArgs : PluginEventArgs
+        public static void Add<TEventArgs>(this IPluginManager pluginManager, string name, Func<TEventArgs, Task> func) where TEventArgs : PluginEventArgs
         {
             Task newFunc(object sender, TouchSocketEventArgs e)
             {
                 return func((TEventArgs)e);
             }
-            pluginsManager.Add(name, newFunc);
+            pluginManager.Add(name, newFunc);
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="func"></param>
-        public static void Add(this IPluginsManager pluginsManager, string name, Func<Task> func)
+        public static void Add(this IPluginManager pluginManager, string name, Func<Task> func)
         {
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 await func();
                 await e.InvokeNext();
             }
-            pluginsManager.Add(name, newFunc);
+            pluginManager.Add(name, newFunc);
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="action"></param>
-        public static void Add<T>(this IPluginsManager pluginsManager, string name, Action<T> action) where T : class
+        public static void Add<T>(this IPluginManager pluginManager, string name, Action<T> action) where T : class
         {
             if (typeof(PluginEventArgs).IsAssignableFrom(typeof(T)))
             {
@@ -95,7 +94,7 @@ namespace TouchSocket.Core
                     action(e as T);
                     await e.InvokeNext();
                 }
-                pluginsManager.Add(name, newFunc);
+                pluginManager.Add(name, newFunc);
             }
             else
             {
@@ -104,24 +103,24 @@ namespace TouchSocket.Core
                     action((T)sender);
                     await e.InvokeNext();
                 }
-                pluginsManager.Add(name, newFunc);
+                pluginManager.Add(name, newFunc);
             }
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="action"></param>
-        public static void Add(this IPluginsManager pluginsManager, string name, Action action)
+        public static void Add(this IPluginManager pluginManager, string name, Action action)
         {
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 action();
                 await e.InvokeNext();
             }
-            pluginsManager.Add(name, newFunc);
+            pluginManager.Add(name, newFunc);
         }
     }
 }

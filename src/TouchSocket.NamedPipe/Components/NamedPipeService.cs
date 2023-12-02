@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Linq;
@@ -186,7 +198,7 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        public override IService Start()
+        public override void Start()
         {
             if (this.Config is null)
             {
@@ -214,7 +226,7 @@ namespace TouchSocket.NamedPipe
 
             if (optionList.Count == 0)
             {
-                return this;
+                return;
             }
             try
             {
@@ -227,7 +239,7 @@ namespace TouchSocket.NamedPipe
                         }
                     case ServerState.Running:
                         {
-                            return this;
+                            return;
                         }
                     case ServerState.Stopped:
                         {
@@ -241,21 +253,96 @@ namespace TouchSocket.NamedPipe
                 }
                 this.m_serverState = ServerState.Running;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
-                return this;
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
+                return;
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                this.PluginsManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
+                this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message });
                 throw;
             }
         }
 
         /// <inheritdoc/>
-        public override IService Stop()
+        public override async Task StartAsync()
         {
+            if (this.Config is null)
+            {
+                throw new ArgumentNullException(nameof(this.Config), "Config为null，请先执行Setup");
+            }
+
+            var optionList = new List<NamedPipeListenOption>();
+            if (this.Config.GetValue(NamedPipeConfigExtension.NamedPipeListenOptionProperty) is Action<List<NamedPipeListenOption>> action)
+            {
+                action.Invoke(optionList);
+            }
+
+            var pipeName = this.Config.GetValue(NamedPipeConfigExtension.PipeNameProperty);
+            if (pipeName != null)
+            {
+                var option = new NamedPipeListenOption
+                {
+                    Name = pipeName,
+                    Adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty),
+                    SendTimeout = this.Config.GetValue(TouchSocketConfigExtension.SendTimeoutProperty)
+                };
+
+                optionList.Add(option);
+            }
+
+            if (optionList.Count == 0)
+            {
+                return;
+            }
+            try
+            {
+                switch (this.m_serverState)
+                {
+                    case ServerState.None:
+                        {
+                            this.BeginListen(optionList);
+                            break;
+                        }
+                    case ServerState.Running:
+                        {
+                            return;
+                        }
+                    case ServerState.Stopped:
+                        {
+                            this.BeginListen(optionList);
+                            break;
+                        }
+                    case ServerState.Disposed:
+                        {
+                            throw new ObjectDisposedException(this.GetType().Name);
+                        }
+                }
+                this.m_serverState = ServerState.Running;
+
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                return;
+            }
+            catch (Exception ex)
+            {
+                this.m_serverState = ServerState.Exception;
+
+                await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureFalseAwait();
+                throw;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override void Stop()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public override async Task StopAsync()
+        {
+            await EasyTask.CompletedTask;
             throw new NotImplementedException();
         }
 
@@ -303,10 +390,10 @@ namespace TouchSocket.NamedPipe
         {
             var client = this.GetClientInstence(namedPipe, monitor);
             client.InternalSetConfig(this.Config);
-            client.InternalSetContainer(this.Container);
+            client.InternalSetContainer(this.Resolver);
             client.InternalSetService(this);
             client.InternalSetNamedPipe(namedPipe);
-            client.InternalSetPluginsManager(this.PluginsManager);
+            client.InternalSetPluginManager(this.PluginManager);
 
             if (client.CanSetDataHandlingAdapter)
             {

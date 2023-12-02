@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -51,7 +51,7 @@ namespace TouchSocket.Sockets
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <inheritdoc/>
-        public IContainer Container { get; private set; }
+        public IResolver Resolver { get; private set; }
 
         /// <inheritdoc/>
         public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
@@ -81,7 +81,7 @@ namespace TouchSocket.Sockets
         public bool Online { get; private set; }
 
         /// <inheritdoc/>
-        public IPluginsManager PluginsManager { get; private set; }
+        public IPluginManager PluginManager { get; private set; }
 
         /// <inheritdoc/>
         public int Port { get; private set; }
@@ -149,10 +149,10 @@ namespace TouchSocket.Sockets
             return this.OnInitialized();
         }
 
-        internal void InternalSetContainer(IContainer container)
+        internal void InternalSetContainer(IResolver containerProvider)
         {
-            this.Container = container;
-            this.Logger ??= container.Resolve<ILog>();
+            this.Resolver = containerProvider;
+            this.Logger ??= containerProvider.Resolve<ILog>();
         }
 
         internal void InternalSetId(string id)
@@ -166,9 +166,9 @@ namespace TouchSocket.Sockets
             //this.ReceiveType = option.ReceiveType;
         }
 
-        internal void InternalSetPluginsManager(IPluginsManager pluginsManager)
+        internal void InternalSetPluginManager(IPluginManager pluginManager)
         {
-            this.PluginsManager = pluginsManager;
+            this.PluginManager = pluginManager;
         }
 
         internal void InternalSetService(TcpServiceBase serviceBase)
@@ -273,7 +273,7 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected virtual async Task OnConnected(ConnectedEventArgs e)
         {
-            if (await this.PluginsManager.RaiseAsync(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(ITcpConnectedPlugin.OnTcpConnected), this, e))
             {
                 return;
             }
@@ -285,7 +285,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected virtual async Task OnConnecting(ConnectingEventArgs e)
         {
-            if (await this.PluginsManager.RaiseAsync(nameof(ITcpConnectingPlugin.OnTcpConnecting), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(ITcpConnectingPlugin.OnTcpConnecting), this, e))
             {
                 return;
             }
@@ -307,7 +307,7 @@ namespace TouchSocket.Sockets
                 }
             }
 
-            if (await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
+            if (await this.PluginManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
             {
                 return;
             }
@@ -331,7 +331,7 @@ namespace TouchSocket.Sockets
                     }
                 }
 
-                if (await this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectingPlugin.OnTcpDisconnecting), this, e))
+                if (await this.PluginManager.RaiseAsync(nameof(ITcpDisconnectingPlugin.OnTcpDisconnecting), this, e))
                 {
                     return;
                 }
@@ -505,7 +505,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         protected Task IdChanged(string oldId, string newId)
         {
-            return this.PluginsManager.RaiseAsync(nameof(IIdChangedPlugin.OnIdChanged), this, new IdChangedEventArgs(oldId, newId));
+            return this.PluginManager.RaiseAsync(nameof(IIdChangedPlugin.OnIdChanged), this, new IdChangedEventArgs(oldId, newId));
         }
 
         /// <summary>
@@ -519,7 +519,7 @@ namespace TouchSocket.Sockets
                 return;
             }
 
-            await this.PluginsManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
+            await this.PluginManager.RaiseAsync(nameof(ITcpReceivedPlugin.OnTcpReceived), this, e);
 
             if (e.Handled)
             {
@@ -536,9 +536,9 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual Task<bool> ReceivingData(ByteBlock byteBlock)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpReceivingPlugin.OnTcpReceiving)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(ITcpReceivingPlugin.OnTcpReceiving)) > 0)
             {
-                return this.PluginsManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
+                return this.PluginManager.RaiseAsync(nameof(ITcpReceivingPlugin.OnTcpReceiving), this, new ByteBlockEventArgs(byteBlock));
             }
             return Task.FromResult(false);
         }
@@ -552,10 +552,10 @@ namespace TouchSocket.Sockets
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual async Task<bool> SendingData(byte[] buffer, int offset, int length)
         {
-            if (this.PluginsManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
+            if (this.PluginManager.GetPluginCount(nameof(ITcpSendingPlugin.OnTcpSending)) > 0)
             {
                 var args = new SendingEventArgs(buffer, offset, length);
-                await this.PluginsManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(nameof(ITcpSendingPlugin.OnTcpSending), this, args).ConfigureAwait(false);
                 return args.IsPermitOperation;
             }
             return true;

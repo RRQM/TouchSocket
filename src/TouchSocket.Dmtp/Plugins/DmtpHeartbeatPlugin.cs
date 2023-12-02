@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 基于Dmtp的心跳插件。服务器和客户端均适用
     /// </summary>
-    [PluginOption(Singleton = true, NotRegister = true)]
+    [PluginOption(Singleton = true)]
     public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
     {
         /// <inheritdoc/>

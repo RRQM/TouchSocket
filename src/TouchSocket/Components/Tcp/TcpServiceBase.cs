@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : SetupConfigObject, ITcpService
+    public abstract class TcpServiceBase : ServiceBase, ITcpService
     {
         private readonly ConcurrentStack<TcpCore> m_tcpCores = new ConcurrentStack<TcpCore>();
 
@@ -40,16 +40,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         /// </summary>
         public abstract IEnumerable<TcpNetworkMonitor> Monitors { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract string ServerName { get; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public abstract ServerState ServerState { get; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -124,18 +114,6 @@ namespace TouchSocket.Sockets
         /// <param name="id"></param>
         /// <returns></returns>
         public abstract bool SocketClientExist(string id);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public abstract IService Start();
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public abstract IService Stop();
 
         internal Task OnInternalConnected(ISocketClient socketClient, ConnectedEventArgs e)
         {

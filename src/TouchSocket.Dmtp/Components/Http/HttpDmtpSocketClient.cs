@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -129,7 +129,7 @@ namespace TouchSocket.Dmtp
             {
                 if (!await this.m_dmtpActor.InputReceivedData(message))
                 {
-                    await this.PluginsManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
+                    await this.PluginManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
                 }
             }
             await base.ReceivedData(e);
@@ -222,7 +222,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
         }
 
         #endregion 事件

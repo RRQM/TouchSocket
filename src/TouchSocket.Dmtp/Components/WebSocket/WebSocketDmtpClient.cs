@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using System.Net.WebSockets;
 using System.Threading;
@@ -192,9 +192,9 @@ namespace TouchSocket.Dmtp
         protected override void LoadConfig(TouchSocketConfig config)
         {
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            if (this.Container.IsRegistered(typeof(IDmtpRouteService)))
+            if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
             {
-                this.m_findDmtpActor = this.Container.Resolve<IDmtpRouteService>().FindDmtpActor;
+                this.m_findDmtpActor = this.Resolver.Resolve<IDmtpRouteService>().FindDmtpActor;
             }
         }
 
@@ -204,7 +204,7 @@ namespace TouchSocket.Dmtp
         /// <param name="e"></param>
         protected virtual void OnDisconnected(DisconnectEventArgs e)
         {
-            if (this.PluginsManager.Raise(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
+            if (this.PluginManager.Raise(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, e))
             {
                 return;
             }
@@ -275,7 +275,7 @@ namespace TouchSocket.Dmtp
             var message = (DmtpMessage)requestInfo;
             if (!this.m_dmtpActor.InputReceivedData(message).GetFalseAwaitResult())
             {
-                this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
+                this.PluginManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
             }
         }
 
@@ -372,7 +372,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         /// <summary>
@@ -385,7 +385,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
         }
 
         /// <summary>
@@ -398,7 +398,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
         }
 
         /// <summary>
@@ -411,7 +411,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
         }
 
         #endregion 事件触发

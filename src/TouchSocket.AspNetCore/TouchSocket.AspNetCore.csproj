@@ -11,12 +11,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj" />
-	  <ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	  <ProjectReference Include="..\TouchSocket.Hosting\TouchSocket.Hosting.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

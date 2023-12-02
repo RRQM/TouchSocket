@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -57,11 +57,11 @@ namespace TouchSocket.Dmtp.Redis
         /// <summary>
         /// 使用Redis插件。仅：Dmtp端会生效。
         /// </summary>
-        /// <param name="pluginsManager"></param>
+        /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static RedisFeature UseDmtpRedis(this IPluginsManager pluginsManager)
+        public static RedisFeature UseDmtpRedis(this IPluginManager pluginManager)
         {
-            return pluginsManager.Add<RedisFeature>();
+            return pluginManager.Add<RedisFeature>();
         }
     }
 }

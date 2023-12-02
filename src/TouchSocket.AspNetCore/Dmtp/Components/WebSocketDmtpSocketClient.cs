@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Net.WebSockets;
@@ -59,10 +59,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         #endregion 字段
 
         /// <inheritdoc/>
-        public override TouchSocketConfig Config { get => m_config;}
+        public override TouchSocketConfig Config { get => this.m_config; }
 
         /// <inheritdoc/>
-        public IContainer Container { get; private set; }
+        public IResolver Resolver { get; private set; }
 
         /// <inheritdoc/>
         public HttpContext HttpContext { get; private set; }
@@ -80,7 +80,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public IPluginsManager PluginsManager { get; private set; }
+        public IPluginManager PluginManager { get; private set; }
 
         /// <inheritdoc/>
         public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
@@ -135,10 +135,10 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.m_dmtpAdapter.Config(config);
         }
 
-        internal void InternalSetContainer(IContainer container)
+        internal void InternalSetContainer(IResolver containerProvider)
         {
-            this.Container = container;
-            this.Logger ??= container.Resolve<ILog>();
+            this.Resolver = containerProvider;
+            this.Logger ??= containerProvider.Resolve<ILog>();
         }
 
         internal void InternalSetId(string id)
@@ -146,9 +146,9 @@ namespace TouchSocket.Dmtp.AspNetCore
             this.Id = id;
         }
 
-        internal void InternalSetPluginsManager(IPluginsManager pluginsManager)
+        internal void InternalSetPluginManager(IPluginManager pluginManager)
         {
-            this.PluginsManager = pluginsManager;
+            this.PluginManager = pluginManager;
         }
 
         internal void InternalSetService(WebSocketDmtpService service)
@@ -267,7 +267,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 return;
             }
 
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e);
         }
 
         /// <summary>
@@ -293,7 +293,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginsManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
+            await this.PluginManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e);
         }
 
         #endregion 事件
@@ -393,10 +393,10 @@ namespace TouchSocket.Dmtp.AspNetCore
                 socketClient.Id = newId;
                 if (this.m_service.TryAdd(this.Id, socketClient))
                 {
-                    if (this.PluginsManager.Enable)
+                    if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(oldId, newId);
-                        this.PluginsManager.Raise(nameof(IIdChangedPlugin.OnIdChanged), socketClient, e);
+                        this.PluginManager.Raise(nameof(IIdChangedPlugin.OnIdChanged), socketClient, e);
                     }
                     return;
                 }
@@ -440,9 +440,9 @@ namespace TouchSocket.Dmtp.AspNetCore
 
                 if (this.m_service.TryRemove(this.Id, out _))
                 {
-                    if (this.PluginsManager.Enable)
+                    if (this.PluginManager.Enable)
                     {
-                        this.PluginsManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, new DisconnectEventArgs(manual, msg));
+                        this.PluginManager.RaiseAsync(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this, new DisconnectEventArgs(manual, msg));
                     }
                 }
             }
@@ -453,7 +453,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             var message = (DmtpMessage)requestInfo;
             if (!this.m_dmtpActor.InputReceivedData(message).GetFalseAwaitResult())
             {
-                this.PluginsManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
+                this.PluginManager.Raise(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message));
             }
         }
 

@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net461;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Hosting;Socket;JsonRpc;NamedPipe;XmlRpc;Dmtp;TouchSocket</PackageTags>
+		<Description>这是TouchSocket基于通用主机的扩展。目前包括Tcp、Udp、NamedPipe、Dmtp、SerialPort等服务。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+		<Title>TouchSocket.Hosting</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Hosting</PackageOutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj" />
+		<ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
+		<ProjectReference Include="..\TouchSocket.NamedPipe\TouchSocket.NamedPipe.csproj" />
+		<ProjectReference Include="..\TouchSocket.SerialPort\TouchSocket.SerialPorts.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+	</ItemGroup>
+
+</Project>
