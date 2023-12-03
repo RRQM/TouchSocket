@@ -1,0 +1,95 @@
+---
+id: generichost
+title: 通用主机
+---
+
+### 定义
+
+命名空间：TouchSocket.Hosting <br/>
+程序集：[TouchSocket.Hosting.dll](https://www.nuget.org/packages/TouchSocket.Hosting)<br/>
+程序集：[TouchSocketPro.Hosting.dll](https://www.nuget.org/packages/TouchSocketPro.Hosting)
+
+
+## 一、说明
+
+Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host) 之后，可以通过Add的服务的形式创建`TouchSocket`的一些组件。如`TcpService`、`TcpClient`、`NamedPipeService`、`NamedPipeclient`等。
+
+## 二、使用
+
+### 2.1 安装Nuget包
+
+在安装Nuget之前，最好先确认目标项目是一个主机项目。例如：[辅助角色服务模板](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)、 [AspNetCore](https://learn.microsoft.com/zh-cn/aspnet/core)等。如果是其他项目，请自行解决。
+
+Nuget安装`TouchSocket.Hosting`或`TouchSocketPro.Hosting`。
+
+### 2.2 添加服务
+
+一些常用的组件，都已经被封装了，可以直接使用。例如：
+
+- TcpService
+- TcpClient
+- NamedPipeService
+- NamedPipeClient
+- 等
+
+```csharp showLineNumbers
+var builder = Host.CreateDefaultBuilder(args);
+
+builder.ConfigureServices(services =>
+{
+    //添加TcpService。
+    services.AddTcpService(config =>
+    {
+        config.SetListenIPHosts(7789);
+    });
+
+    //添加TcpClient
+    //注意，Client类的服务，在整个服务Start时，不会执行Connect。所以需要自行连接，或者配置无人值守连接
+    services.AddTcpClient(config =>
+    {
+        config.SetRemoteIPHost("127.0.0.1:7789");
+    });
+});
+
+var host = builder.Build();
+host.Run();
+```
+
+但是如果想添加自己的服务，或者想注入同一类型的服务，则需要重新实现。例如：添加自己的TcpService。
+
+首先需要声明一个接口`IMyTcpService`，继承自`ITcpService`，然后声明自定义类`MyTcpService`，继承`TcpService`，同时实现`IMyTcpService`。
+
+```csharp showLineNumbers
+class MyTcpService : TcpService, IMyTcpService
+{
+
+}
+
+interface IMyTcpService : ITcpService
+{
+
+}
+```
+
+然后调用AddServiceHostedService即可。
+
+```csharp showLineNumbers
+services.AddServiceHostedService<IMyTcpService, MyTcpService>(config =>
+{
+    config.SetListenIPHosts(7790);
+});
+```
+
+:::tip 提示
+
+`AddServiceHostedService`适用于任何基于`IService`的服务。如果是客户端，请使用`AddClientHostedService`。
+
+:::  
+
+:::tip 提示
+
+当想要注入两个`TcpService`时，如果调用两次`AddTcpService`，则在容器中会替换掉第一次添加的项。所以也需要使用该方法实现。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Hosting)

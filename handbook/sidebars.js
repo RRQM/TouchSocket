@@ -625,7 +625,6 @@ module.exports = {
           },
         ]
     },
-
     {
       type: "doc",
       label: "17、JsonRpc组件",
@@ -635,6 +634,12 @@ module.exports = {
       type: "doc",
       label: "18、XmlRpc组件",
       id: "xmlrpc"
+    }
+    ,
+    {
+      type: "doc",
+      label: "19、通用主机",
+      id: "generichost"
     }
   ]
 };
