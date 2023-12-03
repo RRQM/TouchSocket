@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using TouchSocket.Core;
+using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
 namespace HostingWorkerService
@@ -27,6 +29,12 @@ namespace HostingWorkerService
                 services.AddServiceHostedService<IMyTcpService, MyTcpService>(config =>
                 {
                     config.SetListenIPHosts(7790);
+                });
+
+                //添加命名管道服务
+                services.AddServiceHostedService<INamedPipeService, NamedPipeService>(config =>
+                {
+                    config.SetPipeName("pipe7789");
                 });
             });
 

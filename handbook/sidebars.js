@@ -638,7 +638,7 @@ module.exports = {
     ,
     {
       type: "doc",
-      label: "19、通用主机",
+      label: "19、通用主机(Hosting)",
       id: "generichost"
     }
   ]
