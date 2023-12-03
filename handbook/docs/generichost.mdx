@@ -28,8 +28,6 @@ Nuget安装`TouchSocket.Hosting`或`TouchSocketPro.Hosting`。
 
 - TcpService
 - TcpClient
-- NamedPipeService
-- NamedPipeClient
 - 等
 
 ```csharp showLineNumbers
@@ -82,7 +80,7 @@ services.AddServiceHostedService<IMyTcpService, MyTcpService>(config =>
 
 :::tip 提示
 
-`AddServiceHostedService`适用于任何基于`IService`的服务。如果是客户端，请使用`AddClientHostedService`。
+`AddServiceHostedService`适用于任何基于`IService`的服务，例如`NamedPipeService`。如果是客户端，请使用`AddClientHostedService`。
 
 :::  
 
