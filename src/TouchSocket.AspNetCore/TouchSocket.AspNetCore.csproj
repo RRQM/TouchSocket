@@ -15,6 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
 	  <ProjectReference Include="..\TouchSocket.Hosting\TouchSocket.Hosting.csproj" />
 	</ItemGroup>
 

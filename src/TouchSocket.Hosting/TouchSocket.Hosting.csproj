@@ -18,9 +18,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj" />
-		<ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
-		<ProjectReference Include="..\TouchSocket.NamedPipe\TouchSocket.NamedPipe.csproj" />
-		<ProjectReference Include="..\TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj" />
+		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
