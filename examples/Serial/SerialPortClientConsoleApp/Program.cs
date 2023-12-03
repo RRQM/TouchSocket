@@ -7,7 +7,7 @@ namespace SerialPortClientConsoleApp
 {
     internal class Program
     {
-        static async void Main(string[] args)
+        static void Main(string[] args)
         {
             var client = new SerialPortClient();
             client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到端口
