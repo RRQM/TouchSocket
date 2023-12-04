@@ -79,17 +79,20 @@ public class MyRpcServer : TransientRpcServer
 var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(7789)
-       .ConfigurePlugins(a =>
+       .ConfigureContainer(a=> 
        {
-           a.UseDmtpRpc()
-           .ConfigureRpcStore(store =>
+           a.AddRpcStore(store =>
            {
                store.RegisterServer<MyRpcServer>();//注册服务
            });
        })
+       .ConfigurePlugins(a =>
+       {
+           a.UseDmtpRpc();
+       })
        .SetDmtpOption(new DmtpOption()
        {
-            VerifyToken = "Rpc"//连接验证口令。
+           VerifyToken = "Rpc"//连接验证口令。
        });
 
 service.Setup(config);
@@ -306,13 +309,16 @@ client.Setup(new TouchSocketConfig()
     {
         a.AddConsoleLogger();
     })
-    .ConfigurePlugins(a =>
+    .ConfigureContainer(a => 
     {
-        a.UseDmtpRpc()
-        .ConfigureRpcStore(store => 
+        a.AddRpcStore(store =>
         {
             store.RegisterServer<ReverseCallbackServer>();
         });
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseDmtpRpc();
     })
     .SetRemoteIPHost("127.0.0.1:7789")
     .SetDmtpOption(new DmtpOption()

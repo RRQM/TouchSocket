@@ -108,6 +108,13 @@ JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
 var service = new TcpService();
 service.Setup(new TouchSocketConfig()
     .SetListenIPHosts(7705)
+    .ConfigureContainer(a => 
+    {
+        a.AddRpcStore(store =>
+        {
+            store.RegisterServer<JsonRpcServer>();
+        });
+    })
     .ConfigurePlugins(a =>
     {
         /*
@@ -115,12 +122,7 @@ service.Setup(new TouchSocketConfig()
          这样所有的数据都会被尝试解释为JsonRpc。
          如果不需要该功能，可以调用NoSwitchProtocol()。
          */
-        a.UseTcpJsonRpc()
-        //.NoSwitchProtocol()
-        .ConfigureRpcStore(store =>
-        {
-            store.RegisterServer<JsonRpcServer>();
-        });
+        a.UseTcpJsonRpc();
     }));
 
 service.Start();
@@ -142,13 +144,16 @@ var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
      .SetListenIPHosts(7706)
+     .ConfigureContainer(a => 
+     {
+         a.AddRpcStore(store =>
+         {
+             store.RegisterServer<JsonRpcServer>();
+         });
+     })
      .ConfigurePlugins(a =>
      {
          a.UseHttpJsonRpc()
-         .ConfigureRpcStore(store =>
-         {
-             store.RegisterServer<JsonRpcServer>();
-         })
          .SetJsonRpcUrl("/jsonRpc");
      }));
 
@@ -164,6 +169,13 @@ var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
      .SetListenIPHosts(7707)
+     .ConfigureContainer(a => 
+     {
+         a.AddRpcStore(store =>
+         {
+             store.RegisterServer<JsonRpcServer>();
+         });
+     })
      .ConfigurePlugins(a =>
      {
          a.UseWebSocket()
@@ -175,10 +187,6 @@ service.Setup(new TouchSocketConfig()
              //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
              //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
              return true;
-         })
-         .ConfigureRpcStore(store =>
-         {
-             store.RegisterServer<JsonRpcServer>();
          });
      }));
 
@@ -264,16 +272,14 @@ string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitIn
 在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./generateproxyfromserver.mdx)
 
 ```csharp {8-9}
-a.UseTcpJsonRpc()
-.ConfigureRpcStore(store =>
+a.AddRpcStore(store =>
 {
-    store.RegisterServer<JsonRpcServer>();//注册服务
-
-#if DEBUG
+    store.RegisterServer<JsonRpcServer>();
+    #if DEBUG
     //下列代码，会生成客户端的调用代码。
     var codeString = store.GetProxyCodes("JsonRpcServerProxy", typeof(JsonRpcAttribute));
     File.WriteAllText("../../../JsonRpcServerProxy.cs", codeString);
-#endif
+    #endif
 });
 ```
 
