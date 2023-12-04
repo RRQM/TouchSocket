@@ -44,7 +44,7 @@ namespace RpcPerformanceConsoleApp
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
-                   .SetRegistrator(new MyContainer())
+                   //.SetRegistrator(new MyContainer())
                    .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {
@@ -94,7 +94,7 @@ namespace RpcPerformanceConsoleApp
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .SetRegistrator(new MyContainer())
+                //.SetRegistrator(new MyContainer())
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc();
@@ -185,8 +185,8 @@ namespace RpcPerformanceConsoleApp
     [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
     [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
     [AddSingletonInject(typeof(DmtpRpcFeature))]
-    [AddSingletonInject(typeof(RpcStore))]
-    //[AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
+    [AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
+    [AddSingletonInject(typeof(IDmtpRouteService), typeof(DmtpRouteService))]
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
