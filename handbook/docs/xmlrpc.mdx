@@ -57,15 +57,10 @@ public class MyClass
 var service = new HttpService();
 
 service.Setup(new TouchSocketConfig()
-    .ConfigureContainer(a => 
+    .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.UseXmlRpc()
-        .SetXmlRpcUrl("/xmlRpc")
-        .ConfigureRpcStore(store =>
+        a.AddRpcStore(store =>
         {
             store.RegisterServer<XmlServer>();
 
@@ -74,6 +69,11 @@ service.Setup(new TouchSocketConfig()
             ConsoleLogger.Default.Info("成功生成代理");
 
         });
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseXmlRpc()
+        .SetXmlRpcUrl("/xmlRpc");
     })
     .SetListenIPHosts(7789));
 service.Start();
@@ -145,15 +145,13 @@ private static XmlRpcClient GetXmlRpcClient()
 在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./generateproxyfromserver.mdx)
 
 ```csharp {8-9}
-a.UseXmlRpc()
-.ConfigureRpcStore(store =>
+a.AddRpcStore(store =>
 {
-    store.RegisterServer<XmlServer>();//注册服务
+    store.RegisterServer<XmlServer>();
 
 #if DEBUG
-    //下列代码，会生成客户端的调用代码。
-    var codeString = store.GetProxyCodes("XmlServerProxy", typeof(XmlRpcAttribute));
-    File.WriteAllText("../../../XmlServerProxy.cs", codeString);
+    File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(XmlRpcAttribute) }));
+    ConsoleLogger.Default.Info("成功生成代理");
 #endif
 });
 ```

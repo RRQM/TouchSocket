@@ -39,8 +39,12 @@ namespace XmlRpcServerApp
             service.Logger.Info("服务器已启动");
             Console.ReadKey();
         }
-    }
 
+        static void a()
+        {
+            
+        }
+    }
 
     public class XmlServer : RpcServer
     {
