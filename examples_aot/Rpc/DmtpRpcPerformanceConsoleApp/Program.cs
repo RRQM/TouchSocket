@@ -44,19 +44,19 @@ namespace RpcPerformanceConsoleApp
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
-                   .SetContainer(new MyContainer())
+                   .SetRegistrator(new MyContainer())
                    .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
+                       a.AddRpcStore(store =>
                        {
                            store.RegisterServer<TestController>();
                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -94,7 +94,7 @@ namespace RpcPerformanceConsoleApp
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .SetContainer(new MyContainer())
+                .SetRegistrator(new MyContainer())
                 .ConfigurePlugins(a =>
                 {
                     a.UseDmtpRpc();
@@ -182,11 +182,11 @@ namespace RpcPerformanceConsoleApp
     /// <summary>
     /// IOC容器
     /// </summary>
-    [AddSingletonInject(typeof(IPluginsManager), typeof(PluginsManager))]
+    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
     [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
     [AddSingletonInject(typeof(DmtpRpcFeature))]
     [AddSingletonInject(typeof(RpcStore))]
-    [AddSingletonInject(typeof(IRpcServerFactory), typeof(RpcServerFactory))]
+    //[AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
