@@ -79,10 +79,6 @@ namespace TcpConsoleApp
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
-        protected override bool TryResolve(Type fromType, out object instance)
-        {
-            return base.TryResolve(fromType, out instance);
-        }
     }
 
     [AutoInjectForSingleton]

@@ -125,8 +125,7 @@ namespace DmtpRpcConsoleApp
     [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
     [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
     [AddSingletonInject(typeof(DmtpRpcFeature))]
-    [AddSingletonInject(typeof(RpcStore))]
-    //[AddSingletonInject(typeof(IRpcServerFactory), typeof(RpcServerFactory))]
+    [AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
