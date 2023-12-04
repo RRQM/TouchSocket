@@ -22,8 +22,7 @@ namespace TcpConsoleApp
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
-
-                .SetContainer(new MyContainer())
+                .SetRegistrator(new MyContainer())
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -54,7 +53,7 @@ namespace TcpConsoleApp
 
             //载入配置
             tcpClient.Setup(new TouchSocketConfig()
-                .SetContainer(new MyContainer())
+                .SetRegistrator(new MyContainer())
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
@@ -75,12 +74,15 @@ namespace TcpConsoleApp
     /// <summary>
     /// IOC容器
     /// </summary>
-    [AddSingletonInject(typeof(IPluginsManager), typeof(PluginsManager))]
+    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
     [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
     [GeneratorContainer]
     public partial class MyContainer : ManualContainer
     {
-
+        protected override bool TryResolve(Type fromType, out object instance)
+        {
+            return base.TryResolve(fromType, out instance);
+        }
     }
 
     [AutoInjectForSingleton]
