@@ -217,7 +217,7 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator, Func<IRegistrator, object> func)
+        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator, Func<IResolver, object> func)
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), Lifetime.Singleton)
             {
@@ -233,7 +233,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator, Func<IRegistrator, object> func, string key)
+        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator, Func<IResolver, object> func, string key)
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), Lifetime.Singleton)
             {
@@ -249,7 +249,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Func<IRegistrator, object> func)
+        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Func<IResolver, object> func)
         {
             registrator.Register(new DependencyDescriptor(fromType, Lifetime.Singleton)
             {
@@ -266,7 +266,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Func<IRegistrator, object> func, string key)
+        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Func<IResolver, object> func, string key)
         {
             registrator.Register(new DependencyDescriptor(fromType, Lifetime.Singleton)
             {
@@ -426,7 +426,7 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator, Func<IRegistrator, object> func)
+        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator, Func<IResolver, object> func)
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), Lifetime.Transient)
             {
@@ -442,7 +442,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator, Func<IRegistrator, object> func, string key)
+        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator, Func<IResolver, object> func, string key)
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), Lifetime.Transient)
             {
@@ -458,7 +458,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Func<IRegistrator, object> func)
+        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Func<IResolver, object> func)
         {
             registrator.Register(new DependencyDescriptor(fromType, Lifetime.Transient)
             {
@@ -475,7 +475,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Func<IRegistrator, object> func, string key)
+        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Func<IResolver, object> func, string key)
         {
             registrator.Register(new DependencyDescriptor(fromType, Lifetime.Transient)
             {

@@ -31,7 +31,13 @@ namespace TouchSocket.Rpc
         /// </summary>
         public RpcStore(IRegistrator registrator)
         {
-            registrator.RegisterSingleton<IRpcServerProvider, RpcServerProvider>();
+            registrator.Register(new DependencyDescriptor(typeof(IRpcServerProvider), typeof(RpcServerProvider), Lifetime.Singleton)
+            {
+                ImplementationFactory = (provider) => new RpcServerProvider(
+                    provider.Resolve<IResolver>(),
+                    provider.Resolve<ILog>(),
+                    provider.Resolve<RpcStore>())
+            }) ;
             this.m_registrator = registrator;
         }
 

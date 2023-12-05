@@ -164,5 +164,21 @@ namespace TouchSocket.Core
             config.SetValue(AdapterOptionProperty, value);
             return config;
         }
+
+        #region MyRegion
+        /// <summary>
+        /// 将对象构建到字节数组
+        /// </summary>
+        /// <param name="requestInfo"></param>
+        /// <returns></returns>
+        public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
+        {
+            using (var byteBlock=new ByteBlock(requestInfo.MaxLength))
+            {
+                requestInfo.Build(byteBlock);
+                return byteBlock.ToArray();
+            }
+        }
+        #endregion
     }
 }

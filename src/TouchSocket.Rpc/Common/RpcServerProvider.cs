@@ -17,12 +17,21 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
-    internal sealed class RpcServerProvider : IRpcServerProvider
+    /// <summary>
+    /// RpcServerProvider
+    /// </summary>
+    public sealed class RpcServerProvider : IRpcServerProvider
     {
         private readonly IResolver m_containerProvider;
         private readonly ILog m_logger;
         private readonly RpcStore m_rpcStore;
 
+        /// <summary>
+        /// RpcServerProvider
+        /// </summary>
+        /// <param name="containerProvider"></param>
+        /// <param name="logger"></param>
+        /// <param name="rpcStore"></param>
         public RpcServerProvider(IResolver containerProvider, ILog logger, RpcStore rpcStore)
         {
             this.m_containerProvider = containerProvider;
@@ -222,6 +231,7 @@ namespace TouchSocket.Rpc
             return invokeResult;
         }
 
+        /// <inheritdoc/>
         public MethodInstance[] GetMethods()
         {
             return this.m_rpcStore.GetAllMethods();
