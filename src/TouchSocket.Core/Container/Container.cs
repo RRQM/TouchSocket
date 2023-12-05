@@ -47,7 +47,6 @@ namespace TouchSocket.Core
             return this.m_registrations.Values;
         }
 
-
         /// <inheritdoc/>
         public object GetService(Type serviceType)
         {

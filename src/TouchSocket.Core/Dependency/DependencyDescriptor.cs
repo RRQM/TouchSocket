@@ -55,9 +55,19 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 注册类型
+        /// </summary>
+        public Type FromType { get; }
+
+        /// <summary>
         /// 实例化工厂委托
         /// </summary>
-        public Func<IContainer, object> ImplementationFactory { get; set; }
+        public Func<IResolver, object> ImplementationFactory { get; set; }
+
+        /// <summary>
+        /// 生命周期
+        /// </summary>
+        public Lifetime Lifetime { get; }
 
         /// <summary>
         /// 在获取到注册时触发委托。
@@ -68,23 +78,13 @@ namespace TouchSocket.Core
         public Action<object> OnResolved { get; set; }
 
         /// <summary>
-        /// 实例类型
-        /// </summary>
-        public Type ToType { get; }
-
-        /// <summary>
         /// 实例
         /// </summary>
         public object ToInstance { get; set; }
 
         /// <summary>
-        /// 生命周期
+        /// 实例类型
         /// </summary>
-        public Lifetime Lifetime { get; }
-
-        /// <summary>
-        /// 注册类型
-        /// </summary>
-        public Type FromType { get; }
+        public Type ToType { get; }
     }
 }

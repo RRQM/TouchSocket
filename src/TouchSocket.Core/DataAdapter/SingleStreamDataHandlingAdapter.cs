@@ -31,20 +31,26 @@ namespace TouchSocket.Core
         /// </summary>
         public bool CacheTimeoutEnable { get; set; } = false;
 
+        /// <inheritdoc/>
+        public override bool CanSendRequestInfo => false;
+
+        /// <inheritdoc/>
+        public override bool CanSplicingSend => false;
+
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
         /// </summary>
         public Action<ByteBlock, IRequestInfo> ReceivedCallBack { get; set; }
 
         /// <summary>
-        /// 当发送数据处理完成后，回调该函数执行发送
-        /// </summary>
-        public Action<byte[], int, int> SendCallBack { get; set; }
-
-        /// <summary>
         /// 当发送数据处理完成后，回调该函数执行异步发送
         /// </summary>
         public Func<byte[], int, int, Task> SendAsyncCallBack { get; set; }
+
+        /// <summary>
+        /// 当发送数据处理完成后，回调该函数执行发送
+        /// </summary>
+        public Action<byte[], int, int> SendCallBack { get; set; }
 
         /// <summary>
         /// 是否在收到数据时，即刷新缓存时间。默认true。
@@ -59,12 +65,6 @@ namespace TouchSocket.Core
         /// 最后缓存的时间
         /// </summary>
         protected DateTime LastCacheTime { get; set; }
-
-        /// <inheritdoc/>
-        public override bool CanSendRequestInfo => false;
-
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
 
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
@@ -149,7 +149,16 @@ namespace TouchSocket.Core
         /// <param name="requestInfo"></param>
         protected virtual void PreviewSend(IRequestInfo requestInfo)
         {
-            throw new NotImplementedException();
+            if (requestInfo == null)
+            {
+                throw new ArgumentNullException(nameof(requestInfo));
+            }
+            var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
+            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
+            {
+                requestInfoBuilder.Build(byteBlock);
+                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+            }
         }
 
         /// <summary>
@@ -177,9 +186,18 @@ namespace TouchSocket.Core
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="requestInfo"></param>
-        protected virtual Task PreviewSendAsync(IRequestInfo requestInfo)
+        protected virtual async Task PreviewSendAsync(IRequestInfo requestInfo)
         {
-            throw new NotImplementedException();
+            if (requestInfo == null)
+            {
+                throw new ArgumentNullException(nameof(requestInfo));
+            }
+            var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
+            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
+            {
+                requestInfoBuilder.Build(byteBlock);
+                await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            }
         }
 
         /// <summary>

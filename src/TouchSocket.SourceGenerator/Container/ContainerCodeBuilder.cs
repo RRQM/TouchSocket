@@ -117,7 +117,8 @@ namespace TouchSocket
                 this.BuildInject(codeString, item);
             }
 
-            this.BuildPrivateTryResolve(codeString, singletonInjectDescriptions, transientInjectDescriptions);
+            this.BuildPrivateTryResolve(codeString, singletonInjectDescriptions, transientInjectDescriptions,true);
+            this.BuildPrivateTryResolve(codeString, singletonInjectDescriptions, transientInjectDescriptions,false);
             this.TryBuildInvokeTryResolve(codeString);
             codeString.AppendLine("}");
             codeString.AppendLine("}");
@@ -140,19 +141,21 @@ namespace TouchSocket
 
         #region TryResolve
 
-        private void BuildPrivateTryResolve(StringBuilder codeString, List<InjectDescription> singletonDescriptions, List<InjectDescription> transientInjectDescriptions)
+        private void BuildPrivateTryResolve(StringBuilder codeString, List<InjectDescription> singletonDescriptions, List<InjectDescription> transientInjectDescriptions,bool isKey)
         {
-            codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance, string key = \"\")");
-            codeString.AppendLine("{");
-            codeString.AppendLine("string typeKey;");
-            codeString.AppendLine("if(key.IsNullOrEmpty())");
-            codeString.AppendLine("{");
-            codeString.AppendLine("typeKey = fromType.FullName;");
-            codeString.AppendLine("}");
-            codeString.AppendLine("else");
-            codeString.AppendLine("{");
-            codeString.AppendLine("typeKey = $\"{fromType.FullName}{key}\";");
-            codeString.AppendLine("}");
+            if (isKey)
+            {
+                codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance, string key)");
+                codeString.AppendLine("{");
+                codeString.AppendLine("string typeKey= $\"{fromType.FullName}{key}\";");
+            }
+            else
+            {
+                codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance)");
+                codeString.AppendLine("{");
+                codeString.AppendLine("string typeKey= fromType.FullName;");
+            }
+            
             codeString.AppendLine("switch (typeKey)");
             codeString.AppendLine("{");
             foreach (var item in singletonDescriptions)
@@ -181,6 +184,8 @@ namespace TouchSocket
             codeString.AppendLine("}");
             codeString.AppendLine("}");
         }
+
+
 
         #endregion TryResolve
 
@@ -516,14 +521,19 @@ namespace TouchSocket
             return descriptions;
         }
 
-        private bool HasOverrideMethod()
+        private bool HasOverrideMethod(bool iskey)
         {
             return this.m_containerClass
                 .GetMembers()
                 .OfType<IMethodSymbol>()
                 .Any(m =>
                 {
-                    if (m.Name == "TryResolve" && m.IsOverride && m.Parameters.Length == 3)
+                    if (iskey&& m.Name == "TryResolve" && m.IsOverride && m.Parameters.Length == 3)
+                    {
+                        return true;
+                    }
+
+                    if ((!iskey) && m.Name == "TryResolve" && m.IsOverride && m.Parameters.Length == 2)
                     {
                         return true;
                     }
@@ -533,19 +543,29 @@ namespace TouchSocket
 
         private void TryBuildInvokeTryResolve(StringBuilder stringBuilder)
         {
-            if (this.HasOverrideMethod())
+            if (!this.HasOverrideMethod(true))
             {
-                return;
+                stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance, string key)");
+                stringBuilder.AppendLine("{");
+                stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance, key))");
+                stringBuilder.AppendLine("{");
+                stringBuilder.AppendLine("return true;");
+                stringBuilder.AppendLine("}");
+                stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance, key);");
+                stringBuilder.AppendLine("}");
             }
 
-            stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance, string key = \"\")");
-            stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance, key))");
-            stringBuilder.AppendLine("{");
-            stringBuilder.AppendLine("return true;");
-            stringBuilder.AppendLine("}");
-            stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance, key);");
-            stringBuilder.AppendLine("}");
+            if (!this.HasOverrideMethod(false))
+            {
+                stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance)");
+                stringBuilder.AppendLine("{");
+                stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance))");
+                stringBuilder.AppendLine("{");
+                stringBuilder.AppendLine("return true;");
+                stringBuilder.AppendLine("}");
+                stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance);");
+                stringBuilder.AppendLine("}");
+            }
         }
     }
 }
