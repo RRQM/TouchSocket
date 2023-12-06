@@ -21,7 +21,7 @@ DMTP（Duplex Message Transport Protocol双工消息传输协议）是一个简�
 
 协议格式非常简单。
 - 前两个字节为`大端ushort无符号`类型。其中`0-19`的协议框架内部占用。其余的均可被自定义使用。
-- 再4字节为`大端Int32`无符号类型，表示本次协议的载荷数据长度。
+- 再4字节为`大端Int32`**有**符号类型，表示本次协议的载荷数据长度。
 - 其余数据为实际载荷数据。
 
 
@@ -29,7 +29,9 @@ DMTP（Duplex Message Transport Protocol双工消息传输协议）是一个简�
 
 ### 1.1 Dmtp和Tcp、Udp有什么关系？
 
-Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于最基本的tcp或http工作，也能基于websocket工作。所以，可以认为Dmtp是更为高级的应用层协议。
+Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于最基本的tcp或http工作，也能基于websocket工作。
+
+**所以，可以认为Dmtp是更为高级的应用层协议。**
 
 ### 1.2 Tcp本身就是可靠传输协议了，那Dmtp的可靠又体现在什么地方呢？
 
