@@ -20,7 +20,7 @@ SerialPortClient是串口系客户端，他直接参与串口的连接、发送�
 - 简单易用。
 - 内存池支持
 - 高性能
-- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(如HTTP，Json)等。
+- 适配器预处理，一键式解决**分包**、**粘包**、对象解析(modbus)等。
 - 超简单的同步发送、异步发送、接收等操作。
 - 基于委托、插件驱动，让每一步都能执行AOP。
 
@@ -138,7 +138,7 @@ client.Connect();//调用连接，当连接不成功时，会抛出异常。
 
 ### 7.1 Received委托处理
 
-当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+当使用`SerialPortClient`创建客户端时，内部已经定义好了一个外置委托`Received`，可以通过该委托直接接收数据。
 
 ```csharp showLineNumbers
 var client = new SerialPortClient();
@@ -178,7 +178,7 @@ using (var receiver = client.CreateReceiver())
 
 :::tip 提示
 
-receiver在被Create之后，其优先级最高，即：Received委托和插件都不再被调用。
+`receiver`在被`Create`之后，其优先级最高，即：Received委托和插件都不再被调用。
 
 :::  
 
