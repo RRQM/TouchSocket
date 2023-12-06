@@ -53,7 +53,7 @@ namespace TouchSocket.SerialPorts
         }
 
         /// <inheritdoc/>
-        public bool CanSend => this.m_online;
+        public bool CanSend =>this.Online;
 
         /// <summary>
         /// SerialPort
@@ -100,7 +100,7 @@ namespace TouchSocket.SerialPorts
         /// <summary>
         /// 在线状态
         /// </summary>
-        public bool Online { get => this.m_online; }
+        public bool Online => this.m_online && this.m_serialPort != null && this.m_serialPort.IsOpen;
 
         /// <summary>
         /// 当收到数据的时候

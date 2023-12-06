@@ -99,14 +99,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        protected override void PreviewSend(IRequestInfo requestInfo)
-        {
-        }
-
+        
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -118,15 +111,7 @@ namespace TouchSocket.Core
             this.GoSend(buffer, offset, length);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
-        }
-
+       
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

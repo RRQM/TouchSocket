@@ -205,7 +205,7 @@ namespace TouchSocket.SerialPorts
         #region 属性
 
         /// <inheritdoc/>
-        public bool CanSend => this.m_online;
+        public bool CanSend => this.Online;
 
         /// <inheritdoc/>
         public virtual bool CanSetDataHandlingAdapter => true;
@@ -223,7 +223,7 @@ namespace TouchSocket.SerialPorts
         public SerialPort MainSerialPort { get; private set; }
 
         /// <inheritdoc/>
-        public bool Online { get => this.m_online; }
+        public bool Online => this.m_online && this.m_serialCore != null && this.m_serialCore.Online;
 
         /// <inheritdoc/>
         public Protocol Protocol { get; set; }

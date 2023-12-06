@@ -28,13 +28,7 @@ namespace TouchSocket.Sockets
             this.WaitingOptions = waitingOptions;
         }
 
-        public bool CanSend
-        {
-            get
-            {
-                return this.Client is ITcpClientBase tcpClient ? tcpClient.CanSend : this.Client is IUdpSession;
-            }
-        }
+        public bool CanSend=>this.Client.CanSend;
 
         public TClient Client { get; private set; }
 
