@@ -72,7 +72,7 @@ object-assign
  * Copyright (C) 2020 Oliver Nightingale
  */
 
-/*! medium-zoom 1.0.8 | MIT License | https://github.com/francoischalifour/medium-zoom */
+/*! medium-zoom 1.1.0 | MIT License | https://github.com/francoischalifour/medium-zoom */
 
 /*!***************************************************
 * mark.js v8.11.1
