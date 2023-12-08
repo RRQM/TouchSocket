@@ -66,6 +66,13 @@ Task<System.Int32> PerformanceAsync(System.Int32 a,IInvokeOption invokeOption = 
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
 System.Boolean OutBytes(out System.Byte[] bytes,IInvokeOption invokeOption = default);
+///<summary>
+///测试out
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.Boolean> OutBytesAsync(out System.Byte[] bytes,IInvokeOption invokeOption = default);
 
 }
 public class MyRpcServer :IMyRpcServer
@@ -187,6 +194,28 @@ bytes=default(System.Byte[]);
 }
 return returnData;
 }
+///<summary>
+///测试out
+///</summary>
+public Task<System.Boolean> OutBytesAsync(out System.Byte[] bytes,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{default(System.Byte[])};
+Type[] types = new Type[]{typeof(System.Byte[])};
+System.Boolean returnData=(System.Boolean)Client.Invoke(typeof(System.Boolean),"OutBytes",invokeOption,ref parameters,types);
+if(parameters!=null)
+{
+bytes=(System.Byte[])parameters[0];
+}
+else
+{
+bytes=default(System.Byte[]);
+}
+return Task.FromResult<System.Boolean>(returnData);
+}
 
 }
 public static class MyRpcServerExtensions
@@ -274,6 +303,24 @@ else
 bytes=default(System.Byte[]);
 }
 return returnData;
+}
+///<summary>
+///测试out
+///</summary>
+public static Task<System.Boolean> OutBytesAsync<TClient>(this TClient client,out System.Byte[] bytes,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{default(System.Byte[])};
+Type[] types = new Type[]{typeof(System.Byte[])};
+System.Boolean returnData=(System.Boolean)client.Invoke(typeof(System.Boolean),"OutBytes",invokeOption,ref parameters,types);
+if(parameters!=null)
+{
+bytes=(System.Byte[])parameters[0];
+}
+else
+{
+bytes=default(System.Byte[]);
+}
+return Task.FromResult<System.Boolean>(returnData);
 }
 
 }
