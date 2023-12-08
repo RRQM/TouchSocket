@@ -234,6 +234,12 @@ client.Setup(new TouchSocketConfig()
 client.Connect();
 ```
 
+:::danger 注意
+
+当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Len)。而不是ByteBlock.Buffer.Length
+
+:::  
+
 ## 八、发送数据
 
 【同步发送】
