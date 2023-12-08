@@ -418,6 +418,12 @@ service.Setup(new TouchSocketConfig()
 service.Start();
 ```
 
+:::danger 注意
+
+当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Len)。而不是ByteBlock.Buffer.Length
+
+:::  
+
 ## 十、AspNetCore中创建
 
 首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
