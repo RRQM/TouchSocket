@@ -95,7 +95,8 @@ namespace DmtpClientApp
                 })
                 .SetDmtpOption(new DmtpOption()
                 {
-                    VerifyToken = "Rpc"
+                    VerifyToken = "Rpc",
+                    Id = "asdasd"
                 }));
                 this.m_client.Connect();
 

@@ -78,6 +78,9 @@ namespace DmtpConsoleApp
             tcpClient.Received = (client, e) =>
             {
                 //此处接收服务器返回的消息
+
+                var head = e.ByteBlock.ToArray(0,2);
+                e.ByteBlock.Seek(2, SeekOrigin.Begin);
                 var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
                 var length = e.ByteBlock.ReadInt32(bigEndian: true);
 
@@ -101,7 +104,8 @@ namespace DmtpConsoleApp
 
             using (var byteBlock = new ByteBlock())
             {
-                //按照Flags+Length+Data的格式。
+                //按照Head+Flags+Length+Data的格式。
+                byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
                 byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)1));
                 byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
                 byteBlock.Write(jsonBytes);
