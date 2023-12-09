@@ -44,6 +44,14 @@ namespace DmtpClientApp
                    })
                    .ConfigurePlugins(a =>
                    {
+                       a.Add(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), async (c,e) => 
+                       {
+                           await e.InvokeNext();
+                       });
+                       a.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), async (c, e) =>
+                       {
+                           await e.InvokeNext();
+                       });
                        a.UseDmtpRpc();
                        //a.Add<MyDmtpPlugin>();
                    })

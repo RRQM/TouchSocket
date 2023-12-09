@@ -74,12 +74,16 @@ using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
 tcpClient.Received = (client, e) =>
 {
     //此处接收服务器返回的消息
-    var flags = byteBlock.ReadUInt16(bigEndian: true);
-    var length = byteBlock.ReadInt32(bigEndian: true);
 
-    var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer,0, e.ByteBlock.CanReadLen);
+    var head = e.ByteBlock.ToArray(0,2);
+    e.ByteBlock.Seek(2, SeekOrigin.Begin);
+    var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
+    var length = e.ByteBlock.ReadInt32(bigEndian: true);
+
+    var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
 
     ConsoleLogger.Default.Info($"收到响应：flags={flags}，length={length}，json={json}");
+    return Task.CompletedTask;
 };
 
 //开始链接服务器
@@ -96,14 +100,14 @@ var jsonBytes = Encoding.UTF8.GetBytes(json);
 
 using (var byteBlock = new ByteBlock())
 {
-    //按照Flags+Length+Data的格式。
+    //按照Head+Flags+Length+Data的格式。
+    byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
     byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)1));
     byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
     byteBlock.Write(jsonBytes);
 
     tcpClient.Send(byteBlock);
 }
-
 await Task.Delay(2000);
 ```
 
@@ -127,26 +131,21 @@ await Task.Delay(2000);
 
 ## 二、ID同步
 
-在Dmtp中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其ID也**完全一致**。所以在任意一方修改ID（调用ResetID），都会同时修改远程ID。所以合理使用该操作，可以完成复用ID（重置ID）的需求。
+在Dmtp中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其ID也**完全一致**。所以在任意一方修改Id（调用ResetId），都会同时修改远程Id。所以合理使用该操作，可以完成复用Id（重置Id）的需求。
 
 
-## 三、协议扩展
+## 三、发送数据
 
-协议扩展功能，就是对现有的Dmtp进行自定义的扩展协议。其目的就是为了应对更加复杂，高要求的需求。
-
-例1：当需要广播消息时，可能大家都会想到使用rpc直接进行广播。但是如此一来，每广播一个客户端，就需要序列化一次。因为数据都是一样的，所以多次序列化显得非常没有必要。那么这时候，可以自定义协议，然后先序列化，然后直接广播数据。
-
-自定义协议效率如何呢？
-自定义协议的效率是非常高的，99%接近于底层协议（可能是tcp、udp、websocket）效率。
-
+Dmtp提供协议发送数据，又叫协议扩展功能，就是对现有的Dmtp进行自定义的扩展协议。
 
 ### 3.1 使用
 
 使用起来是非常简单的，每个DmtpActor，都实现了Send方法接口。
+
 第一个参数为ushort类型，使用者可以**约定任意大于20数值**。
 
 ```csharp showLineNumbers
-client.Send(20,Encoding.UTF8.GetBytes("RRQM"));
+client.Send(1000,Encoding.UTF8.GetBytes("RRQM"));
 ```
 
 :::caution 注意
@@ -162,7 +161,7 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 {
     public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
     {
-        if (e.DmtpMessage.ProtocolFlags == 10)
+        if (e.DmtpMessage.ProtocolFlags == 1000)
         {
             //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
             string msg = e.DmtpMessage.BodyByteBlock.ToString();
