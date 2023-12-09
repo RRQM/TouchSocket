@@ -92,12 +92,12 @@ service.Received = (client, e) =>
     {
         //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
     }
-  
+    return EasyTask.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); }));//配置适配器
+    .SetTcpDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); }));//配置适配器
 service.Start();//启动
 ```
 

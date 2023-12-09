@@ -144,7 +144,7 @@ static TcpService CreateService()
         {
             client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
         }
-
+        return EasyTask.CompletedTask;
     };
 
     service.Setup(new TouchSocketConfig()//载入配置

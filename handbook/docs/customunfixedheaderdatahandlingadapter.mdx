@@ -125,12 +125,12 @@ service.Received = (client, e) =>
         //此处可以处理MyUnfixedHeaderRequestInfo的相关信息了。
         string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
     }
-  
+    return EasyTask.CompletedTask;
 };
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }));//配置适配器
+    .SetTcpDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }));//配置适配器
 
 service.Start();//启动
 ```
