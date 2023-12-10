@@ -48,6 +48,11 @@ module.exports = {
           to: "docs/current/blog"
         },
         {
+          label: "视频",
+          position: "left",
+          to: "docs/current/video"
+        },
+        {
           label: "版本",
           type: 'docsVersionDropdown',
           position: 'right',
