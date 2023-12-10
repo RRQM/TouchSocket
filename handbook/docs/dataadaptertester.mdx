@@ -15,9 +15,9 @@ title: 适配器完整性、性能测试
 
 ### 1.1 测试原理
 
-假设发送数据为{0,1,2,3,4}，连续发送10次。
+假设发送数据为[0,1,2,3,4]，连续发送10次。
 当bufferLength=1时，会先接收一个字节，然后适配器判断无法解析，然后缓存，然后再接收下一个字节，直到成功解析一个完整数据包。该模式解决的就是大家所说的分包，也就是能很好的模拟**网络很差**的环境。
-当bufferLength>5时,假如为8，则会先接收{0,1,2,3,4,0,1,2}，然后适配器成功判断解析前五字节，然后缓存后三字节，然后再接收下一个续包，直到解析结束。
+当bufferLength>5时,假如为8，则会先接收[0,1,2,3,4,0,1,2]，然后适配器成功判断解析前五字节，然后缓存后三字节，然后再接收下一个续包，直到解析结束。
 
 
 ### 1.2 测试事项
@@ -45,7 +45,7 @@ for (int bufferLength = 1; bufferLength < 1024 * 10; bufferLength += 1024)
 {
     bool isSuccess = true;
     var data = new byte[] { 0, 1, 2, 3, 4 };
-    DataAdapterTester tester = DataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
+    SingleStreamDataAdapterTester tester = SingleStreamDataAdapterTester.CreateTester(new FixedHeaderPackageAdapter()
      , bufferLength, (byteBlock, requestInfo) =>
      {
          //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
