@@ -344,6 +344,9 @@ namespace WebSocketConsoleApp
                     case WSDataType.Binary:
                         if (e.DataFrame.FIN)
                         {
+                            //可以拿到二进制数据。实际上也不需要ToArray。直接使用PayloadData可能更高效。
+                            //具体资料可以参考内存池
+                            var bytes = e.DataFrame.PayloadData.ToArray();
                             client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
                         }
                         else
