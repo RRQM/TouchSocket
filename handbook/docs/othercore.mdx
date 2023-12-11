@@ -45,9 +45,9 @@ bool b = MD5.VerifyMD5Hash("TouchSocket",str);
  public static int ByHexStringToInt32(this string hexString)
 ```
 
-## 五、雪花ID生成
+## 五、雪花Id生成
 
-雪花ID，会生成long类型的不重复ID。
+雪花Id，会生成long类型的不重复Id。
 ```csharp showLineNumbers
 SnowflakeIDGenerator generator = new SnowflakeIDGenerator(4);
 long id=generator.NextID();

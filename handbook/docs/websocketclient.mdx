@@ -248,20 +248,8 @@ client.Received = (c, e) =>
 
 【定义插件】
 ```csharp showLineNumbers
-public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin,IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+public class MyWebSocketPlugin : PluginBase,IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
-    {
-        client.Logger.Info("WebSocket正在连接");
-        await e.InvokeNext();
-    }
-
-    public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
-    {
-        client.Logger.Info("WebSocket成功连接");
-        await e.InvokeNext();
-    }
-
     public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)

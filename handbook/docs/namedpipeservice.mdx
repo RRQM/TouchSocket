@@ -33,7 +33,7 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 
 服务器在收到**新客户端连接**时，会创建一个`NamedPipeSocketClient`的派生类实例，与客户端`NamedPipeClient`一一对应，后续的数据通信均由此实例负责。
 
-`NamedPipeSocketClient`在Service里面以字典映射。ID为键，`NamedPipeSocketClient`本身为值。
+`NamedPipeSocketClient`在Service里面以字典映射。Id为键，`NamedPipeSocketClient`本身为值。
 
 <img src={require('@site/static/img/docs/namedpipeservice-1.png').default} width="500" />
 
@@ -45,9 +45,6 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 
 #### SetMaxPackageSize
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
-
-#### SetGetDefaultNewID
-配置初始Id的分配策略。
 
 #### SetPipeName
 设置管道名称。 

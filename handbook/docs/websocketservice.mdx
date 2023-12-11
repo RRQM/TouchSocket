@@ -221,20 +221,8 @@ WebSocket服务器接收消息，目前有两种方式。第一种就是通过�
 【定义插件】
 
 ```csharp showLineNumbers
-public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
-    {
-        client.Logger.Info("WebSocket正在连接");
-        await e.InvokeNext();
-    }
-
-    public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
-    {
-        client.Logger.Info("WebSocket成功连接");
-        await e.InvokeNext();
-    }
-
     public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)
@@ -429,12 +417,12 @@ foreach (var item in socketClients)
 
 :::  
 
-#### （2）通过ID获取
+#### （2）通过Id获取
 
-先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
 
 ```csharp showLineNumbers
-string[] ids = service.GetIDs();
+string[] ids = service.GetIds();
 if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
 {
 }
@@ -454,7 +442,7 @@ socketClient.SendWithWS(new byte[10]);
 
 ### 6.4 发送分包的二进制
 
-例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
+例如：发送的数据为[0,1,2,3,4,5,6,7,8,9]，当设置packageSize为5时，会先发送[0,1,2,3,4]作为头包，然后发送[5,6,7,8,9]的后继包。
 
 ```csharp showLineNumbers
 byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -503,7 +491,7 @@ foreach (var item in service.GetClients())
 
 :::tip 提示
 
-在发送时，还可以自己过滤ID。
+在发送时，还可以自己过滤Id。
 
 :::  
 
