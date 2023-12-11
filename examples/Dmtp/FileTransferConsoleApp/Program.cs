@@ -117,6 +117,7 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info($"向服务器推送文件结束，{result}");
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -181,6 +182,7 @@ namespace FileTransferConsoleApp
 
             ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -216,6 +218,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info($"从服务器下载小文件结束，结果：{result}");
             client.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -252,6 +255,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("从服务器下载小文件结束");
             client.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -317,6 +321,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("从其他客户端下载文件结束");
             client1.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -377,6 +382,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("从其他客户端下载文件结束");
             client1.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -441,6 +447,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
             socketClient.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -505,6 +512,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("从客户端下载文件结束");
             socketClient.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -563,6 +571,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("从服务器下载文件结束");
             client.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
@@ -621,6 +630,7 @@ namespace FileTransferConsoleApp
             ConsoleLogger.Default.Info("上传文件到服务器结束");
             client.Logger.Info(result.ToString());
 
+            //删除测试文件。此逻辑在实际使用时不要有
             File.Delete(filePath);
             File.Delete(saveFilePath);
         }
