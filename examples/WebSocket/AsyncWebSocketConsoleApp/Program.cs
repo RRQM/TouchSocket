@@ -84,15 +84,22 @@ namespace SyncWebSocketConsoleApp
                 {
                     using (var receiveResult=await websocket.ReadAsync(CancellationToken.None))
                     {
+                        
                         if (receiveResult.DataFrame==null)
                         {
                             break;
                         }
 
-                        if (receiveResult.DataFrame.IsText)
+                        //判断是否为最后数据
+                        //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
+                        if (receiveResult.DataFrame.FIN)
                         {
-                            m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
+                            if (receiveResult.DataFrame.IsText)
+                            {
+                                m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
+                            }
                         }
+                        
                     }
                 }
 
