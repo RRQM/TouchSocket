@@ -43,14 +43,15 @@ namespace TouchSocket.Core
                     return FilterResult.Cache;
                 }
 
-                byteBlock.Read(out var body, request.BodyLength);
+                var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
                 if (request.OnParsingBody(body))
                 {
+                    byteBlock.Pos += request.BodyLength;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    request = default;//放弃所有解析
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }
@@ -62,9 +63,10 @@ namespace TouchSocket.Core
                 }
 
                 var requestInfo = this.GetInstance();
-                byteBlock.Read(out var header, this.HeaderLength);
+                var header = byteBlock.ToArray(byteBlock.Pos, this.HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
+                    byteBlock.Pos += this.HeaderLength;
                     request = requestInfo;
                     if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
                     {
@@ -72,19 +74,21 @@ namespace TouchSocket.Core
                         return FilterResult.Cache;
                     }
 
-                    byteBlock.Read(out var body, request.BodyLength);
+                    var body=  byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
                     if (request.OnParsingBody(body))
                     {
+                        byteBlock.Pos += request.BodyLength;
                         return FilterResult.Success;
                     }
                     else
                     {
-                        request = default;//放弃所有解析
+                        byteBlock.Pos += 1;
                         return FilterResult.GoOn;
                     }
                 }
                 else
                 {
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }

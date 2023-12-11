@@ -70,26 +70,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 安全性关闭。不会抛出异常。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="msg"></param>
-        public static void SafeClose<T>(this T client, string msg="") where T : ICloseObject,IOnlineClient
-        {
-            try
-            {
-                if (client.Online)
-                {
-                    client.Close(msg);
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        /// <summary>
         /// 安全性发送关闭报文
         /// </summary>
         /// <typeparam name="T"></typeparam>

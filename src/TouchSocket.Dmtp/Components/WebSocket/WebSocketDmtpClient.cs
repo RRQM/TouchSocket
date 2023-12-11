@@ -52,7 +52,7 @@ namespace TouchSocket.Dmtp
         private ValueCounter m_receiveCounter;
         private int m_sendBufferSize = 1024 * 10;
         private ValueCounter m_sendCounter;
-        private TcpDmtpAdapter m_dmtpAdapter;
+        private DmtpAdapter m_dmtpAdapter;
 
         #endregion 字段
 
@@ -134,7 +134,7 @@ namespace TouchSocket.Dmtp
                         CreatedChannel = this.OnDmtpActorCreateChannel
                     }; ;
 
-                    this.m_dmtpAdapter = new TcpDmtpAdapter()
+                    this.m_dmtpAdapter = new DmtpAdapter()
                     {
                         ReceivedCallBack = this.PrivateHandleReceivedData
                     };

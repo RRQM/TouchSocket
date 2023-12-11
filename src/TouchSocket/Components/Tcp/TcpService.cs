@@ -618,22 +618,25 @@ namespace TouchSocket.Sockets
 
         private void OnAccepted(SocketAsyncEventArgs e)
         {
-            if (!this.DisposedValue)
+            if (this.DisposedValue)
             {
-                if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
+                return;
+            }
+
+            if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
+            {
+                var socket = e.AcceptSocket;
+                if (this.SocketClients.Count < this.m_maxCount)
                 {
-                    var socket = e.AcceptSocket;
-                    if (this.SocketClients.Count < this.m_maxCount)
-                    {
-                        //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
-                        Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
-                    }
-                    else
-                    {
-                        socket.SafeDispose();
-                        this.Logger.Warning(this, "连接客户端数量已达到设定最大值");
-                    }
+                    //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                    Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                 }
+                else
+                {
+                    socket.SafeDispose();
+                    this.Logger.Warning(this, "连接客户端数量已达到设定最大值");
+                }
+
                 e.AcceptSocket = null;
 
                 try
@@ -752,7 +755,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器
     /// </summary>
-    public class TcpService : TcpService<SocketClient>
+    public class TcpService : TcpService<SocketClient>,ITcpService
     {
         /// <summary>
         /// 处理数据

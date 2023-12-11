@@ -61,10 +61,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 在解析时发生错误。
         /// </summary>
+        /// <param name="ex">异常</param>
         /// <param name="error">错误异常</param>
         /// <param name="reset">是否调用<see cref="Reset"/></param>
         /// <param name="log">是否记录日志</param>
-        protected virtual void OnError(string error, bool reset = true, bool log = true)
+        protected virtual void OnError(Exception ex,string error, bool reset, bool log)
         {
             if (reset)
             {
@@ -77,7 +78,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 重置解析器到初始状态，一般在<see cref="OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
+        /// 重置解析器到初始状态，一般在<see cref="OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
         protected abstract void Reset();
     }

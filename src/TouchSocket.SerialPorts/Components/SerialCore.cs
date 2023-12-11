@@ -144,7 +144,7 @@ namespace TouchSocket.SerialPorts
                 var byteBlock = new ByteBlock(this.ReceiveBufferSize);
                 try
                 {
-                    var r = await Task<int>.Factory.FromAsync(this.m_serialPort.BaseStream.BeginRead, this.m_serialPort.BaseStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default);
+                    var r = await Task<int>.Factory.FromAsync(this.m_serialPort.BaseStream.BeginRead, this.m_serialPort.BaseStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default).ConfigureFalseAwait();
                     if (r == 0)
                     {
                         this.PrivateBreakOut(false, m_msg1);

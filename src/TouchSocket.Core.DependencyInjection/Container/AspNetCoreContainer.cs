@@ -81,11 +81,6 @@ namespace TouchSocket.Core.AspNetCore
             {
                 return true;
             }
-            if (fromType.IsGenericType)
-            {
-                fromType = fromType.GetGenericTypeDefinition();
-            }
-
             foreach (var item in this.m_services)
             {
                 if (item.ServiceType == fromType)

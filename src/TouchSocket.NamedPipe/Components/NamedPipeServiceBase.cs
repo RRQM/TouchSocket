@@ -22,7 +22,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器基类
     /// </summary>
-    public abstract class NamedPipeServiceBase : ServiceBase, INamedPipeService
+    public abstract class NamedPipeServiceBase : ServiceBase, INamedPipeServiceBase
     {
         /// <summary>
         /// <inheritdoc/>

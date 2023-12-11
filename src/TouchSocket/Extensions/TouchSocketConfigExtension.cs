@@ -502,7 +502,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildService<TService>(this TouchSocketConfig config) where TService : ITcpService, new()
+        public static TService BuildService<TService>(this TouchSocketConfig config) where TService : ITcpServiceBase, new()
         {
             var service = new TService();
             service.Setup(config);

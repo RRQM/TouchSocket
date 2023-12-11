@@ -107,7 +107,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="actionConfig"></param>
         /// <returns></returns>
         public static IServiceCollection AddTcpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TService : class, ITcpService
+            where TService : class, ITcpServiceBase
             where TImpService : class, TService
         {
             return AddServiceHostedService<TService, TImpService>(services, actionConfig);

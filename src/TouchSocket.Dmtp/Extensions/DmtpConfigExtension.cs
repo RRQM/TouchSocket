@@ -145,18 +145,18 @@ namespace TouchSocket.Dmtp
         }
 
         /// <summary>
-        /// 构建<see cref="ITcpDmtpService"/>类服务器，并启动。
+        /// 构建<see cref="ITcpDmtpServiceBase"/>类服务器，并启动。
         /// </summary>
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpService, new()
+        public static TService BuildWithTcpDmtpService<TService>(this TouchSocketConfig config) where TService : ITcpDmtpServiceBase, new()
         {
             return config.BuildService<TService>();
         }
 
         /// <summary>
-        /// 构建<see cref="ITcpDmtpService"/>类服务器，并启动。
+        /// 构建<see cref="ITcpDmtpServiceBase"/>类服务器，并启动。
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
@@ -191,18 +191,18 @@ namespace TouchSocket.Dmtp
         }
 
         /// <summary>
-        /// 构建<see cref="IHttpDmtpService"/>类服务器，并启动。
+        /// 构建<see cref="IHttpDmtpServiceBase"/>类服务器，并启动。
         /// </summary>
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildWithHttpDmtpService<TService>(this TouchSocketConfig config) where TService : IHttpDmtpService, new()
+        public static TService BuildWithHttpDmtpService<TService>(this TouchSocketConfig config) where TService : IHttpDmtpServiceBase, new()
         {
             return config.BuildService<TService>();
         }
 
         /// <summary>
-        /// 构建<see cref="IHttpDmtpService"/>类服务器，并启动。
+        /// 构建<see cref="IHttpDmtpServiceBase"/>类服务器，并启动。
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>

@@ -209,7 +209,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
-            config.SetTcpDataHandlingAdapter(() => new TcpDmtpAdapter());
+            config.SetTcpDataHandlingAdapter(() => new DmtpAdapter());
             base.LoadConfig(config);
             if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
             {

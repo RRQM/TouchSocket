@@ -22,19 +22,24 @@ namespace TouchSocket.Dmtp
     /// <para>|ProtocolFlags|Length|Data|</para>
     /// <para>|ushort|int32|bytes|</para>
     /// </summary>
-    public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo
+    public class DmtpMessage : DisposableObject, IFixedHeaderByteBlockRequestInfo, IRequestInfoBuilder
     {
         private int m_bodyLength;
 
         /// <summary>
         /// Dmtp协议的消息。
-        /// <para>|*2*|**4**|***************n***********|</para>
-        /// <para>|ProtocolFlags|Length|Data|</para>
-        /// <para>|ushort|int32|bytes|</para>
+        /// <para>|*2*|*2*|**4**|***************n***********|</para>
+        /// <para>|Head|ProtocolFlags|Length|Data|</para>
+        /// <para>|dm|ushort|int32|bytes|</para>
         /// </summary>
         public DmtpMessage()
         {
         }
+
+        /// <summary>
+        /// Head
+        /// </summary>
+        public static readonly byte[] Head = new byte[] { 100, 109 };
 
         /// <summary>
         /// Dmtp协议的消息。
@@ -60,12 +65,16 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public ushort ProtocolFlags { get; set; }
 
+        /// <inheritdoc/>
+        public int MaxLength => this.BodyByteBlock == null ? 6 : this.BodyByteBlock.Len + 6;
+
         /// <summary>
         /// 构建数据到<see cref="ByteBlock"/>
         /// </summary>
         /// <param name="byteBlock"></param>
         public void Build(ByteBlock byteBlock)
         {
+            byteBlock.Write(Head);
             byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.ProtocolFlags));
             if (this.BodyByteBlock == null)
             {
@@ -75,19 +84,6 @@ namespace TouchSocket.Dmtp
             {
                 byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes(this.BodyByteBlock.Len));
                 byteBlock.Write(this.BodyByteBlock);
-            }
-        }
-
-        /// <summary>
-        /// 构建数据到<see langword="byte[]" />
-        /// </summary>
-        /// <returns></returns>
-        public byte[] BuildAsBytes()
-        {
-            using (var byteBlock = new ByteBlock(this.GetLength()))
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToArray();
             }
         }
 
@@ -106,7 +102,10 @@ namespace TouchSocket.Dmtp
         {
             var buffer = bytes.Array;
             var offset = bytes.Offset;
-
+            if (bytes.Array[offset++] != Head[0]|| bytes.Array[offset++] != Head[1])
+            {
+                throw new Exception("这可能不是Dmtp协议数据");
+            }
             var protocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(buffer, offset);
             var bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(buffer, 2 + offset);
             var byteBlock = new ByteBlock(bodyLength);
@@ -134,10 +133,17 @@ namespace TouchSocket.Dmtp
         public static DmtpMessage CreateFrom(ByteBlock block)
         {
             var buffer = block.Buffer;
-            var protocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(buffer, 0);
-            var bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(buffer, 2);
+            var offset = 0;
+            if (buffer[offset++] != Head[0] || buffer[offset++] != Head[1])
+            {
+                throw new Exception("这可能不是Dmtp协议数据");
+            }
+            var protocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(buffer, offset);
+            offset += 2;
+            var bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(buffer, offset);
+            offset += 4;
             var byteBlock = new ByteBlock(bodyLength);
-            byteBlock.Write(buffer, 6, bodyLength);
+            byteBlock.Write(buffer, offset, bodyLength);
             byteBlock.SeekToStart();
             return new DmtpMessage()
             {
@@ -163,15 +169,6 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <summary>
-        /// 获取整个<see cref="DmtpMessage"/>的数据长度。
-        /// </summary>
-        /// <returns></returns>
-        public int GetLength()
-        {
-            return this.BodyByteBlock == null ? 6 : this.BodyByteBlock.Len + 6;
-        }
-
         bool IFixedHeaderByteBlockRequestInfo.OnParsingBody(ByteBlock byteBlock)
         {
             if (byteBlock.Len == this.m_bodyLength)
@@ -185,10 +182,16 @@ namespace TouchSocket.Dmtp
 
         bool IFixedHeaderByteBlockRequestInfo.OnParsingHeader(byte[] header)
         {
-            if (header.Length == 6)
+            if (header.Length == 8)
             {
-                this.ProtocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(header, 0);
-                this.m_bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(header, 2);
+                var offset = 0;
+                if (header[offset++] != Head[0] || header[offset++] != Head[1])
+                {
+                    throw new Exception("这可能不是Dmtp协议数据");
+                }
+                this.ProtocolFlags = TouchSocketBitConverter.BigEndian.ToUInt16(header, offset);
+                offset += 2;
+                this.m_bodyLength = TouchSocketBitConverter.BigEndian.ToInt32(header, offset);
                 return true;
             }
             return false;

@@ -83,19 +83,24 @@ namespace TouchSocket.Core
             }
             else
             {
-                var requestInfo = this.GetInstance();
-
                 var indexStart = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.StartCode);
                 if (indexStart == -1)
                 {
                     return FilterResult.Cache;
                 }
-                if (!requestInfo.OnParsingStartCode(byteBlock.ToArray(byteBlock.Pos, this.StartCode.Length)))
+
+                var requestInfo = this.GetInstance();
+
+                if (requestInfo.OnParsingStartCode(byteBlock.ToArray(byteBlock.Pos, this.StartCode.Length)))
                 {
                     byteBlock.Pos += this.StartCode.Length;
+                }
+                else
+                {
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
-                byteBlock.Pos += this.StartCode.Length;
+                
                 request = requestInfo;
 
                 int len;
@@ -128,7 +133,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    byteBlock.Pos += this.EndCode.Length;
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }

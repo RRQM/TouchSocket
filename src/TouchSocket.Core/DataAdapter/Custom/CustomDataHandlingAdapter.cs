@@ -18,7 +18,6 @@ namespace TouchSocket.Core
     /// <summary>
     /// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，
     /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
-    /// <para>此处设计思路借鉴SuperSocket。</para>
     /// </summary>
     public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : class, IRequestInfo
     {
@@ -99,7 +98,6 @@ namespace TouchSocket.Core
             }
         }
 
-        
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -111,7 +109,6 @@ namespace TouchSocket.Core
             this.GoSend(buffer, offset, length);
         }
 
-       
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -163,7 +160,7 @@ namespace TouchSocket.Core
 
                             if (this.TempByteBlock.Len > this.MaxPackageSize)
                             {
-                                this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                                this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                             }
                         }
                         if (this.UpdateCacheTimeWhenRev)

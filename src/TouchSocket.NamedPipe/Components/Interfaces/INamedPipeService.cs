@@ -1,71 +1,52 @@
-//------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {
     /// <summary>
-    /// 命名管道服务器接口
+    /// INamedPipeService
     /// </summary>
-    public interface INamedPipeService : IService, IIdSender, IIdRequsetInfoSender
+    /// <typeparam name="TClient"></typeparam>
+    public interface INamedPipeService<TClient> : INamedPipeServiceBase where TClient : INamedPipeSocketClient
     {
         /// <summary>
-        /// 当前在线客户端数量
+        /// 用户连接完成
         /// </summary>
-        int Count { get; }
+        ConnectedEventHandler<TClient> Connected { get; set; }
 
         /// <summary>
-        /// 获取最大可连接数
+        /// 有用户连接的时候
         /// </summary>
-        int MaxCount { get; }
+        ConnectingEventHandler<TClient> Connecting { get; set; }
 
         /// <summary>
-        /// 管道监听集合
+        /// 有用户断开连接
         /// </summary>
-        IEnumerable<NamedPipeMonitor> Monitors { get; }
+        DisconnectEventHandler<TClient> Disconnected { get; set; }
 
         /// <summary>
-        /// 获取当前连接的所有客户端
+        /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
-        INamedPipeSocketClientCollection SocketClients { get; }
+        DisconnectEventHandler<TClient> Disconnecting { get; set; }
 
         /// <summary>
-        /// 清理当前已连接的所有客户端
+        /// 尝试获取TClient
         /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// 获取当前在线的所有Id集合
-        /// </summary>
+        /// <param name="id">Id</param>
+        /// <param name="socketClient">TClient</param>
         /// <returns></returns>
-        IEnumerable<string> GetIds();
+        bool TryGetSocketClient(string id, out TClient socketClient);
+    }
 
-        /// <summary>
-        /// 重置Id
-        /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        /// <exception cref="ClientNotFindException"></exception>
-        /// <exception cref="Exception"></exception>
-        void ResetId(string oldId, string newId);
+    /// <summary>
+    /// INamedPipeService
+    /// </summary>
+    public interface INamedPipeService : INamedPipeService<NamedPipeSocketClient>
+    {
 
-        /// <summary>
-        /// 根据Id判断<see cref="INamedPipeSocketClient"/>是否存在
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        bool SocketClientExist(string id);
     }
 }

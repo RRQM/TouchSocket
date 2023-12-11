@@ -1083,9 +1083,10 @@ namespace TouchSocket.Dmtp
         {
             var transferBytes = new ArraySegment<byte>[]
            {
-            new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
-            new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
-            new ArraySegment<byte>(buffer,offset,length)
+                new ArraySegment<byte>(DmtpMessage.Head),
+                new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
+                new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
+                new ArraySegment<byte>(buffer,offset,length)
            };
             this.OutputSend.Invoke(this, transferBytes);
             this.LastActiveTime = DateTime.Now;
@@ -1106,9 +1107,10 @@ namespace TouchSocket.Dmtp
         {
             var transferBytes = new ArraySegment<byte>[]
             {
-            new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
-            new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
-            new ArraySegment<byte>(buffer,offset,length)
+                new ArraySegment<byte>(DmtpMessage.Head),
+                new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
+                new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
+                new ArraySegment<byte>(buffer,offset,length)
             };
             this.LastActiveTime = DateTime.Now;
             return this.OutputSendAsync.Invoke(this, transferBytes);
