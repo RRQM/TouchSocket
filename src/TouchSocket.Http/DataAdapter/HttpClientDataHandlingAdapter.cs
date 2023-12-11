@@ -70,7 +70,7 @@ namespace TouchSocket.Http
                 this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                 if (this.tempByteBlock.Len > this.MaxPackageSize)
                 {
-                    this.OnError("缓存的数据长度大于设定值的情况下未收到解析信号");
+                    this.OnError(default,"缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                 }
             }
         }

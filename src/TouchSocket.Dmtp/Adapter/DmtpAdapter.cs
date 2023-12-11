@@ -19,9 +19,9 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// TcpDmtpAdapter
+    /// DmtpAdapter
     /// </summary>
-    public class TcpDmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
+    public class DmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
     {
         private readonly SemaphoreSlim m_locker = new SemaphoreSlim(1, 1);
 
@@ -32,7 +32,7 @@ namespace TouchSocket.Dmtp
         public override bool CanSplicingSend => true;
 
         /// <inheritdoc/>
-        public override int HeaderLength => 6;
+        public override int HeaderLength => 8;
 
         /// <summary>
         /// 最大拼接
@@ -62,7 +62,7 @@ namespace TouchSocket.Dmtp
             {
                 throw new Exception("发送的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
             }
-            using (var byteBlock = new ByteBlock(message.GetLength()))
+            using (var byteBlock = new ByteBlock(message.MaxLength))
             {
                 message.Build(byteBlock);
                 await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
@@ -80,7 +80,7 @@ namespace TouchSocket.Dmtp
             {
                 throw new Exception("发送的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
             }
-            using (var byteBlock = new ByteBlock(message.GetLength()))
+            using (var byteBlock = new ByteBlock(message.MaxLength))
             {
                 message.Build(byteBlock);
                 this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
@@ -105,7 +105,7 @@ namespace TouchSocket.Dmtp
             {
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            if (length > this.MaxPackageSize)
+            if (length > MaxSplicing)
             {
                 try
                 {
@@ -152,7 +152,7 @@ namespace TouchSocket.Dmtp
                 throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
 
-            if (length > this.MaxPackageSize)
+            if (length > MaxSplicing)
             {
                 try
                 {

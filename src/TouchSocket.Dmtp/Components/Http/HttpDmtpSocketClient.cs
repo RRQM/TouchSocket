@@ -157,7 +157,7 @@ namespace TouchSocket.Dmtp
             this.m_dmtpActor = actor;
 
             this.Protocol = DmtpUtility.DmtpProtocol;
-            this.SetDataHandlingAdapter(new TcpDmtpAdapter());
+            this.SetDataHandlingAdapter(new DmtpAdapter());
         }
 
         private void ThisDmtpActorOutputSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)

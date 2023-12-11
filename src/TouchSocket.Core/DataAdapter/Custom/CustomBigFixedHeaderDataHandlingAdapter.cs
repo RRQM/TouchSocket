@@ -43,25 +43,18 @@ namespace TouchSocket.Core
                 while (this.m_surLen > 0 && byteBlock.CanRead)
                 {
                     var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLen);
-                    try
+                    var bytes = byteBlock.ToArray(byteBlock.Pos, r);
+                    request.OnAppendBody(bytes);
+                    this.m_surLen -= r;
+                    byteBlock.Pos += r;
+                    if (this.m_surLen == 0)
                     {
-                        var bytes = byteBlock.ToArray(byteBlock.Pos, r);
-                        request.OnAppendBody(bytes);
-                        this.m_surLen -= r;
-                        byteBlock.Pos += r;
-                        if (this.m_surLen == 0)
+                        if (request.OnFinished())
                         {
-                            if (request.OnFinished())
-                            {
-                                return FilterResult.Success;
-                            }
-                            request = null;
-                            return FilterResult.GoOn;
+                            return FilterResult.Success;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.OnError(ex.Message, false, true);
+                        request = null;
+                        return FilterResult.GoOn;
                     }
                 }
                 return FilterResult.GoOn;
@@ -74,9 +67,10 @@ namespace TouchSocket.Core
                 }
 
                 var requestInfo = this.GetInstance();
-                byteBlock.Read(out var header, this.HeaderLength);
+                var header = byteBlock.ToArray(byteBlock.Pos, this.HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
+                    byteBlock.Pos += this.HeaderLength;
                     request = requestInfo;
                     if (requestInfo.BodyLength == 0)
                     {
@@ -92,31 +86,25 @@ namespace TouchSocket.Core
                     while (this.m_surLen > 0 && byteBlock.CanRead)
                     {
                         var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLen);
-                        try
+                        var bytes = byteBlock.ToArray(byteBlock.Pos, r);
+                        request.OnAppendBody(bytes);
+                        this.m_surLen -= r;
+                        byteBlock.Pos += r;
+                        if (this.m_surLen == 0)
                         {
-                            var bytes = byteBlock.ToArray(byteBlock.Pos, r);
-                            request.OnAppendBody(bytes);
-                            this.m_surLen -= r;
-                            byteBlock.Pos += r;
-                            if (this.m_surLen == 0)
+                            if (request.OnFinished())
                             {
-                                if (request.OnFinished())
-                                {
-                                    return FilterResult.Success;
-                                }
-                                request = null;
-                                return FilterResult.GoOn;
+                                return FilterResult.Success;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            this.OnError(ex.Message, false, true);
+                            request = null;
+                            return FilterResult.GoOn;
                         }
                     }
                     return FilterResult.GoOn;
                 }
                 else
                 {
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }

@@ -21,7 +21,7 @@ namespace TouchSocket.NamedPipe
     public static class NamedPipeServiceExtension
     {
         /// <inheritdoc cref="IService.Start"/>
-        public static TService Start<TService>(this TService service, string pipeName) where TService : INamedPipeService
+        public static TService Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
         {
             TouchSocketConfig config;
             if (service.Config == null)

@@ -33,7 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="actionConfig"></param>
         /// <returns></returns>
         public static IServiceCollection AddTcpDmtpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TService : class, ITcpDmtpService
+            where TService : class, ITcpDmtpServiceBase
             where TImpService : class, TService
         {
             return services.AddTcpService<TService, TImpService>(actionConfig);
@@ -93,7 +93,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="actionConfig"></param>
         /// <returns></returns>
         public static IServiceCollection AddHttpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TService : class, IHttpService
+            where TService : class, IHttpServiceBase
             where TImpService : class, TService
         {
             return services.AddTcpService<TService, TImpService>(actionConfig);
@@ -153,7 +153,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="actionConfig"></param>
         /// <returns></returns>
         public static IServiceCollection AddHttpDmtpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TService : class, IHttpDmtpService
+            where TService : class, IHttpDmtpServiceBase
             where TImpService : class, TService
         {
             return services.AddTcpService<TService, TImpService>(actionConfig);

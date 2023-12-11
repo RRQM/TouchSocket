@@ -21,7 +21,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// HttpDmtpService
     /// </summary>
-    public class HttpDmtpService : HttpDmtpService<HttpDmtpSocketClient>
+    public class HttpDmtpService : HttpDmtpService<HttpDmtpSocketClient>, IHttpDmtpService
     {
     }
 
@@ -29,7 +29,7 @@ namespace TouchSocket.Dmtp
     /// HttpDmtpService泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService where TClient : HttpDmtpSocketClient, new()
+    public partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSocketClient, new()
     {
         /// <summary>
         /// 连接令箭

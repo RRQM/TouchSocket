@@ -18,6 +18,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="msg"></param>
         /// <exception cref="Exception"></exception>
-        void Close(string msg = TouchSocketCoreUtility.Empty);
+        void Close(string msg);
     }
 }

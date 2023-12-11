@@ -45,7 +45,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.OnError(ex.Message);
+                this.OnError(ex,ex.Message, true, true);
             }
         }
 

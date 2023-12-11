@@ -12,19 +12,12 @@
 
 using TouchSocket.Sockets;
 
-namespace TouchSocket.Http
+namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// HTTP/HTTPS服务器
+    /// ITcpDmtpServiceBase
     /// </summary>
-    public class HttpService<TClient> : TcpService<TClient>, IHttpService<TClient> where TClient : HttpSocketClient, new()
-    {
-    }
-
-    /// <summary>
-    /// HTTP/HTTPS服务器
-    /// </summary>
-    public class HttpService : HttpService<HttpSocketClient>, IHttpService
+    public interface ITcpDmtpServiceBase : ITcpServiceBase, IDmtpService
     {
     }
 }

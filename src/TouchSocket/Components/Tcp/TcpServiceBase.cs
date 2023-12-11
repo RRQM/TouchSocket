@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器基类
     /// </summary>
-    public abstract class TcpServiceBase : ServiceBase, ITcpService
+    public abstract class TcpServiceBase : ServiceBase, ITcpServiceBase
     {
         private readonly ConcurrentStack<TcpCore> m_tcpCores = new ConcurrentStack<TcpCore>();
 

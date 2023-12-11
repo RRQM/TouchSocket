@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// TcpDmtpService
     /// </summary>
-    public class TcpDmtpService : TcpDmtpService<TcpDmtpSocketClient>
+    public class TcpDmtpService : TcpDmtpService<TcpDmtpSocketClient>, ITcpDmtpService
     {
     }
 
@@ -28,7 +28,7 @@ namespace TouchSocket.Dmtp
     /// TcpDmtpService泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public partial class TcpDmtpService<TClient> : TcpService<TClient>, ITcpDmtpService where TClient : TcpDmtpSocketClient, new()
+    public class TcpDmtpService<TClient> : TcpService<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSocketClient, new()
     {
         #region 字段
 
@@ -45,7 +45,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
-            config.SetTcpDataHandlingAdapter(() => new TcpDmtpAdapter());
+            config.SetTcpDataHandlingAdapter(() => new DmtpAdapter());
             base.LoadConfig(config);
 
             if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))

@@ -47,7 +47,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private WebSocket m_client;
         private DmtpActor m_dmtpActor;
-        private TcpDmtpAdapter m_dmtpAdapter;
+        private DmtpAdapter m_dmtpAdapter;
         private WebSocketDmtpService m_service;
         private ValueCounter m_receiveCounter;
         private ValueCounter m_sendCounter;
@@ -126,7 +126,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         internal void InternalSetConfig(TouchSocketConfig config)
         {
             this.m_config = config;
-            this.m_dmtpAdapter = new TcpDmtpAdapter()
+            this.m_dmtpAdapter = new DmtpAdapter()
             {
                 ReceivedCallBack = this.PrivateHandleReceivedData,
                 Logger = this.Logger

@@ -53,7 +53,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildWithHttpService<TService>(this TouchSocketConfig config) where TService : IHttpService
+        public static TService BuildWithHttpService<TService>(this TouchSocketConfig config) where TService : IHttpServiceBase
         {
             var service = Activator.CreateInstance<TService>();
             service.Setup(config);

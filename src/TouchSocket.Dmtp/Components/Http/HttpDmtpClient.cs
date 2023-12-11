@@ -219,7 +219,7 @@ namespace TouchSocket.Dmtp
         private void SwitchProtocolToDmtp()
         {
             this.Protocol = DmtpUtility.DmtpProtocol;
-            this.SetDataHandlingAdapter(new TcpDmtpAdapter());
+            this.SetDataHandlingAdapter(new DmtpAdapter());
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
                 OutputSend = this.DmtpActorSend,

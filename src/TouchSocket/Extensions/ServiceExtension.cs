@@ -23,7 +23,7 @@ namespace TouchSocket.Sockets
         #region ITcpService
 
         /// <inheritdoc cref="IService.Start"/>
-        public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpService
+        public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
         {
             TouchSocketConfig config;
             if (service.Config == null)
@@ -42,7 +42,7 @@ namespace TouchSocket.Sockets
 
 
         /// <inheritdoc cref="IService.StartAsync"/>
-        public static async Task StartAsync<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpService
+        public static async Task StartAsync<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
         {
             TouchSocketConfig config;
             if (service.Config == null)

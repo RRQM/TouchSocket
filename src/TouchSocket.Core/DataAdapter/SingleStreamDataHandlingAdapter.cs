@@ -78,7 +78,7 @@ namespace TouchSocket.Core
             }
             catch (Exception ex)
             {
-                this.OnError(ex.Message);
+                this.OnError(ex,ex.Message, true, true);
             }
         }
 
@@ -272,7 +272,7 @@ namespace TouchSocket.Core
         protected abstract void PreviewReceived(ByteBlock byteBlock);
 
         /// <summary>
-        /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(string, bool, bool)"/>被触发时，由返回值指示是否调用。
+        /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
         protected override void Reset()
         {

@@ -13,6 +13,40 @@
 namespace TouchSocket.Core
 {
     /// <summary>
+    /// 用户自定义不固定包头请求
+    /// </summary>
+    public interface IUnfixedHeaderRequestInfo : IRequestInfo
+    {
+        /// <summary>
+        /// 数据体长度
+        /// </summary>
+        int BodyLength { get; }
+
+        /// <summary>
+        /// 协议头长度
+        /// </summary>
+        int HeaderLength { get; }
+
+        /// <summary>
+        /// 当收到数据，由框架封送有效载荷数据。
+        /// <para>如果返回false，意味着放弃本次解析的所有数据，包括已经解析完成的Header</para>
+        /// </summary>
+        /// <param name="body">载荷数据</param>
+        /// <returns>是否成功有效</returns>
+        bool OnParsingBody(byte[] body);
+
+        /// <summary>
+        /// 当收到数据，由框架封送数据，您需要在此函数中，解析自己的数据包头。
+        /// <para>如果满足包头的解析，请返回True，并且递增整个包头的长度到<see cref="ByteBlock.Pos"/>，然后赋值<see cref="BodyLength"/></para>
+        /// <para>如果返回false，意味着缓存剩余数据，此时如果仅仅是因为长度不足，则不必修改其他。</para>
+        /// <para>但是如果是因为数据错误，则需要修改<see cref="ByteBlock.Pos"/>到正确位置，如果都不正确，则设置<see cref="ByteBlock.Pos"/>等于<see cref="ByteBlock.Len"/></para>
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        /// <returns>是否满足解析包头</returns>
+        bool OnParsingHeader(ByteBlock byteBlock);
+    }
+
+    /// <summary>
     /// 用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，同时<see cref="IRequestInfo"/>将实现为TUnfixedHeaderRequestInfo。
     /// </summary>
     public abstract class CustomUnfixedHeaderDataHandlingAdapter<TUnfixedHeaderRequestInfo> : CustomDataHandlingAdapter<TUnfixedHeaderRequestInfo> where TUnfixedHeaderRequestInfo : class, IUnfixedHeaderRequestInfo
@@ -37,14 +71,15 @@ namespace TouchSocket.Core
                     return FilterResult.Cache;
                 }
 
-                byteBlock.Read(out var body, request.BodyLength);
+                var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
                 if (request.OnParsingBody(body))
                 {
+                    byteBlock.Pos += request.BodyLength;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    request = default;//放弃所有解析
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }
@@ -60,14 +95,15 @@ namespace TouchSocket.Core
                         return FilterResult.Cache;
                     }
 
-                    byteBlock.Read(out var body, request.BodyLength);
+                    var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
                     if (request.OnParsingBody(body))
                     {
+                        byteBlock.Pos += request.BodyLength;
                         return FilterResult.Success;
                     }
                     else
                     {
-                        request = default;//放弃所有解析
+                        byteBlock.Pos += 1;
                         return FilterResult.GoOn;
                     }
                 }
@@ -83,39 +119,5 @@ namespace TouchSocket.Core
         /// </summary>
         /// <returns></returns>
         protected abstract TUnfixedHeaderRequestInfo GetInstance();
-    }
-
-    /// <summary>
-    /// 用户自定义不固定包头请求
-    /// </summary>
-    public interface IUnfixedHeaderRequestInfo : IRequestInfo
-    {
-        /// <summary>
-        /// 数据体长度
-        /// </summary>
-        int BodyLength { get; }
-
-        /// <summary>
-        /// 协议头长度
-        /// </summary>
-        int HeaderLength { get; }
-
-        /// <summary>
-        /// 当收到数据，由框架封送数据，您需要在此函数中，解析自己的数据包头。
-        /// <para>如果满足包头的解析，请返回True，并且递增整个包头的长度到<see cref="ByteBlock.Pos"/>，然后赋值<see cref="BodyLength"/></para>
-        /// <para>如果返回false，意味着缓存剩余数据，此时如果仅仅是因为长度不足，则不必修改其他。</para>
-        /// <para>但是如果是因为数据错误，则需要修改<see cref="ByteBlock.Pos"/>到正确位置，如果都不正确，则设置<see cref="ByteBlock.Pos"/>等于<see cref="ByteBlock.Len"/></para>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>是否满足解析包头</returns>
-        bool OnParsingHeader(ByteBlock byteBlock);
-
-        /// <summary>
-        /// 当收到数据，由框架封送有效载荷数据。
-        /// <para>如果返回false，意味着放弃本次解析的所有数据，包括已经解析完成的Header</para>
-        /// </summary>
-        /// <param name="body">载荷数据</param>
-        /// <returns>是否成功有效</returns>
-        bool OnParsingBody(byte[] body);
     }
 }

@@ -26,7 +26,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道服务器
     /// </summary>
-    public class NamedPipeService : NamedPipeService<NamedPipeSocketClient>
+    public class NamedPipeService : NamedPipeService<NamedPipeSocketClient>, INamedPipeService
     {
         /// <summary>
         /// 处理数据
@@ -48,7 +48,7 @@ namespace TouchSocket.NamedPipe
     /// 泛型命名管道服务器。
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class NamedPipeService<TClient> : NamedPipeServiceBase where TClient : NamedPipeSocketClient, new()
+    public class NamedPipeService<TClient> : NamedPipeServiceBase,INamedPipeService<TClient> where TClient : NamedPipeSocketClient, new()
     {
         /// <summary>
         /// 泛型命名管道服务器

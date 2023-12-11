@@ -104,7 +104,7 @@ namespace TouchSocket.WebApi.Swagger
 
             if (this.LaunchBrowser)
             {
-                var iphost = (sender as ITcpService).Monitors.First().Option.IpHost;
+                var iphost = (sender as ITcpServiceBase).Monitors.First().Option.IpHost;
                 string host;
                 if (iphost.IsLoopback || iphost.DnsSafeHost == "127.0.0.1" || iphost.DnsSafeHost == "0.0.0.0")
                 {

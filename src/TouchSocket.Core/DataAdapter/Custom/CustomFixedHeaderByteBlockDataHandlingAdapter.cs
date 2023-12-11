@@ -44,14 +44,17 @@ namespace TouchSocket.Core
                 }
 
                 var block = new ByteBlock(request.BodyLength);
-                byteBlock.Read(block, request.BodyLength);
+
+                block.Write(byteBlock.Buffer, byteBlock.Pos, request.BodyLength);
+                block.SeekToStart();
                 if (request.OnParsingBody(block))
                 {
+                    byteBlock.Pos += request.BodyLength;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    request = default;//放弃所有解析
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }
@@ -63,12 +66,13 @@ namespace TouchSocket.Core
                 }
 
                 var requestInfo = this.GetInstance();
-                byteBlock.Read(out var header, this.HeaderLength);
+                var header = byteBlock.ToArray(byteBlock.Pos, this.HeaderLength);
                 if (requestInfo.OnParsingHeader(header))
                 {
+                    byteBlock.Pos += this.HeaderLength;
                     if (requestInfo.BodyLength > this.MaxPackageSize)
                     {
-                        this.OnError($"接收的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}");
+                        this.OnError(default,$"接收的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}",true,true);
                         return FilterResult.GoOn;
                     }
                     request = requestInfo;
@@ -79,19 +83,23 @@ namespace TouchSocket.Core
                     }
 
                     var block = new ByteBlock(request.BodyLength);
-                    byteBlock.Read(block, request.BodyLength);
+                    block.Write(byteBlock.Buffer,byteBlock.Pos, request.BodyLength);
+                    block.SeekToStart();
+
                     if (requestInfo.OnParsingBody(block))
                     {
+                        byteBlock.Pos += request.BodyLength;
                         return FilterResult.Success;
                     }
                     else
                     {
-                        request = default;//放弃所有解析
+                        byteBlock.Pos += 1;
                         return FilterResult.GoOn;
                     }
                 }
                 else
                 {
+                    byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
             }
