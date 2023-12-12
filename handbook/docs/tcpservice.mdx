@@ -424,92 +424,12 @@ service.Start();
 
 :::  
 
-## 十、AspNetCore中创建
 
-首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
-
-:::tip 建议
-
-在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也及时一些。
-
-:::  
-
-在AspNetCore中使用TcpService，**不应该**像普通端一样，订阅Received。应该是通过**插件**，**注入**等方式实现。步骤如下：
-
-1. 注入TcpService，并做好配置（和常规服务器配置一样）。
-2. 新建插件，处理收到的数据。
-
-代码如下：
-
-（1）声明插件
-
-```csharp showLineNumbers
-public class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
-{
-    private ILogger<MyTcpPlugin> m_logger;
-
-    public MyTcpPlugin(ILogger<MyTcpPlugin> logger)
-    {
-        this.m_logger = logger;
-    }
-
-    public async Task OnTcpConnected(IClient client, ConnectedEventArgs e)
-    {
-        m_logger.LogInformation("客户端连接");
-        await e.InvokeNext();
-    }
-
-    public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
-    {
-        //这里处理数据接收
-        //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.ByteBlock;
-        IRequestInfo requestInfo = e.RequestInfo;
-
-        await e.InvokeNext();
-    }
-}
-```
-
-（2）注入服务
-
-```csharp showLineNumbers
-public void ConfigureServices(IServiceCollection services)
-{
-    var tcpService = services.AddTcpService(config =>
-      {
-          config.SetListenIPHosts(7789)
-          .UseAspNetCoreContainer(services)//使用和Aspnetcore一致的容器，可以做到注册类型的共享
-          .ConfigurePlugins(a =>
-          {
-              a.Add<MyPlugin>();//此插件就可以处理接收数据
-          });
-      });
-}
-```
-
-:::info 温馨提示
-
-UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但是需要注意的是，`IServiceProvider`并不是同一个实例，所以当使用单例注册时，可能无法做到单例共享。解决方法就是将单例类型，使用实例注册。这样就完全可以。其他生命周期不受影响。
-
-:::  
-
-然后在任意地方，也可获得服务。例如：在控制器中
-
-![image.png](@site/static/img/docs/createtcpservice-1.png)
-
-:::tip 提示
-
-此时，TcpService与整个AspNetCore是共享IOC容器的。即：TcpService中的任何地方（例如：插件）也能获得AspNetCore已注册的服务。
-
-:::
-
-
-## 十一、发送数据
+## 十、发送数据
 
 按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SocketClient**的实例，通过**该实例**即可将数据发送至**客户端**。
 
-### 11.1 如何获取SocketClient？
+### 10.1 如何获取SocketClient？
 
 （1）直接获取所有在线客户端
 
@@ -536,7 +456,7 @@ if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
 }
 ```
 
-### 11.2 发送
+### 10.2 发送
 
 【同步发送】
 
@@ -563,7 +483,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 :::  
 
-### 11.3 通过TcpService发送
+### 10.3 通过TcpService发送
 
 通过Id发送数据。
 
