@@ -61,6 +61,26 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <summary>
+        /// 从内存初始化资源
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public FileResourceInfo(ByteBlock byteBlock)
+        {
+            this.FileSectionSize = byteBlock.ReadInt32();
+            this.ResourceHandle = byteBlock.ReadInt32();
+            this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
+            var len = byteBlock.ReadInt32();
+
+            var fileSections=new FileSection[len];
+            for (int i = 0; i < len; i++)
+            {
+                fileSections[i] = byteBlock.ReadPackage<FileSection>();
+            }
+
+            this.m_fileSections = fileSections;
+        }
+
+        /// <summary>
         /// 资源文件信息
         /// </summary>
         public RemoteFileInfo FileInfo { get; private set; }
@@ -161,6 +181,22 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
             this.FileInfo = fileInfo;
             this.m_fileSections = sections;
+        }
+
+        /// <summary>
+        /// 将<see cref="FileResourceInfo"/>对象保存到内存。
+        /// </summary>
+        /// <param name="byteBlock"></param>
+        public void Save(ByteBlock byteBlock)
+        {
+            byteBlock.Write(this.FileSectionSize);
+            byteBlock.Write(this.ResourceHandle);
+            byteBlock.WritePackage(this.FileInfo);
+            byteBlock.Write(this.m_fileSections.Length);
+            foreach (var item in this.m_fileSections)
+            {
+                byteBlock.WritePackage(item);
+            }
         }
     }
 }
