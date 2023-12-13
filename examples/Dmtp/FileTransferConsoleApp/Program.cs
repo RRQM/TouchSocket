@@ -569,29 +569,29 @@ namespace FileTransferConsoleApp
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
             IResult result = client.GetDmtpFileTransferActor().PullFile(fileOperator);
 
-            //关于断点续传
-            //在执行完PullFile(fileOperator)或PushFile(fileOperator)时。只要返回的结果不是Success。
-            //那么就意味着传输没有完成。
-            //而续传的机制就是，在执行传输之前，如果fileOperator.ResourceInfo为空，则开始新的传输。如果不为空，则尝试续传。
-            //而对于失败的传输，未完成的信息都在fileOperator.ResourceInfo中。
-            //所以我们可以使用一个变量（或字典）来存fileOperator.ResourceInfo的值。
-            //亦或者可以把ResourceInfo的值持久化。
-            //然后在重新发起请求传输值前，先对fileOperator.ResourceInfo做有效赋值。即可尝试断点传输。
+            ////关于断点续传
+            ////在执行完PullFile(fileOperator)或PushFile(fileOperator)时。只要返回的结果不是Success。
+            ////那么就意味着传输没有完成。
+            ////而续传的机制就是，在执行传输之前，如果fileOperator.ResourceInfo为空，则开始新的传输。如果不为空，则尝试续传。
+            ////而对于失败的传输，未完成的信息都在fileOperator.ResourceInfo中。
+            ////所以我们可以使用一个变量（或字典）来存fileOperator.ResourceInfo的值。
+            ////亦或者可以把ResourceInfo的值持久化。
+            ////然后在重新发起请求传输值前，先对fileOperator.ResourceInfo做有效赋值。即可尝试断点传输。
 
-            byte[] cacheBytes;//这就是持久化后的数据。你可以将此数据写入到文件或数据库。
-            using (var byteBlock=new ByteBlock())
-            {
-                fileOperator.ResourceInfo.Save(byteBlock);
+            //byte[] cacheBytes;//这就是持久化后的数据。你可以将此数据写入到文件或数据库。
+            //using (var byteBlock=new ByteBlock())
+            //{
+            //    fileOperator.ResourceInfo.Save(byteBlock);
 
-                cacheBytes = byteBlock.ToArray();
-            }
+            //    cacheBytes = byteBlock.ToArray();
+            //}
 
-            //然后想要续传的时候。先把缓存数据转为FileResourceInfo。
-            using (var byteBlock=new ByteBlock(cacheBytes))
-            {
-                var resourceInfo = new FileResourceInfo(byteBlock);
-                //然后把resourceInfo赋值给新建的FileOperator的ResourceInfo属性。
-            }
+            ////然后想要续传的时候。先把缓存数据转为FileResourceInfo。
+            //using (var byteBlock=new ByteBlock(cacheBytes))
+            //{
+            //    var resourceInfo = new FileResourceInfo(byteBlock);
+            //    //然后把resourceInfo赋值给新建的FileOperator的ResourceInfo属性。
+            //}
 
             ConsoleLogger.Default.Info("从服务器下载文件结束");
             client.Logger.Info(result.ToString());
