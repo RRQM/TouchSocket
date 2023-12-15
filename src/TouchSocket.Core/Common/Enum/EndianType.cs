@@ -18,13 +18,23 @@ namespace TouchSocket.Core
     public enum EndianType
     {
         /// <summary>
-        /// 小端模式
+        /// 小端模式，即DCBA
         /// </summary>
         Little,
 
         /// <summary>
-        /// 大端模式
+        /// 大端模式。即ABCD
         /// </summary>
-        Big
+        Big,
+
+        /// <summary>
+        /// 以交换小端格式。即CDAB
+        /// </summary>
+        LittleSwap,
+
+        /// <summary>
+        /// 以交换大端，即：BADC
+        /// </summary>
+        BigSwap
     }
 }

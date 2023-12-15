@@ -570,7 +570,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static object ResolveWithoutRoot(this IResolver resolver, Type fromType)
+        public static object ResolveWithoutRoot(this IServiceProvider resolver, Type fromType)
         {
             object[] ops = null;
             var ctor = fromType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
@@ -612,11 +612,11 @@ namespace TouchSocket.Core
                             {
                                 var attribute = parameters[i].GetCustomAttribute<DependencyInjectAttribute>();
                                 var type = attribute.Type ?? parameters[i].ParameterType;
-                                ps[i] = resolver.Resolve(type, attribute.Key);
+                                ps[i] = resolver.GetService(type);
                             }
                             else
                             {
-                                ps[i] = resolver.Resolve(parameters[i].ParameterType);
+                                ps[i] = resolver.GetService(parameters[i].ParameterType);
                             }
                         }
                     }
@@ -635,7 +635,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static T ResolveWithoutRoot<T>(this IResolver resolver)
+        public static T ResolveWithoutRoot<T>(this IServiceProvider resolver)
         {
             return (T)ResolveWithoutRoot(resolver, typeof(T));
         }

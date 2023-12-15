@@ -26,9 +26,9 @@ namespace TouchSocket.Core
         private readonly ConcurrentDictionary<long, WaitDataAsync<T>> m_waitDicAsync;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
         private readonly ConcurrentQueue<WaitDataAsync<T>> m_waitQueueAsync;
-
+        private long m_maxSign = long.MaxValue;
+        private long m_minSign = long.MinValue;
         private long m_waitCount;
-
         private long m_waitReverseCount;
 
         /// <summary>
@@ -41,6 +41,16 @@ namespace TouchSocket.Core
             this.m_waitQueue = new ConcurrentQueue<WaitData<T>>();
             this.m_waitQueueAsync = new ConcurrentQueue<WaitDataAsync<T>>();
         }
+
+        /// <summary>
+        /// 最大Sign
+        /// </summary>
+        public long MaxSign { get => m_maxSign; set => m_maxSign = value; }
+
+        /// <summary>
+        /// 最小Sign
+        /// </summary>
+        public long MinSign { get => m_minSign; set => m_minSign = value; }
 
         /// <summary>
         /// 取消全部
@@ -368,19 +378,6 @@ namespace TouchSocket.Core
             return result;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long GetSign(bool reverse)
-        {
-            if (reverse)
-            {
-                return Interlocked.Decrement(ref this.m_waitReverseCount);
-            }
-            else
-            {
-                return Interlocked.Increment(ref this.m_waitCount);
-            }
-        }
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -399,6 +396,21 @@ namespace TouchSocket.Core
 
             this.m_waitQueue.Clear();
             base.Dispose(disposing);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private long GetSign(bool reverse)
+        {
+            if (reverse)
+            {
+                Interlocked.CompareExchange(ref this.m_waitReverseCount, 0, this.m_minSign);
+                return Interlocked.Decrement(ref this.m_waitReverseCount);
+            }
+            else
+            {
+                Interlocked.CompareExchange(ref this.m_waitCount, 0, this.m_maxSign);
+                return Interlocked.Increment(ref this.m_waitCount);
+            }
         }
     }
 }

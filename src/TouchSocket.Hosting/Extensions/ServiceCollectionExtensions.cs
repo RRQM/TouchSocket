@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
@@ -24,25 +25,108 @@ namespace Microsoft.Extensions.DependencyInjection
     /// </summary>
     public static class ServiceCollectionExtensions
     {
-        #region HostedService
-
+        #region SetupConfig
         /// <summary>
-        /// 添加Client类型的HostedService服务。
-        /// <para>
-        /// 这类服务必须实现<see cref="ISetupConfigObject"/>与<see cref="ICloseObject"/>。同时，服务不做其他处理。例如连接，需要自己调用。或者做无人值守重连。
-        /// </para>
+        /// 添加SingletonSetupConfigObject服务。
         /// </summary>
-        /// <typeparam name="TObjectClient"></typeparam>
-        /// <typeparam name="TObjectImpClient"></typeparam>
+        /// <typeparam name="TObjectService"></typeparam>
+        /// <typeparam name="TObjectImpService"></typeparam>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddClientHostedService<TObjectClient, TObjectImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TObjectClient : class, ISetupConfigObject, ICloseObject
-            where TObjectImpClient : class, TObjectClient
+        public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TObjectService : class, ISetupConfigObject
+            where TObjectImpService : class, TObjectService
         {
-            return AddSetupConfigObjectHostedService<ClientHost<TObjectClient>, TObjectClient, TObjectImpClient>(services, actionConfig);
+            var aspNetCoreContainer = new AspNetCoreContainer(services);
+            var config = new TouchSocketConfig();
+            config.SetRegistrator(aspNetCoreContainer);
+            actionConfig.Invoke(config);
+            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
+            {
+                actionContainer.Invoke(aspNetCoreContainer);
+            }
+
+            services.AddSingleton<TObjectService>(privoder => 
+            {
+                var imp = privoder.ResolveWithoutRoot<TObjectImpService>();
+                config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
+                aspNetCoreContainer.BuildResolver(privoder);
+                config.SetResolver(aspNetCoreContainer);
+                imp.Setup(config);
+                return imp;
+            });
+            return services;
         }
+
+        /// <summary>
+        /// 添加TransientSetupConfigObject服务。
+        /// </summary>
+        /// <typeparam name="TObjectService"></typeparam>
+        /// <typeparam name="TObjectImpService"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TObjectService : class, ISetupConfigObject
+            where TObjectImpService : class, TObjectService
+        {
+            var aspNetCoreContainer = new AspNetCoreContainer(services);
+            var config = new TouchSocketConfig();
+            config.SetRegistrator(aspNetCoreContainer);
+            actionConfig.Invoke(config);
+            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
+            {
+                actionContainer.Invoke(aspNetCoreContainer);
+            }
+
+            services.AddTransient<TObjectService>(privoder =>
+            {
+                var imp = privoder.ResolveWithoutRoot<TObjectImpService>();
+                config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
+                aspNetCoreContainer.BuildResolver(privoder);
+                config.SetResolver(aspNetCoreContainer);
+                imp.Setup(config);
+                return imp;
+            });
+            return services;
+        }
+
+        /// <summary>
+        /// 添加ScopedSetupConfigObject服务。
+        /// </summary>
+        /// <typeparam name="TObjectService"></typeparam>
+        /// <typeparam name="TObjectImpService"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddScopedSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TObjectService : class, ISetupConfigObject
+            where TObjectImpService : class, TObjectService
+        {
+            var aspNetCoreContainer = new AspNetCoreContainer(services);
+            var config = new TouchSocketConfig();
+            config.SetRegistrator(aspNetCoreContainer);
+            actionConfig.Invoke(config);
+            if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
+            {
+                actionContainer.Invoke(aspNetCoreContainer);
+            }
+
+            services.AddScoped<TObjectService>(privoder =>
+            {
+                var imp = privoder.ResolveWithoutRoot<TObjectImpService>();
+                config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
+                aspNetCoreContainer.BuildResolver(privoder);
+                config.SetResolver(aspNetCoreContainer);
+                imp.Setup(config);
+                return imp;
+            });
+            return services;
+        }
+        #endregion
+
+        #region HostedService
 
         /// <summary>
         /// 添加Service类型的HostedService服务。这类服务必须实现<see cref="ISetupConfigObject"/>与<see cref="IService"/>
@@ -159,31 +243,84 @@ namespace Microsoft.Extensions.DependencyInjection
         #region TcpClient
 
         /// <summary>
-        /// 添加TcpClient服务。
+        /// 添加单例TcpClient服务。
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <typeparam name="TImpClient"></typeparam>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddSingletonTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TClient : class, ITcpClient
             where TImpClient : class, TClient
         {
-            return AddClientHostedService<TClient, TImpClient>(services, actionConfig);
+            return AddSingletonSetupConfigObject<TClient, TImpClient>(services, actionConfig);
         }
 
         /// <summary>
-        /// 添加TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+        /// 添加单例TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
         /// </summary>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddSingletonTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         {
-            return services.AddTcpClient<ITcpClient, TcpClient>(actionConfig);
+            return services.AddSingletonTcpClient<ITcpClient, TcpClient>(actionConfig);
         }
 
+
+        /// <summary>
+        /// 添加瞬态TcpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, ITcpClient
+            where TImpClient : class, TClient
+        {
+            return AddTransientSetupConfigObject<TClient, TImpClient>(services, actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddTransientTcpClient<ITcpClient, TcpClient>(actionConfig);
+        }
+
+
+        /// <summary>
+        /// 添加Scoped TcpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddScopedTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, ITcpClient
+            where TImpClient : class, TClient
+        {
+            return AddScopedSetupConfigObject<TClient, TImpClient>(services, actionConfig);
+        }
+
+        /// <summary>
+        /// 添加Scoped TcpClient服务。并使用<see cref="ITcpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddScopedTcpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddScopedTcpClient<ITcpClient, TcpClient>(actionConfig);
+        }
         #endregion TcpClient
     }
 }
