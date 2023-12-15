@@ -72,6 +72,7 @@ namespace TouchSocket.NamedPipe
         private NamedPipeClientStream m_pipeStream;
         private ValueCounter m_receiveCounter;
         private readonly SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         #endregion 变量
 
         #region 事件
@@ -790,8 +791,16 @@ namespace TouchSocket.NamedPipe
             }
             if (this.SendingData(buffer, offset, length).GetFalseAwaitResult())
             {
-                this.m_pipeStream.Write(buffer, offset, length);
-                this.LastSendTime = DateTime.Now;
+                try
+                {
+                    this.m_semaphoreSlimForSend.Wait();
+                    this.m_pipeStream.Write(buffer, offset, length);
+                    this.LastSendTime = DateTime.Now;
+                }
+                finally
+                {
+                    this.m_semaphoreSlimForSend.Release();
+                }
             }
         }
 
@@ -806,10 +815,23 @@ namespace TouchSocket.NamedPipe
         /// <exception cref="Exception"><inheritdoc/></exception>
         public async Task DefaultSendAsync(byte[] buffer, int offset, int length)
         {
+            if (!this.m_online)
+            {
+                throw new NotConnectedException(TouchSocketResource.NotConnected.GetDescription());
+            }
             if (await this.SendingData(buffer, offset, length))
             {
-                await this.m_pipeStream.WriteAsync(buffer, offset, length);
-                this.LastSendTime = DateTime.Now;
+                try
+                {
+                    await this.m_semaphoreSlimForSend.WaitAsync();
+                    await this.m_pipeStream.WriteAsync(buffer, offset, length);
+                    this.LastSendTime = DateTime.Now;
+                }
+                finally
+                {
+                    this.m_semaphoreSlimForSend.Release();
+                }
+
             }
         }
         #endregion 发送

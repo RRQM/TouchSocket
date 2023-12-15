@@ -724,7 +724,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         public void Write(int value)
         {
-            this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value));
+            this.Write(TouchSocketBitConverter.Default.GetBytes(value));
         }
 
         /// <summary>
