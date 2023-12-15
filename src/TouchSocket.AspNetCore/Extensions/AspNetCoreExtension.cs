@@ -55,29 +55,81 @@ namespace Microsoft.Extensions.DependencyInjection
         #region TcpDmtpClient
 
         /// <summary>
-        /// 添加TcpDmtpClient服务。
+        /// 添加Scoped TcpDmtpClient服务。
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <typeparam name="TImpClient"></typeparam>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TClient : class, ITcpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
-        /// 添加TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
+        /// 添加Scoped TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
         /// </summary>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         {
-            return services.AddTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
+            return services.AddScopedTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例TcpDmtpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, ITcpDmtpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddSingletonTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态TcpDmtpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientTcpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, ITcpDmtpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态TcpDmtpClient服务。并使用<see cref="ITcpDmtpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientTcpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddTransientTcpDmtpClient<ITcpDmtpClient, TcpDmtpClient>(actionConfig);
         }
 
         #endregion TcpDmtpClient
@@ -115,29 +167,81 @@ namespace Microsoft.Extensions.DependencyInjection
         #region HttpClient
 
         /// <summary>
-        /// 添加HttpClient服务。
+        /// 添加Scoped HttpClient服务。
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <typeparam name="TImpClient"></typeparam>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TClient : class, IHttpClient
             where TImpClient : class, TClient
         {
-            return services.AddTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
-        /// 添加HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
+        /// 添加Scoped HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
         /// </summary>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         {
-            return services.AddHttpClient<IHttpClient, HttpClient>(actionConfig);
+            return services.AddScopedHttpClient<IHttpClient, HttpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例HttpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, IHttpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddSingletonHttpClient<IHttpClient, HttpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态HttpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientHttpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, IHttpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态HttpClient服务。并使用<see cref="IHttpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientHttpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddTransientHttpClient<IHttpClient, HttpClient>(actionConfig);
         }
 
         #endregion HttpClient
@@ -175,29 +279,81 @@ namespace Microsoft.Extensions.DependencyInjection
         #region HttpDmtpClient
 
         /// <summary>
-        /// 添加HttpDmtpClient服务。
+        /// 添加Scoped HttpDmtpClient服务。
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <typeparam name="TImpClient"></typeparam>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TClient : class, IHttpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
-        /// 添加HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
+        /// 添加Scoped HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
         /// </summary>
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
-        public static IServiceCollection AddHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        public static IServiceCollection AddScopedHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         {
-            return services.AddHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
+            return services.AddScopedHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例HttpDmtpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, IHttpDmtpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加单例HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddSingletonHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态HttpDmtpClient服务。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <typeparam name="TImpClient"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientHttpDmtpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+            where TClient : class, IHttpDmtpClient
+            where TImpClient : class, TClient
+        {
+            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+        }
+
+        /// <summary>
+        /// 添加瞬态HttpDmtpClient服务。并使用<see cref="IHttpDmtpClient"/>注册服务。
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="actionConfig"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientHttpDmtpClient(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+        {
+            return services.AddTransientHttpDmtpClient<IHttpDmtpClient, HttpDmtpClient>(actionConfig);
         }
 
         #endregion HttpDmtpClient

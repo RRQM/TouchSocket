@@ -85,11 +85,6 @@ namespace TouchSocket.Core
                 {
                     registrator = new Container();
                 }
-                //if (!registrator.IsRegistered(typeof(IPluginManager)))
-                //{
-                //    registrator.RegisterSingleton<IPluginManager, PluginManager>();
-                //}
-
                 if (!registrator.IsRegistered(typeof(ILog)))
                 {
                     registrator.RegisterSingleton<ILog>(new LoggerGroup());

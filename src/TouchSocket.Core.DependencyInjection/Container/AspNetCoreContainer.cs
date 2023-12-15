@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,11 @@ namespace TouchSocket.Core.AspNetCore
         public AspNetCoreContainer(IServiceCollection services)
         {
             this.m_services = services ?? throw new ArgumentNullException(nameof(services));
-            services.AddSingleton<IResolver>(this);
+            services.AddSingleton<IResolver>(privoder => 
+            {
+                this.m_serviceProvider ??= privoder;
+                return this;
+            });
         }
 
         /// <inheritdoc/>

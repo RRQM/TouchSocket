@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -19,31 +20,78 @@ namespace TouchSocket.Core
     /// 将基数据类型转换为指定端的一个字节数组，
     /// 或将一个字节数组转换为指定端基数据类型。
     /// </summary>
-    public class TouchSocketBitConverter
+    public sealed class TouchSocketBitConverter
     {
         /// <summary>
         /// 以大端
         /// </summary>
-        public static TouchSocketBitConverter BigEndian;
+        public static readonly TouchSocketBitConverter BigEndian;
+
+        /// <summary>
+        /// 以交换大端
+        /// </summary>
+        public static readonly TouchSocketBitConverter BigSwapEndian;
 
         /// <summary>
         /// 以小端
         /// </summary>
-        public static TouchSocketBitConverter LittleEndian;
+        public static readonly TouchSocketBitConverter LittleEndian;
+
+        /// <summary>
+        /// 以交换小端
+        /// </summary>
+        public static readonly TouchSocketBitConverter LittleSwapEndian;
+
+        private static EndianType m_defaultEndianType;
 
         static TouchSocketBitConverter()
         {
             BigEndian = new TouchSocketBitConverter(EndianType.Big);
             LittleEndian = new TouchSocketBitConverter(EndianType.Little);
+            BigSwapEndian = new TouchSocketBitConverter(EndianType.BigSwap);
+            LittleSwapEndian = new TouchSocketBitConverter(EndianType.LittleSwap);
             DefaultEndianType = EndianType.Little;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="endianType"></param>
+        public TouchSocketBitConverter(EndianType endianType)
+        {
+            this.EndianType = endianType;
+        }
+
+        /// <summary>
+        /// 按照枚举值选择默认的端序。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static TouchSocketBitConverter GetBitConverter(EndianType endianType)
+        {
+            switch (endianType)
+            {
+                case EndianType.Little:
+                    return LittleEndian;
+
+                case EndianType.Big:
+                    return BigEndian;
+
+                case EndianType.LittleSwap:
+                    return LittleSwapEndian;
+
+                case EndianType.BigSwap:
+                    return BigSwapEndian;
+                default:
+                    throw new Exception("没有该选项");
+            }
         }
 
         /// <summary>
         /// 以默认小端，可通过<see cref="TouchSocketBitConverter.DefaultEndianType"/>重新指定默认端。
         /// </summary>
         public static TouchSocketBitConverter Default { get; private set; }
-
-        private static EndianType m_defaultEndianType;
 
         /// <summary>
         /// 默认大小端切换。
@@ -64,19 +112,18 @@ namespace TouchSocket.Core
                         Default = BigEndian;
                         break;
 
+                    case EndianType.LittleSwap:
+                        Default = LittleSwapEndian;
+                        break;
+
+                    case EndianType.BigSwap:
+                        Default = BigSwapEndian;
+                        break;
+
                     default:
                         break;
                 }
             }
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="endianType"></param>
-        public TouchSocketBitConverter(EndianType endianType)
-        {
-            this.EndianType = endianType;
         }
 
         /// <summary>
@@ -92,7 +139,6 @@ namespace TouchSocket.Core
         public bool IsSameOfSet()
         {
             return !(BitConverter.IsLittleEndian ^ (this.EndianType == EndianType.Little));
-            //return true;
         }
 
         #region ushort
@@ -147,7 +193,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat8(bytes, 0);
             }
 
             return bytes;
@@ -167,9 +213,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[8];
-                Array.Copy(buffer, offset, bytes, 0, 8);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat8(buffer, offset);
                 return BitConverter.ToUInt64(bytes, 0);
             }
         }
@@ -186,6 +230,30 @@ namespace TouchSocket.Core
         public byte[] GetBytes(bool value)
         {
             return BitConverter.GetBytes(value);
+        }
+
+        /// <summary>
+        /// 将布尔数组转为字节数组。不足位补0.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public byte[] GetBytes(bool[] values)
+        {
+            if (values is null)
+            {
+                throw new ArgumentNullException(nameof(values));
+            }
+
+            var numArray = new byte[values.Length % 8 == 0 ? values.Length / 8 : (values.Length / 8) + 1];
+            for (var index = 0; index < values.Length; ++index)
+            {
+                if (values[index])
+                {
+                    numArray[index / 8] = numArray[index / 8].SetBit((short)(index % 8), 1);
+                }
+            }
+            return numArray;
         }
 
         /// <summary>
@@ -295,7 +363,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat4(bytes, 0);
             }
 
             return bytes;
@@ -315,9 +383,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[4];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat4(buffer, offset);
                 return BitConverter.ToInt32(bytes, 0);
             }
         }
@@ -336,7 +402,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat8(bytes, 0);
             }
 
             return bytes;
@@ -356,9 +422,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[8];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat8(buffer, offset);
                 return BitConverter.ToInt64(bytes, 0);
             }
         }
@@ -377,7 +441,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat4(bytes, 0);
             }
 
             return bytes;
@@ -397,9 +461,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[4];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat4(buffer, offset);
                 return BitConverter.ToUInt32(bytes, 0);
             }
         }
@@ -418,7 +480,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat4(bytes, 0);
             }
 
             return bytes;
@@ -438,9 +500,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[4];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat4(buffer, offset);
                 return BitConverter.ToSingle(bytes, 0);
             }
         }
@@ -459,7 +519,7 @@ namespace TouchSocket.Core
             var bytes = BitConverter.GetBytes(value);
             if (!this.IsSameOfSet())
             {
-                Array.Reverse(bytes);
+                bytes = this.ByteTransDataFormat8(bytes, 0);
             }
 
             return bytes;
@@ -479,9 +539,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                var bytes = new byte[8];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
+                var bytes = this.ByteTransDataFormat8(buffer, offset);
                 return BitConverter.ToDouble(bytes, 0);
             }
         }
@@ -527,5 +585,107 @@ namespace TouchSocket.Core
         }
 
         #endregion decimal
+
+        #region Tool
+
+        /// <summary>反转多字节的数据信息</summary>
+        /// <param name="value">数据字节</param>
+        /// <param name="offset">起始索引，默认值为0</param>
+        /// <returns>实际字节信息</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private byte[] ByteTransDataFormat4(byte[] value, int offset)
+        {
+            byte[] numArray = new byte[4];
+            switch (EndianType)
+            {
+                case EndianType.Big:
+                    numArray[0] = value[offset + 3];
+                    numArray[1] = value[offset + 2];
+                    numArray[2] = value[offset + 1];
+                    numArray[3] = value[offset];
+                    break;
+
+                case EndianType.BigSwap:
+                    numArray[0] = value[offset + 2];
+                    numArray[1] = value[offset + 3];
+                    numArray[2] = value[offset];
+                    numArray[3] = value[offset + 1];
+                    break;
+
+                case EndianType.LittleSwap:
+                    numArray[0] = value[offset + 1];
+                    numArray[1] = value[offset];
+                    numArray[2] = value[offset + 3];
+                    numArray[3] = value[offset + 2];
+                    break;
+
+                case EndianType.Little:
+                    numArray[0] = value[offset];
+                    numArray[1] = value[offset + 1];
+                    numArray[2] = value[offset + 2];
+                    numArray[3] = value[offset + 3];
+                    break;
+            }
+            return numArray;
+        }
+
+        /// <summary>反转多字节的数据信息</summary>
+        /// <param name="value">数据字节</param>
+        /// <param name="offset">起始索引，默认值为0</param>
+        /// <returns>实际字节信息</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private byte[] ByteTransDataFormat8(byte[] value, int offset)
+        {
+            byte[] numArray = new byte[8];
+            switch (EndianType)
+            {
+                case EndianType.Big:
+                    numArray[0] = value[offset + 7];
+                    numArray[1] = value[offset + 6];
+                    numArray[2] = value[offset + 5];
+                    numArray[3] = value[offset + 4];
+                    numArray[4] = value[offset + 3];
+                    numArray[5] = value[offset + 2];
+                    numArray[6] = value[offset + 1];
+                    numArray[7] = value[offset];
+                    break;
+
+                case EndianType.BigSwap:
+                    numArray[0] = value[offset + 6];
+                    numArray[1] = value[offset + 7];
+                    numArray[2] = value[offset + 4];
+                    numArray[3] = value[offset + 5];
+                    numArray[4] = value[offset + 2];
+                    numArray[5] = value[offset + 3];
+                    numArray[6] = value[offset];
+                    numArray[7] = value[offset + 1];
+                    break;
+
+                case EndianType.LittleSwap:
+                    numArray[0] = value[offset + 1];
+                    numArray[1] = value[offset];
+                    numArray[2] = value[offset + 3];
+                    numArray[3] = value[offset + 2];
+                    numArray[4] = value[offset + 5];
+                    numArray[5] = value[offset + 4];
+                    numArray[6] = value[offset + 7];
+                    numArray[7] = value[offset + 6];
+                    break;
+
+                case EndianType.Little:
+                    numArray[0] = value[offset];
+                    numArray[1] = value[offset + 1];
+                    numArray[2] = value[offset + 2];
+                    numArray[3] = value[offset + 3];
+                    numArray[4] = value[offset + 4];
+                    numArray[5] = value[offset + 5];
+                    numArray[6] = value[offset + 6];
+                    numArray[7] = value[offset + 7];
+                    break;
+            }
+            return numArray;
+        }
+
+        #endregion Tool
     }
 }

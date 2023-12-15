@@ -3,7 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.239</Version>
+		<Version>2.0.0-beta.241</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Company>若汝棋茗</Company>
@@ -32,6 +32,9 @@
 		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net461'">
 		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
