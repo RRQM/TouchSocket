@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -30,7 +31,7 @@ namespace TouchSocket.NamedPipe
         private NamedPipeServerStream m_pipeStream;
         private ValueCounter m_receiveCounter;
         private int m_receiveBufferSize = 1024 * 10;
-
+        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         #endregion 字段
 
         /// <summary>
@@ -553,20 +554,45 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
+            if (!this.Online)
+            {
+                throw new NotConnectedException(TouchSocketResource.NotConnected.GetDescription());
+            }
             if (this.SendingData(buffer, offset, length).GetFalseAwaitResult())
             {
-                this.m_pipeStream.Write(buffer, offset, length);
-                this.LastSendTime = DateTime.Now;
+                try
+                {
+                    this.m_semaphoreSlimForSend.Wait();
+                    this.m_pipeStream.Write(buffer, offset, length);
+                    this.LastSendTime = DateTime.Now;
+                }
+                finally
+                {
+                    this.m_semaphoreSlimForSend.Release();
+                }
             }
         }
 
         /// <inheritdoc/>
         public async Task DefaultSendAsync(byte[] buffer, int offset, int length)
         {
+            if (!this.Online)
+            {
+                throw new NotConnectedException(TouchSocketResource.NotConnected.GetDescription());
+            }
             if (await this.SendingData(buffer, offset, length))
             {
-                await this.m_pipeStream.WriteAsync(buffer, offset, length);
-                this.LastSendTime = DateTime.Now;
+                try
+                {
+                    await this.m_semaphoreSlimForSend.WaitAsync();
+                    await this.m_pipeStream.WriteAsync(buffer, offset, length);
+                    this.LastSendTime = DateTime.Now;
+                }
+                finally
+                {
+                    this.m_semaphoreSlimForSend.Release();
+                }
+
             }
         }
 
