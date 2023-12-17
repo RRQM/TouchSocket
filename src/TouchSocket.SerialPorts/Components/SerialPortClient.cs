@@ -30,13 +30,13 @@ namespace TouchSocket.SerialPorts
         public ReceivedEventHandler<SerialPortClient> Received { get; set; }
 
         /// <inheritdoc/>
-        protected override Task ReceivedData(ReceivedDataEventArgs e)
+        protected override async Task ReceivedData(ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
-                return this.Received.Invoke(this, e);
+                await this.Received.Invoke(this, e);
             }
-            return base.ReceivedData(e);
+            await base.ReceivedData(e);
         }
     }
 
@@ -377,9 +377,13 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         /// <param name="e"></param>
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected virtual Task ReceivedData(ReceivedDataEventArgs e)
+        protected virtual async Task ReceivedData(ReceivedDataEventArgs e)
         {
-            return this.PluginManager.RaiseAsync(nameof(ISerialReceivedPlugin.OnSerialReceived), this, e);
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginManager.RaiseAsync(nameof(ISerialReceivedPlugin.OnSerialReceived), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
