@@ -21,7 +21,7 @@ namespace HostingWorkerService
 
                 //添加TcpClient
                 //注意，Client类的服务，在整个服务Start时，不会执行Connect。所以需要自行连接，或者配置无人值守连接
-                services.AddTcpClient(config =>
+                services.AddSingletonTcpClient(config =>
                 {
                     config.SetRemoteIPHost("127.0.0.1:7789");
                 });
