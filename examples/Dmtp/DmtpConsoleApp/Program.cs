@@ -81,8 +81,8 @@ namespace DmtpConsoleApp
 
                 var head = e.ByteBlock.ToArray(0,2);
                 e.ByteBlock.Seek(2, SeekOrigin.Begin);
-                var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
-                var length = e.ByteBlock.ReadInt32(bigEndian: true);
+                var flags = e.ByteBlock.ReadUInt16( EndianType.Big);
+                var length = e.ByteBlock.ReadInt32(EndianType.Big);
 
                 var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
 

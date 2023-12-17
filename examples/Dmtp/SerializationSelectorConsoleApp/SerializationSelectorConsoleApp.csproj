@@ -7,16 +7,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.239">
+		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.242">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.239" />
-		<PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.239" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.239" />
-		<PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.239" />
-		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.239" />
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.239" />
+		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.242" />
+		<PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.242" />
+		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.242" />
+		<PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.242" />
+		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.242" />
+		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.242" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SerializationSelectorClassLibrary\SerializationSelectorClassLibrary.csproj" />
