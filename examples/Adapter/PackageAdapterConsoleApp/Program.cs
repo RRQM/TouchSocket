@@ -22,13 +22,19 @@ namespace PackageAdapterConsoleApp
             }
         }
 
+        static SingleStreamDataHandlingAdapter GetAdapter()
+        {
+            //return new TerminatorPackageAdapter("\r\n");//使用换行终止字符
+            return new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) };//使用周期适配器。
+        }
+
         static TcpClient CreateClient()
         {
             var client = new TcpClient();
             //载入配置
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                .SetTcpDataHandlingAdapter(GetAdapter)//赋值适配，必须使用委托，且返回的适配，必须new。不能返回一个单例
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个日志注入
@@ -52,7 +58,7 @@ namespace PackageAdapterConsoleApp
 
             service.Setup(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+                .SetTcpDataHandlingAdapter(GetAdapter)
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）

@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.242" />
-    <PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.242" />
+    <PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.243" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.243" />
   </ItemGroup>
 </Project>
