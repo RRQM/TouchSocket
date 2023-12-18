@@ -24,8 +24,8 @@ namespace PackageAdapterConsoleApp
 
         static SingleStreamDataHandlingAdapter GetAdapter()
         {
-            //return new TerminatorPackageAdapter("\r\n");//使用换行终止字符
-            return new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) };//使用周期适配器。
+            return new TerminatorPackageAdapter("\r\n");//使用换行终止字符
+            //return new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) };//使用周期适配器。
         }
 
         static TcpClient CreateClient()
