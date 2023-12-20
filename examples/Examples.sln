@@ -248,11 +248,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealityProxyDmtpRpcConsoleA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosting", "Hosting", "{0E116F60-01DE-4648-B4EE-5B944EED42AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostingWorkerService", "Hosting\HostingWorkerService\HostingWorkerService.csproj", "{866798F5-FD69-49D2-B4FA-279DC7188A54}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HostingWorkerService", "Hosting\HostingWorkerService\HostingWorkerService.csproj", "{866798F5-FD69-49D2-B4FA-279DC7188A54}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serial", "Serial", "{8911AC2E-B951-436C-A76D-7E994017069B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialPortClientConsoleApp", "Serial\SerialPortClientConsoleApp\SerialPortClientConsoleApp.csproj", "{EBB7E090-7309-49D6-A0C9-CD704E7FEA31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerialPortClientConsoleApp", "Serial\SerialPortClientConsoleApp\SerialPortClientConsoleApp.csproj", "{EBB7E090-7309-49D6-A0C9-CD704E7FEA31}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modbus", "Modbus", "{0F95EA5A-0E08-4516-89D4-C3BFC88789F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusClientConsoleApp", "Modbus\ModbusClientConsoleApp\ModbusClientConsoleApp.csproj", "{999A4AD8-D8C7-411E-9F9D-766B6BBB110C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -560,6 +564,10 @@ Global
 		{EBB7E090-7309-49D6-A0C9-CD704E7FEA31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBB7E090-7309-49D6-A0C9-CD704E7FEA31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB7E090-7309-49D6-A0C9-CD704E7FEA31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{999A4AD8-D8C7-411E-9F9D-766B6BBB110C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{999A4AD8-D8C7-411E-9F9D-766B6BBB110C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{999A4AD8-D8C7-411E-9F9D-766B6BBB110C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{999A4AD8-D8C7-411E-9F9D-766B6BBB110C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -670,6 +678,7 @@ Global
 		{C94B9E69-3B48-4AAB-B3C3-80AA190640C2} = {995183D4-74FD-4EDD-8FDF-8B6BC0410A06}
 		{866798F5-FD69-49D2-B4FA-279DC7188A54} = {0E116F60-01DE-4648-B4EE-5B944EED42AA}
 		{EBB7E090-7309-49D6-A0C9-CD704E7FEA31} = {8911AC2E-B951-436C-A76D-7E994017069B}
+		{999A4AD8-D8C7-411E-9F9D-766B6BBB110C} = {0F95EA5A-0E08-4516-89D4-C3BFC88789F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

@@ -1,0 +1,221 @@
+---
+id: modbusclient
+title: Modbus客户端
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Modbus <br/>
+程序集：[TouchSocket.Modbus.dll](https://www.nuget.org/packages/TouchSocket.Modbus)
+
+
+## 一、说明
+
+Modbus是OSI模型第7层上的应用层报文传输协议，它在连接至不同类型总线或网络的设备之间提供客户机/服务器通信。
+
+自从 1979 年出现工业串行链路的事实标准以来，Modbus使成千上万的自动化设备能够通信。目前，继续增加对简单而雅观的Modbus结构支持。互联网组织能够使TCP/IP栈上的保留系统端口502 访问Modbus。
+
+所以总结来说Modbus是一个请求/应答的总线协议。
+
+所以我们开发了这个组件，方便大家使用。
+
+## 二、特点
+
+- 简单易用。
+- 内存池支持
+- 高性能
+- 易扩展。
+- **支持全数据类型的读写**。
+
+## 三、产品应用场景
+
+- 所有Modbus使用场景：可跨平台使用。
+
+## 四、可配置项
+
+无单独配置项。
+
+## 五、支持插件
+
+无单独支持插件。
+
+## 六、创建
+
+目前TouchSokcet.Modbus支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp等协议。下面会一一介绍创建过程。
+
+#### 6.1 创建ModbusTcpClient
+
+```csharp showLineNumbers
+public IModbusTcpClient GetClient()
+{
+    var client = new ModbusTcpClient();
+
+    client.Connect("127.0.0.1:502");
+    return client;
+}
+```
+
+#### 6.2 创建ModbusUdpClient
+
+```csharp showLineNumbers
+public IModbusClient GetClient()
+{
+    var client = new ModbusUdpClient();
+    client.Setup(new TouchSocketConfig()
+        .UseUdpReceive()
+        .SetRemoteIPHost("127.0.0.1:502"));
+    client.Start();
+    return client;
+}
+```
+
+#### 6.3 创建ModbusRtuClient
+
+```csharp showLineNumbers
+public IModbusClient GetClient()
+{
+    var client = new ModbusRtuClient();
+    client.Setup(new TouchSocketConfig()
+        .SetSerialPortOption(new SerialPortOption()
+        {
+            BaudRate = 9600,
+            DataBits = 8,
+            Parity = System.IO.Ports.Parity.Even,
+            PortName = "COM2",
+            StopBits = System.IO.Ports.StopBits.One
+        }));
+    client.Connect();
+    return client;
+}
+```
+
+#### 6.4 创建ModbusRtuOverTcpClient
+
+```csharp showLineNumbers
+public IModbusClient GetClient()
+{
+    var client = new ModbusRtuOverTcpClient();
+    client.Connect("127.0.0.1:502");
+    return client;
+}
+```
+
+#### 6.5 创建ModbusRtuOverUdpClient
+
+```csharp showLineNumbers
+public IModbusClient GetClient()
+{
+    var client = new ModbusRtuOverUdpClient();
+    client.Setup(new TouchSocketConfig()
+        .UseUdpReceive()
+        .SetRemoteIPHost("127.0.0.1:502"));
+    client.Start();
+    return client;
+}
+```
+
+## 七、读写操作
+
+### 7.1 原生接口操作 
+
+所有的Modbus客户端都支持以下两种原生接口操作：
+
+```csharp showLineNumbers
+//同步发送Modbus请求，并等待响应
+IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token);
+
+//异步发送Modbus请求，并等待响应
+Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token);
+```
+
+以读线圈操作为例：
+
+```csharp showLineNumbers
+ModbusRequest modbusRequest = new ModbusRequest(FunctionCode.ReadCoils);
+modbusRequest.SetSlaveId(1);//设置站号。如果是Tcp可以不设置
+modbusRequest.SetStartingAddress(0);//设置起始
+modbusRequest.SetQuantity(1);//设置数量
+//modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
+
+var response = client.SendModbusRequest(modbusRequest, 1000, CancellationToken.None);
+
+bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
+```
+
+### 7.2 快捷扩展实现
+
+因为Modbus的操作一般比较固化，所以ModbusClient扩展了以下快捷操作：
+
+读取线圈（FC1）。
+
+```csharp showLineNumbers
+bool[] bools = client.ReadCoils(0, 1);
+```
+
+读取离散输入（FC2）。
+
+```csharp showLineNumbers
+bool[] bools = client.ReadDiscreteInputs(0, 1);
+```
+
+读取保持寄存器（FC3）。
+
+```csharp showLineNumbers
+var response = client.ReadHoldingRegisters(0, 1);
+var reader = response.CreateReader();
+var value=reader.ReadInt16();
+```
+
+读取输入寄存器（FC4）。
+
+```csharp showLineNumbers
+var response = client.ReadInputRegisters(0, 1);
+var reader = response.CreateReader();
+var value=reader.ReadInt16();
+```
+
+写入单个线圈（FC5）。
+
+```csharp showLineNumbers
+client.WriteSingleCoil(0, true);
+```
+
+写入单个寄存器（FC6）。
+
+```csharp showLineNumbers
+client.WriteSingleRegister(0, (short)100);
+```
+
+写入多个线圈（FC15）。
+
+```csharp showLineNumbers
+client.WriteMultipleCoils(0, new bool[] { true, false, true });
+```
+
+写入多个寄存器（FC16）。
+
+```csharp showLineNumbers
+using (var writer = new ValueByteBlock(1024))
+{
+    writer.Write(short.MaxValue, EndianType.Big);//ABCD端序 2字节
+    writer.Write(int.MaxValue, EndianType.Little);//DCBA端序 4字节
+    writer.Write(long.MaxValue, EndianType.BigSwap);//BADC端序 8字节
+    writer.Write(double.MaxValue, EndianType.LittleSwap);//CDAB端序 8字节
+    
+    client.WriteMultipleRegisters(0, writer.ToArray());
+}
+```
+
+:::tip 提示
+
+以上扩展方法还有更多重载。例如：站号、超时时间、可取消令箭等参数。
+
+:::  
+
+## 八、更多写入与读取
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
+
