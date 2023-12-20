@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -22,7 +24,7 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public ref struct ValueByteBlock
+    public struct ValueByteBlock:IDisposable, IWrite, IEnumerable<byte>
     {
         private readonly BytePool m_bytePool;
         private readonly bool m_canReturn;
@@ -40,7 +42,6 @@ namespace TouchSocket.Core
             this.m_dis = 1;
             this.m_canReturn = true;
             this.Buffer = BytePool.Default.Rent(byteSize);
-            this.Using = true;
             this.m_length = 0;
             this.Holding = false;
             this.m_position = 0;
@@ -57,7 +58,6 @@ namespace TouchSocket.Core
             this.m_dis = 1;
             this.m_canReturn = true;
             this.Buffer = bytePool.Rent(byteSize);
-            this.Using = true;
             this.m_length = 0;
             this.Holding = false;
             this.m_position = 0;
@@ -73,11 +73,45 @@ namespace TouchSocket.Core
             this.m_canReturn = false;
             this.Buffer = bytes ?? throw new ArgumentNullException(nameof(bytes));
             this.m_length = bytes.Length;
-            this.Using = true;
-            this.m_length = 0;
             this.Holding = false;
             this.m_position = 0;
             this.m_bytePool = default;
+        }
+
+        /// <summary>
+        /// 实例化一个已知内存的对象。且该内存不会被回收。
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="length"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public ValueByteBlock(byte[] bytes,int length)
+        {
+            this.m_dis = 0;
+            this.m_canReturn = false;
+            this.Buffer = bytes ?? throw new ArgumentNullException(nameof(bytes));
+            this.m_length = length;
+            this.Holding = false;
+            this.m_position = 0;
+            this.m_bytePool = default;
+        }
+
+        /// <summary>
+        /// 返回或设置索引对应的值。
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public byte this[int index]
+        {
+            get
+            {
+                this.ThrowIfDisposed();
+                return this.Buffer[index];
+            }
+            set
+            {
+                this.ThrowIfDisposed();
+                this.Buffer[index] = value;
+            }
         }
 
         /// <summary>
@@ -142,7 +176,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using { get; private set; }
+        public bool Using=> m_dis == 1;
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC
@@ -155,16 +189,21 @@ namespace TouchSocket.Core
             }
         }
 
+        private void ThrowIfDisposed()
+        {
+            if (!this.Using)
+            {
+                throw new ObjectDisposedException(typeof(ValueByteBlock).FullName);
+            }
+        }
+
         /// <summary>
         /// 清空所有内存数据
         /// </summary>
         /// <exception cref="ObjectDisposedException">内存块已释放</exception>
         public void Clear()
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException(nameof(ValueByteBlock));
-            }
+            this.ThrowIfDisposed();
             Array.Clear(this.Buffer, 0, this.Buffer.Length);
         }
 
@@ -198,10 +237,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public int Read(byte[] buffer, int offset, int length)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException(nameof(ValueByteBlock));
-            }
+            this.ThrowIfDisposed();
             var len = this.m_length - this.m_position > length ? length : this.CanReadLen;
             Array.Copy(this.Buffer, this.m_position, buffer, offset, len);
             this.m_position += len;
@@ -248,10 +284,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException">内存块已释放</exception>
         public void Reset()
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException(nameof(ValueByteBlock));
-            }
+            this.ThrowIfDisposed();
             this.m_position = 0;
             this.m_length = 0;
         }
@@ -265,10 +298,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public int Seek(int offset, SeekOrigin origin)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException(nameof(ValueByteBlock));
-            }
+            this.ThrowIfDisposed();
             switch (origin)
             {
                 case SeekOrigin.Begin:
@@ -322,10 +352,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public void SetCapacity(int size, bool retainedData = false)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException("ValueByteBlock");
-            }
+            this.ThrowIfDisposed();
             var bytes = new byte[size];
 
             if (retainedData)
@@ -347,10 +374,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public void SetHolding(bool holding)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException("ValueByteBlock");
-            }
+            this.ThrowIfDisposed();
             this.Holding = holding;
             if (!holding)
             {
@@ -365,10 +389,7 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public void SetLength(int value)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException("ValueByteBlock");
-            }
+            this.ThrowIfDisposed();
             if (value > this.Buffer.Length)
             {
                 throw new Exception("设置值超出容量");
@@ -384,10 +405,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public byte[] ToArray(int offset, int length)
         {
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException("ValueByteBlock");
-            }
+            this.ThrowIfDisposed();
             var buffer = new byte[length];
             Array.Copy(this.Buffer, offset, buffer, 0, buffer.Length);
             return buffer;
@@ -430,7 +448,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public string ToString(int offset, int length)
         {
-            return !this.Using ? throw new ObjectDisposedException("ValueByteBlock") : Encoding.UTF8.GetString(this.Buffer, offset, length);
+            this.ThrowIfDisposed();
+            return Encoding.UTF8.GetString(this.Buffer, offset, length);
         }
 
         /// <summary>
@@ -440,9 +459,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public string ToString(int offset)
         {
-            return !this.Using
-                ? throw new ObjectDisposedException("ValueByteBlock")
-                : Encoding.UTF8.GetString(this.Buffer, offset, this.Len - offset);
+            this.ThrowIfDisposed();
+            return Encoding.UTF8.GetString(this.Buffer, offset, this.Len - offset);
         }
 
         /// <summary>
@@ -454,13 +472,10 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         public void Write(byte[] buffer, int offset, int count)
         {
+            this.ThrowIfDisposed();
             if (count == 0)
             {
                 return;
-            }
-            if (!this.Using)
-            {
-                throw new ObjectDisposedException("ValueByteBlock");
             }
             if (this.Buffer.Length - this.m_position < count)
             {
@@ -496,7 +511,6 @@ namespace TouchSocket.Core
         private void Dis()
         {
             this.Holding = false;
-            this.Using = false;
             this.m_position = 0;
             this.m_length = 0;
             this.Buffer = null;
@@ -664,6 +678,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="int"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<int> ToInt32s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt32();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="int"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<int> ToInt32s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt32(endianType);
+            }
+        }
         #endregion Int32
 
         #region Int16
@@ -708,6 +756,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="short"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<short> ToInt16s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt16();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="short"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<short> ToInt16s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt16(endianType);
+            }
+        }
         #endregion Int16
 
         #region Int64
@@ -752,16 +834,61 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="long"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<long> ToInt64s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt64();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="long"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<long> ToInt64s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadInt64(endianType);
+            }
+        }
         #endregion Int64
 
         #region Boolean
 
         /// <summary>
-        /// 从当前流位置读取一个<see cref="bool"/>值
+        /// 从当前流位置读取1个<see cref="bool"/>值
         /// </summary>
         public bool ReadBoolean()
         {
             var value = TouchSocketBitConverter.Default.ToBoolean(this.Buffer, this.Pos);
+            this.m_position += 1;
+            return value;
+        }
+
+        /// <summary>
+        /// 从当前流位置读取1个字节，按位解析为bool值数组。
+        /// </summary>
+        /// <returns></returns>
+        public bool[] ReadBooleans()
+        {
+            var value = TouchSocketBitConverter.Default.ToBooleans(this.Buffer, this.Pos);
             this.m_position += 1;
             return value;
         }
@@ -775,6 +902,51 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.Default.GetBytes(value));
         }
 
+        /// <summary>
+        /// 写入bool数组。
+        /// </summary>
+        /// <param name="values"></param>
+        public void Write(bool[] values)
+        {
+            this.Write(TouchSocketBitConverter.Default.GetBytes(values));
+        }
+
+        /// <summary>
+        /// 将当前有效内存按字节转为<see cref="bool"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<bool> ToBoolensFromByte()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 1 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadBoolean();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存按位转为<see cref="bool"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<bool> ToBoolensFromBit()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 1 > this.m_length)
+                {
+                    yield break;
+                }
+                foreach (var item in this.ReadBooleans())
+                {
+                    yield return item;
+                }
+            }
+        }
         #endregion Boolean
 
         #region Byte
@@ -889,6 +1061,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="char"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<char> ToChars()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadChar();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="char"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<char> ToChars(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadChar(endianType);
+            }
+        }
         #endregion Char
 
         #region Double
@@ -933,6 +1139,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="double"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<double> ToDoubles()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadDouble();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="double"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<double> ToDoubles(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadDouble(endianType);
+            }
+        }
         #endregion Double
 
         #region Float
@@ -977,6 +1217,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="float"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<float> ToFloats()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadFloat();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="float"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<float> ToFloats(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadFloat(endianType);
+            }
+        }
         #endregion Float
 
         #region UInt16
@@ -1021,6 +1295,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="ushort"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ushort> ToUInt16s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt16();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="ushort"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<int> ToUInt16s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 2 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt16(endianType);
+            }
+        }
         #endregion UInt16
 
         #region UInt32
@@ -1065,6 +1373,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="uint"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<uint> ToUInt32s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt32();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="uint"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<uint> ToUInt32s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 4 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt32(endianType);
+            }
+        }
         #endregion UInt32
 
         #region UInt64
@@ -1109,6 +1451,40 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="ulong"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ulong> ToUInt64s()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt64();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="ulong"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<ulong> ToUInt64s(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadUInt64(endianType);
+            }
+        }
         #endregion UInt64
 
         #region Null
@@ -1194,6 +1570,22 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value.ToBinary()));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为<see cref="DateTime"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DateTime> ToDateTimes()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadDateTime();
+            }
+        }
         #endregion DateTime
 
         #region TimeSpan
@@ -1217,7 +1609,51 @@ namespace TouchSocket.Core
             this.Write(TouchSocketBitConverter.BigEndian.GetBytes(value.Ticks));
         }
 
+        /// <summary>
+        /// 将当前有效内存转为<see cref="TimeSpan"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<TimeSpan> ToTimeSpans()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 8 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadTimeSpan();
+            }
+        }
         #endregion TimeSpan
+
+        #region Enumerator
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<byte> GetEnumerator()
+        {
+            var pos = 0;
+            while (true)
+            {
+                if (pos < this.m_length)
+                {
+                    yield return this.Buffer[pos++];
+                }
+                else
+                {
+                    yield break;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        #endregion
 
         #region Object
 

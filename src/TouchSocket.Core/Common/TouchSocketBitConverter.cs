@@ -267,6 +267,22 @@ namespace TouchSocket.Core
             return BitConverter.ToBoolean(buffer, offset);
         }
 
+        /// <summary>
+        /// 将指定的字节，按位解析为bool数组。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public bool[] ToBooleans(byte[] buffer, int offset)
+        {
+            var bools = new bool[8];
+            for (short i = 0; i < bools.Length; i++)
+            {
+                bools[i]= Convert.ToBoolean(buffer[offset].GetBit(i));
+            }
+            return bools;
+        }
+
         #endregion bool
 
         #region char

@@ -136,6 +136,17 @@ namespace TouchSocket.Core
                 : BitConverter.ToString(buffer, offset, length).Replace("-", splite);
         }
 
+
+        /// <summary>
+        /// 字节数组转16进制字符
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="splite"></param>
+        /// <returns></returns>
+        public static string ByBytesToHexString(this byte[] buffer,string splite = default)
+        {
+            return ByBytesToHexString(buffer,0,buffer.Length,splite);
+        }
         #endregion 字节数组扩展
     }
 }
