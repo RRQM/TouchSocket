@@ -237,7 +237,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock">以二进制形式传递</param>
         /// <param name="requestInfo">以解析实例传递</param>
-        protected void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected virtual void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.ReceivedCallBack.Invoke(byteBlock, requestInfo);
         }
@@ -248,7 +248,7 @@ namespace TouchSocket.Core
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        protected void GoSend(byte[] buffer, int offset, int length)
+        protected virtual void GoSend(byte[] buffer, int offset, int length)
         {
             this.SendCallBack.Invoke(buffer, offset, length);
         }
@@ -260,7 +260,7 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        protected Task GoSendAsync(byte[] buffer, int offset, int length)
+        protected virtual Task GoSendAsync(byte[] buffer, int offset, int length)
         {
             return this.SendAsyncCallBack.Invoke(buffer, offset, length);
         }

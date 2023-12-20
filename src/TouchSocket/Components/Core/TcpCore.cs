@@ -109,7 +109,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int ReceiveBufferSize
         {
-            get => this.m_receiveBufferSize;
+            get => Math.Min(Math.Max(this.m_receiveBufferSize, this.MinBufferSize), this.MaxBufferSize);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int SendBufferSize
         {
-            get => this.m_sendBufferSize;
+            get => Math.Min(Math.Max(this.m_sendBufferSize, this.MinBufferSize), this.MaxBufferSize);
         }
 
         /// <summary>

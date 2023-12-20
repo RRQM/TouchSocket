@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -54,11 +55,7 @@ namespace TouchSocket.Sockets
             this.GoSend(endPoint, buffer, offset, length);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
         protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             var length = 0;
@@ -79,6 +76,30 @@ namespace TouchSocket.Sockets
                     byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
                 this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override async Task PreviewSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
+        {
+            var length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Count;
+            }
+
+            if (length > this.MaxPackageSize)
+            {
+                throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+
+            using (var byteBlock = new ByteBlock(length))
+            {
+                foreach (var item in transferBytes)
+                {
+                    byteBlock.Write(item.Array, item.Offset, item.Count);
+                }
+               await this.GoSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
 

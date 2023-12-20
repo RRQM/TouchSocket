@@ -40,7 +40,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.SerialPorts", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Hosting", "TouchSocket.Hosting\TouchSocket.Hosting.csproj", "{2F1E9315-21B5-498C-9B8F-62E7386665EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TouchSocket.ProtocolHouse", "TouchSocket.ProtocolHouse\TouchSocket.ProtocolHouse.csproj", "{A2633688-204C-4A09-908A-F6F2D2241730}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Modbus", "TouchSocket.Modbus\TouchSocket.Modbus.csproj", "{229B4A12-ADBE-4F0D-8D70-F695DE41288B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -112,10 +112,10 @@ Global
 		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F1E9315-21B5-498C-9B8F-62E7386665EF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A2633688-204C-4A09-908A-F6F2D2241730}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2633688-204C-4A09-908A-F6F2D2241730}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2633688-204C-4A09-908A-F6F2D2241730}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2633688-204C-4A09-908A-F6F2D2241730}.Release|Any CPU.Build.0 = Release|Any CPU
+		{229B4A12-ADBE-4F0D-8D70-F695DE41288B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{229B4A12-ADBE-4F0D-8D70-F695DE41288B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{229B4A12-ADBE-4F0D-8D70-F695DE41288B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{229B4A12-ADBE-4F0D-8D70-F695DE41288B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

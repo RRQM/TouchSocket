@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Modbus;TouchSocket</PackageTags>
+		<Description>这是一个Modbus功能库，目前包括ModbusTcpClient、ModbusUdpClient、ModbusRtuClient、ModbusRtuOverTcpClient、ModbusRtuOverUdpClient。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+		<Title>TouchSocket.Modbus</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Modbus</PackageOutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj" />
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+</Project>

@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -410,6 +411,7 @@ namespace TouchSocket.Sockets
             adapter.OnLoaded(this);
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
             adapter.SendCallBack = this.DefaultSend;
+            adapter.SendCallBackAsync = this.DefaultSendAsync;
             this.DataHandlingAdapter = adapter;
         }
 
@@ -553,6 +555,27 @@ namespace TouchSocket.Sockets
             this.ReceivedData(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo));
         }
 
+        #region Throw
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ThorwIfRemoteIPHostNull()
+        {
+            if (this.RemoteIPHost == null)
+            {
+                throw new Exception("默认终结点为空");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ThorwIfDataHandlingAdapterNull()
+        {
+            if (this.DataHandlingAdapter == null)
+            {
+                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketResource.NullDataAdapter.GetDescription());
+            }
+        }
+        #endregion
+
         #region 向默认远程同步发送
 
         /// <summary>
@@ -563,55 +586,31 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public virtual void Send(byte[] buffer, int offset, int length)
         {
-            if (this.RemoteIPHost == null)
-            {
-                throw new Exception("默认终结点为空");
-            }
+            this.ThorwIfRemoteIPHostNull();
             this.Send(this.RemoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 向默认终结点发送
         /// </summary>
         /// <param name="requestInfo"></param>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
         public virtual void Send(IRequestInfo requestInfo)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-            if (this.DataHandlingAdapter == null)
-            {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketResource.NullDataAdapter.GetDescription());
-            }
-            if (!this.DataHandlingAdapter.CanSendRequestInfo)
-            {
-                throw new NotSupportedException($"当前适配器不支持对象发送。");
-            }
-            //this.DataHandlingAdapter.SendInput(requestInfo);
+            this.ThorwIfRemoteIPHostNull();
+            this.Send(this.RemoteIPHost.EndPoint, requestInfo);
         }
 
         #endregion 向默认远程同步发送
 
         #region 向默认远程异步发送
 
-        /// <summary>
-        /// IOCP发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <inheritdoc/>
         public virtual Task SendAsync(byte[] buffer, int offset, int length)
         {
-            return Task.Run(() =>
-              {
-                  this.Send(buffer, offset, length);
-              });
+            this.ThorwIfRemoteIPHostNull();
+            return this.SendAsync(this.RemoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -622,10 +621,8 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(IRequestInfo requestInfo)
         {
-            return Task.Run(() =>
-            {
-                this.Send(requestInfo);
-            });
+            this.ThorwIfRemoteIPHostNull();
+            return this.SendAsync(this.RemoteIPHost.EndPoint, requestInfo);
         }
 
         #endregion 向默认远程异步发送
@@ -647,6 +644,23 @@ namespace TouchSocket.Sockets
             this.DataHandlingAdapter.SendInput(remoteEP, buffer, offset, length);
         }
 
+        /// <summary>
+        /// 向设置终结点发送
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <param name="requestInfo"></param>
+        /// <exception cref="OverlengthException"></exception>
+        /// <exception cref="Exception"></exception>
+        public virtual void Send(EndPoint endPoint, IRequestInfo requestInfo)
+        {
+            ThorwIfDataHandlingAdapterNull();
+            if (!this.DataHandlingAdapter.CanSendRequestInfo)
+            {
+                throw new NotSupportedException($"当前适配器不支持对象发送。");
+            }
+            this.DataHandlingAdapter.SendInput(endPoint, requestInfo);
+        }
+
         #endregion 向设置的远程同步发送
 
         #region 向设置的远程异步发送
@@ -654,21 +668,24 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 向设置的远程异步发送
         /// </summary>
-        /// <param name="remoteEP"></param>
+        /// <param name="endPoint"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <exception cref="NotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public virtual Task SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int length)
+        public virtual Task SendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            return Task.Run(() =>
-             {
-                 this.Send(remoteEP, buffer, offset, length);
-             });
+            ThorwIfDataHandlingAdapterNull();
+            return this.DataHandlingAdapter.SendInputAsync(endPoint, buffer, offset, length);
         }
 
+        public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo)
+        {
+            ThorwIfDataHandlingAdapterNull();
+            return this.DataHandlingAdapter.SendInputAsync(this.RemoteIPHost.EndPoint, requestInfo);
+        }
         #endregion 向设置的远程异步发送
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
@@ -719,6 +736,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
+            this.ThorwIfRemoteIPHostNull();
             this.DefaultSend(this.RemoteIPHost.EndPoint, buffer, offset, length);
         }
 
@@ -731,13 +749,10 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
+            ThrowIfDisposed();
             if (this.HandleSendingData(endPoint, buffer, offset, length))
             {
-                if (this.CanSend)
-                {
-                    this.Monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
-                }
-
+                this.Monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
                 this.LastSendTime = DateTime.Now;
             }
         }
@@ -754,10 +769,8 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public Task DefaultSendAsync(byte[] buffer, int offset, int length)
         {
-            return Task.Run(() =>
-            {
-                this.DefaultSend(buffer, offset, length);
-            });
+            this.ThorwIfRemoteIPHostNull();
+            return this.DefaultSendAsync(this.RemoteIPHost.EndPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -767,13 +780,30 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+#if NET6_0_OR_GREATER
+        public async Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            return Task.Run(() =>
+            ThrowIfDisposed();
+            if (this.HandleSendingData(endPoint, buffer, offset, length))
             {
-                this.DefaultSend(buffer, offset, length);
+                if (this.CanSend)
+                {
+                    await this.Monitor.Socket.SendToAsync(new ReadOnlyMemory<byte>(buffer, offset, length), SocketFlags.None, endPoint);
+                }
+
+                this.LastSendTime = DateTime.Now;
+            }
+        }
+#else
+        public async Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        {
+            ThrowIfDisposed();
+            await Task.Run(() =>
+            {
+                this.DefaultSend(endPoint, buffer, offset, length);
             });
         }
+#endif
 
         #endregion DefaultSendAsync
 
@@ -785,6 +815,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public void Send(IList<ArraySegment<byte>> transferBytes)
         {
+            this.ThorwIfRemoteIPHostNull();
             this.Send(this.RemoteIPHost.EndPoint, transferBytes);
         }
 
@@ -795,10 +826,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public void Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            if (this.DataHandlingAdapter == null)
-            {
-                throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketResource.NullDataAdapter.GetDescription());
-            }
+            ThorwIfDataHandlingAdapterNull();
 
             if (!this.DataHandlingAdapter.CanSplicingSend)
             {
@@ -813,10 +841,8 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
-            return Task.Run(() =>
-            {
-                this.Send(transferBytes);
-            });
+            this.ThorwIfRemoteIPHostNull();
+            return this.SendAsync(this.RemoteIPHost.EndPoint, transferBytes);
         }
 
         /// <summary>
@@ -826,10 +852,8 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            return Task.Run(() =>
-            {
-                this.Send(endPoint, transferBytes);
-            });
+            ThorwIfDataHandlingAdapterNull();
+            return this.DataHandlingAdapter.SendInputAsync(endPoint, transferBytes);
         }
 
         #endregion 组合发送
