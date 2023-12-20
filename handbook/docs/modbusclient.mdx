@@ -216,6 +216,107 @@ using (var writer = new ValueByteBlock(1024))
 
 ## 八、更多写入与读取
 
+线圈与离散输入的写入与读取比较单一，上述操作即可满足大部分需求。下面介绍读写保持寄存器、读取输入寄存器的多元化方式。
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
+
+读取寄存器到集合。如果该集合中的数据是一类数据，例如全是uint32类型。那么可以使用下列方式：
+
+```csharp showLineNumbers
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 10);//站点1，从0开始读取10个寄存器
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+//将数据全部读为无符号32为，且使用大端序，即ABCD
+uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
+```
+
+:::tip 提示
+
+该集合支持全部基础数据类型，以及DataTiem和TimeSpan。
+
+:::  
+
+当寄存器的数据不规则时，可能需要依次读取。例如：
+
+当写入下列数据时：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    valueByteBlock.Write((ushort)2, EndianType.Big);//ABCD端序
+    valueByteBlock.Write((ushort)2000, EndianType.Little);//DCBA端序
+    valueByteBlock.Write(int.MaxValue, EndianType.BigSwap);//BADC端序
+    valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+```
+
+就需要依次读取：
+
+```csharp showLineNumbers
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 1 + 1 + 2 + 4);
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+//依次读取
+Console.WriteLine(reader.ReadInt16(EndianType.Big));
+Console.WriteLine(reader.ReadInt16(EndianType.Little));
+Console.WriteLine(reader.ReadInt32(EndianType.BigSwap));
+Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
+```
+
+读写字符串：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
+    valueByteBlock.Write("Hello");
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 5);//5个长度，10字节
+
+//创建一个读取器
+var reader = response.CreateReader();
+Console.WriteLine(reader.ReadString());
+```
+
+读写任意类型：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    //写入任意类型，使用Json序列化
+    valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonString());
+```
+
+:::tip 提示
+
+上述所有类型可以任意组合使用，只需要读取的时候按序读取即可。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusClientConsoleApp)
 
