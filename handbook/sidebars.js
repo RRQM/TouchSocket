@@ -634,11 +634,15 @@ module.exports = {
       type: "doc",
       label: "18、XmlRpc组件",
       id: "xmlrpc"
-    }
-    ,
+    },
     {
       type: "doc",
-      label: "19、通用主机(Hosting)",
+      label: "19、Modbus客户端",
+      id: "modbusclient"
+    },
+    {
+      type: "doc",
+      label: "20、通用主机(Hosting)",
       id: "generichost"
     }
   ]
