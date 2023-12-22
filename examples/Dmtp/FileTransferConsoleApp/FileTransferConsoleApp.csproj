@@ -27,6 +27,12 @@
 	  <Reference Include="TouchSocket.Rpc">
 	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Rpc.dll</HintPath>
 	  </Reference>
+	  <Reference Include="TouchSocketPro">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocketPro.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocketPro.Dmtp">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocketPro.Dmtp.dll</HintPath>
+	  </Reference>
 	</ItemGroup>-->
 	<ItemGroup>
 		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.245" />
