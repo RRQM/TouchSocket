@@ -636,9 +636,21 @@ module.exports = {
       id: "xmlrpc"
     },
     {
-      type: "doc",
-      label: "19、Modbus客户端",
-      id: "modbusclient"
+      type: "category",
+      label: "19、Modbus组件",
+      items:
+        [
+          {
+            type: "doc",
+            label: "19.1 Modbus客户端",
+            id: "modbusclient"
+          },
+          {
+            type: "doc",
+            label: "19.2 Modbus服务端",
+            id: "modbusslave"
+          },
+        ]
     },
     {
       type: "doc",
