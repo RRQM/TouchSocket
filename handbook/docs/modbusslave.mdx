@@ -1,0 +1,158 @@
+---
+id: modbusslave
+title: Modbus服务器（从站）
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocketPro.Modbus <br/>
+程序集：[TouchSocketPro.Modbus.dll](https://www.nuget.org/packages/TouchSocketPro.Modbus)
+
+
+## 一、说明 <Tag>企业版</Tag>
+
+Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便大家使用。
+
+
+## 二、特点
+
+- 简单易用。
+- 内存池支持
+- 高性能
+- 易扩展。
+- **支持全数据类型的读写**。
+
+## 三、产品应用场景
+
+- 所有Modbus使用场景：可跨平台使用。
+
+## 四、可配置项
+
+无单独配置项。
+
+## 五、支持插件
+
+无单独支持插件。
+
+## 六、创建
+
+目前TouchSokcet.Modbus从站支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp等协议。下面会一一介绍创建过程。
+
+#### 6.1 创建ModbusTcpSlave
+
+```csharp showLineNumbers
+static ModbusTcpSlave CreateModbusTcpSlave()
+{
+    var service = new ModbusTcpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听7808端口
+        .SetListenIPHosts(7808)
+        //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
+        .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.2 创建ModbusUdpSlave
+
+```csharp showLineNumbers
+static ModbusUdpSlave CreateModbusUdpSlave()
+{
+    var service = new ModbusUdpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetBindIPHost(7809)
+        //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
+        .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.3 创建ModbusRtuSlave
+
+```csharp showLineNumbers
+static ModbusRtuSlave CreateModbusRtuSlave()
+{
+    var service = new ModbusRtuSlave();
+    service.Setup(new TouchSocketConfig()
+        //设置串口
+        .SetSerialPortOption(new SerialPortOption()
+        {
+            BaudRate = 9600,
+            DataBits = 8,
+            Parity = System.IO.Ports.Parity.Even,
+            PortName = "COM1",
+            StopBits = System.IO.Ports.StopBits.One
+        })
+        //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
+        .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+        );
+    service.Connect();
+    Console.WriteLine("已连接COM端口");
+    return service;
+}
+```
+
+#### 6.4 创建ModbusRtuOverTcpSlave
+
+```csharp showLineNumbers
+static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
+{
+    var service = new ModbusRtuOverTcpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetListenIPHosts(7810)
+        //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
+        .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.5 创建ModbusRtuOverUdpSlave
+
+```csharp showLineNumbers
+static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
+{
+    var service = new ModbusRtuOverUdpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetBindIPHost(7811)
+        //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
+        .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+## 七、本地读写操作
+
+所有的`ModbusSlave`都会已实现了`IModbusSlave`接口。在该接口中有`ModbusDataLocater`属性，该属性是`Modbus`数据存储区，即`线圈`、`离散输入`、`保持寄存器`、`输入寄存器`。
+
+该属性是可读可写的。所以，即使是不同`ModbusSlave`。也可以使用同一个存储区。
+
+同时。可以通过该属性，创建一个本地`ModbusClient`，用于直接读写。
+
+具体读写操作和[ModbusClient读写](./modbusclient.mdx)一致。
+
+```csharp  showLineNumbers
+var client = service.ModbusDataLocater.CreateDataLocaterClient();
+
+client.ReadCoils(1,0,1);
+```
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusSlaveConsoleApp)
+
