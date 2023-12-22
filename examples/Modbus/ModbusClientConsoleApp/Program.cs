@@ -79,6 +79,10 @@ namespace ModbusClientConsoleApp
             }
         }
 
+        /// <summary>
+        /// Tcp协议的主站
+        /// </summary>
+        /// <returns></returns>
         public static IModbusTcpClient GetModbusTcpClient()
         {
             var client = new ModbusTcpClient();
@@ -87,6 +91,10 @@ namespace ModbusClientConsoleApp
             return client;
         }
 
+        /// <summary>
+        /// Udp协议的主站
+        /// </summary>
+        /// <returns></returns>
         public static IModbusClient GetModbusUdpClient()
         {
             var client = new ModbusUdpClient();
@@ -97,6 +105,10 @@ namespace ModbusClientConsoleApp
             return client;
         }
 
+        /// <summary>
+        /// 串口协议的主站
+        /// </summary>
+        /// <returns></returns>
         public static IModbusClient GetModbusRtuClient()
         {
             var client = new ModbusRtuClient();
@@ -113,6 +125,10 @@ namespace ModbusClientConsoleApp
             return client;
         }
 
+        /// <summary>
+        /// 基于Tcp协议，但使用Rtu的主站
+        /// </summary>
+        /// <returns></returns>
         public static IModbusClient GetModbusRtuOverTcpClient()
         {
             var client = new ModbusRtuOverTcpClient();
@@ -120,6 +136,10 @@ namespace ModbusClientConsoleApp
             return client;
         }
 
+        /// <summary>
+        /// 基于Udp协议，但使用Rtu的主站
+        /// </summary>
+        /// <returns></returns>
         public static IModbusClient GetModbusRtuOverUdpClient()
         {
             var client = new ModbusRtuOverUdpClient();

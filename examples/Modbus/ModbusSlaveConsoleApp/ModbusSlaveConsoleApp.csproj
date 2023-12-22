@@ -6,7 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.246" />
-	</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TouchSocketPro.Modbus" Version="2.0.0-beta.246" />
+  </ItemGroup>
+
 </Project>
