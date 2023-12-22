@@ -307,7 +307,7 @@ namespace TouchSocket.NamedPipe
         #endregion Receiver
 
         /// <inheritdoc/>
-        public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
+        public virtual void Close(string msg)
         {
             lock (this.SyncRoot)
             {

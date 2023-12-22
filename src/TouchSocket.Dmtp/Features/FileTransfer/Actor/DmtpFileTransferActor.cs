@@ -918,7 +918,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                 case TouchSocketDmtpStatus.RemoteRefuse:
                                 default:
                                     {
-                                        return new FileResourceInfoResult(waitFile.Status.ToStatus().GetDescription());
+                                        return new FileResourceInfoResult(waitFile.Status.ToStatus().GetDescription(waitFile.Message));
                                     }
                             }
                         }
@@ -1058,7 +1058,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                     }
                                 case TouchSocketDmtpStatus.RemoteRefuse:
                                     {
-                                        return new Result(ResultCode.Error, waitFile.Status.ToStatus().GetDescription());
+                                        return new Result(ResultCode.Error, waitFile.Status.ToStatus().GetDescription(waitFile.Message));
                                     }
                                 case TouchSocketDmtpStatus.ClientNotFind:
                                     {

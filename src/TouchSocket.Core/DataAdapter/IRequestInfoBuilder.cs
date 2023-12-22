@@ -9,7 +9,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 指示<see cref="IRequestInfo"/>应当如何构建
     /// </summary>
-    public interface IRequestInfoBuilder
+    public interface IRequestInfoBuilder:IRequestInfo
     {
         /// <summary>
         /// 构建数据时，指示内存池的申请长度。

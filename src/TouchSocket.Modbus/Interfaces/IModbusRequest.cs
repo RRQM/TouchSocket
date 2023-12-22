@@ -7,33 +7,43 @@ using System.Threading.Tasks;
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// Modbus基类
+    /// Modbus请求接口
     /// </summary>
-    public abstract class ModbusBase
+    public interface IModbusRequest
     {
         /// <summary>
         /// 数量
         /// </summary>
-        public ushort Quantity { get; protected set; }
+        ushort Quantity { get;}
 
         /// <summary>
         /// 起始位置
         /// </summary>
-        public ushort StartingAddress { get; protected set; }
+        ushort StartingAddress { get;}
 
         /// <summary>
         /// 数据
         /// </summary>
-        public byte[] Data { get; protected set; }
+        byte[] Data { get; }
 
         /// <summary>
         /// 站点号（单元标识符）
         /// </summary>
-        public byte SlaveId { get; protected set; }
+        byte SlaveId { get;}
 
         /// <summary>
         /// 功能码
         /// </summary>
-        public FunctionCode FunctionCode { get; protected set; }
+        FunctionCode FunctionCode { get;}
+
+        /// <summary>
+        /// 在读起始位置。
+        /// </summary>
+        ushort ReadStartAddress { get;}
+
+        /// <summary>
+        /// 读取长度
+        /// </summary>
+        ushort ReadQuantity { get;}
     }
 }

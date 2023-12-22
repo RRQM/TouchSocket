@@ -9,7 +9,7 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// ModbusTcpBase
     /// </summary>
-    internal abstract class ModbusTcpBase: ModbusBase
+    public abstract class ModbusTcpBase : ModbusRequest
     {
         /// <summary>
         /// 事务处理标识符。即序号

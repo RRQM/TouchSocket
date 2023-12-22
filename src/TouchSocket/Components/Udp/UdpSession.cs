@@ -681,6 +681,7 @@ namespace TouchSocket.Sockets
             return this.DataHandlingAdapter.SendInputAsync(endPoint, buffer, offset, length);
         }
 
+        /// <inheritdoc/>
         public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo)
         {
             ThorwIfDataHandlingAdapterNull();
@@ -728,12 +729,7 @@ namespace TouchSocket.Sockets
 
         #region DefaultSend
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
         public void DefaultSend(byte[] buffer, int offset, int length)
         {
             this.ThorwIfRemoteIPHostNull();
@@ -749,7 +745,7 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         public void DefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
             if (this.HandleSendingData(endPoint, buffer, offset, length))
             {
                 this.Monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);

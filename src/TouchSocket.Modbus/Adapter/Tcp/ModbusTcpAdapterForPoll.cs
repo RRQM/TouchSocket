@@ -1,4 +1,5 @@
-﻿using TouchSocket.Core;
+﻿using System;
+using TouchSocket.Core;
 namespace TouchSocket.Modbus
 {
     /// <summary>
@@ -9,7 +10,7 @@ namespace TouchSocket.Modbus
     /// 
     /// 此处解析思路是，将数据之前的所有信息，均认为固定包头。则包头长度是8
     /// </summary>
-    internal class ModbusTcpAdapter : CustomFixedHeaderDataHandlingAdapter<ModbusTcpResponse>
+    internal class ModbusTcpAdapterForPoll : CustomFixedHeaderDataHandlingAdapter<ModbusTcpResponse>
     {
         public override int HeaderLength => 8;
 

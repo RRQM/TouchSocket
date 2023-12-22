@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TouchSocket.Modbus.Adapter
+namespace TouchSocket.Modbus
 {
     /// <summary>
     /// Modbus功能码
     /// </summary>
-    public enum FunctionCode:byte
+    public enum FunctionCode : byte
     {
         /// <summary>
         /// 读线圈寄存器	位	取得一组逻辑线圈的当前状态（ON/OFF )
@@ -50,5 +50,10 @@ namespace TouchSocket.Modbus.Adapter
         /// 写多个保持寄存器	整型、浮点型、字符型	把具体的二进制值装入一串连续的保持寄存器
         /// </summary>
         WriteMultipleRegisters = 16,
+
+        /// <summary>
+        /// 读写多个保持寄存器	整型、浮点型、字符型	把具体的二进制值装入一串连续的保持寄存器 并读取一系列寄存器
+        /// </summary>
+        ReadWriteMultipleRegisters = 23
     }
 }

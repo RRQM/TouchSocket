@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 提供Dmtp协议的最基础功能件
     /// </summary>
-    public interface IDmtpActor : IDependencyObject, IHandshakeObject
+    public interface IDmtpActor : IDependencyObject, IHandshakeObject,ICloseObject
     {
         #region 属性
 
@@ -148,13 +148,6 @@ namespace TouchSocket.Dmtp
         #endregion IDmtpChannel
 
         #region 方法
-
-        /// <summary>
-        /// 关闭
-        /// </summary>
-        /// <param name="message">传递消息</param>
-        void Close(string message);
-
         /// <summary>
         /// 向当前对点发送一个Ping报文，并且等待回应。
         /// </summary>

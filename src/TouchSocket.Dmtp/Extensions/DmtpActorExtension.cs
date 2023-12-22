@@ -298,12 +298,13 @@ namespace TouchSocket.Dmtp
         /// <param name="protocol">协议</param>
         /// <param name="package">包</param>
         /// <param name="maxSize">估计的包最大值，其作用是用于<see cref="ByteBlock"/>的申请。</param>
-        public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
+        public static async Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
         {
-            return Task.Run(() =>
+            using (var byteBlock = new ByteBlock(maxSize))
             {
-                Send(client, protocol, package, maxSize);
-            });
+                package.Package(byteBlock);
+                await client.DmtpActor.SendAsync(protocol, byteBlock);
+            }
         }
 
         /// <summary>
@@ -314,10 +315,7 @@ namespace TouchSocket.Dmtp
         /// <param name="package">包</param>
         public static Task SendAsync(this IDmtpActorObject client, ushort protocol, IPackage package)
         {
-            return Task.Run(() =>
-            {
-                Send(client, protocol, package, 1024 * 64);
-            });
+            return SendAsync(client, protocol, package, 1024 * 64);
         }
 
         #endregion 发送Package

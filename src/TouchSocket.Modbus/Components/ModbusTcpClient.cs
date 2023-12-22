@@ -31,7 +31,7 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         protected override Task OnConnecting(ConnectingEventArgs e)
         {
-            this.SetAdapter(new ModbusTcpAdapter());
+            this.SetAdapter(new ModbusTcpAdapterForPoll());
             return base.OnConnecting(e);
         }
 
@@ -47,7 +47,7 @@ namespace TouchSocket.Modbus
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.GetErrorCode());
+            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
 
@@ -63,7 +63,7 @@ namespace TouchSocket.Modbus
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.GetErrorCode());
+            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
 

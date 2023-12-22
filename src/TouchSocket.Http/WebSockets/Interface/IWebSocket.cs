@@ -21,18 +21,12 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocket
     /// </summary>
-    public interface IWebSocket : IDisposable, IHandshakeObject
+    public interface IWebSocket : IDisposable, IHandshakeObject,ICloseObject
     {
         /// <summary>
         /// WebSocket版本
         /// </summary>
         string Version { get; }
-
-        /// <summary>
-        /// 发送Close报文。
-        /// </summary>
-        /// <param name="msg"></param>
-        void Close(string msg);
 
         /// <summary>
         /// 发送Close报文

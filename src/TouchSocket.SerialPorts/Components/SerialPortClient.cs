@@ -233,7 +233,7 @@ namespace TouchSocket.SerialPorts
         #region 断开操作
 
         /// <inheritdoc/>
-        public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
+        public virtual void Close(string msg)
         {
             lock (this.GetSerialCore())
             {

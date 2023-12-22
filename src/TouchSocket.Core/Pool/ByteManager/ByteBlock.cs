@@ -25,7 +25,7 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public sealed partial class ByteBlock : Stream, IWrite,IEnumerable<byte>
+    public sealed partial class ByteBlock : Stream, IWrite, IEnumerable<byte>
     {
         private BytePool m_bytePool;
         private bool m_canReturn;
@@ -91,7 +91,7 @@ namespace TouchSocket.Core
             set
             {
                 this.ThrowIfDisposed();
-                this.Buffer[index]=value;
+                this.Buffer[index] = value;
             }
         }
 
@@ -237,6 +237,24 @@ namespace TouchSocket.Core
             Array.Copy(this.Buffer, this.m_position, buffer, offset, len);
             this.m_position += len;
             return len;
+        }
+
+        /// <summary>
+        /// 从当前位置读取指定长度的数组。并递增<see cref="Position"/>
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public byte[] ReadToArray(int length)
+        {
+            var bytes = new byte[length];
+            int r = this.Read(bytes, 0, bytes.Length);
+            if (r != bytes.Length)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            return bytes;
         }
 
         /// <summary>
@@ -404,7 +422,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 从指定位置转化到指定长度的有效内存
+        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="length"></param>
@@ -418,7 +436,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 转换为有效内存
+        /// 转换为有效内存。本操作不递增<see cref="Position"/>
         /// </summary>
         /// <returns></returns>
         public byte[] ToArray()
@@ -426,12 +444,24 @@ namespace TouchSocket.Core
             return this.ToArray(0, this.Len);
         }
 
+        /// <summary>
+        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
         public byte[] ToArray(int offset)
         {
             return this.ToArray(offset, this.Len - offset);
+        }
+
+        /// <summary>
+        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public byte[] ToArrayTake(int length)
+        {
+            return this.ToArray(this.Pos, length);
         }
 
         /// <summary>

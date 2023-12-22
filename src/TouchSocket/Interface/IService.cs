@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 服务器接口
     /// </summary>
-    public interface IService : IDisposable, ISetupConfigObject
+    public interface IService : ISetupConfigObject
     {
         /// <summary>
         /// 名称

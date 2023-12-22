@@ -28,7 +28,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.GetErrorCode());
+                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
@@ -52,7 +52,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.GetErrorCode());
+                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
