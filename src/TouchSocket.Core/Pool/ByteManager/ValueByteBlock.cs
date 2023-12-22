@@ -268,6 +268,24 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 从当前位置读取指定长度的数组。并递增<see cref="Pos"/>
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public byte[] ReadToArray(int length)
+        {
+            var bytes = new byte[length];
+            int r = this.Read(bytes, 0, bytes.Length);
+            if (r != bytes.Length)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            return bytes;
+        }
+
+        /// <summary>
         /// 从当前流位置读取一个<see cref="byte"/>值
         /// </summary>
         public int ReadByte()
@@ -398,7 +416,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 从指定位置转化到指定长度的有效内存
+        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Pos"/>
         /// </summary>
         /// <param name="offset"></param>
         /// <param name="length"></param>
@@ -412,7 +430,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 转换为有效内存
+        /// 转换为有效内存。本操作不递增<see cref="Pos"/>
         /// </summary>
         /// <returns></returns>
         public byte[] ToArray()
@@ -421,14 +439,23 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 从指定位置转化到有效内存
+        /// 从指定位置转为有效内存。本操作不递增<see cref="Pos"/>
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
         public byte[] ToArray(int offset)
         {
             return this.ToArray(offset, this.Len - offset);
+        }
+
+        /// <summary>
+        /// 将当前<see cref="Pos"/>至指定长度转化为有效内存。本操作不递增<see cref="Pos"/>
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public byte[] ToArrayTake(int length)
+        {
+            return this.ToArray(this.Pos, length);
         }
 
         /// <summary>

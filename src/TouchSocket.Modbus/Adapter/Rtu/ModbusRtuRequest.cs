@@ -7,7 +7,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
-    internal class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRequestInfo
+    internal sealed class ModbusRtuRequest : ModbusRtuBase, IRequestInfoBuilder, IRequestInfo
     {
         public ModbusRtuRequest(ModbusRequest request)
         {
@@ -16,6 +16,8 @@ namespace TouchSocket.Modbus
             this.Quantity = request.Quantity;
             this.StartingAddress = request.StartingAddress;
             this.Data = request.Data;
+            this.ReadStartAddress = request.ReadStartAddress;
+            this.ReadQuantity = request.ReadQuantity;
         }
 
         /// <inheritdoc/>
@@ -47,8 +49,23 @@ namespace TouchSocket.Modbus
                 byteBlock.Write((byte)this.Data.Length);
                 byteBlock.Write(this.Data);
             }
+            else if (this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
+            {
+                byteBlock.Write(this.SlaveId);
+                byteBlock.Write((byte)this.FunctionCode);
+                byteBlock.Write(this.ReadStartAddress, EndianType.Big);
+                byteBlock.Write(this.ReadQuantity, EndianType.Big);
+                byteBlock.Write(this.StartingAddress, EndianType.Big);
+                byteBlock.Write(this.Quantity, EndianType.Big);
+                byteBlock.Write((byte)this.Data.Length);
+                byteBlock.Write(this.Data);
+            }
+            else
+            {
+                throw new System.InvalidOperationException("无法识别的功能码");
+            }
 
-            this.Crc = SRHelper.ToModbusCrc(byteBlock.Buffer, 0, byteBlock.Len);
+            this.Crc = TouchSocketModbusUtility.ToModbusCrc(byteBlock.Buffer, 0, byteBlock.Len);
 
             byteBlock.Write(this.Crc);
         }

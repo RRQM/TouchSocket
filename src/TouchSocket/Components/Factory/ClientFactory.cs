@@ -103,10 +103,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public virtual Task<int> ClearAsync()
         {
-            return Task.Run(() =>
-             {
-                 return this.Clear();
-             });
+            return Task.Run(this.Clear);
         }
 
         /// <summary>

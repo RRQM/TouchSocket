@@ -21,5 +21,10 @@ namespace TouchSocket.Modbus
         /// 功能码
         /// </summary>
         FunctionCode FunctionCode { get;}
+
+        /// <summary>
+        /// 错误码
+        /// </summary>
+        ModbusErrorCode ErrorCode { get;}
     }
 }

@@ -10,6 +10,37 @@ namespace TouchSocket.Modbus
     /// </summary>
     public static class ModbusTcpClientExtension
     {
+        #region ReadWrite 默认超时
+
+        /// <summary>
+        /// 读写多个寄存器（FC23），默认超时时间为1000ms。
+        /// </summary>
+        /// <param name="client">通讯客户端</param>
+        /// <param name="startingAddressForRead">读取位置（从0开始）</param>
+        /// <param name="quantityForRead">读取长度</param>
+        /// <param name="startingAddress">写入位置（从0开始）</param>
+        /// <param name="bytes">待写入数据</param>
+        /// <returns>响应值</returns>
+        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusTcpClient client,ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+        {
+            return client.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// 读写多个寄存器（FC23），默认超时时间为1000ms。
+        /// </summary>
+        /// <param name="client">通讯客户端</param>
+        /// <param name="startingAddressForRead">读取位置（从0开始）</param>
+        /// <param name="quantityForRead">读取长度</param>
+        /// <param name="startingAddress">写入位置（从0开始）</param>
+        /// <param name="bytes">待写入数据</param>
+        /// <returns>响应值</returns>
+        public static Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IModbusTcpClient client, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+        {
+            return client.ReadWriteMultipleRegistersAsync(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
+        }
+        #endregion
+
         #region Read 默认超时
         /// <summary>
         /// 忽略站点（默认站号为1）读取线圈（FC1），默认超时时间为1000ms。

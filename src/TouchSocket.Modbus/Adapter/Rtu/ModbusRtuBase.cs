@@ -6,8 +6,14 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Modbus
 {
-    internal abstract class ModbusRtuBase:ModbusBase
+    /// <summary>
+    /// ModbusRtuBase
+    /// </summary>
+    public abstract class ModbusRtuBase: ModbusRequest
     {
-        public byte[] Crc { get;protected set; }
+        /// <summary>
+        /// 校验码
+        /// </summary>
+        public byte[] Crc { get;set; }
     }
 }

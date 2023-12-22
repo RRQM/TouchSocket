@@ -25,10 +25,10 @@ namespace TouchSocket.Modbus
         FunctionCodeNotDefined = 1,
 
         /// <summary>
-        /// 从机的单元标识符不正确
+        /// 非法数据地址
         /// </summary>
-        [Description("从机的单元标识符不正确")]
-        SlaveIdInvalid = 2,
+        [Description("非法数据地址")]
+        AddressInvalid = 2,
 
         /// <summary>
         /// 值不被从机接受

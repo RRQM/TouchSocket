@@ -13,11 +13,19 @@ namespace TouchSocket.Modbus
         /// </summary>
         private ByteBlock m_byteBlock;
 
+        private bool m_isError;
         int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+
+        public ModbusErrorCode ErrorCode { get; set; }
 
         bool IFixedHeaderRequestInfo.OnParsingBody(byte[] body)
         {
-            if ((byte)this.FunctionCode <= 4)
+            if (this.m_isError)
+            {
+                this.ErrorCode = (ModbusErrorCode)body.First();
+                return true;
+            }
+            if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
                 this.Data = body.Take(body.Length - 2).ToArray();
                 return true;
@@ -43,8 +51,20 @@ namespace TouchSocket.Modbus
             if (header.Length == 3)
             {
                 this.SlaveId = header[0];
-                this.FunctionCode = (FunctionCode)header[1];
-                if ((byte)this.FunctionCode <= 4)
+
+                var code = header[1];
+                if ((code & 0x80) == 0)
+                {
+                    this.FunctionCode = (FunctionCode)code;
+                }
+                else
+                {
+                    code = code.SetBit(7, 0);
+                    this.FunctionCode = (FunctionCode)code;
+                    this.m_isError = true;
+                }
+
+                if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
                 {
                     this.m_bodyLength = header[2] + 2;
                     return true;
@@ -60,39 +80,9 @@ namespace TouchSocket.Modbus
             return false;
         }
 
-        public void SetFunctionCode(FunctionCode functionCode)
-        {
-            this.FunctionCode = functionCode;
-        }
-
-        public void SetQuantity(ushort value)
-        {
-            this.Quantity = value;
-        }
-
-        public void SetSlaveId(byte value)
-        {
-            this.SlaveId = value;
-        }
-
-        public void SetStartingAddress(ushort value)
-        {
-            this.StartingAddress = value;
-        }
-
-        public void SetValue(byte[] bytes)
-        {
-            this.Data = bytes;
-        }
-
-        internal void SetByteBlock(ByteBlock byteBlock)
+        public void SetByteBlock(ByteBlock byteBlock)
         {
             this.m_byteBlock = byteBlock;
-        }
-
-        internal void SetCrc(byte[] bytes)
-        {
-            this.Crc = bytes;
         }
     }
 }

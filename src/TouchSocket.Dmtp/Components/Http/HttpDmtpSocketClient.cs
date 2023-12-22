@@ -46,7 +46,7 @@ namespace TouchSocket.Dmtp
         #region 断开
 
         /// <inheritdoc/>
-        public override void Close(string msg = "")
+        public override void Close(string msg)
         {
             if (this.m_dmtpActor != null)
             {

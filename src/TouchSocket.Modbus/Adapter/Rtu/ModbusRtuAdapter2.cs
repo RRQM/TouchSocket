@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
-    internal class ModbusRtuAdapter2:PeriodPackageAdapter
+    internal class ModbusRtuAdapter2 : PeriodPackageAdapter
     {
         public ModbusRtuAdapter2()
         {
@@ -16,33 +17,54 @@ namespace TouchSocket.Modbus
         protected override void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var response = new ModbusRtuResponse();
-            response.SetSlaveId(byteBlock[0]);
-            response.SetFunctionCode((FunctionCode)byteBlock[1]);
+            response.SlaveId = byteBlock[0];
 
-            int crcLen = 0;
-            if ((byte)response.FunctionCode <= 4)
+            var m_isError = false;
+            var code = byteBlock[1];
+            if ((code & 0x80) == 0)
             {
-                var len = byteBlock[2];
-                response.SetValue(byteBlock.Skip(3).Take(len).ToArray());
-                response.SetCrc(byteBlock.Skip(3 + len).Take(2).ToArray());
-                crcLen = 3 + len;
+                response.FunctionCode = (FunctionCode)code;
             }
-            else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
+            else
             {
-                response.SetStartingAddress(TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2));
-                response.SetValue(byteBlock.Skip(4).Take(2).ToArray());
-                response.SetCrc(byteBlock.Skip(6).Take(2).ToArray());
-                crcLen = 6;
-            }
-            else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
-            {
-                response.SetStartingAddress (TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2));
-                response.SetQuantity( TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 4));
-                response.SetCrc(byteBlock.Skip(6).Take(2).ToArray());
-                crcLen = 6;
+                code = code.SetBit(7, 0);
+                response.FunctionCode = (FunctionCode)code;
+                m_isError = true;
             }
 
-            var crc = SRHelper.ToModbusCrc(byteBlock.Buffer,0,crcLen);
+            var crcLen = 0;
+            if (m_isError)
+            {
+                response.ErrorCode = ((ModbusErrorCode)byteBlock[2]);
+                response.Crc=byteBlock.Skip(3).Take(2).ToArray();
+                crcLen = 3;
+            }
+            else
+            {
+                if ((byte)response.FunctionCode <= 4 || response.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
+                {
+                    var len = byteBlock[2];
+                    response.SetValue(byteBlock.Skip(3).Take(len).ToArray());
+                    response.Crc=byteBlock.Skip(3 + len).Take(2).ToArray();
+                    crcLen = 3 + len;
+                }
+                else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
+                {
+                    response.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2);
+                    response.SetValue(byteBlock.Skip(4).Take(2).ToArray());
+                    response.Crc=byteBlock.Skip(6).Take(2).ToArray();
+                    crcLen = 6;
+                }
+                else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
+                {
+                    response.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2);
+                    response.Quantity = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 4);
+                    response.Crc=byteBlock.Skip(6).Take(2).ToArray();
+                    crcLen = 6;
+                }
+            }
+
+            var crc = TouchSocketModbusUtility.ToModbusCrc(byteBlock.Buffer, 0, crcLen);
             if (crc.SequenceEqual(response.Crc))
             {
                 base.GoReceived(null, response);

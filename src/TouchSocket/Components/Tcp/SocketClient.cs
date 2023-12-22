@@ -379,7 +379,7 @@ namespace TouchSocket.Sockets
         #endregion 事件&委托
 
         /// <inheritdoc/>
-        public virtual void Close(string msg = TouchSocketCoreUtility.Empty)
+        public virtual void Close(string msg)
         {
             lock (this.GetTcpCore())
             {
