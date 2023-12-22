@@ -19,9 +19,6 @@ namespace ModbusSlaveConsoleApp
             }
             var service = CreateModbusTcpSlave();
 
-            var client = service.ModbusDataLocater.CreateDataLocaterClient();
-
-            client.ReadCoils();
             Console.ReadKey();
         }
 
