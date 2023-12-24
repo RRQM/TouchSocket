@@ -642,12 +642,12 @@ module.exports = {
         [
           {
             type: "doc",
-            label: "19.1 Modbus客户端",
+            label: "19.1 Modbus主站",
             id: "modbusclient"
           },
           {
             type: "doc",
-            label: "19.2 Modbus服务端",
+            label: "19.2 Modbus从站",
             id: "modbusslave"
           },
         ]
