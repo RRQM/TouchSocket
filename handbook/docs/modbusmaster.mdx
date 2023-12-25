@@ -1,0 +1,488 @@
+---
+id: modbusmaster
+title: Modbus主站（Master）
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Modbus <br/>
+程序集：[TouchSocket.Modbus.dll](https://www.nuget.org/packages/TouchSocket.Modbus)
+
+
+## 一、说明
+
+Modbus是OSI模型第7层上的应用层报文传输协议，它在连接至不同类型总线或网络的设备之间提供客户机/服务器通信。
+
+自从 1979 年出现工业串行链路的事实标准以来，Modbus使成千上万的自动化设备能够通信。目前，继续增加对简单而雅观的Modbus结构支持。互联网组织能够使TCP/IP栈上的保留系统端口502 访问Modbus。
+
+所以总结来说Modbus是一个请求/应答的总线协议。
+
+所以我们开发了这个组件，方便大家使用。
+
+## 二、特点
+
+- 简单易用。
+- 内存池支持
+- 高性能
+- 易扩展。
+- **支持全数据类型的读写**。
+
+## 三、产品应用场景
+
+- 所有Modbus使用场景：可跨平台使用。
+
+## 四、可配置项
+
+无单独配置项。
+
+## 五、支持插件
+
+无单独支持插件。
+
+## 六、创建
+
+目前TouchSokcet.Modbus支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp等协议。下面会一一介绍创建过程。
+
+#### 6.1 创建ModbusTcpMaster
+
+```csharp showLineNumbers
+public IModbusTcpMaster GetMaster()
+{
+    var client = new ModbusTcpMaster();
+
+    client.Connect("127.0.0.1:502");
+    return client;
+}
+```
+
+#### 6.2 创建ModbusUdpMaster
+
+```csharp showLineNumbers
+public IModbusMaster GetMaster()
+{
+    var client = new ModbusUdpMaster();
+    client.Setup(new TouchSocketConfig()
+        .UseUdpReceive()
+        .SetRemoteIPHost("127.0.0.1:502"));
+    client.Start();
+    return client;
+}
+```
+
+#### 6.3 创建ModbusRtuMaster
+
+```csharp showLineNumbers
+public IModbusMaster GetMaster()
+{
+    var client = new ModbusRtuMaster();
+    client.Setup(new TouchSocketConfig()
+        .SetSerialPortOption(new SerialPortOption()
+        {
+            BaudRate = 9600,
+            DataBits = 8,
+            Parity = System.IO.Ports.Parity.Even,
+            PortName = "COM2",
+            StopBits = System.IO.Ports.StopBits.One
+        }));
+    client.Connect();
+    return client;
+}
+```
+
+#### 6.4 创建ModbusRtuOverTcpMaster
+
+```csharp showLineNumbers
+public IModbusMaster GetMaster()
+{
+    var client = new ModbusRtuOverTcpMaster();
+    client.Connect("127.0.0.1:502");
+    return client;
+}
+```
+
+#### 6.5 创建ModbusRtuOverUdpMaster
+
+```csharp showLineNumbers
+public IModbusMaster GetMaster()
+{
+    var client = new ModbusRtuOverUdpMaster();
+    client.Setup(new TouchSocketConfig()
+        .UseUdpReceive()
+        .SetRemoteIPHost("127.0.0.1:502"));
+    client.Start();
+    return client;
+}
+```
+
+## 七、读写操作
+
+### 7.1 原生接口操作 
+
+所有的Modbus客户端都支持以下两种原生接口操作：
+
+```csharp showLineNumbers
+//同步发送Modbus请求，并等待响应
+IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token);
+
+//异步发送Modbus请求，并等待响应
+Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token);
+```
+
+以读线圈操作为例：
+
+```csharp showLineNumbers
+ModbusRequest modbusRequest = new ModbusRequest(FunctionCode.ReadCoils);
+modbusRequest.SetSlaveId(1);//设置站号。如果是Tcp可以不设置
+modbusRequest.SetStartingAddress(0);//设置起始
+modbusRequest.SetQuantity(1);//设置数量
+//modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
+
+var response = client.SendModbusRequest(modbusRequest, 1000, CancellationToken.None);
+
+bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
+```
+
+### 7.2 快捷扩展实现
+
+因为Modbus的操作一般比较固化，所以ModbusClient扩展了以下快捷操作：
+
+读取线圈（FC1）。
+
+```csharp showLineNumbers
+bool[] bools = client.ReadCoils(0, 1);
+```
+
+读取离散输入（FC2）。
+
+```csharp showLineNumbers
+bool[] bools = client.ReadDiscreteInputs(0, 1);
+```
+
+读取保持寄存器（FC3）。
+
+```csharp showLineNumbers
+var response = client.ReadHoldingRegisters(0, 1);
+var reader = response.CreateReader();
+var value=reader.ReadInt16();
+```
+
+读取输入寄存器（FC4）。
+
+```csharp showLineNumbers
+var response = client.ReadInputRegisters(0, 1);
+var reader = response.CreateReader();
+var value=reader.ReadInt16();
+```
+
+写入单个线圈（FC5）。
+
+```csharp showLineNumbers
+client.WriteSingleCoil(0, true);
+```
+
+写入单个寄存器（FC6）。
+
+```csharp showLineNumbers
+client.WriteSingleRegister(0, (short)100);
+```
+
+写入多个线圈（FC15）。
+
+```csharp showLineNumbers
+client.WriteMultipleCoils(0, new bool[] { true, false, true });
+```
+
+写入多个寄存器（FC16）。
+
+```csharp showLineNumbers
+using (var writer = new ValueByteBlock(1024))
+{
+    writer.Write(short.MaxValue, EndianType.Big);//ABCD端序 2字节
+    writer.Write(int.MaxValue, EndianType.Little);//DCBA端序 4字节
+    writer.Write(long.MaxValue, EndianType.BigSwap);//BADC端序 8字节
+    writer.Write(double.MaxValue, EndianType.LittleSwap);//CDAB端序 8字节
+    
+    client.WriteMultipleRegisters(0, writer.ToArray());
+}
+```
+
+:::tip 提示
+
+以上扩展方法还有更多重载。例如：站号、超时时间、可取消令箭等参数。
+
+:::  
+
+## 八、更多写入与读取
+
+线圈与离散输入的写入与读取比较单一，上述操作即可满足大部分需求。下面介绍读写保持寄存器、读取输入寄存器的多元化方式。
+
+
+读取寄存器到集合。如果该集合中的数据是一类数据，例如全是uint32类型。那么可以使用下列方式：
+
+```csharp showLineNumbers
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 10);//站点1，从0开始读取10个寄存器
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+//将数据全部读为无符号32为，且使用大端序，即ABCD
+uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
+```
+
+:::tip 提示
+
+该集合支持全部基础数据类型，以及DataTiem和TimeSpan。
+
+:::  
+
+当寄存器的数据不规则时，可能需要依次读取。例如：
+
+当写入下列数据时：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    valueByteBlock.Write((ushort)2, EndianType.Big);//ABCD端序
+    valueByteBlock.Write((ushort)2000, EndianType.Little);//DCBA端序
+    valueByteBlock.Write(int.MaxValue, EndianType.BigSwap);//BADC端序
+    valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+```
+
+就需要依次读取：
+
+```csharp showLineNumbers
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 1 + 1 + 2 + 4);
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+//依次读取
+Console.WriteLine(reader.ReadInt16(EndianType.Big));
+Console.WriteLine(reader.ReadInt16(EndianType.Little));
+Console.WriteLine(reader.ReadInt32(EndianType.BigSwap));
+Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
+```
+
+读写字符串：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
+    valueByteBlock.Write("Hello");
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 5);//5个长度，10字节
+
+//创建一个读取器
+var reader = response.CreateReader();
+Console.WriteLine(reader.ReadString());
+```
+
+读写任意类型：
+
+```csharp showLineNumbers
+using (var valueByteBlock = new ValueByteBlock(1024))
+{
+    //写入任意类型，使用Json序列化
+    valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
+
+    //写入到寄存器
+    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+}
+
+//读取寄存器
+var response = client.ReadHoldingRegisters(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
+
+//创建一个读取器
+var reader = response.CreateReader();
+
+Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonString());
+```
+
+:::tip 提示
+
+上述所有类型可以任意组合使用，只需要读取的时候按序读取即可。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusMasterConsoleApp)
+
+## 九、ModbusObject操作
+
+### 9.1 基本使用
+
+一般的，我们使用`Modbus`，都是通过Master直接`Read`或`Write`。所以有时候需要维护的代码会非常多，而且容易出错。
+
+所以，我们提供了`ModbusObject`，可以简化Modbus的读写操作。
+
+`ModbusObject`可以理解为一个实体类，我们只需要定义需要读写的属性，然后就可以直接读写了。
+
+例如：我们需要读写线圈。
+
+则声明一个新建类`MyModbusObject`，继承`ModbusObject`。
+
+然后声明一个属性`MyProperty1`。类型为`bool`。并使用`ModbusProperty`特性标记，同时指定站号、数据区、起始地址、超时时间等。
+
+然后在属性实现中使用`GetValue`和`SetValue`方法。
+
+```csharp showLineNumbers
+class MyModbusObject : ModbusObject
+{
+    /// <summary>
+    /// 声明一个来自线圈的bool属性。
+    /// <para>
+    /// 配置：站号、数据区、起始地址、超时时间
+    /// </para>
+    /// </summary>
+    [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 0, Timeout = 1000)]
+    public bool MyProperty1
+    {
+        get { return this.GetValue<bool>(); }
+        set { this.SetValue(value); }
+    }
+}
+```
+
+然后我们可以通过`IModbusMaster`的扩展方法来创建该对象。
+
+**然后可以像访问属性那样的访问`Modbus`。**
+
+```csharp showLineNumbers
+var master = GetModbusTcpMaster();
+
+var myModbusObject = master.CreateModbusObject<MyModbusObject>();
+
+myModbusObject.MyProperty1 = true;//直接赋值线圈
+
+Console.WriteLine(myModbusObject.MyProperty1.ToJsonString());//读取，然后以json格式化
+```
+
+### 9.2 读写寄存器
+
+对于寄存器，我们也可以以属性的方式直接读写基础类型。
+
+例如下列，我们可以直接读写`short`类型。
+
+在配置时，除了可配置站号、数据区、起始地址、超时时间外，还可以配置端序。
+
+```csharp showLineNumbers
+class MyModbusObject : ModbusObject
+{
+    /// <summary>
+    /// 声明一个来自保持寄存器的short属性。
+    /// <para>
+    /// 配置：站号、数据区、起始地址、超时时间、端序
+    /// </para>
+    /// </summary>
+    [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big)]
+    public short MyProperty3
+    {
+        get { return this.GetValue<short>(); }
+        set { this.SetValue(value); }
+    }
+
+    /// <summary>
+    /// 声明一个来自输入寄存器的short属性。
+    /// <para>
+    /// 配置：站号、数据区、起始地址、超时时间、端序
+    /// </para>
+    /// </summary>
+    [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big)]
+    public short MyProperty4
+    {
+        get { return this.GetValue<short>(); }
+    }
+}
+```
+
+:::tip 提示
+
+常用的数据类型，基本都支持，例如：int16、uint16、int32、uint32、int64、uint64、float、double、char等。
+
+:::  
+
+### 9.3 读写数组
+
+当操作的数据是数组时，也可以直接读写。但是需要使用`GetValueArray`和`SetValueArray`方法。
+
+使用数组时，需要指定数组的长度。也就是`Quantity`。
+
+在线圈和离散输入中，该值就是读取的数量。
+
+在寄存器中，该值是读取时的数组长度，并非寄存器个数。例如：当读取int32数组时，如果该值是5，那就是需要读取10个寄存器。
+
+```csharp showLineNumbers
+ class MyModbusObject : ModbusObject
+ {
+
+     /// <summary>
+     /// 声明一个来自线圈的bool数组属性。
+     /// <para>
+     /// 配置：站号、数据区、起始地址、超时时间、数量
+     /// </para>
+     /// </summary>
+     [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 1, Timeout = 1000, Quantity = 9)]
+     public bool[] MyProperty11
+     {
+         get { return this.GetValueArray<bool>(); }
+         set { this.SetValueArray(value); }
+     }
+  
+
+     /// <summary>
+     /// 声明一个来自离散输入的bool数组属性。
+     /// <para>
+     /// 配置：站号、数据区、起始地址、超时时间、数量
+     /// </para>
+     /// </summary>
+     [ModbusProperty(SlaveId = 1, Partition = Partition.DiscreteInputs, StartAddress = 1, Timeout = 1000, Quantity = 9)]
+     public bool MyProperty22
+     {
+         get { return this.GetValue<bool>(); }
+     }
+    
+     /// <summary>
+     /// 声明一个来自保持寄存器的short数组属性。
+     /// <para>
+     /// 配置：站号、数据区、起始地址、超时时间、端序、数组长度
+     /// </para>
+     /// </summary>
+     [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 1, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big, Quantity = 9)]
+     public short[] MyProperty33
+     {
+         get { return this.GetValueArray<short>(); }
+         set { this.SetValueArray(value); }
+     }
+
+
+     /// <summary>
+     /// 声明一个来自输入寄存器的short数组属性。
+     /// <para>
+     /// 配置：站号、数据区、起始地址、超时时间、端序、数组长度
+     /// </para>
+     /// </summary>
+     [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big, Quantity = 10)]
+     public short[] MyProperty44
+     {
+         get { return this.GetValueArray<short>(); }
+     }
+}
+```
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusObjectConsoleApp)
+
+
+
