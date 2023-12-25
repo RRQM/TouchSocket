@@ -643,7 +643,7 @@ module.exports = {
           {
             type: "doc",
             label: "19.1 Modbus主站",
-            id: "modbusclient"
+            id: "modbusmaster"
           },
           {
             type: "doc",
