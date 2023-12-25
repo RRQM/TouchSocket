@@ -1,21 +1,49 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Sockets;
 using TouchSocket.Core;
+using System.Threading;
 
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
+    /// 基于Udp协议，且使用Rtu格式的Modbus主站
     /// </summary>
-    public class ModbusRtuOverTcpClient : TcpClientBase, IModbusRtuOverTcpClient
+    public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     {
+        #region 字段
+
+        private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
+        private WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
+        private WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+
+        #endregion 字段
+
+
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
+
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
+        {
+            this.SetAdapter(new ModbusUdpRtuAdapter());
+            base.LoadConfig(config);
+        }
 
         /// <inheritdoc/>
         public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
@@ -65,22 +93,7 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        protected override Task OnConnecting(ConnectingEventArgs e)
-        {
-            this.SetAdapter(new ModbusRtuAdapter2());
-            return base.OnConnecting(e);
-        }
-
-        #region 字段
-
-        private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-        private WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
-        private WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
-
-        #endregion 字段
-
-        /// <inheritdoc/>
-        protected override async Task ReceivedData(ReceivedDataEventArgs e)
+        protected override async Task ReceivedData(UdpReceivedDataEventArgs e)
         {
             if (e.RequestInfo is ModbusRtuResponse response)
             {
