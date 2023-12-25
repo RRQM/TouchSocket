@@ -15,17 +15,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// ModbusRtuBase
+    /// 基于Udp协议的Modbus主站接口。
     /// </summary>
-    public abstract class ModbusRtuBase: ModbusRequest
+    public interface IModbusUdpMaster:IUdpSession,IModbusMaster
     {
-        /// <summary>
-        /// 校验码
-        /// </summary>
-        public byte[] Crc { get;set; }
     }
 }

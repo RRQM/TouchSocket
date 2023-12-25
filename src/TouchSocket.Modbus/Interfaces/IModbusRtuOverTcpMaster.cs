@@ -19,13 +19,9 @@ using System.Threading.Tasks;
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// ModbusRtuBase
+    /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
     /// </summary>
-    public abstract class ModbusRtuBase: ModbusRequest
+    public interface IModbusRtuOverTcpMaster: IModbusTcpMaster
     {
-        /// <summary>
-        /// 校验码
-        /// </summary>
-        public byte[] Crc { get;set; }
     }
 }

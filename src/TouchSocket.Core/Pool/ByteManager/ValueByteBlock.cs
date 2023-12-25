@@ -1514,6 +1514,84 @@ namespace TouchSocket.Core
         }
         #endregion UInt64
 
+        #region Decimal
+
+        /// <summary>
+        /// 从当前流位置读取一个默认端序的<see cref="decimal"/>值
+        /// </summary>
+        public decimal ReadDecimal()
+        {
+            var value = TouchSocketBitConverter.Default.ToDecimal(this.Buffer, this.Pos);
+            this.m_position += 16;
+            return value;
+        }
+
+        /// <summary>
+        /// 从当前流位置读取一个<see cref="decimal"/>值
+        /// </summary>
+        /// <param name="endianType">指定端序</param>
+        public decimal ReadDecimal(EndianType endianType)
+        {
+            var value = TouchSocketBitConverter.GetBitConverter(endianType).ToDecimal(this.Buffer, this.Pos);
+            this.m_position += 16;
+            return value;
+        }
+
+        /// <summary>
+        /// 写入默认端序的<see cref="decimal"/>值
+        /// </summary>
+        /// <param name="value"></param>
+        public void Write(decimal value)
+        {
+            this.Write(TouchSocketBitConverter.Default.GetBytes(value));
+        }
+
+        /// <summary>
+        /// 写入<see cref="decimal"/>值
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="endianType">指定端序</param>
+        public void Write(decimal value, EndianType endianType)
+        {
+            this.Write(TouchSocketBitConverter.GetBitConverter(endianType).GetBytes(value));
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为默认端序的<see cref="decimal"/>集合。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<decimal> ToDecimals()
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 16 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadDecimal();
+            }
+        }
+
+        /// <summary>
+        /// 将当前有效内存转为指定端序的<see cref="decimal"/>集合。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        public IEnumerable<decimal> ToDecimals(EndianType endianType)
+        {
+            this.m_position = 0;
+            while (true)
+            {
+                if (this.m_position + 16 > this.m_length)
+                {
+                    yield break;
+                }
+                yield return this.ReadDecimal(endianType);
+            }
+        }
+        #endregion Decimal
+
         #region Null
 
         /// <summary>
