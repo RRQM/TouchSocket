@@ -9,7 +9,7 @@ namespace ModbusClientConsoleApp
     {
         static void Main(string[] args)
         {
-            var client = GetModbusTcpClient();
+            var client = GetModbusTcpMaster();
 
             ReadWriteHoldingRegisters(client);
             Console.ReadKey();
@@ -18,7 +18,7 @@ namespace ModbusClientConsoleApp
         /// <summary>
         /// 要测试，请打开Modbus Slave软件，设置HoldingRegisters。至少30个长度。
         /// </summary>
-        public static void ReadWriteHoldingRegisters(IModbusClient client)
+        public static void ReadWriteHoldingRegisters(IModbusMaster client)
         {
             //写入单个寄存器
             client.WriteSingleRegister(1, 0, 1);//默认short ABCD端序
@@ -62,7 +62,7 @@ namespace ModbusClientConsoleApp
         /// 读写线圈，在测试时，请选择对应的Modbus Slave类型，且调到线圈操作，至少5个长度
         /// </summary>
         /// <param name="client"></param>
-        public static void ReadWriteCoilsShouldBeOk(IModbusClient client)
+        public static void ReadWriteCoilsShouldBeOk(IModbusMaster client)
         {
             //写单个线圈
             client.WriteSingleCoil(1, 0, true);
@@ -83,9 +83,9 @@ namespace ModbusClientConsoleApp
         /// Tcp协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusTcpClient GetModbusTcpClient()
+        public static IModbusTcpMaster GetModbusTcpMaster()
         {
-            var client = new ModbusTcpClient();
+            var client = new ModbusTcpMaster();
 
             client.Connect("127.0.0.1:502");
             return client;
@@ -95,9 +95,9 @@ namespace ModbusClientConsoleApp
         /// Udp协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusClient GetModbusUdpClient()
+        public static IModbusMaster GetModbusUdpMaster()
         {
-            var client = new ModbusUdpClient();
+            var client = new ModbusUdpMaster();
             client.Setup(new TouchSocketConfig()
                 .UseUdpReceive()
                 .SetRemoteIPHost("127.0.0.1:502"));
@@ -109,9 +109,9 @@ namespace ModbusClientConsoleApp
         /// 串口协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusClient GetModbusRtuClient()
+        public static IModbusMaster GetModbusRtuMaster()
         {
-            var client = new ModbusRtuClient();
+            var client = new ModbusRtuMaster();
             client.Setup(new TouchSocketConfig()
                 .SetSerialPortOption(new SerialPortOption()
                 {
@@ -129,9 +129,9 @@ namespace ModbusClientConsoleApp
         /// 基于Tcp协议，但使用Rtu的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusClient GetModbusRtuOverTcpClient()
+        public static IModbusMaster GetModbusRtuOverTcpMaster()
         {
-            var client = new ModbusRtuOverTcpClient();
+            var client = new ModbusRtuOverTcpMaster();
             client.Connect("127.0.0.1:502");
             return client;
         }
@@ -140,9 +140,9 @@ namespace ModbusClientConsoleApp
         /// 基于Udp协议，但使用Rtu的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusClient GetModbusRtuOverUdpClient()
+        public static IModbusMaster GetModbusRtuOverUdpMaster()
         {
-            var client = new ModbusRtuOverUdpClient();
+            var client = new ModbusRtuOverUdpMaster();
             client.Setup(new TouchSocketConfig()
                 .UseUdpReceive()
                 .SetRemoteIPHost("127.0.0.1:502"));
