@@ -27,7 +27,7 @@ namespace ModbusObjectConsoleApp
             myModbusObject.MyProperty11 = new bool[] { false, true, false, true, false, true, false, true, false };//直接赋值多线圈
 
             myModbusObject.MyProperty3 = 1;//直接赋值保持寄存器
-            myModbusObject.MyProperty33 = new short[] {1,2,3,4,5,6,7,8,9 };//直接赋值保持寄存器
+            myModbusObject.MyProperty33 = new short[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };//直接赋值保持寄存器
 
             Console.WriteLine(myModbusObject.MyProperty1.ToJsonString());
             Console.WriteLine(myModbusObject.MyProperty11.ToJsonString());
@@ -51,7 +51,13 @@ namespace ModbusObjectConsoleApp
                 //监听端口
                 .SetListenIPHosts(7808)
                 //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10)
+                {
+                    Coils = new DataPartition<bool>(1000, new bool[10]),
+                    DiscreteInputs = new DataPartition<bool>(1000, new bool[10]),
+                    HoldingRegisters = new DataPartition<byte>(1000, new byte[20]),
+                    InputRegisters = new DataPartition<byte>(1000, new byte[20])
+                })
                 );
             service.Start();
             Console.WriteLine("服务已启动");
@@ -80,7 +86,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 0, Timeout = 1000)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 1000, Timeout = 1000)]
         public bool MyProperty1
         {
             get { return this.GetValue<bool>(); }
@@ -93,7 +99,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、数量
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 1, Timeout = 1000, Quantity = 9)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.Coils, StartAddress = 1001, Timeout = 1000, Quantity = 9)]
         public bool[] MyProperty11
         {
             get { return this.GetValueArray<bool>(); }
@@ -108,7 +114,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.DiscreteInputs, StartAddress = 0, Timeout = 1000)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.DiscreteInputs, StartAddress = 1000, Timeout = 1000)]
         public bool MyProperty2
         {
             get { return this.GetValue<bool>(); }
@@ -120,7 +126,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、数量
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.DiscreteInputs, StartAddress = 1, Timeout = 1000, Quantity = 9)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.DiscreteInputs, StartAddress = 1001, Timeout = 1000, Quantity = 9)]
         public bool MyProperty22
         {
             get { return this.GetValue<bool>(); }
@@ -134,7 +140,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、端序
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 1000, Timeout = 1000, EndianType = EndianType.Big)]
         public short MyProperty3
         {
             get { return this.GetValue<short>(); }
@@ -147,7 +153,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、端序、数组长度
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 1, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big, Quantity = 9)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.HoldingRegisters, StartAddress = 1001, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big, Quantity = 9)]
         public short[] MyProperty33
         {
             get { return this.GetValueArray<short>(); }
@@ -162,7 +168,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、端序
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 1000, Timeout = 1000, EndianType = EndianType.Big)]
         public short MyProperty4
         {
             get { return this.GetValue<short>(); }
@@ -174,7 +180,7 @@ namespace ModbusObjectConsoleApp
         /// 配置：站号、数据区、起始地址、超时时间、端序、数组长度
         /// </para>
         /// </summary>
-        [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 0, Timeout = 1000, EndianType = TouchSocket.Core.EndianType.Big, Quantity = 10)]
+        [ModbusProperty(SlaveId = 1, Partition = Partition.InputRegisters, StartAddress = 1000, Timeout = 1000, EndianType = EndianType.Big, Quantity = 10)]
         public short[] MyProperty44
         {
             get { return this.GetValueArray<short>(); }
