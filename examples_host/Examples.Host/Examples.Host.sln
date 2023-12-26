@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aspnetcore", "Aspnetcore", "{317E3933-5817-49B4-9C2B-067DA6D051EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication_NET6", "Aspnetcore\WebApplication_NET6\WebApplication_NET6.csproj", "{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9F419CC4-F34E-4B6C-B2B8-F86FE7A4DE52} = {317E3933-5817-49B4-9C2B-067DA6D051EF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {04D833EF-6EB7-4BAA-A5F0-1C587472EA86}
+	EndGlobalSection
+EndGlobal

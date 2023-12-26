@@ -45,16 +45,16 @@ Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便�
 ```csharp showLineNumbers
 static ModbusTcpSlave CreateModbusTcpSlave()
 {
-    var service = new ModbusTcpSlave();
-    service.Setup(new TouchSocketConfig()
+    var slave = new ModbusTcpSlave();
+    slave.Setup(new TouchSocketConfig()
         //监听7808端口
         .SetListenIPHosts(7808)
         //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
         );
-    service.Start();
+    slave.Start();
     Console.WriteLine("服务已启动");
-    return service;
+    return slave;
 }
 ```
 
@@ -63,16 +63,16 @@ static ModbusTcpSlave CreateModbusTcpSlave()
 ```csharp showLineNumbers
 static ModbusUdpSlave CreateModbusUdpSlave()
 {
-    var service = new ModbusUdpSlave();
-    service.Setup(new TouchSocketConfig()
+    var slave = new ModbusUdpSlave();
+    slave.Setup(new TouchSocketConfig()
         //监听端口
         .SetBindIPHost(7809)
         //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
         );
-    service.Start();
+    slave.Start();
     Console.WriteLine("服务已启动");
-    return service;
+    return slave;
 }
 ```
 
@@ -81,8 +81,8 @@ static ModbusUdpSlave CreateModbusUdpSlave()
 ```csharp showLineNumbers
 static ModbusRtuSlave CreateModbusRtuSlave()
 {
-    var service = new ModbusRtuSlave();
-    service.Setup(new TouchSocketConfig()
+    var slave = new ModbusRtuSlave();
+    slave.Setup(new TouchSocketConfig()
         //设置串口
         .SetSerialPortOption(new SerialPortOption()
         {
@@ -95,9 +95,9 @@ static ModbusRtuSlave CreateModbusRtuSlave()
         //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
         );
-    service.Connect();
+    slave.Connect();
     Console.WriteLine("已连接COM端口");
-    return service;
+    return slave;
 }
 ```
 
@@ -106,16 +106,16 @@ static ModbusRtuSlave CreateModbusRtuSlave()
 ```csharp showLineNumbers
 static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
 {
-    var service = new ModbusRtuOverTcpSlave();
-    service.Setup(new TouchSocketConfig()
+    var slave = new ModbusRtuOverTcpSlave();
+    slave.Setup(new TouchSocketConfig()
         //监听端口
         .SetListenIPHosts(7810)
         //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
         );
-    service.Start();
+    slave.Start();
     Console.WriteLine("服务已启动");
-    return service;
+    return slave;
 }
 ```
 
@@ -124,16 +124,16 @@ static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
 ```csharp showLineNumbers
 static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
 {
-    var service = new ModbusRtuOverUdpSlave();
-    service.Setup(new TouchSocketConfig()
+    var slave = new ModbusRtuOverUdpSlave();
+    slave.Setup(new TouchSocketConfig()
         //监听端口
         .SetBindIPHost(7811)
         //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
         .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
         );
-    service.Start();
+    slave.Start();
     Console.WriteLine("服务已启动");
-    return service;
+    return slave;
 }
 ```
 
@@ -143,15 +143,21 @@ static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
 
 该属性是可读可写的。所以，即使是不同`ModbusSlave`。也可以使用同一个存储区。
 
-同时。可以通过该属性，创建一个本地`ModbusClient`，用于直接读写。
+同时。可以通过该属性，创建一个本地`ModbusMaster`，用于直接读写。
 
-具体读写操作和[ModbusClient读写](./modbusmaster.mdx)一致。
+具体读写操作和[ModbusMaster读写](./modbusmaster.mdx)一致。
 
 ```csharp  showLineNumbers
-var client = service.ModbusDataLocater.CreateDataLocaterClient();
+var master = slave.ModbusDataLocater.CreateDataLocaterMaster();
 
-client.ReadCoils(1,0,1);
+master.ReadCoils(1,0,1);
 ```
+
+:::tip 提示
+
+通过`slave.ModbusDataLocater.CreateDataLocaterMaster()`创建的Master，具备[ModbusMaster](./modbusmaster.mdx)的所有功能。且是直接读取内存的，中间没有任何通信，所以速度非常快。
+
+:::  
 
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusSlaveConsoleApp)

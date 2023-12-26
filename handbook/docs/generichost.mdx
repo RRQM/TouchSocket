@@ -14,21 +14,91 @@ title: 通用主机
 
 Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host) 之后，可以通过Add的服务的形式创建`TouchSocket`的一些组件。如`TcpService`、`TcpClient`、`NamedPipeService`、`NamedPipeclient`等。
 
-## 二、使用
 
-### 2.1 安装Nuget包
+## 二、安装Nuget包
 
-在安装Nuget之前，最好先确认目标项目是一个主机项目。例如：[辅助角色服务模板](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)、 [AspNetCore](https://learn.microsoft.com/zh-cn/aspnet/core)等。如果是其他项目，请自行解决。
+在安装Nuget之前，最好先确认目标项目是一个主机项目。例如：[辅助角色服务模板](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)、 [AspNetCore](https://learn.microsoft.com/zh-cn/aspnet/core)等。如果是其他项目，请自行解决依赖。
 
-Nuget安装`TouchSocket.Hosting`。
+使用Nuget安装`TouchSocket.Hosting`、`TouchSocketPro.Hosting`、`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`其中的**任意一个**。
 
-### 2.2 添加服务
+:::info 备注
+
+`TouchSocket.Hosting`、`TouchSocketPro.Hosting`、`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`都可以安装使用。主要区别就是：Hosting的只包含基础扩展。AspNetCore的会对Web项目有更多扩展。
+
+:::  
+
+:::tip 建议
+
+一般建议Web项目使用`TouchSocket.AspNetCore`、`TouchSocketPro.AspNetCore`。辅助角色项目、MAUI项目等使用`TouchSocket.Hosting`、`TouchSocketPro.Hosting`。
+
+:::  
+
+## 三、添加服务
 
 一些常用的组件，都已经被封装了，可以直接使用。例如：
 
 - TcpService
 - TcpClient
 - 等
+
+### 3.1 在Aspnetcore中添加
+
+<Tabs
+  defaultValue="App.Configuration[path]"
+  values={[
+    {
+      label: "App.Configuration[path]",
+      value: "App.Configuration[path]",
+    },
+    { label: "依赖注入方式", value: "依赖注入方式" }
+  ]}
+>
+  <TabItem value="App.Configuration[path]">
+
+```cs showLineNumbers  {11-13}
+using Microsoft.AspNetCore.Mvc;
+
+namespace Furion.Web.Entry.Controllers
+{
+    [Route("api/[controller]")]
+    public class DefaultController : ControllerBase
+    {
+        [HttpGet]
+        public string Get()
+        {
+            return $@"名称：{App.Configuration["AppInfo:Name"]}，
+                      版本：{App.Configuration["AppInfo:Version"]}，
+                      公司：{App.Configuration["AppInfo:Company"]}";
+        }
+    }
+}
+```
+
+  </TabItem>
+  <TabItem value="依赖注入方式">
+
+```cs showLineNumbers  {2,10-15}
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+
+namespace Furion.Web.Entry.Controllers
+{
+    [Route("api/[controller]")]
+    public class DefaultController : ControllerBase
+    {
+        [HttpGet]
+        public string Get([FromServices] IConfiguration configuration)
+        {
+            return $@"名称：{configuration["AppInfo:Name"]}，
+                      版本：{configuration["AppInfo:Version"]}，
+                      公司：{configuration["AppInfo:Company"]}";
+        }
+    }
+}
+```
+
+  </TabItem>
+</Tabs>
 
 ```csharp showLineNumbers
 var builder = Host.CreateDefaultBuilder(args);
