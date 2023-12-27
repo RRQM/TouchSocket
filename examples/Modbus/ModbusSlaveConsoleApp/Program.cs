@@ -28,8 +28,13 @@ namespace ModbusSlaveConsoleApp
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetListenIPHosts(7808)
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .ConfigurePlugins(a =>
+                {
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    .UseIgnoreSlaveId()//忽略站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater(10,10,10,10));//设置数据区
+                })
                 );
             service.Start();
             Console.WriteLine("服务已启动");
@@ -42,8 +47,13 @@ namespace ModbusSlaveConsoleApp
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetListenIPHosts(7810)
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .ConfigurePlugins(a =>
+                {
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    .UseIgnoreSlaveId()//忽略站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                })
                 );
             service.Start();
             Console.WriteLine("服务已启动");
@@ -56,8 +66,13 @@ namespace ModbusSlaveConsoleApp
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetBindIPHost(7809)
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .ConfigurePlugins(a =>
+                {
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    .UseIgnoreSlaveId()//忽略站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                })
                 );
             service.Start();
             Console.WriteLine("服务已启动");
@@ -70,8 +85,13 @@ namespace ModbusSlaveConsoleApp
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetBindIPHost(7811)
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .ConfigurePlugins(a =>
+                {
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    .UseIgnoreSlaveId()//忽略站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                })
                 );
             service.Start();
             Console.WriteLine("服务已启动");
@@ -91,8 +111,13 @@ namespace ModbusSlaveConsoleApp
                     PortName = "COM1",
                     StopBits = System.IO.Ports.StopBits.One
                 })
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10))
+                .ConfigurePlugins(a =>
+                {
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    //.UseIgnoreSlaveId()//如果不调用，默认会进行站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+                })
                 );
             service.Connect();
             Console.WriteLine("已连接COM端口");

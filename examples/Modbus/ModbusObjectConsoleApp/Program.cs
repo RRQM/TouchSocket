@@ -50,13 +50,19 @@ namespace ModbusObjectConsoleApp
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetListenIPHosts(7808)
-                //设置数据存储区，即线圈、离散输入、保持寄存器、输入寄存器
-                .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10)
+                .ConfigurePlugins(a => 
                 {
-                    Coils = new DataPartition<bool>(1000, new bool[10]),
-                    DiscreteInputs = new DataPartition<bool>(1000, new bool[10]),
-                    HoldingRegisters = new DataPartition<byte>(1000, new byte[20]),
-                    InputRegisters = new DataPartition<byte>(1000, new byte[20])
+                    a.AddModbusSlavePoint()//添加一个从站站点
+                    .SetSlaveId(1)//设置站点号
+                    .UseIgnoreSlaveId()//忽略站号验证
+                    .SetModbusDataLocater(new ModbusDataLocater()//设置数据区
+                    {
+                        //下列配置表示，起始地址从1000开始，10个长度
+                        Coils = new BooleanDataPartition(1000, 10),
+                        DiscreteInputs = new BooleanDataPartition(1000, 10),
+                        HoldingRegisters = new ShortDataPartition(1000, 10),
+                        InputRegisters = new ShortDataPartition(1000, 10)
+                    });
                 })
                 );
             service.Start();
