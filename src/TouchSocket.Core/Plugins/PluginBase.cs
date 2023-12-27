@@ -19,6 +19,8 @@ namespace TouchSocket.Core
     /// </summary>
     public class PluginBase : DisposableObject, IPlugin
     {
+        private IPluginManager m_pluginManager;
+
         /// <inheritdoc/>
         [Obsolete("该属性已被弃用，插件顺序将直接由添加顺序决定。本设置将在正式版发布时直接删除", true)]
         public int Order { get; set; }
@@ -28,8 +30,14 @@ namespace TouchSocket.Core
         {
         }
 
+        /// <summary>
+        /// 插件管理器
+        /// </summary>
+        public IPluginManager PluginManager=> this.m_pluginManager;
+
         void IPlugin.Loaded(IPluginManager pluginManager)
         {
+            this.m_pluginManager = pluginManager;
             this.Loaded(pluginManager);
         }
     }

@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 读取锁
     /// </summary>
-    public struct ReadLock : IDisposable
+    public readonly struct ReadLock : IDisposable
     {
         private readonly ReaderWriterLockSlim m_locks;
 
@@ -44,7 +44,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 写入锁
     /// </summary>
-    public struct WriteLock : IDisposable
+    public readonly struct WriteLock : IDisposable
     {
         private readonly ReaderWriterLockSlim m_locks;
 

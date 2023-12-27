@@ -15,7 +15,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 消息事件
     /// </summary>
-    public class MsgPermitEventArgs : PluginEventArgs
+    public class MsgPermitEventArgs : PermitEventArgs
     {
         /// <summary>
         ///  构造函数
@@ -32,11 +32,6 @@ namespace TouchSocket.Core
         public MsgPermitEventArgs()
         {
         }
-
-        /// <summary>
-        /// 是否允许操作
-        /// </summary>
-        public bool IsPermitOperation { get; set; }
 
         /// <summary>
         /// 消息

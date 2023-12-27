@@ -15,13 +15,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
 {
     /// <summary>
     /// TouchSocketModbusUtility
     /// </summary>
-    public class TouchSocketModbusUtility
+    public static class TouchSocketModbusUtility
     {
         /// <summary>
         /// CRC16_Modbus效验
@@ -57,5 +58,40 @@ namespace TouchSocket.Modbus
             return CRC;
 
         }
+
+        /// <summary>
+        /// 将布尔值转为2字节数组
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static byte[] BoolToBytes(bool value)
+        {
+            return value ? new byte[] { 255, 0 } : new byte[] { 0, 0 };
+        }
+
+        /// <summary>
+        /// ModbusTcp
+        /// </summary>
+        public static readonly Protocol ModbusTcp = new Protocol(nameof(ModbusTcp));
+
+        /// <summary>
+        /// ModbusUdp
+        /// </summary>
+        public static readonly Protocol ModbusUdp = new Protocol(nameof(ModbusUdp));
+
+        /// <summary>
+        /// ModbusRtu
+        /// </summary>
+        public static readonly Protocol ModbusRtu = new Protocol(nameof(ModbusRtu));
+
+        /// <summary>
+        /// ModbusRtuOverTcp
+        /// </summary>
+        public static readonly Protocol ModbusRtuOverTcp = new Protocol(nameof(ModbusRtuOverTcp));
+
+        /// <summary>
+        /// ModbusRtuOverUdp
+        /// </summary>
+        public static readonly Protocol ModbusRtuOverUdp = new Protocol(nameof(ModbusRtuOverUdp));
     }
 }

@@ -173,5 +173,32 @@
 		    "| 单元格  | 单元格 |",
 		],
 		"description": "table"
+	},
+	"importTab": {
+		"prefix": "importTab",
+		"body": [
+			"import Tabs from \"@theme/Tabs\";",
+			"import TabItem from \"@theme/TabItem\";"
+		],
+		"description": "importTab"
+	},
+	"Tabs": {
+		"prefix": "Tabs",
+		"body": [
+			"<Tabs",
+			"	defaultValue=\"tab1\"",
+			"	values=",
+			"	{[",
+			"		{ label: \"tab1\",value: \"tab1\"},",
+			"		{ label: \"tab2\", value: \"tab2\" }",
+			"	]}",
+			">",
+			"<TabItem value=\"tab1\">",
+			"</TabItem>",
+			"<TabItem value=\"tab2\">",
+			"</TabItem>",
+			"</Tabs>",
+		],
+		"description": "importTab"
 	}
 }

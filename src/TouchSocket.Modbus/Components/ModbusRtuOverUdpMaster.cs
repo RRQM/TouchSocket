@@ -26,6 +26,13 @@ namespace TouchSocket.Modbus
     /// </summary>
     public class ModbusRtuOverUdpMaster : UdpSessionBase, IModbusRtuOverUdpMaster
     {
+        /// <summary>
+        /// 基于Udp协议，且使用Rtu格式的Modbus主站
+        /// </summary>
+        public ModbusRtuOverUdpMaster()
+        {
+            this.Protocol = TouchSocketModbusUtility.ModbusRtuOverUdp;
+        }
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
@@ -59,7 +66,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
@@ -83,7 +90,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally

@@ -22,15 +22,16 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// 基于Tcp协议的Modbus客户端
     /// </summary>
-    public class ModbusTcpMaster : TcpClientBase,IModbusTcpMaster
+    public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     {
         private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
 
         /// <summary>
-        /// 初始化一个基于Tcp协议的Modbus客户端
+        /// 基于Tcp协议的Modbus客户端
         /// </summary>
         public ModbusTcpMaster()
         {
+            this.Protocol = TouchSocketModbusUtility.ModbusTcp;
             this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
             {
                 MaxSign = ushort.MaxValue
@@ -39,13 +40,6 @@ namespace TouchSocket.Modbus
 
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
-
-        /// <inheritdoc/>
-        protected override Task OnConnecting(ConnectingEventArgs e)
-        {
-            this.SetAdapter(new ModbusTcpAdapterForPoll());
-            return base.OnConnecting(e);
-        }
 
         /// <inheritdoc/>
         public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
@@ -59,7 +53,7 @@ namespace TouchSocket.Modbus
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
 
@@ -71,12 +65,19 @@ namespace TouchSocket.Modbus
 
             this.Send(modbusTcpRequest);
             waitData.SetCancellationToken(token);
-            var waitDataStatus =await waitData.WaitAsync(timeout);
+            var waitDataStatus = await waitData.WaitAsync(timeout);
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
+        }
+
+        /// <inheritdoc/>
+        protected override Task OnConnecting(ConnectingEventArgs e)
+        {
+            this.SetAdapter(new ModbusTcpAdapterForPoll());
+            return base.OnConnecting(e);
         }
 
         /// <inheritdoc/>

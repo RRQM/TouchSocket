@@ -3,6 +3,9 @@ id: generichost
 title: 通用主机
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 ### 定义
 
 命名空间：TouchSocket.Hosting <br/>
@@ -44,84 +47,18 @@ Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.co
 ### 3.1 在Aspnetcore中添加
 
 <Tabs
-  defaultValue="App.Configuration[path]"
-  values={[
-    {
-      label: "App.Configuration[path]",
-      value: "App.Configuration[path]",
-    },
-    { label: "依赖注入方式", value: "依赖注入方式" }
+  defaultValue="tab1"
+  values=
+  {[
+    { label: "NET6",value: "tab1"},
+    { label: "NET7", value: "tab2" }
   ]}
 >
-  <TabItem value="App.Configuration[path]">
-
-```cs showLineNumbers  {11-13}
-using Microsoft.AspNetCore.Mvc;
-
-namespace Furion.Web.Entry.Controllers
-{
-    [Route("api/[controller]")]
-    public class DefaultController : ControllerBase
-    {
-        [HttpGet]
-        public string Get()
-        {
-            return $@"名称：{App.Configuration["AppInfo:Name"]}，
-                      版本：{App.Configuration["AppInfo:Version"]}，
-                      公司：{App.Configuration["AppInfo:Company"]}";
-        }
-    }
-}
-```
-
-  </TabItem>
-  <TabItem value="依赖注入方式">
-
-```cs showLineNumbers  {2,10-15}
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-
-namespace Furion.Web.Entry.Controllers
-{
-    [Route("api/[controller]")]
-    public class DefaultController : ControllerBase
-    {
-        [HttpGet]
-        public string Get([FromServices] IConfiguration configuration)
-        {
-            return $@"名称：{configuration["AppInfo:Name"]}，
-                      版本：{configuration["AppInfo:Version"]}，
-                      公司：{configuration["AppInfo:Company"]}";
-        }
-    }
-}
-```
-
-  </TabItem>
+<TabItem value="tab1">
+</TabItem>
+<TabItem value="tab2">
+</TabItem>
 </Tabs>
-
-```csharp showLineNumbers
-var builder = Host.CreateDefaultBuilder(args);
-
-builder.ConfigureServices(services =>
-{
-    //添加TcpService。
-    services.AddTcpService(config =>
-    {
-        config.SetListenIPHosts(7789);
-    });
-
-    //添加TcpClient
-    //注意，Client类的服务，在整个服务Start时，不会执行Connect。所以需要自行连接，或者配置无人值守连接
-    services.AddTcpClient(config =>
-    {
-        config.SetRemoteIPHost("127.0.0.1:7789");
-    });
-});
-
-var host = builder.Build();
-host.Run();
-```
 
 但是如果想添加自己的服务，或者想注入同一类型的服务，则需要重新实现。例如：添加自己的TcpService。
 

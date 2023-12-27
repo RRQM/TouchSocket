@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
-		<PackageTags>Modbus;TouchSocket</PackageTags>
-		<Description>这是一个Modbus功能库，目前包括ModbusTcpClient、ModbusUdpClient、ModbusRtuClient、ModbusRtuOverTcpClient、ModbusRtuOverUdpClient。
+		<PackageTags>Modbus;Master;TouchSocket</PackageTags>
+		<Description>这是一个Modbus功能库，目前包括ModbusTcpMaster、ModbusUdpMaster、ModbusRtuMaster、ModbusRtuOverTcpMaster、ModbusRtuOverUdpMaster。
 
 说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Modbus</Title>
