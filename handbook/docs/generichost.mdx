@@ -46,20 +46,6 @@ Hosting通用主机，是在创建一个[HostBuilder](https://learn.microsoft.co
 
 ### 3.1 在Aspnetcore中添加
 
-<Tabs
-  defaultValue="tab1"
-  values=
-  {[
-    { label: "NET6",value: "tab1"},
-    { label: "NET7", value: "tab2" }
-  ]}
->
-<TabItem value="tab1">
-</TabItem>
-<TabItem value="tab2">
-</TabItem>
-</Tabs>
-
 但是如果想添加自己的服务，或者想注入同一类型的服务，则需要重新实现。例如：添加自己的TcpService。
 
 首先需要声明一个接口`IMyTcpService`，继承自`ITcpService`，然后声明自定义类`MyTcpService`，继承`TcpService`，同时实现`IMyTcpService`。
