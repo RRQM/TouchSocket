@@ -23,7 +23,7 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// 基于Tcp协议的Modbus主站接口。
     /// </summary>
-    public interface IModbusTcpMaster: ITcpClient,IModbusMaster
+    public interface IModbusTcpMaster: ITcpClient, IIgnoreSlaveIdModbusMaster
     {
     }
 }

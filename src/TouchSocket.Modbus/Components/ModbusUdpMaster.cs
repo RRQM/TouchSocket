@@ -29,10 +29,11 @@ namespace TouchSocket.Modbus
         private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
 
         /// <summary>
-        /// 初始化一个基于Udp协议的Modbus
+        /// 基于Udp协议的Modbus
         /// </summary>
         public ModbusUdpMaster()
         {
+            this.Protocol = TouchSocketModbusUtility.ModbusUdp;
             this.m_waitHandlePool = new WaitHandlePool<ModbusTcpResponse>()
             {
                 MaxSign = ushort.MaxValue
@@ -41,13 +42,6 @@ namespace TouchSocket.Modbus
 
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
-
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            this.SetAdapter(new ModbusUdpAdapter());
-            base.LoadConfig(config);
-        }
 
         /// <inheritdoc/>
         public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
@@ -61,7 +55,7 @@ namespace TouchSocket.Modbus
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
         }
 
@@ -77,8 +71,15 @@ namespace TouchSocket.Modbus
             waitDataStatus.ThrowIfNotRunning();
 
             var response = waitData.WaitResult;
-            SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
             return response;
+        }
+
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
+        {
+            this.SetAdapter(new ModbusUdpAdapter());
+            base.LoadConfig(config);
         }
 
         /// <inheritdoc/>

@@ -14,8 +14,16 @@ using System;
 
 namespace TouchSocket.Modbus
 {
-    internal class SRHelper
+    /// <summary>
+    /// TouchSocketModbusThrowHelper
+    /// </summary>
+    public class TouchSocketModbusThrowHelper
     {
+        /// <summary>
+        /// 判断Modbus状态，非成功状态将抛出异常。
+        /// </summary>
+        /// <param name="errorCode"></param>
+        /// <exception cref="ModbusResponseException"></exception>
         public static void ThrowIfNotSuccess(ModbusErrorCode errorCode)
         {
             switch (errorCode)

@@ -18,38 +18,38 @@ using System.Threading.Tasks;
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// ModbusTcpClientExtension
+    /// ModbusIgnoreSlaveMasterExtension
     /// </summary>
-    public static class ModbusTcpMasterExtension
+    public static class ModbusIgnoreSlaveMasterExtension
     {
         #region ReadWrite 默认超时
 
         /// <summary>
         /// 读写多个寄存器（FC23），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddressForRead">读取位置（从0开始）</param>
         /// <param name="quantityForRead">读取长度</param>
         /// <param name="startingAddress">写入位置（从0开始）</param>
         /// <param name="bytes">待写入数据</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusTcpMaster client,ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+        public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master,ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
         {
-            return client.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
+            return master.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 读写多个寄存器（FC23），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddressForRead">读取位置（从0开始）</param>
         /// <param name="quantityForRead">读取长度</param>
         /// <param name="startingAddress">写入位置（从0开始）</param>
         /// <param name="bytes">待写入数据</param>
         /// <returns>响应值</returns>
-        public static Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IModbusTcpMaster client, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+        public static Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
         {
-            return client.ReadWriteMultipleRegistersAsync(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
+            return master.ReadWriteMultipleRegistersAsync(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
         #endregion
 
@@ -57,49 +57,49 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 忽略站点（默认站号为1）读取线圈（FC1），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>读取到的值集合</returns>
-        public static bool[] ReadCoils(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static bool[] ReadCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadCoils(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadCoils(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）读离散输入状态（FC2），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>读取到的值集合</returns>
-        public static bool[] ReadDiscreteInputs(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static bool[] ReadDiscreteInputs(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadDiscreteInputs(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadDiscreteInputs(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）读保持寄存器（FC3），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadHoldingRegisters(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static IModbusResponse ReadHoldingRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadHoldingRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadHoldingRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）读输入寄存器（FC4），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadInputRegisters(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static IModbusResponse ReadInputRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadInputRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadInputRegisters(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         #endregion Read 默认超时
@@ -109,49 +109,49 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 异步忽略站点（默认站号为1）读取线圈（FC1），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>读取到的值集合</returns>
-        public static Task<bool[]> ReadCoilsAsync(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static Task<bool[]> ReadCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadCoilsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）读离散输入状态（FC2），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>读取到的值集合</returns>
-        public static Task<bool[]> ReadDiscreteInputsAsync(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static Task<bool[]> ReadDiscreteInputsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadDiscreteInputsAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）读保持寄存器（FC3），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>响应值</returns>
-        public static Task<IModbusResponse> ReadHoldingRegistersAsync(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static Task<IModbusResponse> ReadHoldingRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadHoldingRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadHoldingRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）读输入寄存器（FC4），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
         /// <returns>响应值</returns>
-        public static Task<IModbusResponse> ReadInputRegistersAsync(this IModbusTcpMaster client, ushort startingAddress, ushort quantity)
+        public static Task<IModbusResponse> ReadInputRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, ushort quantity)
         {
-            return client.ReadInputRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
+            return master.ReadInputRegistersAsync(1, startingAddress, quantity, 1000, CancellationToken.None);
         }
 
         #endregion ReadAsync 默认超时
@@ -161,45 +161,45 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 忽略站点（默认站号为1）写入多个线圈（FC15），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        public static void WriteMultipleCoils(this IModbusTcpMaster client, ushort startingAddress, bool[] values)
+        public static void WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
         {
-            client.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
+            master.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）写入多个寄存器（FC16），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        public static void WriteMultipleRegisters(this IModbusTcpMaster client, ushort startingAddress, byte[] bytes)
+        public static void WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
         {
-            client.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
+            master.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）写入单个线圈（FC5），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static void WriteSingleCoil(this IModbusTcpMaster client, ushort startingAddress, bool value)
+        public static void WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
         {
-            client.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
+            master.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 忽略站点（默认站号为1）写入单个寄存器（FC6），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static void WriteSingleRegister(this IModbusTcpMaster client, ushort startingAddress, short value)
+        public static void WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
         {
-            client.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
+            master.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         #endregion Write 默认超时
@@ -209,45 +209,45 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 异步忽略站点（默认站号为1）写入多个线圈（FC15），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        public static Task WriteMultipleCoilsAsync(this IModbusTcpMaster client, ushort startingAddress, bool[] values)
+        public static Task WriteMultipleCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
         {
-            return client.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None);
+            return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）写入多个寄存器（FC16），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        public static Task WriteMultipleRegistersAsync(this IModbusTcpMaster client, ushort startingAddress, byte[] bytes)
+        public static Task WriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
         {
-            return client.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None);
+            return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）写入单个线圈（FC5），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static Task WriteSingleCoilAsync(this IModbusTcpMaster client, ushort startingAddress, bool value)
+        public static Task WriteSingleCoilAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
         {
-            return client.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None);
+            return master.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         /// <summary>
         /// 异步忽略站点（默认站号为1）写入单个寄存器（FC6），默认超时时间为1000ms。
         /// </summary>
-        /// <param name="client">通讯客户端</param>
+        /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static Task WriteSingleRegisterAsync(this IModbusTcpMaster client, ushort startingAddress, short value)
+        public static Task WriteSingleRegisterAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
         {
-            return client.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None);
+            return master.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         #endregion WriteAsync 默认超时

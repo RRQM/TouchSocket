@@ -95,42 +95,44 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            var length = 0;
-            foreach (var item in transferBytes)
+            
+            try
             {
-                length += item.Count;
-            }
-
-            if (length > this.MaxPackageSize)
-            {
-                throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
-            }
-            if (length > MaxSplicing)
-            {
-                try
+                await this.m_locker.WaitAsync();
+                var length = 0;
+                foreach (var item in transferBytes)
                 {
-                    await this.m_locker.WaitAsync();
+                    length += item.Count;
+                }
+
+                if (length > this.MaxPackageSize)
+                {
+                    throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+                }
+                if (length > MaxSplicing)
+                {
                     foreach (var item in transferBytes)
                     {
                         await this.GoSendAsync(item.Array, item.Offset, item.Count);
                     }
                 }
-                finally
+                else
                 {
-                    this.m_locker.Release();
-                }
-            }
-            else
-            {
-                using (var byteBlock = new ByteBlock(length))
-                {
-                    foreach (var item in transferBytes)
+                    using (var byteBlock = new ByteBlock(length))
                     {
-                        byteBlock.Write(item.Array, item.Offset, item.Count);
+                        foreach (var item in transferBytes)
+                        {
+                            byteBlock.Write(item.Array, item.Offset, item.Count);
+                        }
+                        await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
                     }
-                    await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
                 }
             }
+            finally
+            {
+                this.m_locker.Release();
+            }
+            
         }
 
         /// <inheritdoc/>
@@ -140,43 +142,43 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-
-            var length = 0;
-            foreach (var item in transferBytes)
+            try
             {
-                length += item.Count;
-            }
-
-            if (length > this.MaxPackageSize)
-            {
-                throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
-            }
-
-            if (length > MaxSplicing)
-            {
-                try
+                this.m_locker.Wait();
+                var length = 0;
+                foreach (var item in transferBytes)
                 {
-                    this.m_locker.Wait();
+                    length += item.Count;
+                }
+
+                if (length > this.MaxPackageSize)
+                {
+                    throw new Exception("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+                }
+
+                if (length > MaxSplicing)
+                {
                     foreach (var item in transferBytes)
                     {
                         this.GoSend(item.Array, item.Offset, item.Count);
                     }
+
                 }
-                finally
+                else
                 {
-                    this.m_locker.Release();
+                    using (var byteBlock = new ByteBlock(length))
+                    {
+                        foreach (var item in transferBytes)
+                        {
+                            byteBlock.Write(item.Array, item.Offset, item.Count);
+                        }
+                        this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
+                    }
                 }
             }
-            else
+            finally
             {
-                using (var byteBlock = new ByteBlock(length))
-                {
-                    foreach (var item in transferBytes)
-                    {
-                        byteBlock.Write(item.Array, item.Offset, item.Count);
-                    }
-                    this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-                }
+                this.m_locker.Release();
             }
         }
     }

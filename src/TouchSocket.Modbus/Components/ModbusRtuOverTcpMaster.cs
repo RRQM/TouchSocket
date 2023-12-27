@@ -26,6 +26,13 @@ namespace TouchSocket.Modbus
     /// </summary>
     public class ModbusRtuOverTcpMaster : TcpClientBase, IModbusRtuOverTcpMaster
     {
+        /// <summary>
+        /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
+        /// </summary>
+        public ModbusRtuOverTcpMaster()
+        {
+            this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
+        }
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
 
@@ -43,7 +50,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
@@ -67,7 +74,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally

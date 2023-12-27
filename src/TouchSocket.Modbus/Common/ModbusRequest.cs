@@ -102,7 +102,7 @@ namespace TouchSocket.Modbus
         /// <param name="value"></param>
         public void SetValue(bool value)
         {
-            this.Data = value ? new byte[] { 255, 0 } : new byte[] { 0, 0 };
+            this.Data = TouchSocketModbusUtility.BoolToBytes(value);
         }
 
         /// <summary>

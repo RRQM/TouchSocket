@@ -23,6 +23,13 @@ namespace TouchSocket.Modbus
     /// </summary>
     public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     {
+        /// <summary>
+        /// 基于串口的Modbus主站接口
+        /// </summary>
+        public ModbusRtuMaster()
+        {
+            this.Protocol = TouchSocketModbusUtility.ModbusRtu;     
+        }
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
 
@@ -40,7 +47,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
@@ -64,7 +71,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
-                SRHelper.ThrowIfNotSuccess(response.ErrorCode);
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally

@@ -272,13 +272,14 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
+        /// <param name="length"></param>
         /// <returns></returns>
-        public bool[] ToBooleans(byte[] buffer, int offset)
+        public bool[] ToBooleans(byte[] buffer, int offset,int length)
         {
-            var bools = new bool[8];
+            var bools = new bool[8*length];
             for (short i = 0; i < bools.Length; i++)
             {
-                bools[i]= Convert.ToBoolean(buffer[offset].GetBit(i));
+                bools[i]= Convert.ToBoolean(buffer[offset+i/8].GetBit(i));
             }
             return bools;
         }

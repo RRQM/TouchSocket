@@ -915,7 +915,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool[] ReadBooleans()
         {
-            var value = TouchSocketBitConverter.Default.ToBooleans(this.Buffer, this.Pos);
+            var value = TouchSocketBitConverter.Default.ToBooleans(this.Buffer, this.Pos,1);
             this.m_position += 1;
             return value;
         }
@@ -1344,7 +1344,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="endianType"></param>
         /// <returns></returns>
-        public IEnumerable<int> ToUInt16s(EndianType endianType)
+        public IEnumerable<ushort> ToUInt16s(EndianType endianType)
         {
             this.m_position = 0;
             while (true)
