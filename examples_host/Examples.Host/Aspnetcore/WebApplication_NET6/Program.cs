@@ -1,3 +1,5 @@
+using TouchSocket.Sockets;
+
 namespace WebApplication_NET6
 {
     public class Program
@@ -13,7 +15,12 @@ namespace WebApplication_NET6
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-
+            #region Ìí¼ÓTcp·þÎñÆ÷
+            builder.Services.AddTcpService(config =>
+            {
+                config.SetListenIPHosts(7789);
+            });
+            #endregion
 
             var app = builder.Build();
 
