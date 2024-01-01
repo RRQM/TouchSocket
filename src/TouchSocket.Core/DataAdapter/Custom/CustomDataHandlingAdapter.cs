@@ -130,6 +130,10 @@ namespace TouchSocket.Core
                 {
                     return;
                 }
+                if (this.DisposedValue)
+                {
+                    return;
+                }
                 var tempCapacity = 1024 * 64;
                 var filterResult = this.Filter(byteBlock, this.TempRequest != null, ref this.TempRequest, ref tempCapacity);
                 switch (filterResult)
