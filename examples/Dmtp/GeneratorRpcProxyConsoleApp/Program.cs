@@ -81,6 +81,6 @@ namespace GeneratorRpcProxyConsoleApp
     {
         [Description("这是登录方法")]//该作用是生成注释
         [DmtpRpc]//表明该方法应该被代理，也可以通过参数，直接设置调用键
-        public bool Login(string account, string password);
+        bool Login(string account, string password);
     }
 }
