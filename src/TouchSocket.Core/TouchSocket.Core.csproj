@@ -9,6 +9,11 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core</PackageOutputPath>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="..\TouchSocket.Core.SourceGenerator\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
+		<None Include="..\TouchSocket.Core.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Core.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
+	</ItemGroup>
+	
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" PrivateAssets="All" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" PrivateAssets="All" />

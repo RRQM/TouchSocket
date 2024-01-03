@@ -8,7 +8,10 @@
 		<Title>TouchSocket.Rpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
-	
+	<ItemGroup>
+		<None Include="..\TouchSocket.Rpc.SourceGenerator\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
+		<None Include="..\TouchSocket.Rpc.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Rpc.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
+	</ItemGroup>
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<DebugSymbols>True</DebugSymbols>
 		<DebugType>Embedded</DebugType>
