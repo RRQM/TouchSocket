@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocketPro.Modbus" Version="2.0.0-beta.252" />
+    <PackageReference Include="TouchSocketPro.Modbus" Version="2.0.0-beta.253" />
   </ItemGroup>
 
 </Project>
