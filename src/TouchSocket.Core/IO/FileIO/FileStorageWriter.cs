@@ -10,14 +10,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading;
+
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 文件写入器。
     /// </summary>
-
     public partial class FileStorageWriter : DisposableObject, IWrite
     {
+        int m_dis = 1;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -96,7 +99,11 @@ namespace TouchSocket.Core
             {
                 return;
             }
-            FilePool.TryReleaseFile(this.FileStorage.Path);
+            if (Interlocked.Decrement(ref this.m_dis)==0) 
+            {
+                FilePool.TryReleaseFile(this.FileStorage.Path);
+                this.FileStorage = null;
+            }
             base.Dispose(disposing);
         }
     }

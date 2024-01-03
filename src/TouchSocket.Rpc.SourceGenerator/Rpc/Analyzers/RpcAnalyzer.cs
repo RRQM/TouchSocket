@@ -13,6 +13,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Security.Claims;
 
 namespace TouchSocket.SourceGenerator
 {
@@ -23,7 +25,7 @@ namespace TouchSocket.SourceGenerator
         private static readonly DiagnosticDescriptor m_rule_Rpc0001 = new DiagnosticDescriptor(
             "Rpc0001",
             "用于判断源生成接口函数是否使用了构造入参",
-            "{0}使用了构造函数设置，这在源生成时将无法生效，所以可能会导致调用失败，所以请考虑使用NamedArguments设置。",
+            "{0}使用了构造函数设置，这在源生成时将无法生效，所以可能会导致调用失败，所以请考虑使用NamedArguments设置。例如：“MethodInvoke =true”",
             "Rpc", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor m_rule_Rpc0002 = new DiagnosticDescriptor(
@@ -79,7 +81,8 @@ namespace TouchSocket.SourceGenerator
                 }
             }
 
-            if (RpcServerSyntaxReceiver.IsRpcServer(namedTypeSymbol))
+            
+            if (namedTypeSymbol.AllInterfaces.Any(a => a.ToDisplayString() == RpcServerSyntaxReceiver.IRpcServerTypeName))
             {
                 foreach (var methodSymbol in namedTypeSymbol.GetMembers().OfType<IMethodSymbol>())
                 {

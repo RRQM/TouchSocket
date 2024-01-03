@@ -27,8 +27,9 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// 标识将通过源生成器生成Rpc服务的调用委托。
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class)]
-    internal class GeneratorRpcServerAttribute:Attribute
+    [AttributeUsage(AttributeTargets.Class)]
+    [Obsolete(""该配置已被弃用，内部会尽可能得使用委托调用"",true)]
+    internal class GeneratorRpcServerAttribute : Attribute
     {
     }
 }

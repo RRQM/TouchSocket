@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -18,6 +20,8 @@ namespace TouchSocket.Core
 
     public partial class FileStorageReader : DisposableObject
     {
+        private int m_dis=1;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -79,8 +83,13 @@ namespace TouchSocket.Core
             {
                 return;
             }
-            FilePool.TryReleaseFile(this.FileStorage.Path);
-            this.FileStorage = null;
+
+            if (Interlocked.Decrement(ref this.m_dis) == 0)
+            {
+                FilePool.TryReleaseFile(this.FileStorage.Path);
+                this.FileStorage = null;
+            }
+
             base.Dispose(disposing);
         }
     }
