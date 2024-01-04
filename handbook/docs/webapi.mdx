@@ -25,7 +25,7 @@ WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统�
 在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记。
 
 ```csharp showLineNumbers
-public class ApiServer : RpcServer
+public partial class ApiServer : RpcServer
 {
     private readonly ILog m_logger;
 

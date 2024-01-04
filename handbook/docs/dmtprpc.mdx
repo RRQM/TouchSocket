@@ -32,7 +32,7 @@ RPC（Remote Procedure Call）远程过程调用协议，一种通过网络从�
 3. 在该类中写**公共方法**，并用**DmtpRpc**属性标签标记。
 
 ```csharp showLineNumbers
-public class MyRpcServer : RpcServer
+public partial class MyRpcServer : RpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
     [DmtpRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
@@ -49,7 +49,7 @@ public class MyRpcServer : RpcServer
 ```
 
 ```csharp showLineNumbers
-public class MyRpcServer : TransientRpcServer
+public partial class MyRpcServer : TransientRpcServer
 {
     [Description("登录")]//服务描述，在生成代理时，会变成注释。
     [DmtpRpc("Login")]//服务注册的函数键，此处为显式指定。默认不传参的时候，为该函数类全名+方法名的全小写。
@@ -290,7 +290,7 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 2. 用**DmtpRpc**标记需要公开的公共方法。
 
 ```csharp showLineNumbers
-public class ReverseCallbackServer : RpcServer
+public partial class ReverseCallbackServer : RpcServer
 {
     [DmtpRpc(true)]//使用方法名作为调用键
     public string SayHello(string name)
@@ -366,7 +366,7 @@ if (service.TryGetSocketClient(id, out var socketClient))
 使用该方式可以实现，当客户端调用服务器的Add接口的时候，服务器又回调客户端的SayHello接口。
 
 ```csharp showLineNumbers
-class MyRpcServer : TransientRpcServer
+partial class MyRpcServer : TransientRpcServer
 {
     [DmtpRpc(true)]//使用函数名直接调用
     public int Add(int a, int b)
