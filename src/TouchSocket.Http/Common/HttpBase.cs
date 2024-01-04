@@ -154,6 +154,21 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 允许编码
+        /// </summary>
+        public string AcceptEncoding
+        {
+            get
+            {
+                return this.m_headers.Get(HttpHeaders.AcceptEncoding);
+            }
+            set
+            {
+                this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
+            }
+        }
+
+        /// <summary>
         /// 传递标识
         /// </summary>
         public object Flag { get; set; }

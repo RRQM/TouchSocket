@@ -46,7 +46,7 @@ namespace XmlRpcServerApp
         }
     }
 
-    public class XmlServer : RpcServer
+    public partial class XmlServer : RpcServer
     {
         [XmlRpc(true)]
         public int Sum(int a, int b)

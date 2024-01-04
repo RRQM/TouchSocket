@@ -130,7 +130,7 @@ namespace UnityServerConsoleApp
     /// <summary>
     /// 单例服务
     /// </summary>
-    public class MyRpcServer : RpcServer
+    public partial class MyRpcServer : RpcServer
     {
         public MyRpcServer(ILog logger)
         {

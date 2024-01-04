@@ -72,7 +72,7 @@ namespace DmtpClientApp
         }
     }
 
-    public class MyRpcServer : TransientRpcServer
+    public partial class MyRpcServer : TransientRpcServer
     {
         [Description("登录")]
         [DmtpRpc(MethodInvoke = true)]//使用调用上才文

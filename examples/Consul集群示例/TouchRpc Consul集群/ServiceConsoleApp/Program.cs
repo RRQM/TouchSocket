@@ -96,7 +96,7 @@ namespace ServiceConsoleApp
         }
     }
 
-    internal class MyServer : RpcServer
+    internal partial class MyServer : RpcServer
     {
         [WebApi(HttpMethodType.GET)]
         [XmlRpc]

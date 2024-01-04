@@ -94,7 +94,7 @@ namespace ReverseJsonRpcConsoleApp
         }
     }
 
-    public class ReverseJsonRpcServer : RpcServer
+    public partial class ReverseJsonRpcServer : RpcServer
     {
         [JsonRpc(MethodInvoke = true)]
         public int Add(int a, int b)

@@ -116,7 +116,7 @@ namespace JsonRpcConsoleApp
 
     }
 
-    public class JsonRpcServer : RpcServer
+    public partial class JsonRpcServer : RpcServer
     {
         /// <summary>
         /// 使用调用上下文。

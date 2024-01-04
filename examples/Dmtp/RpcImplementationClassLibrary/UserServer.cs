@@ -5,7 +5,7 @@ using TouchSocket.Rpc;
 
 namespace RpcImplementationClassLibrary
 {
-    public class UserServer : IUserServer
+    public partial class UserServer : IUserServer
     {
         public LoginResponse Login(ICallContext callContext, LoginRequest request)
         {

@@ -234,10 +234,7 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(option));
             }
 
-            if (this.DisposedValue)
-            {
-                throw new ObjectDisposedException(nameof(TcpService));
-            }
+            this.ThrowIfDisposed();
 
             if (option.IpHost is null)
             {
@@ -602,10 +599,7 @@ namespace TouchSocket.Sockets
 
         private void Args_Completed(object sender, SocketAsyncEventArgs e)
         {
-            if (e.LastOperation == SocketAsyncOperation.Accept)
-            {
-                this.OnAccepted(e);
-            }
+            this.OnAccepted(e);
         }
 
         private void BeginListen(List<TcpListenOption> optionList)
@@ -623,20 +617,23 @@ namespace TouchSocket.Sockets
                 return;
             }
 
-            if (e.SocketError == SocketError.Success && e.AcceptSocket != null)
+            if (e.LastOperation == SocketAsyncOperation.Accept&& e.SocketError == SocketError.Success && e.AcceptSocket != null)
             {
                 var socket = e.AcceptSocket;
                 if (this.SocketClients.Count < this.m_maxCount)
                 {
-                    //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
-                    Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                    this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
+                    //Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                 }
                 else
                 {
                     socket.SafeDispose();
                     this.Logger.Warning(this, "连接客户端数量已达到设定最大值");
                 }
+            }
 
+            if (this.m_serverState== ServerState.Running)
+            {
                 e.AcceptSocket = null;
 
                 try
@@ -694,13 +691,13 @@ namespace TouchSocket.Sockets
                     client.SetDataHandlingAdapter(this.GetAdapter(monitor));
                 }
 
-                await client.InternalInitialized();
+                await client.InternalInitialized().ConfigureFalseAwait();
 
                 var args = new ConnectingEventArgs(socket)
                 {
                     Id = this.GetNextNewId()
                 };
-                await client.InternalConnecting(args);//Connecting
+                await client.InternalConnecting(args).ConfigureFalseAwait();//Connecting
                 if (args.IsPermitOperation)
                 {
                     client.InternalSetId(args.Id);
@@ -720,7 +717,7 @@ namespace TouchSocket.Sockets
                         {
                             try
                             {
-                                await client.AuthenticateAsync(monitor.Option.ServiceSslOption);
+                                await client.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureFalseAwait();
                                 _ = client.BeginReceiveSsl();
                             }
                             catch (Exception ex)

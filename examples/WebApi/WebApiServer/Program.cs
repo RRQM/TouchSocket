@@ -53,7 +53,7 @@ namespace WebApiServerApp
         }
     }
 
-    public class ApiServer : RpcServer
+    public partial class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
 

@@ -211,8 +211,6 @@ namespace TouchSocket.Http
         /// <item>Connection:keep-alive</item>
         /// <item>Pragma:no-cache</item>
         /// <item>UserAgent:TouchSocket.Http</item>
-        /// <item>Accept:*/*</item>
-        /// <item>AcceptEncoding:deflate, br</item>
         /// </list>
         /// </summary>
         /// <param name="request"></param>
@@ -222,8 +220,6 @@ namespace TouchSocket.Http
             request.Headers.Add(HttpHeaders.Connection, "keep-alive");
             request.Headers.Add(HttpHeaders.Pragma, "no-cache");
             request.Headers.Add(HttpHeaders.UserAgent, "TouchSocket.Http");
-            request.Headers.Add(HttpHeaders.Accept, "*/*");
-            request.Headers.Add(HttpHeaders.AcceptEncoding, "deflate, br");
             return request;
         }
 
