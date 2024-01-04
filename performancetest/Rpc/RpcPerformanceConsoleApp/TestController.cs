@@ -47,7 +47,7 @@ namespace RpcPerformanceConsoleApp
     }
 
 
-    public class TestController : RpcServer
+    public partial class TestController : RpcServer
     {
         [DmtpRpc(true)]
         public int Sum(int a, int b) => a + b;
