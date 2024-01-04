@@ -26,13 +26,16 @@ namespace HttpPerformanceConsoleApp
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .SetListenIPHosts(7790)
-               .ConfigurePlugins(a =>
+               .ConfigureContainer(a => 
                {
-                   a.UseWebApi()
-                   .ConfigureRpcStore(store =>
+                   a.AddRpcStore(store =>
                    {
                        store.RegisterServer<ApiServer>();//注册服务
                    });
+               })
+               .ConfigurePlugins(a =>
+               {
+                   a.UseWebApi();
 
                    a.UseSwagger()//使用Swagger页面
                    .UseLaunchBrowser();//启动浏览器

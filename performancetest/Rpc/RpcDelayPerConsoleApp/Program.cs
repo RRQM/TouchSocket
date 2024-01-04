@@ -46,13 +46,16 @@ namespace RpcDelayPerConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
+                   .ConfigureContainer(a => 
+                   {
+                       a.AddRpcStore(store =>
+                       {
+                           store.RegisterServer<MyRpcServer>();
+                       });
+                   })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
-                       {
-                           store.RegisterServer<MyRpcServer>();//注册服务
-                       });
+                       a.UseDmtpRpc();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -86,7 +89,7 @@ namespace RpcDelayPerConsoleApp
         }
     }
 
-    public class MyRpcServer : RpcServer
+    public partial class MyRpcServer : RpcServer
     {
         Timer m_timer;
         public MyRpcServer()
