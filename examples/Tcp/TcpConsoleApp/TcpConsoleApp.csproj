@@ -18,8 +18,8 @@
   </ItemGroup>-->
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket" Version="2.0.0-beta.253" />
-    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.253" />
+    <PackageReference Include="TouchSocket" Version="2.0.0-beta.255" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.255" />
   </ItemGroup>
 
 </Project>

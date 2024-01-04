@@ -77,7 +77,7 @@ namespace SerializationSelectorConsoleApp
         }
     }
 
-    public class MyRpcServer : RpcServer
+    public partial class MyRpcServer : RpcServer
     {
         /// <summary>
         /// 登录

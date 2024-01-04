@@ -12,7 +12,7 @@ namespace GenerateProxyFromServerConsoleApp
         }
     }
 
-    class MyRpcClass : RpcServer
+    partial class MyRpcClass : RpcServer
     {
         public int Add(int a, int b)
         {
@@ -24,7 +24,7 @@ namespace GenerateProxyFromServerConsoleApp
     {
         public MyRpcAttribute()
         {
-            this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync; 
+            this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;
         }
         public override Type[] GetGenericConstraintTypes()
         {

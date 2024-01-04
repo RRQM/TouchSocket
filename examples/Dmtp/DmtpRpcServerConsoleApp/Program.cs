@@ -58,132 +58,132 @@ namespace ConsoleApp2
             }
 
         }
+    }
 
+    [MyRpcActionFilter]
+    partial class MyRpcServer : RpcServer
+    {
+        private readonly ILog m_logger;
+
+        public MyRpcServer(ILog logger)
+        {
+            this.m_logger = logger;
+        }
+
+        /// <summary>
+        /// 将两个数相加
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        [DmtpRpc(true)]//使用函数名直接调用
+        [Description("将两个数相加")]//其作用是生成代理时，作为注释。
         [MyRpcActionFilter]
-        class MyRpcServer : RpcServer
+        public int Add(int a, int b)
         {
-            private readonly ILog m_logger;
-
-            public MyRpcServer(ILog logger)
-            {
-                this.m_logger = logger;
-            }
-
-            /// <summary>
-            /// 将两个数相加
-            /// </summary>
-            /// <param name="a"></param>
-            /// <param name="b"></param>
-            /// <returns></returns>
-            [DmtpRpc(true)]//使用函数名直接调用
-            [Description("将两个数相加")]//其作用是生成代理时，作为注释。
-            [MyRpcActionFilter]
-            public int Add(int a, int b)
-            {
-                this.m_logger.Info("调用Add");
-                var sum = a + b;
-                return sum;
-            }
-
-            /// <summary>
-            /// 测试客户端请求，服务器响应大量流数据
-            /// </summary>
-            /// <param name="callContext"></param>
-            /// <param name="channelID"></param>
-            [Description("测试客户端请求，服务器响应大量流数据")]
-            [DmtpRpc]
-            public int RpcPullChannel(IDmtpRpcCallContext callContext, int channelID)
-            {
-                var size = 0;
-                var package = 1024 * 64;
-                if (callContext.Caller is TcpDmtpSocketClient socketClient)
-                {
-                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
-                    {
-                        for (var i = 0; i < 10; i++)
-                        {
-                            size += package;
-                            channel.Write(new byte[package]);
-                        }
-                        channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
-                    }
-                }
-                return size;
-            }
-
-            /// <summary>
-            /// "测试推送"
-            /// </summary>
-            /// <param name="callContext"></param>
-            /// <param name="channelID"></param>
-            [Description("测试客户端推送流数据")]
-            [DmtpRpc]
-            public int RpcPushChannel(ICallContext callContext, int channelID)
-            {
-                var size = 0;
-
-                if (callContext.Caller is TcpDmtpSocketClient socketClient)
-                {
-                    if (socketClient.TrySubscribeChannel(channelID, out var channel))
-                    {
-                        foreach (var item in channel)
-                        {
-                            size += item.Len;//此处处理流数据
-                        }
-                    }
-                }
-                return size;
-            }
+            this.m_logger.Info("调用Add");
+            var sum = a + b;
+            return sum;
         }
 
-        internal class MyRpcPlugin : PluginBase, IDmtpRoutingPlugin
+        /// <summary>
+        /// 测试客户端请求，服务器响应大量流数据
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="channelID"></param>
+        [Description("测试客户端请求，服务器响应大量流数据")]
+        [DmtpRpc]
+        public int RpcPullChannel(IDmtpRpcCallContext callContext, int channelID)
         {
-            public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+            var size = 0;
+            var package = 1024 * 64;
+            if (callContext.Caller is TcpDmtpSocketClient socketClient)
             {
-                if (e.RouterType == RouteType.Rpc)
+                if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                    e.IsPermitOperation = true;
-                    return;
+                    for (var i = 0; i < 10; i++)
+                    {
+                        size += package;
+                        channel.Write(new byte[package]);
+                    }
+                    channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
                 }
-
-                await e.InvokeNext();
             }
+            return size;
         }
 
-        public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
+        /// <summary>
+        /// "测试推送"
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <param name="channelID"></param>
+        [Description("测试客户端推送流数据")]
+        [DmtpRpc]
+        public int RpcPushChannel(ICallContext callContext, int channelID)
         {
-            public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+            var size = 0;
+
+            if (callContext.Caller is TcpDmtpSocketClient socketClient)
             {
-                //invokeResult = new InvokeResult()
-                //{
-                //    Status = InvokeStatus.UnEnable,
-                //    Message = "不允许执行",
-                //    Result = default
-                //};
-                if (callContext.Caller is ISocketClient client)
+                if (socketClient.TrySubscribeChannel(channelID, out var channel))
                 {
-                    client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
+                    foreach (var item in channel)
+                    {
+                        size += item.Len;//此处处理流数据
+                    }
                 }
-                return Task.FromResult(invokeResult);
+            }
+            return size;
+        }
+    }
+
+    internal class MyRpcPlugin : PluginBase, IDmtpRoutingPlugin
+    {
+        public async Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e)
+        {
+            if (e.RouterType == RouteType.Rpc)
+            {
+                e.IsPermitOperation = true;
+                return;
             }
 
-            public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
-            {
-                if (callContext.Caller is ISocketClient client)
-                {
-                    client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
-                }
-                return Task.FromResult(invokeResult);
-            }
+            await e.InvokeNext();
+        }
+    }
 
-            public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+    public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
+    {
+        public override Task<InvokeResult> ExecutingAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+        {
+            //invokeResult = new InvokeResult()
+            //{
+            //    Status = InvokeStatus.UnEnable,
+            //    Message = "不允许执行",
+            //    Result = default
+            //};
+            if (callContext.Caller is ISocketClient client)
             {
-                if (callContext.Caller is ISocketClient client)
-                {
-                    client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
-                }
-                return Task.FromResult(invokeResult);
+                client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
             }
+            return Task.FromResult(invokeResult);
+        }
+
+        public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+        {
+            if (callContext.Caller is ISocketClient client)
+            {
+                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+            }
+            return Task.FromResult(invokeResult);
+        }
+
+        public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+        {
+            if (callContext.Caller is ISocketClient client)
+            {
+                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+            }
+            return Task.FromResult(invokeResult);
         }
     }
 }

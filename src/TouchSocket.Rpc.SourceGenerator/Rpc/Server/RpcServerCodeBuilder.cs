@@ -34,7 +34,6 @@ namespace TouchSocket
                 yield return "using System;";
                 yield return "using System.Diagnostics;";
                 yield return "using TouchSocket.Core;";
-                yield return "using TouchSocket.Sockets;";
                 yield return "using TouchSocket.Rpc;";
                 yield return "using System.Threading.Tasks;";
             }
@@ -82,9 +81,35 @@ namespace TouchSocket
             return codeString.ToString();
         }
 
+        private string GetObjectName(IMethodSymbol method)
+        {
+            foreach (var item1 in new string[] {"obj","targetObj","target","@obj", "@targetObj", "@target" })
+            {
+                bool same=false;
+                foreach (var item2 in method.Parameters)
+                {
+                    if (item2.Name == item1)
+                    {
+                        same = true;
+                        break;
+                    }
+                }
+
+                if (!same)
+                {
+                    return item1;
+                }
+            }
+
+
+            return "@obj";
+        }
+
         private void BuildMethod(StringBuilder codeString, IMethodSymbol method)
         {
-            codeString.AppendLine($"private static object {this.GetMethodName(method)}(object obj, object[] ps)");
+            var objectName=GetObjectName(method);
+
+            codeString.AppendLine($"private static object {this.GetMethodName(method)}(object {objectName}, object[] ps)");
             codeString.AppendLine("{");
 
             var ps = new List<string>();
@@ -110,22 +135,22 @@ namespace TouchSocket
             {
                 if (method.ReturnsVoid)
                 {
-                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()})obj).{method.Name}({string.Join(",", ps)});");
+                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
                 }
                 else
                 {
-                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})obj).{method.Name}({string.Join(",", ps)});");
+                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}({string.Join(",", ps)});");
                 }
             }
             else
             {
                 if (method.ReturnsVoid)
                 {
-                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()})obj).{method.Name}();");
+                    codeString.AppendLine($"(({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
                 }
                 else
                 {
-                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()})obj).{method.Name}();");
+                    codeString.AppendLine($"var result = (({method.ContainingType.ToDisplayString()}){objectName}).{method.Name}();");
                 }
             }
             for (var i = 0; i < method.Parameters.Length; i++)

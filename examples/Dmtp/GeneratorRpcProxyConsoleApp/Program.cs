@@ -58,7 +58,7 @@ namespace GeneratorRpcProxyConsoleApp
         }
     }
 
-    public class MyRpcServer : RpcServer
+    public partial class MyRpcServer : RpcServer
     {
         [DmtpRpc]
         public bool Login(string account, string password)
