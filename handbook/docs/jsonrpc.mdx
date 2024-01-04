@@ -31,7 +31,7 @@ JsonRpc是**通用**的Rpc规范，与**编程语言无关、操作系统无关*
 
 
 ```csharp showLineNumbers
-public class JsonRpcServer : RpcServer
+public partial class JsonRpcServer : RpcServer
 {
     /// <summary>
     /// 使用调用上下文。
@@ -363,7 +363,7 @@ while (true)
 首先需要像常规Rpc一样声明一个Rpc服务。然后需要使用`JsonRpc`特性表示。
 
 ```csharp showLineNumbers
-public class ReverseJsonRpcServer : RpcServer
+public partial class ReverseJsonRpcServer : RpcServer
 {
     [JsonRpc(MethodInvoke = true)]
     public int Add(int a, int b)
