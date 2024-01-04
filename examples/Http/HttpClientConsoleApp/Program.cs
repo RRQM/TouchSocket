@@ -15,6 +15,7 @@ namespace ClientConsoleApp
             client.Connect();//先做连接
 
             {
+                //创建一个请求
                 var request = new HttpRequest();
                 request.InitHeaders()
                     .SetUrl("/WeatherForecast")
@@ -22,10 +23,11 @@ namespace ClientConsoleApp
                     .AsGet();
 
                 var respose = client.Request(request, timeout: 1000 * 10);
-                Console.WriteLine(respose.GetBody());
+                Console.WriteLine(respose.GetBody());//将接收的数据，一次性转为utf8编码的字符串
             }
 
             {
+                //创建一个请求
                 var request = new HttpRequest();
                 request.InitHeaders()
                     .SetUrl("/WeatherForecast")
@@ -34,6 +36,13 @@ namespace ClientConsoleApp
 
                 var respose = client.Request(request, timeout: 1000 * 10);
 
+                //一次性接收字节
+                if (respose.TryGetContent(out var content))
+                {
+
+                }
+
+                //如果数据太大，可以一直read
                 var buffer = new byte[1024 * 64];
                 while (true)
                 {
