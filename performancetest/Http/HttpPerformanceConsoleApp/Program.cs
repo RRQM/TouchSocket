@@ -1,4 +1,5 @@
-﻿using HttpPerformanceConsoleApp.Controllers;
+﻿using FastEndpoints;
+using HttpPerformanceConsoleApp.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,7 @@ namespace HttpPerformanceConsoleApp
         {
             StartAspnetHttp();
             StartTouchSokcetHttp();
+            StartFastEndpoints();
             Console.ReadKey();
         }
 
@@ -63,6 +65,18 @@ namespace HttpPerformanceConsoleApp
             app.RunAsync("http://127.0.0.1:7789");
             ConsoleLogger.Default.Info("Aspnet已启动，请求连接：http://127.0.0.1:7789/ApiServer/Add?a=10&b=20");
 
+        }
+
+        static void StartFastEndpoints()
+        {
+            var builder = WebApplication.CreateBuilder();
+            builder.Logging.ClearProviders();
+            builder.Services.AddFastEndpoints();
+
+            var app = builder.Build();
+            app.UseFastEndpoints();
+            app.RunAsync("http://127.0.0.1:7791");
+            ConsoleLogger.Default.Info("FastEndpoints已启动，请求连接：http://127.0.0.1:7791/ApiServer/Add?a=10&b=20");
         }
     }
 }
