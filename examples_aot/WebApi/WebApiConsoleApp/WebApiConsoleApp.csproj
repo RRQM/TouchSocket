@@ -9,14 +9,8 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.258" />
-	</ItemGroup>
-	
-  <!--<ItemGroup>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
+  <ItemGroup>
+    <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.258" />
+  </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using System;
@@ -20,9 +20,9 @@ using System.Linq.Expressions;
 namespace BenchmarkConsoleApp.Benchmark
 {
     [SimpleJob(RuntimeMoniker.Net461)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class BenchmarkNewCreateObject : BenchmarkBase
     {
@@ -73,8 +73,6 @@ namespace BenchmarkConsoleApp.Benchmark
                 this.GoType(type);
             }
         }
-
-
 
         [Benchmark]
         public void NewCreateStringList()

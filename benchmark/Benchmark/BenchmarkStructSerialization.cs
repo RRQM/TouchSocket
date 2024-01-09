@@ -9,8 +9,8 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-#if NETCOREAPP3_1_OR_GREATER
+
+#if NET6_0_OR_GREATER
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MemoryPack;

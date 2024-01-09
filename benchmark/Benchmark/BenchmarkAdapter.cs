@@ -12,42 +12,19 @@
 
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using System.Collections;
-using System.Collections.Generic;
+using TouchSocket.Core;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
     [SimpleJob(RuntimeMoniker.Net461)]
     [SimpleJob(RuntimeMoniker.Net60)]
-    [SimpleJob(RuntimeMoniker.Net70)]
-    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
-    public class BenchmarkList : BenchmarkBase
+    public class BenchmarkAdapter : BenchmarkBase
     {
         [Benchmark]
-        public void ListAdd()
+        public void FixedHeaderPackageAdapter()
         {
-            var myListClass = new MyListClass();
-            var list = new List<MyListClass>();
-            for (var i = 0; i < this.Count; i++)
-            {
-                list.Add(myListClass);
-            }
+            var adapter = new FixedHeaderPackageAdapter();
         }
-
-        [Benchmark]
-        public void ArrayListAdd()
-        {
-            var myListClass = new MyListClass();
-            var list = new ArrayList();
-            for (var i = 0; i < this.Count; i++)
-            {
-                list.Add(myListClass);
-            }
-        }
-    }
-
-    internal class MyListClass
-    {
     }
 }

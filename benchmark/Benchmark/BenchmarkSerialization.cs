@@ -9,12 +9,11 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-#if NETCOREAPP3_1_OR_GREATER
+
+#if NET6_0_OR_GREATER
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MemoryPack;
-using Nino.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,8 +21,10 @@ using TouchSocket.Core;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
+    [SimpleJob(RuntimeMoniker.Net461)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class BenchmarkSerialization : BenchmarkBase
     {
@@ -42,7 +43,7 @@ namespace BenchmarkConsoleApp.Benchmark
         public void MemoryPack()
         {
             var v = new MemoryPackPerson { Age = 40, Name = "John" };
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < this.Count; i++)
             {
                 var bin = MemoryPackSerializer.Serialize(v);
                 var val = MemoryPackSerializer.Deserialize<MemoryPackPerson>(bin);
@@ -54,9 +55,9 @@ namespace BenchmarkConsoleApp.Benchmark
         {
             var v = new MyPackPerson { Age = 40, Name = "John" };
 
-            using (ByteBlock byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock())
             {
-                for (int i = 0; i < Count; i++)
+                for (var i = 0; i < this.Count; i++)
                 {
                     byteBlock.Reset();//避免ByteBlock的创建
                     byteBlock.WritePackage(v);//序列化
@@ -69,14 +70,14 @@ namespace BenchmarkConsoleApp.Benchmark
         public void TouchPack_2()
         {
             var v = new MyPackPerson { Age = 40, Name = "John" };
-            using (ByteBlock byteBlock = new ByteBlock())
+            using (var byteBlock = new ByteBlock())
             {
-                for (int i = 0; i < Count; i++)
+                for (var i = 0; i < this.Count; i++)
                 {
                     byteBlock.Reset();//避免ByteBlock的创建
                     byteBlock.WritePackage(v);//序列化
                     byteBlock.Seek(0);
-                    MyPackPerson myPackPerson = new MyPackPerson();
+                    var myPackPerson = new MyPackPerson();
                     myPackPerson.Unpackage(byteBlock);//反序列化
                 }
             }
@@ -135,22 +136,6 @@ namespace BenchmarkConsoleApp.Benchmark
                 }
             }
         }
-
-        [Benchmark]
-        public void NinoSerialization()
-        {
-            var v = new MyPackPerson2 { Age = 40, Name = "John" };
-            using (var byteBlock = new ByteBlock())
-            {
-                for (var i = 0; i < this.Count; i++)
-                {
-                    byteBlock.Reset();
-                    int r = Nino.Serialization.Serializer.Serialize(byteBlock.Buffer, v);
-                    byteBlock.Seek(0);
-                    var val = Nino.Serialization.Deserializer.Deserialize<MyPackPerson2>(byteBlock.Buffer);
-                }
-            }
-        }
     }
 
     [MemoryPackable]
@@ -169,25 +154,15 @@ namespace BenchmarkConsoleApp.Benchmark
 
         public override void Package(in ByteBlock byteBlock)
         {
-            byteBlock.Write(Age);
-            byteBlock.Write(Name);
+            byteBlock.Write(this.Age);
+            byteBlock.Write(this.Name);
         }
 
         public override void Unpackage(in ByteBlock byteBlock)
         {
-            Age = byteBlock.ReadInt32();
-            Name = byteBlock.ReadString();
+            this.Age = byteBlock.ReadInt32();
+            this.Name = byteBlock.ReadString();
         }
-    }
-
-    [NinoSerialize]
-    public partial class MyPackPerson2
-    {
-        [NinoMember(0)]
-        public int Age;
-
-        [NinoMember(1)]
-        public string Name;
     }
 }
 #endif

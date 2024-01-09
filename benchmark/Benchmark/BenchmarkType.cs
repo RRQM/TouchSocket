@@ -9,34 +9,59 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using System;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
     [SimpleJob(RuntimeMoniker.Net461)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class BenchmarkType : BenchmarkBase
     {
         [Benchmark]
         public void RunTypeof()
         {
+            var type = this.GetTypeOne();
             for (var i = 0; i < this.Count; i++)
             {
-                var type = typeof(BenchmarkType);
+                if (type.FullName == typeof(BenchmarkType).FullName)
+                {
+                }
             }
         }
 
         [Benchmark]
         public void RunGetType()
         {
+            var type = this.GetTypeOne();
             for (var i = 0; i < this.Count; i++)
             {
-                var type = this.GetType();
+                if (type.FullName == this.GetType().FullName)
+                {
+                }
             }
+        }
+
+        [Benchmark]
+        public void RunTypeString()
+        {
+            var type = this.GetTypeOne();
+            for (var i = 0; i < this.Count; i++)
+            {
+                if (type.FullName == "BenchmarkConsoleApp.Benchmark.BenchmarkType")
+                {
+                }
+            }
+        }
+
+        private Type GetTypeOne()
+        {
+            return typeof(BenchmarkType);
         }
     }
 }

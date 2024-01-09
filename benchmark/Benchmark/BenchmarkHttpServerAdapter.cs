@@ -10,62 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using System;
-using System.Linq;
+using TouchSocket.Core;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
+    [SimpleJob(RuntimeMoniker.Net461)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
-    public class BenchmarkValueEnumerator : BenchmarkBase
+    public class BenchmarkHttpServerAdapter : BenchmarkBase
     {
-        private int[] list;
-        public BenchmarkValueEnumerator()
-        {
-            this.list = Enumerable.Range(0, 10000).ToArray();
-        }
         [Benchmark]
-        public void RunFor()
-        {
-            for (var j = 0; j < this.Count; j++)
-            {
-                for (var i = 0; i < this.list.Length; i++)
-                {
-                    var value = this.list[i];
-                }
-            }
-        }
-
-        [Benchmark]
-        public void RunEnumerator()
+        public void CreateByteBlock()
         {
             for (var i = 0; i < this.Count; i++)
             {
-                foreach (var item in this.list)
+                using (var byteBlock = new ByteBlock(1024 * 64))
                 {
-
-                }
-            }
-
-        }
-
-        [Benchmark]
-        public void RunRangeEnumerator()
-        {
-            for (var i = 0; i < this.Count; i++)
-            {
-                foreach (var item in this.list[0..this.list.Length])
-                {
-
                 }
             }
         }
     }
 }
-
-
-#endif

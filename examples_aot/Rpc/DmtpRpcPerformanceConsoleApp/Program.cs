@@ -154,7 +154,6 @@ namespace RpcPerformanceConsoleApp
     }
 
     [AutoInjectForSingleton]
-    [GeneratorRpcServer]
     public partial class TestController : RpcServer
     {
         [DmtpRpc(true)]
