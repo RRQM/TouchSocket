@@ -1,4 +1,4 @@
-ï»¿using TouchSocket.Core;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -6,48 +6,39 @@ using TouchSocket.WebApi;
 
 namespace WebApiConsoleApp
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            var service = new HttpService();
-            service.Setup(new TouchSocketConfig()
-               .SetListenIPHosts(7789)
-               //.SetRegistrator(new MyContainer())
-               .ConfigureContainer(a =>
-               {
-                   a.AddRpcStore(store =>
-                   {
-                       store.RegisterServer<ApiServer>();//æ³¨å†ŒæœåŠ¡
-                   });
-               })
-               .ConfigurePlugins(a =>
-               {
-                   a.UseWebApi();
-               }));
-            service.Start();
+            var builder = Host.CreateApplicationBuilder(args);
 
-            Console.WriteLine("ä»¥ä¸‹è¿žæŽ¥ç”¨äºŽæµ‹è¯•webApi");
-            Console.WriteLine($"ä½¿ç”¨ï¼šhttp://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
-            Console.ReadKey();
+            builder.Services.AddServiceHostedService<IHttpService, HttpService>(config =>
+            {
+                config.SetListenIPHosts(7789)
+                .ConfigureContainer(a =>
+                {
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<ApiServer>();//×¢²á·þÎñ
+                    });
+
+                    a.AddConsoleLogger();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseCheckClear();
+
+                    a.UseWebApi();
+
+                    //´Ë²å¼þÊÇhttpµÄ¶µµ×²å¼þ£¬Ó¦¸Ã×îºóÌí¼Ó¡£×÷ÓÃÊÇµ±ËùÓÐÂ·ÓÉ²»Æ¥ÅäÊ±·µ»Ø404.ÇÒÄÚ²¿Ò²»á´¦ÀíOptionÇëÇó¡£¿ÉÒÔ¸üºÃµÄ´¦ÀíÀ´×Ôä¯ÀÀÆ÷µÄ¿çÓòÌ½²â¡£
+                    a.UseDefaultHttpServicePlugin();
+                });
+            });
+
+            var host = builder.Build();
+            host.Run();
         }
     }
-
-    #region IOC
-    /// <summary>
-    /// IOCå®¹å™¨
-    /// </summary>
-    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
-    [AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
-    [AddSingletonInject(typeof(ApiServer))]
-    [AddSingletonInject(typeof(WebApiParserPlugin))]
-    [AddSingletonInject(typeof(DefaultHttpServicePlugin))]
-    [GeneratorContainer]
-    public partial class MyContainer : ManualContainer
-    {
-    }
-    #endregion
 
     public partial class ApiServer : RpcServer
     {
@@ -58,15 +49,28 @@ namespace WebApiConsoleApp
             this.m_logger = logger;
         }
 
-        [Origin(AllowOrigin = "*")]//è·¨åŸŸè®¾ç½®
-        [Router("[api]/[action]ab")]//æ­¤è·¯ç”±ä¼šä»¥"/Server/Sumab"å®žçŽ°
-        [Router("[api]/[action]")]//æ­¤è·¯ç”±ä¼šä»¥"/Server/Sum"å®žçŽ°
+        [Origin(AllowOrigin = "*")]//¿çÓòÉèÖÃ
+        [Router("[api]/[action]ab")]//´ËÂ·ÓÉ»áÒÔ"/Server/Sumab"ÊµÏÖ
+        [Router("[api]/[action]")]//´ËÂ·ÓÉ»áÒÔ"/Server/Sum"ÊµÏÖ
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {
+            m_logger.Info("Sum");
             return a + b;
         }
 
-       
+        [WebApi(HttpMethodType.POST)]
+        public int TestPost(MyClass myClass)
+        {
+            m_logger.Info("TestPost");
+            return myClass.A + myClass.B;
+        }
+
+    }
+
+    public class MyClass
+    {
+        public int A { get; set; }
+        public int B { get; set; }
     }
 }
