@@ -1,4 +1,6 @@
-﻿using TouchSocket.Core;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
@@ -10,30 +12,34 @@ namespace RpcPerformanceConsoleApp
     {
         public static void StartServer()
         {
-            var service = new TcpDmtpService();
-            var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
-                   .ConfigureContainer(a =>
-                   {
-                       a.AddConsoleLogger();
-
-                       a.AddRpcStore(store => 
+            IHost host = Host.CreateDefaultBuilder()
+        .ConfigureServices(services =>
+        {
+            services.AddServiceHostedService<ITcpDmtpService, TcpDmtpService>(config =>
+            {
+                config.SetListenIPHosts(7789)
+                       .ConfigureContainer(a =>
                        {
-                           store.RegisterServer<TestController>();
-                       });
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc();
-                   })
-                   .SetDmtpOption(new DmtpOption()
-                   {
-                       VerifyToken = "Rpc"//设定连接口令，作用类似账号密码
-                   });
+                           a.AddConsoleLogger();
 
-            service.Setup(config);
-            service.Start();
-            service.Logger.Info($"{service.GetType().Name}已启动");
+                           a.AddRpcStore(store =>
+                           {
+                               store.RegisterServer<TestController>();
+                           });
+                       })
+                       .ConfigurePlugins(a =>
+                       {
+                           a.UseDmtpRpc();
+                       })
+                       .SetDmtpOption(new DmtpOption()
+                       {
+                           VerifyToken = "Rpc"//设定连接口令，作用类似账号密码
+                       });
+            });
+        })
+        .Build();
+
+            host.RunAsync();
         }
 
         public static void StartSumClient(int count)
@@ -74,14 +80,14 @@ namespace RpcPerformanceConsoleApp
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .ConfigurePlugins(a => 
-                { 
-                    a.UseDmtpRpc(); 
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption() 
-                { 
-                    VerifyToken = "Rpc" 
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Rpc"
                 }));
             client.Connect();
 
@@ -108,14 +114,14 @@ namespace RpcPerformanceConsoleApp
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .ConfigurePlugins(a => 
-                { 
-                    a.UseDmtpRpc(); 
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
                 })
                 .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption() 
-                { 
-                    VerifyToken = "Rpc" 
+                .SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Rpc"
                 }));
             client.Connect();
 

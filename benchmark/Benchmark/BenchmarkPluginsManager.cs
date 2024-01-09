@@ -9,39 +9,57 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
     [SimpleJob(RuntimeMoniker.Net461)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
-    public class BenchmarkPluginsManager : BenchmarkBase
+    public class BenchmarkPluginManager : BenchmarkBase
     {
-        private IPluginsManager m_plugins;
+        private IPluginManager m_plugins1;
+        private IPluginManager m_plugins2;
         private Method method;
         private int plugCount = 10;
+        private MethodInfo m_methodInfo;
 
-        public BenchmarkPluginsManager()
+        public BenchmarkPluginManager()
         {
             //this.Count = 1;
 
-            this.m_plugins = new PluginsManager(new Container())
+            this.m_plugins1 = new PluginManager(new Container())
             {
                 Enable = true
             };
             for (var i = 0; i < this.plugCount; i++)
             {
-                this.m_plugins.Add(new MyPlugin());
+                this.m_plugins1.Add(new MyPlugin());
             }
 
-            this.method = new Method(typeof(MyPlugin).GetMethod("Test"));
+            this.m_plugins2 = new PluginManager(new Container())
+            {
+                Enable = true
+            };
+            for (var i = 0; i < this.plugCount; i++)
+            {
+                this.m_plugins2.Add(nameof(MyPlugin.Test), this.Test);
+            }
+            this.m_methodInfo = typeof(MyPlugin).GetMethod("Test");
+            this.method = new Method(this.m_methodInfo);
+        }
+
+        private Task Test(object sender, PluginEventArgs e)
+        {
+            return e.InvokeNext();
         }
 
         private interface MyPluginInterface : IPlugin
@@ -68,7 +86,8 @@ namespace BenchmarkConsoleApp.Benchmark
         [Benchmark]
         public void ActionRun()
         {
-            Func<Task> func = () => Task.CompletedTask;
+            var myPlugin = new MyPlugin();
+            Func<object, PluginEventArgs, Task> func = myPlugin.Test;
             for (var i = 0; i < this.Count; i++)
             {
                 var sender = new object();
@@ -76,7 +95,23 @@ namespace BenchmarkConsoleApp.Benchmark
                 var ps = new object[] { sender, e };
                 for (var j = 0; j < this.plugCount; j++)
                 {
-                    func.Invoke();
+                    func.Invoke(sender, e);
+                }
+            }
+        }
+
+        [Benchmark]
+        public void MethodInfoRun()
+        {
+            var myPlugin = new MyPlugin();
+            for (var i = 0; i < this.Count; i++)
+            {
+                var sender = new object();
+                var e = new PluginEventArgs();
+                var ps = new object[] { sender, e };
+                for (var j = 0; j < this.plugCount; j++)
+                {
+                    this.m_methodInfo.Invoke(myPlugin, ps);
                 }
             }
         }
@@ -93,7 +128,7 @@ namespace BenchmarkConsoleApp.Benchmark
                 var ps = new object[] { sender, e };
                 for (var j = 0; j < this.plugCount; j++)
                 {
-                    this.method.InvokeAsync(myPlugin, sender, e);
+                    this.method.Invoke(myPlugin, sender, e);
                 }
             }
         }
@@ -103,7 +138,25 @@ namespace BenchmarkConsoleApp.Benchmark
         {
             for (var i = 0; i < this.Count; i++)
             {
-                this.m_plugins.RaiseAsync(nameof(MyPluginInterface.Test), new object(), new PluginEventArgs());
+                this.m_plugins1.Raise(nameof(MyPluginInterface.Test), new object(), new PluginEventArgs());
+            }
+        }
+
+        [Benchmark]
+        public void PluginActionRun()
+        {
+            for (var i = 0; i < this.Count; i++)
+            {
+                this.m_plugins2.Raise(nameof(MyPluginInterface.Test), new object(), new PluginEventArgs());
+            }
+        }
+
+        [Benchmark]
+        public async Task PluginActionRunAsync()
+        {
+            for (var i = 0; i < this.Count; i++)
+            {
+                await this.m_plugins2.RaiseAsync(nameof(MyPluginInterface.Test), new object(), new PluginEventArgs());
             }
         }
 
@@ -115,9 +168,8 @@ namespace BenchmarkConsoleApp.Benchmark
             {
             }
 
-            public void Loaded(IPluginsManager pluginsManager)
+            public void Loaded(IPluginManager pluginManager)
             {
-                
             }
 
             public Task Test(object sender, PluginEventArgs e)

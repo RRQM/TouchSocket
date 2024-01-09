@@ -10,62 +10,71 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using System;
-using System.Linq;
 
 namespace BenchmarkConsoleApp.Benchmark
 {
+    [SimpleJob(RuntimeMoniker.Net461)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [SimpleJob(RuntimeMoniker.Net70)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
-    public class BenchmarkValueEnumerator : BenchmarkBase
+    public class BenchmarkLazy : BenchmarkBase
     {
-        private int[] list;
-        public BenchmarkValueEnumerator()
+        public BenchmarkLazy()
         {
-            this.list = Enumerable.Range(0, 10000).ToArray();
+            this.Count = 1000000;
         }
+
+        private Lazy<MyBenchmarkLazyClass> m_lazyClass;
+        private MyBenchmarkLazyClass m_class;
+        private MyBenchmarkLazyClass m_class1;
+
         [Benchmark]
-        public void RunFor()
+        public void Lazy()
         {
-            for (var j = 0; j < this.Count; j++)
+            this.m_lazyClass = new Lazy<MyBenchmarkLazyClass>(() => new MyBenchmarkLazyClass());
+            for (var i = 0; i < this.Count; i++)
             {
-                for (var i = 0; i < this.list.Length; i++)
-                {
-                    var value = this.list[i];
-                }
+                var v = this.m_lazyClass.Value;
             }
         }
 
         [Benchmark]
-        public void RunEnumerator()
+        public void Direct()
         {
+            this.m_class = new MyBenchmarkLazyClass();
             for (var i = 0; i < this.Count; i++)
             {
-                foreach (var item in this.list)
-                {
-
-                }
+                var v = this.m_class;
             }
-
         }
 
+        private object root = new object();
+
         [Benchmark]
-        public void RunRangeEnumerator()
+        public void DirectLock()
         {
             for (var i = 0; i < this.Count; i++)
             {
-                foreach (var item in this.list[0..this.list.Length])
+                if (this.m_class1 == null)
                 {
-
+                    lock (this.root)
+                    {
+                        if (this.m_class1 != null)
+                        {
+                            this.m_class1 = new MyBenchmarkLazyClass();
+                        }
+                    }
                 }
+                var v = this.m_class1;
             }
         }
     }
+
+    internal class MyBenchmarkLazyClass
+    {
+    }
 }
-
-
-#endif

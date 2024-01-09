@@ -9,7 +9,7 @@
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using System;
@@ -18,11 +18,17 @@ using TouchSocket.Core;
 namespace BenchmarkConsoleApp.Benchmark
 {
     [SimpleJob(RuntimeMoniker.Net461)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [SimpleJob(RuntimeMoniker.Net60)]
+    //[SimpleJob(RuntimeMoniker.Net70)]
+    //[SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class BenchmarkBytePool : BenchmarkBase
     {
+        public BenchmarkBytePool()
+        {
+            //this.Count = 1000000;
+        }
+
         [Benchmark]
         public void CreateByteBlock()
         {
@@ -50,19 +56,10 @@ namespace BenchmarkConsoleApp.Benchmark
         {
             for (var i = 0; i < this.Count; i++)
             {
-                var bytes = this.Rent(1024 * 64);
-                this.Return(bytes);
+                var bytes = System.Buffers.ArrayPool<byte>.Shared.Rent(1024 * 64);
+                System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
             }
         }
-        private byte[] Rent(int size)
-        {
-            return System.Buffers.ArrayPool<byte>.Shared.Rent(size);
-        }
-        private void Return(byte[] bytes)
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(bytes);
-        }
-
 
         [Benchmark]
         public void CreateBytePoolBytes()
@@ -73,8 +70,6 @@ namespace BenchmarkConsoleApp.Benchmark
                 BytePool.Default.Return(bytes);
             }
         }
-
-
 
         [Benchmark]
         public void RunByteBlock()
@@ -133,12 +128,11 @@ namespace BenchmarkConsoleApp.Benchmark
         {
             using (var byteBlock = new ByteBlock(1024 * 64))
             {
-                int a = 0;
-                for (int i = 0; i < this.Count; i++)
+                var a = 0;
+                for (var i = 0; i < this.Count; i++)
                 {
                     ByteBlockRef(byteBlock, ref a);
                 }
-
             }
         }
 
@@ -156,22 +150,21 @@ namespace BenchmarkConsoleApp.Benchmark
         {
             using (var byteBlock = new ValueByteBlock(1024 * 64))
             {
-                int a = 0;
-                for (int i = 0; i < this.Count; i++)
+                var a = 0;
+                for (var i = 0; i < this.Count; i++)
                 {
                     ValueByteBlockRef(byteBlock, ref a);
                 }
-
             }
         }
 
-        private static void ValueByteBlockRef(ValueByteBlock valueByteBlock,ref int a)
+        private static void ValueByteBlockRef(ValueByteBlock valueByteBlock, ref int a)
         {
-            if (a++>10000)
+            if (a++ > 10000)
             {
                 return;
             }
-            ValueByteBlockRef(valueByteBlock,ref a);
+            ValueByteBlockRef(valueByteBlock, ref a);
         }
     }
 }

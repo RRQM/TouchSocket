@@ -9,10 +9,6 @@
 		<!--<PublishTrimmed>false</PublishTrimmed>-->
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.232">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.232" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.258" />
 	</ItemGroup>
 </Project>
