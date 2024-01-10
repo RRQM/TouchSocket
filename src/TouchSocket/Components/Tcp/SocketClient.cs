@@ -51,7 +51,7 @@ namespace TouchSocket.Sockets
         public virtual bool CanSetDataHandlingAdapter => true;
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; private set; }
+        public override TouchSocketConfig Config => this.Service?.Config;
 
         /// <inheritdoc/>
         public SingleStreamDataHandlingAdapter DataHandlingAdapter { get; private set; }
@@ -94,6 +94,9 @@ namespace TouchSocket.Sockets
         public ReceiveType ReceiveType { get; private set; }
 
         /// <inheritdoc/>
+        public IResolver Resolver { get; private set; }
+
+        /// <inheritdoc/>
         public TcpServiceBase Service { get; private set; }
 
         /// <inheritdoc/>
@@ -105,8 +108,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public bool UseSsl { get; private set; }
 
-        /// <inheritdoc/>
-        public override TouchSocketConfig Config => this.Service?.Config;
         #endregion 属性
 
         #region Internal

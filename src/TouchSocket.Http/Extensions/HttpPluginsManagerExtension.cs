@@ -38,5 +38,14 @@ namespace TouchSocket.Core
         {
             return pluginManager.Add<HttpStaticPagePlugin>();
         }
+
+        /// <summary>
+        /// 使用跨域
+        /// </summary>
+        /// <returns></returns>
+        public static CorsPlugin UseCors(this IPluginManager pluginManager)
+        {
+            return pluginManager.Add<CorsPlugin>();
+        }
     }
 }

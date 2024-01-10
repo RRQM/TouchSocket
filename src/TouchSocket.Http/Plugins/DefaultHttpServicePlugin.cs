@@ -18,10 +18,17 @@ namespace TouchSocket.Http
     /// <summary>
     /// 默认的Http服务。为Http做兜底拦截。该插件应该最后添加。
     /// </summary>
-    public sealed class DefaultHttpServicePlugin : PluginBase, IHttpPlugin
+    public sealed class DefaultHttpServicePlugin : PluginBase
     {
         /// <inheritdoc/>
-        public Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            base.Loaded(pluginManager);
+        }
+
+        /// <inheritdoc/>
+        private Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (e.Context.Response.Responsed)
             {

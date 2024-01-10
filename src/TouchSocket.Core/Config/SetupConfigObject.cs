@@ -26,10 +26,10 @@ namespace TouchSocket.Core
         public override TouchSocketConfig Config => this.m_config;
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; private set; }
+        public IPluginManager PluginManager { get; private set; }
 
         /// <inheritdoc/>
-        public IPluginManager PluginManager { get; private set; }
+        public IResolver Resolver { get; private set; }
 
         /// <inheritdoc/>
         public void Setup(TouchSocketConfig config)
@@ -66,13 +66,23 @@ namespace TouchSocket.Core
             await this.PluginManager.RaiseAsync(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config)).ConfigureFalseAwait();
         }
 
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.Config.SafeDispose();
+                this.PluginManager.SafeDispose();
+            }
+            base.Dispose(disposing);
+        }
+
         /// <summary>
         /// 加载配置
         /// </summary>
         /// <param name="config"></param>
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
-
         }
 
         private void BuildConfig(TouchSocketConfig config)
@@ -99,7 +109,7 @@ namespace TouchSocket.Core
             }
 
             IPluginManager pluginManager;
-            if ((!this.Config.GetValue(TouchSocketCoreConfigExtension.NewPluginManagerProperty))&& resolver.IsRegistered<IPluginManager>())
+            if ((!this.Config.GetValue(TouchSocketCoreConfigExtension.NewPluginManagerProperty)) && resolver.IsRegistered<IPluginManager>())
             {
                 pluginManager = resolver.Resolve<IPluginManager>();
             }

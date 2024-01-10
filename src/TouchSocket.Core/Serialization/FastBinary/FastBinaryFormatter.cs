@@ -29,10 +29,7 @@ namespace TouchSocket.Core
     public static partial class FastBinaryFormatter
     {
 #if NET6_0_OR_GREATER
-        /// <summary>
-        /// DynamicallyAccessed
-        /// </summary>
-        public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.All;
+        internal const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors| DynamicallyAccessedMemberTypes.PublicMethods| DynamicallyAccessedMemberTypes.PublicFields| DynamicallyAccessedMemberTypes.PublicProperties;
 #endif
 
         static FastBinaryFormatter()

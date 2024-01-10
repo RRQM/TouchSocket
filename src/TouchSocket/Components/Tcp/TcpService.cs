@@ -35,12 +35,14 @@ namespace TouchSocket.Sockets
         }
 
         #region 变量
+
         private readonly List<TcpNetworkMonitor> m_monitors = new List<TcpNetworkMonitor>();
         private readonly SocketClientCollection m_socketClients = new SocketClientCollection();
         private Func<string> m_getDefaultNewId;
         private int m_maxCount;
         private long m_nextId;
         private ServerState m_serverState;
+
         #endregion 变量
 
         #region 属性
@@ -89,7 +91,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientConnected(ISocketClient socketClient, ConnectedEventArgs e)
+        protected override sealed Task OnClientConnected(ISocketClient socketClient, ConnectedEventArgs e)
         {
             return this.OnConnected((TClient)socketClient, e);
         }
@@ -99,7 +101,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientConnecting(ISocketClient socketClient, ConnectingEventArgs e)
+        protected override sealed Task OnClientConnecting(ISocketClient socketClient, ConnectingEventArgs e)
         {
             return this.OnConnecting((TClient)socketClient, e);
         }
@@ -109,7 +111,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnected(ISocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnected((TClient)socketClient, e);
         }
@@ -119,7 +121,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnecting(ISocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnecting((TClient)socketClient, e);
         }
@@ -129,7 +131,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
+        protected override sealed Task OnClientReceivedData(ISocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnReceived((TClient)socketClient, e);
         }
@@ -201,28 +203,6 @@ namespace TouchSocket.Sockets
         }
 
         #endregion 事件
-
-        private string GetDefaultNewId()
-        {
-            return Interlocked.Increment(ref this.m_nextId).ToString();
-        }
-
-        /// <summary>
-        /// 获取下一个新Id
-        /// </summary>
-        /// <returns></returns>
-        protected string GetNextNewId()
-        {
-            try
-            {
-                return this.m_getDefaultNewId.Invoke();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Exception(ex);
-            }
-            return this.GetDefaultNewId();
-        }
 
         /// <inheritdoc/>
         /// <exception cref="ArgumentNullException"></exception>
@@ -560,7 +540,6 @@ namespace TouchSocket.Sockets
 
                 this.m_serverState = ServerState.Disposed;
                 this.PluginManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
-                this.PluginManager.SafeDispose();
             }
             base.Dispose(disposing);
         }
@@ -572,6 +551,23 @@ namespace TouchSocket.Sockets
         protected virtual TClient GetClientInstence(Socket socket, TcpNetworkMonitor monitor)
         {
             return new TClient();
+        }
+
+        /// <summary>
+        /// 获取下一个新Id
+        /// </summary>
+        /// <returns></returns>
+        protected string GetNextNewId()
+        {
+            try
+            {
+                return this.m_getDefaultNewId.Invoke();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Exception(ex);
+            }
+            return this.GetDefaultNewId();
         }
 
         /// <inheritdoc/>
@@ -610,6 +606,24 @@ namespace TouchSocket.Sockets
             }
         }
 
+        private SingleStreamDataHandlingAdapter GetAdapter(TcpNetworkMonitor monitor)
+        {
+            try
+            {
+                return monitor.Option.Adapter.Invoke();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Exception(ex);
+            }
+            return new NormalDataHandlingAdapter();
+        }
+
+        private string GetDefaultNewId()
+        {
+            return Interlocked.Increment(ref this.m_nextId).ToString();
+        }
+
         private void OnAccepted(SocketAsyncEventArgs e)
         {
             if (this.DisposedValue)
@@ -617,7 +631,7 @@ namespace TouchSocket.Sockets
                 return;
             }
 
-            if (e.LastOperation == SocketAsyncOperation.Accept&& e.SocketError == SocketError.Success && e.AcceptSocket != null)
+            if (e.LastOperation == SocketAsyncOperation.Accept && e.SocketError == SocketError.Success && e.AcceptSocket != null)
             {
                 var socket = e.AcceptSocket;
                 if (this.SocketClients.Count < this.m_maxCount)
@@ -632,7 +646,7 @@ namespace TouchSocket.Sockets
                 }
             }
 
-            if (this.m_serverState== ServerState.Running)
+            if (this.m_serverState == ServerState.Running)
             {
                 e.AcceptSocket = null;
 
@@ -650,19 +664,6 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
-        }
-
-        private SingleStreamDataHandlingAdapter GetAdapter(TcpNetworkMonitor monitor)
-        {
-            try
-            {
-                return monitor.Option.Adapter.Invoke();
-            }
-            catch (Exception ex)
-            {
-                this.Logger.Exception(ex);
-            }
-            return new NormalDataHandlingAdapter();
         }
 
         private async Task OnClientSocketInit(object obj)
@@ -752,7 +753,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp服务器
     /// </summary>
-    public class TcpService : TcpService<SocketClient>,ITcpService
+    public class TcpService : TcpService<SocketClient>, ITcpService
     {
         /// <summary>
         /// 处理数据

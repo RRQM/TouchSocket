@@ -129,6 +129,7 @@ namespace TouchSocket.Core
             {
                 return this;
             }
+
             if (this.TryResolve(fromType, out var instance))
             {
                 return instance;

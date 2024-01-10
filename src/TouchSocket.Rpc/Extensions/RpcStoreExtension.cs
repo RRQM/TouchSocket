@@ -25,6 +25,13 @@ namespace TouchSocket.Rpc
     /// </summary>
     public static class RpcStoreExtension
     {
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// DynamicallyAccessed
+        /// </summary>
+        public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicProperties;
+#endif
+
 #if !NET6_0_OR_GREATER
 
         /// <summary>
@@ -62,7 +69,7 @@ namespace TouchSocket.Rpc
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(this RpcStore rpcStore) where T : IRpcServer
+        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this RpcStore rpcStore) where T : IRpcServer
 #else
 
         public static void RegisterServer<T>(this RpcStore rpcStore) where T : IRpcServer
@@ -79,7 +86,7 @@ namespace TouchSocket.Rpc
         /// <param name="providerType"></param>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type providerType)
+        public static void RegisterServer(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type providerType)
 #else
 
         public static void RegisterServer(this RpcStore rpcStore, Type providerType)
@@ -95,7 +102,7 @@ namespace TouchSocket.Rpc
         /// <typeparam name="TTo"></typeparam>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
+        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
 #else
 
         public static void RegisterServer<TFrom, TTo>(this RpcStore rpcStore) where TFrom : class, IRpcServer where TTo : TFrom
@@ -111,7 +118,7 @@ namespace TouchSocket.Rpc
         /// <typeparam name="TFrom"></typeparam>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] TFrom rpcServer) where TFrom : class, IRpcServer
+        public static void RegisterServer<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this RpcStore rpcStore, [DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom rpcServer) where TFrom : class, IRpcServer
 #else
 
         public static void RegisterServer<TFrom>(this RpcStore rpcStore, TFrom rpcServer) where TFrom : class, IRpcServer

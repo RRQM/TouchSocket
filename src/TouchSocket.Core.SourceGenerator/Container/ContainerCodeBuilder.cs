@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -100,10 +101,11 @@ namespace TouchSocket
             codeString.AppendLine("{");
             var singletonInjectDescriptions = this.FindSingletonInjects().ToList();
             singletonInjectDescriptions.AddRange(this.m_autoInjectForSingletonClassTypes);
+            singletonInjectDescriptions=singletonInjectDescriptions.Distinct(new InjectDescriptionCompare()).ToList();
 
             var transientInjectDescriptions = this.FindTransientInjects().ToList();
             transientInjectDescriptions.AddRange(this.m_autoInjectForTransientClassTypes);
-
+            transientInjectDescriptions=transientInjectDescriptions.Distinct(new InjectDescriptionCompare()).ToList();
             this.BuildConstructor(codeString);
             this.BuildContainerInit(codeString, singletonInjectDescriptions);
             foreach (var item in singletonInjectDescriptions)
@@ -148,44 +150,61 @@ namespace TouchSocket
                 codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance, string key)");
                 codeString.AppendLine("{");
                 codeString.AppendLine("string typeKey= $\"{fromType.FullName}{key}\";");
+                codeString.AppendLine("switch (typeKey)");
+                codeString.AppendLine("{");
+                foreach (var item in singletonDescriptions)
+                {
+                    codeString.AppendLine($"case \"{item.From.ToDisplayString()}{item.Key}\":");
+                    codeString.AppendLine("{");
+                    codeString.AppendLine($"instance = this.{this.GetFieldName(item)}.Value;");
+                    codeString.AppendLine("return true;");
+                    codeString.AppendLine("}");
+                }
+
+                foreach (var item in transientInjectDescriptions)
+                {
+                    codeString.AppendLine($"case \"{item.From.ToDisplayString()}{item.Key}\":");
+                    codeString.AppendLine("{");
+                    codeString.AppendLine($"instance = this.{this.GetMethodName(item)}();");
+                    codeString.AppendLine("return true;");
+                    codeString.AppendLine("}");
+                }
+
+                codeString.AppendLine("default:");
+                codeString.AppendLine("{");
+                codeString.AppendLine("instance = default;");
+                codeString.AppendLine("return false;");
+                codeString.AppendLine("}");
+                codeString.AppendLine("}");
+                codeString.AppendLine("}");
             }
             else
             {
                 codeString.AppendLine($"private bool PrivateTryResolve(Type fromType, out object instance)");
                 codeString.AppendLine("{");
-                codeString.AppendLine("string typeKey= fromType.FullName;");
-            }
-            
-            codeString.AppendLine("switch (typeKey)");
-            codeString.AppendLine("{");
-            foreach (var item in singletonDescriptions)
-            {
-                codeString.AppendLine($"case \"{item.From.ToDisplayString()}{item.Key}\":");
-                codeString.AppendLine("{");
-                codeString.AppendLine($"instance = this.{this.GetFieldName(item)}.Value;");
-                codeString.AppendLine("return true;");
+                foreach (var item in singletonDescriptions)
+                {
+                    codeString.AppendLine($"if(fromType==typeof({item.From.ToDisplayString()}))");
+                    codeString.AppendLine("{");
+                    codeString.AppendLine($"instance = this.{this.GetFieldName(item)}.Value;");
+                    codeString.AppendLine("return true;");
+                    codeString.AppendLine("}");
+                }
+
+                foreach (var item in transientInjectDescriptions)
+                {
+                    codeString.AppendLine($"if(fromType==typeof({item.From.ToDisplayString()}))");
+                    codeString.AppendLine("{");
+                    codeString.AppendLine($"instance = this.{this.GetMethodName(item)}();");
+                    codeString.AppendLine("return true;");
+                    codeString.AppendLine("}");
+                }
+
+                codeString.AppendLine("instance = default;");
+                codeString.AppendLine("return false;");
                 codeString.AppendLine("}");
             }
-
-            foreach (var item in transientInjectDescriptions)
-            {
-                codeString.AppendLine($"case \"{item.From.ToDisplayString()}{item.Key}\":");
-                codeString.AppendLine("{");
-                codeString.AppendLine($"instance = this.{this.GetMethodName(item)}();");
-                codeString.AppendLine("return true;");
-                codeString.AppendLine("}");
-            }
-
-            codeString.AppendLine("default:");
-            codeString.AppendLine("{");
-            codeString.AppendLine("instance = default;");
-            codeString.AppendLine("return false;");
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
-            codeString.AppendLine("}");
         }
-
-
 
         #endregion TryResolve
 
@@ -357,7 +376,8 @@ namespace TouchSocket
                          To = toTypedConstant,
                          Key = key
                      };
-                 });
+                 })
+                 .Distinct(new InjectDescriptionCompare());
         }
 
         private IEnumerable<InjectDescription> FindTransientInjects()
@@ -394,7 +414,7 @@ namespace TouchSocket
                          To = toTypedConstant,
                          Key = key
                      };
-                 });
+                 }).Distinct(new InjectDescriptionCompare());
         }
 
         private DependencyType GetDependencyType(INamedTypeSymbol namedType)
@@ -547,11 +567,11 @@ namespace TouchSocket
             {
                 stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance, string key)");
                 stringBuilder.AppendLine("{");
-                stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance, key))");
+                stringBuilder.AppendLine("if (this.PrivateTryResolve(fromType, out instance, key))");
                 stringBuilder.AppendLine("{");
                 stringBuilder.AppendLine("return true;");
                 stringBuilder.AppendLine("}");
-                stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance, key);");
+                stringBuilder.AppendLine("return base.TryResolve(fromType, out instance, key);");
                 stringBuilder.AppendLine("}");
             }
 
@@ -559,11 +579,11 @@ namespace TouchSocket
             {
                 stringBuilder.AppendLine("protected override bool TryResolve(Type fromType, out object instance)");
                 stringBuilder.AppendLine("{");
-                stringBuilder.AppendLine("if (base.TryResolve(fromType, out instance))");
+                stringBuilder.AppendLine("if (this.PrivateTryResolve(fromType, out instance))");
                 stringBuilder.AppendLine("{");
                 stringBuilder.AppendLine("return true;");
                 stringBuilder.AppendLine("}");
-                stringBuilder.AppendLine("return this.PrivateTryResolve(fromType, out instance);");
+                stringBuilder.AppendLine("return base.TryResolve(fromType, out instance);");
                 stringBuilder.AppendLine("}");
             }
         }

@@ -11,15 +11,44 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 
 namespace TouchSocket
 {
+    class InjectDescriptionCompare : IEqualityComparer<InjectDescription>
+    {
+        public bool Equals(InjectDescription x, InjectDescription y)
+        {
+            if (string.IsNullOrEmpty(x.Key) || string.IsNullOrEmpty(y.Key))
+            {
+                return x.From.ToDisplayString() == y.From.ToDisplayString();
+            }
+            else
+            {
+                return x.From.ToDisplayString() == y.From.ToDisplayString() && x.Key == y.Key;
+            }
+        }
+
+        public int GetHashCode(InjectDescription obj)
+        {
+            if (string.IsNullOrEmpty(obj.Key))
+            {
+                return obj.From.ToDisplayString().GetHashCode();
+            }
+            else
+            {
+                return obj.From.ToDisplayString().GetHashCode()^ obj.Key.GetHashCode();
+            }
+        }
+    }
     internal class InjectDescription
     {
         public INamedTypeSymbol From { get; set; }
         public INamedTypeSymbol To { get; set; }
         public string Key { get; set; }
+
+        
     }
 
     internal class InjectPropertyDescription
