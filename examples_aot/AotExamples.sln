@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastBinaryFormatterConsoleA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApi", "WebApi", "{75D559D7-F52D-4065-8072-3970811D04CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApiConsoleApp", "WebApi\WebApiConsoleApp\WebApiConsoleApp.csproj", "{E4E96E75-C1C2-47C7-B48D-9E2C647D6E09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiConsoleApp", "WebApi\WebApiConsoleApp\WebApiConsoleApp.csproj", "{E4E96E75-C1C2-47C7-B48D-9E2C647D6E09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
