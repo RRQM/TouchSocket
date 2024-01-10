@@ -17,6 +17,9 @@ using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
 using TouchSocket.Hosting.Sockets.HostService;
 using TouchSocket.Sockets;
+#if NET6_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,6 +28,9 @@ namespace Microsoft.Extensions.DependencyInjection
     /// </summary>
     public static class ServiceCollectionExtensions
     {
+#if NET6_0_OR_GREATER
+        private const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors;
+#endif
         #region SetupConfig
         /// <summary>
         /// 添加SingletonSetupConfigObject服务。
@@ -34,9 +40,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)]TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TObjectService : class, ISetupConfigObject
-            where TObjectImpService : class, TObjectService
+#endif
+       where TObjectService : class, ISetupConfigObject
+       where TObjectImpService : class, TObjectService
         {
             var aspNetCoreContainer = new AspNetCoreContainer(services);
             var config = new TouchSocketConfig();
@@ -47,7 +57,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 actionContainer.Invoke(aspNetCoreContainer);
             }
 
-            services.AddSingleton<TObjectService>(privoder => 
+            services.AddSingleton<TObjectService>(privoder =>
             {
                 var imp = privoder.ResolveWithoutRoot<TObjectImpService>();
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
@@ -67,9 +77,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddTransientSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddTransientSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TObjectService : class, ISetupConfigObject
-            where TObjectImpService : class, TObjectService
+#endif
+
+         where TObjectService : class, ISetupConfigObject
+         where TObjectImpService : class, TObjectService
         {
             var aspNetCoreContainer = new AspNetCoreContainer(services);
             var config = new TouchSocketConfig();
@@ -100,9 +115,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddScopedSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddScopedSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TObjectService : class, ISetupConfigObject
-            where TObjectImpService : class, TObjectService
+#endif
+
+         where TObjectService : class, ISetupConfigObject
+         where TObjectImpService : class, TObjectService
         {
             var aspNetCoreContainer = new AspNetCoreContainer(services);
             var config = new TouchSocketConfig();
@@ -136,9 +156,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddServiceHostedService<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddServiceHostedService<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TObjectService : class, ISetupConfigObject, IService
-            where TObjectImpService : class, TObjectService
+#endif
+
+         where TObjectService : class, ISetupConfigObject, IService
+         where TObjectImpService : class, TObjectService
         {
             return AddSetupConfigObjectHostedService<ServiceHost<TObjectService>, TObjectService, TObjectImpService>(services, actionConfig);
         }
@@ -152,10 +177,15 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddSetupConfigObjectHostedService<THostService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddSetupConfigObjectHostedService<THostService, TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where THostService : SetupConfigObjectHostedService<TObjectService>, new()
-            where TObjectService : class, ISetupConfigObject
-            where TObjectImpService : class, TObjectService
+#endif
+
+         where THostService : SetupConfigObjectHostedService<TObjectService>, new()
+         where TObjectService : class, ISetupConfigObject
+         where TObjectImpService : class, TObjectService
         {
             var aspNetCoreContainer = new AspNetCoreContainer(services);
             var config = new TouchSocketConfig();
@@ -190,9 +220,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddTcpService<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddTcpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TService : class, ITcpServiceBase
-            where TImpService : class, TService
+#endif
+
+         where TService : class, ITcpServiceBase
+         where TImpService : class, TService
         {
             return AddServiceHostedService<TService, TImpService>(services, actionConfig);
         }
@@ -220,9 +255,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddUdpSession<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddUdpSession<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-           where TService : class, IUdpSession
-           where TImpService : class, TService
+#endif
+
+        where TService : class, IUdpSession
+        where TImpService : class, TService
         {
             return AddServiceHostedService<TService, TImpService>(services, actionConfig);
         }
@@ -250,9 +290,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddSingletonTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddSingletonTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TClient : class, ITcpClient
-            where TImpClient : class, TClient
+#endif
+       where TClient : class, ITcpClient
+        where TImpClient : class, TClient
         {
             return AddSingletonSetupConfigObject<TClient, TImpClient>(services, actionConfig);
         }
@@ -277,9 +321,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddTransientTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddTransientTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TClient : class, ITcpClient
-            where TImpClient : class, TClient
+#endif
+
+         where TClient : class, ITcpClient
+         where TImpClient : class, TClient
         {
             return AddTransientSetupConfigObject<TClient, TImpClient>(services, actionConfig);
         }
@@ -304,9 +353,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services"></param>
         /// <param name="actionConfig"></param>
         /// <returns></returns>
+#if NET6_0_OR_GREATER
+        public static IServiceCollection AddScopedTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
+#else
         public static IServiceCollection AddScopedTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-            where TClient : class, ITcpClient
-            where TImpClient : class, TClient
+#endif
+
+         where TClient : class, ITcpClient
+         where TImpClient : class, TClient
         {
             return AddScopedSetupConfigObject<TClient, TImpClient>(services, actionConfig);
         }

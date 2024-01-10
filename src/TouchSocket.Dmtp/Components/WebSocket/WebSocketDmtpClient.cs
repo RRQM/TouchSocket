@@ -141,7 +141,7 @@ namespace TouchSocket.Dmtp
                     _ = this.BeginReceive();
                 }
 
-                this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
+               await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
                     this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id,
                     timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
                 this.IsHandshaked = true;

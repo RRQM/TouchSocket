@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// 检查清理连接插件。服务器与客户端均适用。
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class CheckClearPlugin<TClient> : PluginBase, ITcpConnectedPlugin<TClient> where TClient : ITcpClientBase
+    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : ITcpClientBase
     {
         /// <summary>
         /// 检查清理连接插件。服务器与客户端均适用。
@@ -44,6 +44,13 @@ namespace TouchSocket.Sockets
             };
         }
 
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            pluginManager.Add<TClient, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), this.OnTcpConnected);
+            base.Loaded(pluginManager);
+        }
+
         /// <summary>
         /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
         /// 则只检验发送方向是否有数据流动。没有的话则会断开连接。
@@ -61,7 +68,7 @@ namespace TouchSocket.Sockets
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
         /// <inheritdoc/>
-        public async Task OnTcpConnected(TClient client, ConnectedEventArgs e)
+        private async Task OnTcpConnected(TClient client, ConnectedEventArgs e)
         {
             _ = Task.Run(async () =>
             {

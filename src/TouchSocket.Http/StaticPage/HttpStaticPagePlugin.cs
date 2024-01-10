@@ -20,7 +20,7 @@ namespace TouchSocket.Http
     /// Http静态内容插件
     /// </summary>
     [PluginOption(Singleton = false)]
-    public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
+    public class HttpStaticPagePlugin : PluginBase
     {
         /// <summary>
         /// 构造函数
@@ -32,6 +32,13 @@ namespace TouchSocket.Http
             {
                 return request.RelativeURL;
             });
+        }
+
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), OnHttpRequest);
+            base.Loaded(pluginManager);
         }
 
         /// <summary>
@@ -75,8 +82,8 @@ namespace TouchSocket.Http
             this.FileCache.Clear();
         }
 
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+       
+        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             var url = await this.NavigateAction.Invoke(e.Context.Request);
             if (this.FileCache.Find(url, out var data))
