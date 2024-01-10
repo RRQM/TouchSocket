@@ -30,6 +30,18 @@ namespace WebApiConsoleApp
 
                     a.UseWebApi();
 
+                    a.UseHttpStaticPage()
+                    .SetNavigateAction(request =>
+                    {
+                        //此处可以设置重定向
+                        return request.RelativeURL;
+                    })
+                    .SetResponseAction(response =>
+                    {
+                        //可以设置响应头
+                    })
+                    .AddFolder("api/");//添加静态页面文件夹，可使用 http://127.0.0.1:7789/index.html 访问静态网页
+
                     //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
                     a.UseDefaultHttpServicePlugin();
                 });
