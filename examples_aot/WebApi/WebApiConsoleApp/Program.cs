@@ -67,7 +67,7 @@ namespace WebApiConsoleApp
         [WebApi(HttpMethodType.GET)]
         public int Sum(int a, int b)
         {
-            m_logger.Info("Sum");
+            //m_logger.Info("Sum");
             return a + b;
         }
 
