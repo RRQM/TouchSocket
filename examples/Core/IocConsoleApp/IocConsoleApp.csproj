@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.260" />
-    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.260" />
+    <PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.261" />
+    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.261" />
   </ItemGroup>
 
 </Project>

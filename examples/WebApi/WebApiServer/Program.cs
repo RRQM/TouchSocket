@@ -126,14 +126,14 @@ namespace WebApiServerApp
     {
         public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            string aut = e.Context.Request.Headers["Authorization"];
-            if (aut.IsNullOrEmpty())//授权header为空
-            {
-               await e.Context.Response
-                    .SetStatus(401, "授权失败")
-                    .AnswerAsync();
-                return;
-            }
+            //string aut = e.Context.Request.Headers["Authorization"];
+            //if (aut.IsNullOrEmpty())//授权header为空
+            //{
+            //   await e.Context.Response
+            //        .SetStatus(401, "授权失败")
+            //        .AnswerAsync();
+            //    return;
+            //}
 
             //伪代码，假设使用jwt解码成功。那就执行下一个插件。
             //if (jwt.Encode(aut))
