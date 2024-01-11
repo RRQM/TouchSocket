@@ -12,9 +12,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="FastEndpoints" Version="5.21.2.7-beta" />
-	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.260" />
-	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.260" />
-	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.0-beta.260" />
+	  <PackageReference Include="FastEndpoints" Version="5.21.2.9-beta" />
+	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.262" />
+	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.262" />
+	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.0-beta.262" />
 	</ItemGroup>
 </Project>
