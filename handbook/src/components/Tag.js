@@ -48,7 +48,7 @@ export default function (props) {
 
     企业版: {
       bgColor: "#23AAF2",
-    },
+    }
   };
   return (
     <label

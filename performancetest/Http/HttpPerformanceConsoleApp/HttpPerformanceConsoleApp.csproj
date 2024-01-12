@@ -17,4 +17,31 @@
 	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.262" />
 	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.0-beta.262" />
 	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <Reference Include="Newtonsoft.Json">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Core">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Dmtp">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Dmtp.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Hosting">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Hosting.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Http">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Http.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Rpc">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Rpc.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.WebApi">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.WebApi.dll</HintPath>
+	  </Reference>
+	</ItemGroup>-->
 </Project>
