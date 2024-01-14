@@ -168,6 +168,7 @@ tcpClient.Setup(new TouchSocketConfig()
 tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
 ```
 
+
 ## 七、接收数据
 
 在TcpClient中，接收数据的方式有很多种。多种方式可以组合使用。
@@ -188,6 +189,7 @@ tcpClient.Received = (client, e) =>
 
 tcpClient.Connect("127.0.0.1:7789");
 ```
+
 
 ### 7.2 插件处理 <Tag>推荐</Tag>
 
@@ -239,6 +241,9 @@ client.Connect();
 当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Len)。而不是ByteBlock.Buffer.Length
 
 :::  
+
+### 7.3 异步阻塞ReadAsync
+
 
 ## 八、发送数据
 

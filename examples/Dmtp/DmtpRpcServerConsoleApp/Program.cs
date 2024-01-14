@@ -21,6 +21,11 @@ namespace ConsoleApp2
 
                        a.AddRpcStore(store =>
                        {
+                           //该方法是由
+                           store.RegisterAllFromDmtpRpcServerConsoleApp();
+
+                           store.InternalRegisterAllFromDmtpRpcServerConsoleApp();
+
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
@@ -61,7 +66,7 @@ namespace ConsoleApp2
     }
 
     [MyRpcActionFilter]
-    partial class MyRpcServer : RpcServer
+    public partial class MyRpcServer : RpcServer
     {
         private readonly ILog m_logger;
 
