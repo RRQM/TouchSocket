@@ -75,6 +75,8 @@ public partial class MyRpcServer : TransientRpcServer
 
 以下仅示例基于Tcp协议Dmtp。其他协议的服务器请看[创建Dmtp服务器](./dmtpservice.mdx)
 
+更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
+
 ```csharp showLineNumbers
 var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置

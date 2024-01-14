@@ -500,43 +500,48 @@ module.exports = {
         [
           {
             type: "doc",
+            id: "rpcregister",
+            label: "14.1 注册服务"
+          },
+          {
+            type: "doc",
             id: "generateproxydescription",
-            label: "14.1 为什么要生成代理"
+            label: "14.2 为什么要生成代理"
           },
           {
             type: "doc",
             id: "generateproxyfromserver",
-            label: "14.2 从服务端生成代理"
+            label: "14.3 从服务端生成代理"
           },
           {
             type: "doc",
             id: "generateproxyfromsourcegenerator",
-            label: "14.3 从SourceGenerator获取代理"
+            label: "14.4 从SourceGenerator获取代理"
           },
           {
             type: "doc",
             id: "generateproxyfromdispatchproxy",
-            label: "14.4 从DispatchProxy获取代理"
+            label: "14.5 从DispatchProxy获取代理"
           },
           {
             type: "doc",
             id: "generateproxyfromrealityproxy",
-            label: "14.5 从RealityProxy生成透明代理"
+            label: "14.6 从RealityProxy生成透明代理"
           },
           {
             type: "doc",
             id: "generateproxysourcegeneratordemo",
-            label: "14.6 SG代理推荐写法"
+            label: "14.7 SG代理推荐写法"
           },
           {
             type: "doc",
             id: "rpcactionfilter",
-            label: "14.7 Rpc服务AOP"
+            label: "14.8 Rpc服务AOP"
           },
           {
             type: "doc",
             id: "rpcallcontext",
-            label: "14.8 调用上下文"
+            label: "14.9 调用上下文"
           }
         ]
     },

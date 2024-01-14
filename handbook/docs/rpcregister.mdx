@@ -1,0 +1,150 @@
+---
+id: rpcregister
+title: 注册服务
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Rpc <br/>
+程序集：[TouchSocket.Rpc.dll](https://www.nuget.org/packages/TouchSocket.Rpc)
+
+
+## 一、直接注册
+
+在AddRpcStore时，可通过RpcStore实例，直接注册服务。
+
+```csharp {5,8} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterServer<MyRpcServer>();
+
+        //或者按照类型注册
+        //store.RegisterServer(typeof(MyRpcServer));
+    });
+})
+```
+
+## 二、注册所有服务
+
+### 2.1 注册指定程序集的服务
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterAllServer(typeof(MyRpcServer).Assembly);
+    });
+})
+```
+
+### 2.2 注册已加载程序集中的所有服务
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterAllServer();
+    });
+})
+```
+
+:::info 信息
+
+`RegisterAllServer`会搜索已加载的所有类型，所以在AOT时可能无法使用，并且会影响**启动**性能。
+
+:::  
+
+## 三、源生成注册
+
+当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`IRpcServer`接口的类，并生成源代码。
+
+
+```csharp {6,9} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有公共Rpc服务
+        store.RegisterAllFromDmtpRpcServerConsoleApp();
+
+        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有Rpc服务（包含非公共服务）
+        store.InternalRegisterAllFromDmtpRpcServerConsoleApp();
+    });
+})
+```
+
+:::tip 提示
+
+源生成的注册方法名并不固定，而是与**程序集名称**有关。例如上程序，程序集名称为DmtpRpcServerConsoleApp，即生成`RegisterAllFromDmtpRpcServerConsoleApp`方法与`InternalRegisterAllFromDmtpRpcServerConsoleApp`方法。
+
+:::  
+
+源生成的注册，支持接口与实例注册。例如下列服务：
+
+```csharp showLineNumbers
+public interface IMyRpcServer : IRpcServer
+{ 
+    [DmtpRpc(true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+
+public partial class MyRpcServer : RpcServer,IMyRpcServer
+{
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+在生成源代码注册时，会以`IMyRpcServer`接口为注册，以`MyRpcServer`为实现。生成以下注册代码：
+
+```csharp showLineNumbers
+/*
+此代码由Rpc工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
+namespace TouchSocket.Rpc
+{
+    /// <summary>
+    /// RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    /// </summary>
+    public static class RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    {
+        /// <summary>
+        /// 注册程序集DmtpRpcServerConsoleApp中的所有公共Rpc服务。包括：
+        /// <list type="number">
+        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// </list>
+        /// </summary>
+        /// <param name="rpcStore"></param>
+        public static void RegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        {
+            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+        }
+        /// <summary>
+        /// 注册程序集DmtpRpcServerConsoleApp中的所有Rpc服务。包括：
+        /// <list type="number">
+        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// </list>
+        /// </summary>
+        /// <param name="rpcStore"></param>
+        internal static void InternalRegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        {
+            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+        }
+    }
+}
+
+```
+
+在生成源代码注册时，也会生成注释，来表明注册了哪些类型。
+
+<img src={require('@site/static/img/docs/rpcregister-1.png').default} />
