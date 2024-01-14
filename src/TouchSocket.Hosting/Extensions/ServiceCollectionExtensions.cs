@@ -11,12 +11,12 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.ComponentModel;
 using TouchSocket.Core;
 using TouchSocket.Core.AspNetCore;
 using TouchSocket.Hosting;
 using TouchSocket.Hosting.Sockets.HostService;
 using TouchSocket.Sockets;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
@@ -31,7 +31,9 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         private const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors;
 #endif
+
         #region SetupConfig
+
         /// <summary>
         /// 添加SingletonSetupConfigObject服务。
         /// </summary>
@@ -43,6 +45,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)]TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddSingletonSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
        where TObjectService : class, ISetupConfigObject
@@ -80,6 +83,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddTransientSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddTransientSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -118,6 +122,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddScopedSetupConfigObject<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddScopedSetupConfigObject<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -144,7 +149,8 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             return services;
         }
-        #endregion
+
+        #endregion SetupConfig
 
         #region HostedService
 
@@ -159,6 +165,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddServiceHostedService<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddServiceHostedService<TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -180,6 +187,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddSetupConfigObjectHostedService<THostService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddSetupConfigObjectHostedService<THostService, TObjectService, TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -223,6 +231,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddTcpService<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddTcpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -258,6 +267,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddUdpSession<TService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddUdpSession<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -293,6 +303,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddSingletonTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddSingletonTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
        where TClient : class, ITcpClient
@@ -312,7 +323,6 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddSingletonTcpClient<ITcpClient, TcpClient>(actionConfig);
         }
 
-
         /// <summary>
         /// 添加瞬态TcpClient服务。
         /// </summary>
@@ -324,6 +334,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddTransientTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddTransientTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -344,7 +355,6 @@ namespace Microsoft.Extensions.DependencyInjection
             return services.AddTransientTcpClient<ITcpClient, TcpClient>(actionConfig);
         }
 
-
         /// <summary>
         /// 添加Scoped TcpClient服务。
         /// </summary>
@@ -356,6 +366,7 @@ namespace Microsoft.Extensions.DependencyInjection
 #if NET6_0_OR_GREATER
         public static IServiceCollection AddScopedTcpClient<TClient, [DynamicallyAccessedMembers(DynamicallyAccessed)] TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #else
+
         public static IServiceCollection AddScopedTcpClient<TClient, TImpClient>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
 #endif
 
@@ -375,6 +386,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             return services.AddScopedTcpClient<ITcpClient, TcpClient>(actionConfig);
         }
+
         #endregion TcpClient
     }
 }

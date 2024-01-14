@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Modbus
 {
     /// <summary>
@@ -26,12 +20,12 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 数量
         /// </summary>
-        ushort Quantity { get;}
+        ushort Quantity { get; }
 
         /// <summary>
         /// 起始位置
         /// </summary>
-        ushort StartingAddress { get;}
+        ushort StartingAddress { get; }
 
         /// <summary>
         /// 数据
@@ -41,21 +35,21 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 站点号（单元标识符）
         /// </summary>
-        byte SlaveId { get;}
+        byte SlaveId { get; }
 
         /// <summary>
         /// 功能码
         /// </summary>
-        FunctionCode FunctionCode { get;}
+        FunctionCode FunctionCode { get; }
 
         /// <summary>
         /// 在读起始位置。
         /// </summary>
-        ushort ReadStartAddress { get;}
+        ushort ReadStartAddress { get; }
 
         /// <summary>
         /// 读取长度
         /// </summary>
-        ushort ReadQuantity { get;}
+        ushort ReadQuantity { get; }
     }
 }

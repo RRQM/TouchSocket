@@ -35,9 +35,20 @@ namespace TouchSocket.Http
 
         private Task m_task;
 
-        /// <summary>
+        private HttpRequest m_requestRoot;
+
         /// <inheritdoc/>
-        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.m_requestRoot.SafeDispose();
+                this.tempByteBlock.SafeDispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
         public override bool CanSplicingSend => false;
 
         /// <inheritdoc/>
@@ -57,6 +68,8 @@ namespace TouchSocket.Http
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
+            this.m_requestRoot ??= new HttpRequest(this.m_client, true);
+
             if (this.tempByteBlock == null)
             {
                 byteBlock.Pos = 0;
@@ -80,14 +93,21 @@ namespace TouchSocket.Http
                 this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                 if (this.tempByteBlock.Len > this.MaxPackageSize)
                 {
-                    this.OnError(default,"缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
+                    this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                 }
             }
         }
 
-        private Task RunGoReceived(HttpRequest request)
+        private void DestoryRequest()
         {
-            return Task.Run(() => { this.GoReceived(null, request); });
+            this.m_request = null;
+            if (this.m_task != null)
+            {
+                this.m_task.Wait();
+                this.m_task = null;
+            }
+
+            this.m_requestRoot.Destory();
         }
 
         private void Single(ByteBlock byteBlock, bool dis)
@@ -96,9 +116,13 @@ namespace TouchSocket.Http
             {
                 while (byteBlock.CanReadLen > 0)
                 {
+                    if (this.DisposedValue)
+                    {
+                        return;
+                    }
                     if (this.m_request == null)
                     {
-                        this.m_request = new HttpRequest(this.m_client, true);
+                        this.m_request = this.m_requestRoot;
                         if (this.m_request.ParsingHeader(byteBlock, byteBlock.CanReadLen))
                         {
                             byteBlock.Pos++;
@@ -106,22 +130,20 @@ namespace TouchSocket.Http
                             {
                                 this.m_surLen = this.m_request.ContentLength;
 
-                                this.m_task = this.RunGoReceived(this.m_request);
+                                this.m_task = this.TaskRunGoReceived(this.m_request);
                             }
                             else
                             {
                                 byteBlock.Read(out var buffer, (int)this.m_request.ContentLength);
                                 this.m_request.SetContent(buffer);
                                 this.GoReceived(null, this.m_request);
-                                this.m_request = null;
+                                this.DestoryRequest();
                             }
                         }
                         else
                         {
                             this.Cache(byteBlock);
                             this.m_request = null;
-                            this.m_task?.Wait();
-                            this.m_task = null;
                             return;
                         }
                     }
@@ -136,18 +158,14 @@ namespace TouchSocket.Http
                             byteBlock.Pos += len;
                             if (this.m_surLen == 0)
                             {
-                                this.m_request.InternalInput(null, 0, 0);
-                                this.m_request = null;
-                                this.m_task?.Wait();
-                                this.m_task = null;
+                                this.m_request.InternalInput(new byte[0], 0, 0);
+                                this.DestoryRequest();
                             }
                         }
                     }
                     else
                     {
-                        this.m_request = null;
-                        this.m_task?.Wait();
-                        this.m_task = null;
+                        this.DestoryRequest();
                     }
                 }
             }
@@ -159,5 +177,21 @@ namespace TouchSocket.Http
                 }
             }
         }
+
+        private Task TaskRunGoReceived(HttpRequest request)
+        {
+            var task = Task.Run(() => { this.GoReceived(null, request); });
+            task.ConfigureFalseAwait();
+            return task;
+        }
+
+        //private void RunGoReceived(HttpRequest request)
+        //{
+        //    try
+        //    {
+        //        this.GoReceived(null, request);
+        //    }
+        //    catch
+        //    {
     }
 }

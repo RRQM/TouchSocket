@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,7 +31,7 @@ namespace TouchSocket.Modbus
         /// <param name="startingAddress">写入位置（从0开始）</param>
         /// <param name="bytes">待写入数据</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master,ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
+        public static IModbusResponse ReadWriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
         {
             return master.ReadWriteMultipleRegisters(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
@@ -51,9 +49,11 @@ namespace TouchSocket.Modbus
         {
             return master.ReadWriteMultipleRegistersAsync(1, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
-        #endregion
+
+        #endregion ReadWrite 默认超时
 
         #region Read 默认超时
+
         /// <summary>
         /// 忽略站点（默认站号为1）读取线圈（FC1），默认超时时间为1000ms。
         /// </summary>

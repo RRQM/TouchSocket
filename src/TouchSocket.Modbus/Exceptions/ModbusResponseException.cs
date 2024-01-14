@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
 using System;
+using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
@@ -19,7 +19,7 @@ namespace TouchSocket.Modbus
     /// Modbus响应异常。
     /// </summary>
     [Serializable]
-    public class ModbusResponseException:Exception
+    public class ModbusResponseException : Exception
     {
         /// <summary>
         /// Modbus响应异常

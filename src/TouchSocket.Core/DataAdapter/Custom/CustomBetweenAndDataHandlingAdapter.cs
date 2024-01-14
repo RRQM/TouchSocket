@@ -100,7 +100,7 @@ namespace TouchSocket.Core
                     byteBlock.Pos += 1;
                     return FilterResult.GoOn;
                 }
-                
+
                 request = requestInfo;
 
                 int len;

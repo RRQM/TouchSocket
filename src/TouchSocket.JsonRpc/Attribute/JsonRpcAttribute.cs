@@ -36,7 +36,6 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public JsonRpcAttribute()
         {
-
         }
 
         /// <summary>

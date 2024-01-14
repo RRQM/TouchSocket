@@ -16,7 +16,6 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    
     /// <summary>
     /// Tcp服务器接口
     /// </summary>

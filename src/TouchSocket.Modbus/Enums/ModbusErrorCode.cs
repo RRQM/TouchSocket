@@ -10,12 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Modbus
 {
@@ -63,31 +58,31 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 从站正在处理长时间命令。Master应该稍后重试
         /// </summary>
-        [Description("从站正在处理长时间命令。Master应该稍后重试")] 
+        [Description("从站正在处理长时间命令。Master应该稍后重试")]
         Busy = 6,
 
         /// <summary>
         /// 从站不能执行程序功能。主站应该向从站请求诊断或错误信息。
         /// </summary>
-        [Description("从站不能执行程序功能。主站应该向从站请求诊断或错误信息。")] 
+        [Description("从站不能执行程序功能。主站应该向从站请求诊断或错误信息。")]
         ExecuteError = 7,
 
         /// <summary>
         /// 从站在内存中检测到奇偶校验错误。主设备可以重试请求，但从设备上可能需要服务。
         /// </summary>
-        [Description("从站在内存中检测到奇偶校验错误。主设备可以重试请求，但从设备上可能需要服务。")] 
+        [Description("从站在内存中检测到奇偶校验错误。主设备可以重试请求，但从设备上可能需要服务。")]
         MemoryVerificationError = 8,
 
         /// <summary>
         /// 专门用于Modbus网关。表示配置错误的网关。
         /// </summary>
-        [Description("专门用于Modbus网关。表示配置错误的网关。")] 
+        [Description("专门用于Modbus网关。表示配置错误的网关。")]
         GatewayError = 10,
 
         /// <summary>
         /// 专用于Modbus网关的响应。当从站无法响应时发送
         /// </summary>
-        [Description("专用于Modbus网关的响应。当从站无法响应时发送")] 
+        [Description("专用于Modbus网关的响应。当从站无法响应时发送")]
         GatewayUnavailable = 11
     }
 }

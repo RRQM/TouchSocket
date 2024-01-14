@@ -201,6 +201,7 @@ namespace TouchSocket.NamedPipe
             pluginManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
-        #endregion
+
+        #endregion Reconnection
     }
 }

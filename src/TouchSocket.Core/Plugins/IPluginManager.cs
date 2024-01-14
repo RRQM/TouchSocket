@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
@@ -55,7 +56,9 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         object Add([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type pluginType);
 #else
+
         object Add(Type pluginType);
+
 #endif
 
         /// <summary>

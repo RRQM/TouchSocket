@@ -134,6 +134,7 @@ namespace TouchSocket.Dmtp
                 this.m_semaphoreForConnect.Release();
             }
         }
+
         #endregion 连接
 
         #region 断开

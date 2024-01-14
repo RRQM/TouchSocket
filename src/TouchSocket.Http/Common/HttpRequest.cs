@@ -25,6 +25,7 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpRequest : HttpBase
     {
+        private readonly bool m_isServer;
         private bool m_canRead;
         private ITcpClientBase m_client;
         private byte[] m_content;
@@ -42,6 +43,7 @@ namespace TouchSocket.Http
         public HttpRequest(ITcpClientBase client, bool isServer = false)
         {
             this.m_client = client;
+            this.m_isServer = isServer;
             if (isServer)
             {
                 this.m_canRead = true;
@@ -85,13 +87,19 @@ namespace TouchSocket.Http
         {
             get
             {
-                if (this.ContentType == @"application/x-www-form-urlencoded")
+                if (this.m_isServer)
                 {
-                    this.m_forms ??= GetParameters(this.GetBody());
+                    this.m_forms ??= new InternalHttpParams();
+                    if (this.ContentType == @"application/x-www-form-urlencoded")
+                    {
+                        GetParameters(this.GetBody(), ref this.m_forms);
+                    }
                     return this.m_forms;
                 }
-
-                return this.m_forms ??= new InternalHttpParams();
+                else
+                {
+                    return this.m_forms ??= new InternalHttpParams();
+                }
             }
         }
 
@@ -168,6 +176,17 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 设置代理Host
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
+        public HttpRequest SetProxyHost(string host)
+        {
+            this.URL = host;
+            return this;
+        }
+
+        /// <summary>
         /// 设置Url，可带参数
         /// </summary>
         /// <param name="url"></param>
@@ -180,14 +199,15 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 设置代理Host
+        /// 输出
         /// </summary>
-        /// <param name="host"></param>
-        /// <returns></returns>
-        public HttpRequest SetProxyHost(string host)
+        public override string ToString()
         {
-            this.URL = host;
-            return this;
+            using (var byteBlock = new ByteBlock())
+            {
+                this.Build(byteBlock);
+                return byteBlock.ToString();
+            }
         }
 
         /// <summary>
@@ -275,6 +295,20 @@ namespace TouchSocket.Http
             }
         }
 
+        internal override void Destory()
+        {
+            base.Destory();
+            this.m_canRead = true;
+            this.m_content = null;
+            this.m_sentHeader = false;
+            this.RelativeURL = "/";
+            this.URL = "/";
+            this.m_sentLength = 0;
+            this.m_params?.Clear();
+            this.m_query?.Clear();
+            this.m_forms?.Clear();
+        }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -303,6 +337,29 @@ namespace TouchSocket.Http
                 {
                     this.Protocols = new Protocol(ps[0]);
                     this.ProtocolVersion = ps[1];
+                }
+            }
+        }
+
+        private static void GetParameters(string row, ref InternalHttpParams pairs)
+        {
+            if (string.IsNullOrEmpty(row))
+            {
+                return;
+            }
+
+            var kvs = row.Split('&');
+            if (kvs == null || kvs.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var item in kvs)
+            {
+                var kv = item.SplitFirst('=');
+                if (kv.Length == 2)
+                {
+                    pairs.AddOrUpdate(kv[0], kv[1]);
                 }
             }
         }
@@ -367,31 +424,6 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        private static InternalHttpParams GetParameters(string row)
-        {
-            if (string.IsNullOrEmpty(row))
-            {
-                return null;
-            }
-            var kvs = row.Split('&');
-            if (kvs == null || kvs.Count() == 0)
-            {
-                return null;
-            }
-
-            var pairs = new InternalHttpParams();
-            foreach (var item in kvs)
-            {
-                var kv = item.SplitFirst('=');
-                if (kv.Length == 2)
-                {
-                    pairs.Add(kv[0], kv[1]);
-                }
-            }
-
-            return pairs;
-        }
-
         private void ParseUrl()
         {
             if (this.URL.Contains('?'))
@@ -403,34 +435,13 @@ namespace TouchSocket.Http
                 }
                 if (urls.Length > 1)
                 {
-                    if (this.m_query == null)
-                    {
-                        this.m_query = GetParameters(urls[1]);
-                    }
-                    else
-                    {
-                        foreach (var item in GetParameters(urls[1]))
-                        {
-                            this.m_query.Add(item.Key, item.Value);
-                        }
-                    }
+                    this.m_query ??= new InternalHttpParams();
+                    GetParameters(urls[1], ref this.m_query);
                 }
             }
             else
             {
                 this.RelativeURL = this.URL;
-            }
-        }
-
-        /// <summary>
-        /// 输出
-        /// </summary>
-        public override string ToString()
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToString();
             }
         }
     }

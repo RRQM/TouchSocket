@@ -10,11 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
@@ -23,15 +18,14 @@ namespace TouchSocket.Dmtp
     /// ITcpDmtpService
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface ITcpDmtpService<TClient>: ITcpDmtpServiceBase,ITcpService<TClient> where TClient : ITcpDmtpSocketClient
+    public interface ITcpDmtpService<TClient> : ITcpDmtpServiceBase, ITcpService<TClient> where TClient : ITcpDmtpSocketClient
     {
     }
 
     /// <summary>
     /// ITcpDmtpService
     /// </summary>
-    public interface ITcpDmtpService: ITcpDmtpService<TcpDmtpSocketClient>
+    public interface ITcpDmtpService : ITcpDmtpService<TcpDmtpSocketClient>
     {
-
     }
 }

@@ -45,6 +45,7 @@ namespace TouchSocket.Http.WebSockets
     public class WebSocketClientBase : HttpClientBase, IWebSocketClient
     {
         #region Connect
+
         /// <summary>
         /// 连接到ws服务器
         /// </summary>
@@ -129,6 +130,7 @@ namespace TouchSocket.Http.WebSockets
                 this.m_semaphoreSlim.Release();
             }
         }
+
         #endregion Connect
 
         #region 字段

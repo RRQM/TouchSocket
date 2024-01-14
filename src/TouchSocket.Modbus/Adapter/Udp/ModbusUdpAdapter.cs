@@ -22,13 +22,13 @@ namespace TouchSocket.Modbus
 
         protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            var response=new ModbusTcpResponse();
+            var response = new ModbusTcpResponse();
 
-            if (((IFixedHeaderRequestInfo)response).OnParsingHeader(byteBlock.ToArray(0,8))) 
+            if (((IFixedHeaderRequestInfo)response).OnParsingHeader(byteBlock.ToArray(0, 8)))
             {
                 if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
                 {
-                    this.GoReceived(remoteEndPoint,default,response);
+                    this.GoReceived(remoteEndPoint, default, response);
                 }
             }
         }

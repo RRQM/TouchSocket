@@ -30,6 +30,7 @@ namespace TouchSocket.Core
             {
                 case WaitDataStatus.SetRunning:
                     return;
+
                 case WaitDataStatus.Canceled: throw new OperationCanceledException();
                 case WaitDataStatus.Overtime: throw new TimeoutException();
                 case WaitDataStatus.Disposed:

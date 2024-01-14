@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -83,6 +82,7 @@ namespace TouchSocket.Core
 
                 case EndianType.BigSwap:
                     return BigSwapEndian;
+
                 default:
                     throw new Exception("没有该选项");
             }
@@ -274,12 +274,12 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public bool[] ToBooleans(byte[] buffer, int offset,int length)
+        public bool[] ToBooleans(byte[] buffer, int offset, int length)
         {
-            var bools = new bool[8*length];
+            var bools = new bool[8 * length];
             for (short i = 0; i < bools.Length; i++)
             {
-                bools[i]= Convert.ToBoolean(buffer[offset+i/8].GetBit(i));
+                bools[i] = Convert.ToBoolean(buffer[offset + i / 8].GetBit(i));
             }
             return bools;
         }

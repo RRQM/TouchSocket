@@ -48,7 +48,7 @@ namespace TouchSocket.NamedPipe
     /// 泛型命名管道服务器。
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class NamedPipeService<TClient> : NamedPipeServiceBase,INamedPipeService<TClient> where TClient : NamedPipeSocketClient, new()
+    public class NamedPipeService<TClient> : NamedPipeServiceBase, INamedPipeService<TClient> where TClient : NamedPipeSocketClient, new()
     {
         /// <summary>
         /// 泛型命名管道服务器
@@ -73,6 +73,7 @@ namespace TouchSocket.NamedPipe
         #endregion 字段
 
         #region 属性
+
         /// <inheritdoc/>
         public override int MaxCount { get => this.m_maxCount; }
 
@@ -478,7 +479,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
+        protected override sealed Task OnClientConnected(INamedPipeSocketClient socketClient, ConnectedEventArgs e)
         {
             return this.OnConnected((TClient)socketClient, e);
         }
@@ -488,7 +489,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
+        protected override sealed Task OnClientConnecting(INamedPipeSocketClient socketClient, ConnectingEventArgs e)
         {
             return this.OnConnecting((TClient)socketClient, e);
         }
@@ -498,7 +499,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnected(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnected((TClient)socketClient, e);
         }
@@ -508,7 +509,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
+        protected override sealed Task OnClientDisconnecting(INamedPipeSocketClient socketClient, DisconnectEventArgs e)
         {
             return this.OnDisconnecting((TClient)socketClient, e);
         }
@@ -518,7 +519,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected sealed override Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
+        protected override sealed Task OnClientReceivedData(INamedPipeSocketClient socketClient, ReceivedDataEventArgs e)
         {
             return this.OnReceived((TClient)socketClient, e);
         }

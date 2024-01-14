@@ -17,6 +17,5 @@ namespace TouchSocket.Core
     /// </summary>
     public interface IContainer : IResolver, IRegistrator
     {
-
     }
 }

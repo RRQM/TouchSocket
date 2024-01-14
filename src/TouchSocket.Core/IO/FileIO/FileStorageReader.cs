@@ -20,7 +20,7 @@ namespace TouchSocket.Core
 
     public partial class FileStorageReader : DisposableObject
     {
-        private int m_dis=1;
+        private int m_dis = 1;
 
         /// <summary>
         /// 构造函数

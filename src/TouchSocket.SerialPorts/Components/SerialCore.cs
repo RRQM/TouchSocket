@@ -53,7 +53,7 @@ namespace TouchSocket.SerialPorts
         }
 
         /// <inheritdoc/>
-        public bool CanSend =>this.Online;
+        public bool CanSend => this.Online;
 
         /// <summary>
         /// SerialPort

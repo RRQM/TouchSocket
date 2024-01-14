@@ -175,8 +175,5 @@ namespace TouchSocket.Core
         }
 
         #endregion 容器
-
-        #region Setup
-        #endregion
     }
 }

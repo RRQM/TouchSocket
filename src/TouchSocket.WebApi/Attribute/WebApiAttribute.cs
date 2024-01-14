@@ -33,13 +33,11 @@ namespace TouchSocket.WebApi
             this.Method = method;
         }
 
-
         /// <summary>
         /// 使用Get函数的WebApi特性
         /// </summary>
         public WebApiAttribute()
         {
-
         }
 
         /// <summary>

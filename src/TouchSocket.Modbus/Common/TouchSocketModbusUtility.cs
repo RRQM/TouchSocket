@@ -11,10 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
@@ -56,7 +52,6 @@ namespace TouchSocket.Modbus
             CRC[1] = (byte)((wCrc & 0xFF00) >> 8);//高位在后
             CRC[0] = (byte)(wCrc & 0x00FF);       //低位在前
             return CRC;
-
         }
 
         /// <summary>

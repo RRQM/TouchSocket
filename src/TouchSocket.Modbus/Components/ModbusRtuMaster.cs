@@ -28,8 +28,9 @@ namespace TouchSocket.Modbus
         /// </summary>
         public ModbusRtuMaster()
         {
-            this.Protocol = TouchSocketModbusUtility.ModbusRtu;     
+            this.Protocol = TouchSocketModbusUtility.ModbusRtu;
         }
+
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
 

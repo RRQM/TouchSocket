@@ -10,14 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Sockets;
-using TouchSocket.Core;
 using System.Threading;
+using System.Threading.Tasks;
+using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
 {
@@ -33,6 +29,7 @@ namespace TouchSocket.Modbus
         {
             this.Protocol = TouchSocketModbusUtility.ModbusRtuOverUdp;
         }
+
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
@@ -40,7 +37,6 @@ namespace TouchSocket.Modbus
         private WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
 
         #endregion 字段
-
 
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;

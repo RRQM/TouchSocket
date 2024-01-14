@@ -13,10 +13,10 @@
 using System;
 using System.Linq;
 using System.Reflection;
+
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
-
 
 namespace TouchSocket.Core
 {
@@ -45,6 +45,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, TTo instance)
 #else
+
         public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, TTo instance)
 #endif
 
@@ -82,6 +83,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton(this IRegistrator registrator, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
 #else
+
         public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType)
 #endif
         {
@@ -106,6 +108,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, string key, TTo instance)
 #else
+
         public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, string key, TTo instance)
 
 #endif
@@ -192,6 +195,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this IRegistrator registrator)
 #else
+
         public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator)
 
 #endif
@@ -284,6 +288,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, Func<IResolver, object> func)
 #else
+
         public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, Func<IResolver, object> func)
 
 #endif
@@ -379,6 +384,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator)
 #else
+
         public static IRegistrator RegisterSingleton<TFrom, TTO>(this IRegistrator registrator)
 
 #endif
@@ -526,6 +532,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient(this IRegistrator registrator, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
 #else
+
         public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, string key)
 
 #endif
@@ -703,6 +710,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
 #else
+
         public static T Resolve<T>(this IResolver resolver)
 #endif
 
@@ -720,6 +728,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver, string key)
 #else
+
         public static T Resolve<T>(this IResolver resolver, string key)
 #endif
 
@@ -737,6 +746,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static object ResolveWithoutRoot(this IServiceProvider resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
 #else
+
         public static object ResolveWithoutRoot(this IServiceProvider resolver, Type fromType)
 #endif
 
@@ -807,6 +817,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T ResolveWithoutRoot<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IServiceProvider resolver)
 #else
+
         public static T ResolveWithoutRoot<T>(this IServiceProvider resolver)
 #endif
 
@@ -823,6 +834,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
 #else
+
         public static object TryResolve(this IResolver resolver, Type fromType)
 #endif
 
@@ -844,6 +856,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
 #else
+
         public static object TryResolve(this IResolver resolver, Type fromType, string key)
 #endif
 
@@ -864,6 +877,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
 #else
+
         public static T TryResolve<T>(this IResolver resolver)
 #endif
 
@@ -881,6 +895,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver, string key)
 #else
+
         public static T TryResolve<T>(this IResolver resolver, string key)
 #endif
 
@@ -901,6 +916,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static bool IsRegistered<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IRegistered registered)
 #else
+
         public static bool IsRegistered<T>(this IRegistered registered)
 #endif
 
@@ -918,12 +934,14 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static bool IsRegistered<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IRegistered registered, string key)
 #else
+
         public static bool IsRegistered<T>(this IRegistered registered, string key)
 #endif
 
         {
             return registered.IsRegistered(typeof(T), key);
         }
-        #endregion
+
+        #endregion IsRegistered
     }
 }

@@ -69,8 +69,7 @@ namespace TouchSocket.Hosting
         /// </summary>
         /// <param name="resolver"></param>
         protected virtual void OnSetResolver(IResolver resolver)
-        { 
-        
+        {
         }
 
         /// <summary>

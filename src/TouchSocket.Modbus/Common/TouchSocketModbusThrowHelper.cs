@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-
 namespace TouchSocket.Modbus
 {
     /// <summary>
@@ -30,6 +28,7 @@ namespace TouchSocket.Modbus
             {
                 case ModbusErrorCode.Success:
                     break;
+
                 default:
                     throw new ModbusResponseException(errorCode);
             }

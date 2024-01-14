@@ -99,6 +99,8 @@ namespace TouchSocket.Dmtp.Rpc
                     else
                     {
                         rpcPackage.UnpackageBody(byteBlock);
+                        //this.InvokeThis(rpcPackage);
+                        //ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
                         _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
@@ -264,6 +266,7 @@ namespace TouchSocket.Dmtp.Rpc
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
                     invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
+                    //invokeResult = this.m_rpcServerProvider.Execute(callContext, ps);
                 }
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)
@@ -371,6 +374,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 case WaitDataStatus.SetRunning:
                     return;
+
                 case WaitDataStatus.Canceled: throw new OperationCanceledException();
                 case WaitDataStatus.Overtime: throw new TimeoutException();
                 case WaitDataStatus.Disposed:

@@ -19,7 +19,6 @@ namespace TouchSocket.Core
     /// </summary>
     public interface IRegistrator : IRegistered
     {
-
         /// <summary>
         /// 添加类型描述符。
         /// </summary>

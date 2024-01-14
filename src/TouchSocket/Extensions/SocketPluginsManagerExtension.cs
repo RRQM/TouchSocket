@@ -46,6 +46,7 @@ namespace TouchSocket.Sockets
         }
 
         #region Reconnection
+
         /// <summary>
         /// 使用断线重连。
         /// </summary>
@@ -58,6 +59,7 @@ namespace TouchSocket.Sockets
             pluginManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
+
         /// <summary>
         /// 使用断线重连。
         /// <para>该效果仅客户端在完成首次连接，且为被动断开时有效。</para>
@@ -152,6 +154,7 @@ namespace TouchSocket.Sockets
             pluginManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
-        #endregion
+
+        #endregion Reconnection
     }
 }

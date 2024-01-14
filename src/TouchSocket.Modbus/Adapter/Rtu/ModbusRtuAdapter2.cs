@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Drawing;
 using System.Linq;
 using TouchSocket.Core;
 
@@ -48,7 +47,7 @@ namespace TouchSocket.Modbus
             if (m_isError)
             {
                 response.ErrorCode = ((ModbusErrorCode)byteBlock[2]);
-                response.Crc=byteBlock.Skip(3).Take(2).ToArray();
+                response.Crc = byteBlock.Skip(3).Take(2).ToArray();
                 crcLen = 3;
             }
             else
@@ -57,21 +56,21 @@ namespace TouchSocket.Modbus
                 {
                     var len = byteBlock[2];
                     response.SetValue(byteBlock.Skip(3).Take(len).ToArray());
-                    response.Crc=byteBlock.Skip(3 + len).Take(2).ToArray();
+                    response.Crc = byteBlock.Skip(3 + len).Take(2).ToArray();
                     crcLen = 3 + len;
                 }
                 else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
                 {
                     response.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2);
                     response.SetValue(byteBlock.Skip(4).Take(2).ToArray());
-                    response.Crc=byteBlock.Skip(6).Take(2).ToArray();
+                    response.Crc = byteBlock.Skip(6).Take(2).ToArray();
                     crcLen = 6;
                 }
                 else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
                 {
                     response.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 2);
                     response.Quantity = TouchSocketBitConverter.BigEndian.ToUInt16(byteBlock.Buffer, 4);
-                    response.Crc=byteBlock.Skip(6).Take(2).ToArray();
+                    response.Crc = byteBlock.Skip(6).Take(2).ToArray();
                     crcLen = 6;
                 }
             }

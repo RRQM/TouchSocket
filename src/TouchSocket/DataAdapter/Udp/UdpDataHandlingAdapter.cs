@@ -176,7 +176,7 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected virtual void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            this.GoReceived(remoteEndPoint,byteBlock,default);
+            this.GoReceived(remoteEndPoint, byteBlock, default);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace TouchSocket.Sockets
         /// <param name="length">长度</param>
         protected virtual void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            this.GoSend(endPoint,buffer,offset,length);
+            this.GoSend(endPoint, buffer, offset, length);
         }
 
         /// <summary>
@@ -224,7 +224,6 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override void Reset()
         {
-           
         }
 
         /// <summary>

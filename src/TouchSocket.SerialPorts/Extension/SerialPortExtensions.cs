@@ -14,7 +14,6 @@ using System.IO.Ports;
 
 namespace TouchSocket.SerialPorts
 {
-
     /// <summary>
     /// SocketExtension
     /// </summary>
@@ -35,7 +34,6 @@ namespace TouchSocket.SerialPorts
             }
             catch
             {
-
             }
         }
     }

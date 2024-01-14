@@ -40,6 +40,7 @@ namespace TouchSocket.Dmtp
 
         private bool m_allowRoute;
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
+
         #endregion 字段
 
         /// <inheritdoc/>

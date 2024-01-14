@@ -33,7 +33,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 插件管理器
         /// </summary>
-        public IPluginManager PluginManager=> this.m_pluginManager;
+        public IPluginManager PluginManager => this.m_pluginManager;
 
         void IPlugin.Loaded(IPluginManager pluginManager)
         {

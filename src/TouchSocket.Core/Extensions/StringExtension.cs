@@ -55,83 +55,103 @@ namespace TouchSocket.Core
         }
 
         ///<summary>
-        ///  将字符串格式化成指定的数据类型
+        /// 将字符串格式化成指定的基本数据类型
         ///</summary>
-        ///<param name="str"></param>
-        ///<param name="type"></param>
-        /// <param name="value"></param>
-        /// <param name="splits"></param>
+        ///<param name="value"></param>
+        ///<param name="destinationType"></param>
+        /// <param name="returnValue"></param>
         ///   <returns></returns>
-        public static bool TryParseToType(string str, Type type, out object value, char[] splits = default)
+        public static bool TryParseToType(string value, Type destinationType, out object returnValue)
         {
-            if (string.IsNullOrEmpty(str))
-            {
-                value = default;
-                return true;
-            }
-
-            if (type == null)
-            {
-                value = str;
-                return true;
-            }
-            if (type.IsArray)
-            {
-                var elementType = type.GetElementType();
-                var strs = splits == null ? str.Split(new char[] { ' ', ';', '-', '/' }) : str.Split(splits);
-                var array = Array.CreateInstance(elementType, strs.Length);
-                for (int i = 0, c = strs.Length; i < c; ++i)
-                {
-                    if (ConvertSimpleType(strs[i], elementType, out var o))
-                    {
-                        array.SetValue(o, i);
-                    }
-                    else
-                    {
-                        value = default;
-                        return false;
-                    }
-                }
-                value = array;
-                return true;
-            }
-            return ConvertSimpleType(str, type, out value);
-        }
-
-        private static bool ConvertSimpleType(string value, Type destinationType, out object returnValue)
-        {
-            if ((value == null) || destinationType.IsInstanceOfType(value))
-            {
-                returnValue = value;
-                return true;
-            }
-
             if (string.IsNullOrEmpty(value))
             {
                 returnValue = default;
                 return true;
             }
-            var converter = TypeDescriptor.GetConverter(destinationType);
-            var flag = converter.CanConvertFrom(value.GetType());
-            if (!flag)
+
+            switch (Type.GetTypeCode(destinationType))
             {
-                converter = TypeDescriptor.GetConverter(value.GetType());
+                case TypeCode.Boolean:
+                    {
+                        returnValue = bool.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Char:
+                    {
+                        returnValue = char.Parse(value);
+                        return true;
+                    }
+                case TypeCode.SByte:
+                    {
+                        returnValue = sbyte.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Byte:
+                    {
+                        returnValue = byte.Parse(value); ;
+                        return true;
+                    }
+                case TypeCode.Int16:
+                    {
+                        returnValue = short.Parse(value);
+                        return true;
+                    }
+                case TypeCode.UInt16:
+                    {
+                        returnValue = ushort.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Int32:
+                    {
+                        returnValue = int.Parse(value); ;
+                        return true;
+                    }
+                case TypeCode.UInt32:
+                    {
+                        returnValue = uint.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Int64:
+                    {
+                        returnValue = long.Parse(value);
+                        return true;
+                    }
+                case TypeCode.UInt64:
+                    {
+                        returnValue = ulong.Parse(value); ;
+                        return true;
+                    }
+                case TypeCode.Single:
+                    {
+                        returnValue = float.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Double:
+                    {
+                        returnValue = double.Parse(value);
+                        return true;
+                    }
+                case TypeCode.Decimal:
+                    {
+                        returnValue = decimal.Parse(value);
+                        return true;
+                    }
+                case TypeCode.DateTime:
+                    {
+                        returnValue = DateTime.Parse(value);
+                        return true;
+                    }
+                case TypeCode.String:
+                    {
+                        returnValue = value;
+                        return true;
+                    }
+                case TypeCode.Empty:
+                case TypeCode.Object:
+                case TypeCode.DBNull:
+                default:
+                    throw new NotSupportedException("不支持该类型");
             }
-            if (!flag && !converter.CanConvertTo(destinationType))
-            {
-                returnValue = default;
-                return false;
-            }
-            try
-            {
-                returnValue = flag ? converter.ConvertFrom(null, null, value) : converter.ConvertTo(null, null, value, destinationType);
-            }
-            catch
-            {
-                returnValue = default;
-                return false;
-            }
-            return true;
         }
 
         /// <summary>

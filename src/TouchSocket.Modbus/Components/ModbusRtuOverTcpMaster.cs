@@ -10,14 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Sockets;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
 {
@@ -33,6 +29,7 @@ namespace TouchSocket.Modbus
         {
             this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
         }
+
         /// <inheritdoc/>
         public override bool CanSetDataHandlingAdapter => false;
 

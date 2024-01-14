@@ -29,17 +29,28 @@ namespace TouchSocket.Http
         protected ByteBlock tempByteBlock;
 
         private static readonly byte[] m_rnCode = Encoding.UTF8.GetBytes("\r\n");
+        private ITcpClientBase m_client;
         private HttpResponse m_httpResponse;
 
         private long m_surLen;
 
         private Task m_task;
-        private ITcpClientBase client;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool CanSplicingSend => false;
+
+        /// <inheritdoc/>
+        public override void OnLoaded(object owner)
+        {
+            if (!(owner is ITcpClientBase clientBase))
+            {
+                throw new Exception($"此适配器必须适用于{nameof(ITcpClientBase)}");
+            }
+            this.m_client = clientBase;
+            base.OnLoaded(owner);
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -70,7 +81,7 @@ namespace TouchSocket.Http
                 this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
                 if (this.tempByteBlock.Len > this.MaxPackageSize)
                 {
-                    this.OnError(default,"缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
+                    this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                 }
             }
         }
@@ -119,17 +130,6 @@ namespace TouchSocket.Http
              });
         }
 
-        /// <inheritdoc/>
-        public override void OnLoaded(object owner)
-        {
-            if (!(owner is ITcpClientBase clientBase))
-            {
-                throw new Exception($"此适配器必须适用于{nameof(ITcpClientBase)}");
-            }
-            this.client = clientBase;
-            base.OnLoaded(owner);
-        }
-
         private void Single(ByteBlock byteBlock, bool dis)
         {
             try
@@ -138,7 +138,7 @@ namespace TouchSocket.Http
                 {
                     if (this.m_httpResponse == null)
                     {
-                        this.m_httpResponse = new HttpResponse(this.client, false);
+                        this.m_httpResponse = new HttpResponse(this.m_client, false);
                         if (this.m_httpResponse.ParsingHeader(byteBlock, byteBlock.CanReadLen))
                         {
                             byteBlock.Pos++;
@@ -195,7 +195,7 @@ namespace TouchSocket.Http
                                 byteBlock.Pos += len;
                                 if (this.m_surLen == 0)
                                 {
-                                    this.m_httpResponse.InternalInput(null, 0, 0);
+                                    this.m_httpResponse.InternalInput(new byte[0], 0, 0);
                                     this.m_httpResponse = null;
                                     this.m_task?.Wait();
                                     this.m_task = null;

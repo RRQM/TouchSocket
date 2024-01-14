@@ -95,7 +95,6 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            
             try
             {
                 await this.m_locker.WaitAsync();
@@ -132,7 +131,6 @@ namespace TouchSocket.Dmtp
             {
                 this.m_locker.Release();
             }
-            
         }
 
         /// <inheritdoc/>
@@ -162,7 +160,6 @@ namespace TouchSocket.Dmtp
                     {
                         this.GoSend(item.Array, item.Offset, item.Count);
                     }
-
                 }
                 else
                 {

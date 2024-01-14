@@ -11,11 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using TouchSocket.Core;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -33,7 +31,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        void Send(EndPoint endPoint,IRequestInfo requestInfo);
+        void Send(EndPoint endPoint, IRequestInfo requestInfo);
 
         /// <summary>
         /// 异步发送数据。
@@ -44,6 +42,6 @@ namespace TouchSocket.Sockets
         /// <exception cref="NotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        Task SendAsync(EndPoint endPoint,IRequestInfo requestInfo);
+        Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo);
     }
 }

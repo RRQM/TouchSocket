@@ -31,7 +31,6 @@ namespace TouchSocket.JsonRpc
         /// <param name="rpcServerProvider"></param>
         public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
         {
-
         }
 
         /// <inheritdoc/>
@@ -62,7 +61,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected sealed override void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {

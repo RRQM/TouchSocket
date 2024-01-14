@@ -24,7 +24,7 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Len={Len},Pos={Pos},Capacity={Capacity}")]
-    public struct ValueByteBlock:IDisposable, IWrite, IEnumerable<byte>
+    public struct ValueByteBlock : IDisposable, IWrite, IEnumerable<byte>
     {
         private readonly BytePool m_bytePool;
         private readonly bool m_canReturn;
@@ -84,7 +84,7 @@ namespace TouchSocket.Core
         /// <param name="bytes"></param>
         /// <param name="length"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public ValueByteBlock(byte[] bytes,int length)
+        public ValueByteBlock(byte[] bytes, int length)
         {
             this.m_dis = 0;
             this.m_canReturn = false;
@@ -176,7 +176,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 使用状态
         /// </summary>
-        public bool Using=> m_dis == 1;
+        public bool Using => m_dis == 1;
 
         /// <summary>
         /// 直接完全释放，游离该对象，然后等待GC
@@ -739,6 +739,7 @@ namespace TouchSocket.Core
                 yield return this.ReadInt32(endianType);
             }
         }
+
         #endregion Int32
 
         #region Int16
@@ -817,6 +818,7 @@ namespace TouchSocket.Core
                 yield return this.ReadInt16(endianType);
             }
         }
+
         #endregion Int16
 
         #region Int64
@@ -895,6 +897,7 @@ namespace TouchSocket.Core
                 yield return this.ReadInt64(endianType);
             }
         }
+
         #endregion Int64
 
         #region Boolean
@@ -915,7 +918,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public bool[] ReadBooleans()
         {
-            var value = TouchSocketBitConverter.Default.ToBooleans(this.Buffer, this.Pos,1);
+            var value = TouchSocketBitConverter.Default.ToBooleans(this.Buffer, this.Pos, 1);
             this.m_position += 1;
             return value;
         }
@@ -974,6 +977,7 @@ namespace TouchSocket.Core
                 }
             }
         }
+
         #endregion Boolean
 
         #region Byte
@@ -1122,6 +1126,7 @@ namespace TouchSocket.Core
                 yield return this.ReadChar(endianType);
             }
         }
+
         #endregion Char
 
         #region Double
@@ -1200,6 +1205,7 @@ namespace TouchSocket.Core
                 yield return this.ReadDouble(endianType);
             }
         }
+
         #endregion Double
 
         #region Float
@@ -1278,6 +1284,7 @@ namespace TouchSocket.Core
                 yield return this.ReadFloat(endianType);
             }
         }
+
         #endregion Float
 
         #region UInt16
@@ -1356,6 +1363,7 @@ namespace TouchSocket.Core
                 yield return this.ReadUInt16(endianType);
             }
         }
+
         #endregion UInt16
 
         #region UInt32
@@ -1434,6 +1442,7 @@ namespace TouchSocket.Core
                 yield return this.ReadUInt32(endianType);
             }
         }
+
         #endregion UInt32
 
         #region UInt64
@@ -1512,6 +1521,7 @@ namespace TouchSocket.Core
                 yield return this.ReadUInt64(endianType);
             }
         }
+
         #endregion UInt64
 
         #region Decimal
@@ -1590,6 +1600,7 @@ namespace TouchSocket.Core
                 yield return this.ReadDecimal(endianType);
             }
         }
+
         #endregion Decimal
 
         #region Null
@@ -1691,6 +1702,7 @@ namespace TouchSocket.Core
                 yield return this.ReadDateTime();
             }
         }
+
         #endregion DateTime
 
         #region TimeSpan
@@ -1730,9 +1742,11 @@ namespace TouchSocket.Core
                 yield return this.ReadTimeSpan();
             }
         }
+
         #endregion TimeSpan
 
         #region Enumerator
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -1758,7 +1772,7 @@ namespace TouchSocket.Core
             return this.GetEnumerator();
         }
 
-        #endregion
+        #endregion Enumerator
 
         #region Object
 

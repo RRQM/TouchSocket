@@ -13,6 +13,7 @@
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
+
 using System;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -107,6 +108,7 @@ namespace TouchSocket.Dmtp.Rpc
 #if NET6_0_OR_GREATER
         public static  DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
 #else
+
         public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
 #endif
         {
@@ -121,6 +123,7 @@ namespace TouchSocket.Dmtp.Rpc
 #if NET6_0_OR_GREATER
         public static DmtpRpcFeature UseDmtpRpc<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TDmtpRpcFeature>(this IPluginManager pluginManager) where TDmtpRpcFeature : DmtpRpcFeature
 #else
+
         public static DmtpRpcFeature UseDmtpRpc<TDmtpRpcFeature>(this IPluginManager pluginManager) where TDmtpRpcFeature : DmtpRpcFeature
 #endif
 
