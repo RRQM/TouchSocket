@@ -36,7 +36,6 @@ namespace TouchSocket.XmlRpc
         /// </summary>
         public XmlRpcAttribute()
         {
-
         }
 
         /// <summary>

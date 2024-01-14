@@ -65,7 +65,7 @@ namespace TouchSocket.Core
         /// <param name="error">错误异常</param>
         /// <param name="reset">是否调用<see cref="Reset"/></param>
         /// <param name="log">是否记录日志</param>
-        protected virtual void OnError(Exception ex,string error, bool reset, bool log)
+        protected virtual void OnError(Exception ex, string error, bool reset, bool log)
         {
             if (reset)
             {

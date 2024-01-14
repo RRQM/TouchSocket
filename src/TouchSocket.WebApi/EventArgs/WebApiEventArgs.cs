@@ -49,6 +49,7 @@ namespace TouchSocket.WebApi
     }
 
 #if !NET45
+
     public partial class WebApiEventArgs
     {
         /// <summary>
@@ -73,5 +74,6 @@ namespace TouchSocket.WebApi
         /// </summary>
         public System.Net.Http.HttpResponseMessage ResponseMessage { get; }
     }
+
 #endif
 }

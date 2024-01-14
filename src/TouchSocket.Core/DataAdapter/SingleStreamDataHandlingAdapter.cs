@@ -78,7 +78,7 @@ namespace TouchSocket.Core
             }
             catch (Exception ex)
             {
-                this.OnError(ex,ex.Message, true, true);
+                this.OnError(ex, ex.Message, true, true);
             }
         }
 

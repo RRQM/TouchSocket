@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
@@ -32,36 +33,32 @@ namespace TouchSocket.Rpc
         public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicProperties;
 #endif
 
-#if !NET6_0_OR_GREATER
-
         /// <summary>
-        /// 注册所有服务
+        /// 注册<see cref="AppDomain"/>已加载程序集的所有Rpc服务
         /// </summary>
         /// <returns>返回搜索到的服务数</returns>
-        public static int RegisterAllServer(this RpcStore rpcStore)
+        public static void RegisterAllServer(this RpcStore rpcStore)
         {
             var types = new List<Type>();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
             {
-                try
-                {
-                    var t1 = assembly.GetTypes().Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray();
-                    types.AddRange(t1);
-                }
-                catch
-                {
-                }
+                RegisterAllServer(rpcStore, assembly);
             }
+        }
 
-            foreach (var type in types)
+        /// <summary>
+        /// 注册指定程序集的Rpc服务。
+        /// </summary>
+        /// <param name="rpcStore"></param>
+        /// <param name="assembly"></param>
+        public static void RegisterAllServer(this RpcStore rpcStore, Assembly assembly)
+        {
+            foreach (var type in assembly.ExportedTypes.Where(p => typeof(IRpcServer).IsAssignableFrom(p) && !p.IsAbstract && p.IsClass).ToArray())
             {
                 rpcStore.RegisterServer(type);
             }
-            return types.Count;
         }
-
-#endif
 
         /// <summary>
         /// 注册服务

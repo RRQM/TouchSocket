@@ -71,7 +71,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
             var len = byteBlock.ReadInt32();
 
-            var fileSections=new FileSection[len];
+            var fileSections = new FileSection[len];
             for (int i = 0; i < len; i++)
             {
                 fileSections[i] = byteBlock.ReadPackage<FileSection>();

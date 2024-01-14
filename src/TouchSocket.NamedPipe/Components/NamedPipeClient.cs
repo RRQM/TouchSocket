@@ -73,6 +73,7 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private readonly SemaphoreSlim m_semaphoreSlimForConnect = new SemaphoreSlim(1, 1);
         private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
+
         #endregion 变量
 
         #region 事件
@@ -831,9 +832,9 @@ namespace TouchSocket.NamedPipe
                 {
                     this.m_semaphoreSlimForSend.Release();
                 }
-
             }
         }
+
         #endregion 发送
     }
 }

@@ -354,7 +354,6 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-
                     while (length > 0)
                     {
                         var r = this.m_socket.Send(buffer, offset, length, SocketFlags.None);
@@ -365,7 +364,6 @@ namespace TouchSocket.Sockets
                         offset += r;
                         length -= r;
                     }
-
                 }
                 this.m_sendCounter.Increment(length);
             }
@@ -477,7 +475,7 @@ namespace TouchSocket.Sockets
         #region 接收
 
         /// <inheritdoc/>
-        protected sealed override void OnCompleted(SocketAsyncEventArgs e)
+        protected override sealed void OnCompleted(SocketAsyncEventArgs e)
         {
             if (e.LastOperation == SocketAsyncOperation.Receive)
             {

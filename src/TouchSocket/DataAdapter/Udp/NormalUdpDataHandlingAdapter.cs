@@ -99,7 +99,7 @@ namespace TouchSocket.Sockets
                 {
                     byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
-               await this.GoSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+                await this.GoSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
 

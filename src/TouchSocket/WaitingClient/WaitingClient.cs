@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
             this.WaitingOptions = waitingOptions;
         }
 
-        public bool CanSend=>this.Client.CanSend;
+        public bool CanSend => this.Client.CanSend;
 
         public TClient Client { get; private set; }
 

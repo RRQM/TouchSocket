@@ -21,6 +21,8 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpSocketClient : SocketClient, IHttpSocketClient
     {
+        private HttpContext m_httpContext;
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -33,7 +35,23 @@ namespace TouchSocket.Http
         protected override async Task OnConnecting(ConnectingEventArgs e)
         {
             this.SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
-            await base.OnConnecting(e);
+            await base.OnConnecting(e).ConfigureFalseAwait();
+        }
+
+        /// <summary>
+        /// 当收到到Http请求时。覆盖父类方法将不会触发插件。
+        /// </summary>
+        protected virtual async Task OnReceivedHttpRequest(HttpRequest request)
+        {
+            m_httpContext ??= new HttpContext(request);
+
+            if (this.PluginManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest)) > 0)
+            {
+                var e = new HttpContextEventArgs(m_httpContext);
+
+                await this.PluginManager.RaiseAsync(nameof(IHttpPlugin.OnHttpRequest), this, e).ConfigureFalseAwait();
+                m_httpContext.Response.Destory();
+            }
         }
 
         /// <inheritdoc/>
@@ -41,24 +59,9 @@ namespace TouchSocket.Http
         {
             if (e.RequestInfo is HttpRequest request)
             {
-                await this.OnReceivedHttpRequest(request);
+                await this.OnReceivedHttpRequest(request).ConfigureFalseAwait();
             }
-            await base.ReceivedData(e);
-        }
-
-        /// <summary>
-        /// 当收到到Http请求时。覆盖父类方法将不会触发插件。
-        /// </summary>
-        protected virtual Task OnReceivedHttpRequest(HttpRequest request)
-        {
-            if (this.PluginManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest)) > 0)
-            {
-                var e = new HttpContextEventArgs(new HttpContext(request));
-
-                return this.PluginManager.RaiseAsync(nameof(IHttpPlugin.OnHttpRequest), this, e);
-            }
-
-            return EasyTask.CompletedTask;
+            await base.ReceivedData(e).ConfigureFalseAwait();
         }
     }
 }

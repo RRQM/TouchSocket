@@ -102,7 +102,7 @@ namespace TouchSocket.Dmtp
         {
             var buffer = bytes.Array;
             var offset = bytes.Offset;
-            if (bytes.Array[offset++] != Head[0]|| bytes.Array[offset++] != Head[1])
+            if (bytes.Array[offset++] != Head[0] || bytes.Array[offset++] != Head[1])
             {
                 throw new Exception("这可能不是Dmtp协议数据");
             }

@@ -11,18 +11,16 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Core.AspNetCore;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Hosting.Sockets.HostService
 {
-    internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject,IService
+    internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IService
     {
         private ILogger<ServiceHost<TService>> m_logger;
 

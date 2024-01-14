@@ -216,6 +216,7 @@ namespace TouchSocket.Http
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitDataAsync.WaitResult;
+
                         case WaitDataStatus.Overtime:
                             throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
@@ -256,6 +257,7 @@ namespace TouchSocket.Http
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitData.WaitResult;
+
                         case WaitDataStatus.Overtime:
                             throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
@@ -296,6 +298,7 @@ namespace TouchSocket.Http
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitData.WaitResult;
+
                         case WaitDataStatus.Overtime:
                             throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription());
                         case WaitDataStatus.Canceled:
@@ -319,7 +322,11 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_waitData?.Dispose();
+            if (disposing)
+            {
+                this.m_waitData.SafeDispose();
+                this.m_waitDataAsync.SafeDispose();
+            }
             base.Dispose(disposing);
         }
 

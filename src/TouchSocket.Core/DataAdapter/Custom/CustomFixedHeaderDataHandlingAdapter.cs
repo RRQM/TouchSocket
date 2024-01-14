@@ -74,7 +74,7 @@ namespace TouchSocket.Core
                         return FilterResult.Cache;
                     }
 
-                    var body=  byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
+                    var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
                     if (request.OnParsingBody(body))
                     {
                         byteBlock.Pos += request.BodyLength;

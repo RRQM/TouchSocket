@@ -21,7 +21,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocket
     /// </summary>
-    public interface IWebSocket : IDisposable, IHandshakeObject,ICloseObject
+    public interface IWebSocket : IDisposable, IHandshakeObject, ICloseObject
     {
         /// <summary>
         /// WebSocket版本

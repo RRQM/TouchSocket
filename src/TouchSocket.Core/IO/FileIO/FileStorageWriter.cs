@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// </summary>
     public partial class FileStorageWriter : DisposableObject, IWrite
     {
-        int m_dis = 1;
+        private int m_dis = 1;
 
         /// <summary>
         /// 构造函数
@@ -99,7 +99,7 @@ namespace TouchSocket.Core
             {
                 return;
             }
-            if (Interlocked.Decrement(ref this.m_dis)==0) 
+            if (Interlocked.Decrement(ref this.m_dis) == 0)
             {
                 FilePool.TryReleaseFile(this.FileStorage.Path);
                 this.FileStorage = null;

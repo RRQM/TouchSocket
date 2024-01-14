@@ -32,6 +32,7 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private int m_receiveBufferSize = 1024 * 10;
         private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
+
         #endregion 字段
 
         /// <summary>
@@ -592,7 +593,6 @@ namespace TouchSocket.NamedPipe
                 {
                     this.m_semaphoreSlimForSend.Release();
                 }
-
             }
         }
 

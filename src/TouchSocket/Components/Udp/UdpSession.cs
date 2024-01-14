@@ -402,7 +402,6 @@ namespace TouchSocket.Sockets
                 throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
             }
 
-
             if (this.Config != null)
             {
                 adapter.Config(this.Config);
@@ -574,7 +573,8 @@ namespace TouchSocket.Sockets
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketResource.NullDataAdapter.GetDescription());
             }
         }
-        #endregion
+
+        #endregion Throw
 
         #region 向默认远程同步发送
 
@@ -687,6 +687,7 @@ namespace TouchSocket.Sockets
             ThorwIfDataHandlingAdapterNull();
             return this.DataHandlingAdapter.SendInputAsync(this.RemoteIPHost.EndPoint, requestInfo);
         }
+
         #endregion 向设置的远程异步发送
 
         private void ProcessReceive(Socket socket, SocketAsyncEventArgs e)
@@ -791,6 +792,7 @@ namespace TouchSocket.Sockets
             }
         }
 #else
+
         public async Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             ThrowIfDisposed();
@@ -799,6 +801,7 @@ namespace TouchSocket.Sockets
                 this.DefaultSend(endPoint, buffer, offset, length);
             });
         }
+
 #endif
 
         #endregion DefaultSendAsync

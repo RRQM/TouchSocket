@@ -33,6 +33,5 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <returns></returns>
         bool IsRegistered(Type fromType);
-
     }
 }

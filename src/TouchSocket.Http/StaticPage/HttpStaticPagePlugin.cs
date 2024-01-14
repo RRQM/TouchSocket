@@ -82,7 +82,6 @@ namespace TouchSocket.Http
             this.FileCache.Clear();
         }
 
-       
         private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             var url = await this.NavigateAction.Invoke(e.Context.Request);

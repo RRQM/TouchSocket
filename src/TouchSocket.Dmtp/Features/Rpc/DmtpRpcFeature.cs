@@ -151,7 +151,7 @@ namespace TouchSocket.Dmtp.Rpc
                     return;
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
         }
 
         #endregion Config

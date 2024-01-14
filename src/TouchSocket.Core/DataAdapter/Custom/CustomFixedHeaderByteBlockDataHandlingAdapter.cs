@@ -72,7 +72,7 @@ namespace TouchSocket.Core
                     byteBlock.Pos += this.HeaderLength;
                     if (requestInfo.BodyLength > this.MaxPackageSize)
                     {
-                        this.OnError(default,$"接收的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}",true,true);
+                        this.OnError(default, $"接收的BodyLength={requestInfo.BodyLength},大于设定的MaxPackageSize={this.MaxPackageSize}", true, true);
                         return FilterResult.GoOn;
                     }
                     request = requestInfo;
@@ -83,7 +83,7 @@ namespace TouchSocket.Core
                     }
 
                     var block = new ByteBlock(request.BodyLength);
-                    block.Write(byteBlock.Buffer,byteBlock.Pos, request.BodyLength);
+                    block.Write(byteBlock.Buffer, byteBlock.Pos, request.BodyLength);
                     block.SeekToStart();
 
                     if (requestInfo.OnParsingBody(block))

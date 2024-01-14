@@ -73,7 +73,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected sealed override void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {

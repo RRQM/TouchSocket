@@ -83,7 +83,10 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_dp.Clear();
+            if (disposing)
+            {
+                this.m_dp.Clear();
+            }
             base.Dispose(disposing);
         }
 

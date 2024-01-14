@@ -40,7 +40,6 @@ namespace TouchSocket.Sockets
             service.Start();
         }
 
-
         /// <inheritdoc cref="IService.StartAsync"/>
         public static async Task StartAsync<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
         {
@@ -58,6 +57,7 @@ namespace TouchSocket.Sockets
             }
             await service.StartAsync();
         }
+
         #endregion ITcpService
 
         #region Udp
@@ -97,6 +97,7 @@ namespace TouchSocket.Sockets
             }
             await service.StartAsync();
         }
+
         #endregion Udp
     }
 }

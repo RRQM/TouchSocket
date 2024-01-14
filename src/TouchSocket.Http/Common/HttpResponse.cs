@@ -431,5 +431,14 @@ namespace TouchSocket.Http
             stringBuilder.Append("\r\n");
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
+
+        internal override void Destory()
+        {
+            base.Destory();
+            this.Responsed = false;
+            this.IsChunk = false;
+            this.StatusCode = 200;
+            this.StatusMessage = "Success";
+        }
     }
 }

@@ -10,10 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using System;
-using System.Collections.Generic;
 using System.Linq;
+using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {

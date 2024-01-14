@@ -299,6 +299,7 @@ namespace TouchSocket.Http
 
         private void GetRequestHeaders(string[] rows)
         {
+            this.m_headers.Clear();
             if (rows == null || rows.Length <= 0)
             {
                 return;
@@ -310,9 +311,18 @@ namespace TouchSocket.Http
                 if (kv.Length == 2)
                 {
                     var key = kv[0].ToLower();
-                    this.Headers.Add(key, kv[1]);
+                    this.m_headers.Add(key, kv[1]);
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        internal virtual void Destory()
+        {
+            base.ResetBlock();
+            this.m_headers.Clear();
+            this.ContentComplated = null;
+            this.RequestLine = default;
         }
     }
 }

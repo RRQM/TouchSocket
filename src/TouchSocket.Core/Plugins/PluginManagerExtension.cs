@@ -13,6 +13,7 @@
 #if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 #endif
+
 using System;
 using System.Threading.Tasks;
 
@@ -31,6 +32,7 @@ namespace TouchSocket.Core
 #if NET6_0_OR_GREATER
         public static TPlugin Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
 #else
+
         public static TPlugin Add<TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
 #endif
 

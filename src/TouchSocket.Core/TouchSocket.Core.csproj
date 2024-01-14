@@ -42,4 +42,8 @@
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
 		<EnableDynamicLoading>true</EnableDynamicLoading>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<RdXmlFile Include="rd.xml" />
+	</ItemGroup>
 </Project>

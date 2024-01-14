@@ -74,6 +74,7 @@ namespace TouchSocket.NamedPipe
             await client.ConnectAsync(timeout, CancellationToken.None);
             return client;
         }
+
         #endregion 连接
     }
 }

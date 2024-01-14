@@ -36,7 +36,6 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         public DmtpRpcAttribute()
         {
-
         }
 
         /// <summary>

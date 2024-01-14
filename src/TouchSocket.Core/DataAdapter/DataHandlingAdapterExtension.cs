@@ -166,6 +166,7 @@ namespace TouchSocket.Core
         }
 
         #region MyRegion
+
         /// <summary>
         /// 将对象构建到字节数组
         /// </summary>
@@ -173,12 +174,13 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
         {
-            using (var byteBlock=new ByteBlock(requestInfo.MaxLength))
+            using (var byteBlock = new ByteBlock(requestInfo.MaxLength))
             {
                 requestInfo.Build(byteBlock);
                 return byteBlock.ToArray();
             }
         }
-        #endregion
+
+        #endregion MyRegion
     }
 }

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +35,7 @@ namespace TouchSocket.Modbus
         /// <returns>响应值</returns>
         public static IModbusResponse ReadWriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes)
         {
-            return master.ReadWriteMultipleRegisters(slaveId,startingAddressForRead,quantityForRead,startingAddress,bytes,1000,CancellationToken.None);
+            return master.ReadWriteMultipleRegisters(slaveId, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
 
         /// <summary>
@@ -53,7 +52,8 @@ namespace TouchSocket.Modbus
         {
             return master.ReadWriteMultipleRegistersAsync(slaveId, startingAddressForRead, quantityForRead, startingAddress, bytes, 1000, CancellationToken.None);
         }
-        #endregion
+
+        #endregion ReadWrite 默认超时
 
         #region Read 默认超时
 
@@ -95,7 +95,6 @@ namespace TouchSocket.Modbus
         {
             return master.ReadHoldingRegisters(slaveId, startingAddress, quantity, 1000, CancellationToken.None);
         }
-
 
         /// <summary>
         /// 从指定站点读输入寄存器（FC4），默认超时时间为1000ms。
@@ -218,7 +217,7 @@ namespace TouchSocket.Modbus
             master.WriteSingleRegister(slaveId, startingAddress, value, 1000, CancellationToken.None);
         }
 
-        #endregion Write  默认超时
+        #endregion Write 默认超时
 
         #region WriteAsync 默认超时
 
@@ -270,9 +269,10 @@ namespace TouchSocket.Modbus
             return master.WriteSingleRegisterAsync(slaveId, startingAddress, value, 1000, CancellationToken.None);
         }
 
-        #endregion WriteAsync  默认超时
+        #endregion WriteAsync 默认超时
 
         #region Read
+
         /// <summary>
         /// 从指定站点读取线圈（FC1）。
         /// </summary>
@@ -424,6 +424,7 @@ namespace TouchSocket.Modbus
         #endregion ReadAsync
 
         #region Write
+
         /// <summary>
         /// 向指定站点写入多个线圈（FC15）。
         /// </summary>
@@ -454,7 +455,7 @@ namespace TouchSocket.Modbus
         public static void WriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteMultipleRegisters);
-            request.StartingAddress=startingAddress;
+            request.StartingAddress = startingAddress;
             request.SetValue(bytes);
 
             master.SendModbusRequest(request, timeout, token);
@@ -624,12 +625,12 @@ namespace TouchSocket.Modbus
         /// <param name="timeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddressForRead,ushort quantityForRead, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
+        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadWriteMultipleRegisters);
             request.StartingAddress = startingAddress;
-            request.ReadStartAddress=startingAddressForRead;
-            request.ReadQuantity=quantityForRead;
+            request.ReadStartAddress = startingAddressForRead;
+            request.ReadQuantity = quantityForRead;
             request.SetValue(bytes);
             return master.SendModbusRequest(request, timeout, token);
         }
@@ -650,11 +651,12 @@ namespace TouchSocket.Modbus
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadWriteMultipleRegisters);
             request.StartingAddress = startingAddress;
-            request.ReadStartAddress=startingAddressForRead;
-            request.ReadQuantity= quantityForRead;
+            request.ReadStartAddress = startingAddressForRead;
+            request.ReadQuantity = quantityForRead;
             request.SetValue(bytes);
             return await master.SendModbusRequestAsync(request, timeout, token);
         }
-        #endregion
+
+        #endregion ReadWrite
     }
 }
