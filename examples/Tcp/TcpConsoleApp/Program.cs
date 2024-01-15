@@ -173,6 +173,35 @@ namespace ServiceConsoleApp
         }
     }
 
+    class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>
+    {
+        public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
+        {
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = client.CreateReceiver())
+            {
+                while (true)
+                {
+                    //receiverResult必须释放
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                    {
+                        if (receiverResult.IsClosed)
+                        {
+                            //断开连接了
+                        }
+
+                        //从服务器收到信息。
+                        var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
+                        client.Logger.Info($"客户端接收到信息：{mes}");
+
+                        //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
+
+                    }
+                }
+            }
+        }
+    }
+
     class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
     {
         public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
