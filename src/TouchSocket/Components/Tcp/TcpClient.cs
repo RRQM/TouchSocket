@@ -25,13 +25,17 @@ namespace TouchSocket.Sockets
         public ReceivedEventHandler<TcpClient> Received { get; set; }
 
         /// <inheritdoc/>
-        protected override Task ReceivedData(ReceivedDataEventArgs e)
+        protected override async Task ReceivedData(ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
-                return this.Received.Invoke(this, e);
+                await this.Received.Invoke(this, e);
+                if (e.Handled)
+                {
+                    return;
+                }
             }
-            return base.ReceivedData(e);
+            await base.ReceivedData(e);
         }
     }
 }

@@ -108,15 +108,7 @@ namespace TouchSocket.Core
                 resolver = registrator.BuildResolver();
             }
 
-            IPluginManager pluginManager;
-            if ((!this.Config.GetValue(TouchSocketCoreConfigExtension.NewPluginManagerProperty)) && resolver.IsRegistered<IPluginManager>())
-            {
-                pluginManager = resolver.Resolve<IPluginManager>();
-            }
-            else
-            {
-                pluginManager = new PluginManager(resolver);
-            }
+            var pluginManager = new PluginManager(resolver);
 
             if (this.Config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
             {
@@ -129,5 +121,16 @@ namespace TouchSocket.Core
             this.PluginManager = pluginManager;
             this.Resolver = resolver;
         }
+
+#if NET6_0_OR_GREATER
+
+        /// <inheritdoc/>
+        protected override async ValueTask DisposeAsyncCore()
+        {
+            this.Config.SafeDispose();
+            this.PluginManager.SafeDispose();
+            await base.DisposeAsyncCore();
+        }
+#endif
     }
 }
