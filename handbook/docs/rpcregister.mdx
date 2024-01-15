@@ -13,7 +13,28 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、直接注册
 
-在AddRpcStore时，可通过RpcStore实例，直接注册服务。
+### 1.1 注册实例服务
+
+当服务仅是一个实例类，则可以在`AddRpcStore`时，可通过`RpcStore`实例，直接注册服务。
+
+```csharp showLineNumbers
+public partial class MyRpcServer : RpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
 
 ```csharp {5,8} showLineNumbers
 .ConfigureContainer(a =>
@@ -27,6 +48,81 @@ import Tag from "@site/src/components/Tag.js";
     });
 })
 ```
+
+### 1.2 注册接口服务
+
+当服务是一个接口时，则可以在`AddRpcStore`时，通过`RpcStore`实例，按注册接口与实例服务。
+
+```csharp showLineNumbers
+public interface IMyRpcServer2 : IRpcServer
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+
+public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
+{
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterServer<IMyRpcServer2, MyRpcServer2>();
+    });
+})
+```
+
+:::tip 提示
+
+使用接口注册服务时，标识Rpc（例如：DmtpRpc）特性必须放在接口方法中。否则不会生效。
+
+:::  
+
+### 1.3 注册瞬态服务
+
+默认情况下，Rpc服务均是单例注册。当服务实例继承`TransientRpcServer`（或实现`ITransientRpcServer`）接口时，该服务会被注册为瞬态。
+
+注册为瞬态的服务，在每次调用时，都会创建一个新的服务实例。这可能会对性能产生一定影响。但是，瞬态服务可以直接获取调用上下文。
+
+
+```csharp {7} showLineNumbers
+public partial class MyRpcServer : TransientRpcServer
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+甚至直接指定泛型上下文
+
+```csharp {1,7} showLineNumbers
+public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
 
 ## 二、注册所有服务
 
@@ -60,10 +156,38 @@ import Tag from "@site/src/components/Tag.js";
 
 :::  
 
+:::caution 警告
+
+`RegisterAllServer`无法实现接口注册，所以如果您的服务是接口，则不会生效。
+
+:::  
+
 ## 三、源生成注册
 
-当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`IRpcServer`接口的类，并生成源代码。
+当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`IRpcServer`接口的类，并生成统一注册的源代码。
 
+### 3.1 启用源生成
+
+首先请先确定是在声明Rpc**实例服务**的程序集中。一般的，如果您只声明了实例服务，或者实例服务和接口在同一程序集中，您将不用关心这个。如果您的声明接口与实现在不同的程序集，那么请您确定下列操作均在**实例服务**的程序集中。
+
+
+为程序集添加`[GeneratorRpcServerRegister]`特性。
+
+一般的您需要新建个类文件，建议文件名为“AssemblyInfo.cs”（如果是Framework项目，则在Properties文件夹中有此文件，所以不必新建。）
+
+然后在该文件中添加新行：
+
+```csharp showLineNumbers
+[assembly:GeneratorRpcServerRegister]
+```
+
+或者指定一些生成属性，不过一般建议默认即可。
+
+```csharp showLineNumbers
+[assembly:GeneratorRpcServerRegister(ClassName = "ClassName", MethodName = "MethodName",Accessibility = Accessibility.Both)]
+```
+
+### 3.2 注册指定程序集的服务
 
 ```csharp {6,9} showLineNumbers
 .ConfigureContainer(a =>
@@ -81,7 +205,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::tip 提示
 
-源生成的注册方法名并不固定，而是与**程序集名称**有关。例如上程序，程序集名称为DmtpRpcServerConsoleApp，即生成`RegisterAllFromDmtpRpcServerConsoleApp`方法与`InternalRegisterAllFromDmtpRpcServerConsoleApp`方法。
+源生成的注册方法名并不固定，而是与**程序集名称**有关，或者如果直接指定的话，则是指定的方法名。例如上程序，默认情况下，程序集名称为DmtpRpcServerConsoleApp，即生成`RegisterAllFromDmtpRpcServerConsoleApp`方法与`InternalRegisterAllFromDmtpRpcServerConsoleApp`方法。
 
 :::  
 
@@ -148,3 +272,10 @@ namespace TouchSocket.Rpc
 在生成源代码注册时，也会生成注释，来表明注册了哪些类型。
 
 <img src={require('@site/static/img/docs/rpcregister-1.png').default} />
+
+
+:::tip 提示
+
+统一生成的源代码注册**并非**是搜索反射注册，所以并不影响性能，且支持AOT，并且也支持接口注册。
+
+:::  
