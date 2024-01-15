@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ namespace ServiceConsoleApp
         {
             var consoleAction = new ConsoleAction();
             consoleAction.Add("1", "以Received委托接收", RunClientForReceived);
-            consoleAction.Add("2", "以ReadAsync异步阻塞接收", () => { RunClientForRead().GetFalseAwaitResult(); });
+            consoleAction.Add("2", "以ReadAsync异步阻塞接收", () => { RunClientForReadAsync().GetFalseAwaitResult(); });
 
             var service = CreateService();
 
@@ -26,17 +25,11 @@ namespace ServiceConsoleApp
         private static TcpService CreateService()
         {
             var service = new TcpService();
-            service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
-            service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
-            service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
-
             service.Setup(new TouchSocketConfig()//载入配置
-                                                 //.UseAspNetCoreContainer(new ServiceCollection())//使用其他Ioc
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                    a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -48,10 +41,10 @@ namespace ServiceConsoleApp
                         c.TryShutdown();
                         c.SafeClose("超时无数据");
                     });
+
                     a.Add<ClosePlugin>();
                     a.Add<TcpServiceReceivedPlugin>();
                     a.Add<MyServicePluginClass>();
-                    //a.Add();//此处可以添加插件
                 }));
             service.Start();//启动
             return service;
@@ -100,11 +93,12 @@ namespace ServiceConsoleApp
                         a.AddConsoleLogger();//添加一个日志注入
                     });
         }
-        private static async Task RunClientForRead()
+
+        private static async Task RunClientForReadAsync()
         {
             var client = new TcpClient();
             client.Setup(GetConfig());//载入配置
-            client.Connect();//连接
+            client.Connect("127.0.0.1:7789");//连接
             client.Logger.Info("客户端成功连接");
 
             Console.WriteLine("输入任意内容，回车发送");
@@ -123,9 +117,12 @@ namespace ServiceConsoleApp
                             //断开连接了
                         }
 
-                        //从服务器收到信息
+                        //从服务器收到信息。
                         var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
                         client.Logger.Info($"客户端接收到信息：{mes}");
+
+                        //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
+
                     }
                 }
             }

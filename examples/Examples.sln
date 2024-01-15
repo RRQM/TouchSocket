@@ -260,7 +260,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusSlaveConsoleApp", "Mo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusMasterConsoleApp", "Modbus\ModbusMasterConsoleApp\ModbusMasterConsoleApp.csproj", "{B8326741-67E8-42CB-910A-E236F2C94A8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModbusObjectConsoleApp", "Modbus\ModbusObjectConsoleApp\ModbusObjectConsoleApp.csproj", "{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusObjectConsoleApp", "Modbus\ModbusObjectConsoleApp\ModbusObjectConsoleApp.csproj", "{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
