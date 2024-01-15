@@ -242,7 +242,43 @@ client.Connect();
 
 :::  
 
-### 7.3 异步阻塞ReadAsync
+### 7.3 异步阻塞接收 <Tag>推荐</Tag>
+
+异步阻塞接收，即使用await的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。例如：
+
+```csharp showLineNumbers
+var client = new TcpClient();
+client.Connect("127.0.0.1:7789");//连接
+
+//receiver可以复用，不需要每次接收都新建
+using (var receiver = client.CreateReceiver())
+{
+    while (true)
+    {
+        //receiverResult必须释放
+        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+        {
+            if (receiverResult.IsClosed)
+            {
+                //断开连接了
+            }
+
+            //从服务器收到信息。
+            var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
+            client.Logger.Info($"客户端接收到信息：{mes}");
+
+            //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
+
+        }
+    }
+}
+```
+
+:::tip 提示
+
+异步阻塞接收，在等待接收数据时，不会阻塞线程资源，所以即使大量使用，也不会影响性能。
+
+:::  
 
 
 ## 八、发送数据

@@ -5,21 +5,8 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
-  <!--<ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
-    </Reference>
-    <Reference Include="TouchSocket.Core">
-      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
-
   <ItemGroup>
     <PackageReference Include="TouchSocket" Version="2.0.0-beta.266" />
-    <PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.266" />
   </ItemGroup>
 
 </Project>
