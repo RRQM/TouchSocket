@@ -141,13 +141,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnConnected(TClient socketClient, ConnectedEventArgs e)
+        protected virtual async Task OnConnected(TClient socketClient, ConnectedEventArgs e)
         {
             if (this.Connected != null)
             {
-                return this.Connected.Invoke(socketClient, e);
+                await this.Connected.Invoke(socketClient, e).ConfigureFalseAwait();
             }
-            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -155,13 +154,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnConnecting(TClient socketClient, ConnectingEventArgs e)
+        protected virtual async Task OnConnecting(TClient socketClient, ConnectingEventArgs e)
         {
             if (this.Connecting != null)
             {
-                return this.Connecting.Invoke(socketClient, e);
+                await this.Connecting.Invoke(socketClient, e).ConfigureFalseAwait();
             }
-            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -169,13 +167,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnDisconnected(TClient socketClient, DisconnectEventArgs e)
+        protected virtual async Task OnDisconnected(TClient socketClient, DisconnectEventArgs e)
         {
             if (this.Disconnected != null)
             {
-                return this.Disconnected.Invoke(socketClient, e);
+                await this.Disconnected.Invoke(socketClient, e).ConfigureFalseAwait();
             }
-            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -183,13 +180,12 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="socketClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
+        protected virtual async Task OnDisconnecting(TClient socketClient, DisconnectEventArgs e)
         {
             if (this.Disconnecting != null)
             {
-                return this.Disconnecting.Invoke(socketClient, e);
+                await this.Disconnecting.Invoke(socketClient, e).ConfigureFalseAwait();
             }
-            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -761,13 +757,18 @@ namespace TouchSocket.Sockets
         public ReceivedEventHandler<SocketClient> Received { get; set; }
 
         /// <inheritdoc/>
-        protected override Task OnReceived(SocketClient socketClient, ReceivedDataEventArgs e)
+        protected override async Task OnReceived(SocketClient socketClient, ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
-                return this.Received.Invoke(socketClient, e);
+                await this.Received.Invoke(socketClient, e).ConfigureFalseAwait();
+                if (e.Handled)
+                {
+                    return;
+                }
             }
-            return EasyTask.CompletedTask;
+
+            await base.OnReceived(socketClient, e);
         }
     }
 }

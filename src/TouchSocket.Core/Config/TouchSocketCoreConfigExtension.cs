@@ -37,6 +37,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 是否使用新插件管理器。
         /// </summary>
+        [Obsolete("此配置已被弃用", true)]
         public static readonly DependencyProperty<bool> NewPluginManagerProperty =
             DependencyProperty<bool>.Register("NewPluginManager", false);
 
@@ -82,6 +83,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用", true)]
         public static TouchSocketConfig UseNewPluginManager(this TouchSocketConfig config)
         {
             config.SetValue(NewPluginManagerProperty, true);
