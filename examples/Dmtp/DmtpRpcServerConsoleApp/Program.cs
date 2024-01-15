@@ -5,6 +5,8 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
+[assembly:GeneratorRpcServerRegister]//生成注册
+
 namespace ConsoleApp2
 {
     internal class Program
@@ -21,6 +23,8 @@ namespace ConsoleApp2
 
                        a.AddRpcStore(store =>
                        {
+                           
+
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
@@ -57,21 +61,6 @@ namespace ConsoleApp2
                 }
             }
 
-        }
-    }
-
-    public interface IMyRpcServer2 : IRpcServer
-    {
-        [DmtpRpc(true)]//使用函数名直接调用
-        int Add(int a, int b);
-    }
-
-    public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
-    {
-        public int Add(int a, int b)
-        {
-            var sum = a + b;
-            return sum;
         }
     }
 
