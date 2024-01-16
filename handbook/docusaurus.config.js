@@ -5,7 +5,7 @@ module.exports = {
   url: "https://rrqm_home.gitee.io",
   baseUrl: "/touchsocket/",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenMarkdownLinks: "throw",
   favicon: "img/favicon.ico",
   projectName: "TouchSocket",
   scripts: [],
