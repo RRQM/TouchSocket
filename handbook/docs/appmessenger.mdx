@@ -11,41 +11,76 @@ title: 应用信使
 ## 一、说明
 应用信使是在进程内的，行使注册和触发功能的组件。可**代替事件**，可**跨越程序集**，可**依赖倒置**。
 
-## 二、使用
+## 二、注册
 
+下列演示时，是使用`AppMessenger.Default`默认实例，实际上，用户可以自己新实例化的`AppMessenger`。
 
-【声明主体】
-实现IMessageObject接口，然后增加AppMessage标记的公共方法。
-```csharp showLineNumbers
+### 2.1 注册实例
+
+首先让类实例实现`IMessageObject`接口，然后在实例类中声明**异步公共实例**方法，并使用`AppMessage`特性标记。
+
+然后一般情况下，建议在构造函数中，注册消息。
+
+```csharp {5} showLineNumbers
 public class MessageObject : IMessageObject
 {
-
-    [AppMessage]
-    public int Add(int a, int b)
+    public MessageObject()
     {
-        return a + b;
+        AppMessenger.Default.Register(this);
     }
 
     [AppMessage]
-    public int Sub(int a, int b)
+    public Task<int> Add(int a, int b)
     {
-        return a - b;
+        return Task.FromResult(a + b);
+    }
+
+    [AppMessage]
+    public Task<int> Sub(int a, int b)
+    {
+        return Task.FromResult(a - b);
     }
 }
+```
 
+:::info 信息
+
+对于实例类，如果构造函数中，没有注册消息，那么在构造函数之后，也可以使用其**实例**注册消息。
+
+```csharp {2} showLineNumbers
+var messageObject = new MessageObject();
+AppMessenger.Default.Register(messageObject);
 ```
-【注册】
-下列演示时，是新实例化的AppMessenger，实际上，用户可以直接使用AppMessenger.Default默认实例。
+
+:::  
+
+### 2.1 注册静态方法
+
+注册静态方法，只需在类中直接声明**异步公共实例**方法，并使用`AppMessage`特性标记即可。
+
 ```csharp showLineNumbers
-AppMessenger appMessenger = new AppMessenger();
-appMessenger.Register<MessageObject>();
+public static class MessageObject : IMessageObject
+{
+    [AppMessage]
+    public static Task<int> StaticAdd(int a, int b)
+    {
+        return Task.FromResult(a + b);
+    }
+}
 ```
-【触发】
+
+使用`RegisterStatic`进行注册
+
+```csharp  showLineNumbers
+AppMessenger.Default.RegisterStatic<MessageObject>();
+```
+
+## 三、触发
+
 触发时，泛型类型，即时返回值类型。
-```csharp showLineNumbers
-int add = appMessenger.Send<int>("Add", 20, 10);
-Assert.Equal(30,add);
 
-int sub = appMessenger.Send<int>("Sub", 20, 10);
-Assert.Equal(10, sub);
+```csharp showLineNumbers
+int add = await appMessenger.SendAsync<int>("Add", 20, 10);
+
+int sub =await appMessenger.SendAsync<int>("Sub", 20, 10);
 ```
