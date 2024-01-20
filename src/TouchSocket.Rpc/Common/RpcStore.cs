@@ -15,10 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using TouchSocket.Core;
-
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace TouchSocket.Rpc
 {
@@ -150,12 +147,7 @@ namespace TouchSocket.Rpc
         /// <param name="serverFromType"></param>
         /// <param name="serverToType"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public void RegisterServer(Type serverFromType, [DynamicallyAccessedMembers(RpcStoreExtension.DynamicallyAccessed)] Type serverToType)
-#else
-
-        public void RegisterServer(Type serverFromType, Type serverToType)
-#endif
         {
             if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
             {

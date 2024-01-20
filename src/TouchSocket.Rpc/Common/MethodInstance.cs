@@ -79,8 +79,7 @@ namespace TouchSocket.Rpc
                 {
                     throw new InvalidOperationException($"没有找到方法{method.Name}的实现");
                 }
-
-                this.Filters = this.GetActionFilters(method, toMethod);
+                this.ToMethodInfo = toMethod;
 
                 if (this.Parameters.Length > 0 && typeof(ICallContext).IsAssignableFrom(this.Parameters[0].ParameterType))
                 {
@@ -102,11 +101,6 @@ namespace TouchSocket.Rpc
                 this.ParameterTypes = types.ToArray();
             }
         }
-
-        /// <summary>
-        /// 筛选器
-        /// </summary>
-        public IRpcActionFilter[] Filters { get; }
 
         /// <summary>
         /// 是否包含调用上下文
@@ -168,6 +162,11 @@ namespace TouchSocket.Rpc
         public Type ServerToType { get; private set; }
 
         /// <summary>
+        /// 实现方法。
+        /// </summary>
+        public MethodInfo ToMethodInfo { get; }
+
+        /// <summary>
         /// 获取指定类型属性标签
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -203,6 +202,46 @@ namespace TouchSocket.Rpc
             return this.Info.GetCustomAttribute<DescriptionAttribute>()?.Description;
         }
 
+        /// <summary>
+        /// 筛选器
+        /// </summary>
+        public IRpcActionFilter[] GetFilters()
+        {
+            var actionFilters = new List<IRpcActionFilter>();
+
+            //注册方法
+
+            foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter),false))
+            {
+                this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+            }
+
+            //实现方法
+            if (this.ServerFromType != this.ServerToType)
+            {
+                foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                {
+                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                }
+            }
+
+            //注册类
+            foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
+            {
+                this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+            }
+
+            //实现类
+            if (this.ServerFromType != this.ServerToType)
+            {
+                foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                {
+                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                }
+            }
+            return actionFilters.ToArray();
+        }
+
         private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
         {
             foreach (var item in filters)
@@ -223,61 +262,6 @@ namespace TouchSocket.Rpc
             }
 
             filters.Add(filter);
-        }
-
-        private IRpcActionFilter[] GetActionFilters(MethodInfo method, MethodInfo toMethod)
-        {
-            var actionFilters = new List<IRpcActionFilter>();
-
-            //注册方法
-            foreach (var item in method.GetCustomAttributes(true))
-            {
-                if (item is IRpcActionFilter filter)
-                {
-                    this.AddActionFilter(filter, ref actionFilters);
-                }
-            }
-
-            //实现方法
-            if (this.ServerFromType != this.ServerToType)
-            {
-                foreach (var item in toMethod.GetCustomAttributes(true))
-                {
-                    if (item is IRpcActionFilter filter)
-                    {
-                        this.AddActionFilter(filter, ref actionFilters);
-                    }
-                }
-            }
-
-            //注册类
-            foreach (var item in this.ServerFromType.GetCustomAttributes(true))
-            {
-                if (item is IRpcActionFilter filter)
-                {
-                    this.AddActionFilter(filter, ref actionFilters);
-                }
-            }
-
-            //实现类
-            if (this.ServerFromType != this.ServerToType)
-            {
-                foreach (var item in this.ServerToType.GetCustomAttributes(true))
-                {
-                    if (item is IRpcActionFilter filter)
-                    {
-                        this.AddActionFilter(filter, ref actionFilters);
-                    }
-                }
-            }
-            if (actionFilters.Count > 0)
-            {
-                return actionFilters.ToArray();
-            }
-            else
-            {
-                return new IRpcActionFilter[0];
-            }
         }
     }
 }

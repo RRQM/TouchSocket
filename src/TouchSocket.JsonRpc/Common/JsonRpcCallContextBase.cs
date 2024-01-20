@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
 using TouchSocket.Rpc;
 
@@ -18,10 +19,8 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpc调用上下文
     /// </summary>
-    public abstract class JsonRpcCallContextBase : IJsonRpcCallContext
+    public abstract class JsonRpcCallContextBase :CallContext, IJsonRpcCallContext
     {
-        private CancellationTokenSource m_tokenSource;
-
         /// <summary>
         ///  JsonRpc调用上下文
         /// </summary>
@@ -34,11 +33,6 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public object Caller { get; }
-
-        /// <summary>
         /// JsonRpc上下文
         /// </summary>
         public JsonRpcRequestContext JsonRpcContext { get; internal set; }
@@ -48,21 +42,9 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public string JsonString { get; }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public MethodInstance MethodInstance { get; internal set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public CancellationTokenSource TokenSource
+        internal void SetMethodInstance(MethodInstance methodInstance)
         {
-            get
-            {
-                this.m_tokenSource ??= new CancellationTokenSource();
-                return this.m_tokenSource;
-            }
+            this.MethodInstance = methodInstance;
         }
     }
 }

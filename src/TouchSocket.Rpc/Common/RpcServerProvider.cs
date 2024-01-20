@@ -48,15 +48,13 @@ namespace TouchSocket.Rpc
         public InvokeResult Execute(ICallContext callContext, object[] ps)
         {
             var invokeResult = new InvokeResult();
+            var filters= callContext.MethodInstance.GetFilters();
             try
             {
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                            .GetFalseAwaitResult();
-                    }
+                    invokeResult = filters[i].ExecutingAsync(callContext, ps, invokeResult)
+                        .GetFalseAwaitResult();
                 }
 
                 if (invokeResult.Status != InvokeStatus.Ready)
@@ -98,37 +96,28 @@ namespace TouchSocket.Rpc
                 }
 
                 invokeResult.Status = InvokeStatus.Success;
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, invokeResult)
-                            .GetFalseAwaitResult();
-                    }
+                    invokeResult = filters[i].ExecutedAsync(callContext, ps, invokeResult)
+                        .GetFalseAwaitResult();
                 }
             }
             catch (TargetInvocationException ex)
             {
                 invokeResult.Status = InvokeStatus.InvocationException;
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
-                    }
+                    invokeResult = filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                 }
             }
             catch (Exception ex)
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
-                    }
+                    invokeResult = filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                 }
             }
 
@@ -144,15 +133,13 @@ namespace TouchSocket.Rpc
         public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps)
         {
             var invokeResult = new InvokeResult();
+            var filters = callContext.MethodInstance.GetFilters();
             try
             {
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                            .ConfigureFalseAwait();
-                    }
+                    invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
+                        .ConfigureFalseAwait();
                 }
 
                 if (invokeResult.Status != InvokeStatus.Ready)
@@ -194,37 +181,28 @@ namespace TouchSocket.Rpc
                 }
 
                 invokeResult.Status = InvokeStatus.Success;
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutedAsync(callContext, ps, invokeResult)
-                            .ConfigureFalseAwait();
-                    }
+                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult)
+                        .ConfigureFalseAwait();
                 }
             }
             catch (TargetInvocationException ex)
             {
                 invokeResult.Status = InvokeStatus.InvocationException;
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
-                    }
+                    invokeResult = await filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
                 }
             }
             catch (Exception ex)
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
-                if (callContext.MethodInstance.Filters != null)
+                for (var i = 0; i < filters.Length; i++)
                 {
-                    for (var i = 0; i < callContext.MethodInstance.Filters.Length; i++)
-                    {
-                        invokeResult = await callContext.MethodInstance.Filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
-                    }
+                    invokeResult = await filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
                 }
             }
 

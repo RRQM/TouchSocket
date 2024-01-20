@@ -47,6 +47,33 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <summary>
+        /// 安全性释放（不用判断对象是否为空）。不会抛出任何异常。
+        /// <para>
+        /// 内部会判断<see cref="IDisposableObject.DisposedValue"/>的值，如果为<see langword="true"/>，则不会再执行<see cref="IDisposable.Dispose"/>。
+        /// </para>
+        /// </summary>
+        /// <param name="disposableObject"></param>
+        /// <returns></returns>
+        public static void SafeDispose(this IDisposableObject disposableObject)
+        {
+            if (disposableObject == default)
+            {
+                return;
+            }
+            if (disposableObject.DisposedValue)
+            {
+                return;
+            }
+            try
+            {
+                disposableObject.Dispose();
+            }
+            catch
+            {
+            }
+        }
+
         #endregion 其他
 
         /// <summary>

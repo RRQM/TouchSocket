@@ -16,10 +16,7 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.IO;
 using System.Text;
-
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace TouchSocket.Core
 {
@@ -28,9 +25,10 @@ namespace TouchSocket.Core
     /// </summary>
     public static partial class FastBinaryFormatter
     {
-#if NET6_0_OR_GREATER
-        internal const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors| DynamicallyAccessedMemberTypes.PublicMethods| DynamicallyAccessedMemberTypes.PublicFields| DynamicallyAccessedMemberTypes.PublicProperties;
-#endif
+        /// <summary>
+        /// DynamicallyAccessed
+        /// </summary>
+        public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties;
 
         static FastBinaryFormatter()
         {
@@ -48,13 +46,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 添加转换器。
         /// </summary>
-#if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType, [DynamicallyAccessedMembers(DynamicallyAccessed)] TConverter>() where TConverter : IFastBinaryConverter, new()
-#else
-
-        public static void AddFastBinaryConverter<TType, TConverter>() where TConverter : IFastBinaryConverter, new()
-#endif
-
         {
             AddFastBinaryConverter(typeof(TType), (IFastBinaryConverter)Activator.CreateInstance(typeof(TConverter)));
         }
@@ -64,12 +56,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TType"></typeparam>
         /// <param name="converter"></param>
-#if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType>(IFastBinaryConverter converter)
-#else
-
-        public static void AddFastBinaryConverter<TType>(IFastBinaryConverter converter)
-#endif
         {
             AddFastBinaryConverter(typeof(TType), converter);
         }
@@ -79,12 +66,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="type"></param>
         /// <param name="converter"></param>
-#if NET6_0_OR_GREATER
         public static void AddFastBinaryConverter([DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, IFastBinaryConverter converter)
-#else
-
-        public static void AddFastBinaryConverter(Type type, IFastBinaryConverter converter)
-#endif
         {
             var serializObject = new SerializObject(type, converter);
             m_instanceCache.AddOrUpdate(type, serializObject, (k, v) => serializObject);
@@ -97,12 +79,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock">流</param>
         /// <param name="graph">对象</param>
-#if NET6_0_OR_GREATER
         public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph)
-#else
-
-        public static void Serialize<T>(ByteBlock byteBlock, in T graph)
-#endif
         {
             byteBlock.Position = 1;
             SerializeObject(byteBlock, graph);
@@ -404,12 +381,7 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static object Deserialize(byte[] data, int offset, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type)
-#else
-
-        public static object Deserialize(byte[] data, int offset, Type type)
-#endif
         {
             if (data[offset] != 1)
             {

@@ -11,33 +11,22 @@
 //------------------------------------------------------------------------------
 
 using System.Threading;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.XmlRpc
 {
-    internal class XmlRpcCallContext : IXmlRpcCallContext
+    internal class XmlRpcCallContext :CallContext, IXmlRpcCallContext
     {
-        private CancellationTokenSource m_tokenSource;
-
-        public object Caller { get; internal set; }
-
-        public MethodInstance MethodInstance { get; internal set; }
-
-        public CancellationTokenSource TokenSource
+        public XmlRpcCallContext(object caller, MethodInstance methodInstance, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, methodInstance, resolver)
         {
-            get
-            {
-                this.m_tokenSource ??= new CancellationTokenSource();
-                return this.m_tokenSource;
-            }
+            this.HttpContext = httpContext;
+            this.XmlString = xmlString;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public HttpContext HttpContext { get; internal set; }
+        public HttpContext HttpContext { get;}
 
-        public string XmlString { get; internal set; }
+        public string XmlString { get; }
     }
 }

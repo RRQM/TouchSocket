@@ -109,13 +109,13 @@ namespace TouchSocket.JsonRpc
         /// <exception cref="RpcException"></exception>
         public static void BuildRequestContext(ActionMap actionMap, ref JsonRpcCallContextBase callContext)
         {
-            var requestContext = JsonRpcUtility.ToJsonRpcRequestContext(callContext.JsonString);
+            var requestContext = ToJsonRpcRequestContext(callContext.JsonString);
 
             callContext.JsonRpcContext = requestContext;
 
             if (actionMap.TryGetMethodInstance(requestContext.Method, out var methodInstance))
             {
-                callContext.MethodInstance = methodInstance;
+                callContext.SetMethodInstance(methodInstance);
                 if (requestContext.Params == null)
                 {
                     if (methodInstance.IncludeCallContext)

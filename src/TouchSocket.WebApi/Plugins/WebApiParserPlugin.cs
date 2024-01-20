@@ -27,11 +27,12 @@ namespace TouchSocket.WebApi
     public class WebApiParserPlugin : PluginBase
     {
         private readonly IRpcServerProvider m_rpcServerProvider;
+        private readonly IResolver m_resolver;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider)
+        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider,IResolver resolver)
         {
             this.GetRouteMap = new ActionMap(true);
             this.PostRouteMap = new ActionMap(true);
@@ -39,6 +40,7 @@ namespace TouchSocket.WebApi
 
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
+            this.m_resolver = resolver;
         }
 
         /// <summary>
@@ -82,12 +84,9 @@ namespace TouchSocket.WebApi
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-                var callContext = new WebApiCallContext()
-                {
-                    Caller = client,
-                    HttpContext = e.Context,
-                    MethodInstance = methodInstance
-                };
+
+                var callContext = new WebApiCallContext(client,methodInstance, m_resolver,e.Context);
+
                 if (methodInstance.IsEnable)
                 {
                     try
@@ -192,12 +191,9 @@ namespace TouchSocket.WebApi
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-                var callContext = new WebApiCallContext()
-                {
-                    Caller = client,
-                    HttpContext = e.Context,
-                    MethodInstance = methodInstance
-                };
+
+                var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
+
                 if (methodInstance.IsEnable)
                 {
                     try

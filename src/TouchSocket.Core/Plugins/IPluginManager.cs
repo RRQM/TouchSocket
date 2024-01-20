@@ -13,17 +13,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 插件管理器接口
     /// </summary>
-    public interface IPluginManager : IDisposable
+    public interface IPluginManager : IDisposableObject,IResolverObject
     {
         /// <summary>
         /// 标识该插件管理器是否可用。
@@ -53,13 +50,15 @@ namespace TouchSocket.Core
         /// 添加插件
         /// </summary>
         /// <param name="pluginType">插件类型</param>
-#if NET6_0_OR_GREATER
         object Add([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type pluginType);
-#else
 
-        object Add(Type pluginType);
-
-#endif
+        /// <summary>
+        /// 添加插件
+        /// </summary>
+        /// <typeparam name="TPlugin"></typeparam>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        TPlugin Add<TPlugin>(Func<IResolver,TPlugin> func)where TPlugin :IPlugin;
 
         /// <summary>
         /// 添加插件异步执行委托

@@ -25,13 +25,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// 添加<see cref="WebSocketDmtpService"/>服务。
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="config"></param>
+        /// <param name="configAction"></param>
         /// <returns></returns>
-        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection services, Func<TouchSocketConfig> config)
+        public static IServiceCollection AddWebSocketDmtpService(this IServiceCollection services, Action<TouchSocketConfig> configAction)
         {
-            var service = new WebSocketDmtpService();
-            service.Setup(config.Invoke());
-            return services.AddSingleton<IWebSocketDmtpService>(service);
+            return services.AddSingletonSetupConfigObject<IWebSocketDmtpService, WebSocketDmtpService>(configAction);
         }
     }
 }

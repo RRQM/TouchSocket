@@ -10,14 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// 调用上下文
+    /// Rpc调用上下文
     /// </summary>
-    public interface ICallContext
+    public interface ICallContext : IResolverObject
     {
         /// <summary>
         /// 调用此服务的主体。
@@ -38,6 +40,18 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 可取消的调用令箭
         /// </summary>
+        CancellationToken Token { get; }
+
+        /// <summary>
+        /// TokenSource
+        /// </summary>
+        [Obsolete("此配置已被弃用，请使用Token和Cancel()代替该功能。", true)]
         CancellationTokenSource TokenSource { get; }
+
+        /// <summary>
+        /// 执行取消<see cref="ICallContext.Token"/>。
+        /// </summary>
+        /// <returns></returns>
+        public void Cancel();
     }
 }

@@ -43,6 +43,8 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public IEnumerable<IPlugin> Plugins => this.m_plugins;
 
+        IResolver IResolverObject.Resolver => this.m_resolver;
+
         void IPluginManager.Add(IPlugin plugin)
         {
             if (plugin is null)
@@ -132,6 +134,19 @@ namespace TouchSocket.Core
                 var pluginModel = this.GetPluginModel(name);
                 pluginModel.Funcs.Add(func);
             }
+        }
+
+        TPlugin IPluginManager.Add<TPlugin>(Func<IResolver, TPlugin> func)
+        {
+            if (func is null)
+            {
+                throw new ArgumentNullException(nameof(func));
+            }
+
+            var plugin = func.Invoke(this.m_resolver);
+
+            ((IPluginManager)this).Add(plugin);
+            return plugin;
         }
 
         /// <inheritdoc/>

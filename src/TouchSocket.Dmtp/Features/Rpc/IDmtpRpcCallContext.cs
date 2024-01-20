@@ -22,12 +22,6 @@ namespace TouchSocket.Dmtp.Rpc
     public interface IDmtpRpcCallContext : ICallContext
     {
         /// <summary>
-        /// 当<see cref="ICallContext.TokenSource"/>不为空时，调用<see cref="CancellationTokenSource.Cancel()"/>
-        /// </summary>
-        /// <returns></returns>
-        public bool TryCancel();
-
-        /// <summary>
         /// DmtpRpcPackage
         /// </summary>
         DmtpRpcPackage DmtpRpcPackage { get; }

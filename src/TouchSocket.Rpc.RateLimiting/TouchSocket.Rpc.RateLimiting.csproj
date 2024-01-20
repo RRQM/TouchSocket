@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<PackageTags>Rpc;RateLimiting;TouchSocket</PackageTags>
+		<Description>这是一个扩展于Rpc管理平台的限流包。目前支持开发DmtpRpc、XmlRpc、JsonRpc、WebApi等所有Rpc部分。
+
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+		<Title>TouchSocket.Rpc.RateLimiting</Title>
+		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc.RateLimiting</PackageOutputPath>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Threading.RateLimiting" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
+	</ItemGroup>
+</Project>

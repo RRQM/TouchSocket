@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Http;
 
 namespace TouchSocket.Core
@@ -43,9 +44,20 @@ namespace TouchSocket.Core
         /// 使用跨域
         /// </summary>
         /// <returns></returns>
+        public static CorsPlugin UseCors(this IPluginManager pluginManager,string policyName)
+        {
+            return pluginManager.Add(resolver=>new CorsPlugin(resolver.Resolve<ICorsService>(), policyName));
+        }
+
+        /// <summary>
+        /// 使用跨域
+        /// </summary>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用其他包含policyName的重载方法实现", true)]
         public static CorsPlugin UseCors(this IPluginManager pluginManager)
         {
-            return pluginManager.Add<CorsPlugin>();
+            throw new System.NotImplementedException();
         }
     }
 }
