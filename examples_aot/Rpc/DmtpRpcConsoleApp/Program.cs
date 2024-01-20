@@ -102,6 +102,7 @@ namespace DmtpRpcConsoleApp
     }
 
 
+    [GeneratorRpcServer]
     public partial class MyRpcServer : IMyRpcServer
     {
         public bool Login(string account, string password)
