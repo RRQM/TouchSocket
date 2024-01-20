@@ -153,6 +153,7 @@ namespace RpcPerformanceConsoleApp
         }
     }
 
+    [GeneratorRpcServer]
     [AutoInjectForSingleton]
     public partial class TestController : RpcServer
     {
