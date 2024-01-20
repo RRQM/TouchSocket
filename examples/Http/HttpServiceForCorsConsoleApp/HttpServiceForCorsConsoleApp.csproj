@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.267" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.267" />
+	</ItemGroup>
+	
 </Project>

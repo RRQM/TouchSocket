@@ -18,14 +18,13 @@ namespace DmtpWebApplication
             }
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddWebSocketDmtpService(() =>
+            builder.Services.AddWebSocketDmtpService(config =>
             {
-                return new TouchSocketConfig()
+                config
                     .SetDmtpOption(new DmtpOption()
                     {
                         VerifyToken = "Dmtp"
                     })
-                    .UseAspNetCoreContainer(builder.Services)
                     .ConfigureContainer(a =>
                     {
                         a.AddDmtpRouteService();
@@ -37,22 +36,20 @@ namespace DmtpWebApplication
             });
 
             //企业版功能
-            builder.Services.AddHttpMiddlewareDmtpService(() =>
+            builder.Services.AddHttpMiddlewareDmtpService(config =>
             {
-                return new TouchSocketConfig()
-                        .SetDmtpOption(new DmtpOption()
-                        {
-                            VerifyToken = "Dmtp"
-                        })
-                        .UseAspNetCoreContainer(builder.Services)
-                        .ConfigureContainer(a =>
-                        {
-                            a.AddDmtpRouteService();
-                        })
-                        .ConfigurePlugins(a =>
-                        {
-                            //添加插件
-                        });
+                config.SetDmtpOption(new DmtpOption()
+                {
+                    VerifyToken = "Dmtp"
+                })
+                .ConfigureContainer(a =>
+                {
+                    a.AddDmtpRouteService();
+                })
+                .ConfigurePlugins(a =>
+                {
+                    //添加插件
+                });
             });
 
             var app = builder.Build();

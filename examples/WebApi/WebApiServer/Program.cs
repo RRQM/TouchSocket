@@ -29,6 +29,18 @@ namespace WebApiServerApp
                        File.WriteAllText("../../../WebApiProxy.cs", codeString);
 #endif
                    });
+
+                   //添加跨域服务
+                   //webapi中使用跨域时，可以不使用插件的UseCors。直接使用RpcFilter的Aop特性完成。即
+                   a.AddCors(corsOption =>
+                   {
+                       //添加跨域策略，后续使用policyName即可应用跨域策略。
+                       corsOption.Add("cors", corsBuilder =>
+                       {
+                           corsBuilder.AllowAnyMethod()
+                               .AllowAnyOrigin();
+                       });
+                   });
                })
                .ConfigurePlugins(a =>
                {
@@ -62,7 +74,7 @@ namespace WebApiServerApp
             this.m_logger = logger;
         }
 
-        [Origin(AllowOrigin = "*")]//跨域设置
+        [EnableCors("cors")]//使用跨域
         [Router("[api]/[action]ab")]//此路由会以"/ApiServer/Sumab"实现
         [Router("[api]/[action]")]//此路由会以"/ApiServer/Sum"实现
         [WebApi(HttpMethodType.GET)]
