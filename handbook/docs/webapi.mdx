@@ -471,5 +471,48 @@ class AuthenticationPlugin : PluginBase, IHttpPlugin
 
 WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实现鉴权。具体请看[Rpc服务AOP](./rpcactionfilter.mdx)
 
+
+## 八、跨域
+
+在`WebApi`中的跨域，除了[Cors跨域](./cors.mdx)全局设置之外，还支持特性设置，进行更细粒度的控制。
+
+所以，首先添加跨域服务是必须的。
+
+```csharp {4} showLineNumbers
+.ConfigureContainer(a =>
+{
+    //添加跨域服务
+    a.AddCors(corsOption =>
+    {
+        //添加跨域策略，后续使用policyName即可应用跨域策略。
+        corsOption.Add("cors", corsBuilder =>
+        {
+            corsBuilder.AllowAnyMethod()
+                .AllowAnyOrigin();
+        });
+    });
+})
+```
+
+然后，在WebApi中使用特性进行跨域设置。
+
+```csharp {3} showLineNumbers
+public partial class ApiServer : RpcServer
+{
+    [EnableCors("cors")]//使用跨域
+    [WebApi(HttpMethodType.GET)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+:::tip 提示
+
+`EnableCors`特性，不仅可以用于方法，还支持服务类，接口直接使用。
+
+:::  
+
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebApi)
 

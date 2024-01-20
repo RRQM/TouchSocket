@@ -262,6 +262,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusMasterConsoleApp", "M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusObjectConsoleApp", "Modbus\ModbusObjectConsoleApp\ModbusObjectConsoleApp.csproj", "{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServiceForCorsConsoleApp", "Http\HttpServiceForCorsConsoleApp\HttpServiceForCorsConsoleApp.csproj", "{12A8A263-EF41-4B20-97A8-3D050FF1B326}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -580,6 +582,10 @@ Global
 		{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12A8A263-EF41-4B20-97A8-3D050FF1B326}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12A8A263-EF41-4B20-97A8-3D050FF1B326}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12A8A263-EF41-4B20-97A8-3D050FF1B326}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12A8A263-EF41-4B20-97A8-3D050FF1B326}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -693,6 +699,7 @@ Global
 		{3043062B-A48A-419F-8F78-9ED234383103} = {0F95EA5A-0E08-4516-89D4-C3BFC88789F9}
 		{B8326741-67E8-42CB-910A-E236F2C94A8F} = {0F95EA5A-0E08-4516-89D4-C3BFC88789F9}
 		{74C98BF5-D663-4CCA-B970-D9A1258B6BB9} = {0F95EA5A-0E08-4516-89D4-C3BFC88789F9}
+		{12A8A263-EF41-4B20-97A8-3D050FF1B326} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

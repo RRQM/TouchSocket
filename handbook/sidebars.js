@@ -458,6 +458,11 @@ module.exports = {
             type: "doc",
             id: "httpstaticpageplugin",
             label: "12.3 静态页面插件"
+          },
+          {
+            type: "doc",
+            id: "cors",
+            label: "12.4 Cors跨域"
           }
         ]
     },

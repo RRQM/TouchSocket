@@ -293,25 +293,5 @@ Https服务器，和http服务器几乎一样，只不过增加了一个Ssl的�
 })
 ```
 
-## 八、跨域设置
-
-跨域设置，非常简单，基本如下：
-
-```csharp showLineNumbers
-.ConfigurePlugins(a =>
-{
-    a.UseCors()
-    .AllowAnyMethod()
-    .AllowAnyOrigin()
-    .AllowCredentials();
-}
-```
-
-:::tip 提示
-
-跨域设置，除了上述的允许所有配置之外，还可以设置允许指定域名，允许指定方法等。
-
-:::  
-
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Http)
