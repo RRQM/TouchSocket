@@ -50,6 +50,8 @@ namespace TouchSocket.Core
         /// </summary>
         protected Func<object, object[], object> m_invoker;
 
+        private readonly MethodInfo m_info;
+
         /// <summary>
         /// 初始化一个动态调用方法
         /// </summary>
@@ -65,7 +67,7 @@ namespace TouchSocket.Core
         /// <param name="build">是否直接使用IL构建调用</param>
         public Method(MethodInfo method, bool build)
         {
-            this.Info = method ?? throw new ArgumentNullException(nameof(method));
+            this.m_info = method ?? throw new ArgumentNullException(nameof(method));
             this.Name = method.Name;
             foreach (var item in method.GetParameters())
             {
@@ -121,7 +123,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 方法信息
         /// </summary>
-        public MethodInfo Info { get; private set; }
+        public MethodInfo Info { get => m_info; }
 
         /// <summary>
         /// 是否有引用类型
@@ -144,6 +146,18 @@ namespace TouchSocket.Core
         /// 返回值的Task类型。
         /// </summary>
         public TaskReturnType TaskType { get; private set; }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            return m_info.Equals(obj);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return m_info.GetHashCode();
+        }
 
         /// <summary>
         /// 执行方法。
@@ -284,6 +298,129 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <summary>
+        /// 构建表达式树调用
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        protected Func<object, object[], object> CreateExpressionInvoker(MethodInfo method)
+        {
+            var instance = Expression.Parameter(typeof(object), "instance");
+            var parameters = Expression.Parameter(typeof(object[]), "parameters");
+
+            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
+            var parametersCast = method.GetParameters().Select((p, i) =>
+            {
+                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
+                return Expression.Convert(parameter, p.ParameterType);
+            });
+
+            var body = Expression.Call(instanceCast, method, parametersCast);
+
+            if (method.ReturnType == typeof(Task))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.Task;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                this.TaskType = TaskReturnType.TaskObject;
+                this.HasReturn = true;
+                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType == typeof(void))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.None;
+                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
+                return (_instance, _parameters) =>
+                {
+                    action.Invoke(_instance, _parameters);
+                    return null;
+                };
+            }
+            else
+            {
+                this.HasReturn = true;
+                this.TaskType = TaskReturnType.None;
+                this.ReturnType = method.ReturnType;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+        }
+
+        /// <summary>
+        /// 构建IL调用
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        protected Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
+        {
+            var dynamicMethod = new DynamicMethod(string.Empty, typeof(object), new Type[] { typeof(object), typeof(object[])
+    }, methodInfo.DeclaringType.Module);
+            var il = dynamicMethod.GetILGenerator();
+            var ps = methodInfo.GetParameters();
+            var paramTypes = new Type[ps.Length];
+            for (var i = 0; i < paramTypes.Length; i++)
+            {
+                paramTypes[i] = ps[i].ParameterType.IsByRef ? ps[i].ParameterType.GetElementType() : ps[i].ParameterType;
+            }
+            var locals = new LocalBuilder[paramTypes.Length];
+
+            for (var i = 0; i < paramTypes.Length; i++)
+            {
+                locals[i] = il.DeclareLocal(paramTypes[i], true);
+            }
+            for (var i = 0; i < paramTypes.Length; i++)
+            {
+                il.Emit(OpCodes.Ldarg_1);
+                EmitFastInt(il, i);
+                il.Emit(OpCodes.Ldelem_Ref);
+                EmitCastToReference(il, paramTypes[i]);
+                il.Emit(OpCodes.Stloc, locals[i]);
+            }
+            if (!methodInfo.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+            }
+            for (var i = 0; i < paramTypes.Length; i++)
+            {
+                if (ps[i].ParameterType.IsByRef)
+                    il.Emit(OpCodes.Ldloca_S, locals[i]);
+                else
+                    il.Emit(OpCodes.Ldloc, locals[i]);
+            }
+            if (methodInfo.IsStatic)
+                il.EmitCall(OpCodes.Call, methodInfo, null);
+            else
+                il.EmitCall(OpCodes.Callvirt, methodInfo, null);
+            if (methodInfo.ReturnType == typeof(void))
+                il.Emit(OpCodes.Ldnull);
+            else
+                EmitBoxIfNeeded(il, methodInfo.ReturnType);
+
+            for (var i = 0; i < paramTypes.Length; i++)
+            {
+                if (ps[i].ParameterType.IsByRef)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                    EmitFastInt(il, i);
+                    il.Emit(OpCodes.Ldloc, locals[i]);
+                    if (locals[i].LocalType.IsValueType)
+                        il.Emit(OpCodes.Box, locals[i].LocalType);
+                    il.Emit(OpCodes.Stelem_Ref);
+                }
+            }
+
+            il.Emit(OpCodes.Ret);
+            var invoder = (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
+            return invoder;
+        }
+
         private static void EmitBoxIfNeeded(ILGenerator il, System.Type type)
         {
             if (type.IsValueType)
@@ -356,129 +493,6 @@ namespace TouchSocket.Core
             else
             {
                 il.Emit(OpCodes.Ldc_I4, value);
-            }
-        }
-
-        /// <summary>
-        /// 构建IL调用
-        /// </summary>
-        /// <param name="methodInfo"></param>
-        /// <returns></returns>
-        protected Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
-        {
-            var dynamicMethod = new DynamicMethod(string.Empty, typeof(object), new Type[] { typeof(object), typeof(object[])
-    }, methodInfo.DeclaringType.Module);
-            var il = dynamicMethod.GetILGenerator();
-            var ps = methodInfo.GetParameters();
-            var paramTypes = new Type[ps.Length];
-            for (var i = 0; i < paramTypes.Length; i++)
-            {
-                paramTypes[i] = ps[i].ParameterType.IsByRef ? ps[i].ParameterType.GetElementType() : ps[i].ParameterType;
-            }
-            var locals = new LocalBuilder[paramTypes.Length];
-
-            for (var i = 0; i < paramTypes.Length; i++)
-            {
-                locals[i] = il.DeclareLocal(paramTypes[i], true);
-            }
-            for (var i = 0; i < paramTypes.Length; i++)
-            {
-                il.Emit(OpCodes.Ldarg_1);
-                EmitFastInt(il, i);
-                il.Emit(OpCodes.Ldelem_Ref);
-                EmitCastToReference(il, paramTypes[i]);
-                il.Emit(OpCodes.Stloc, locals[i]);
-            }
-            if (!methodInfo.IsStatic)
-            {
-                il.Emit(OpCodes.Ldarg_0);
-            }
-            for (var i = 0; i < paramTypes.Length; i++)
-            {
-                if (ps[i].ParameterType.IsByRef)
-                    il.Emit(OpCodes.Ldloca_S, locals[i]);
-                else
-                    il.Emit(OpCodes.Ldloc, locals[i]);
-            }
-            if (methodInfo.IsStatic)
-                il.EmitCall(OpCodes.Call, methodInfo, null);
-            else
-                il.EmitCall(OpCodes.Callvirt, methodInfo, null);
-            if (methodInfo.ReturnType == typeof(void))
-                il.Emit(OpCodes.Ldnull);
-            else
-                EmitBoxIfNeeded(il, methodInfo.ReturnType);
-
-            for (var i = 0; i < paramTypes.Length; i++)
-            {
-                if (ps[i].ParameterType.IsByRef)
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                    EmitFastInt(il, i);
-                    il.Emit(OpCodes.Ldloc, locals[i]);
-                    if (locals[i].LocalType.IsValueType)
-                        il.Emit(OpCodes.Box, locals[i].LocalType);
-                    il.Emit(OpCodes.Stelem_Ref);
-                }
-            }
-
-            il.Emit(OpCodes.Ret);
-            var invoder = (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
-            return invoder;
-        }
-
-        /// <summary>
-        /// 构建表达式树调用
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns></returns>
-        protected Func<object, object[], object> CreateExpressionInvoker(MethodInfo method)
-        {
-            var instance = Expression.Parameter(typeof(object), "instance");
-            var parameters = Expression.Parameter(typeof(object[]), "parameters");
-
-            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
-            var parametersCast = method.GetParameters().Select((p, i) =>
-            {
-                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
-                return Expression.Convert(parameter, p.ParameterType);
-            });
-
-            var body = Expression.Call(instanceCast, method, parametersCast);
-
-            if (method.ReturnType == typeof(Task))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.Task;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-            {
-                this.TaskType = TaskReturnType.TaskObject;
-                this.HasReturn = true;
-                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType == typeof(void))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.None;
-                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
-                return (_instance, _parameters) =>
-                {
-                    action.Invoke(_instance, _parameters);
-                    return null;
-                };
-            }
-            else
-            {
-                this.HasReturn = true;
-                this.TaskType = TaskReturnType.None;
-                this.ReturnType = method.ReturnType;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
             }
         }
     }

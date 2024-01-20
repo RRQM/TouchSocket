@@ -20,6 +20,7 @@ namespace TouchSocket.WebApi
     /// 跨域相关设置
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
+    [Obsolete("该特性已被弃用，请使用EnableCors特性替代", true)]
     public sealed class OriginAttribute : RpcActionFilterAttribute
     {
         /// <summary>

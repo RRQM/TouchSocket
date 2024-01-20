@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp
     {
         private readonly EndPoint m_endPoint;
         private readonly UdpSessionBase m_udpSession;
-        private IPluginManager pluginManager;
+        private IPluginManager m_pluginManager;
 
         /// <summary>
         /// UdpDmtp终端客户端
@@ -47,12 +47,12 @@ namespace TouchSocket.Dmtp
 
         private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            return this.pluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            return this.m_pluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
         }
 
         public bool Created(IPluginManager pluginManager)
         {
-            this.pluginManager = pluginManager;
+            this.m_pluginManager = pluginManager;
             var args = new DmtpVerifyEventArgs()
             {
                 Id = this.Id,

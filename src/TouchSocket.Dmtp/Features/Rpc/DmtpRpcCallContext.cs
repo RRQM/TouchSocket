@@ -19,57 +19,27 @@ namespace TouchSocket.Dmtp.Rpc
     /// <summary>
     /// DmtpRpcCallContext
     /// </summary>
-    public class DmtpRpcCallContext : IDmtpRpcCallContext
+    public sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     {
-        private CancellationTokenSource m_tokenSource;
-
         /// <summary>
         /// DmtpRpcCallContext
         /// </summary>
         /// <param name="caller"></param>
         /// <param name="methodInstance"></param>
         /// <param name="dmtpRpcPackage"></param>
-        public DmtpRpcCallContext(object caller, MethodInstance methodInstance, DmtpRpcPackage dmtpRpcPackage)
+        /// <param name="resolver"></param>
+        public DmtpRpcCallContext(object caller, MethodInstance methodInstance, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, methodInstance, resolver)
         {
-            this.Caller = caller;
-            this.MethodInstance = methodInstance;
             this.DmtpRpcPackage = dmtpRpcPackage;
         }
-
-        /// <inheritdoc/>
-        public Metadata Metadata => this.DmtpRpcPackage.Metadata;
-
-        /// <inheritdoc/>
-        public object Caller { get; }
-
-        /// <inheritdoc/>
-        public MethodInstance MethodInstance { get; }
-
-        /// <inheritdoc/>
-        public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
 
         /// <inheritdoc/>
         public DmtpRpcPackage DmtpRpcPackage { get; }
 
         /// <inheritdoc/>
-        public CancellationTokenSource TokenSource
-        {
-            get
-            {
-                this.m_tokenSource ??= new CancellationTokenSource();
-                return this.m_tokenSource;
-            }
-        }
+        public Metadata Metadata => this.DmtpRpcPackage.Metadata;
 
         /// <inheritdoc/>
-        public bool TryCancel()
-        {
-            if (this.m_tokenSource != null)
-            {
-                this.m_tokenSource.Cancel();
-                return true;
-            }
-            return false;
-        }
+        public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
     }
 }

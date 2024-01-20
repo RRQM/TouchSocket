@@ -13,10 +13,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
 
 namespace TouchSocket.Core
 {
@@ -25,12 +22,10 @@ namespace TouchSocket.Core
     /// </summary>
     public static class CoreContainerExtension
     {
-#if NET6_0_OR_GREATER
         /// <summary>
         /// DynamicallyAccessed
         /// </summary>
         public const DynamicallyAccessedMemberTypes DynamicallyAccessed = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicProperties;
-#endif
 
         #region RegisterSingleton
 
@@ -42,14 +37,8 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="instance"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, TTo instance)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, TTo instance)
-#endif
-
-             where TFrom : class
+                     where TFrom : class
               where TTo : class, TFrom
         {
             RegisterSingleton(registrator, typeof(TFrom), instance);
@@ -80,12 +69,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton(this IRegistrator registrator, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
-#else
-
-        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType)
-#endif
         {
             if (fromType is null)
             {
@@ -105,14 +89,8 @@ namespace TouchSocket.Core
         /// <param name="key"></param>
         /// <param name="instance"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, string key, TTo instance)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, string key, TTo instance)
-
-#endif
-                      where TFrom : class
+                              where TFrom : class
                       where TTo : class, TFrom
         {
             RegisterSingleton(registrator, typeof(TFrom), instance, key);
@@ -192,13 +170,7 @@ namespace TouchSocket.Core
         /// <typeparam name="TFrom"></typeparam>
         /// <param name="registrator"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this IRegistrator registrator)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator)
-
-#endif
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), typeof(TFrom), Lifetime.Singleton));
             return registrator;
@@ -211,13 +183,7 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this IRegistrator registrator, string key)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom>(this IRegistrator registrator, string key)
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), typeof(TFrom), Lifetime.Singleton), key);
             return registrator;
@@ -230,13 +196,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="toType"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type toType)
-#else
-
-        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Type toType)
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(fromType, toType, Lifetime.Singleton));
             return registrator;
@@ -250,12 +210,7 @@ namespace TouchSocket.Core
         /// <param name="toType"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type toType, string key)
-#else
-
-        public static IRegistrator RegisterSingleton(this IRegistrator registrator, Type fromType, Type toType, string key)
-#endif
 
         {
             registrator.Register(new DependencyDescriptor(fromType, toType, Lifetime.Singleton), key);
@@ -285,14 +240,7 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, Func<IResolver, object> func)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, Func<IResolver, object> func)
-
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), typeof(TTo), Lifetime.Singleton)
             {
@@ -326,13 +274,7 @@ namespace TouchSocket.Core
         /// <param name="func"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTo>(this IRegistrator registrator, Func<IResolver, object> func, string key)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTo>(this IRegistrator registrator, Func<IResolver, object> func, string key)
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(typeof(TFrom), typeof(TTo), Lifetime.Singleton)
             {
@@ -381,15 +323,7 @@ namespace TouchSocket.Core
         /// <typeparam name="TTO"></typeparam>
         /// <param name="registrator"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
-        public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTO>(this IRegistrator registrator)
-
-#endif
-
-                     where TFrom : class
+        public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator)where TFrom : class
                      where TTO : class, TFrom
         {
             RegisterSingleton(registrator, typeof(TFrom), typeof(TTO));
@@ -404,14 +338,8 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator, string key)
-#else
-
-        public static IRegistrator RegisterSingleton<TFrom, TTO>(this IRegistrator registrator, string key)
-#endif
-
-              where TFrom : class
+                      where TFrom : class
               where TTO : class, TFrom
         {
             RegisterSingleton(registrator, typeof(TFrom), typeof(TTO), key);
@@ -429,14 +357,8 @@ namespace TouchSocket.Core
         /// <typeparam name="TTO"></typeparam>
         /// <param name="registrator"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator)
-#else
-
-        public static IRegistrator RegisterTransient<TFrom, TTO>(this IRegistrator registrator)
-#endif
-
-            where TFrom : class
+                    where TFrom : class
              where TTO : class, TFrom
         {
             RegisterTransient(registrator, typeof(TFrom), typeof(TTO));
@@ -449,14 +371,8 @@ namespace TouchSocket.Core
         /// <typeparam name="TFrom"></typeparam>
         /// <param name="registrator"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this IRegistrator registrator)
-#else
-
-        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator)
-#endif
-
-              where TFrom : class
+                      where TFrom : class
         {
             RegisterTransient(registrator, typeof(TFrom), typeof(TFrom));
             return registrator;
@@ -469,14 +385,8 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient<[DynamicallyAccessedMembers(DynamicallyAccessed)] TFrom>(this IRegistrator registrator, string key)
-#else
-
-        public static IRegistrator RegisterTransient<TFrom>(this IRegistrator registrator, string key)
-#endif
-
-              where TFrom : class
+                      where TFrom : class
         {
             RegisterTransient(registrator, typeof(TFrom), typeof(TFrom), key);
             return registrator;
@@ -490,14 +400,8 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator, string key)
-#else
-
-        public static IRegistrator RegisterTransient<TFrom, TTO>(this IRegistrator registrator, string key)
-#endif
-
-             where TFrom : class
+                     where TFrom : class
              where TTO : class, TFrom
         {
             RegisterTransient(registrator, typeof(TFrom), typeof(TTO), key);
@@ -510,13 +414,7 @@ namespace TouchSocket.Core
         /// <param name="registrator"></param>
         /// <param name="fromType"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient(this IRegistrator registrator, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
-#else
-
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType)
-#endif
-
         {
             RegisterTransient(registrator, fromType, fromType);
             return registrator;
@@ -529,14 +427,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient(this IRegistrator registrator, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
-#else
-
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, string key)
-
-#endif
-
         {
             RegisterTransient(registrator, fromType, fromType, key);
             return registrator;
@@ -549,13 +440,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="toType"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type toType)
-#else
-
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Type toType)
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(fromType, toType, Lifetime.Transient));
             return registrator;
@@ -569,13 +454,7 @@ namespace TouchSocket.Core
         /// <param name="toType"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type toType, string key)
-#else
-
-        public static IRegistrator RegisterTransient(this IRegistrator registrator, Type fromType, Type toType, string key)
-#endif
-
         {
             registrator.Register(new DependencyDescriptor(fromType, toType, Lifetime.Transient), key);
             return registrator;
@@ -707,13 +586,7 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
-#else
-
-        public static T Resolve<T>(this IResolver resolver)
-#endif
-
         {
             return (T)resolver.Resolve(typeof(T));
         }
@@ -725,13 +598,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver, string key)
-#else
-
-        public static T Resolve<T>(this IResolver resolver, string key)
-#endif
-
         {
             return (T)resolver.Resolve(typeof(T), key);
         }
@@ -743,13 +610,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-#if NET6_0_OR_GREATER
         public static object ResolveWithoutRoot(this IServiceProvider resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
-#else
-
-        public static object ResolveWithoutRoot(this IServiceProvider resolver, Type fromType)
-#endif
-
         {
             object[] ops = null;
             var ctor = fromType.GetConstructors().FirstOrDefault(x => x.IsDefined(typeof(DependencyInjectAttribute), true));
@@ -814,13 +675,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-#if NET6_0_OR_GREATER
         public static T ResolveWithoutRoot<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IServiceProvider resolver)
-#else
-
-        public static T ResolveWithoutRoot<T>(this IServiceProvider resolver)
-#endif
-
         {
             return (T)ResolveWithoutRoot(resolver, typeof(T));
         }
@@ -831,13 +686,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         /// <param name="fromType"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
-#else
-
-        public static object TryResolve(this IResolver resolver, Type fromType)
-#endif
-
         {
             if (resolver.IsRegistered(fromType))
             {
@@ -853,13 +702,7 @@ namespace TouchSocket.Core
         /// <param name="fromType"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
-#else
-
-        public static object TryResolve(this IResolver resolver, Type fromType, string key)
-#endif
-
         {
             if (resolver.IsRegistered(fromType))
             {
@@ -874,13 +717,7 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
-#else
-
-        public static T TryResolve<T>(this IResolver resolver)
-#endif
-
         {
             return (T)TryResolve(resolver, typeof(T));
         }
@@ -892,13 +729,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver, string key)
-#else
-
-        public static T TryResolve<T>(this IResolver resolver, string key)
-#endif
-
         {
             return (T)TryResolve(resolver, typeof(T), key);
         }
@@ -913,13 +744,7 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="registered"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static bool IsRegistered<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IRegistered registered)
-#else
-
-        public static bool IsRegistered<T>(this IRegistered registered)
-#endif
-
         {
             return registered.IsRegistered(typeof(T));
         }
@@ -931,13 +756,7 @@ namespace TouchSocket.Core
         /// <param name="registered"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-#if NET6_0_OR_GREATER
         public static bool IsRegistered<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IRegistered registered, string key)
-#else
-
-        public static bool IsRegistered<T>(this IRegistered registered, string key)
-#endif
-
         {
             return registered.IsRegistered(typeof(T), key);
         }

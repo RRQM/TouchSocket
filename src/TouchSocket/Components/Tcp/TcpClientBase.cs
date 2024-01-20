@@ -659,10 +659,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public void Send(IRequestInfo requestInfo)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
+            this.ThrowIfDisposed();
             if (this.DataHandlingAdapter == null)
             {
                 throw new ArgumentNullException(nameof(this.DataHandlingAdapter), TouchSocketResource.NullDataAdapter.GetDescription());

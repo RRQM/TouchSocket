@@ -135,7 +135,7 @@ namespace ClientConsoleApp
                 {
                     a.UseDmtpRpc();
                     //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                    //.SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor));
+                    //.SetCreateDmtpRpcActor((actor) => new MyDmtpRpcActor(actor, actor.r));
 
                     a.UseDmtpHeartbeat()
                     .SetTick(TimeSpan.FromSeconds(3))

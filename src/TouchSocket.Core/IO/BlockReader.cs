@@ -20,14 +20,13 @@ namespace TouchSocket.Core
     /// </summary>
     public abstract class BlockReader : DisposableObject
     {
-        private byte[] m_buffer;
         private readonly AutoResetEvent m_inputEvent;
+        private byte[] m_buffer;
+        private volatile bool m_inputed;
         private int m_offset;
 
         //private readonly AutoResetEvent m_readEvent;
         private int m_surLength;
-
-        private volatile bool m_inputed;
 
         /// <summary>
         /// 构造函数
@@ -37,6 +36,15 @@ namespace TouchSocket.Core
             //this.m_readEvent = new AutoResetEvent(false);
             this.m_inputEvent = new AutoResetEvent(true);
             this.ReadTimeout = 5000;
+        }
+
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~BlockReader()
+        {
+            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            this.Dispose(disposing: false);
         }
 
         /// <summary>
@@ -73,8 +81,73 @@ namespace TouchSocket.Core
             return this.PrivateRead(false, buffer, offset, count);
         }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.ResetBlock();
+                //this.m_readEvent.SafeDispose();
+                this.m_inputEvent.SafeDispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// 传输输入.
+        /// 当以length为0结束。
+        /// 否则读取端会超时。
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        protected bool Input(byte[] buffer, int offset, int length)
+        {
+            if (this.DisposedValue)
+            {
+                return false;
+            }
+            this.m_inputEvent.Reset();
+            this.m_buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+            this.m_offset = offset;
+            this.m_surLength = length;
+            this.m_inputed = true;
+            return this.m_inputEvent.WaitOne(this.ReadTimeout);
+        }
+
+        /// <summary>
+        /// 输入完成
+        /// </summary>
+        protected bool InputComplate()
+        {
+            return this.Input(new byte[0], 0, 0);
+        }
+
+        /// <summary>
+        /// 重置阻塞
+        /// </summary>
+        protected void ResetBlock()
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+            this.m_buffer = null;
+            this.m_offset = 0;
+            this.m_surLength = 0;
+            //this.m_readEvent.Reset();
+            this.m_inputed = false;
+            this.m_inputEvent.Set();
+        }
+
         private int PrivateRead(bool peek, byte[] buffer, int offset, int count)
         {
+            this.ThrowIfDisposed();
+
             if (!this.CanRead)
             {
                 throw new Exception("该流不允许读取。");
@@ -113,70 +186,6 @@ namespace TouchSocket.Core
         private bool SpinUntil()
         {
             return this.m_inputed;
-        }
-
-        /// <summary>
-        /// 传输输入.
-        /// 当以length为0结束。
-        /// 否则读取端会超时。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        protected bool Input(byte[] buffer, int offset, int length)
-        {
-            this.m_inputEvent.Reset();
-            this.m_buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-            this.m_offset = offset;
-            this.m_surLength = length;
-            this.m_inputed = true;
-            return this.m_inputEvent.WaitOne(this.ReadTimeout);
-        }
-
-        /// <summary>
-        /// 输入完成
-        /// </summary>
-        protected bool InputComplate()
-        {
-            return this.Input(new byte[0], 0, 0);
-        }
-
-        /// <summary>
-        /// 重置阻塞
-        /// </summary>
-        protected void ResetBlock()
-        {
-            this.m_buffer = null;
-            this.m_offset = 0;
-            this.m_surLength = 0;
-            //this.m_readEvent.Reset();
-            this.m_inputed = false;
-            this.m_inputEvent.Set();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                this.ResetBlock();
-                //this.m_readEvent.SafeDispose();
-                this.m_inputEvent.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~BlockReader()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: false);
         }
     }
 }

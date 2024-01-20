@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Threading;
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
@@ -19,35 +20,16 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// WebApi调用上下文
     /// </summary>
-    internal class WebApiCallContext : IWebApiCallContext
+    internal class WebApiCallContext : CallContext, IWebApiCallContext
     {
-        private CancellationTokenSource m_tokenSource;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public object Caller { get; internal set; }
+        public WebApiCallContext(object caller, MethodInstance methodInstance, IResolver resolver, HttpContext httpContext) : base(caller, methodInstance, resolver)
+        {
+            this.HttpContext = httpContext;
+        }
 
         /// <summary>
         /// Http上下文
         /// </summary>
-        public HttpContext HttpContext { get; internal set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public MethodInstance MethodInstance { get; internal set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public CancellationTokenSource TokenSource
-        {
-            get
-            {
-                this.m_tokenSource ??= new CancellationTokenSource();
-                return this.m_tokenSource;
-            }
-        }
+        public HttpContext HttpContext { get; }
     }
 }

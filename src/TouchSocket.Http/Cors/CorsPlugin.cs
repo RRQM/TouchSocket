@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -20,29 +21,47 @@ namespace TouchSocket.Http
     /// </summary>
     public class CorsPlugin : PluginBase
     {
+        private readonly ICorsService m_corsService;
+        private readonly string m_policyName;
+
+        /// <summary>
+        /// 可以配置跨域的插件
+        /// </summary>
+        /// <param name="corsService"></param>
+        /// <param name="policyName"></param>
+        public CorsPlugin(ICorsService corsService, string policyName)
+        {
+            this.m_corsService = corsService;
+            this.m_policyName = policyName;
+        }
+
         /// <summary>
         /// 允许客户端携带验证信息
         /// </summary>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public bool Credentials { get; set; }
 
         /// <summary>
         /// 允许跨域的方法。
         /// 默认为“PUT,POST,GET,DELETE,OPTIONS,HEAD,PATCH”
         /// </summary>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public string Methods { get; set; }
 
         /// <summary>
         /// 允许跨域的域名
         /// </summary>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public string Origin { get; set; }
 
         /// <summary>
-        /// 允许任何Method。实际上包含：PUT,POST,GET,DELETE,OPTIONS,HEAD,PATCH
+        /// 允许任何Method。
         /// </summary>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public CorsPlugin AllowAnyMethod()
         {
-            this.Methods = "PUT,POST,GET,DELETE,OPTIONS,HEAD,PATCH";
+            this.Methods = "*";
             return this;
         }
 
@@ -50,6 +69,7 @@ namespace TouchSocket.Http
         /// 允许所有的源
         /// </summary>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public CorsPlugin AllowAnyOrigin()
         {
             this.Origin = "*";
@@ -60,6 +80,7 @@ namespace TouchSocket.Http
         /// 允许客户端携带验证信息
         /// </summary>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public CorsPlugin AllowCredentials()
         {
             this.Credentials = true;
@@ -72,6 +93,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public CorsPlugin SetMethods(string value)
         {
             this.Methods = value;
@@ -83,6 +105,7 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，跨域策略，请先在ConfigureContainer中，使用“AddCors”注册跨域策略，更多详情请看文档", true)]
         public CorsPlugin SetOrigin(string value)
         {
             this.Origin = value;
@@ -98,18 +121,9 @@ namespace TouchSocket.Http
 
         private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (this.Credentials)
-            {
-                e.Context.Response.Headers.Add("Access-Control-Allow-Credentials", this.Credentials.ToString().ToLower());
-            }
-            if (this.Methods.HasValue())
-            {
-                e.Context.Response.Headers.Add("Access-Control-Allow-Methods", this.Methods);
-            }
-            if (this.Origin.HasValue())
-            {
-                e.Context.Response.Headers.Add("Access-Control-Allow-Origin", this.Origin);
-            }
+            var corsPolicy = m_corsService.GetPolicy(this.m_policyName) ?? throw new Exception($"没有找到名称为{this.m_policyName}的跨域策略。");
+
+            corsPolicy.Apply(e.Context);
 
             await e.InvokeNext();
         }

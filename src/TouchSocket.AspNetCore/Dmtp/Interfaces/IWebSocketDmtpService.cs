@@ -20,13 +20,8 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// <summary>
     /// IWebSocketDmtpService服务器接口
     /// </summary>
-    public interface IWebSocketDmtpService : IDmtpService, IPluginObject
+    public interface IWebSocketDmtpService : IDmtpService, ISetupConfigObject
     {
-        /// <summary>
-        /// 配置项
-        /// </summary>
-        TouchSocketConfig Config { get; }
-
         /// <summary>
         /// 转换客户端
         /// </summary>

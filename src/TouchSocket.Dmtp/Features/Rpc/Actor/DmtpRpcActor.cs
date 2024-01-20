@@ -30,10 +30,12 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="dmtpActor"></param>
         /// <param name="rpcServerProvider"></param>
-        public DmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider)
+        /// <param name="m_resolver"></param>
+        public DmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IResolver m_resolver)
         {
             this.DmtpActor = dmtpActor;
             this.m_rpcServerProvider = rpcServerProvider;
+            this.m_resolver = m_resolver;
         }
 
         /// <inheritdoc/>
@@ -53,6 +55,7 @@ namespace TouchSocket.Dmtp.Rpc
         private ushort m_invoke_Request;
         private ushort m_invoke_Response;
         private readonly IRpcServerProvider m_rpcServerProvider;
+        private readonly IResolver m_resolver;
 
         #endregion 字段
 
@@ -153,7 +156,7 @@ namespace TouchSocket.Dmtp.Rpc
                         canceledPackage.UnpackageBody(byteBlock);
                         if (this.TryGetValue(canceledPackage.Sign, out var context))
                         {
-                            context.TokenSource.Cancel();
+                            context.Cancel();
                         }
                     }
                 }
@@ -227,8 +230,10 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         if (methodInstance.IsEnable)
                         {
-                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage);
+                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage, m_resolver);
+
                             this.TryAdd(rpcPackage.Sign, callContext);
+
                             if (methodInstance.IncludeCallContext)
                             {
                                 ps = new object[methodInstance.ParameterTypes.Length];

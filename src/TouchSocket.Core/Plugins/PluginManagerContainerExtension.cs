@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -22,6 +24,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="registrator"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，插件管理器后续不再支持共享使用",true)]
         public static IRegistrator AddPluginManager(this IRegistrator registrator)
         {
             registrator.RegisterSingleton<IPluginManager, PluginManager>();

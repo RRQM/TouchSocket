@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -22,8 +23,14 @@ namespace TouchSocket.Core
     /// </summary>
     public class AppMessenger
     {
-        private static AppMessenger m_instance;
+        private static readonly Lazy<AppMessenger> m_instanceLazy;
+
         private readonly ConcurrentDictionary<string, List<MessageInstance>> m_tokenAndInstance = new ConcurrentDictionary<string, List<MessageInstance>>();
+
+        static AppMessenger()
+        {
+            m_instanceLazy = new Lazy<AppMessenger>(() => new AppMessenger());
+        }
 
         /// <summary>
         /// 默认单例实例
@@ -32,19 +39,7 @@ namespace TouchSocket.Core
         {
             get
             {
-                if (m_instance != null)
-                {
-                    return m_instance;
-                }
-                lock (typeof(AppMessenger))
-                {
-                    if (m_instance != null)
-                    {
-                        return m_instance;
-                    }
-                    m_instance = new AppMessenger();
-                    return m_instance;
-                }
+                return m_instanceLazy.Value;
             }
         }
 

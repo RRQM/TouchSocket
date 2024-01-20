@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
-
 using System;
 using System.Threading.Tasks;
 
@@ -29,13 +26,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TPlugin">插件类型</typeparam>
         /// <returns>插件类型实例</returns>
-#if NET6_0_OR_GREATER
         public static TPlugin Add<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
-#else
-
-        public static TPlugin Add<TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
-#endif
-
         {
             return (TPlugin)pluginManager.Add(typeof(TPlugin));
         }

@@ -28,16 +28,18 @@ namespace TouchSocket.XmlRpc
     public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     {
         private readonly IRpcServerProvider m_rpcServerProvider;
+        private readonly IResolver m_resolver;
         private string m_xmlRpcUrl = "/xmlrpc";
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider)
+        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider,IResolver resolver)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
+            this.m_resolver = resolver;
         }
 
         /// <summary>
@@ -84,13 +86,8 @@ namespace TouchSocket.XmlRpc
                         {
                             try
                             {
-                                callContext = new XmlRpcCallContext()
-                                {
-                                    Caller = client,
-                                    HttpContext = e.Context,
-                                    MethodInstance = methodInstance,
-                                    XmlString = xmlstring
-                                };
+                                callContext = new XmlRpcCallContext(client,methodInstance,this.m_resolver,e.Context,xmlstring);
+
                                 ps = new object[methodInstance.ParameterNames.Length];
                                 var paramsNode = xml.SelectSingleNode("methodCall/params");
                                 if (methodInstance.IncludeCallContext)

@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -20,54 +22,6 @@ namespace TouchSocket.Core
     /// </summary>
     public static class AppMessengerExtensions
     {
-        /// <summary>
-        /// 注册类的静态消息
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public static void RegisterStatic<T>(this AppMessenger appMessenger) where T : IMessageObject
-        {
-            RegisterStatic(appMessenger, typeof(T));
-        }
-
-        private static MethodInfo[] GetStaticMethods(Type type)
-        {
-            return type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-        }
-
-        private static MethodInfo[] GetInstanceMethods(Type type)
-        {
-            return type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        }
-
-        /// <summary>
-        /// 注册类的静态消息
-        /// </summary>
-        /// <param name="appMessenger"></param>
-        /// <param name="type"></param>
-        /// <exception cref="NotSupportedException"></exception>
-        public static void RegisterStatic(this AppMessenger appMessenger, Type type)
-        {
-            var methods = GetStaticMethods(type);
-            foreach (var method in methods)
-            {
-                var attributes = method.GetCustomAttributes();
-                foreach (var attribute in attributes)
-                {
-                    if (attribute is AppMessageAttribute att)
-                    {
-                        if (string.IsNullOrEmpty(att.Token))
-                        {
-                            Register(appMessenger, null, method.Name, method);
-                        }
-                        else
-                        {
-                            Register(appMessenger, null, att.Token, method);
-                        }
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// 注册消息
         /// </summary>
@@ -109,172 +63,56 @@ namespace TouchSocket.Core
             appMessenger.Add(token, new MessageInstance(methodInfo, messageObject));
         }
 
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register(this AppMessenger appMessenger, Action action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
+        ///// <summary>
+        ///// 注册消息
+        ///// </summary>
+        ///// <typeparam name="T1"></typeparam>
+        ///// <typeparam name="T2"></typeparam>
+        ///// <typeparam name="TReturn"></typeparam>
+        ///// <param name="appMessenger"></param>
+        ///// <param name="func"></param>
+        ///// <param name="token"></param>
+        //public static void Register(this AppMessenger appMessenger, Delegate func, string token = default)
+        //{
+        //    RegisterDelegate(appMessenger, token, func);
+        //}
 
         /// <summary>
-        /// 注册消息
+        /// 注册类的静态消息
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T>(this AppMessenger appMessenger, Action<T> action, string token = default)
+        public static void RegisterStatic<T>(this AppMessenger appMessenger) where T : IMessageObject
         {
-            RegisterDelegate(appMessenger, token, action);
+            RegisterStatic(appMessenger, typeof(T));
         }
 
         /// <summary>
-        /// 注册消息
+        /// 注册类的静态消息
         /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
         /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2>(this AppMessenger appMessenger, Action<T1, T2> action, string token = default)
+        /// <param name="type"></param>
+        /// <exception cref="NotSupportedException"></exception>
+        public static void RegisterStatic(this AppMessenger appMessenger, Type type)
         {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3>(this AppMessenger appMessenger, Action<T1, T2, T3> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3, T4>(this AppMessenger appMessenger, Action<T1, T2, T3, T4> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="T5"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3, T4, T5>(this AppMessenger appMessenger, Action<T1, T2, T3, T4, T5> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T, TReturn>(this AppMessenger appMessenger, Func<T, TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, TReturn>(this AppMessenger appMessenger, Func<T1, T2, TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3, TReturn>(this AppMessenger appMessenger, Func<T1, T2, T3, TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3, T4, TReturn>(this AppMessenger appMessenger, Func<T1, T2, T3, T4, TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="T5"></typeparam>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<T1, T2, T3, T4, T5, TReturn>(this AppMessenger appMessenger, Func<T1, T2, T3, T4, T5, TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
-        }
-
-        /// <summary>
-        /// 注册消息
-        /// </summary>
-        /// <typeparam name="TReturn"></typeparam>
-        /// <param name="appMessenger"></param>
-        /// <param name="action"></param>
-        /// <param name="token"></param>
-        public static void Register<TReturn>(this AppMessenger appMessenger, Func<TReturn> action, string token = default)
-        {
-            RegisterDelegate(appMessenger, token, action);
+            var methods = GetStaticMethods(type);
+            foreach (var method in methods)
+            {
+                var attributes = method.GetCustomAttributes();
+                foreach (var attribute in attributes)
+                {
+                    if (attribute is AppMessageAttribute att)
+                    {
+                        if (string.IsNullOrEmpty(att.Token))
+                        {
+                            Register(appMessenger, null, method.Name, method);
+                        }
+                        else
+                        {
+                            Register(appMessenger, null, att.Token, method);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -302,21 +140,40 @@ namespace TouchSocket.Core
             appMessenger.Remove(token);
         }
 
-        private static void RegisterDelegate(this AppMessenger appMessenger, string token, Delegate dele)
+        private static MethodInfo[] GetInstanceMethods(Type type)
         {
-            var attributes = dele.Method.GetCustomAttributes();
-            foreach (var attribute in attributes)
-            {
-                if (attribute is AppMessageAttribute att)
-                {
-                    if (token.IsNullOrEmpty())
-                    {
-                        token = string.IsNullOrEmpty(att.Token) ? dele.Method.Name : att.Token;
-                    }
-
-                    appMessenger.Add(token, new MessageInstance(dele.Method, dele.Target));
-                }
-            }
+            return type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
+
+        private static MethodInfo[] GetStaticMethods(Type type)
+        {
+            return type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        }
+
+        //private static void RegisterDelegate(this AppMessenger appMessenger, string token, Delegate dele)
+        //{
+        //    if (!typeof(Task).IsAssignableFrom(dele.Method.ReturnType))
+        //    {
+        //        throw new Exception("注册委托的返回值必须继承自Task或其泛型");
+        //    }
+        //    if (token.HasValue())
+        //    {
+        //        appMessenger.Add(token, new MessageInstance(dele));
+        //        return;
+        //    }
+        //    var attributes = dele.Method.GetCustomAttributes();
+        //    foreach (var attribute in attributes)
+        //    {
+        //        if (attribute is AppMessageAttribute att)
+        //        {
+        //            if (token.IsNullOrEmpty())
+        //            {
+        //                token = string.IsNullOrEmpty(att.Token) ? dele.Method.Name : att.Token;
+        //            }
+
+        //            appMessenger.Add(token, new MessageInstance(dele.Method, dele.Target));
+        //        }
+        //    }
+        //}
     }
 }
