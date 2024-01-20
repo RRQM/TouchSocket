@@ -547,6 +547,11 @@ module.exports = {
             type: "doc",
             id: "rpcallcontext",
             label: "14.9 调用上下文"
+          },
+          {
+            type: "doc",
+            id: "rpcratelimiting",
+            label: "14.10 Rpc访问速率限制"
           }
         ]
     },
