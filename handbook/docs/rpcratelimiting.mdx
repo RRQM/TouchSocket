@@ -1,0 +1,125 @@
+---
+id: rpcratelimiting
+title: Rpc访问速率限制
+---
+
+### 定义
+
+命名空间：TouchSocket.Rpc.RateLimiting <br/>
+程序集：[TouchSocket.Rpc.RateLimiting.dll](https://www.nuget.org/packages/TouchSocket.Rpc.RateLimiting)
+
+
+## 一、说明
+
+速率限制是指限制一个资源的访问量的概念。例如，你知道你的应用程序访问的数据库可以安全地处理每分钟1000个请求，但你不相信它可以处理比这多得多的请求。你可以在你的应用程序中放置一个速率限制器，允许每分钟有1000个请求，并在访问数据库之前拒绝任何更多的请求。因此，速率限制你的数据库，允许你的应用程序处理安全数量的请求，而不可能有来自你的数据库的不良故障。
+
+有多种不同的速率限制算法来控制请求的流量。我们将讨论其中的4种，他们分别为：
+
+- 固定窗口
+- 滑动窗口
+- 令牌桶
+- 并发
+
+## 二、使用
+
+### 2.1 安装
+
+nuget安装TouchSocket.Rpc.RateLimiting。
+
+```csharp showLineNumbers
+Install-Package TouchSocket.Rpc.RateLimiting
+```
+
+### 2.2 固定窗口限制器
+
+AddFixedWindowLimiter 方法使用固定的时间窗口来限制请求。 当时间窗口过期时，会启动一个新的时间窗口，并重置请求限制。
+
+```csharp {3} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRateLimiter(p =>
+    {
+        p.AddFixedWindowLimiter("FixedWindow", options =>
+        {
+            options.PermitLimit = 10;
+            options.Window = TimeSpan.FromSeconds(10);
+        });
+    });
+})
+```
+
+### 2.3 滑动窗口限制器
+
+AddSlidingWindowLimiter 方法使用滑动的时间窗口来限制请求。 当时间窗口过期时，会启动一个新的时间窗口，与固定窗口限制器类似，但为每个窗口添加了段。 窗口在每个段间隔滑动一段。 段间隔的计算方式是：(窗口时间)/(每个窗口的段数)。
+
+```csharp {1,4-6,11} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRateLimiter(p =>
+    {
+        //添加一个名称为SlidingWindow的滑动窗口的限流策略
+        p.AddSlidingWindowLimiter("SlidingWindow", options => 
+        {
+            options.PermitLimit = 10;
+            options.Window = TimeSpan.FromSeconds(10);
+            options.SegmentsPerWindow = 5;
+        });
+    });
+})
+```
+
+### 2.4 令牌桶限制器
+
+AddTokenBucketLimiter 方法使用令牌桶来限制请求。 令牌桶限制器将根据指定的令牌生成速率向桶中添加令牌。 如果桶中有足够的令牌，则允许请求，否则拒绝请求。
+
+```csharp showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRateLimiter(p =>
+    {
+        //添加一个名称为TokenBucket的令牌桶的限流策略
+        p.AddTokenBucketLimiter("TokenBucket", options =>
+        {
+            options.TokenLimit = 100;
+            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            options.QueueLimit = 10;
+            options.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+            options.TokensPerPeriod = 10;
+            options.AutoReplenishment = true;
+        });
+    });
+})
+```
+
+### 2.5 并发限制器
+
+并发限制器会限制并发请求数。 每添加一个请求，在并发限制中减去 1。 一个请求完成时，在限制中增加 1。 其他请求限制器限制的是指定时间段的请求总数，而与它们不同，并发限制器仅限制并发请求数，不对一段时间内的请求数设置上限。
+
+```csharp showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRateLimiter(p =>
+    {
+        //添加一个名称为Concurrency的并发的限流策略
+        p.AddConcurrencyLimiter("Concurrency", options =>
+        {
+            options.PermitLimit = 10;
+            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            options.QueueLimit = 10;
+        });
+    });
+})
+```
+
+
+## 三、算法
+
+TouchSocket的限流算法，是完全引用`System.Threading.RateLimiting.dll`。所以算是比较通用的限流算法。
+
+同时，算法的使用方法，也是完全借鉴Aspnetcore的限流算法使用方法。
+
+所以，具体算法可以参考[ASP.NET Core 中的速率限制](https://learn.microsoft.com/zh-cn/aspnet/core/performance/rate-limit)
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Rpc/RpcRateLimitingConsoleApp)
+

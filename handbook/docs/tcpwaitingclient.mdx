@@ -30,11 +30,13 @@ var waitClient = client.CreateWaitingClient(new WaitingOptions()
 {
     FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
     {
-        if (response.Data.Length == 1)
-        {
-            return true;
-        }
-        return false;
+        return true;
+
+        //if (response.Data.Length == 1)
+        //{
+        //    return true;
+        //}
+        //return false;
     }
 });
 
@@ -58,11 +60,13 @@ service.Received = async (client, e) =>
     {
         FilterFunc =response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
         {
-            if (response.Data.Length == 1)
-            {
-                return true;
-            }
-            return false;
+            return true;
+        
+            //if (response.Data.Length == 1)
+            //{
+            //    return true;
+            //}
+            //return false;
         }
     });
 
