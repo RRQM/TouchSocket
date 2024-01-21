@@ -19,6 +19,7 @@ namespace ClientConsoleApp
             consoleAction.Add("2", "客户端互相调用Rpc", RunInvokeT_2C);
             consoleAction.Add("3", "测试客户端请求，服务器响应大量流数据", () => { RunRpcPullChannel(); });
             consoleAction.Add("4", "测试客户端推送大量流数据", () => { RunRpcPushChannel(); });
+            consoleAction.Add("5", "测试取消调用", () => { RunInvokeCancellationToken(); });
 
             consoleAction.ShowAll();
 
@@ -35,6 +36,35 @@ namespace ClientConsoleApp
         private static void ConsoleAction_OnException(Exception obj)
         {
             ConsoleLogger.Default.Exception(obj);
+        }
+
+        static void RunInvokeCancellationToken()
+        {
+            var client = GetTcpDmtpClient();
+
+            //设置调用配置。当设置可取消操作时，invokeOption必须每次重新new，然后对invokeOption.Token重新赋值。
+
+            //创建一个指定时间可取消令箭源，可用于取消Rpc的调用。
+            using (var tokenSource = new CancellationTokenSource(5000))
+            {
+                var invokeOption = new DmtpInvokeOption()//调用配置
+                {
+                    FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
+                    SerializationType = SerializationType.FastBinary,//序列化类型
+                    Timeout = 5000,//调用超时设置
+                    Token = tokenSource.Token//配置可取消令箭
+                };
+
+                try
+                {
+                    var result = client.GetDmtpRpcActor().TestCancellationToken(invokeOption);
+                    Console.WriteLine(result);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
 
         /// <summary>
@@ -135,7 +165,7 @@ namespace ClientConsoleApp
                 {
                     a.UseDmtpRpc()
                     //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                    .SetCreateDmtpRpcActor((actor,provider) => new MyDmtpRpcActor(actor, provider,a.Resolver));
+                    .SetCreateDmtpRpcActor((actor, provider) => new MyDmtpRpcActor(actor, provider, a.Resolver));
 
                     a.UseDmtpHeartbeat()
                     .SetTick(TimeSpan.FromSeconds(3))
@@ -170,7 +200,7 @@ namespace ClientConsoleApp
 
     class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     {
-        public MyDmtpRpcActor(IDmtpActor smtpActor, IRpcServerProvider rpcServerProvider,IResolver resolver) : base(smtpActor, rpcServerProvider, resolver)
+        public MyDmtpRpcActor(IDmtpActor smtpActor, IRpcServerProvider rpcServerProvider, IResolver resolver) : base(smtpActor, rpcServerProvider, resolver)
         {
         }
     }

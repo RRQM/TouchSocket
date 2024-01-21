@@ -12,14 +12,6 @@ namespace RecommendRpcConsoleApp
     {
         private static void Main(string[] args)
         {
-            try
-            {
-                Enterprise.ForTest();
-            }
-            catch
-            {
-            }
-            CodeGenerator.AddIgnoreProxyAssembly(typeof(Program).Assembly);
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
@@ -29,8 +21,11 @@ namespace RecommendRpcConsoleApp
                        a.AddFileLogger();
                        a.AddRpcStore(store =>
                        {
-                           //此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
-                           store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+                           ////此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+                           //store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+
+                           //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
+                           store.RegisterAllFromRpcImplementationClassLibrary();
                        });
                    })
                    .ConfigurePlugins(a =>
