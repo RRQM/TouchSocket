@@ -84,7 +84,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "序列化选择器", "序�
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DmtpRpc工厂示例", "DmtpRpc工厂示例", "{D4C8400D-94FB-4C82-A7A2-26BD970A42D8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SG推荐用法", "SG推荐用法", "{8CFACB33-960A-4BA7-972F-059B81E1A4B2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "源生成代理推荐写法", "源生成代理推荐写法", "{8CFACB33-960A-4BA7-972F-059B81E1A4B2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "远程流映射", "远程流映射", "{B7D7FF93-7003-44AA-A88F-EB192B38C00A}"
 EndProject
@@ -262,9 +262,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusMasterConsoleApp", "M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModbusObjectConsoleApp", "Modbus\ModbusObjectConsoleApp\ModbusObjectConsoleApp.csproj", "{74C98BF5-D663-4CCA-B970-D9A1258B6BB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpServiceForCorsConsoleApp", "Http\HttpServiceForCorsConsoleApp\HttpServiceForCorsConsoleApp.csproj", "{12A8A263-EF41-4B20-97A8-3D050FF1B326}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServiceForCorsConsoleApp", "Http\HttpServiceForCorsConsoleApp\HttpServiceForCorsConsoleApp.csproj", "{12A8A263-EF41-4B20-97A8-3D050FF1B326}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcRateLimitingConsoleApp", "Rpc\RpcRateLimitingConsoleApp\RpcRateLimitingConsoleApp.csproj", "{BAEBA822-4EBF-4211-A92F-797D529C2DE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcRateLimitingConsoleApp", "Rpc\RpcRateLimitingConsoleApp\RpcRateLimitingConsoleApp.csproj", "{BAEBA822-4EBF-4211-A92F-797D529C2DE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

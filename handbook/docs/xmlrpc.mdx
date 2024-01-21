@@ -143,7 +143,7 @@ private static XmlRpcClient GetXmlRpcClient()
 
 ### 4.3 生成代理调用
 
-在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./generateproxyfromserver.mdx)
+在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
 
 ```csharp {8-9}
 a.AddRpcStore(store =>
@@ -165,7 +165,7 @@ var sum3 = client.Sum(10,20);
 
 ### 4.4 使用DispatchProxy代理调用
 
-使用DispatchProxy代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./generateproxyfromdispatchproxy.mdx)
+使用DispatchProxy代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./rpcgenerateproxy.mdx)
 
 首先，需要声明一个基类，用于通讯基础。
 

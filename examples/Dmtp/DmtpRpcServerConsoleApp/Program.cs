@@ -64,6 +64,7 @@ namespace ConsoleApp2
         }
     }
 
+    [GeneratorRpcServer]
     [MyRpcActionFilter]
     public partial class MyRpcServer : RpcServer
     {
@@ -138,6 +139,31 @@ namespace ConsoleApp2
                 }
             }
             return size;
+        }
+
+        /// <summary>
+        /// 测试取消调用
+        /// </summary>
+        /// <param name="callContext"></param>
+        /// <returns></returns>
+        [Description("测试取消调用")]
+        [DmtpRpc]
+        public async Task<int> TestCancellationToken(ICallContext callContext)
+        {
+            //模拟一个耗时操作
+            for (var i = 0; i < 10; i++)
+            {
+                //判断任务是否已被取消
+                if (callContext.Token.IsCancellationRequested)
+                {
+                    Console.WriteLine("执行已取消");
+                    return i;
+                }
+                Console.WriteLine($"执行{i}次");
+                await Task.Delay(1000);
+            }
+
+            return -1;
         }
     }
 
