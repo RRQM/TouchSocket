@@ -434,8 +434,13 @@ module.exports = {
           },
           {
             type: "doc",
+            id: "adaptererrorcorrection",
+            label: "11.6 适配器纠错"
+          },
+          {
+            type: "doc",
             id: "dataadaptertester",
-            label: "11.6 适配器完整性、性能测试"
+            label: "11.7 适配器完整性、性能测试"
           },
         ]
     },
