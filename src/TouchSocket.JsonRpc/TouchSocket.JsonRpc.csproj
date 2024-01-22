@@ -4,7 +4,7 @@
 		<PackageTags>JsonRpc;TouchSocket</PackageTags>
 		<Description>这是一个提供JsonRpc服务器和客户端的组件库。可以通过该组件创建基于Tcp、Http、WebSocket协议的JsonRpc服务器和客户端，支持JsonRpc全部功能，可与Web，Android等平台无缝对接。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket.JsonRpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.JsonRpc</PackageOutputPath>
 	</PropertyGroup>
