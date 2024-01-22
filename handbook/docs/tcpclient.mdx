@@ -261,6 +261,7 @@ using (var receiver = client.CreateReceiver())
             if (receiverResult.IsClosed)
             {
                 //断开连接了
+                return;
             }
 
             //从服务器收到信息。
