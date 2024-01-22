@@ -2,7 +2,7 @@
 module.exports = {
   title: "TouchSocket",
   tagline: "网络开发",
-  url: "https://rrqm_home.gitee.io",
+  url: "https://touchsocket.net/",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "throw",
