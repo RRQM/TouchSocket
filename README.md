@@ -15,6 +15,8 @@
 <img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
 </a>
 [![NuGet(TouchSocket)](https://img.shields.io/github/stars/RRQM/TouchSocket?logo=github)](https://github.com/RRQM/TouchSocket)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/64fad777-6f8c-4151-bfa1-23593b7f7490/deploy-status)](https://app.netlify.com/sites/touchsocket/deploys)
+
 
 </div>  
 
