@@ -4,7 +4,7 @@
 		<PackageTags>Rpc;TouchSocket</PackageTags>
 		<Description>这是一个超轻量、高性能、可扩展的Rpc管理平台框架。您可以基于该框架，快速开发出Rpc执行。目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Rpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>

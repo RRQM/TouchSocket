@@ -4,7 +4,7 @@
 		<PackageTags>IOC;DependencyInjection;TouchSocket</PackageTags>
 		<Description>这是一个为Core中扩展Ioc容器为IServiceCollection的库。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Core.DependencyInjection</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core.DependencyInjection</PackageOutputPath>
 	</PropertyGroup>
