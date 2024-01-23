@@ -417,11 +417,6 @@ module.exports = {
                 },
                 {
                   type: "doc",
-                  id: "adaptermodbus",
-                  label: "c.Modbus系列"
-                },
-                {
-                  type: "doc",
                   id: "adaptersiemenss7",
                   label: "d.西门子S7"
                 },
@@ -441,6 +436,11 @@ module.exports = {
             type: "doc",
             id: "dataadaptertester",
             label: "11.7 适配器完整性、性能测试"
+          },
+          {
+            type: "doc",
+            id: "adapterbuilder",
+            label: "11.8 适配器消息构建器"
           },
         ]
     },
