@@ -37,7 +37,6 @@ public partial class MyContainer : ManualContainer
 同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
 
 ```csharp showLineNumbers
-[AutoInjectForSingleton]
 internal partial class MyServicePluginClass : PluginBase
 {
     [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
@@ -69,7 +68,6 @@ internal partial class MyServicePluginClass : PluginBase
     }
 }
 
-[AutoInjectForSingleton]
 partial class TcpServiceReceivedPlugin : PluginBase
 {
     [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
@@ -104,7 +102,6 @@ partial class TcpServiceReceivedPlugin : PluginBase
 /// <summary>
 /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
 /// </summary>
-[AutoInjectForSingleton]
 partial class ClosePlugin : PluginBase
 {
     private readonly ILog m_logger;
