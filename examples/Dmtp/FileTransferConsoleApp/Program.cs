@@ -796,7 +796,7 @@ namespace FileTransferConsoleApp
             }
             else
             {
-                this.m_logger.Info($"结束Push文件，类型={e.TransferType}，文件名={e.ResourcePath}，结果={e.Result}");
+                this.m_logger.Info($"结束Push文件，类型={e.TransferType}，文件名={e.FileInfo.Name}，结果={e.Result}");
             }
             await e.InvokeNext();
         }
@@ -826,7 +826,7 @@ namespace FileTransferConsoleApp
             }
             else
             {
-                this.m_logger.Info($"请求Push文件，类型={e.TransferType}，文件名={e.ResourcePath}");
+                this.m_logger.Info($"请求Push文件，类型={e.TransferType}，文件名={e.FileInfo.Name}");
             }
             await e.InvokeNext();
         }
