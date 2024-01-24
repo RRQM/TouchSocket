@@ -51,8 +51,10 @@ Ssl配置，为Null时则不启用。
 #### SetRemoteIPHost
 
 链接到的远程IPHost，支持域名。支持类型：
-1. 使用IP&Port，传入形如：127.0.0.1:7789的字符串即可。
-2. 使用域名，必须包含协议类型，形如：http://baidu.com或者https://baidu.com:80
+1. 使用IPv4，传入形如：127.0.0.1:7789的字符串即可。
+2. 使用IPv6，传入形如：[\*::\*]:7789的字符串即可。
+3. 使用域名，必须包含协议类型，形如：http://baidu.com或者https://baidu.com:80
+3. 使用IPv6域名，必须包含协议类型，形如：http://[\*::\*]:80
 
 #### SetClientSslOption
 客户端Ssl配置，为Null时则不启用。
