@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -26,21 +26,26 @@ namespace TouchSocket.WebApi
     [PluginOption(Singleton = true)]
     public class WebApiParserPlugin : PluginBase
     {
-        private readonly IRpcServerProvider m_rpcServerProvider;
         private readonly IResolver m_resolver;
+        private readonly IRpcServerProvider m_rpcServerProvider;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider,IResolver resolver)
+        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver)
         {
+            if (rpcServerProvider is null)
+            {
+                throw new ArgumentNullException(nameof(rpcServerProvider));
+            }
+
             this.GetRouteMap = new ActionMap(true);
             this.PostRouteMap = new ActionMap(true);
             this.Converter = new StringConverter();
 
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
-            this.m_resolver = resolver;
+            this.m_resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         }
 
         /// <summary>
@@ -85,7 +90,7 @@ namespace TouchSocket.WebApi
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
 
-                var callContext = new WebApiCallContext(client,methodInstance, m_resolver,e.Context);
+                var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
 
                 if (methodInstance.IsEnable)
                 {

@@ -4,7 +4,7 @@
 		<PackageTags>Rpc;RateLimiting;TouchSocket</PackageTags>
 		<Description>这是一个扩展于Rpc管理平台的限流包。目前支持开发DmtpRpc、XmlRpc、JsonRpc、WebApi等所有Rpc部分。
 
-说明文档：https://touchsocket.net/</Description>
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Rpc.RateLimiting</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc.RateLimiting</PackageOutputPath>
 	</PropertyGroup>

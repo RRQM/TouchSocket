@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -36,19 +36,18 @@ namespace TouchSocket.Http
         /// Http响应
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="isServer"></param>
-        public HttpResponse(ITcpClientBase client, bool isServer = true)
+        public HttpResponse(ITcpClientBase client)
         {
             this.m_client = client;
-            if (isServer)
-            {
-                this.m_canRead = false;
-                this.m_canWrite = true;
-            }
-            else
+            if (client.IsClient)
             {
                 this.m_canRead = true;
                 this.m_canWrite = false;
+            }
+            else
+            {
+                this.m_canRead = false;
+                this.m_canWrite = true;
             }
         }
 
@@ -56,7 +55,7 @@ namespace TouchSocket.Http
         /// 从<see cref="HttpRequest"/>创建一个Http响应
         /// </summary>
         /// <param name="request"></param>
-        public HttpResponse(HttpRequest request) : this(request.Client, true)
+        public HttpResponse(HttpRequest request) : this(request.Client)
         {
             this.ProtocolVersion = request.ProtocolVersion;
             this.Protocols = request.Protocols;
@@ -135,10 +134,7 @@ namespace TouchSocket.Http
         /// </summary>
         public void Answer()
         {
-            if (this.Responsed)
-            {
-                return;
-            }
+            this.ThrowIfResponsed();
             using (var byteBlock = new ByteBlock())
             {
                 this.Build(byteBlock);
@@ -156,10 +152,7 @@ namespace TouchSocket.Http
         /// </summary>
         public async Task AnswerAsync()
         {
-            if (this.Responsed)
-            {
-                return;
-            }
+            this.ThrowIfResponsed();
             using (var byteBlock = new ByteBlock())
             {
                 this.Build(byteBlock);
@@ -171,6 +164,14 @@ namespace TouchSocket.Http
             }
         }
 
+        private void ThrowIfResponsed()
+        {
+            if (this.Responsed)
+            {
+                throw new Exception("该对象已被响应。");
+            }
+        }
+
         /// <summary>
         ///  构建响应数据。
         /// <para>当数据较大时，不建议这样操作，可直接<see cref="WriteContent(byte[], int, int)"/></para>
@@ -179,11 +180,7 @@ namespace TouchSocket.Http
         /// <param name="responsed"></param>
         public void Build(ByteBlock byteBlock, bool responsed = true)
         {
-            if (this.Responsed)
-            {
-                throw new Exception("该对象已被响应。");
-            }
-
+            this.ThrowIfResponsed();
             this.BuildHeader(byteBlock);
             this.BuildContent(byteBlock);
             this.Responsed = responsed;
@@ -435,6 +432,8 @@ namespace TouchSocket.Http
         internal override void Destory()
         {
             base.Destory();
+            this.m_sentHeader = false;
+            this.m_sentLength = 0;
             this.Responsed = false;
             this.IsChunk = false;
             this.StatusCode = 200;
