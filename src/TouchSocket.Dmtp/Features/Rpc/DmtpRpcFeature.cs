@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -22,8 +22,8 @@ namespace TouchSocket.Dmtp.Rpc
     /// </summary>
     public class DmtpRpcFeature : PluginBase, IDmtpFeature
     {
-        private readonly IRpcServerProvider m_rpcServerProvider;
         private readonly IResolver m_resolver;
+        private readonly IRpcServerProvider m_rpcServerProvider;
 
         /// <summary>
         /// 能够基于Dmtp协议，提供Rpc的功能
@@ -38,7 +38,7 @@ namespace TouchSocket.Dmtp.Rpc
                 this.m_rpcServerProvider = rpcServerProvider;
             }
 
-            this.CreateDmtpRpcActor = this.PrivateCreateDmtpRpcActor;
+            this.CreateDmtpRpcActor = PrivateCreateDmtpRpcActor;
             this.SetProtocolFlags(20);
             this.m_resolver = resolver;
         }
@@ -51,7 +51,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 创建DmtpRpc实例
         /// </summary>
-        public Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
+        public Func<IDmtpActor, IRpcServerProvider, IResolver, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
 
         /// <inheritdoc/>
         public ushort ReserveProtocolSize => 5;
@@ -69,7 +69,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="createDmtpRpcActor"></param>
         /// <returns></returns>
-        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> createDmtpRpcActor)
+        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, IResolver, DmtpRpcActor> createDmtpRpcActor)
         {
             this.CreateDmtpRpcActor = createDmtpRpcActor;
             return this;
@@ -100,14 +100,14 @@ namespace TouchSocket.Dmtp.Rpc
             return this;
         }
 
+        private static DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IResolver resolver)
+        {
+            return new DmtpRpcActor(dmtpActor, rpcServerProvider, resolver);
+        }
+
         private MethodInstance GetInvokeMethod(string name)
         {
             return this.ActionMap.GetMethodInstance(name);
-        }
-
-        private DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider)
-        {
-            return new DmtpRpcActor(dmtpActor, rpcServerProvider,this.m_resolver);
         }
 
         private void RegisterServer(MethodInstance[] methodInstances)
@@ -133,7 +133,7 @@ namespace TouchSocket.Dmtp.Rpc
 
         private async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor,this.m_rpcServerProvider);
+            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.m_resolver);
             dmtpRpcActor.SerializationSelector = this.SerializationSelector;
             dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 

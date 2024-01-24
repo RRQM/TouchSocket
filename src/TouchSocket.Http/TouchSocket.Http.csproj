@@ -4,7 +4,7 @@
 		<PackageTags>Http;Https;HttpServer;HttpClient;WebSocket;WebSocketServer;WebSocketClient;TouchSocket</PackageTags>
 		<Description>这是一个基于Http1.1协议的组件库。它能提供Http服务器、客户端、以及WebSocket组件。功能上支持大文件下载、上传、以及多线程下载和断点续传，小文件form上传，WebApi声明和执行。所提供的Http客户端是基于连接的，可以捕获连接和断开连接等消息。
 
-说明文档：https://touchsocket.net/	</Description>
+说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
 		<Title>TouchSocket.Http</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Http</PackageOutputPath>
 	</PropertyGroup>

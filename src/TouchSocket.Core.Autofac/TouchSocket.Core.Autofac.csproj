@@ -4,7 +4,7 @@
 		<PackageTags>IOC;Autofac;DependencyInjection;TouchSocket</PackageTags>
 		<Description>这是一个为Core中扩展Ioc容器为Autofac的库。
 
-说明文档：https://touchsocket.net/</Description>
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.Core.Autofac</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core.Autofac</PackageOutputPath>
 	</PropertyGroup>

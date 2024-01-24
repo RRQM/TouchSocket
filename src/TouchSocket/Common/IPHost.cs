@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -35,10 +35,14 @@ namespace TouchSocket.Sockets
         /// IP解析映射
         /// <para>
         /// 支持端口，ip，域名等。具体格式如下：
-        /// <list type=" number">
+        /// <list type="bullet">
         /// <item>端口：直接按<see cref="int"/>入参，该操作一般在监听时使用。</item>
-        /// <item>ip：按127.0.0.1:7789入参。</item>
-        /// <item>域名：按tcp://127.0.0.1:7789、或者http://baidu.com入参。</item>
+        /// <item>IPv4：按"127.0.0.1:7789"入参。</item>
+        /// <item>IPv6：按"[*::*]:7789"入参。</item>
+        /// <item>域名(1)："tcp://127.0.0.1:7789"</item>
+        /// <item>域名(2)："tcp://[*::*]:7789"</item>
+        /// <item>域名(3)："http://touchsocket.net"</item>
+        /// <item>域名(4)："http://touchsocket.net:7789"</item>
         /// </list>
         /// </para>
         /// </summary>
@@ -48,7 +52,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 从端口号创建。
+        /// 从端口号创建IPv4的Any地址。
         /// </summary>
         /// <param name="port"></param>
         public IPHost(int port) : this($"0.0.0.0:{port}")
@@ -60,7 +64,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param>
-        public IPHost(IPAddress address, int port) : this($"{address}:{port}")
+        public IPHost(IPAddress address, int port) 
+            : this(address.AddressFamily== System.Net.Sockets.AddressFamily.InterNetworkV6? $"[{address}]:{port}" : $"{address}:{port}")
         {
         }
 

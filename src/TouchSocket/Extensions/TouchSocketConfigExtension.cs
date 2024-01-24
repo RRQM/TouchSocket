@@ -5,13 +5,14 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Security.Authentication;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -285,7 +286,16 @@ namespace TouchSocket.Sockets
             {
                 config.SetClientSslOption(new ClientSslOption()
                 {
-                    TargetHost = value.Authority
+                    TargetHost = value.Authority,
+#if NET45 || NETSTANDARD2_0
+                    SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12
+#elif NET481_OR_GREATER
+                    SslProtocols = SslProtocols.Ssl2 | SslProtocols.Ssl3 | SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13
+#elif NET6_0
+                    SslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13
+#elif NET7_0_OR_GREATER
+                    SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13
+#endif
                 });
             }
             return config;

@@ -4,7 +4,7 @@
 		<PackageTags>WebApi;TouchSocket</PackageTags>
 		<Description>这是一个提供WebApi服务器和客户端的组件库。可以通过该组件创建WebApi服务解析器和客户端，让桌面端、Web端、移动端可以跨语言调用Rpc函数。功能支持自定义路由、Get传参、Post传参等。
 
-说明文档：https://touchsocket.net/</Description>
+说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
 		<Title>TouchSocket.WebApi</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi</PackageOutputPath>
 	</PropertyGroup>

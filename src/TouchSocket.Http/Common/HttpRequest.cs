@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -39,12 +39,11 @@ namespace TouchSocket.Http
         /// 构造函数
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="isServer"></param>
-        public HttpRequest(ITcpClientBase client, bool isServer = false)
+        public HttpRequest(ITcpClientBase client)
         {
             this.m_client = client;
-            this.m_isServer = isServer;
-            if (isServer)
+            this.m_isServer = !client.IsClient;
+            if (this.m_isServer)
             {
                 this.m_canRead = true;
                 this.CanWrite = false;

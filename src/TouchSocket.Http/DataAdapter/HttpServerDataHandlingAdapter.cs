@@ -5,7 +5,7 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ namespace TouchSocket.Http
         /// <param name="byteBlock"></param>
         protected override void PreviewReceived(ByteBlock byteBlock)
         {
-            this.m_requestRoot ??= new HttpRequest(this.m_client, true);
+            this.m_requestRoot ??= new HttpRequest(this.m_client);
 
             if (this.tempByteBlock == null)
             {
