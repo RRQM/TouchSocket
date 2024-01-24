@@ -29,6 +29,7 @@ function EditMetaRow({
     <div className={clsx(ThemeClassNames.docs.docFooterEditMetaRow, 'row')}>
       <div className="col">{editUrl && <EditThisPage editUrl={editUrl} />}</div>
       <script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+      <script defer src="https://us.umami.is/script.js" data-website-id="b77ef5ce-12e7-4637-95cb-c606ff14f188"></script>
       <div className={clsx('col', styles.lastUpdated)}>
       📖<span id="busuanzi_value_page_pv"></span><br/>
         {(lastUpdatedAt || lastUpdatedBy) && (
