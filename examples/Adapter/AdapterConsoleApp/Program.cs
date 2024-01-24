@@ -7,7 +7,6 @@ using TouchSocket.Sockets;
 
 namespace AdapterConsoleApp
 {
-
     internal class Program
     {
         private static TcpClient CreateClient()
