@@ -41,7 +41,6 @@
     ]
   },
   "devDependencies": {
-    "@21yunbox/netlify-plugin-21yunbox-deploy-to-china-cdn": "^1.0.7",
     "@docusaurus/module-type-aliases": "^2.4.3",
     "react-iconfont-cli": "^2.0.2"
   },
