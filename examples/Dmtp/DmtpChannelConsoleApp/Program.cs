@@ -11,27 +11,69 @@ namespace DmtpChannelConsoleApp
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
-            var count = 1024 * 20;//测试20Gb数据
+            var consoleAction = new ConsoleAction();
 
+            consoleAction.Add("1","测试完成写入", () => { RunComplete(client); });
+            consoleAction.Add("2","测试Hold", () => { RunHoldOn(client); });
+
+
+            consoleAction.ShowAll();
+
+            consoleAction.RunCommandLine();
+        }
+
+        static void RunHoldOn(IDmtpActorObject client)
+        {
+            //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
+
+            //1.创建通道，同时支持通道路由和元数据传递
             using (var channel = client.CreateChannel())
             {
+                //设置限速
+                //channel.MaxSpeed = 1024 * 1024;
+
+                ConsoleLogger.Default.Info($"通道创建成功，即将写入");
+                var bytes = new byte[1024];
+
+                for (var i = 0; i < 100; i++)//循环100次
+                {
+                    for (int j = 0; j < 10; j++)
+                    {
+                        //2.持续写入数据
+                        channel.Write(bytes);
+                    }
+                    //3.在某个阶段完成数据传输时，可以调用HoldOn
+                    channel.HoldOn("等一下下");
+                }
+                //4.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+                channel.Complete("我完成了");
+
+                ConsoleLogger.Default.Info("通道写入结束");
+            }
+        }
+
+        static void RunComplete(IDmtpActorObject client)
+        {
+            var count = 1024 * 1;//测试1Gb数据
+
+            //1.创建通道，同时支持通道路由和元数据传递
+            using (var channel = client.CreateChannel())
+            {
+                //设置限速
+                //channel.MaxSpeed = 1024 * 1024;
+
                 ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
                 var bytes = new byte[1024 * 1024];
                 for (var i = 0; i < count; i++)
                 {
+                    //2.持续写入数据
                     channel.Write(bytes);
                 }
-                channel.Complete();
+
+                //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+                channel.Complete("我完成了");
                 ConsoleLogger.Default.Info("通道写入结束");
             }
-
-            while (true)
-            {
-                BytePool.Default.Clear();
-                GC.Collect();
-                Console.ReadKey();
-            }
-
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()
@@ -40,7 +82,7 @@ namespace DmtpChannelConsoleApp
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetDmtpOption(new DmtpOption()
                    {
-                       VerifyToken = "File"
+                       VerifyToken = "Channel"
                    })
                    .SetSendTimeout(0)
                    .ConfigureContainer(a =>
@@ -74,7 +116,7 @@ namespace DmtpChannelConsoleApp
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
-                       VerifyToken = "File"//连接验证口令。
+                       VerifyToken = "Channel"//连接验证口令。
                    });
 
             service.Setup(config);
@@ -96,17 +138,29 @@ namespace DmtpChannelConsoleApp
         {
             if (client.TrySubscribeChannel(e.ChannelId, out var channel))
             {
+                //接收端也可以限速
+                //channel.MaxSpeed = 1024 * 1024;
+
+                //设定读取超时时间
+                //channel.Timeout = TimeSpan.FromSeconds(30);
                 using (channel)
                 {
-                    long count = 0;
                     this.m_logger.Info("通道开始接收");
-                    foreach (var byteBlock in channel)
-                    {
-                        //这里处理数据
-                        count += byteBlock.Len;
-                    }
 
-                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count / (1048576.0):0.00}Mb字节");
+                    //此判断主要是探测是否有Hold操作
+                    while (channel.CanMoveNext)
+                    {
+                        long count = 0;
+                        foreach (var byteBlock in channel)
+                        {
+                            //这里处理数据
+                            count += byteBlock.Len;
+                            this.m_logger.Info($"通道已接收：{count}字节");
+                        }
+
+                        this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+                    }
+                    
                 }
             }
 
