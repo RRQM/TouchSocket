@@ -15,10 +15,14 @@ using System;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 强制Fast序列化。一般当某个属性为只读时，使用该特性。
+    /// 显式Fast序列化。一般当某个属性为只读时，使用该特性。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property| AttributeTargets.Class| AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
     public sealed class FastSerializedAttribute : Attribute
     {
+        /// <summary>
+        /// 使用索引替代属性名称。
+        /// </summary>
+        public bool EnableIndex { get; set; }
     }
 }

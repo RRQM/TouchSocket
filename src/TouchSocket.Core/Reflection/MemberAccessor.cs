@@ -37,8 +37,10 @@ namespace TouchSocket.Core
     /// </summary>
     public class MemberAccessor : IMemberAccessor
     {
-        private Func<object, string, object> GetValueDelegate;
-        private Action<object, string, object> SetValueDelegate;
+        private Func<object, string, object> m_getValueDelegate;
+        private Dictionary<string, FieldInfo> m_dicFieldInfes;
+        private Dictionary<string, PropertyInfo> m_dicProperties;
+        private Action<object, string, object> m_setValueDelegate;
 
         /// <summary>
         /// 动态成员访问器
@@ -51,8 +53,20 @@ namespace TouchSocket.Core
             this.OnGetProperties = (t) => { return t.GetProperties(); };
         }
 
-        private Dictionary<string, FieldInfo> dicFieldInfes;
-        private Dictionary<string, PropertyInfo> dicProperties;
+        /// <summary>
+        /// 获取字段
+        /// </summary>
+        public Func<Type, FieldInfo[]> OnGetFieldInfes { get; set; }
+
+        /// <summary>
+        /// 获取属性
+        /// </summary>
+        public Func<Type, PropertyInfo[]> OnGetProperties { get; set; }
+
+        /// <summary>
+        /// 所属类型
+        /// </summary>
+        public Type Type { get; }
 
         /// <summary>
         /// 构建
@@ -61,39 +75,24 @@ namespace TouchSocket.Core
         {
             if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
             {
-                this.dicFieldInfes = this.OnGetFieldInfes.Invoke(this.Type).ToDictionary(a => a.Name);
-                this.dicProperties = this.OnGetProperties.Invoke(this.Type).ToDictionary(a => a.Name);
+                this.m_dicFieldInfes = this.OnGetFieldInfes.Invoke(this.Type).ToDictionary(a => a.Name);
+                this.m_dicProperties = this.OnGetProperties.Invoke(this.Type).ToDictionary(a => a.Name);
             }
 
-            this.GetValueDelegate = this.GenerateGetValue();
-            this.SetValueDelegate = this.GenerateSetValue();
+            this.m_getValueDelegate = this.GenerateGetValue();
+            this.m_setValueDelegate = this.GenerateSetValue();
         }
-
-        /// <summary>
-        /// 获取属性
-        /// </summary>
-        public Func<Type, PropertyInfo[]> OnGetProperties { get; set; }
-
-        /// <summary>
-        /// 获取字段
-        /// </summary>
-        public Func<Type, FieldInfo[]> OnGetFieldInfes { get; set; }
-
-        /// <summary>
-        /// 所属类型
-        /// </summary>
-        public Type Type { get; }
 
         /// <inheritdoc/>
         public object GetValue(object instance, string memberName)
         {
-            return this.GetValueDelegate(instance, memberName);
+            return this.m_getValueDelegate(instance, memberName);
         }
 
         /// <inheritdoc/>
         public void SetValue(object instance, string memberName, object newValue)
         {
-            this.SetValueDelegate(instance, memberName, newValue);
+            this.m_setValueDelegate(instance, memberName, newValue);
         }
 
         private Func<object, string, object> GenerateGetValue()
@@ -102,13 +101,13 @@ namespace TouchSocket.Core
             {
                 return (obj, key) =>
                 {
-                    if (this.dicFieldInfes.TryGetValue(key, out var value1))
+                    if (this.m_dicFieldInfes.TryGetValue(key, out var value1))
                     {
                         return value1.GetValue(obj);
                     }
                     else
                     {
-                        return this.dicProperties.TryGetValue(key, out var value2) ? value2.GetValue(obj) : default;
+                        return this.m_dicProperties.TryGetValue(key, out var value2) ? value2.GetValue(obj) : default;
                     }
                 };
             }
@@ -160,11 +159,11 @@ namespace TouchSocket.Core
             {
                 return (obj, key, value) =>
                 {
-                    if (this.dicFieldInfes.TryGetValue(key, out var value1))
+                    if (this.m_dicFieldInfes.TryGetValue(key, out var value1))
                     {
                         value1.SetValue(obj, value);
                     }
-                    if (this.dicProperties.TryGetValue(key, out var value2))
+                    if (this.m_dicProperties.TryGetValue(key, out var value2))
                     {
                         value2.SetValue(obj, value);
                     }

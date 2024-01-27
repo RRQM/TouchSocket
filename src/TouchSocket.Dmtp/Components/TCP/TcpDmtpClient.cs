@@ -57,7 +57,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public override void Close(string msg = "")
+        public override void Close(string msg)
         {
             if (this.IsHandshaked)
             {

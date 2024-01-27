@@ -17,18 +17,38 @@ using System.Reflection;
 
 namespace TouchSocket.Core
 {
-    internal sealed class SerializObject
+    /// <summary>
+    /// 可序列化对象
+    /// </summary>
+    public sealed class SerializObject
     {
-        private FieldInfo[] m_fieldInfos;
-        private MemberInfo[] m_memberInfos;
-        private PropertyInfo[] m_properties;
+        internal Method AddMethod;
+        internal Type[] ArgTypes;
+        internal Type ArrayType;
+        internal bool EnableIndex;
+        internal Dictionary<byte, FastMemberInfo> FastMemberInfoDicForIndex;
+        internal Dictionary<string, FastMemberInfo> FastMemberInfoDicForName;
+        internal InstanceType InstanceType;
+        internal bool IsStruct;
+        internal MemberAccessor MemberAccessor;
+        internal FastMemberInfo[] MemberInfos;
 
+        /// <summary>
+        /// 从转换器初始化
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="converter"></param>
         public SerializObject(Type type, IFastBinaryConverter converter)
         {
             this.Type = type;
             this.Converter = converter;
         }
 
+        /// <summary>
+        /// 从类型创建序列化器
+        /// </summary>
+        /// <param name="type"></param>
+        /// <exception cref="Exception"></exception>
         public SerializObject(Type type)
         {
             this.Type = type;
@@ -92,12 +112,50 @@ namespace TouchSocket.Core
                     };
                     this.MemberAccessor.Build();
                 }
-                if (type.GetCustomAttribute<FastConverterAttribute>() is FastConverterAttribute attribute)
+
+                if (type.GetCustomAttribute(typeof(FastConverterAttribute), false) is FastConverterAttribute attribute)
                 {
                     this.Converter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
                 }
-                this.PropertiesDic = GetProperties(type).ToDictionary(a => a.Name);
-                this.FieldInfosDic = GetFieldInfos(type).ToDictionary(a => a.Name);
+
+                if (type.GetCustomAttribute(typeof(FastSerializedAttribute), false) is FastSerializedAttribute fastSerializedAttribute)
+                {
+                    this.EnableIndex = fastSerializedAttribute.EnableIndex;
+                }
+
+                var list = new List<MemberInfo>();
+                list.AddRange(GetProperties(type));
+                list.AddRange(GetFieldInfos(type));
+
+                this.FastMemberInfoDicForIndex = new Dictionary<byte, FastMemberInfo>();
+                this.FastMemberInfoDicForName = new Dictionary<string, FastMemberInfo>();
+
+                if (this.EnableIndex)
+                {
+                    foreach (var memberInfo in list)
+                    {
+                        var fastMemberInfo = new FastMemberInfo(memberInfo, true);
+                        if (this.FastMemberInfoDicForIndex.ContainsKey(fastMemberInfo.Index))
+                        {
+                            throw new Exception($"类型：{type}中的成员{memberInfo.Name}，在标识{nameof(FastMemberAttribute)}特性时Index重复。");
+                        }
+                        this.FastMemberInfoDicForIndex.Add(fastMemberInfo.Index, fastMemberInfo);
+                    }
+                }
+                else
+                {
+                    foreach (var memberInfo in list)
+                    {
+                        var fastMemberInfo = new FastMemberInfo(memberInfo, false);
+                        this.FastMemberInfoDicForName.Add(fastMemberInfo.Name, fastMemberInfo);
+                    }
+                }
+
+                var infos = new List<FastMemberInfo>();
+                infos.AddRange(this.FastMemberInfoDicForIndex.Values);
+                infos.AddRange(this.FastMemberInfoDicForName.Values);
+                this.MemberInfos = infos.ToArray();
+
                 if (type.IsGenericType)
                 {
                     this.ArgTypes = type.GetGenericArguments();
@@ -106,64 +164,22 @@ namespace TouchSocket.Core
             this.IsStruct = type.IsStruct();
         }
 
-        public Method AddMethod { get; private set; }
-        public Type[] ArgTypes { get; private set; }
-        public Type ArrayType { get; private set; }
-        public IFastBinaryConverter Converter { get; private set; }
+        /// <summary>
+        /// 转化器
+        /// </summary>
+        public IFastBinaryConverter Converter { get;private set; }
 
-        public FieldInfo[] FieldInfos
-        {
-            get
-            {
-                this.m_fieldInfos ??= this.FieldInfosDic.Values.ToArray();
-                return this.m_fieldInfos;
-            }
-        }
-
-        public Dictionary<string, FieldInfo> FieldInfosDic { get; private set; }
-        public InstanceType InstanceType { get; private set; }
-        public bool IsStruct { get; private set; }
-        public MemberAccessor MemberAccessor { get; private set; }
-
-        public MemberInfo[] MemberInfos
-        {
-            get
-            {
-                if (this.m_memberInfos == null)
-                {
-                    var infos = new List<MemberInfo>();
-                    infos.AddRange(this.FieldInfosDic.Values);
-                    infos.AddRange(this.PropertiesDic.Values);
-                    this.m_memberInfos = infos.ToArray();
-                }
-                return this.m_memberInfos;
-            }
-        }
-
-        public PropertyInfo[] Properties
-        {
-            get
-            {
-                this.m_properties ??= this.PropertiesDic.Values.ToArray();
-                return this.m_properties;
-            }
-        }
-
-        public Dictionary<string, PropertyInfo> PropertiesDic { get; private set; }
-
+        /// <summary>
+        /// 类型
+        /// </summary>
         public Type Type { get; private set; }
-
-        public object GetNewInstance()
-        {
-            return Activator.CreateInstance(this.Type);
-        }
 
         private static FieldInfo[] GetFieldInfos(Type type)
         {
             return type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
                 .Where(p =>
                 {
-                    return !p.IsInitOnly && (!p.IsDefined(typeof(FastNonSerializedAttribute), true));
+                    return !p.IsInitOnly && (!p.IsDefined(typeof(FastNonSerializedAttribute), false));
                 })
                 .ToArray();
         }
@@ -173,9 +189,9 @@ namespace TouchSocket.Core
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
                           .Where(p =>
                           {
-                              return p.IsDefined(typeof(FastSerializedAttribute), true) || p.CanWrite &&
+                              return p.IsDefined(typeof(FastSerializedAttribute), false) || p.CanWrite &&
                               p.CanRead &&
-                              (!p.IsDefined(typeof(FastNonSerializedAttribute), true) &&
+                              (!p.IsDefined(typeof(FastNonSerializedAttribute), false) &&
                               (p.SetMethod.GetParameters().Length == 1) &&
                               (p.GetMethod.GetParameters().Length == 0));
                           })

@@ -41,20 +41,20 @@ namespace TouchSocket.Core
     /// <typeparam name="T"></typeparam>
     public abstract class FastBinaryConverter<T> : IFastBinaryConverter
     {
-        int IFastBinaryConverter.Write(ByteBlock byteBlock, object obj)
-        {
-            return this.Write(byteBlock, (T)obj);
-        }
-
         object IFastBinaryConverter.Read(byte[] buffer, int offset, int len)
         {
             return this.Read(buffer, offset, len);
         }
 
-        /// <inheritdoc cref="IFastBinaryConverter.Write(ByteBlock, object)"/>
-        protected abstract int Write(ByteBlock byteBlock, T obj);
+        int IFastBinaryConverter.Write(ByteBlock byteBlock, object obj)
+        {
+            return this.Write(byteBlock, (T)obj);
+        }
 
         /// <inheritdoc cref="IFastBinaryConverter.Read(byte[], int, int)"/>
         protected abstract T Read(byte[] buffer, int offset, int len);
+
+        /// <inheritdoc cref="IFastBinaryConverter.Write(ByteBlock, object)"/>
+        protected abstract int Write(ByteBlock byteBlock, T obj);
     }
 }

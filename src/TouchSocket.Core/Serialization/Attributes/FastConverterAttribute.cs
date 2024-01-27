@@ -17,6 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// FastConverterAttribute
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class,AllowMultiple =false,Inherited =false)]
     public class FastConverterAttribute : Attribute
     {
         /// <summary>

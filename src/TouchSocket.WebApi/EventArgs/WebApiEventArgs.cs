@@ -48,7 +48,7 @@ namespace TouchSocket.WebApi
         public HttpResponse Response { get; }
     }
 
-#if !NET45
+#if NETSTANDARD2_0_OR_GREATER||NET481_OR_GREATER||NET6_0_OR_GREATER
 
     public partial class WebApiEventArgs
     {

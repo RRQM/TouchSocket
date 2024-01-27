@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>Rpc;TouchSocket</PackageTags>
 		<Description>这是一个超轻量、高性能、可扩展的Rpc管理平台框架。您可以基于该框架，快速开发出Rpc执行。目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。
 

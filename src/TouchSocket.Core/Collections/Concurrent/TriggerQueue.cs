@@ -96,8 +96,11 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_timer.SafeDispose();
-            this.m_queue.Clear();
+            if (disposing) 
+            {
+                this.m_timer.SafeDispose();
+                this.m_queue.Clear();
+            }
             base.Dispose(disposing);
         }
 

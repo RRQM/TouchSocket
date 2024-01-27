@@ -33,7 +33,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await c.ConnectAsync();
+                    await c.ConnectAsync().ConfigureFalseAwait();
                     return true;
                 }
                 catch
@@ -83,7 +83,7 @@ namespace TouchSocket.Sockets
         {
             this.ActionForCheck = async (c, i) =>
             {
-                await EasyTask.CompletedTask;
+                await EasyTask.CompletedTask.ConfigureFalseAwait();
                 return actionForCheck.Invoke(c, i);
             };
             return this;
@@ -142,9 +142,9 @@ namespace TouchSocket.Sockets
             pluginManager.Add<TClient, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this.OnTcpDisconnected);
         }
 
-        private Task OnLoadedConfig(object sender, ConfigEventArgs e)
+        private async Task OnLoadedConfig(object sender, ConfigEventArgs e)
         {
-            Task.Run(async () =>
+            _=Task.Run(async () =>
             {
                 if (!this.m_polling)
                 {
@@ -159,17 +159,17 @@ namespace TouchSocket.Sockets
                         {
                             return;
                         }
-                        await Task.Delay(this.Tick);
+                        await Task.Delay(this.Tick).ConfigureFalseAwait();
                         try
                         {
-                            var b = await this.ActionForCheck.Invoke(client, failCount);
+                            var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureFalseAwait();
                             if (b == null)
                             {
                                 continue;
                             }
                             else if (b == false)
                             {
-                                if (await this.ActionForConnect.Invoke(client))
+                                if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
                                 {
                                     failCount = 0;
                                 }
@@ -186,7 +186,7 @@ namespace TouchSocket.Sockets
                 }
             });
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
 
         private async Task OnTcpDisconnected(TClient client, DisconnectEventArgs e)
@@ -201,7 +201,7 @@ namespace TouchSocket.Sockets
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client))
+                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
                     {
                         return;
                     }

@@ -72,7 +72,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         public static void SafeClose<T>(this T client) where T : ICloseObject
         {
-            SafeClose(client);
+            SafeClose(client, "SafeClose");
         }
     }
 }

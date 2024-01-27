@@ -47,9 +47,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 异步等待设置此事件
         /// </summary>
-        public Task WaitOneAsync()
+        public async Task WaitOneAsync()
         {
-            return this.WaitOneAsync(CancellationToken.None);
+            await this.WaitOneAsync(CancellationToken.None);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace TouchSocket.Core
             {
                 using (var timeoutSource = new CancellationTokenSource(timeout))
                 {
-                    await this.WaitOneAsync(timeoutSource.Token);
+                    await this.WaitOneAsync(timeoutSource.Token).ConfigureFalseAwait();
                     return true;
                 }
             }
@@ -182,17 +182,21 @@ namespace TouchSocket.Core
             {
                 return;
             }
-            while (true)
-            {
-                lock (this.m_locker)
-                {
-                    if (this.m_waitQueue.Count == 0)
-                    {
-                        break;
-                    }
-                }
 
-                this.Set();
+            if (disposing)
+            {
+                while (true)
+                {
+                    lock (this.m_locker)
+                    {
+                        if (this.m_waitQueue.Count == 0)
+                        {
+                            break;
+                        }
+                    }
+
+                    this.Set();
+                }
             }
             base.Dispose(disposing);
         }

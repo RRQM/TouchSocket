@@ -41,13 +41,21 @@ namespace TouchSocket.Core
         public static readonly Type dicType = typeof(IDictionary);
         public static readonly Type arrayType = typeof(Array);
         public static readonly Type nullableType = typeof(Nullable<>);
-
-        public static readonly byte[] ZeroBytes = new byte[0];
 #pragma warning restore CS1591 // 缺少对公共可见类型或成员的 XML 注释
 
         /// <summary>
         /// 空字符串常亮
         /// </summary>
         public const string Empty = "";
+
+        /// <summary>
+        /// 0长度字节数组
+        /// </summary>
+#if NET45
+        public static readonly byte[] ZeroBytes = new byte[0];
+#else
+        public static readonly byte[] ZeroBytes = Array.Empty<byte>();
+#endif
+
     }
 }

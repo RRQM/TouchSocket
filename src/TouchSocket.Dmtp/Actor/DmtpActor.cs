@@ -1005,7 +1005,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 this.SendJsonObject(P5_Ping_Request, waitPing);
-                switch (await waitData.WaitAsync(timeout).ConfigureFalseAwait())
+                switch (await waitData.WaitAsync(timeout))
                 {
                     case WaitDataStatus.SetRunning:
                         {

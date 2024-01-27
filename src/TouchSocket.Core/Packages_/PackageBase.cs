@@ -17,8 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// PackageBase包结构数据。
     /// </summary>
-    [Serializable]
-    public abstract partial class PackageBase : IPackage
+    public abstract class PackageBase : IPackage
     {
         /// <inheritdoc/>
         public abstract void Package(in ByteBlock byteBlock);
