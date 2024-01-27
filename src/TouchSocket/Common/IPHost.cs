@@ -18,14 +18,6 @@ namespace TouchSocket.Sockets
 {
     /// <summary>
     /// IP解析映射
-    /// <para>
-    /// 支持端口，ip，域名等。具体格式如下：
-    /// <list type=" number">
-    /// <item>端口：直接按<see cref="int"/>入参，该操作一般在监听时使用。</item>
-    /// <item>ip：按127.0.0.1:7789入参。</item>
-    /// <item>域名：按tcp://127.0.0.1:7789、或者http://baidu.com入参。</item>
-    /// </list>
-    /// </para>
     /// </summary>
     public class IPHost : Uri
     {

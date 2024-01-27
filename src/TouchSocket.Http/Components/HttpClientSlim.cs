@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if !NET45
+#if NETSTANDARD2_0_OR_GREATER||NET481_OR_GREATER||NET6_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.Linq;

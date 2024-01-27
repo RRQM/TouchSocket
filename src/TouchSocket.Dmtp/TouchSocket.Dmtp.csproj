@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>Duplex;Rpc;FileTransfer;Redis;TouchSocket</PackageTags>
 		<Description>DMTP（Duplex Message Transport Protocol双工消息传输协议）是一个简单易用，便捷高效，且易于扩展的二进制数据协议。目前基于该协议，已实现的功能包括：连接验证、同步Id、Rpc（包括客户端请求服务器，服务器请求客户端、客户端请求客户端）、文件传输（包括客户端向服务器请求文件、客户端向服务器推送文件、服务器向客户端请求文件、服务器向客户端推送文件、
 客户端之间请求、推送文件）、Redis等。

@@ -468,23 +468,15 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override void Stop()
         {
-            foreach (var item in this.m_monitors)
-            {
-                item.Socket.SafeDispose();
-                item.SocketAsyncEvent.SafeDispose();
-            }
-
-            this.m_monitors.Clear();
-
-            this.Clear();
-
             this.m_serverState = ServerState.Stopped;
+
+            this.ReleaseAll();
+
             this.PluginManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
             return;
         }
 
-        /// <inheritdoc/>
-        public override async Task StopAsync()
+        private void ReleaseAll()
         {
             foreach (var item in this.m_monitors)
             {
@@ -495,9 +487,14 @@ namespace TouchSocket.Sockets
             this.m_monitors.Clear();
 
             this.Clear();
+        }
 
+        /// <inheritdoc/>
+        public override async Task StopAsync()
+        {
             this.m_serverState = ServerState.Stopped;
-            await this.PluginManager.RaiseAsync(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
+            this.ReleaseAll();
+            await this.PluginManager.RaiseAsync(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -524,17 +521,8 @@ namespace TouchSocket.Sockets
 
             if (disposing)
             {
-                foreach (var item in this.m_monitors)
-                {
-                    item.Socket.SafeDispose();
-                    item.SocketAsyncEvent.SafeDispose();
-                }
-
-                this.m_monitors.Clear();
-
-                this.Clear();
-
                 this.m_serverState = ServerState.Disposed;
+                this.ReleaseAll();
                 this.PluginManager.Raise(nameof(IServerStopedPlugin.OnServerStoped), this, new ServiceStateEventArgs(this.m_serverState, default));
             }
             base.Dispose(disposing);
@@ -655,7 +643,10 @@ namespace TouchSocket.Sockets
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.Exception(ex);
+                    if (this.m_serverState== ServerState.Running)
+                    {
+                        this.Logger.Exception(ex);
+                    }
                     e.SafeDispose();
                     return;
                 }

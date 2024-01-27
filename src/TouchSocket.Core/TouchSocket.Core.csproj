@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>Message;ArrayPool;Logger;Plugin;3DES;Xml;FilePool;Serialize;TouchSocket</PackageTags>
 		<Description>这是一个基础服务功能的库，其中包含：内存池、对象池、文件池、流式数据解包器、等待逻辑池、AppMessenger、3DES加密、Xml快速存储、运行时间测量器、文件快捷操作、高性能二进制序列化器、规范日志接口等。
 			
