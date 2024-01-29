@@ -148,7 +148,126 @@ using (ByteBlock byteBlock=new ByteBlock())
 }
 ```
 
-## 四、性能评测
+## 四、使用源生成
+
+如果源生成可用，使用源代码生成方式，可以实现**自动**的打包和解包。
+
+例如上述类型，我们只需要使用`GeneratorPackage`特性标记即可。
+
+```csharp {1} showLineNumbers
+[GeneratorPackage]
+internal partial class MyGeneratorPackage : PackageBase
+{
+    public int P1 { get; set; }
+    public string P2 { get; set; }
+    public char P3 { get; set; }
+    public double P4 { get; set; }
+    public List<int> P5 { get; set; }
+    public Dictionary<int, MyClassModel> P6 { get; set; }
+}
+```
+
+<details>
+<summary>源生成的代码</summary>
+<div>
+
+```csharp showLineNumbers
+/*
+此代码由SourceGenerator工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
+using System;
+using System.Diagnostics;
+using TouchSocket.Core;
+using System.Threading.Tasks;
+
+namespace PackageConsoleApp
+{
+    [global::System.CodeDom.Compiler.GeneratedCode("TouchSocket.SourceGenerator", "2.0.0.0")]
+    partial class MyGeneratorPackage
+    {
+        public override void Package(in ByteBlock byteBlock)
+        {
+            byteBlock.Write(P1);
+            byteBlock.Write(P2);
+            byteBlock.Write(P3);
+            byteBlock.Write(P4);
+            byteBlock.WriteIsNull(this.P5);
+            if (this.P5 != null)
+            {
+                byteBlock.Write(this.P5.Count);
+                foreach (var item in this.P5)
+                {
+                    byteBlock.Write(item);
+                }
+            }
+
+            byteBlock.WriteIsNull(this.P6);
+            if (this.P6 != null)
+            {
+                byteBlock.Write(this.P6.Count);
+                foreach (var item in this.P6)
+                {
+                    byteBlock.Write(item.Key);
+                    byteBlock.WritePackage(item.Value);
+                }
+            }
+        }
+
+        public override void Unpackage(in ByteBlock byteBlock)
+        {
+            P1 = byteBlock.ReadInt32();
+            P2 = byteBlock.ReadString();
+            P3 = byteBlock.ReadChar();
+            P4 = byteBlock.ReadDouble();
+            if (!byteBlock.ReadIsNull())
+            {
+                var len = byteBlock.ReadInt32();
+                var list = new int[len];
+                for (var i = 0; i < len; i++)
+                {
+                    list[i] = byteBlock.ReadInt32();
+                }
+
+                this.P5 = new System.Collections.Generic.List<int>(list);
+            }
+
+            if (!byteBlock.ReadIsNull())
+            {
+                var len = byteBlock.ReadInt32();
+                var dic = new System.Collections.Generic.Dictionary<int, PackageConsoleApp.MyClassModel>(len);
+                for (var i = 0; i < len; i++)
+                {
+                    var key = byteBlock.ReadInt32();
+                    PackageConsoleApp.MyClassModel value = null;
+                    if (!byteBlock.ReadIsNull())
+                    {
+                        value = new PackageConsoleApp.MyClassModel();
+                        value.Unpackage(byteBlock);
+                    }
+
+                    dic.Add(key, value);
+                }
+
+                this.P6 = dic;
+            }
+        }
+    }
+}
+```
+
+</div>
+</details>
+
+:::caution 注意
+
+使用源代码生成方式，需要确保包内的所有成员均为基础类型，或者`IPackage`。不然将无法生成。
+
+同时，当包类型是结构体时，才可以直接实现`IPackage`接口。如果是实例类，则需要直接或间接使用`PackageBase`作为基类。
+
+:::  
+
+## 五、性能评测
 
 基准测试表明：
 
