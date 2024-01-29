@@ -6,50 +6,63 @@ namespace PackageConsoleApp
     {
         private static void Main(string[] args)
         {
-            var myClass = new MyClass();
-            myClass.P1 = 1;
-            myClass.P2 = "若汝棋茗";
-            myClass.P3 = 'a';
-            myClass.P4 = 3;
+            {
+                //测试手动打包和解包
+                var myClass = new MyPackage();
+                myClass.P1 = 1;
+                myClass.P2 = "若汝棋茗";
+                myClass.P3 = 'a';
+                myClass.P4 = 3;
 
-            myClass.P5 = new List<int> { 1, 2, 3 };
+                myClass.P5 = new List<int> { 1, 2, 3 };
 
-            myClass.P6 = new Dictionary<int, MyClassModel>()
+                myClass.P6 = new Dictionary<int, MyClassModel>()
             {
                 { 1,new MyClassModel(){ P1=DateTime.Now} },
                 { 2,new MyClassModel(){ P1=DateTime.Now} }
             };
 
-            using (var byteBlock = new ByteBlock())
+                using (var byteBlock = new ByteBlock())
+                {
+                    myClass.Package(byteBlock);//打包，相当于序列化
+
+                    byteBlock.Seek(0);//将流位置重置为0
+
+                    var myNewClass = new MyPackage();
+                    myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
+                }
+            }
+
             {
-                myClass.Package(byteBlock);//打包，相当于序列化
+                //测试源生成打包和解包
+                var myClass = new MyGeneratorPackage();
+                myClass.P1 = 1;
+                myClass.P2 = "若汝棋茗";
+                myClass.P3 = 'a';
+                myClass.P4 = 3;
 
-                byteBlock.Seek(0);//将流位置重置为0
+                myClass.P5 = new List<int> { 1, 2, 3 };
 
-                var myNewClass = new MyClass();
-                myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
+                myClass.P6 = new Dictionary<int, MyClassModel>()
+            {
+                { 1,new MyClassModel(){ P1=DateTime.Now} },
+                { 2,new MyClassModel(){ P1=DateTime.Now} }
+            };
+
+                using (var byteBlock = new ByteBlock())
+                {
+                    myClass.Package(byteBlock);//打包，相当于序列化
+
+                    byteBlock.Seek(0);//将流位置重置为0
+
+                    var myNewClass = new MyGeneratorPackage();
+                    myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
+                }
             }
         }
     }
 
-    public class Person : DependencyObject
-    {
-        /// <summary>
-        /// 年龄
-        /// </summary>
-        public int Age { get; set; }//常规属性
-
-        public string Name//依赖属性
-        {
-            get { return (string)this.GetValue(NameProperty); }
-            set { this.SetValue(NameProperty, value); }
-        }
-
-        public static readonly DependencyProperty<string> NameProperty =
-            DependencyProperty<string>.Register("Name", string.Empty);
-    }
-
-    internal class MyClass : IPackage
+    internal class MyPackage : PackageBase
     {
         public int P1 { get; set; }
         public string P2 { get; set; }
@@ -58,7 +71,7 @@ namespace PackageConsoleApp
         public List<int> P5 { get; set; }
         public Dictionary<int, MyClassModel> P6 { get; set; }
 
-        public void Package(in ByteBlock byteBlock)
+        public override void Package(in ByteBlock byteBlock)
         {
             //基础类型直接写入。
             byteBlock.Write(this.P1);
@@ -96,7 +109,7 @@ namespace PackageConsoleApp
             }
         }
 
-        public void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage(in ByteBlock byteBlock)
         {
             //基础类型按序读取。
             this.P1 = byteBlock.ReadInt32();
@@ -128,6 +141,21 @@ namespace PackageConsoleApp
                 this.P6 = dic;
             }
         }
+    }
+
+    /// <summary>
+    /// 使用源生成包序列化。
+    /// 也就是不需要手动Package和Unpackage
+    /// </summary>
+    [GeneratorPackage]
+    internal partial class MyGeneratorPackage : PackageBase
+    {
+        public int P1 { get; set; }
+        public string P2 { get; set; }
+        public char P3 { get; set; }
+        public double P4 { get; set; }
+        public List<int> P5 { get; set; }
+        public Dictionary<int, MyClassModel> P6 { get; set; }
     }
 
     internal class MyClassModel : PackageBase
