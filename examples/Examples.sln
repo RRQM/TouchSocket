@@ -266,6 +266,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServiceForCorsConsoleAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcRateLimitingConsoleApp", "Rpc\RpcRateLimitingConsoleApp\RpcRateLimitingConsoleApp.csproj", "{BAEBA822-4EBF-4211-A92F-797D529C2DE3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PluginPassingParameters", "PluginPassingParameters", "{B9AD57A2-89FB-459B-8D58-41C770CCA89B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
