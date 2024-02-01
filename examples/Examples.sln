@@ -268,6 +268,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcRateLimitingConsoleApp",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PluginPassingParameters", "PluginPassingParameters", "{B9AD57A2-89FB-459B-8D58-41C770CCA89B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReuseAddressServerConsoleApp", "Tcp\ReuseAddressServerConsoleApp\ReuseAddressServerConsoleApp.csproj", "{1E65E919-C7D8-4678-8BFD-1434CC8293BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -594,6 +596,10 @@ Global
 		{BAEBA822-4EBF-4211-A92F-797D529C2DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAEBA822-4EBF-4211-A92F-797D529C2DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAEBA822-4EBF-4211-A92F-797D529C2DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -709,6 +715,7 @@ Global
 		{74C98BF5-D663-4CCA-B970-D9A1258B6BB9} = {0F95EA5A-0E08-4516-89D4-C3BFC88789F9}
 		{12A8A263-EF41-4B20-97A8-3D050FF1B326} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{BAEBA822-4EBF-4211-A92F-797D529C2DE3} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
+		{1E65E919-C7D8-4678-8BFD-1434CC8293BF} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
