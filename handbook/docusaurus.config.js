@@ -53,6 +53,11 @@ module.exports = {
           to: "docs/current/video"
         },
         {
+          label: "API手册",
+          position: "left",
+          to: "https://rrqm_home.gitee.io/touchsocketapidoc"
+        },
+        {
           label: "版本",
           type: 'docsVersionDropdown',
           position: 'right',
