@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER
+#if SystemTextJson
 using System.Text.Json.Serialization;
 using TouchSocket.Core;
 

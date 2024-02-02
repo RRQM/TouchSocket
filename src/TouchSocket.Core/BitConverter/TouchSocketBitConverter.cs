@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     /// 将基数据类型转换为指定端的一个字节数组，
     /// 或将一个字节数组转换为指定端基数据类型。
     /// </summary>
-    public sealed class TouchSocketBitConverter
+    public sealed partial class TouchSocketBitConverter
     {
         /// <summary>
         /// 以大端
@@ -42,6 +42,7 @@ namespace TouchSocket.Core
         public static readonly TouchSocketBitConverter LittleSwapEndian;
 
         private static EndianType m_defaultEndianType;
+        private readonly EndianType m_endianType;
 
         static TouchSocketBitConverter()
         {
@@ -58,34 +59,7 @@ namespace TouchSocket.Core
         /// <param name="endianType"></param>
         public TouchSocketBitConverter(EndianType endianType)
         {
-            this.EndianType = endianType;
-        }
-
-        /// <summary>
-        /// 按照枚举值选择默认的端序。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static TouchSocketBitConverter GetBitConverter(EndianType endianType)
-        {
-            switch (endianType)
-            {
-                case EndianType.Little:
-                    return LittleEndian;
-
-                case EndianType.Big:
-                    return BigEndian;
-
-                case EndianType.LittleSwap:
-                    return LittleSwapEndian;
-
-                case EndianType.BigSwap:
-                    return BigSwapEndian;
-
-                default:
-                    throw new Exception("没有该选项");
-            }
+            this.m_endianType = endianType;
         }
 
         /// <summary>
@@ -129,7 +103,34 @@ namespace TouchSocket.Core
         /// <summary>
         /// 指定大小端。
         /// </summary>
-        public EndianType EndianType { get; private set; }
+        public EndianType EndianType { get => m_endianType; }
+
+        /// <summary>
+        /// 按照枚举值选择默认的端序。
+        /// </summary>
+        /// <param name="endianType"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static TouchSocketBitConverter GetBitConverter(EndianType endianType)
+        {
+            switch (endianType)
+            {
+                case EndianType.Little:
+                    return LittleEndian;
+
+                case EndianType.Big:
+                    return BigEndian;
+
+                case EndianType.LittleSwap:
+                    return LittleSwapEndian;
+
+                case EndianType.BigSwap:
+                    return BigSwapEndian;
+
+                default:
+                    throw new Exception("没有该选项");
+            }
+        }
 
         /// <summary>
         /// 判断当前系统是否为设置的大小端
@@ -155,28 +156,8 @@ namespace TouchSocket.Core
             {
                 Array.Reverse(bytes);
             }
-            return bytes;
-        }
 
-        /// <summary>
-        /// 转换为指定端模式的2字节转换为UInt16数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public ushort ToUInt16(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToUInt16(buffer, offset);
-            }
-            else
-            {
-                var bytes = new byte[2];
-                Array.Copy(buffer, offset, bytes, 0, 2);
-                Array.Reverse(bytes);
-                return BitConverter.ToUInt16(bytes, 0);
-            }
+            return bytes;
         }
 
         #endregion ushort
@@ -197,25 +178,6 @@ namespace TouchSocket.Core
             }
 
             return bytes;
-        }
-
-        /// <summary>
-        ///  转换为指定端模式的Ulong数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public ulong ToUInt64(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToUInt64(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat8(buffer, offset);
-                return BitConverter.ToUInt64(bytes, 0);
-            }
         }
 
         #endregion ulong
@@ -256,34 +218,6 @@ namespace TouchSocket.Core
             return numArray;
         }
 
-        /// <summary>
-        ///  转换为指定端模式的bool数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public bool ToBoolean(byte[] buffer, int offset)
-        {
-            return BitConverter.ToBoolean(buffer, offset);
-        }
-
-        /// <summary>
-        /// 将指定的字节，按位解析为bool数组。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public bool[] ToBooleans(byte[] buffer, int offset, int length)
-        {
-            var bools = new bool[8 * length];
-            for (short i = 0; i < bools.Length; i++)
-            {
-                bools[i] = Convert.ToBoolean(buffer[offset + i / 8].GetBit(i));
-            }
-            return bools;
-        }
-
         #endregion bool
 
         #region char
@@ -302,27 +236,6 @@ namespace TouchSocket.Core
             }
 
             return bytes;
-        }
-
-        /// <summary>
-        ///  转换为指定端模式的Char数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public char ToChar(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToChar(buffer, offset);
-            }
-            else
-            {
-                var bytes = new byte[2];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
-                return BitConverter.ToChar(bytes, 0);
-            }
         }
 
         #endregion char
@@ -345,27 +258,6 @@ namespace TouchSocket.Core
             return bytes;
         }
 
-        /// <summary>
-        ///  转换为指定端模式的Short数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public short ToInt16(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToInt16(buffer, offset);
-            }
-            else
-            {
-                var bytes = new byte[2];
-                Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-                Array.Reverse(bytes);
-                return BitConverter.ToInt16(bytes, 0);
-            }
-        }
-
         #endregion short
 
         #region int
@@ -375,6 +267,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] GetBytes(int value)
         {
             var bytes = BitConverter.GetBytes(value);
@@ -384,25 +277,6 @@ namespace TouchSocket.Core
             }
 
             return bytes;
-        }
-
-        /// <summary>
-        ///  转换为指定端模式的int数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public int ToInt32(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToInt32(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat4(buffer, offset);
-                return BitConverter.ToInt32(bytes, 0);
-            }
         }
 
         #endregion int
@@ -425,25 +299,6 @@ namespace TouchSocket.Core
             return bytes;
         }
 
-        /// <summary>
-        ///  转换为指定端模式的long数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public long ToInt64(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToInt64(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat8(buffer, offset);
-                return BitConverter.ToInt64(bytes, 0);
-            }
-        }
-
         #endregion long
 
         #region uint
@@ -462,25 +317,6 @@ namespace TouchSocket.Core
             }
 
             return bytes;
-        }
-
-        /// <summary>
-        ///  转换为指定端模式的Uint数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public uint ToUInt32(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToUInt32(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat4(buffer, offset);
-                return BitConverter.ToUInt32(bytes, 0);
-            }
         }
 
         #endregion uint
@@ -503,25 +339,6 @@ namespace TouchSocket.Core
             return bytes;
         }
 
-        /// <summary>
-        ///  转换为指定端模式的float数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public float ToSingle(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToSingle(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat4(buffer, offset);
-                return BitConverter.ToSingle(bytes, 0);
-            }
-        }
-
         #endregion float
 
         #region long
@@ -542,66 +359,7 @@ namespace TouchSocket.Core
             return bytes;
         }
 
-        /// <summary>
-        ///  转换为指定端模式的double数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public double ToDouble(byte[] buffer, int offset)
-        {
-            if (this.IsSameOfSet())
-            {
-                return BitConverter.ToDouble(buffer, offset);
-            }
-            else
-            {
-                var bytes = this.ByteTransDataFormat8(buffer, offset);
-                return BitConverter.ToDouble(bytes, 0);
-            }
-        }
-
         #endregion long
-
-        #region decimal
-
-        /// <summary>
-        /// 转换为指定端16字节
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public byte[] GetBytes(decimal value)
-        {
-            var bytes = DecimalConver.ToBytes(value);
-            if (!this.IsSameOfSet())
-            {
-                Array.Reverse(bytes);
-            }
-            return bytes;
-        }
-
-        /// <summary>
-        ///  转换为指定端模式的<see cref="decimal"/>数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public decimal ToDecimal(byte[] buffer, int offset)
-        {
-            var bytes = new byte[16];
-            Array.Copy(buffer, offset, bytes, 0, bytes.Length);
-            if (this.IsSameOfSet())
-            {
-                return DecimalConver.FromBytes(bytes);
-            }
-            else
-            {
-                Array.Reverse(bytes);
-                return DecimalConver.FromBytes(bytes);
-            }
-        }
-
-        #endregion decimal
 
         #region Tool
 
@@ -612,8 +370,8 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private byte[] ByteTransDataFormat4(byte[] value, int offset)
         {
-            byte[] numArray = new byte[4];
-            switch (EndianType)
+            var numArray = new byte[4];
+            switch (this.m_endianType)
             {
                 case EndianType.Big:
                     numArray[0] = value[offset + 3];
@@ -653,8 +411,8 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private byte[] ByteTransDataFormat8(byte[] value, int offset)
         {
-            byte[] numArray = new byte[8];
-            switch (EndianType)
+            var numArray = new byte[8];
+            switch (this.m_endianType)
             {
                 case EndianType.Big:
                     numArray[0] = value[offset + 7];

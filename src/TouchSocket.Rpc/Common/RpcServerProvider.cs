@@ -51,7 +51,7 @@ namespace TouchSocket.Rpc
             var filters= callContext.MethodInstance.GetFilters();
             try
             {
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = filters[i].ExecutingAsync(callContext, ps, invokeResult)
                         .GetFalseAwaitResult();
@@ -96,7 +96,7 @@ namespace TouchSocket.Rpc
                 }
 
                 invokeResult.Status = InvokeStatus.Success;
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = filters[i].ExecutedAsync(callContext, ps, invokeResult)
                         .GetFalseAwaitResult();
@@ -106,7 +106,7 @@ namespace TouchSocket.Rpc
             {
                 invokeResult.Status = InvokeStatus.InvocationException;
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                 }
@@ -115,7 +115,7 @@ namespace TouchSocket.Rpc
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).GetFalseAwaitResult();
                 }
@@ -136,7 +136,7 @@ namespace TouchSocket.Rpc
             var filters = callContext.MethodInstance.GetFilters();
             try
             {
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
                         .ConfigureFalseAwait();
@@ -181,7 +181,7 @@ namespace TouchSocket.Rpc
                 }
 
                 invokeResult.Status = InvokeStatus.Success;
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult)
                         .ConfigureFalseAwait();
@@ -191,7 +191,7 @@ namespace TouchSocket.Rpc
             {
                 invokeResult.Status = InvokeStatus.InvocationException;
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
                 }
@@ -200,7 +200,7 @@ namespace TouchSocket.Rpc
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
-                for (var i = 0; i < filters.Length; i++)
+                for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutExceptionAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
                 }

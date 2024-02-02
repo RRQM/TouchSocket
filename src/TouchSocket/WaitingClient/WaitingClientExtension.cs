@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> CreateWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IClient, ISender
+        public static IWaitingClient<TClient> CreateWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverObject, ISender
         {
             return new WaitingClient<TClient>(client, waitingOptions);
         }

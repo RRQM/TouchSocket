@@ -24,6 +24,7 @@ namespace TouchSocket.Rpc
     /// </summary>
     public sealed class MethodInstance : Method
     {
+        private readonly bool[] m_hasFilters = new bool[4];
         private RpcAttribute[] m_rpcAttributes;
         private RpcAttribute[] m_serverRpcAttributes;
 
@@ -100,6 +101,8 @@ namespace TouchSocket.Rpc
                 }
                 this.ParameterTypes = types.ToArray();
             }
+
+            this.PrivateGetFilters();
         }
 
         /// <summary>
@@ -205,41 +208,81 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 筛选器
         /// </summary>
-        public IRpcActionFilter[] GetFilters()
+        public IList<IRpcActionFilter> GetFilters()
         {
-            var actionFilters = new List<IRpcActionFilter>();
-
-            //注册方法
-
-            foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter),false))
+            if (m_hasFilters[0] || m_hasFilters[1] || m_hasFilters[2] || m_hasFilters[3])
             {
-                this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                var actionFilters = new List<IRpcActionFilter>();
+                //注册方法
+                if (m_hasFilters[0])
+                {
+                    foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                    {
+                        m_hasFilters[0] = true;
+                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    }
+                }
+
+                if (m_hasFilters[1])
+                {
+                    //实现方法
+                    if (this.ServerFromType != this.ServerToType)
+                    {
+                        foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                        {
+                            m_hasFilters[1] = true;
+                            this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        }
+                    }
+                }
+
+                if (m_hasFilters[2])
+                {
+                    //注册类
+                    foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                    {
+                        m_hasFilters[2] = true;
+                        this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                    }
+                }
+
+                if (m_hasFilters[3])
+                {
+                    //实现类
+                    if (this.ServerFromType != this.ServerToType)
+                    {
+                        foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
+                        {
+                            m_hasFilters[3] = true;
+                            this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
+                        }
+                    }
+                }
+
+                return actionFilters;
             }
+            return new IRpcActionFilter[0];
+        }
+
+        private void PrivateGetFilters()
+        {
+            //注册方法
+            m_hasFilters[0] = this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
 
             //实现方法
             if (this.ServerFromType != this.ServerToType)
             {
-                foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
-                {
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
-                }
+                m_hasFilters[1] = this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
             }
 
             //注册类
-            foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
-            {
-                this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
-            }
+            m_hasFilters[2] = this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
 
             //实现类
             if (this.ServerFromType != this.ServerToType)
             {
-                foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
-                {
-                    this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
-                }
+                m_hasFilters[3] = this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
             }
-            return actionFilters.ToArray();
         }
 
         private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)

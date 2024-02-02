@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -102,9 +103,9 @@ namespace TouchSocket.Dmtp.Rpc
                     else
                     {
                         rpcPackage.UnpackageBody(byteBlock);
-                        //this.InvokeThis(rpcPackage);
-                        //ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
-                        _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                        //await this.InvokeThis(rpcPackage);
+                        ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
+                        //_ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -193,7 +194,7 @@ namespace TouchSocket.Dmtp.Rpc
             }
         }
 
-        private async Task InvokeThis(object o)
+        private void InvokeThis(object o)
         {
             try
             {
@@ -270,8 +271,8 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
-                    //invokeResult = this.m_rpcServerProvider.Execute(callContext, ps);
+                    //invokeResult = await this.m_rpcServerProvider.Execute(callContext, ps).ConfigureFalseAwait();
+                    invokeResult = this.m_rpcServerProvider.Execute(callContext, ps);
                 }
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)

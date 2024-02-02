@@ -28,6 +28,7 @@ namespace SerialPortClientConsoleApp
                     PortName = "COM1",//COM
                     StopBits = System.IO.Ports.StopBits.One//停止位
                 })
+                .SetSerialDataHandlingAdapter(()=>new PeriodPackageAdapter())
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyPlugin>();

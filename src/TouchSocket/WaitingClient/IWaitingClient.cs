@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 等待型客户端。
     /// </summary>
-    public interface IWaitingClient<TClient> : IWaitSender, IDisposable where TClient : IClient, ISender
+    public interface IWaitingClient<TClient> : IWaitSender, IDisposable where TClient : IReceiverObject, ISender
     {
         /// <summary>
         /// 等待设置。

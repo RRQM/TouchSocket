@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net461;net462;net472;netstandard2.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net461;net462;net472;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
 		<PackageTags>Hosting;Socket;JsonRpc;NamedPipe;XmlRpc;Dmtp;TouchSocket</PackageTags>
 		<Description>这是TouchSocket基于通用主机的扩展。目前包括Tcp、Udp、NamedPipe、Dmtp、SerialPort等服务。
 

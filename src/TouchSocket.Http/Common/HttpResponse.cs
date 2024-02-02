@@ -429,9 +429,10 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        internal override void Destory()
+        /// <inheritdoc/>
+        public override void Reset()
         {
-            base.Destory();
+            base.Reset();
             this.m_sentHeader = false;
             this.m_sentLength = 0;
             this.Responsed = false;

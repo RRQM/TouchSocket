@@ -1,16 +1,4 @@
-//------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
-
-//#if !NET45
+//#if SystemNetHttp
 //using System;
 //using System.Collections.Generic;
 //using System.Linq;
@@ -25,13 +13,13 @@
 //    /// <summary>
 //    /// 基于<see cref="System.Net.Http.HttpClient"/>通讯模型的JsonRpc客户端
 //    /// </summary>
-//    public class HttpJsonRpcClientSlim:Http.HttpClientSlim, IHttpJsonRpcClientSlim
+//    public class HttpJsonRpcClientSlim : Http.HttpClientSlim, IHttpJsonRpcClientSlim
 //    {
 //        /// <summary>
 //        /// 基于<see cref="System.Net.Http.HttpClient"/>通讯模型的JsonRpc客户端
 //        /// </summary>
 //        /// <param name="httpClient"></param>
-//        public HttpJsonRpcClientSlim(System.Net.Http.HttpClient httpClient = default):base(httpClient)
+//        public HttpJsonRpcClientSlim(System.Net.Http.HttpClient httpClient = default) : base(httpClient)
 //        {
 //        }
 
@@ -59,7 +47,7 @@
 //                };
 //                var request = new HttpRequestMessage();
 //                request.Method = HttpMethod.Post;
-//                request.RequestUri=(this.RemoteIPHost.PathAndQuery);
+//                request.RequestUri = (this.RemoteIPHost.PathAndQuery);
 //                request.FromJson(jsonRpcRequest.ToJson());
 //                request.Build(byteBlock);
 //                switch (invokeOption.FeedbackType)

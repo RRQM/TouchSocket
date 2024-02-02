@@ -12,12 +12,8 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Data;
-using System.IO;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
 
 namespace TouchSocket.Core
 {
@@ -26,6 +22,48 @@ namespace TouchSocket.Core
     /// </summary>
     public static class FastBinaryFormatter
     {
+        #region DefaultType
+        public const byte Empty = 0;
+
+        public const byte Boolean = 1;
+
+        public const byte Char = 2;
+
+        public const byte SByte = 3;
+
+        public const byte Byte = 4;
+
+        public const byte Int16 = 5;
+
+        public const byte UInt16 = 6;
+
+        public const byte Int32 = 7;
+
+        public const byte UInt32 = 8;
+
+        public const byte Int64 = 9;
+
+        public const byte UInt64 = 10;
+
+        public const byte Single = 11;
+
+        public const byte Double = 12;
+
+        public const byte Decimal = 13;
+
+        public const byte DateTime = 14;
+
+        public const byte TimeSpan = 15;
+
+        public const byte String = 16;
+
+        public const byte ClassObject = 17;
+
+        public const byte StructObject = 18;
+
+        public const byte EnumObject = 19;
+
+        #endregion
         /// <summary>
         /// DynamicallyAccessed
         /// </summary>
@@ -125,8 +163,12 @@ namespace TouchSocket.Core
             return len;
         }
 
-        private static int SerializeDictionary(in ByteBlock byteBlock, in IEnumerable param, FastSerializerContext serializerContext)
+        private static int SerializeDictionary(in ByteBlock byteBlock, in IDictionary param, FastSerializerContext serializerContext)
         {
+            foreach (var item in param.Keys)
+            {
+                
+            }
             var len = 0;
             if (param != null)
             {
@@ -135,10 +177,10 @@ namespace TouchSocket.Core
                 len += 4;
                 uint paramLen = 0;
 
-                foreach (var item in param)
+                foreach (DictionaryEntry item in param)
                 {
-                    len += SerializeObject(byteBlock, DynamicMethodMemberAccessor.Default.GetValue(item, "Key"), serializerContext);
-                    len += SerializeObject(byteBlock, DynamicMethodMemberAccessor.Default.GetValue(item, "Value"), serializerContext);
+                    len += SerializeObject(byteBlock, item.Key, serializerContext);
+                    len += SerializeObject(byteBlock, item.Value, serializerContext);
                     paramLen++;
                 }
                 var newPosition = byteBlock.Position;
@@ -176,164 +218,184 @@ namespace TouchSocket.Core
         {
             var len = 0;
             byte[] data = null;
-
             var startPosition = byteBlock.Position;
             long endPosition;
             if (graph != null)
             {
                 var type = graph.GetType();
-                if (type.IsPrimitive)
+                switch (graph)
                 {
-                    switch (graph)
-                    {
-                        case byte value:
-                            {
-                                data = new byte[] { value };
-                                break;
-                            }
-                        case sbyte value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case bool value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case short value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case ushort value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case int value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case uint value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case long value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case ulong value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case float value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case double value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case char value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        default:
-                            {
-                                throw new Exception("未知基础类型");
-                            }
-                    }
-                }
-                else
-                {
-                    switch (graph)
-                    {
-                        case decimal value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value);
-                                break;
-                            }
-                        case DateTime value:
-                            {
-                                data = TouchSocketBitConverter.Default.GetBytes(value.Ticks);
-                                break;
-                            }
-                        case Enum _:
-                            {
-                                var enumValType = Enum.GetUnderlyingType(type);
+                    case byte value:
+                        {
+                            byteBlock.Write(1);
+                            byteBlock.Write(value);
+                            return 1 + 4;
+                        }
+                    case sbyte value:
+                        {
+                            byteBlock.Write(2);
+                            byteBlock.Write(value);
+                            return 2 + 4;
+                        }
+                    case bool value:
+                        {
+                            byteBlock.Write(1);
 
-                                if (enumValType == TouchSocketCoreUtility.byteType)
+                            byteBlock.Write(value);
+                            return 1 + 4;
+                        }
+                    case short value:
+                        {
+                            byteBlock.Write(2);
+
+                            byteBlock.Write(value);
+                            return 2 + 4;
+                            
+                        }
+                    case ushort value:
+                        {
+                            byteBlock.Write(2);
+
+                            byteBlock.Write(value);
+                            return 2 + 4;
+                            
+                        }
+                    case int value:
+                        {
+                            byteBlock.Write(4);
+
+                            byteBlock.Write(value);
+                            return 4 + 4;
+                        }
+                    case uint value:
+                        {
+                            byteBlock.Write(4);
+
+                            byteBlock.Write(value);
+                            return 4 + 4;
+                            
+                        }
+                    case long value:
+                        {
+                            byteBlock.Write(8);
+
+                            byteBlock.Write(value);
+                            return 8 + 4;
+                        }
+                    case ulong value:
+                        {
+                            byteBlock.Write(8);
+
+                            byteBlock.Write(value);
+                            return 8 + 4;
+                            
+                        }
+                    case float value:
+                        {
+                            byteBlock.Write(4);
+
+                            byteBlock.Write(value);
+                            return 4 + 4;
+                        }
+                    case double value:
+                        {
+                            byteBlock.Write(8);
+
+                            byteBlock.Write(value);
+                            return 8 + 4;
+                           
+                        }
+                    case char value:
+                        {
+                            byteBlock.Write(2);
+
+                            byteBlock.Write(value);
+                            return 2 + 4;
+                           
+                        }
+                    case decimal value:
+                        {
+                            byteBlock.Write(16);
+
+                            byteBlock.Write(value);
+                            return 16 + 4;
+                        }
+                    case DateTime value:
+                        {
+                            byteBlock.Write(8);
+
+                            byteBlock.Write(value.Ticks);
+                            return 8 + 4;
+                            
+                        }
+                    case Enum _:
+                        {
+                            var enumValType = Enum.GetUnderlyingType(type);
+
+                            if (enumValType == TouchSocketCoreUtility.byteType)
+                            {
+                                data = new byte[] { Convert.ToByte(graph) };
+                            }
+                            else
+                            {
+                                if (enumValType == TouchSocketCoreUtility.shortType)
                                 {
-                                    data = new byte[] { Convert.ToByte(graph) };
+                                    data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt16(graph));
                                 }
                                 else
                                 {
-                                    if (enumValType == TouchSocketCoreUtility.shortType)
+                                    if (enumValType == TouchSocketCoreUtility.intType)
                                     {
-                                        data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt16(graph));
+                                        data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt32(graph));
                                     }
                                     else
                                     {
-                                        if (enumValType == TouchSocketCoreUtility.intType)
-                                        {
-                                            data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt32(graph));
-                                        }
-                                        else
-                                        {
-                                            data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt64(graph));
-                                        }
+                                        data = TouchSocketBitConverter.Default.GetBytes(Convert.ToInt64(graph));
                                     }
                                 }
-                                break;
                             }
-                        case byte[] value:
+                            break;
+                        }
+                    case byte[] value:
+                        {
+                            data = value;
+                            break;
+                        }
+                    default:
+                        {
+                            byteBlock.Position += 4;
+                            var serializeObj = serializerContext.GetSerializObject(type);
+                            if (serializeObj.Converter != null)
                             {
-                                data = value;
-                                break;
+                                len += serializeObj.Converter.Write(byteBlock, graph);
                             }
-                        default:
+                            else
                             {
-                                byteBlock.Position += 4;
-                                var serializeObj = serializerContext.GetSerializObject(type);
-                                if (serializeObj.Converter != null)
+                                switch (serializeObj.InstanceType)
                                 {
-                                    len += serializeObj.Converter.Write(byteBlock, graph);
+                                    case InstanceType.List:
+                                        len += SerializeIListOrArray(byteBlock, (IEnumerable)graph, serializerContext);
+                                        break;
+
+                                    case InstanceType.Array:
+                                        len += SerializeIListOrArray(byteBlock, (IEnumerable)graph, serializerContext);
+                                        break;
+
+                                    case InstanceType.Dictionary:
+                                        len += SerializeDictionary(byteBlock, (IDictionary)graph, serializerContext);
+                                        break;
+
+                                    default:
+                                    case InstanceType.Class:
+                                        len += SerializeClass(byteBlock, graph, type, serializerContext);
+                                        break;
                                 }
-                                else
-                                {
-                                    switch (serializeObj.InstanceType)
-                                    {
-                                        case InstanceType.List:
-                                            len += SerializeIListOrArray(byteBlock, (IEnumerable)graph, serializerContext);
-                                            break;
-
-                                        case InstanceType.Array:
-                                            len += SerializeIListOrArray(byteBlock, (IEnumerable)graph, serializerContext);
-                                            break;
-
-                                        case InstanceType.Dictionary:
-                                            len += SerializeDictionary(byteBlock, (IEnumerable)graph, serializerContext);
-                                            break;
-
-                                        default:
-                                        case InstanceType.Class:
-                                            len += SerializeClass(byteBlock, graph, type, serializerContext);
-                                            break;
-                                    }
-                                }
-                                break;
                             }
-                    }
+
+
+                            break;
+                        }
                 }
-
                 if (data != null)
                 {
                     len = data.Length;
@@ -349,9 +411,13 @@ namespace TouchSocket.Core
                 endPosition = startPosition + 4;
             }
 
-            var lenBuffer = TouchSocketBitConverter.Default.GetBytes(len);
+            //var lenBuffer = TouchSocketBitConverter.Default.GetBytes(len);
+            //byteBlock.Position = startPosition;
+            //byteBlock.Write(lenBuffer, 0, lenBuffer.Length);
+
+            //var lenBuffer = TouchSocketBitConverter.Default.GetBytes(len);
             byteBlock.Position = startPosition;
-            byteBlock.Write(lenBuffer, 0, lenBuffer.Length);
+            byteBlock.Write(len);
 
             if (data != null)
             {
@@ -680,22 +746,6 @@ namespace TouchSocket.Core
                                     serializObject.AddMethod.Invoke(instance, new object[] { key, value });
                                 }
                             }
-
-                            //uint paramLen = TouchSocketBitConverter.Default.ToUInt32(datas, offset);
-                            //offset += 4;
-                            //for (uint i = 0; i < paramLen; i++)
-                            //{
-                            //    offset += 4;
-                            //    offset += datas[offset] + 1;
-                            //    object key = this.Deserialize(instanceObject.ArgTypes[0], datas, ref offset);
-
-                            //    offset += datas[offset] + 1;
-                            //    object value = this.Deserialize(instanceObject.ArgTypes[1], datas, ref offset);
-                            //    if (key != null)
-                            //    {
-                            //        instanceObject.AddMethod.Invoke(instance, new object[] { key, value });
-                            //    }
-                            //}
                         }
                         else
                         {
