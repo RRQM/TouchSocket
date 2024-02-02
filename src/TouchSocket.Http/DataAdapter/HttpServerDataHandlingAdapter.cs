@@ -107,7 +107,7 @@ namespace TouchSocket.Http
                 this.m_task = null;
             }
 
-            this.m_requestRoot.Destory();
+            this.m_requestRoot.Reset();
         }
 
         private void Single(ByteBlock byteBlock, bool dis)

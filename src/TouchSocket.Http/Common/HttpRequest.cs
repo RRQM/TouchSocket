@@ -294,9 +294,10 @@ namespace TouchSocket.Http
             }
         }
 
-        internal override void Destory()
+        /// <inheritdoc/>
+        public override void Reset()
         {
-            base.Destory();
+            base.Reset();
             this.m_canRead = true;
             this.m_content = null;
             this.m_sentHeader = false;
@@ -308,10 +309,7 @@ namespace TouchSocket.Http
             this.m_forms?.Clear();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             this.m_client = null;

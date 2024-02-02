@@ -63,11 +63,11 @@ namespace TouchSocket.Core
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        public bool TryConvertTo(object target, out string source)
+        public bool TryConvertTo<TTarget>(TTarget target, out string source)
         {
             if (target != null)
             {
-                var type = target.GetType();
+                var type = typeof(TTarget);
                 if (type.IsPrimitive || type == TouchSocketCoreUtility.stringType)
                 {
                     source = target.ToString();
@@ -122,7 +122,7 @@ namespace TouchSocket.Core
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        public bool TryConvertTo(object target, out string source)
+        public bool TryConvertTo<TTarget>(TTarget target, out string source)
         {
             try
             {

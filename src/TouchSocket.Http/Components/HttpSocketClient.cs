@@ -50,7 +50,7 @@ namespace TouchSocket.Http
                 var e = new HttpContextEventArgs(m_httpContext);
 
                 await this.PluginManager.RaiseAsync(nameof(IHttpPlugin.OnHttpRequest), this, e).ConfigureFalseAwait();
-                m_httpContext.Response.Destory();
+                m_httpContext.Response.Reset();
             }
         }
 

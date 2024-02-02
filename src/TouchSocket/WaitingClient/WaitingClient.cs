@@ -17,7 +17,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IClient, ISender
+    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IReceiverObject, ISender
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
         private CancellationTokenSource m_cancellationTokenSource;

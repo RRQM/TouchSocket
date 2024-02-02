@@ -18,19 +18,9 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 终端接口
     /// </summary>
-    public interface IClient : IDependencyObject, IDisposable, ILoggerObject, IResolverObject
+    public interface IClient : IDependencyObject, IDisposable, ILoggerObject, IResolverObject, IReceiverObject
     {
-        /// <summary>
-        /// 获取一个同步数据接收器
-        /// </summary>
-        /// <returns></returns>
-        IReceiver CreateReceiver();
-
-        /// <summary>
-        /// 移除同步数据接收器
-        /// </summary>
-        void ClearReceiver();
-
+        
         /// <summary>
         /// 终端协议
         /// </summary>

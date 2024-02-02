@@ -30,7 +30,7 @@ namespace TouchSocket.Sockets
             this.Dispose(false);
         }
 
-        private readonly IClient m_client;
+        private readonly IReceiverObject m_client;
         private readonly AutoResetEvent m_resetEventForComplateRead = new AutoResetEvent(false);
         private readonly AsyncAutoResetEvent m_resetEventForRead = new AsyncAutoResetEvent(false);
         private ByteBlock m_byteBlock;
@@ -40,7 +40,7 @@ namespace TouchSocket.Sockets
         /// Receiver
         /// </summary>
         /// <param name="client"></param>
-        public Receiver(IClient client)
+        public Receiver(IReceiverObject client)
         {
             this.m_client = client;
         }

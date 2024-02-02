@@ -84,7 +84,7 @@ namespace TouchSocket.Core
                     return;
                 }
 
-                wait.Reset();
+                //wait.Reset();
                 this.m_waitQueue.Enqueue(wait);
             }
         }
@@ -106,7 +106,7 @@ namespace TouchSocket.Core
                     return;
                 }
 
-                wait.Reset();
+                //wait.Reset();
                 this.m_waitQueueAsync.Enqueue(wait);
             }
         }

@@ -3,9 +3,10 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.270</Version>
+		<Version>2.0.0-beta.271</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>preview</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
 		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
@@ -26,23 +27,33 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<LangVersion>8.0</LangVersion>
+		<DefineConstants>ValueTask;SystemNetHttp</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-		<LangVersion>8.0</LangVersion>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-		<LangVersion>8.0</LangVersion>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
-		<LangVersion>8.0</LangVersion>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
-		<LangVersion>8.0</LangVersion>
+		
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-		<LangVersion>8.0</LangVersion>
+		
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net462'">
+		
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
+		
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<None Include="LICENSE.txt">
 			<Pack>True</Pack>

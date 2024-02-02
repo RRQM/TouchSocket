@@ -72,7 +72,7 @@ namespace TouchSocket.Core
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        public bool TryConvertTo(object target, out byte[] source)
+        public bool TryConvertTo<TTarget>(TTarget target, out byte[] source)
         {
             try
             {

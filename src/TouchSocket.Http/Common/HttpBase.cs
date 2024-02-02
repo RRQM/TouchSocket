@@ -316,8 +316,10 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <inheritdoc/>
-        internal virtual void Destory()
+        /// <summary>
+        /// 重置Http状态。
+        /// </summary>
+        public virtual void Reset()
         {
             base.ResetBlock();
             this.m_headers.Clear();

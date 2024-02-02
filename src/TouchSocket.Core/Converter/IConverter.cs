@@ -41,6 +41,6 @@ namespace TouchSocket.Core
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        bool TryConvertTo(object target, out TSource source);
+        bool TryConvertTo<TTarget>(TTarget target, out TSource source);
     }
 }

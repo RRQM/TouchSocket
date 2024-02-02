@@ -43,32 +43,48 @@ namespace TouchSocket.Modbus
         public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
         {
             var waitData = this.m_waitHandlePool.GetWaitData(out var sign);
-            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            this.Send(modbusTcpRequest);
-            waitData.SetCancellationToken(token);
-            var waitDataStatus = waitData.Wait(timeout);
-            waitDataStatus.ThrowIfNotRunning();
+            try
+            {
+                var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            var response = waitData.WaitResult;
-            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-            return response;
+                this.Send(modbusTcpRequest);
+                waitData.SetCancellationToken(token);
+                var waitDataStatus = waitData.Wait(timeout);
+                waitDataStatus.ThrowIfNotRunning();
+
+                var response = waitData.WaitResult;
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+                return response;
+            }
+            finally
+            {
+                this.m_waitHandlePool.Destroy(waitData);
+            }
         }
 
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token)
         {
             var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
-            var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
+            try
+            {
+                var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-            this.Send(modbusTcpRequest);
-            waitData.SetCancellationToken(token);
-            var waitDataStatus = await waitData.WaitAsync(timeout);
-            waitDataStatus.ThrowIfNotRunning();
+                this.Send(modbusTcpRequest);
+                waitData.SetCancellationToken(token);
+                var waitDataStatus = await waitData.WaitAsync(timeout);
+                waitDataStatus.ThrowIfNotRunning();
 
-            var response = waitData.WaitResult;
-            TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-            return response;
+                var response = waitData.WaitResult;
+                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+                return response;
+            }
+            finally
+            {
+                this.m_waitHandlePool.Destroy(waitData);
+            }
+           
         }
 
         /// <inheritdoc/>
