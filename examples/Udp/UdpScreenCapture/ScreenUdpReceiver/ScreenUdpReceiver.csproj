@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.270" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.271" />
   </ItemGroup>
 
 </Project>
