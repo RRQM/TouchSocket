@@ -26,7 +26,6 @@ namespace BytePoolConsoleApp
                 {
                     Property = 10
                 });
-
                 byteBlock.SeekToStart();
 
                 var myPackage = byteBlock.ReadPackage<MyPackage>();
