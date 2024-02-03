@@ -463,7 +463,12 @@ using (var byteBlock=new ByteBlock(cacheBytes))
 
 ## 七、取消传输
 
-传输取消，指的是，在传输过程中，用户主动取消传输。使用方法非常简单，因为`FileOperator`中允许传入一个可取消令箭。所以只需要通过`CancellationTokenSource`，将`Token`传入，然后直接使用`CancellationTokenSource`取消即可。
+传输取消，指的是，在传输过程中，用户主动取消传输。
+
+
+### 7.1 Token传递
+
+使用方法非常简单，因为`FileOperator`中允许传入一个可取消令箭。所以只需要通过`CancellationTokenSource`，将`Token`传入，然后直接使用`CancellationTokenSource`取消即可。
 
 ```csharp {1,7,13} showLineNumbers
 var tokenSource = new CancellationTokenSource();
@@ -480,6 +485,23 @@ var fileOperator = new FileOperator//实例化本次传输的控制器，用于�
     ...
     Token = tokenSource.Token
 };
+
+IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+```
+
+### 7.1 使用CancellationFileOperator 
+
+`CancellationFileOperator`是继承`FileOperator`并且已经实现取消传输的操作器。原理和`Token`一致，这里只是做了一次封装。
+
+```csharp {1,4-6,11} showLineNumbers
+
+var fileOperator = new CancellationFileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+{
+    ...
+};
+
+//模拟五秒后自动取消传输，或者直接Cancel
+fileOperator.CancelAfter(TimeSpan.FromSeconds(5));
 
 IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```

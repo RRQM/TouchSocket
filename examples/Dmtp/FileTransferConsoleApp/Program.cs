@@ -483,7 +483,7 @@ namespace FileTransferConsoleApp
             metadata.Add("1", "1");
             metadata.Add("2", "2");
 
-            var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+            var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
             {
                 SavePath = saveFilePath,//服务器本地保存路径
                 ResourcePath = filePath,//请求客户端文件的资源路径
