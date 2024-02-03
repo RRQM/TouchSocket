@@ -87,7 +87,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 可取消令箭
         /// </summary>
-        public CancellationToken Token { get; set; }
+        public virtual CancellationToken Token { get; set; }
 
         /// <summary>
         /// 从上次获取到此次获得的速度
