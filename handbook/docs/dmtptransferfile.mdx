@@ -461,7 +461,37 @@ using (var byteBlock=new ByteBlock(cacheBytes))
 
 :::  
 
-## 七、小文件传输
+## 七、取消传输
+
+传输取消，指的是，在传输过程中，用户主动取消传输。使用方法非常简单，因为`FileOperator`中允许传入一个可取消令箭。所以只需要通过`CancellationTokenSource`，将`Token`传入，然后直接使用`CancellationTokenSource`取消即可。
+
+```csharp {1,7,13} showLineNumbers
+var tokenSource = new CancellationTokenSource();
+
+_=Task.Run(async () => 
+{
+    //此处模拟五秒后自动取消传输
+    await Task.Delay(5000);
+    tokenSource.Cancel();
+});
+
+var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+{
+    ...
+    Token = tokenSource.Token
+};
+
+IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+```
+
+:::tip 提示
+
+`取消传输`和`断点续传`结合，就能模拟`暂停传输`功能。这样，用户就可以在传输过程中，随时暂停和继续传输。并且没有暂停时长限制。
+
+:::  
+
+
+## 八、小文件传输
 
 小文件传输是指，当传输文件小于设定大小（默认1024*1024字节）时的传输。
 
@@ -470,7 +500,7 @@ using (var byteBlock=new ByteBlock(cacheBytes))
 常规传输，建立一个传输通道，大约需要传输两端，往返通信4-6次。这在本地局域网中，显得无所谓。但是在互联网环境中，一次ping延迟平均50ms，那么建立一个传输，就大约需要200-300ms。这也就意味着，即使一个文件只有一字节，也需要200ms-300。所以，这明显是不合理的。所以又新增了小文件传输，只要文件在1Mb以内，仅往返1次，就可以完成传输。
 
 
-### 7.1 拉取小文件
+### 8.1 拉取小文件
 
 1. 直接调用PullSmallFile或者PullSmallFileAsync，获取到实际的文件数据。
 2. 通过Save方法，将数据写入文件。也可以自行保存。
@@ -489,7 +519,7 @@ byte[] data = result.Value;//此处即是下载的小文件的实际数据
 result.Save(saveFilePath,overwrite:true);//将数据保存到指定路径。
 ```
 
-### 7.2 推送小文件
+### 8.2 推送小文件
 
 【推送文件】
 
@@ -525,7 +555,7 @@ if (result.IsSuccess())
 
 :::  
 
-## 八、多线程文件传输 <Tag>企业版</Tag>
+## 九、多线程文件传输 <Tag>企业版</Tag>
 
 多线程文件传输，顾名思义，就是多个连接链路，共同传输一个文件。
 
@@ -536,7 +566,7 @@ if (result.IsSuccess())
 例如，我自己租的一个单核云服务器，它的单个连接速率只有1Mb，但是弹性带宽却有10Mb。宏观表象就是，一个客户端连接时，可以用1Mb带宽，两个客户端连接时，就可以用2Mb。那么这时候，多线程传输就显得格外重要了。
 
 
-### 8.1 创建多链路连接器
+### 9.1 创建多链路连接器
 
 因为是多链路传输，所以，就必须建立多个客户端的连接到服务器。这里使用已经封装好的通信模型ClientFactory。
 
@@ -575,7 +605,7 @@ clientFactory.MainConfig//配置主通信
              });
 ```
 
-### 8.2 多线程请求文件
+### 9.2 多线程请求文件
 
 ```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
@@ -624,7 +654,7 @@ IResult result = clientFactory.PullFile(fileOperator);
 ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 ```
 
-### 8.3 多线程推送文件
+### 9.3 多线程推送文件
 
 ```csharp showLineNumbers
 using var clientFactory = CreateClientFactory();
@@ -672,7 +702,7 @@ loopAction.RunAsync();
 IResult result = clientFactory.PushFile(fileOperator);
 ```
 
-### 8.4 客户端之间传输文件
+### 9.4 客户端之间传输文件
 
 该功能也支持客户端之间互相传输。使用方法基本一致，需要额外指定目标Id，以及**获取传输的Id集合**即可。
 
