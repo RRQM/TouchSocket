@@ -13,11 +13,11 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
-Modbus是OSI模型第7层上的应用层报文传输协议，它在连接至不同类型总线或网络的设备之间提供客户机/服务器通信。
+`Modbus`是OSI模型第7层上的应用层报文传输协议，它在连接至不同类型总线或网络的设备之间提供客户机/服务器通信。
 
-自从 1979 年出现工业串行链路的事实标准以来，Modbus使成千上万的自动化设备能够通信。目前，继续增加对简单而雅观的Modbus结构支持。互联网组织能够使TCP/IP栈上的保留系统端口502 访问Modbus。
+自从 1979 年出现工业串行链路的事实标准以来，`Modbus`使成千上万的自动化设备能够通信。目前，继续增加对简单而雅观的`Modbus`结构支持。互联网组织能够使TCP/IP栈上的保留系统端口502 访问`Modbus`。
 
-所以总结来说Modbus是一个请求/应答的总线协议。
+所以总结来说`Modbus`是一个请求/应答的总线协议。
 
 所以我们开发了这个组件，方便大家使用。
 
@@ -31,7 +31,7 @@ Modbus是OSI模型第7层上的应用层报文传输协议，它在连接至不�
 
 ## 三、产品应用场景
 
-- 所有Modbus使用场景：可跨平台使用。
+- 所有`Modbus`使用场景：可跨平台使用。
 
 ## 四、可配置项
 
@@ -43,17 +43,17 @@ Modbus是OSI模型第7层上的应用层报文传输协议，它在连接至不�
 
 ## 六、创建
 
-目前TouchSokcet.Modbus支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp等协议。下面会一一介绍创建过程。
+目前`TouchSokcet.Modbus`支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
 
 #### 6.1 创建ModbusTcpMaster
 
 ```csharp showLineNumbers
 public IModbusTcpMaster GetMaster()
 {
-    var client = new ModbusTcpMaster();
+    var master = new ModbusTcpMaster();
 
-    client.Connect("127.0.0.1:502");
-    return client;
+    master.Connect("127.0.0.1:502");
+    return master;
 }
 ```
 
@@ -62,12 +62,12 @@ public IModbusTcpMaster GetMaster()
 ```csharp showLineNumbers
 public IModbusMaster GetMaster()
 {
-    var client = new ModbusUdpMaster();
-    client.Setup(new TouchSocketConfig()
+    var master = new ModbusUdpMaster();
+    master.Setup(new TouchSocketConfig()
         .UseUdpReceive()
         .SetRemoteIPHost("127.0.0.1:502"));
-    client.Start();
-    return client;
+    master.Start();
+    return master;
 }
 ```
 
@@ -76,8 +76,8 @@ public IModbusMaster GetMaster()
 ```csharp showLineNumbers
 public IModbusMaster GetMaster()
 {
-    var client = new ModbusRtuMaster();
-    client.Setup(new TouchSocketConfig()
+    var master = new ModbusRtuMaster();
+    master.Setup(new TouchSocketConfig()
         .SetSerialPortOption(new SerialPortOption()
         {
             BaudRate = 9600,
@@ -86,8 +86,8 @@ public IModbusMaster GetMaster()
             PortName = "COM2",
             StopBits = System.IO.Ports.StopBits.One
         }));
-    client.Connect();
-    return client;
+    master.Connect();
+    return master;
 }
 ```
 
@@ -96,9 +96,9 @@ public IModbusMaster GetMaster()
 ```csharp showLineNumbers
 public IModbusMaster GetMaster()
 {
-    var client = new ModbusRtuOverTcpMaster();
-    client.Connect("127.0.0.1:502");
-    return client;
+    var master = new ModbusRtuOverTcpMaster();
+    master.Connect("127.0.0.1:502");
+    return master;
 }
 ```
 
@@ -107,12 +107,12 @@ public IModbusMaster GetMaster()
 ```csharp showLineNumbers
 public IModbusMaster GetMaster()
 {
-    var client = new ModbusRtuOverUdpMaster();
-    client.Setup(new TouchSocketConfig()
+    var master = new ModbusRtuOverUdpMaster();
+    master.Setup(new TouchSocketConfig()
         .UseUdpReceive()
         .SetRemoteIPHost("127.0.0.1:502"));
-    client.Start();
-    return client;
+    master.Start();
+    return master;
 }
 ```
 
@@ -120,7 +120,7 @@ public IModbusMaster GetMaster()
 
 ### 7.1 原生接口操作 
 
-所有的Modbus客户端都支持以下两种原生接口操作：
+所有的Modbus主站都支持以下两种原生接口操作：
 
 ```csharp showLineNumbers
 //同步发送Modbus请求，并等待响应
@@ -139,31 +139,31 @@ modbusRequest.SetStartingAddress(0);//设置起始
 modbusRequest.SetQuantity(1);//设置数量
 //modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
 
-var response = client.SendModbusRequest(modbusRequest, 1000, CancellationToken.None);
+var response = master.SendModbusRequest(modbusRequest, 1000, CancellationToken.None);
 
 bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
 ```
 
 ### 7.2 快捷扩展实现
 
-因为Modbus的操作一般比较固化，所以ModbusClient扩展了以下快捷操作：
+因为`Modbus`的操作一般比较固化，所以`ModbusMaster`扩展了以下快捷操作：
 
 读取线圈（FC1）。
 
 ```csharp showLineNumbers
-bool[] bools = client.ReadCoils(0, 1);
+bool[] bools = master.ReadCoils(0, 1);
 ```
 
 读取离散输入（FC2）。
 
 ```csharp showLineNumbers
-bool[] bools = client.ReadDiscreteInputs(0, 1);
+bool[] bools = master.ReadDiscreteInputs(0, 1);
 ```
 
 读取保持寄存器（FC3）。
 
 ```csharp showLineNumbers
-var response = client.ReadHoldingRegisters(0, 1);
+var response = master.ReadHoldingRegisters(0, 1);
 var reader = response.CreateReader();
 var value=reader.ReadInt16();
 ```
@@ -171,7 +171,7 @@ var value=reader.ReadInt16();
 读取输入寄存器（FC4）。
 
 ```csharp showLineNumbers
-var response = client.ReadInputRegisters(0, 1);
+var response = master.ReadInputRegisters(0, 1);
 var reader = response.CreateReader();
 var value=reader.ReadInt16();
 ```
@@ -179,19 +179,19 @@ var value=reader.ReadInt16();
 写入单个线圈（FC5）。
 
 ```csharp showLineNumbers
-client.WriteSingleCoil(0, true);
+master.WriteSingleCoil(0, true);
 ```
 
 写入单个寄存器（FC6）。
 
 ```csharp showLineNumbers
-client.WriteSingleRegister(0, (short)100);
+master.WriteSingleRegister(0, (short)100);
 ```
 
 写入多个线圈（FC15）。
 
 ```csharp showLineNumbers
-client.WriteMultipleCoils(0, new bool[] { true, false, true });
+master.WriteMultipleCoils(0, new bool[] { true, false, true });
 ```
 
 写入多个寄存器（FC16）。
@@ -204,7 +204,7 @@ using (var writer = new ValueByteBlock(1024))
     writer.Write(long.MaxValue, EndianType.BigSwap);//BADC端序 8字节
     writer.Write(double.MaxValue, EndianType.LittleSwap);//CDAB端序 8字节
     
-    client.WriteMultipleRegisters(0, writer.ToArray());
+    master.WriteMultipleRegisters(0, writer.ToArray());
 }
 ```
 
@@ -223,7 +223,7 @@ using (var writer = new ValueByteBlock(1024))
 
 ```csharp showLineNumbers
 //读取寄存器
-var response = client.ReadHoldingRegisters(1, 0, 10);//站点1，从0开始读取10个寄存器
+var response = master.ReadHoldingRegisters(1, 0, 10);//站点1，从0开始读取10个寄存器
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -251,7 +251,7 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
     //写入到寄存器
-    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
 }
 ```
 
@@ -259,7 +259,7 @@ using (var valueByteBlock = new ValueByteBlock(1024))
 
 ```csharp showLineNumbers
 //读取寄存器
-var response = client.ReadHoldingRegisters(1, 0, 1 + 1 + 2 + 4);
+var response = master.ReadHoldingRegisters(1, 0, 1 + 1 + 2 + 4);
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -280,11 +280,11 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.Write("Hello");
 
     //写入到寄存器
-    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
 }
 
 //读取寄存器
-var response = client.ReadHoldingRegisters(1, 0, 5);//5个长度，10字节
+var response = master.ReadHoldingRegisters(1, 0, 5);//5个长度，10字节
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -300,11 +300,11 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
 
     //写入到寄存器
-    client.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
 }
 
 //读取寄存器
-var response = client.ReadHoldingRegisters(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
+var response = master.ReadHoldingRegisters(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
 
 //创建一个读取器
 var reader = response.CreateReader();
