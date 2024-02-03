@@ -215,7 +215,7 @@ var metadata = new Metadata();//传递到服务器的元数据
 metadata.Add("1", "1");
 metadata.Add("2", "2");
 
-var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     SavePath = saveFilePath,//客户端本地保存路径
     ResourcePath = filePath,//请求文件的资源路径
@@ -253,7 +253,7 @@ var metadata = new Metadata();//传递到服务器的元数据
 metadata.Add("1", "1");
 metadata.Add("2", "2");
 
-var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     SavePath = saveFilePath,//服务器本地保存路径
     ResourcePath = filePath,//客户端本地即将上传文件的资源路径
@@ -299,7 +299,7 @@ var metadata = new Metadata();//传递到客户端的元数据
 metadata.Add("1", "1");
 metadata.Add("2", "2");
 
-var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     SavePath = saveFilePath,//服务器本地保存路径
     ResourcePath = filePath,//请求客户端文件的资源路径
@@ -344,7 +344,7 @@ var metadata = new Metadata();//传递到客户端的元数据
 metadata.Add("1", "1");
 metadata.Add("2", "2");
 
-var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     SavePath = saveFilePath,//客户端本地保存路径
     ResourcePath = filePath,//服务器文件的资源路径
@@ -480,7 +480,7 @@ _=Task.Run(async () =>
     tokenSource.Cancel();
 });
 
-var fileOperator = new FileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+var fileOperator = new FileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     ...
     Token = tokenSource.Token
@@ -493,9 +493,8 @@ IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 
 `CancellationFileOperator`是继承`FileOperator`并且已经实现取消传输的操作器。原理和`Token`一致，这里只是做了一次封装。
 
-```csharp {1,4-6,11} showLineNumbers
-
-var fileOperator = new CancellationFileOperator//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
+```csharp {1,7} showLineNumbers
+var fileOperator = new CancellationFileOperator()//实例化本次传输的控制器，用于获取传输进度、速度、状态等。
 {
     ...
 };
