@@ -42,7 +42,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBus简单示例(暂时
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileTransfer", "FileTransfer", "{24212B0A-8DAA-4AC3-BB5D-F3AC485EABA4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "基于AspNetCore的WebSocket协议", "基于AspNetCore的WebSocket协议", "{5C17B127-95DD-480C-BDCC-7FDF5E645B0C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "基于AspNetCore的Dmtp", "基于AspNetCore的Dmtp", "{5C17B127-95DD-480C-BDCC-7FDF5E645B0C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "控制台", "控制台", "{DB89FCB6-E4F9-4BD4-93F3-4E857741D749}"
 EndProject
@@ -268,7 +268,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcRateLimitingConsoleApp",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PluginPassingParameters", "PluginPassingParameters", "{B9AD57A2-89FB-459B-8D58-41C770CCA89B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReuseAddressServerConsoleApp", "Tcp\ReuseAddressServerConsoleApp\ReuseAddressServerConsoleApp.csproj", "{1E65E919-C7D8-4678-8BFD-1434CC8293BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReuseAddressServerConsoleApp", "Tcp\ReuseAddressServerConsoleApp\ReuseAddressServerConsoleApp.csproj", "{1E65E919-C7D8-4678-8BFD-1434CC8293BF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpAspnetcoreConsoleApp", "Dmtp\DmtpAspnetcoreConsoleApp\DmtpAspnetcoreConsoleApp.csproj", "{7208999A-BC28-4476-BBFD-572C8D43E35E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "基于NamedPipe的Dmtp", "基于NamedPipe的Dmtp", "{1B6092F9-4776-4502-818F-B35D153D19D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeDmtpConsoleApp", "Dmtp\NamedPipeDmtpConsoleApp\NamedPipeDmtpConsoleApp.csproj", "{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -600,6 +606,14 @@ Global
 		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E65E919-C7D8-4678-8BFD-1434CC8293BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7208999A-BC28-4476-BBFD-572C8D43E35E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7208999A-BC28-4476-BBFD-572C8D43E35E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7208999A-BC28-4476-BBFD-572C8D43E35E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7208999A-BC28-4476-BBFD-572C8D43E35E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -716,6 +730,9 @@ Global
 		{12A8A263-EF41-4B20-97A8-3D050FF1B326} = {EFB33E23-9E98-4B85-99E4-865705D5ACD2}
 		{BAEBA822-4EBF-4211-A92F-797D529C2DE3} = {D01CF5F0-67D0-44E3-B7CE-0BAD4F475C0E}
 		{1E65E919-C7D8-4678-8BFD-1434CC8293BF} = {FB46E926-0EEC-488C-B950-A16D2E7F694B}
+		{7208999A-BC28-4476-BBFD-572C8D43E35E} = {5C17B127-95DD-480C-BDCC-7FDF5E645B0C}
+		{1B6092F9-4776-4502-818F-B35D153D19D6} = {BF701694-E1CE-4FD1-97BA-DA832F6F3D45}
+		{5AB49F06-014A-4CAF-9A92-F5B3783E51C6} = {1B6092F9-4776-4502-818F-B35D153D19D6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

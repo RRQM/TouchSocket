@@ -6,10 +6,11 @@ namespace DmtpWebApplication
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             try
             {
+                //企业版才需要
                 Enterprise.ForTest();
             }
             catch (Exception ex)
@@ -18,6 +19,16 @@ namespace DmtpWebApplication
             }
             var builder = WebApplication.CreateBuilder(args);
 
+            //在整个通用Host中，所有组件会共用一个容器。
+            //所以建议使用ConfigureContainer统一设置。
+            builder.Services.ConfigureContainer(container => 
+            {
+                container.AddConsoleLogger();
+                container.AddDmtpRouteService();
+            });
+
+            //添加WebSocket协议的Dmtp
+            //客户端使用WebSocketDmtpClient
             builder.Services.AddWebSocketDmtpService(config =>
             {
                 config
@@ -25,63 +36,54 @@ namespace DmtpWebApplication
                     {
                         VerifyToken = "Dmtp"
                     })
-                    .ConfigureContainer(a =>
-                    {
-                        a.AddDmtpRouteService();
-                    })
                     .ConfigurePlugins(a =>
                     {
                         //添加插件
+                        a.Add<MyClassPlugin>();
                     });
             });
 
             //企业版功能
+            //添加基于Http升级协议的Dmtp。
+            //客户端使用HttpDmtpClient
             builder.Services.AddHttpMiddlewareDmtpService(config =>
             {
                 config.SetDmtpOption(new DmtpOption()
                 {
                     VerifyToken = "Dmtp"
                 })
-                .ConfigureContainer(a =>
-                {
-                    a.AddDmtpRouteService();
-                })
                 .ConfigurePlugins(a =>
                 {
                     //添加插件
+                    a.Add<MyClassPlugin>();
                 });
             });
 
             var app = builder.Build();
+
+            //WebSocketDmtp必须在UseWebSockets之后使用。
             app.UseWebSockets();
-            app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
+            app.UseWebSocketDmtp("/WebSocketDmtp");
 
-            app.UseHttpDmtp(); //HttpDmtp可以单独直接使用。
+            //HttpDmtp可以单独直接使用。
+            app.UseHttpDmtp(); 
 
-            _ = app.RunAsync("http://localhost:5174");
+            app.Run();
+        }
+    }
 
-            //WebSocketDmtpClient连接
-            var websocketDmtpClient = new WebSocketDmtpClient();
-            websocketDmtpClient.Setup(new TouchSocketConfig()
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                })
-                .SetRemoteIPHost("ws://localhost:5174/WebSocketDmtp"));
-            await websocketDmtpClient.ConnectAsync();
-            Console.WriteLine("WebSocketDmtpClient连接成功");
+    class MyClassPlugin : PluginBase, IDmtpHandshakedPlugin
+    {
+        private readonly ILogger<MyClassPlugin> m_logger;
 
-            var httpDmtpClient = new HttpDmtpClient();
-            httpDmtpClient.Setup(new TouchSocketConfig()
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                })
-                .SetRemoteIPHost("http://127.0.0.1:5174"));
-            httpDmtpClient.Connect();
-            Console.WriteLine("HttpDmtpClient连接成功");
-
-            Console.ReadKey();
+        public MyClassPlugin(ILogger<MyClassPlugin> logger)
+        {
+            this.m_logger = logger;
+        }
+        public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        {
+            m_logger.LogInformation("DmtpHandshaked");
+            await e.InvokeNext();
         }
     }
 }

@@ -2,11 +2,11 @@
   "profiles": {
     "DmtpWebApplication": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:62923;http://localhost:62924"
+      "applicationUrl": "http://localhost:5174"
     }
   }
 }
