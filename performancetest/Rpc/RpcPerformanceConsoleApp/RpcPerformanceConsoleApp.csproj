@@ -10,9 +10,9 @@
 	<ItemGroup>
 		<PackageReference Include="BeetleX.XRPC" Version="1.2.0.1802" />
 		<PackageReference Include="BeetleX.XRPC.Hosting" Version="1.2.0.1802" />
-		<PackageReference Include="NewLife.Remoting" Version="2.7.2024.101" />
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.263" />
-		<PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.263" />
+		<PackageReference Include="NewLife.Remoting" Version="2.7.2024.202" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.272" />
+		<PackageReference Include="TouchSocket.Hosting" Version="2.0.0-beta.272" />
 	</ItemGroup>
 
 	<!--<ItemGroup>
