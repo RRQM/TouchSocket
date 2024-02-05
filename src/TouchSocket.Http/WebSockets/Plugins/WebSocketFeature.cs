@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class WebSocketFeature : PluginBase, ITcpReceivedPlugin, IHttpPlugin, ITcpDisconnectedPlugin
+    public sealed class WebSocketFeature : PluginBase
     {
         /// <summary>
         /// 表示是否完成WS握手
@@ -83,8 +83,7 @@ namespace TouchSocket.Http.WebSockets
             return this;
         }
 
-        /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
             if (client.Protocol == Protocol.Http)
             {
@@ -98,13 +97,7 @@ namespace TouchSocket.Http.WebSockets
             await e.InvokeNext();
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+        private async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
         {
             client.SetValue(HandshakedProperty, false);
             if (client.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
@@ -115,7 +108,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        private async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
         {
             if (client.Protocol == Protocol.WebSocket)
             {
@@ -182,6 +175,11 @@ namespace TouchSocket.Http.WebSockets
         {
             base.Loaded(pluginManager);
             this.m_pluginManager = pluginManager;
+            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest),this.OnHttpRequest);
+
+            pluginManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived),this.OnTcpReceived);
+
+            pluginManager.Add<ITcpClientBase, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected),this.OnTcpDisconnected);
         }
 
         private async Task OnHandleWSDataFrame(ITcpClientBase client, WSDataFrame dataFrame)

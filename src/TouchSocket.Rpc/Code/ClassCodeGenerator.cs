@@ -351,7 +351,7 @@ namespace TouchSocket.Rpc
             else if (typeof(Task).IsAssignableFrom(type))
             {
                 var ts = type.GetGenericArguments();
-                return ts.Length == 1 ? ts[0].Name : type.Name;
+                return ts.Length == 1 ? this.GetTypeFullName(ts[0]) : type.Name;
             }
             else if (type.IsArray)
             {

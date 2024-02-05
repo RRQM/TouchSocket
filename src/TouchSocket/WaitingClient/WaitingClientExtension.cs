@@ -44,7 +44,7 @@ namespace TouchSocket.Sockets
         /// <param name="func">当条件成立时返回</param>
         /// <returns></returns>
         [Obsolete("本方法已被弃用，请使用CreateWaitingClient替代", true)]
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func) where TClient : IClient, ISender
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func) where TClient : IClient, ISender,IReceiverObject
         {
             return new WaitingClient<TClient>(client, waitingOptions);
         }
@@ -57,7 +57,7 @@ namespace TouchSocket.Sockets
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
         [Obsolete("本方法已被弃用，请使用CreateWaitingClient替代", true)]
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IClient, ISender
+        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverObject, ISender
         {
             return new WaitingClient<TClient>(client, waitingOptions);
         }
@@ -75,7 +75,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, CancellationToken token)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponse(buffer, 0, buffer.Length, token);
         }
@@ -91,7 +91,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, string msg, CancellationToken token)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponse(Encoding.UTF8.GetBytes(msg), token);
         }
@@ -107,7 +107,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, string msg, int timeout = 5000)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponse(Encoding.UTF8.GetBytes(msg), timeout);
         }
@@ -123,7 +123,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, ByteBlock byteBlock, CancellationToken token)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponse(byteBlock.Buffer, 0, byteBlock.Len, token);
         }
@@ -139,7 +139,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int timeout = 5000)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             using (var tokenSource = new CancellationTokenSource(timeout))
             {
@@ -158,7 +158,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, ByteBlock byteBlock, int timeout = 5000)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             using (var tokenSource = new CancellationTokenSource(timeout))
             {
@@ -177,7 +177,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, byte[] buffer, CancellationToken token)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponseAsync(buffer, 0, buffer.Length, token);
         }
@@ -193,7 +193,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, string msg, CancellationToken token)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             return client.SendThenResponseAsync(Encoding.UTF8.GetBytes(msg), token);
         }
@@ -209,7 +209,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int timeout = 5000)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             using (var tokenSource = new CancellationTokenSource(timeout))
             {
@@ -228,7 +228,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
         public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, string msg, int timeout = 5000)
-            where TClient : IClient, ISender
+            where TClient : IReceiverObject, ISender
         {
             using (var tokenSource = new CancellationTokenSource(timeout))
             {

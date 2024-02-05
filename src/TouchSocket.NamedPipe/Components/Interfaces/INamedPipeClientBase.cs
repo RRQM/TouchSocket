@@ -19,7 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 命名管道终端接口
     /// </summary>
-    public interface INamedPipeClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, IConfigObject, IAdapterObject, ICloseObject
+    public interface INamedPipeClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, IConfigObject, IAdapterObject, ICloseObject, ILoggerObject, IResolverObject, IReceiverObject
     {
         /// <summary>
         /// 用于通讯的管道流。

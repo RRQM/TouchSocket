@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 基于WebSocket协议的Dmtp终端接口
     /// </summary>
-    public interface IWebSocketDmtpClientBase : IClient, IPluginObject, IDmtpActorObject, IConfigObject, IHandshakeObject
+    public interface IWebSocketDmtpClientBase :IConfigObject, IClient, IPluginObject, IDmtpActorObject, IHandshakeObject, IResolverObject
     {
         /// <summary>
         /// 客户端的Id

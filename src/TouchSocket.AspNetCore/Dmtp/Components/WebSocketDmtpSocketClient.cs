@@ -311,29 +311,6 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         #endregion 事件
 
-        #region Receiver
-
-        /// <summary>
-        /// 不支持该功能
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        public IReceiver CreateReceiver()
-        {
-            throw new NotSupportedException("不支持该功能");
-        }
-
-        /// <summary>
-        /// 不支持该功能
-        /// </summary>
-        /// <exception cref="NotSupportedException"></exception>
-        public void ClearReceiver()
-        {
-            throw new NotSupportedException("不支持该功能");
-        }
-
-        #endregion Receiver
-
         internal void SetDmtpActor(DmtpActor actor)
         {
             actor.IdChanged = this.ThisOnResetId;
@@ -422,7 +399,10 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.BreakOut($"{nameof(Dispose)}断开链接", true);
+            if (disposing) 
+            {
+                this.BreakOut($"{nameof(Dispose)}断开链接", true);
+            }
         }
 
         private void BreakOut(string msg, bool manual)
