@@ -22,7 +22,6 @@ title: 源生成代理推荐写法
 [GeneratorRpcProxy]
 public interface IUserServer:IRpcServer
 {
-    [GeneratorRpcMethod]
     [DmtpRpc]
     LoginResponse Login(LoginRequest request);
 }

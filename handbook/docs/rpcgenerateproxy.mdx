@@ -301,7 +301,7 @@ public interface IMyRpcServer
 interface IMyRpcServer
 {
     [Description("这是登录方法")]//该作用是生成注释
-    [GeneratorRpcMethod]//表面该方法应该被代理，也可以通过参数，直接设置调用键
+    [DmtpRpc]
     public bool Login(string account, string password);
 }
 ```
@@ -338,7 +338,6 @@ GeneratorRpcProxyAttribute的配置，是对整个接口的总体配置，通过
 [GeneratorRpcProxy(Prefix = "RpcClassLibrary")]
 public interface IUserServer:IRpcServer
 {
-    [GeneratorRpcMethod]
     [DmtpRpc]
     LoginResponse Login(LoginRequest request);
 }
@@ -398,8 +397,7 @@ where TClient:IRpcClient
 [GeneratorRpcProxy(GeneratorFlag = CodeGeneratorFlag.ExtensionAsync| CodeGeneratorFlag.InterfaceAsync)]
 public interface IUserServer:IRpcServer
 {
-    [GeneratorRpcMethod]
-    [TouchRpc]
+    [DmtpRpc]
     LoginResponse Login(LoginRequest request);
 }
 ```
@@ -412,8 +410,7 @@ public interface IUserServer:IRpcServer
 [GeneratorRpcProxy]
 public interface IUserServer:IRpcServer
 {
-    [GeneratorRpcMethod]
-    [TouchRpc]
+    [DmtpRpc]
     LoginResponse Login(ICallContext callContext,LoginRequest request);
 }
 ```
@@ -444,39 +441,6 @@ public interface IB:IA
 }
 
 ```
-
-#### 3.2.2 GeneratorRpcMethodAttribute配置
-
-```csharp {4} 
-[GeneratorRpcProxy]
-public interface IUserServer:IRpcServer
-{
-    [GeneratorRpcMethod]
-    LoginResponse Login(ICallContext callContext,LoginRequest request);
-}
-```
-
-可配置项：
-
-- （1）GenericConstraintTypes
-- （2）GeneratorFlag
-- （3）MethodInvoke
-- （4）MethodFlags
-
-:::info 说明
-
-以上项目功能和**GeneratorRpcProxyAttribute**一致，但是当配置时，会优先生效。
-
-:::  
-
-**（5）InvokeKey**
-
-调用键，直接生效，区分大小写。
-
-**（6）MethodName**
-
-方法名称，可以修改生成代理的方法名。
-
 
 ## 四、从DispatchProxy生成代理
 
