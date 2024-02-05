@@ -128,7 +128,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗.`,
+      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗  <a href="https://beian.miit.gov.cn/">赣ICP备2024022829号-1</a>`,
     },
   },
   presets: [
