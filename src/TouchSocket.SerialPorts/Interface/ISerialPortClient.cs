@@ -19,7 +19,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 串口客户端接口。
     /// </summary>
-    public interface ISerialPortClient : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, ISetupConfigObject, IOnlineClient, IAdapterObject, IConnectObject, ICloseObject
+    public interface ISerialPortClient : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, ISetupConfigObject, IOnlineClient, IAdapterObject, IConnectObject, ICloseObject, ILoggerObject, IResolverObject, IReceiverObject
     {
         /// <summary>
         /// 成功打开串口

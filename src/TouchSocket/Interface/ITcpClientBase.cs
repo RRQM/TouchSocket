@@ -24,7 +24,7 @@ namespace TouchSocket.Sockets
     /// 注意：该接口并不仅表示客户端。<see cref="SocketClient"/>也实现了该接口。
     /// </para>
     /// </summary>
-    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, IConfigObject, IOnlineClient, IAdapterObject, ICloseObject
+    public interface ITcpClientBase : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, IConfigObject, IOnlineClient, IAdapterObject, ICloseObject, ILoggerObject, IResolverObject, IReceiverObject
     {
         /// <summary>
         /// 断开连接
