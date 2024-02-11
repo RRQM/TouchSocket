@@ -16,7 +16,7 @@ string jsonstr=SerializeConvert.ToJson(new object());//序列化
 object obj=SerializeConvert.FromJson<object>(jsonstr);//反序列化
 ```
 
-## 二、动态调整的Json策略
+## 二、动态调整的Json策略 弃用
 默认情况下：
 在net45和netstandard2.0平台时，序列化方式是由[JsonFast（群友老江）](https://gitee.com/majorworld/jsonfast)提供的单文件json序列化。该json工具能够序列化大多数数据结构，且性能和Newtonsoft.Json不相上下（见下测试）。
 在netcoreapp3.1及以上平台时，序列化方式使用System.Text.Json。
