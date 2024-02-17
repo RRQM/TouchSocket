@@ -101,6 +101,7 @@ public class MyClass
                .SetListenIPHosts(7789)
                .ConfigureContainer(a => 
                {
+                   a.AddConsoleLogger();
                    a.AddRpcStore(store =>
                    {
                        store.RegisterServer<ApiServer>();//注册服务
