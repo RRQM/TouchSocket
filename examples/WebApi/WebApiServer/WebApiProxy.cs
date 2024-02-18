@@ -74,6 +74,21 @@ String PostContent(IInvokeOption invokeOption = default);
 /// <exception cref="System.Exception">其他异常</exception>
 Task<String> PostContentAsync(IInvokeOption invokeOption = default);
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+String UploadMultiFile(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<String> UploadMultiFileAsync(System.String id,IInvokeOption invokeOption = default);
+
 }
 public class ApiServer :IApiServer
 {
@@ -196,6 +211,35 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 return (String) await Client.InvokeAsync(typeof(String),"POST:/apiserver/postcontent",invokeOption, null);
 }
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public String UploadMultiFile(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+String returnData=(String)Client.Invoke(typeof(String),"POST:/apiserver/uploadmultifile",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<String> UploadMultiFileAsync(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return (String) await Client.InvokeAsync(typeof(String),"POST:/apiserver/uploadmultifile",invokeOption, parameters);
+}
+
 }
 public static class ApiServerExtensions
 {
@@ -279,6 +323,27 @@ return returnData;
 public static async Task<String> PostContentAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 return (String) await client.InvokeAsync(typeof(String),"POST:/apiserver/postcontent",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static String UploadMultiFile<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+String returnData=(String)client.Invoke(typeof(String),"POST:/apiserver/uploadmultifile",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<String> UploadMultiFileAsync<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+return (String) await client.InvokeAsync(typeof(String),"POST:/apiserver/uploadmultifile",invokeOption, parameters);
 }
 
 }

@@ -17,7 +17,7 @@ namespace WebApiServerApp
             var service = new HttpService();
             service.Setup(new TouchSocketConfig()
                .SetListenIPHosts(7789)
-               .ConfigureContainer(a => 
+               .ConfigureContainer(a =>
                {
                    a.AddRpcStore(store =>
                    {
@@ -121,6 +121,55 @@ namespace WebApiServerApp
                 this.m_logger.Info($"共计：{content.Length}");
             }
 
+            return Task.FromResult("ok");
+        }
+
+        /// <summary>
+        /// 使用调用上下文，上传多个小文件。
+        /// </summary>
+        /// <param name="callContext"></param>
+        [WebApi(HttpMethodType.POST)]
+        public Task<string> UploadMultiFile(IWebApiCallContext callContext, string id)
+        {
+            var formFiles = callContext.HttpContext.Request.GetMultifileCollection();
+            if (formFiles != null)
+            {
+                foreach (var item in formFiles)
+                {
+                    Console.WriteLine($"fileName={item.FileName},name={item.Name}");
+
+                    //写入实际数据
+                    File.WriteAllBytes(item.FileName, item.Data);
+                }
+            }
+            return Task.FromResult("ok");
+        }
+
+        /// <summary>
+        /// 使用调用上下文，上传大文件。
+        /// </summary>
+        /// <param name="callContext"></param>
+        [WebApi(HttpMethodType.POST)]
+        public Task<string> UploadBigFile(IWebApiCallContext callContext)
+        {
+            using (FileStream stream = File.Create("text.file"))
+            {
+                byte[] buffer = new byte[1024 * 64];
+                while (true)
+                {
+                    int r = callContext.HttpContext.Request.Read(buffer, 0, buffer.Length);
+
+                    if (r == 0)
+                    {
+                        break;
+                    }
+
+                    Console.WriteLine(r);
+
+                    stream.Write(buffer, 0, r);
+                }
+            }
+            Console.WriteLine("ok");
             return Task.FromResult("ok");
         }
     }
