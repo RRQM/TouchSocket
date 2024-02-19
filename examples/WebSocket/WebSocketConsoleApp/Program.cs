@@ -108,15 +108,32 @@ namespace WebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
+                    a.Add(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), () =>
+                    {
+                        Console.WriteLine("WebSocketHandshaked");
+                    });
+
+                    a.Add(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), () =>
+                    {
+                        Console.WriteLine("WebSocketClosing");
+                    });
+
+                    a.Add(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), () =>
+                    {
+                        Console.WriteLine("TcpDisconnected");
+                    });
+
                     a.UseWebSocketHeartbeat()
                     .SetTick(TimeSpan.FromSeconds(1));
+
+                    a.UseReconnection();
                 })
                 .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
             client.Connect();
 
             client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 
-            await Task.Delay(10000);
+            await Task.Delay(1000000);
         }
 
         /// <summary>

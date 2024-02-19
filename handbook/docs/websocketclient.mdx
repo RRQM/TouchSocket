@@ -385,6 +385,17 @@ WebSocket是双向通讯，所以支持客户端和服务器双向操作Ping和P
 
 :::  
 
+### 7.3 断线重连
+
+`WebSocket`断线重连，可以直接使用[Tcp断线重连](./reconnection.mdx)插件。
+
+```csharp showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseReconnection();
+})
+```
+
 ## 八、关闭连接
 
 关闭Websocket，应该发送关闭报文。
