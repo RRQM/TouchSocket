@@ -21,7 +21,7 @@ namespace DmtpWebApplication
 
             //在整个通用Host中，所有组件会共用一个容器。
             //所以建议使用ConfigureContainer统一设置。
-            builder.Services.ConfigureContainer(container => 
+            builder.Services.ConfigureContainer(container =>
             {
                 container.AddConsoleLogger();
                 container.AddDmtpRouteService();
@@ -66,7 +66,7 @@ namespace DmtpWebApplication
             app.UseWebSocketDmtp("/WebSocketDmtp");
 
             //HttpDmtp可以单独直接使用。
-            app.UseHttpDmtp(); 
+            app.UseHttpDmtp();
 
             app.Run();
         }
