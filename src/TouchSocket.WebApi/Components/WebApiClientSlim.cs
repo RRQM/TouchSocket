@@ -27,7 +27,7 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// 使用<see cref="HttpClient"/>为基础的WebApi客户端。
     /// </summary>
-    public class WebApiClientSlim : TouchSocket.Http.HttpClientSlim, IWebApiClientBase
+    public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     {
         /// <summary>
         /// 使用<see cref="HttpClient"/>为基础的WebApi客户端。
@@ -35,13 +35,13 @@ namespace TouchSocket.WebApi
         /// <param name="httpClient"></param>
         public WebApiClientSlim(HttpClient httpClient = default) : base(httpClient)
         {
-            this.StringConverter = new StringConverter();
+            this.Converter = new StringSerializerConverter(new JsonStringToClassSerializerFormatter<object>());
         }
 
         /// <summary>
         /// 字符串转化器
         /// </summary>
-        public StringConverter StringConverter { get; }
+        public StringSerializerConverter Converter { get; }
 
         ///<inheritdoc/>
         public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
@@ -100,7 +100,7 @@ namespace TouchSocket.WebApi
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return this.StringConverter.ConvertFrom(response.Content.ReadAsStringAsync().GetAwaiter().GetResult(), returnType);
+                    return this.Converter.Deserialize(null,response.Content.ReadAsStringAsync().GetFalseAwaitResult(), returnType);
                 }
                 else if ((int)response.StatusCode == 422)
                 {
@@ -322,7 +322,7 @@ namespace TouchSocket.WebApi
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return this.StringConverter.ConvertFrom(await response.Content.ReadAsStringAsync(), returnType);
+                    return this.Converter.Deserialize(null,await response.Content.ReadAsStringAsync(), returnType);
                 }
                 else if ((int)response.StatusCode == 422)
                 {

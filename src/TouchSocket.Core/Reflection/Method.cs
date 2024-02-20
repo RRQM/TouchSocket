@@ -73,7 +73,7 @@ namespace TouchSocket.Core
             {
                 if (item.ParameterType.IsByRef)
                 {
-                    this.IsByRef = true;
+                    this.HasByRef = true;
                 }
             }
             if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
@@ -128,7 +128,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 是否有引用类型
         /// </summary>
-        public bool IsByRef { get; private set; }
+        public bool HasByRef { get; private set; }
 
         /// <summary>
         /// 获取方法名

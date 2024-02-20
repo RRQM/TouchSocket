@@ -27,7 +27,8 @@ namespace TouchSocket.JsonRpc
         /// 基于Tcp协议的JsonRpc功能插件
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
+        /// <param name="resolver"></param>
+        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
         {
         }
 

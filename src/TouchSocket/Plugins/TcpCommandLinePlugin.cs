@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets
         protected TcpCommandLinePlugin(ILog logger)
         {
             this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Converter = new StringConverter();
+            this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(),new JsonStringToClassSerializerFormatter<object>());
             var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
             {
@@ -46,7 +46,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。
         /// </summary>
-        public StringConverter Converter { get; }
+        public StringSerializerConverter Converter { get; }
 
         /// <summary>
         /// 是否返回执行异常。
@@ -82,7 +82,7 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            os[i] = this.Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
+                            os[i] = this.Converter.Deserialize(null,strs[index + 1], ps[i].ParameterType);
                             index++;
                         }
                     }
@@ -109,7 +109,7 @@ namespace TouchSocket.Sockets
                         }
                         if (method.HasReturn)
                         {
-                            client.Send(this.Converter.ConvertTo(result));
+                            client.Send(this.Converter.Serialize(null,result));
                         }
                     }
                     catch (Exception ex)

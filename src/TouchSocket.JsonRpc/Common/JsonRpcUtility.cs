@@ -104,10 +104,11 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// BuildRequestContext
         /// </summary>
+        /// <param name="resolver"></param>
         /// <param name="actionMap"></param>
         /// <param name="callContext"></param>
         /// <exception cref="RpcException"></exception>
-        public static void BuildRequestContext(ActionMap actionMap, ref JsonRpcCallContextBase callContext)
+        public static void BuildRequestContext(IResolver resolver, ActionMap actionMap, ref JsonRpcCallContextBase callContext)
         {
             var requestContext = ToJsonRpcRequestContext(callContext.JsonString);
 
@@ -116,84 +117,159 @@ namespace TouchSocket.JsonRpc
             if (actionMap.TryGetMethodInstance(requestContext.Method, out var methodInstance))
             {
                 callContext.SetMethodInstance(methodInstance);
+                var ps = new object[methodInstance.Parameters.Length];
+
                 if (requestContext.Params == null)
                 {
-                    if (methodInstance.IncludeCallContext)
+                    for (var i = 0; i < ps.Length; i++)
                     {
-                        requestContext.Parameters = methodInstance.ParameterNames.Length > 1 ? throw new RpcException("调用参数计数不匹配") : (new object[] { callContext });
-                    }
-                    else
-                    {
-                        if (methodInstance.ParameterNames.Length != 0)
+                        var parameter = methodInstance.Parameters[i];
+                        if (parameter.IsCallContext)
                         {
-                            throw new RpcException("调用参数计数不匹配");
+                            ps[i] = callContext;
                         }
-                    }
-                }
-                if (requestContext.Params is JObject obj)
-                {
-                    requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
-                    //内联
-                    var i = 0;
-                    if (methodInstance.IncludeCallContext)
-                    {
-                        requestContext.Parameters[0] = callContext;
-                        i = 1;
-                    }
-                    for (; i < methodInstance.ParameterNames.Length; i++)
-                    {
-                        if (obj.TryGetValue(methodInstance.ParameterNames[i], out var jToken))
+                        else if (parameter.IsFromServices)
                         {
-                            var type = methodInstance.ParameterTypes[i];
-                            requestContext.Parameters[i] = jToken.ToJsonString().FromJsonString(type);
+                            ps[i] = resolver.Resolve(parameter.Type);
+                        }
+                        else if (parameter.ParameterInfo.HasDefaultValue)
+                        {
+                            ps[i] = parameter.ParameterInfo.DefaultValue;
                         }
                         else
                         {
-                            if (methodInstance.Parameters[i].HasDefaultValue)
-                            {
-                                requestContext.Parameters[i] = methodInstance.Parameters[i].DefaultValue;
-                            }
-                            else
-                            {
-                                throw new RpcException("调用参数计数不匹配");
-                            }
+                            ps[i] = parameter.Type.GetDefault();
                         }
                     }
+                    //if (methodInstance.IncludeCallContext)
+                    //{
+                    //    requestContext.Parameters = methodInstance.ParameterNames.Length > 1 ? throw new RpcException("调用参数计数不匹配") : (new object[] { callContext });
+                    //}
+                    //else
+                    //{
+                    //    if (methodInstance.ParameterNames.Length != 0)
+                    //    {
+                    //        throw new RpcException("调用参数计数不匹配");
+                    //    }
+                    //}
+                }
+                if (requestContext.Params is JObject obj)
+                {
+                    for (var i = 0; i < ps.Length; i++)
+                    {
+                        var parameter = methodInstance.Parameters[i];
+                        if (parameter.IsCallContext)
+                        {
+                            ps[i] = callContext;
+                        }
+                        else if (parameter.IsFromServices)
+                        {
+                            ps[i] = resolver.Resolve(parameter.Type);
+                        }
+                        else if (obj.TryGetValue(parameter.Name, out var jToken))
+                        {
+                            ps[i] = jToken.ToJsonString().FromJsonString(parameter.Type);
+                        }
+                        else if (parameter.ParameterInfo.HasDefaultValue)
+                        {
+                            ps[i] = parameter.ParameterInfo.DefaultValue;
+                        }
+                        else
+                        {
+                            ps[i] = parameter.Type.GetDefault();
+                        }
+                    }
+
+                    //requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
+                    ////内联
+                    //var i = 0;
+                    //if (methodInstance.IncludeCallContext)
+                    //{
+                    //    requestContext.Parameters[0] = callContext;
+                    //    i = 1;
+                    //}
+                    //for (; i < methodInstance.ParameterNames.Length; i++)
+                    //{
+                    //    if (obj.TryGetValue(methodInstance.ParameterNames[i], out var jToken))
+                    //    {
+                    //        var type = methodInstance.ParameterTypes[i];
+                    //        requestContext.Parameters[i] = jToken.ToJsonString().FromJsonString(type);
+                    //    }
+                    //    else
+                    //    {
+                    //        if (methodInstance.Parameters[i].HasDefaultValue)
+                    //        {
+                    //            requestContext.Parameters[i] = methodInstance.Parameters[i].DefaultValue;
+                    //        }
+                    //        else
+                    //        {
+                    //            throw new RpcException("调用参数计数不匹配");
+                    //        }
+                    //    }
+                    //}
                 }
                 else if (requestContext.Params is JArray array)
                 {
-                    if (methodInstance.IncludeCallContext)
+                    var index = 0;
+                    for (var i = 0; i < ps.Length; i++)
                     {
-                        if (array.Count != methodInstance.ParameterNames.Length - 1)
+                        var parameter = methodInstance.Parameters[i];
+                        if (parameter.IsCallContext)
                         {
-                            throw new RpcException("调用参数计数不匹配");
+                            ps[i] = callContext;
                         }
-                        requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
-
-                        requestContext.Parameters[0] = callContext;
-                        for (var i = 0; i < array.Count; i++)
+                        else if (parameter.IsFromServices)
                         {
-                            requestContext.Parameters[i + 1] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i + 1]);
+                            ps[i] = resolver.Resolve(parameter.Type);
+                        }
+                        else if (index < array.Count)
+                        {
+                            ps[i] = array[index++].ToJsonString().FromJsonString(parameter.Type);
+                        }
+                        else if (parameter.ParameterInfo.HasDefaultValue)
+                        {
+                            ps[i] = parameter.ParameterInfo.DefaultValue;
+                        }
+                        else
+                        {
+                            ps[i] = parameter.Type.GetDefault();
                         }
                     }
-                    else
-                    {
-                        if (array.Count != methodInstance.ParameterNames.Length)
-                        {
-                            throw new RpcException("调用参数计数不匹配");
-                        }
-                        requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
 
-                        for (var i = 0; i < array.Count; i++)
-                        {
-                            requestContext.Parameters[i] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i]);
-                        }
-                    }
+                    //if (methodInstance.IncludeCallContext)
+                    //{
+                    //    if (array.Count != methodInstance.ParameterNames.Length - 1)
+                    //    {
+                    //        throw new RpcException("调用参数计数不匹配");
+                    //    }
+                    //    requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
+
+                    //    requestContext.Parameters[0] = callContext;
+                    //    for (var i = 0; i < array.Count; i++)
+                    //    {
+                    //        requestContext.Parameters[i + 1] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i + 1]);
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    if (array.Count != methodInstance.ParameterNames.Length)
+                    //    {
+                    //        throw new RpcException("调用参数计数不匹配");
+                    //    }
+                    //    requestContext.Parameters = new object[methodInstance.ParameterNames.Length];
+
+                    //    for (var i = 0; i < array.Count; i++)
+                    //    {
+                    //        requestContext.Parameters[i] = array[i].ToJsonString().FromJsonString(methodInstance.ParameterTypes[i]);
+                    //    }
+                    //}
                 }
                 else
                 {
                     throw new RpcException("未知参数类型");
                 }
+
+                requestContext.Parameters = ps;
             }
         }
 

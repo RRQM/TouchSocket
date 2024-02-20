@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using TouchSocket.Core;
@@ -912,16 +913,7 @@ namespace TouchSocket.Rpc
             isOut = false;
             isRef = false;
 
-            if (methodInstance.IncludeCallContext)
-            {
-                var infos = new List<ParameterInfo>(methodInstance.Parameters);
-                infos.RemoveAt(0);
-                parameters = infos.ToArray();
-            }
-            else
-            {
-                parameters = methodInstance.Parameters;
-            }
+            parameters = methodInstance.GetNormalParameters().Select(a => a.ParameterInfo).ToArray();
 
             for (var i = 0; i < parameters.Length; i++)
             {

@@ -199,14 +199,14 @@ namespace TouchSocket.Core
         {
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
-                sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+                sign = this.GetSign(true);
                 waitData.SetResult(default);
                 this.m_waitDicAsync.TryAdd(sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitDataAsync<T>();
-            sign = Interlocked.Decrement(ref this.m_waitReverseCount);
+            sign = this.GetSign(true);
             waitData.SetResult(default);
             this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
@@ -224,7 +224,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = Interlocked.Increment(ref this.m_waitCount);
+                    result.Sign = this.GetSign(false);
                 }
                 waitData.SetResult(result);
                 this.m_waitDic.TryAdd(result.Sign, waitData);
@@ -234,7 +234,7 @@ namespace TouchSocket.Core
             waitData = new WaitData<T>();
             if (autoSign)
             {
-                result.Sign = Interlocked.Increment(ref this.m_waitCount);
+                result.Sign = this.GetSign(false);
             }
             waitData.SetResult(result);
             this.m_waitDic.TryAdd(result.Sign, waitData);
@@ -250,14 +250,14 @@ namespace TouchSocket.Core
         {
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
-                sign = Interlocked.Increment(ref this.m_waitCount);
+                sign = this.GetSign(false);
                 waitData.SetResult(default);
                 this.m_waitDic.TryAdd(sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
-            sign = Interlocked.Increment(ref this.m_waitCount);
+            sign = this.GetSign(false);
             waitData.SetResult(default);
             this.m_waitDic.TryAdd(sign, waitData);
             return waitData;
@@ -275,7 +275,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = Interlocked.Increment(ref this.m_waitCount);
+                    result.Sign = this.GetSign(false);
                 }
                 waitData.SetResult(result);
                 this.m_waitDicAsync.TryAdd(result.Sign, waitData);
@@ -285,7 +285,7 @@ namespace TouchSocket.Core
             waitData = new WaitDataAsync<T>();
             if (autoSign)
             {
-                result.Sign = Interlocked.Increment(ref this.m_waitCount);
+                result.Sign = this.GetSign(false);
             }
             waitData.SetResult(result);
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
@@ -301,14 +301,14 @@ namespace TouchSocket.Core
         {
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
-                sign = Interlocked.Increment(ref this.m_waitCount);
+                sign = this.GetSign(false);
                 waitData.SetResult(default);
                 this.m_waitDicAsync.TryAdd(sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitDataAsync<T>();
-            sign = Interlocked.Increment(ref this.m_waitCount);
+            sign = this.GetSign(false);
             waitData.SetResult(default);
             this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;

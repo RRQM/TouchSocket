@@ -421,7 +421,7 @@ namespace TouchSocket.JsonRpc
 
             try
             {
-                JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
+                JsonRpcUtility.BuildRequestContext(this.Resolver,this.ActionMap, ref callContext);
             }
             catch (Exception ex)
             {

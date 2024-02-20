@@ -62,9 +62,11 @@ namespace TouchSocket.Core
                     {
                         foreach (var item in this.m_plugins)
                         {
-                            if (item.GetType().FullName == plugin.GetType().FullName)
+                            if (item.GetType() == plugin.GetType())
                             {
-                                throw new Exception($"{plugin.GetType().FullName}类型的插件为单例类型，且已经注册。");
+                                //throw new Exception($"{plugin.GetType().FullName}类型的插件为单例类型，且已经注册。");
+
+                                return;
                             }
                         }
                     }

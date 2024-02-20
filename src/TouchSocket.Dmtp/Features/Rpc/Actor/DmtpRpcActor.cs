@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -52,11 +53,11 @@ namespace TouchSocket.Dmtp.Rpc
 
         #region 字段
 
+        private readonly IResolver m_resolver;
+        private readonly IRpcServerProvider m_rpcServerProvider;
         private ushort m_cancelInvoke;
         private ushort m_invoke_Request;
         private ushort m_invoke_Response;
-        private readonly IRpcServerProvider m_rpcServerProvider;
-        private readonly IResolver m_resolver;
 
         #endregion 字段
 
@@ -182,6 +183,24 @@ namespace TouchSocket.Dmtp.Rpc
             this.m_cancelInvoke = start;
         }
 
+        private static void CheckWaitDataStatus(WaitDataStatus status)
+        {
+            switch (status)
+            {
+                case WaitDataStatus.SetRunning:
+                    return;
+
+                case WaitDataStatus.Canceled: throw new OperationCanceledException();
+                case WaitDataStatus.Overtime: throw new TimeoutException();
+                case WaitDataStatus.Disposed:
+                case WaitDataStatus.Default:
+                default:
+                    {
+                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                    }
+            }
+        }
+
         private void CanceledInvoke(object obj)
         {
             if (obj is CanceledPackage canceled)
@@ -231,27 +250,55 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         if (methodInstance.IsEnable)
                         {
+                            ps = new object[methodInstance.Parameters.Length];
+
                             callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage, m_resolver);
 
                             this.TryAdd(rpcPackage.Sign, callContext);
 
-                            if (methodInstance.IncludeCallContext)
+                            var index = 0;
+                            for (var i = 0; i < ps.Length; i++)
                             {
-                                ps = new object[methodInstance.ParameterTypes.Length];
-                                ps[0] = callContext;
-                                for (var i = 0; i < psData.Count; i++)
+                                var parameter = methodInstance.Parameters[i];
+                                if (parameter.IsCallContext)
                                 {
-                                    ps[i + 1] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i + 1]);
+                                    ps[i] = callContext;
+                                }
+                                else if (parameter.IsFromServices)
+                                {
+                                    ps[i] = this.m_resolver.Resolve(parameter.Type);
+                                }
+                                else if (index < psData.Count)
+                                {
+                                    ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[index++], methodInstance.ParameterTypes[i]);
+                                }
+                                else if (parameter.ParameterInfo.HasDefaultValue)
+                                {
+                                    ps[i] = parameter.ParameterInfo.DefaultValue;
+                                }
+                                else
+                                {
+                                    ps[i] = parameter.Type.GetDefault();
                                 }
                             }
-                            else
-                            {
-                                ps = new object[methodInstance.ParameterTypes.Length];
-                                for (var i = 0; i < methodInstance.ParameterTypes.Length; i++)
-                                {
-                                    ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i]);
-                                }
-                            }
+
+                            //if (methodInstance.IncludeCallContext)
+                            //{
+                            //    ps = new object[methodInstance.ParameterTypes.Length];
+                            //    ps[0] = callContext;
+                            //    for (var i = 0; i < psData.Count; i++)
+                            //    {
+                            //        ps[i + 1] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i + 1]);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    ps = new object[methodInstance.ParameterTypes.Length];
+                            //    for (var i = 0; i < methodInstance.ParameterTypes.Length; i++)
+                            //    {
+                            //        ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i]);
+                            //    }
+                            //}
                         }
                         else
                         {
@@ -299,20 +346,40 @@ namespace TouchSocket.Dmtp.Rpc
                                 rpcPackage.ReturnParameterBytes = null;
                             }
 
-                            if (methodInstance.IsByRef)
+                            if (methodInstance.HasByRef)
                             {
                                 rpcPackage.IsByRef = true;
                                 rpcPackage.ParametersBytes = new List<byte[]>();
 
-                                var i = 0;
-                                if (methodInstance.IncludeCallContext)
+                                for (var i = 0; i < methodInstance.Parameters.Length; i++)
                                 {
-                                    i = 1;
+                                    var parameter = methodInstance.Parameters[i];
+                                    if (parameter.IsCallContext)
+                                    {
+                                        continue;
+                                    }
+                                    else if (parameter.IsFromServices)
+                                    {
+                                        continue;
+                                    }
+                                    else if (parameter.IsByRef)
+                                    {
+                                        rpcPackage.ParametersBytes.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, ps[i]));
+                                    }
+                                    else
+                                    {
+                                        rpcPackage.ParametersBytes.Add(null);
+                                    }
                                 }
-                                for (; i < ps.Length; i++)
-                                {
-                                    rpcPackage.ParametersBytes.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, ps[i]));
-                                }
+                                //var i = 0;
+                                //if (methodInstance.IncludeCallContext)
+                                //{
+                                //    i = 1;
+                                //}
+                                //for (; i < ps.Length; i++)
+                                //{
+                                //    rpcPackage.ParametersBytes.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, ps[i]));
+                                //}
                             }
                             else
                             {
@@ -372,24 +439,6 @@ namespace TouchSocket.Dmtp.Rpc
                 }
             }
             return default;
-        }
-
-        private static void CheckWaitDataStatus(WaitDataStatus status)
-        {
-            switch (status)
-            {
-                case WaitDataStatus.SetRunning:
-                    return;
-
-                case WaitDataStatus.Canceled: throw new OperationCanceledException();
-                case WaitDataStatus.Overtime: throw new TimeoutException();
-                case WaitDataStatus.Disposed:
-                case WaitDataStatus.Default:
-                default:
-                    {
-                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
-                    }
-            }
         }
 
         #region Rpc

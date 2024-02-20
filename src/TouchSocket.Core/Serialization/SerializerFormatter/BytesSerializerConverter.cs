@@ -10,29 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
+using System.Text;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 序列化器
+    /// 字节类转换器
     /// </summary>
-    /// <typeparam name="TSource"></typeparam>
-    public interface ISerializer<TSource>
+    public class BytesSerializerConverter<TState> : TouchSocketSerializerConverter<byte[], TState>
     {
-        /// <summary>
-        /// 序列化
-        /// </summary>
-        /// <param name="target"></param>
-        /// <returns></returns>
-        TSource Serialize(object target);
+        ///// <summary>
+        ///// 字节类转换器
+        ///// </summary>
+        //public BytesConverter()
+        //{
+        //    this.Add(new JsonBytesToClassConverter());
+        //}
+    }
 
-        /// <summary>
-        /// 反序列化
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        object Deserialize(TSource source, Type targetType);
+    /// <summary>
+    /// 字节类转换器
+    /// </summary>
+    public class BytesSerializerConverter: BytesSerializerConverter<object>
+    {
+
     }
 }

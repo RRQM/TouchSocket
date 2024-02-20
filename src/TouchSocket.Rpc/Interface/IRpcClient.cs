@@ -94,7 +94,7 @@ namespace TouchSocket.Rpc
         /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
         /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
         /// </summary>
-        /// <param name="returnType"></param>
+        /// <param name="returnType">返回值类型</param>
         /// <param name="invokeKey">调用键</param>
         /// <param name="parameters">参数</param>
         /// <param name="invokeOption">Rpc调用设置</param>

@@ -10,9 +10,12 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -41,17 +44,18 @@ namespace TouchSocket.WebApi
 
             this.GetRouteMap = new ActionMap(true);
             this.PostRouteMap = new ActionMap(true);
-            this.Converter = new StringConverter();
-
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
             this.m_resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+
+            this.Converter = new WebApiSerializerConverter();
+            this.Converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings());
         }
 
         /// <summary>
         /// 转化器
         /// </summary>
-        public StringConverter Converter { get; private set; }
+        public WebApiSerializerConverter Converter { get; private set; }
 
         /// <summary>
         /// 获取Get函数路由映射图
@@ -68,7 +72,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         /// <param name="action"></param>
         /// <returns></returns>
-        public WebApiParserPlugin ConfigureConverter(Action<StringConverter> action)
+        public WebApiParserPlugin ConfigureConverter(Action<WebApiSerializerConverter> action)
         {
             action.Invoke(this.Converter);
             return this;
@@ -79,6 +83,19 @@ namespace TouchSocket.WebApi
         {
             pluginManager.Add(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
             base.Loaded(pluginManager);
+        }
+
+        private static object PrimitiveParse(string source, Type targetType)
+        {
+            if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.stringType)
+            {
+                StringExtension.TryParseToType(source, targetType, out var target);
+
+                return target;
+            }
+            //return this.Converter.Deserialize(source, targetType);
+
+            return default;
         }
 
         private async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
@@ -97,34 +114,63 @@ namespace TouchSocket.WebApi
                     try
                     {
                         ps = new object[methodInstance.Parameters.Length];
-                        var i = 0;
-                        if (methodInstance.IncludeCallContext)
+                        for (var i = 0; i < methodInstance.Parameters.Length; i++)
                         {
-                            ps[i] = callContext;
-                            i++;
-                        }
-                        if (e.Context.Request.Query == null)
-                        {
-                            for (; i < methodInstance.Parameters.Length; i++)
+                            var parameter = methodInstance.Parameters[i];
+                            if (parameter.IsCallContext)
                             {
-                                ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                ps[i] = callContext;
                             }
-                        }
-                        else
-                        {
-                            for (; i < methodInstance.Parameters.Length; i++)
+                            else if (parameter.IsFromServices)
                             {
-                                var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
-                                if (!value.IsNullOrEmpty())
+                                ps[i] = this.m_resolver.Resolve(parameter.Type);
+                            }
+                            else
+                            {
+                                var value = e.Context.Request.Query.Get(parameter.Name);
+                                if (value.HasValue())
                                 {
-                                    ps[i] = this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                    ps[i] = WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                                }
+                                else if (parameter.ParameterInfo.HasDefaultValue)
+                                {
+                                    ps[i] = parameter.ParameterInfo.DefaultValue;
                                 }
                                 else
                                 {
-                                    ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                    ps[i] = parameter.Type.GetDefault();
                                 }
                             }
                         }
+
+                        //var i = 0;
+                        //if (methodInstance.IncludeCallContext)
+                        //{
+                        //    ps[i] = callContext;
+                        //    i++;
+                        //}
+                        //if (e.Context.Request.Query == null)
+                        //{
+                        //    for (; i < methodInstance.Parameters.Length; i++)
+                        //    {
+                        //        ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    for (; i < methodInstance.Parameters.Length; i++)
+                        //    {
+                        //        var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                        //        if (!value.IsNullOrEmpty())
+                        //        {
+                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, methodInstance.ParameterTypes[i]);
+                        //        }
+                        //        else
+                        //        {
+                        //            ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //        }
+                        //    }
+                        //}
                     }
                     catch (Exception ex)
                     {
@@ -145,45 +191,8 @@ namespace TouchSocket.WebApi
                 {
                     return;
                 }
-                var httpResponse = e.Context.Response;
-                switch (invokeResult.Status)
-                {
-                    case InvokeStatus.Success:
-                        {
-                            httpResponse.FromJson(this.Converter.ConvertTo(invokeResult.Result)).SetStatus();
-                            break;
-                        }
-                    case InvokeStatus.UnFound:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(404);
-                            break;
-                        }
-                    case InvokeStatus.UnEnable:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(405);
-                            break;
-                        }
-                    case InvokeStatus.InvocationException:
-                    case InvokeStatus.Exception:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(422);
-                            break;
-                        }
-                }
 
-                using (var byteBlock = new ByteBlock())
-                {
-                    httpResponse.Build(byteBlock);
-                    client.DefaultSend(byteBlock);
-                }
-
-                if (!e.Context.Request.KeepAlive)
-                {
-                    client.TryShutdown(SocketShutdown.Both);
-                }
+                this.Response(client, e.Context, invokeResult);
             }
             await e.InvokeNext();
         }
@@ -196,117 +205,126 @@ namespace TouchSocket.WebApi
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-
-                var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
-
                 if (methodInstance.IsEnable)
                 {
+                    var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
                     try
                     {
-                        int index;
                         ps = new object[methodInstance.Parameters.Length];
-                        var i = 0;
-                        if (methodInstance.IncludeCallContext)
+
+                        for (var i = 0; i < methodInstance.Parameters.Length; i++)
                         {
-                            ps[i] = callContext;
-                            i++;
-                            index = methodInstance.Parameters.Length - 2;
-                        }
-                        else
-                        {
-                            index = methodInstance.Parameters.Length - 1;
-                        }
-                        if (e.Context.Request.Query == null)
-                        {
-                            for (; i < methodInstance.Parameters.Length - 1; i++)
+                            var parameter = methodInstance.Parameters[i];
+                            if (parameter.IsCallContext)
                             {
-                                ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                ps[i] = callContext;
                             }
-                        }
-                        else
-                        {
-                            for (; i < methodInstance.Parameters.Length - 1; i++)
+                            else if (parameter.IsFromServices)
                             {
-                                var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
-                                if (!value.IsNullOrEmpty())
+                                ps[i] = this.m_resolver.Resolve(parameter.Type);
+                            }
+                            else if (parameter.Type.IsPrimitive || parameter.Type == typeof(string))
+                            {
+                                var value = e.Context.Request.Query.Get(parameter.Name);
+                                if (value.HasValue())
                                 {
-                                    ps[i] = this.Converter.ConvertFrom(value, methodInstance.ParameterTypes[i]);
+                                    ps[i] = WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                                }
+                                else if (parameter.ParameterInfo.HasDefaultValue)
+                                {
+                                    ps[i] = parameter.ParameterInfo.DefaultValue;
                                 }
                                 else
                                 {
-                                    ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                                    ps[i] = parameter.Type.GetDefault();
                                 }
+                            }
+                            else
+                            {
+                                var str = e.Context.Request.GetBody();
+                                ps[i] = this.Converter.Deserialize(e.Context, str, parameter.Type);
                             }
                         }
 
-                        if (index >= 0)
-                        {
-                            var str = e.Context.Request.GetBody();
-                            if (methodInstance.IncludeCallContext)
-                            {
-                                index++;
-                            }
-                            ps[index] = this.Converter.ConvertFrom(str, methodInstance.ParameterTypes[index]);
-                        }
+                        //var i = 0;
+                        
+                        //if (methodInstance.IncludeCallContext)
+                        //{
+                        //    //包含上下文
+                        //    ps[i] = callContext;
+                        //    i++;
+                        //    index = methodInstance.Parameters.Length - 2;
+
+                           
+                        //}
+                        //else
+                        //{
+                        //    index = methodInstance.Parameters.Length - 1;
+                        //}
+
+                        //var lastType = methodInstance.ParameterTypes.LastOrDefault();
+                        //if (true)
+                        //{
+
+                        //}
+                        //var psLength = methodInstance.ParameterTypes.Length - 1;
+                        //if (e.Context.Request.Query.Count==0)
+                        //{
+                        //    for (; i < psLength; i++)
+                        //    {
+                        //        ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    for (; i < psLength + 1; i++)
+                        //    {
+                        //        var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                        //        if (!value.IsNullOrEmpty())
+                        //        {
+                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, methodInstance.ParameterTypes[i]);
+                        //            index--;
+                        //        }
+                        //        else
+                        //        {
+                        //            ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //        }
+                        //    }
+                        //}
+
+                        //if (index >= 0)
+                        //{
+                        //    var str = e.Context.Request.GetBody();
+                        //    if (methodInstance.IncludeCallContext)
+                        //    {
+                        //        index++;
+                        //    }
+                        //    ps[index] = this.Converter.Deserialize(e.Context, str, methodInstance.ParameterTypes[index]);
+                        //}
                     }
                     catch (Exception ex)
                     {
                         invokeResult.Status = InvokeStatus.Exception;
                         invokeResult.Message = ex.Message;
                     }
+
+                    if (invokeResult.Status == InvokeStatus.Ready)
+                    {
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
+                    }
+
+                    if (e.Context.Response.Responsed)
+                    {
+                        return;
+                    }
+
                 }
                 else
                 {
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
-                }
 
-                if (e.Context.Response.Responsed)
-                {
-                    return;
-                }
-                var httpResponse = e.Context.Response;
-                switch (invokeResult.Status)
-                {
-                    case InvokeStatus.Success:
-                        {
-                            httpResponse.FromJson(this.Converter.ConvertTo(invokeResult.Result)).SetStatus();
-                            break;
-                        }
-                    case InvokeStatus.UnFound:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(404, invokeResult.Status.ToString());
-                            break;
-                        }
-                    case InvokeStatus.UnEnable:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(405, invokeResult.Status.ToString());
-                            break;
-                        }
-                    case InvokeStatus.InvocationException:
-                    case InvokeStatus.Exception:
-                        {
-                            var jsonString = this.Converter.ConvertTo(new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
-                            httpResponse.FromJson(jsonString).SetStatus(422, invokeResult.Status.ToString());
-                            break;
-                        }
-                }
-
-                using (var byteBlock = new ByteBlock())
-                {
-                    httpResponse.Build(byteBlock);
-                    client.DefaultSend(byteBlock);
-                }
-
-                if (!e.Context.Request.KeepAlive)
-                {
-                    client.TryShutdown(SocketShutdown.Both);
-                }
+                this.Response(client, e.Context, invokeResult);
             }
             await e.InvokeNext();
         }
@@ -352,6 +370,71 @@ namespace TouchSocket.WebApi
                         }
                     }
                 }
+            }
+        }
+
+        private void Response(IHttpSocketClient client, HttpContext httpContext, in InvokeResult invokeResult)
+        {
+            var httpResponse = httpContext.Response;
+            var httpRequest = httpContext.Request;
+
+            string contentType;
+
+            switch (httpRequest.Accept)
+            {
+                case "application/json":
+                case "application/xml":
+                case "text/json":
+                case "text/xml":
+                case "text/plain":
+                    {
+                        contentType = httpRequest.Accept;
+                        break;
+                    }
+                default:
+                    contentType = "application/json";
+                    break;
+            }
+
+            httpResponse.ContentType= contentType;
+
+            switch (invokeResult.Status)
+            {
+                case InvokeStatus.Success:
+                    {
+                        httpResponse.SetContent(this.Converter.Serialize(httpContext,invokeResult.Result)).SetStatus();
+                        break;
+                    }
+                case InvokeStatus.UnFound:
+                    {
+                        var jsonString = this.Converter.Serialize(httpContext,new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                        httpResponse.SetContent(jsonString).SetStatus(404, "Not Found");
+                        break;
+                    }
+                case InvokeStatus.UnEnable:
+                    {
+                        var jsonString = this.Converter.Serialize(httpContext, new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                        httpResponse.SetContent(jsonString).SetStatus(405, "UnEnable");
+                        break;
+                    }
+                case InvokeStatus.InvocationException:
+                case InvokeStatus.Exception:
+                    {
+                        var jsonString = this.Converter.Serialize(httpContext, new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                        httpResponse.SetContent(jsonString).SetStatus(422, "Exception");
+                        break;
+                    }
+            }
+
+            using (var byteBlock = new ByteBlock())
+            {
+                httpResponse.Build(byteBlock);
+                client.DefaultSend(byteBlock);
+            }
+
+            if (!httpContext.Request.KeepAlive)
+            {
+                client.TryShutdown(SocketShutdown.Both);
             }
         }
     }

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -26,13 +27,16 @@ namespace TouchSocket.Dmtp.Redis
         public RedisFeature()
         {
             this.SetProtocolFlags(25);
+
+            this.Converter = new BytesSerializerConverter();
+            this.Converter.Add(new JsonBytesToClassSerializerFormatter<object>());
         }
 
         /// <summary>
         /// 定义元素的序列化和反序列化。
         /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
         /// </summary>
-        public BytesConverter Converter { get; set; } = new BytesConverter();
+        public BytesSerializerConverter Converter { get;private set; }
 
         /// <summary>
         /// 实际储存缓存。
@@ -88,10 +92,10 @@ namespace TouchSocket.Dmtp.Redis
         /// 定义元素的序列化和反序列化。
         /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
         /// </summary>
-        /// <param name="converter"></param>
-        public RedisFeature SetConverter(BytesConverter converter)
+        /// <param name="action"></param>
+        public RedisFeature ConfigureConverter(Action<BytesSerializerConverter> action)
         {
-            this.Converter = converter;
+            action.Invoke(this.Converter);
             return this;
         }
 

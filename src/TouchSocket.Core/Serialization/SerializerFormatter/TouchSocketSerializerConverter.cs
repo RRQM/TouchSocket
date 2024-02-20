@@ -16,18 +16,18 @@ using System.Collections.Generic;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 转换器
+    /// 序列化转换器
     /// </summary>
-    public class TouchSocketConverter<TSource>
+    public class TouchSocketSerializerConverter<TSource, TState>
     {
-        private readonly List<IConverter<TSource>> m_converters = new List<IConverter<TSource>>();
+        private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
 
         /// <summary>
         /// 添加插件
         /// </summary>
         /// <param name="converter">插件</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public void Add(IConverter<TSource> converter)
+        public void Add(ISerializerFormatter<TSource, TState> converter)
         {
             if (converter == null)
             {
@@ -43,7 +43,7 @@ namespace TouchSocket.Core
 
             this.m_converters.Add(converter);
 
-            this.m_converters.Sort(delegate (IConverter<TSource> x, IConverter<TSource> y)
+            this.m_converters.Sort(delegate (ISerializerFormatter<TSource, TState> x, ISerializerFormatter<TSource, TState> y)
             {
                 return x.Order == y.Order ? 0 : x.Order > y.Order ? 1 : -1;
             });
@@ -60,14 +60,15 @@ namespace TouchSocket.Core
         /// <summary>
         /// 将源数据转换目标类型对象
         /// </summary>
+        /// <param name="state"></param>
         /// <param name="source"></param>
         /// <param name="targetType"></param>
         /// <returns></returns>
-        public object ConvertFrom(TSource source, Type targetType)
+        public virtual object Deserialize(TState state, TSource source, Type targetType)
         {
             foreach (var item in this.m_converters)
             {
-                if (item.TryConvertFrom(source, targetType, out var result))
+                if (item.TryDeserialize(state, source, targetType, out var result))
                 {
                     return result;
                 }
@@ -79,13 +80,14 @@ namespace TouchSocket.Core
         /// <summary>
         /// 将目标类型对象转换源数据
         /// </summary>
+        /// <param name="state"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public TSource ConvertTo(object target)
+        public virtual TSource Serialize(TState state, in object target)
         {
             foreach (var item in this.m_converters)
             {
-                if (item.TryConvertTo(target, out var source))
+                if (item.TrySerialize(state, target, out var source))
                 {
                     return source;
                 }
@@ -98,7 +100,7 @@ namespace TouchSocket.Core
         /// 移除插件
         /// </summary>
         /// <param name="converter"></param>
-        public void Remove(IConverter<TSource> converter)
+        public void Remove(ISerializerFormatter<TSource, TState> converter)
         {
             if (converter == null)
             {

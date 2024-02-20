@@ -439,13 +439,24 @@ namespace TouchSocket.Http
         /// <param name="status"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static TResponse SetStatus<TResponse>(this TResponse response, int status = 200, string msg = "Success") where TResponse : HttpResponse
+        public static TResponse SetStatus<TResponse>(this TResponse response, int status, string msg) where TResponse : HttpResponse
         {
             response.StatusCode = status;
             response.StatusMessage = msg;
             response.Headers.Add(HttpHeaders.Server, $"TouchSocket.Http {HttpBase.ServerVersion}");
             response.Headers.Add(HttpHeaders.Date, DateTime.Now.ToGMTString("r"));
             return response;
+        }
+
+        /// <summary>
+        /// 设置默认Success状态，并且附带时间戳。
+        /// </summary>
+        /// <typeparam name="TResponse"></typeparam>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public static TResponse SetStatus<TResponse>(this TResponse response) where TResponse : HttpResponse
+        {
+            return SetStatus(response,200, "Success");
         }
 
         /// <summary>

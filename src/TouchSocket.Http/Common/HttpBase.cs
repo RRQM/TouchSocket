@@ -169,6 +169,21 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 可接受MIME类型
+        /// </summary>
+        public string Accept
+        {
+            get
+            {
+                return this.m_headers.Get(HttpHeaders.Accept);
+            }
+            set
+            {
+                this.m_headers.Add(HttpHeaders.Accept, value);
+            }
+        }
+
+        /// <summary>
         /// 传递标识
         /// </summary>
         public object Flag { get; set; }
@@ -230,6 +245,10 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
+            if (this.ContentLength == 0)
+            {
+                return 0;
+            }
             return base.Read(buffer, offset, count);
         }
 

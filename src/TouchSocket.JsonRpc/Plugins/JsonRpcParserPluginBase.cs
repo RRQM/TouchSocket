@@ -24,15 +24,17 @@ namespace TouchSocket.JsonRpc
     public abstract class JsonRpcParserPluginBase : PluginBase
     {
         private readonly IRpcServerProvider m_rpcServerProvider;
+        private readonly IResolver m_resolver;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider)
+        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider,IResolver resolver)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
+            this.m_resolver = resolver;
         }
 
         /// <summary>
@@ -58,7 +60,7 @@ namespace TouchSocket.JsonRpc
 
             try
             {
-                JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
+                JsonRpcUtility.BuildRequestContext(this.m_resolver, this.ActionMap, ref callContext);
             }
             catch (Exception ex)
             {

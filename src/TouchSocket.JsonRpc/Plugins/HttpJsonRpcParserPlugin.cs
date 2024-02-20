@@ -29,7 +29,8 @@ namespace TouchSocket.JsonRpc
         /// HttpJsonRpcParserPlugin
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
+        /// <param name="resolver"></param>
+        public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider,IResolver resolver) : base(rpcServerProvider,resolver)
         {
         }
 
