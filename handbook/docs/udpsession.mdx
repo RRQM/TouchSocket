@@ -72,17 +72,40 @@ udpClient.Start();
 
 框架内置很多发送发送。但是大致可分为两种。一种是带参数`EndPoint`，和一种不带的。
 
+### 6.1 发送到指定地址
+
 带`EndPoint`，即表示可以发送到任意终结点。
 
 ```csharp showLineNumbers
 public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
 ```
 
+### 6.2 发送到接收数据的地址
+
+一般的，当udp收到数据时，都能获取到`UdpReceivedDataEventArgs`参数。然后通过该参数，能获取到接收数据的`EndPoint`。然后向这个终结点发送数据。发送方就能收到数据。
+
+例如：
+
+```csharp {5} showLineNumbers
+class MyPluginClass : PluginBase, IUdpReceivedPlugin
+{
+    public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
+    {
+        await client.SendAsync(e.EndPoint, "RRQM");
+        await e.InvokeNext();
+    }
+}
+```
+
+### 6.3 发送到默认地址
+
 不带`EndPoint`，即表示直接发送到默认（通过`SetRemoteIPHost`设置）的终结点。这一般在Udp作为客户端时是有用的。
 
 ```csharp showLineNumbers
 public virtual void Send(byte[] buffer, int offset, int length)
 ```
+
+
 
 ## 七、接收数据
 
