@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp.Redis
         /// <summary>
         /// 序列化转换器。
         /// </summary>
-        BytesConverter Converter { get; set; }
+        BytesSerializerConverter Converter { get; set; }
 
         /// <summary>
         /// 实际储存缓存。

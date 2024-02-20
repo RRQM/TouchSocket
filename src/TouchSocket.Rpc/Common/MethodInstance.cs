@@ -47,7 +47,7 @@ namespace TouchSocket.Rpc
             this.ServerFromType = serverFromType;
             this.ServerToType = serverToType;
 
-            this.Parameters = method.GetParameters();
+            this.Parameters = method.GetParameters().Select(a => new RpcParameter(a)).ToArray();
 
             var name = $"{serverToType.Name}{method.Name}Func";
             var property = serverToType.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Static);
@@ -82,33 +82,12 @@ namespace TouchSocket.Rpc
                 }
                 this.ToMethodInfo = toMethod;
 
-                if (this.Parameters.Length > 0 && typeof(ICallContext).IsAssignableFrom(this.Parameters[0].ParameterType))
-                {
-                    this.IncludeCallContext = true;
-                }
-
-                var names = new List<string>();
-                foreach (var parameterInfo in this.Parameters)
-                {
-                    names.Add(parameterInfo.Name);
-                }
-                this.ParameterNames = names.ToArray();
-                var parameters = method.GetParameters();
-                var types = new List<Type>();
-                foreach (var parameter in parameters)
-                {
-                    types.Add(parameter.ParameterType.GetRefOutType());
-                }
-                this.ParameterTypes = types.ToArray();
+                this.ParameterNames = this.Parameters.Select(a => a.Name).ToArray();
+                this.ParameterTypes = this.Parameters.Select(a => a.Type).ToArray();
             }
 
             this.PrivateGetFilters();
         }
-
-        /// <summary>
-        /// 是否包含调用上下文
-        /// </summary>
-        public bool IncludeCallContext { get; private set; }
 
         /// <summary>
         /// 是否可用
@@ -123,12 +102,39 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 参数集合
         /// </summary>
-        public ParameterInfo[] Parameters { get; private set; }
+        public RpcParameter[] Parameters { get; private set; }
 
         /// <summary>
         /// 参数类型集合，已处理out及ref，无参数时为空集合，
         /// </summary>
         public Type[] ParameterTypes { get; private set; }
+
+        /// <summary>
+        /// 获取常规Rpc参数。
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<RpcParameter> GetNormalParameters()
+        {
+            return Parameters.Where(a =>
+            {
+                if (a.IsFromServices)
+                {
+                    return false;
+                }
+
+                if (a.IsCallContext)
+                {
+                    return false;
+                }
+
+                if (a.Type.IsInterface)
+                {
+                    return false;
+                }
+
+                return true;
+            });
+        }
 
         /// <summary>
         /// Rpc属性集合
@@ -264,27 +270,6 @@ namespace TouchSocket.Rpc
             return new IRpcActionFilter[0];
         }
 
-        private void PrivateGetFilters()
-        {
-            //注册方法
-            m_hasFilters[0] = this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
-
-            //实现方法
-            if (this.ServerFromType != this.ServerToType)
-            {
-                m_hasFilters[1] = this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
-            }
-
-            //注册类
-            m_hasFilters[2] = this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
-
-            //实现类
-            if (this.ServerFromType != this.ServerToType)
-            {
-                m_hasFilters[3] = this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
-            }
-        }
-
         private void AddActionFilter(IRpcActionFilter filter, ref List<IRpcActionFilter> filters)
         {
             foreach (var item in filters)
@@ -305,6 +290,27 @@ namespace TouchSocket.Rpc
             }
 
             filters.Add(filter);
+        }
+
+        private void PrivateGetFilters()
+        {
+            //注册方法
+            m_hasFilters[0] = this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+
+            //实现方法
+            if (this.ServerFromType != this.ServerToType)
+            {
+                m_hasFilters[1] = this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+            }
+
+            //注册类
+            m_hasFilters[2] = this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+
+            //实现类
+            if (this.ServerFromType != this.ServerToType)
+            {
+                m_hasFilters[3] = this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+            }
         }
     }
 }

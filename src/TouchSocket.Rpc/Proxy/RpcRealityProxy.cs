@@ -119,7 +119,7 @@ namespace TouchSocket.Rpc
                         break;
                     }
             }
-            if (methodInstance.IsByRef)
+            if (methodInstance.HasByRef)
             {
                 for (var i = 0; i < ps.Length; i++)
                 {

@@ -17,30 +17,32 @@ namespace TouchSocket.Core
     /// <summary>
     /// 转换器接口
     /// </summary>
-    public interface IConverter<TSource>
+    public interface ISerializerFormatter<TSource,TState>
     {
         /// <summary>
         /// 转换器执行顺序
         /// <para>该属性值越小，越靠前执行。值相等时，按添加先后顺序</para>
-        /// <para>该属性效果，仅在<see cref="TouchSocketConverter{TSource}.Add(IConverter{TSource})"/>之前设置有效。</para>
+        /// <para>该属性效果，仅在<see cref="TouchSocketSerializerConverter{TSource, TState}.Add(ISerializerFormatter{TSource, TState})"/>之前设置有效。</para>
         /// </summary>
         int Order { get; set; }
 
         /// <summary>
         /// 尝试将源数据转换目标类型对象
         /// </summary>
+        /// <param name="state"></param>
         /// <param name="source"></param>
         /// <param name="targetType"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        bool TryConvertFrom(TSource source, Type targetType, out object target);
+        bool TryDeserialize(TState state, in TSource source, Type targetType, out object target);
 
         /// <summary>
         /// 尝试将目标类型对象转换源数据
         /// </summary>
+        /// <param name="state"></param>
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        bool TryConvertTo<TTarget>(TTarget target, out TSource source);
+        bool TrySerialize(TState state,in object target, out TSource source);
     }
 }

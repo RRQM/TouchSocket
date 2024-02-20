@@ -17,6 +17,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Security;
 
 namespace TouchSocket.Core
 {
@@ -333,28 +334,47 @@ namespace TouchSocket.Core
         /// <summary>
         /// Xml反序列化
         /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <param name="xmlString">xml字符串</param>
-        /// <param name="encoding">编码格式</param>
+        /// <param name="xmlStream"></param>
+        /// <param name="targetType"></param>
         /// <returns></returns>
-        public static T XmlDeserializeFromString<T>(string xmlString, Encoding encoding)
+        public static object XmlDeserializeFromStream(Stream xmlStream,Type targetType)
         {
-            var xmlserializer = new XmlSerializer(typeof(T));
-            using (Stream xmlstream = new MemoryStream(encoding.GetBytes(xmlString)))
-            {
-                return (T)xmlserializer.Deserialize(xmlstream);
-            }
+            var xmlserializer = new XmlSerializer(targetType);
+            return xmlserializer.Deserialize(xmlStream);
         }
 
         /// <summary>
         /// Xml反序列化
         /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <param name="json">xml字符串</param>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="xmlStream"></param>
         /// <returns></returns>
-        public static T XmlDeserializeFromString<T>(string json)
+        public static T XmlDeserializeFromStream<T>(Stream xmlStream)
         {
-            return XmlDeserializeFromString<T>(json, Encoding.UTF8);
+            var xmlserializer = new XmlSerializer(typeof(T));
+            return (T)xmlserializer.Deserialize(xmlStream);
+        }
+
+        /// <summary>
+        /// Xml反序列化
+        /// </summary>
+        /// <param name="xmlString">xml字符串</param>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        public static object XmlDeserializeFromString(string xmlString, Type targetType)
+        {
+            return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)),targetType);
+        }
+
+        /// <summary>
+        /// Xml反序列化
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="xmlString"></param>
+        /// <returns></returns>
+        public static T XmlDeserializeFromString<T>(string xmlString)
+        {
+            return (T)XmlDeserializeFromString(xmlString, typeof(T));
         }
 
         /// <summary>

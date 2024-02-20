@@ -61,23 +61,19 @@ namespace TouchSocket.WebApi
         /// <returns></returns>
         public override string GetInvokenKey(MethodInstance methodInstance)
         {
-            var i = 0;
-            if (methodInstance.IncludeCallContext)
-            {
-                i = 1;
-            }
+            var parameters = methodInstance.GetNormalParameters().ToList();
             if (this.Method == HttpMethodType.GET)
             {
                 var actionUrl = this.GetRouteUrls(methodInstance)[0];
-                if (methodInstance.ParameterNames.Length > i)
+                if (parameters.Count > 0)
                 {
                     var stringBuilder = new StringBuilder();
                     stringBuilder.Append(actionUrl);
                     stringBuilder.Append('?');
-                    for (; i < methodInstance.ParameterNames.Length; i++)
+                    for (var i = 0; i < parameters.Count; i++)
                     {
-                        stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
-                        if (i != methodInstance.ParameterNames.Length - 1)
+                        stringBuilder.Append(parameters[i].Name + "={&}".Replace("&", i.ToString()));
+                        if (i != parameters.Count - 1)
                         {
                             stringBuilder.Append('&');
                         }
@@ -89,19 +85,34 @@ namespace TouchSocket.WebApi
             else if (this.Method == HttpMethodType.POST)
             {
                 var actionUrl = this.GetRouteUrls(methodInstance)[0];
-                if (methodInstance.ParameterNames.Length > i + 1)
+                if (parameters.Count > 0)
                 {
                     var stringBuilder = new StringBuilder();
                     stringBuilder.Append(actionUrl);
                     stringBuilder.Append('?');
-                    for (; i < methodInstance.ParameterNames.Length - 1; i++)
+
+                    var last = parameters.LastOrDefault();
+                    if (!(last.Type.IsPrimitive || last.Type == typeof(string)))
                     {
-                        stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
-                        if (i != methodInstance.ParameterNames.Length - 2)
+                        parameters.Remove(last);
+                    }
+                    for (var i = 0; i < parameters.Count; i++)
+                    {
+                        stringBuilder.Append(parameters[i].Name + "={&}".Replace("&", i.ToString()));
+                        if (i != parameters.Count - 1)
                         {
                             stringBuilder.Append('&');
                         }
                     }
+
+                    //for (; i < methodInstance.ParameterNames.Length - 1; i++)
+                    //{
+                    //    stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
+                    //    if (i != methodInstance.ParameterNames.Length - 2)
+                    //    {
+                    //        stringBuilder.Append('&');
+                    //    }
+                    //}
                     actionUrl = stringBuilder.ToString();
                 }
                 return $"POST:{actionUrl}";

@@ -31,7 +31,7 @@ namespace TouchSocket.Http
         private byte[] m_content;
         private InternalHttpParams m_forms;
         private InternalHttpParams m_params;
-        private InternalHttpParams m_query;
+        private readonly InternalHttpParams m_query = new InternalHttpParams();
         private bool m_sentHeader;
         private int m_sentLength;
 
@@ -91,7 +91,7 @@ namespace TouchSocket.Http
                     this.m_forms ??= new InternalHttpParams();
                     if (this.ContentType == @"application/x-www-form-urlencoded")
                     {
-                        GetParameters(this.GetBody(), ref this.m_forms);
+                        GetParameters(this.GetBody(), this.m_forms);
                     }
                     return this.m_forms;
                 }
@@ -126,7 +126,6 @@ namespace TouchSocket.Http
         {
             get
             {
-                this.m_query ??= new InternalHttpParams();
                 return this.m_query;
             }
         }
@@ -305,7 +304,7 @@ namespace TouchSocket.Http
             this.URL = "/";
             this.m_sentLength = 0;
             this.m_params?.Clear();
-            this.m_query?.Clear();
+            this.m_query.Clear();
             this.m_forms?.Clear();
         }
 
@@ -338,7 +337,7 @@ namespace TouchSocket.Http
             }
         }
 
-        private static void GetParameters(string row, ref InternalHttpParams pairs)
+        private static void GetParameters(string row, in InternalHttpParams pairs)
         {
             if (string.IsNullOrEmpty(row))
             {
@@ -380,7 +379,7 @@ namespace TouchSocket.Http
             string url = null;
             if (!string.IsNullOrEmpty(this.RelativeURL))
             {
-                if (this.m_query == null)
+                if (this.m_query.Count == 0)
                 {
                     url = this.RelativeURL;
                 }
@@ -432,8 +431,8 @@ namespace TouchSocket.Http
                 }
                 if (urls.Length > 1)
                 {
-                    this.m_query ??= new InternalHttpParams();
-                    GetParameters(urls[1], ref this.m_query);
+                    this.m_query.Clear();
+                    GetParameters(urls[1], this.m_query);
                 }
             }
             else

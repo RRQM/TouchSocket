@@ -37,7 +37,7 @@ namespace TouchSocket.Http
             if (e.Context.Request.IsMethod("OPTIONS"))
             {
                 var response = e.Context.Response;
-                response.SetStatus(204);
+                response.SetStatus(204, "No Content");
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
                 response.Headers.Add("Access-Control-Allow-Headers", "*");
                 response.Headers.Add("Allow", "OPTIONS, GET, POST");

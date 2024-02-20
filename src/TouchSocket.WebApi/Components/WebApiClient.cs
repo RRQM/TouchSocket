@@ -28,13 +28,13 @@ namespace TouchSocket.WebApi
         /// </summary>
         public WebApiClient()
         {
-            this.StringConverter = new StringConverter();
+            this.Converter = new StringSerializerConverter(new JsonStringToClassSerializerFormatter<object>());
         }
 
         /// <summary>
         /// 字符串转化器
         /// </summary>
-        public StringConverter StringConverter { get; }
+        public StringSerializerConverter Converter { get; }
 
         #region Rpc调用
 
@@ -92,7 +92,7 @@ namespace TouchSocket.WebApi
 
             if (response.StatusCode == 200)
             {
-                return this.StringConverter.ConvertFrom(response.GetBody(), returnType);
+                return this.Converter.Deserialize(null,response.GetBody(), returnType);
             }
             else if (response.StatusCode == 422)
             {
@@ -298,7 +298,7 @@ namespace TouchSocket.WebApi
 
             if (response.StatusCode == 200)
             {
-                return this.StringConverter.ConvertFrom(response.GetBody(), returnType);
+                return this.Converter.Deserialize(null,response.GetBody(), returnType);
             }
             else if (response.StatusCode == 422)
             {

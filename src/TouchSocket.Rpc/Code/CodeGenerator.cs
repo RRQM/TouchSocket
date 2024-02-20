@@ -293,17 +293,12 @@ namespace TouchSocket.Rpc
                             classCodeGenerator.AddTypeString(methodInstance.ReturnType, ref deep);
                         }
 
-                        var i = 0;
-                        if (methodInstance.IncludeCallContext)
-                        {
-                            i = 1;
-                        }
-                        for (; i < methodInstance.ParameterTypes.Length; i++)
+                        var psTypes=methodInstance.GetNormalParameters().Select(a=>a.Type);
+                        foreach (var itemType in psTypes)
                         {
                             var deep = 0;
-                            classCodeGenerator.AddTypeString(methodInstance.ParameterTypes[i], ref deep);
+                            classCodeGenerator.AddTypeString(itemType, ref deep);
                         }
-
                         instances.Add(methodInstance);
                         break;
                     }

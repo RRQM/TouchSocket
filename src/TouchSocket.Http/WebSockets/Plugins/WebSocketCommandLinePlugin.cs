@@ -36,7 +36,7 @@ namespace TouchSocket.Http.WebSockets
         protected WebSocketCommandLinePlugin(ILog logger)
         {
             this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Converter = new StringConverter();
+            this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(),new JsonStringToClassSerializerFormatter<object>());
             var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
             foreach (var item in ms)
             {
@@ -47,7 +47,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 字符串转换器，默认支持基础类型和Json。可以自定义。
         /// </summary>
-        public StringConverter Converter { get; }
+        public StringSerializerConverter Converter { get; }
 
         /// <summary>
         /// 是否返回执行异常。
@@ -85,7 +85,7 @@ namespace TouchSocket.Http.WebSockets
                             }
                             else
                             {
-                                os[i] = this.Converter.ConvertFrom(strs[index + 1], ps[i].ParameterType);
+                                os[i] = this.Converter.Deserialize(null, strs[index + 1], ps[i].ParameterType);
                                 index++;
                             }
                         }
@@ -116,11 +116,11 @@ namespace TouchSocket.Http.WebSockets
                             {
                                 if (client is HttpClient httpClient)
                                 {
-                                    httpClient.SendWithWS(this.Converter.ConvertTo(result));
+                                    httpClient.SendWithWS(this.Converter.Serialize(null, result));
                                 }
                                 else if (client is HttpSocketClient httpSocketClient)
                                 {
-                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(result));
+                                    httpSocketClient.SendWithWS(this.Converter.Serialize(null, result));
                                 }
                             }
                         }
@@ -130,11 +130,11 @@ namespace TouchSocket.Http.WebSockets
                             {
                                 if (client is HttpClient httpClient)
                                 {
-                                    httpClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
+                                    httpClient.SendWithWS(this.Converter.Serialize(null, ex.Message));
                                 }
                                 else if (client is HttpSocketClient httpSocketClient)
                                 {
-                                    httpSocketClient.SendWithWS(this.Converter.ConvertTo(ex.Message));
+                                    httpSocketClient.SendWithWS(this.Converter.Serialize(null, ex.Message));
                                 }
                             }
                         }

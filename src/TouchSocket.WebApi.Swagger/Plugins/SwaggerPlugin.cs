@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -256,22 +257,31 @@ namespace TouchSocket.WebApi.Swagger
                 Description = methodInstance.GetDescription(),
                 Summary = methodInstance.GetDescription()
             };
-            var i = 0;
-            if (methodInstance.IncludeCallContext)
-            {
-                i = 1;
-            }
+            //var i = 0;
+            //if (methodInstance.IncludeCallContext)
+            //{
+            //    i = 1;
+            //}
 
             var parameters = new List<OpenApiParameter>();
-            for (; i < methodInstance.Parameters.Length; i++)
+            foreach (var parameter in methodInstance.GetNormalParameters())
             {
-                var parameter = methodInstance.Parameters[i];
-                var openApiParameter = this.GetParameter(parameter);
+                var openApiParameter = this.GetParameter(parameter.ParameterInfo);
                 openApiParameter.In = "query";
 
-                this.AddSchemaType(parameter.ParameterType, schemaTypeList);
+                this.AddSchemaType(parameter.Type, schemaTypeList);
                 parameters.Add(openApiParameter);
             }
+
+            //for (; i < methodInstance.Parameters.Length; i++)
+            //{
+            //    var parameter = methodInstance.Parameters[i];
+            //    var openApiParameter = this.GetParameter(parameter);
+            //    openApiParameter.In = "query";
+
+            //    this.AddSchemaType(parameter.ParameterType, schemaTypeList);
+            //    parameters.Add(openApiParameter);
+            //}
 
             openApiPathValue.Parameters = parameters.Count > 0 ? parameters : null;
 
@@ -332,54 +342,49 @@ namespace TouchSocket.WebApi.Swagger
                 Summary = methodInstance.GetDescription()
             };
 
-            var i = 0;
-            if (methodInstance.IncludeCallContext)
-            {
-                i = 1;
-            }
+            var openApiParameters = new List<OpenApiParameter>();
 
-            var parameters = new List<OpenApiParameter>();
-            for (; i < methodInstance.Parameters.Length; i++)
+            var parameters = methodInstance.GetNormalParameters().ToList();
+            if (parameters.Count > 0)
             {
-                var parameter = methodInstance.Parameters[i];
-                if (this.ParseDataTypes(parameter.ParameterType).IsPrimitive())
+                var last = parameters.LastOrDefault();
+                if (!(last.Type.IsPrimitive || last.Type == typeof(string)))
                 {
-                    var openApiParameter = this.GetParameter(parameter);
-                    openApiParameter.In = "query";
-                    this.AddSchemaType(parameter.ParameterType, schemaTypeList);
-                    parameters.Add(openApiParameter);
+                    parameters.Remove(last);
+
+                    if (!this.ParseDataTypes(last.Type).IsPrimitive())
+                    {
+                        this.AddSchemaType(last.Type, schemaTypeList);
+
+                        var body = new OpenApiRequestBody();
+                        body.Content = new Dictionary<string, OpenApiContent>();
+                        var content = new OpenApiContent();
+                        content.Schema = this.CreateSchema(last.Type);
+                        body.Content.Add("application/json", content);
+                        body.Content.Add("text/xml", content);
+                        body.Content.Add("text/plain", content);
+                        body.Content.Add("text/json", content);
+                        body.Content.Add("application/xml", content);
+                        openApiPathValue.RequestBody = body;
+                    }
                 }
-            }
 
-            openApiPathValue.Parameters = parameters.Count > 0 ? parameters : default;
-
-            ParameterInfo parameterInfo = null;
-            if (methodInstance.IncludeCallContext)
-            {
-                if (methodInstance.Parameters.Length > 1)
+                foreach (var parameter in parameters)
                 {
-                    parameterInfo = methodInstance.Parameters.Last();
+                    if (this.ParseDataTypes(parameter.Type).IsPrimitive())
+                    {
+                        var openApiParameter = this.GetParameter(parameter.ParameterInfo);
+                        openApiParameter.In = "query";
+                        this.AddSchemaType(parameter.Type, schemaTypeList);
+                        openApiParameters.Add(openApiParameter);
+                    }
                 }
-            }
-            else
-            {
-                if (methodInstance.Parameters.Length > 0)
-                {
-                    parameterInfo = methodInstance.Parameters.Last();
-                }
-            }
-            if (parameterInfo != null && !this.ParseDataTypes(parameterInfo.ParameterType).IsPrimitive())
-            {
-                this.AddSchemaType(parameterInfo.ParameterType, schemaTypeList);
-
-                var body = new OpenApiRequestBody();
-                body.Content = new Dictionary<string, OpenApiContent>();
-                var content = new OpenApiContent();
-                content.Schema = this.CreateSchema(parameterInfo.ParameterType);
-                body.Content.Add("application/json", content);
-                openApiPathValue.RequestBody = body;
+                
             }
 
+            openApiPathValue.Parameters = openApiParameters.Count > 0 ? openApiParameters : default;
+
+           
             this.BuildResponse(methodInstance, openApiPathValue, schemaTypeList);
 
             openApiPath.Add("post", openApiPathValue);
@@ -396,6 +401,10 @@ namespace TouchSocket.WebApi.Swagger
                 openApiResponse.Content = new Dictionary<string, OpenApiContent>();
                 var openApiContent = new OpenApiContent();
                 openApiResponse.Content.Add("application/json", openApiContent);
+                openApiResponse.Content.Add("text/xml", openApiContent);
+                openApiResponse.Content.Add("text/plain", openApiContent);
+                openApiResponse.Content.Add("text/json", openApiContent);
+                openApiResponse.Content.Add("application/xml", openApiContent);
                 openApiContent.Schema = this.CreateSchema(methodInstance.ReturnType);
                 this.AddSchemaType(methodInstance.ReturnType, schemaTypeList);
             }

@@ -88,29 +88,57 @@ namespace TouchSocket.XmlRpc
                             {
                                 callContext = new XmlRpcCallContext(client,methodInstance,this.m_resolver,e.Context,xmlstring);
 
-                                ps = new object[methodInstance.ParameterNames.Length];
+                                ps = new object[methodInstance.Parameters.Length];
                                 var paramsNode = xml.SelectSingleNode("methodCall/params");
-                                if (methodInstance.IncludeCallContext)
+
+                                var index = 0;
+                                for (var i = 0; i < ps.Length; i++)
                                 {
-                                    ps[0] = callContext;
-                                    var index = 1;
-                                    foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                    var parameter = methodInstance.Parameters[i];
+                                    if (parameter.IsCallContext)
                                     {
-                                        var valueNode = paramNode.FirstChild.FirstChild;
-                                        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                                        index++;
+                                        ps[i] = callContext;
+                                    }
+                                    else if (parameter.IsFromServices)
+                                    {
+                                        ps[i] = this.m_resolver.Resolve(parameter.Type);
+                                    }
+                                    else if (index < paramsNode.ChildNodes.Count)
+                                    {
+                                        var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;
+                                        ps[i] = XmlDataTool.GetValue(valueNode, parameter.Type);
+                                    }
+                                    else if (parameter.ParameterInfo.HasDefaultValue)
+                                    {
+                                        ps[i] = parameter.ParameterInfo.DefaultValue;
+                                    }
+                                    else
+                                    {
+                                        ps[i] = parameter.Type.GetDefault();
                                     }
                                 }
-                                else
-                                {
-                                    var index = 0;
-                                    foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                                    {
-                                        var valueNode = paramNode.FirstChild.FirstChild;
-                                        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
-                                        index++;
-                                    }
-                                }
+
+                                //if (methodInstance.IncludeCallContext)
+                                //{
+                                //    ps[0] = callContext;
+                                //    var index = 1;
+                                //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                //    {
+                                //        var valueNode = paramNode.FirstChild.FirstChild;
+                                //        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                //        index++;
+                                //    }
+                                //}
+                                //else
+                                //{
+                                //    var index = 0;
+                                //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
+                                //    {
+                                //        var valueNode = paramNode.FirstChild.FirstChild;
+                                //        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                //        index++;
+                                //    }
+                                //}
                             }
                             catch (Exception ex)
                             {

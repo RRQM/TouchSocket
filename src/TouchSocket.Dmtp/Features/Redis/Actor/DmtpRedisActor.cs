@@ -32,7 +32,7 @@ namespace TouchSocket.Dmtp.Redis
         }
 
         /// <inheritdoc/>
-        public BytesConverter Converter { get; set; }
+        public BytesSerializerConverter Converter { get; set; }
 
         /// <inheritdoc/>
         public IDmtpActor DmtpActor { get; }
@@ -52,7 +52,7 @@ namespace TouchSocket.Dmtp.Redis
             };
             if (!(value is byte[]))
             {
-                cache.Value = this.Converter.ConvertTo(value);
+                cache.Value = this.Converter.Serialize(null,value);
             }
             return this.AddCache(cache);
         }
@@ -389,7 +389,7 @@ namespace TouchSocket.Dmtp.Redis
             {
                 Duration = TimeSpan.FromSeconds(duration)
             };
-            cache.Value = value is byte[] bytes ? bytes : this.Converter.ConvertTo(value);
+            cache.Value = value is byte[] bytes ? bytes : this.Converter.Serialize(null, value);
             return this.SetCache(cache);
         }
 
@@ -478,7 +478,7 @@ namespace TouchSocket.Dmtp.Redis
                     value = value1;
                     return true;
                 }
-                value = (TValue)this.Converter.ConvertFrom(cache.Value, typeof(TValue));
+                value = (TValue)this.Converter.Deserialize(null,cache.Value, typeof(TValue));
                 return true;
             }
             value = default;
