@@ -105,12 +105,12 @@ namespace TouchSocket.Dmtp.Rpc
             return new DmtpRpcActor(dmtpActor, rpcServerProvider, resolver);
         }
 
-        private MethodInstance GetInvokeMethod(string name)
+        private RpcMethod GetInvokeMethod(string name)
         {
             return this.ActionMap.GetMethodInstance(name);
         }
 
-        private void RegisterServer(MethodInstance[] methodInstances)
+        private void RegisterServer(RpcMethod[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

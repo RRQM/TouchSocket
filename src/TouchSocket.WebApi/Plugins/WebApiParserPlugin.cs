@@ -348,7 +348,7 @@ namespace TouchSocket.WebApi
             }
         }
 
-        private void RegisterServer(MethodInstance[] methodInstances)
+        private void RegisterServer(RpcMethod[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

@@ -46,7 +46,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 获取调用的函数
         /// </summary>
-        public Func<string, MethodInstance> GetInvokeMethod { get; set; }
+        public Func<string, RpcMethod> GetInvokeMethod { get; set; }
 
         /// <inheritdoc/>
         public SerializationSelector SerializationSelector { get; set; }
@@ -105,8 +105,8 @@ namespace TouchSocket.Dmtp.Rpc
                     {
                         rpcPackage.UnpackageBody(byteBlock);
                         //await this.InvokeThis(rpcPackage);
-                        ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
-                        //_ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                        //ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
+                        _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -213,7 +213,7 @@ namespace TouchSocket.Dmtp.Rpc
             }
         }
 
-        private void InvokeThis(object o)
+        private async Task InvokeThis(object o)
         {
             try
             {
@@ -254,7 +254,10 @@ namespace TouchSocket.Dmtp.Rpc
 
                             callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage, m_resolver);
 
-                            this.TryAdd(rpcPackage.Sign, callContext);
+                            if (rpcPackage.Feedback == FeedbackType.WaitInvoke && methodInstance.HasCallContext)
+                            {
+                                this.TryAdd(rpcPackage.Sign, callContext);
+                            }
 
                             var index = 0;
                             for (var i = 0; i < ps.Length; i++)
@@ -318,13 +321,12 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    //invokeResult = await this.m_rpcServerProvider.Execute(callContext, ps).ConfigureFalseAwait();
-                    invokeResult = this.m_rpcServerProvider.Execute(callContext, ps);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
+                    //invokeResult = this.m_rpcServerProvider.Execute(callContext, ps);
                 }
 
                 if (rpcPackage.Feedback == FeedbackType.OnlySend)
                 {
-                    this.TryRemove(rpcPackage.Sign, out _);
                     return;
                 }
 
@@ -410,7 +412,10 @@ namespace TouchSocket.Dmtp.Rpc
                         return;
                 }
 
-                this.TryRemove(rpcPackage.Sign, out _);
+                if (rpcPackage.Feedback == FeedbackType.WaitInvoke && methodInstance.HasCallContext)
+                {
+                    this.TryRemove(rpcPackage.Sign, out _);
+                }
 
                 using (var byteBlock = new ByteBlock())
                 {

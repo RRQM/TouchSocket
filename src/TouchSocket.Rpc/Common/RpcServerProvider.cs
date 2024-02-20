@@ -210,7 +210,7 @@ namespace TouchSocket.Rpc
         }
 
         /// <inheritdoc/>
-        public MethodInstance[] GetMethods()
+        public RpcMethod[] GetMethods()
         {
             return this.m_rpcStore.GetAllMethods();
         }

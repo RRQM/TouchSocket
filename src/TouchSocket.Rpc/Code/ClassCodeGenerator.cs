@@ -57,12 +57,321 @@ namespace TouchSocket.Rpc
         /// </summary>
         public ConcurrentDictionary<Type, ClassCellCode> PropertyDic { get; private set; }
 
+        ///// <summary>
+        ///// 添加类型字符串
+        ///// </summary>
+        ///// <param name="type"></param>
+        ///// <param name="deep"></param>
+        //public void AddTypeString(Type type, ref int deep)
+        //{
+        //    if (CodeGenerator.m_ignoreTypes.Contains(type))
+        //    {
+        //        return;
+        //    }
+        //    if (CodeGenerator.m_ignoreAssemblies.Contains(type.Assembly))
+        //    {
+        //        return;
+        //    }
+        //    deep++;
+        //    if (deep > 50)
+        //    {
+        //        return;
+        //    }
+        //    if (type.IsByRef)
+        //    {
+        //        type = type.GetRefOutType();
+        //    }
+
+        //    if (type.IsPrimitive || type == typeof(string))
+        //    {
+        //        return;
+        //    }
+
+        //    if (type == TouchSocketCoreUtility.objType)
+        //    {
+        //        return;
+        //    }
+        //    if (type.IsInterface || type.IsAbstract)
+        //    {
+        //        return;
+        //    }
+        //    if (type.IsArray)
+        //    {
+        //        this.AddTypeString(type.GetElementType(), ref deep);
+        //    }
+        //    else if (type.IsGenericType)
+        //    {
+        //        var types = type.GetGenericArguments();
+        //        foreach (var itemType in types)
+        //        {
+        //            this.AddTypeString(itemType, ref deep);
+        //        }
+        //    }
+        //    else if (type.IsEnum)
+        //    {
+        //        var baseType = Enum.GetUnderlyingType(type);
+        //        var stringBuilder = new StringBuilder();
+        //        if (baseType == TouchSocketCoreUtility.byteType)
+        //        {
+        //            stringBuilder.AppendLine($"public enum {type.Name}:byte");
+        //            stringBuilder.AppendLine("{");
+        //            var array = Enum.GetValues(type);
+        //            foreach (var item in array)
+        //            {
+        //                var enumString = item.ToString();
+        //                stringBuilder.AppendLine($"{enumString}={(byte)item},");
+        //            }
+        //        }
+        //        else if (baseType == TouchSocketCoreUtility.shortType)
+        //        {
+        //            stringBuilder.AppendLine($"public enum {type.Name}:short");
+        //            stringBuilder.AppendLine("{");
+        //            var array = Enum.GetValues(type);
+        //            foreach (var item in array)
+        //            {
+        //                var enumString = item.ToString();
+        //                stringBuilder.AppendLine($"{enumString}={(short)item},");
+        //            }
+        //        }
+        //        else if (baseType == TouchSocketCoreUtility.intType)
+        //        {
+        //            stringBuilder.AppendLine($"public enum {type.Name}:int");
+        //            stringBuilder.AppendLine("{");
+        //            var array = Enum.GetValues(type);
+        //            foreach (var item in array)
+        //            {
+        //                var enumString = item.ToString();
+        //                stringBuilder.AppendLine($"{enumString}={(int)item},");
+        //            }
+        //        }
+        //        else if (baseType == TouchSocketCoreUtility.longType)
+        //        {
+        //            stringBuilder.AppendLine($"public enum {type.Name}:long");
+        //            stringBuilder.AppendLine("{");
+        //            var array = Enum.GetValues(type);
+        //            foreach (var item in array)
+        //            {
+        //                var enumString = item.ToString();
+        //                stringBuilder.AppendLine($"{enumString}={(long)item},");
+        //            }
+        //        }
+
+        //        stringBuilder.AppendLine("}");
+        //        if (!this.PropertyDic.ContainsKey(type))
+        //        {
+        //            string className;
+        //            if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
+        //            {
+        //                className = attribute.ClassName ?? type.Name;
+        //            }
+        //            else if (CodeGenerator.TryGetProxyTypeName(type, out className))
+        //            {
+        //            }
+        //            else if (this.AllowGen(type.Assembly))
+        //            {
+        //                className = type.Name;
+        //            }
+        //            else
+        //            {
+        //                return;
+        //            }
+        //            this.PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+        //        }
+        //    }
+        //    else
+        //    {
+        //        string className;
+        //        if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
+        //        {
+        //            className = attribute.ClassName ?? type.Name;
+        //        }
+        //        else if (CodeGenerator.TryGetProxyTypeName(type, out className))
+        //        {
+        //        }
+        //        else if (this.AllowGen(type.Assembly))
+        //        {
+        //            className = type.Name;
+        //        }
+        //        else
+        //        {
+        //            return;
+        //        }
+        //        var stringBuilder = new StringBuilder();
+
+        //        stringBuilder.AppendLine("");
+        //        if (type.IsStruct())
+        //        {
+        //            stringBuilder.AppendLine($"public struct {className}");
+        //        }
+        //        else
+        //        {
+        //            stringBuilder.AppendLine($"public class {className}");
+        //        }
+
+        //        if (!type.IsStruct() && type.BaseType != typeof(object))
+        //        {
+        //            this.AddTypeString(type.BaseType, ref deep);
+        //            if (type.BaseType.IsGenericType)
+        //            {
+        //                var types = type.BaseType.GetGenericArguments();
+        //                foreach (var itemType in types)
+        //                {
+        //                    this.AddTypeString(itemType, ref deep);
+        //                }
+        //                if (m_listType.Contains(type.BaseType.Name))
+        //                {
+        //                    var typeString = this.GetTypeFullName(types[0]);
+        //                    stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
+        //                }
+        //                else if (m_dicType.Contains(type.BaseType.Name))
+        //                {
+        //                    var keyString = this.GetTypeFullName(types[0]);
+        //                    var valueString = this.GetTypeFullName(types[1]);
+        //                    stringBuilder.Append($": {type.BaseType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>");
+        //                }
+        //            }
+        //            else if (type.BaseType.IsClass)
+        //            {
+        //                stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
+        //            }
+        //        }
+
+        //        stringBuilder.AppendLine("{");
+        //        foreach (var itemProperty in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty))
+        //        {
+        //            this.AddTypeString(itemProperty.PropertyType, ref deep);
+        //            if (this.PropertyDic.ContainsKey(itemProperty.PropertyType))
+        //            {
+        //                stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
+        //            }
+        //            else if (itemProperty.IsNullableType())
+        //            {
+        //                stringBuilder.Append($"public {this.GetTypeFullName(itemProperty)}? {itemProperty.Name}");
+        //            }
+        //            else if (itemProperty.PropertyType.IsGenericType)
+        //            {
+        //                var types = itemProperty.PropertyType.GetGenericArguments();
+        //                foreach (var itemType in types)
+        //                {
+        //                    this.AddTypeString(itemType, ref deep);
+        //                }
+        //                if (m_listType.Contains(itemProperty.PropertyType.Name))
+        //                {
+        //                    var typeString = this.GetTypeFullName(types[0]);
+        //                    stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`1", string.Empty)}<{typeString}> {itemProperty.Name}");
+        //                }
+        //                else if (m_dicType.Contains(itemProperty.PropertyType.Name))
+        //                {
+        //                    var keyString = this.GetTypeFullName(types[0]);
+        //                    var valueString = this.GetTypeFullName(types[1]);
+        //                    stringBuilder.Append($"public {itemProperty.PropertyType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}> {itemProperty.Name}");
+        //                }
+        //            }
+        //            else
+        //            {
+        //                this.AddTypeString(itemProperty.PropertyType, ref deep);
+        //                stringBuilder.Append($"public {this.GetTypeFullName(itemProperty.PropertyType)} {itemProperty.Name}");
+        //            }
+
+        //            stringBuilder.AppendLine("{get;set;}");
+        //        }
+
+        //        foreach (var itemField in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+        //        {
+        //            this.AddTypeString(itemField.FieldType, ref deep);
+        //            if (this.PropertyDic.ContainsKey(itemField.FieldType))
+        //            {
+        //                stringBuilder.Append($"public {itemField.FieldType.Name} {itemField.Name}");
+        //            }
+        //            else if (itemField.IsNullableType())
+        //            {
+        //                stringBuilder.Append($"public {this.GetTypeFullName(itemField)}? {itemField.Name}");
+        //            }
+        //            else if (itemField.FieldType.IsGenericType)
+        //            {
+        //                var types = itemField.FieldType.GetGenericArguments();
+        //                foreach (var itemType in types)
+        //                {
+        //                    this.AddTypeString(itemType, ref deep);
+        //                }
+        //                if (m_listType.Contains(itemField.FieldType.Name))
+        //                {
+        //                    var typeString = this.GetTypeFullName(types[0]);
+        //                    stringBuilder.Append($"public {itemField.FieldType.Name.Replace("`1", string.Empty)}<{typeString}> {itemField.Name}");
+        //                }
+        //                else if (m_dicType.Contains(itemField.FieldType.Name))
+        //                {
+        //                    var keyString = this.GetTypeFullName(types[0]);
+        //                    var valueString = this.GetTypeFullName(types[1]);
+        //                    stringBuilder.Append($"public {itemField.FieldType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}> {itemField.Name}");
+        //                }
+        //            }
+        //            else
+        //            {
+        //                this.AddTypeString(itemField.FieldType, ref deep);
+        //                stringBuilder.Append($"public {this.GetTypeFullName(itemField.FieldType)} {itemField.Name}");
+        //            }
+
+        //            stringBuilder.AppendLine(";");
+        //        }
+
+        //        stringBuilder.AppendLine("}");
+
+        //        if (!this.PropertyDic.ContainsKey(type))
+        //        {
+        //            this.PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
+        //        }
+        //    }
+        //}
+
+        private string GetClassName(Type type)
+        {
+            string className;
+            if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
+            {
+                className = attribute.ClassName ?? type.Name;
+            }
+            else if (CodeGenerator.TryGetProxyTypeName(type, out className))
+            {
+            }
+            else if (this.AllowAssembly(type.Assembly))
+            {
+                className = type.Name;
+            }
+            else
+            {
+                return null;
+            }
+
+            return className ;
+        }
+        private void AddType(Type type,string code)
+        {
+            var className=GetClassName(type);
+            if (className.IsNullOrEmpty())
+            {
+                return;
+            }
+            this.PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = code });
+        }
+
         /// <summary>
         /// 添加类型字符串
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="deep"></param>
-        public void AddTypeString(Type type, ref int deep)
+        public void AddTypeString(Type type)
+        {
+            var list = new List<Type>();
+
+            this.GetTransmitTypes(type, ref list);
+
+            foreach (var item in list)
+            {
+                PrivateAddTypeString(item);
+            }
+        }
+
+        private void PrivateAddTypeString(Type type)
         {
             if (CodeGenerator.m_ignoreTypes.Contains(type))
             {
@@ -72,11 +381,7 @@ namespace TouchSocket.Rpc
             {
                 return;
             }
-            deep++;
-            if (deep > 50)
-            {
-                return;
-            }
+           
             if (type.IsByRef)
             {
                 type = type.GetRefOutType();
@@ -87,7 +392,7 @@ namespace TouchSocket.Rpc
                 return;
             }
 
-            if (type == TouchSocketCoreUtility.objType)
+            if (type == typeof(object))
             {
                 return;
             }
@@ -95,110 +400,31 @@ namespace TouchSocket.Rpc
             {
                 return;
             }
-            if (type.IsArray)
+
+            var className = this.GetClassName(type);
+            if (className.IsNullOrEmpty())
             {
-                this.AddTypeString(type.GetElementType(), ref deep);
+                return;
             }
-            else if (type.IsGenericType)
-            {
-                var types = type.GetGenericArguments();
-                foreach (var itemType in types)
-                {
-                    this.AddTypeString(itemType, ref deep);
-                }
-            }
-            else if (type.IsEnum)
+            var stringBuilder = new StringBuilder();
+            if (type.IsEnum)
             {
                 var baseType = Enum.GetUnderlyingType(type);
-                var stringBuilder = new StringBuilder();
-                if (baseType == TouchSocketCoreUtility.byteType)
+                
+                stringBuilder.AppendLine($"public enum {className}:{baseType.FullName}");
+                stringBuilder.AppendLine("{");
+                var array = Enum.GetValues(type);
+                foreach (var item in array)
                 {
-                    stringBuilder.AppendLine($"public enum {type.Name}:byte");
-                    stringBuilder.AppendLine("{");
-                    var array = Enum.GetValues(type);
-                    foreach (var item in array)
-                    {
-                        var enumString = item.ToString();
-                        stringBuilder.AppendLine($"{enumString}={(byte)item},");
-                    }
+                    var enumString = item.ToString();
+                    stringBuilder.AppendLine($"{enumString}={Convert.ToInt64(item)},");
                 }
-                else if (baseType == TouchSocketCoreUtility.shortType)
-                {
-                    stringBuilder.AppendLine($"public enum {type.Name}:short");
-                    stringBuilder.AppendLine("{");
-                    var array = Enum.GetValues(type);
-                    foreach (var item in array)
-                    {
-                        var enumString = item.ToString();
-                        stringBuilder.AppendLine($"{enumString}={(short)item},");
-                    }
-                }
-                else if (baseType == TouchSocketCoreUtility.intType)
-                {
-                    stringBuilder.AppendLine($"public enum {type.Name}:int");
-                    stringBuilder.AppendLine("{");
-                    var array = Enum.GetValues(type);
-                    foreach (var item in array)
-                    {
-                        var enumString = item.ToString();
-                        stringBuilder.AppendLine($"{enumString}={(int)item},");
-                    }
-                }
-                else if (baseType == TouchSocketCoreUtility.longType)
-                {
-                    stringBuilder.AppendLine($"public enum {type.Name}:long");
-                    stringBuilder.AppendLine("{");
-                    var array = Enum.GetValues(type);
-                    foreach (var item in array)
-                    {
-                        var enumString = item.ToString();
-                        stringBuilder.AppendLine($"{enumString}={(long)item},");
-                    }
-                }
-
                 stringBuilder.AppendLine("}");
-                if (!this.PropertyDic.ContainsKey(type))
-                {
-                    string className;
-                    if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
-                    {
-                        className = attribute.ClassName ?? type.Name;
-                    }
-                    else if (CodeGenerator.TryGetProxyTypeName(type, out className))
-                    {
-                    }
-                    else if (this.AllowGen(type.Assembly))
-                    {
-                        className = type.Name;
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    this.PropertyDic.TryAdd(type, new ClassCellCode() { Name = className, Code = stringBuilder.ToString() });
-                }
+
+                this.AddType(type,stringBuilder.ToString());
             }
             else
             {
-                string className;
-                if (type.GetCustomAttribute<RpcProxyAttribute>() is RpcProxyAttribute attribute)
-                {
-                    className = attribute.ClassName ?? type.Name;
-                }
-                else if (CodeGenerator.TryGetProxyTypeName(type, out className))
-                {
-                }
-                else if (this.AllowGen(type.Assembly))
-                {
-                    className = type.Name;
-                }
-                else
-                {
-                    return;
-                }
-                var stringBuilder = new StringBuilder();
-
-                stringBuilder.AppendLine("");
                 if (type.IsStruct())
                 {
                     stringBuilder.AppendLine($"public struct {className}");
@@ -206,40 +432,36 @@ namespace TouchSocket.Rpc
                 else
                 {
                     stringBuilder.AppendLine($"public class {className}");
+                    if (type.BaseType != typeof(object))
+                    {
+                        if (type.BaseType.IsGenericType)
+                        {
+                            var types = type.BaseType.GetGenericArguments();
+
+                            if (m_listType.Contains(type.BaseType.Name))
+                            {
+                                var typeString = this.GetTypeFullName(types[0]);
+                                stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
+                            }
+                            else if (m_dicType.Contains(type.BaseType.Name))
+                            {
+                                var keyString = this.GetTypeFullName(types[0]);
+                                var valueString = this.GetTypeFullName(types[1]);
+                                stringBuilder.Append($": {type.BaseType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>");
+                            }
+                        }
+                        else if (type.BaseType.IsClass)
+                        {
+                            stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
+                        }
+                    }
+
                 }
 
-                if (!type.IsStruct() && type.BaseType != typeof(object))
-                {
-                    this.AddTypeString(type.BaseType, ref deep);
-                    if (type.BaseType.IsGenericType)
-                    {
-                        var types = type.BaseType.GetGenericArguments();
-                        foreach (var itemType in types)
-                        {
-                            this.AddTypeString(itemType, ref deep);
-                        }
-                        if (m_listType.Contains(type.BaseType.Name))
-                        {
-                            var typeString = this.GetTypeFullName(types[0]);
-                            stringBuilder.Append($":{type.BaseType.Name.Replace("`1", string.Empty)}<{typeString}>");
-                        }
-                        else if (m_dicType.Contains(type.BaseType.Name))
-                        {
-                            var keyString = this.GetTypeFullName(types[0]);
-                            var valueString = this.GetTypeFullName(types[1]);
-                            stringBuilder.Append($": {type.BaseType.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>");
-                        }
-                    }
-                    else if (type.BaseType.IsClass)
-                    {
-                        stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
-                    }
-                }
 
                 stringBuilder.AppendLine("{");
                 foreach (var itemProperty in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty))
                 {
-                    this.AddTypeString(itemProperty.PropertyType, ref deep);
                     if (this.PropertyDic.ContainsKey(itemProperty.PropertyType))
                     {
                         stringBuilder.Append($"public {itemProperty.PropertyType.Name} {itemProperty.Name}");
@@ -251,10 +473,6 @@ namespace TouchSocket.Rpc
                     else if (itemProperty.PropertyType.IsGenericType)
                     {
                         var types = itemProperty.PropertyType.GetGenericArguments();
-                        foreach (var itemType in types)
-                        {
-                            this.AddTypeString(itemType, ref deep);
-                        }
                         if (m_listType.Contains(itemProperty.PropertyType.Name))
                         {
                             var typeString = this.GetTypeFullName(types[0]);
@@ -269,16 +487,14 @@ namespace TouchSocket.Rpc
                     }
                     else
                     {
-                        this.AddTypeString(itemProperty.PropertyType, ref deep);
                         stringBuilder.Append($"public {this.GetTypeFullName(itemProperty.PropertyType)} {itemProperty.Name}");
                     }
 
-                    stringBuilder.AppendLine("{get;set;}");
+                    stringBuilder.AppendLine(" { get; set; }");
                 }
 
                 foreach (var itemField in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
                 {
-                    this.AddTypeString(itemField.FieldType, ref deep);
                     if (this.PropertyDic.ContainsKey(itemField.FieldType))
                     {
                         stringBuilder.Append($"public {itemField.FieldType.Name} {itemField.Name}");
@@ -290,10 +506,6 @@ namespace TouchSocket.Rpc
                     else if (itemField.FieldType.IsGenericType)
                     {
                         var types = itemField.FieldType.GetGenericArguments();
-                        foreach (var itemType in types)
-                        {
-                            this.AddTypeString(itemType, ref deep);
-                        }
                         if (m_listType.Contains(itemField.FieldType.Name))
                         {
                             var typeString = this.GetTypeFullName(types[0]);
@@ -308,7 +520,6 @@ namespace TouchSocket.Rpc
                     }
                     else
                     {
-                        this.AddTypeString(itemField.FieldType, ref deep);
                         stringBuilder.Append($"public {this.GetTypeFullName(itemField.FieldType)} {itemField.Name}");
                     }
 
@@ -459,25 +670,6 @@ namespace TouchSocket.Rpc
 
         internal void CheckDeep()
         {
-            //foreach (var strItem in GenericTypeDic)
-            //{
-            //    bool goon = true;
-            //    string strItemNew = strItem.Value;
-            //    while (goon)
-            //    {
-            //        goon = false;
-            //        foreach (var item in GenericTypeDic.Keys)
-            //        {
-            //            if (strItemNew.Contains(item.FullName))
-            //            {
-            //                strItemNew = strItemNew.Replace(item.FullName, item.Name);
-            //                goon = true;
-            //            }
-            //        }
-            //    }
-            //    GenericTypeDic[strItem.Key] = strItemNew;
-            //}
-
             foreach (var strItem in this.PropertyDic)
             {
                 var strItemNew = strItem.Value.Code;
@@ -492,7 +684,7 @@ namespace TouchSocket.Rpc
             }
         }
 
-        private bool AllowGen(Assembly assembly)
+        private bool AllowAssembly(Assembly assembly)
         {
             foreach (var item in this.Assembly)
             {
@@ -502,6 +694,71 @@ namespace TouchSocket.Rpc
                 }
             }
             return false;
+        }
+
+        private void GetTransmitTypes(Type type, ref List<Type> types)
+        {
+            if (type.IsByRef)
+            {
+                type = type.GetRefOutType();
+            }
+
+            if (types.Contains(type))
+            {
+                return;
+            }
+
+            if (type.IsPrimitive || type == typeof(string))
+            {
+                return;
+            }
+
+            if (type == typeof(object))
+            {
+                return;
+            }
+
+            if (type.IsInterface || type.IsAbstract)
+            {
+                return;
+            }
+
+            if (type.IsArray)
+            {
+                this.GetTransmitTypes(type.GetElementType(), ref types);
+            }
+            else if (type.IsGenericType)
+            {
+                foreach (var itemType in type.GetGenericArguments())
+                {
+                    this.GetTransmitTypes(itemType, ref types);
+                }
+            }
+            else if (type.IsEnum)
+            {
+                //添加类型
+                types.Add(type);
+            }
+            else
+            {
+                //添加类型
+                types.Add(type);
+
+                if (type.BaseType!=null)
+                {
+                    this.GetTransmitTypes(type.BaseType, ref types);
+                }
+
+                foreach (var item in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty))
+                {
+                    this.GetTransmitTypes(item.PropertyType, ref types);
+                }
+
+                foreach (var item in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                {
+                    this.GetTransmitTypes(item.FieldType, ref types);
+                }
+            }
         }
     }
 }

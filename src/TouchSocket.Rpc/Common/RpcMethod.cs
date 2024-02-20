@@ -22,7 +22,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc函数实例
     /// </summary>
-    public sealed class MethodInstance : Method
+    public sealed class RpcMethod : Method
     {
         private readonly bool[] m_hasFilters = new bool[4];
         private RpcAttribute[] m_rpcAttributes;
@@ -32,7 +32,7 @@ namespace TouchSocket.Rpc
         /// 实例化一个Rpc调用函数，并在方法声明的类上操作
         /// </summary>
         /// <param name="methodInfo"></param>
-        public MethodInstance(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType, methodInfo.DeclaringType)
+        public RpcMethod(MethodInfo methodInfo) : this(methodInfo, methodInfo.DeclaringType, methodInfo.DeclaringType)
         {
         }
 
@@ -42,7 +42,7 @@ namespace TouchSocket.Rpc
         /// <param name="method"></param>
         /// <param name="serverFromType"></param>
         /// <param name="serverToType"></param>
-        public MethodInstance(MethodInfo method, Type serverFromType, Type serverToType) : base(method, false)
+        public RpcMethod(MethodInfo method, Type serverFromType, Type serverToType) : base(method, false)
         {
             this.ServerFromType = serverFromType;
             this.ServerToType = serverToType;
@@ -87,6 +87,15 @@ namespace TouchSocket.Rpc
             }
 
             this.PrivateGetFilters();
+
+            if (typeof(ITransientRpcServer).IsAssignableFrom(this.ServerToType))
+            {
+                this.HasCallContext = true;
+            }
+            else
+            {
+                this.HasCallContext = this.Parameters.Where(a => a.IsCallContext).Any();
+            }
         }
 
         /// <summary>
@@ -110,12 +119,17 @@ namespace TouchSocket.Rpc
         public Type[] ParameterTypes { get; private set; }
 
         /// <summary>
+        /// 是否包含调用上下文
+        /// </summary>
+        public bool HasCallContext { get; private set; }
+
+        /// <summary>
         /// 获取常规Rpc参数。
         /// </summary>
         /// <returns></returns>
         public IEnumerable<RpcParameter> GetNormalParameters()
         {
-            return Parameters.Where(a =>
+            return this.Parameters.Where(a =>
             {
                 if (a.IsFromServices)
                 {

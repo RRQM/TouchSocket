@@ -35,7 +35,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 本次调用的<see cref="MethodInstance"/>
         /// </summary>
-        MethodInstance MethodInstance { get; }
+        RpcMethod MethodInstance { get; }
 
         /// <summary>
         /// 可取消的调用令箭

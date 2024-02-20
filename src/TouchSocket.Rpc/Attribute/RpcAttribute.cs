@@ -83,7 +83,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string GetDescription(MethodInstance methodInstance)
+        public virtual string GetDescription(RpcMethod methodInstance)
         {
             return string.IsNullOrEmpty(methodInstance.GetDescription()) ? "无注释信息" : methodInstance.GetDescription();
         }
@@ -93,7 +93,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string GetExtensionsMethodProxyCode(MethodInstance methodInstance)
+        public virtual string GetExtensionsMethodProxyCode(RpcMethod methodInstance)
         {
             var codeString = new StringBuilder();
 
@@ -456,7 +456,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string GetInstanceProxyCode(MethodInstance methodInstance)
+        public virtual string GetInstanceProxyCode(RpcMethod methodInstance)
         {
             var codeString = new StringBuilder();
 
@@ -792,7 +792,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string GetInterfaceProxyCode(MethodInstance methodInstance)
+        public virtual string GetInterfaceProxyCode(RpcMethod methodInstance)
         {
             var codeString = new StringBuilder();
             var description = this.GetDescription(methodInstance);
@@ -866,7 +866,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string GetInvokenKey(MethodInstance methodInstance)
+        public virtual string GetInvokenKey(RpcMethod methodInstance)
         {
             if (this.MethodInvoke)
             {
@@ -893,7 +893,7 @@ namespace TouchSocket.Rpc
         /// <param name="methodInstance"></param>
         /// <param name="isAsync"></param>
         /// <returns></returns>
-        public virtual string GetMethodName(MethodInstance methodInstance, bool isAsync)
+        public virtual string GetMethodName(RpcMethod methodInstance, bool isAsync)
         {
             var name = string.IsNullOrEmpty(this.MethodName) ? methodInstance.Name : this.MethodName.Format(methodInstance.Name);
             return isAsync ? name + "Async" : name;
@@ -907,7 +907,7 @@ namespace TouchSocket.Rpc
         /// <param name="isRef"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public virtual List<string> GetParameters(MethodInstance methodInstance, out bool isOut, out bool isRef, out ParameterInfo[] parameters)
+        public virtual List<string> GetParameters(RpcMethod methodInstance, out bool isOut, out bool isRef, out ParameterInfo[] parameters)
         {
             var list = new List<string>();
             isOut = false;
@@ -983,7 +983,7 @@ namespace TouchSocket.Rpc
         /// <param name="methodInstance"></param>
         /// <param name="isAsync"></param>
         /// <returns></returns>
-        public virtual string GetReturn(MethodInstance methodInstance, bool isAsync)
+        public virtual string GetReturn(RpcMethod methodInstance, bool isAsync)
         {
             if (isAsync)
             {

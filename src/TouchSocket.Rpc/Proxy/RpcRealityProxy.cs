@@ -135,7 +135,7 @@ namespace TouchSocket.Rpc
         private ProxyModel AddMethod(MethodInfo info)
         {
             var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
-            var methodInstance = new MethodInstance(info);
+            var methodInstance = new RpcMethod(info);
             var invokeKey = attribute.GetInvokenKey(methodInstance);
             var invokeOption = false;
             if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))

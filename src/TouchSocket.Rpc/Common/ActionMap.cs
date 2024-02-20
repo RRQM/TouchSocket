@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// 服务映射图
     /// </summary>
-    public sealed class ActionMap : Dictionary<string, MethodInstance>
+    public sealed class ActionMap : Dictionary<string, RpcMethod>
     {
         /// <summary>
         /// 服务映射图
@@ -33,7 +33,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="actionKey"></param>
         /// <returns></returns>
-        public MethodInstance GetMethodInstance(string actionKey)
+        public RpcMethod GetMethodInstance(string actionKey)
         {
             this.TryGetValue(actionKey, out var methodInstance);
             return methodInstance;
@@ -45,7 +45,7 @@ namespace TouchSocket.Rpc
         /// <param name="actionKey"></param>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public bool TryGetMethodInstance(string actionKey, out MethodInstance methodInstance)
+        public bool TryGetMethodInstance(string actionKey, out RpcMethod methodInstance)
         {
             return this.TryGetValue(actionKey, out methodInstance);
         }

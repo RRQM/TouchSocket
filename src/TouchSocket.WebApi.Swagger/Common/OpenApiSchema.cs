@@ -33,6 +33,6 @@ namespace TouchSocket.WebApi.Swagger
         public OpenApiSchema Items { get; set; }
 
         [JsonProperty("enum")]
-        public int[] Enum { get; set; }
+        public long[] Enum { get; set; }
     }
 }

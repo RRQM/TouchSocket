@@ -246,7 +246,7 @@ namespace TouchSocket.WebApi.Swagger
             }
         }
 
-        private void BuildGet(string url, MethodInstance methodInstance, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
+        private void BuildGet(string url, RpcMethod methodInstance, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
         {
             //解析get
             var openApiPath = new OpenApiPath();
@@ -291,7 +291,7 @@ namespace TouchSocket.WebApi.Swagger
             paths.Add(url, openApiPath);
         }
 
-        private byte[] BuildOpenApi(MethodInstance[] methodInstances)
+        private byte[] BuildOpenApi(RpcMethod[] methodInstances)
         {
             var openApiRoot = new OpenApiRoot();
             openApiRoot.Info = new OpenApiInfo();
@@ -330,7 +330,7 @@ namespace TouchSocket.WebApi.Swagger
             return JsonConvert.SerializeObject(openApiRoot, Formatting.Indented, jsonSetting).ToUTF8Bytes();
         }
 
-        private void BuildPost(string url, MethodInstance methodInstance, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
+        private void BuildPost(string url, RpcMethod methodInstance, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
         {
             //解析post
             var openApiPath = new OpenApiPath();
@@ -391,7 +391,7 @@ namespace TouchSocket.WebApi.Swagger
             paths.Add(url, openApiPath);
         }
 
-        private void BuildResponse(MethodInstance methodInstance, in OpenApiPathValue openApiPathValue, in List<Type> schemaTypeList)
+        private void BuildResponse(RpcMethod methodInstance, in OpenApiPathValue openApiPathValue, in List<Type> schemaTypeList)
         {
             var openApiResponse = new OpenApiResponse();
             openApiResponse.Description = "Success";
@@ -505,7 +505,14 @@ namespace TouchSocket.WebApi.Swagger
                     {
                         if (type.IsEnum)
                         {
-                            schema.Enum = (int[])Enum.GetValues(type);
+                            var list=new List<long>();
+                            foreach (var item in Enum.GetValues(type))
+                            {
+                                list.Add(Convert.ToInt64(item));
+                            }
+                            schema.Enum = list.ToArray();
+
+
                             schema.Type = OpenApiDataTypes.Integer;
                         }
                         else
@@ -625,7 +632,7 @@ namespace TouchSocket.WebApi.Swagger
             return stringBuilder.ToString();
         }
 
-        private IEnumerable<string> GetTags(MethodInstance methodInstance)
+        private IEnumerable<string> GetTags(RpcMethod methodInstance)
         {
             var tags = new List<string>();
             foreach (var item in methodInstance.ServerFromType.GetCustomAttributes(true))
