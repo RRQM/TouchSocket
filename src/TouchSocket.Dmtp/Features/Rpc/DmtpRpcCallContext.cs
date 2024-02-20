@@ -28,7 +28,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="methodInstance"></param>
         /// <param name="dmtpRpcPackage"></param>
         /// <param name="resolver"></param>
-        public DmtpRpcCallContext(object caller, MethodInstance methodInstance, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, methodInstance, resolver)
+        public DmtpRpcCallContext(object caller, RpcMethod methodInstance, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, methodInstance, resolver)
         {
             this.DmtpRpcPackage = dmtpRpcPackage;
         }

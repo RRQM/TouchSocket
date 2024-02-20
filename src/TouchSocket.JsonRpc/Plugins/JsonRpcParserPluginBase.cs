@@ -93,7 +93,7 @@ namespace TouchSocket.JsonRpc
             this.Response(callContext, invokeResult.Result, error);
         }
 
-        private void RegisterServer(MethodInstance[] methodInstances)
+        private void RegisterServer(RpcMethod[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
             {

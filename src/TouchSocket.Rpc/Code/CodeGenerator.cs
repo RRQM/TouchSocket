@@ -273,12 +273,13 @@ namespace TouchSocket.Rpc
 
             serverCellCode.Name = serverType.IsInterface ?
                 (serverType.Name.StartsWith("I") ? serverType.Name.Remove(0, 1) : serverType.Name) : serverType.Name;
-            var instances = new List<MethodInstance>();
+            var instances = new List<RpcMethod>();
 
             foreach (var item in m_proxyType.Keys)
             {
                 var deep = 0;
-                classCodeGenerator.AddTypeString(item, ref deep);
+                //classCodeGenerator.AddTypeString(item, ref deep);
+                classCodeGenerator.AddTypeString(item);
             }
 
             foreach (var methodInstance in methodInstances)
@@ -290,14 +291,14 @@ namespace TouchSocket.Rpc
                         if (methodInstance.ReturnType != null)
                         {
                             var deep = 0;
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType, ref deep);
+                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
                         }
 
                         var psTypes=methodInstance.GetNormalParameters().Select(a=>a.Type);
                         foreach (var itemType in psTypes)
                         {
                             var deep = 0;
-                            classCodeGenerator.AddTypeString(itemType, ref deep);
+                            classCodeGenerator.AddTypeString(itemType);
                         }
                         instances.Add(methodInstance);
                         break;
@@ -306,19 +307,6 @@ namespace TouchSocket.Rpc
             }
 
             classCodeGenerator.CheckDeep();
-
-            //foreach (var item in classCodeGenerator.GenericTypeDic.Keys.ToArray())
-            //{
-            //    if (m_ignoreTypes.Contains(item))
-            //    {
-            //        classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
-            //    }
-
-            //    if (m_ignoreAssemblies.Contains(item.Assembly))
-            //    {
-            //        classCodeGenerator.GenericTypeDic.TryRemove(item, out _);
-            //    }
-            //}
 
             foreach (var item in classCodeGenerator.PropertyDic.Keys.ToArray())
             {
@@ -429,7 +417,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <typeparam name="TServer"></typeparam>
         /// <returns></returns>
-        public static MethodInstance[] GetMethodInstances<TServer>() where TServer : IRpcServer
+        public static RpcMethod[] GetMethodInstances<TServer>() where TServer : IRpcServer
         {
             return GetMethodInstances(typeof(TServer), typeof(TServer));
         }
@@ -440,7 +428,7 @@ namespace TouchSocket.Rpc
         /// <param name="serverFromType"></param>
         /// <param name="serverToType"></param>
         /// <returns></returns>
-        public static MethodInstance[] GetMethodInstances(Type serverFromType, Type serverToType)
+        public static RpcMethod[] GetMethodInstances(Type serverFromType, Type serverToType)
         {
             if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
             {
@@ -452,7 +440,7 @@ namespace TouchSocket.Rpc
                 throw new RpcException($"{serverToType}类型必须从{serverFromType}派生。");
             }
 
-            var instances = new List<MethodInstance>();
+            var instances = new List<RpcMethod>();
 
             var fromMethodInfos = new Dictionary<string, MethodInfo>();
             GetMethodInfos(serverToType, ref fromMethodInfos);
@@ -466,7 +454,7 @@ namespace TouchSocket.Rpc
                 var attributes = method.GetCustomAttributes<RpcAttribute>(true);
                 if (attributes.Any())
                 {
-                    instances.Add(new MethodInstance(method, serverFromType, serverToType));
+                    instances.Add(new RpcMethod(method, serverFromType, serverToType));
                 }
             }
 

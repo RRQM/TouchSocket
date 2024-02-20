@@ -22,16 +22,16 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 可以取消的调用令箭
         /// </summary>
-        public CancellationToken Token { get; set; }
+        CancellationToken Token { get; set; }
 
         /// <summary>
         /// 调用反馈
         /// </summary>
-        public FeedbackType FeedbackType { get; set; }
+        FeedbackType FeedbackType { get; set; }
 
         /// <summary>
         /// 调用超时
         /// </summary>
-        public int Timeout { get; set; }
+        int Timeout { get; set; }
     }
 }

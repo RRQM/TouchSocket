@@ -19,7 +19,7 @@ namespace TouchSocket.XmlRpc
 {
     internal class XmlRpcCallContext :CallContext, IXmlRpcCallContext
     {
-        public XmlRpcCallContext(object caller, MethodInstance methodInstance, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, methodInstance, resolver)
+        public XmlRpcCallContext(object caller, RpcMethod methodInstance, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, methodInstance, resolver)
         {
             this.HttpContext = httpContext;
             this.XmlString = xmlString;

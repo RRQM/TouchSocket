@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc
     public sealed class RpcStore
     {
         private readonly IRegistrator m_registrator;
-        private readonly ConcurrentDictionary<Type, List<MethodInstance>> m_serverTypes = new ConcurrentDictionary<Type, List<MethodInstance>>();
+        private readonly ConcurrentDictionary<Type, List<RpcMethod>> m_serverTypes = new ConcurrentDictionary<Type, List<RpcMethod>>();
 
         /// <summary>
         /// 实例化一个Rpc仓库。
@@ -43,9 +43,9 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 获取所有已注册的函数。
         /// </summary>
-        public MethodInstance[] GetAllMethods()
+        public RpcMethod[] GetAllMethods()
         {
-            var methods = new List<MethodInstance>();
+            var methods = new List<RpcMethod>();
             foreach (var item in this.m_serverTypes.Values)
             {
                 methods.AddRange(item);
@@ -103,7 +103,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="serverType"></param>
         /// <returns></returns>
-        public MethodInstance[] GetServerMethodInstances(Type serverType)
+        public RpcMethod[] GetServerMethodInstances(Type serverType)
         {
             return this.m_serverTypes[serverType].ToArray();
         }
@@ -137,7 +137,7 @@ namespace TouchSocket.Rpc
 
             var methodInstances = CodeGenerator.GetMethodInstances(serverFromType, rpcServer.GetType());
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
+            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(methodInstances));
             this.m_registrator.RegisterSingleton(serverFromType, rpcServer);
         }
 
@@ -177,7 +177,7 @@ namespace TouchSocket.Rpc
             }
             var methodInstances = CodeGenerator.GetMethodInstances(serverFromType, serverToType);
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<MethodInstance>(methodInstances));
+            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(methodInstances));
         }
 
         #endregion 注册

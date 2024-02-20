@@ -34,7 +34,7 @@ namespace TouchSocket.Rpc
         /// <param name="caller"></param>
         /// <param name="methodInstance"></param>
         /// <param name="resolver"></param>
-        public CallContext(object caller, MethodInstance methodInstance, IResolver resolver)
+        public CallContext(object caller, RpcMethod methodInstance, IResolver resolver)
         {
             this.Caller = caller;
             this.MethodInstance = methodInstance;
@@ -52,7 +52,7 @@ namespace TouchSocket.Rpc
         public object Caller { get; protected set; }
 
         /// <inheritdoc/>
-        public MethodInstance MethodInstance { get; protected set; }
+        public RpcMethod MethodInstance { get; protected set; }
 
         /// <inheritdoc/>
         public IResolver Resolver { get; protected set; }

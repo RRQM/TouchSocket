@@ -42,7 +42,7 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public string JsonString { get; }
 
-        internal void SetMethodInstance(MethodInstance methodInstance)
+        internal void SetMethodInstance(RpcMethod methodInstance)
         {
             this.MethodInstance = methodInstance;
         }

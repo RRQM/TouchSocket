@@ -39,6 +39,6 @@ namespace TouchSocket.Rpc
         /// 获取所有Method
         /// </summary>
         /// <returns></returns>
-        MethodInstance[] GetMethods();
+        RpcMethod[] GetMethods();
     }
 }

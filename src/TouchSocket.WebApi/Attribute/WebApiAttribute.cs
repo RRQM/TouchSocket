@@ -59,7 +59,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public override string GetInvokenKey(MethodInstance methodInstance)
+        public override string GetInvokenKey(RpcMethod methodInstance)
         {
             var parameters = methodInstance.GetNormalParameters().ToList();
             if (this.Method == HttpMethodType.GET)
@@ -129,7 +129,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         /// <param name="methodInstance"></param>
         /// <returns></returns>
-        public virtual string[] GetRouteUrls(MethodInstance methodInstance)
+        public virtual string[] GetRouteUrls(RpcMethod methodInstance)
         {
             if (methodInstance.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
             {
