@@ -478,6 +478,28 @@ namespace TouchSocket.Sockets
             return SetBindIPHost(config, 0);
         }
 
+        /// <summary>
+        /// 解决Windows下UDP连接被重置错误10054。
+        /// </summary>
+#if NET6_0_OR_GREATER
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
+        public static readonly DependencyProperty<bool> UdpConnResetProperty = DependencyProperty<bool>.Register("UdpConnReset", false);
+
+        /// <summary>
+        /// 解决Windows下UDP连接被重置错误10054。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+#if NET6_0_OR_GREATER
+        [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
+        public static TouchSocketConfig UseUdpConnReset(this TouchSocketConfig config)
+        {
+            config.SetValue(UdpConnResetProperty, true);
+            return config;
+        }
+
         #endregion UDP
 
         #region 创建
