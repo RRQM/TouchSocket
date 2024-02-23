@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
         private bool m_polling;
 
         /// <summary>
-        /// 重连插件我才
+        /// 重连插件
         /// </summary>
         public ReconnectionPlugin()
         {
