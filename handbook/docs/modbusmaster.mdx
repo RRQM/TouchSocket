@@ -124,10 +124,10 @@ public IModbusMaster GetMaster()
 
 ```csharp showLineNumbers
 //同步发送Modbus请求，并等待响应
-IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token);
+IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
 
 //异步发送Modbus请求，并等待响应
-Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token);
+Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
 ```
 
 以读线圈操作为例：

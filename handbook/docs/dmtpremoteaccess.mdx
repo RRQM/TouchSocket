@@ -28,7 +28,7 @@ import Tag from "@site/src/components/Tag.js";
 同时可以传递一个元数据组。用于载入自定义消息。
 
 ```csharp showLineNumbers
-var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync("c:/新建文件夹", timeout: 30 * 1000);
+var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync("c:/新建文件夹", millisecondsTimeout: 30 * 1000);
 
 //然后通过DirectoryInfo属性，可以获取到请求文件夹的信息，包括创建时间、修改时间、子文件夹、子文件等。
 ```

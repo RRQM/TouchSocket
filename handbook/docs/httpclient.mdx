@@ -46,7 +46,7 @@ request
     .SetHost(client.RemoteIPHost.Host)
     .AsGet();
 
-var respose = client.Request(request, timeout: 1000*10);
+var respose = client.Request(request, millisecondsTimeout: 1000*10);
 Console.WriteLine(respose.GetBody());
 ```
 
@@ -59,7 +59,7 @@ request.InitHeaders()
     .SetHost(client.RemoteIPHost.Host)
     .AsGet();
 
-var respose = client.Request(request, timeout: 1000 * 10);
+var respose = client.Request(request, millisecondsTimeout: 1000 * 10);
 
 var buffer = new byte[1024 * 64];
 while (true)
