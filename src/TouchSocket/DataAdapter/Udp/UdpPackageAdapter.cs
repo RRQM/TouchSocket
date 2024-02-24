@@ -15,6 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -97,9 +98,9 @@ namespace TouchSocket.Sockets
         /// 构造函数
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="revStore"></param>
-        public UdpPackage(long id, int timeout, ConcurrentDictionary<long, UdpPackage> revStore)
+        public UdpPackage(long id, int millisecondsTimeout, ConcurrentDictionary<long, UdpPackage> revStore)
         {
             this.Id = id;
             this.m_frames = new ConcurrentQueue<UdpFrame>();
@@ -109,7 +110,7 @@ namespace TouchSocket.Sockets
                 {
                     udpPackage.m_frames.Clear();
                 }
-            }, null, timeout, Timeout.Infinite);
+            }, null, millisecondsTimeout, Timeout.Infinite);
         }
 
         /// <summary>
@@ -232,11 +233,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public int Timeout { get; set; } = 5000;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="remoteEndPoint"></param>
-        /// <param name="byteBlock"></param>
         protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             var udpFrame = new UdpFrame();
@@ -266,13 +263,64 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        protected override async Task PreviewSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        {
+            if (length > this.MaxPackageSize)
+            {
+                throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+            var id = this.m_iDGenerator.NextId();
+            var off = 0;
+            var surLen = length;
+            var freeRoom = this.m_mtu - 11;
+            ushort sn = 0;
+            /*|********|**|*|n|*/
+            /*|********|**|*|**|*/
+            while (surLen > 0)
+            {
+                var data = new byte[this.m_mtu];
+                Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, data, 0, 8);
+                Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
+                if (surLen > freeRoom)//有余
+                {
+                    Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
+                    off += freeRoom;
+                    surLen -= freeRoom;
+                    await this.GoSendAsync(endPoint, data, 0, this.m_mtu);
+                }
+                else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
+                {
+                    byte flag = 0;
+                    data[10] = flag.SetBit(7, 1);//设置终结帧
+
+                    Buffer.BlockCopy(buffer, off, data, 11, surLen);
+                    Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
+
+                    await this.GoSendAsync(endPoint, data, 0, surLen + 11 + 2);
+
+                    off += surLen;
+                    surLen -= surLen;
+                }
+                else//结束但不能容纳Crc
+                {
+                    Buffer.BlockCopy(buffer, off, data, 11, surLen);
+                    await this.GoSendAsync(endPoint, data, 0, surLen + 11);
+                    off += surLen;
+                    surLen -= surLen;
+
+                    var finData = new byte[13];
+                    Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, finData, 0, 8);
+                    Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, finData, 8, 2);
+                    byte flag = 0;
+                    finData[10] = flag.SetBit(7, 1);
+                    Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, finData, 11, 2);
+                    await this.GoSendAsync(endPoint, finData, 0, finData.Length);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
             if (length > this.MaxPackageSize)
@@ -329,11 +377,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
         protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             var length = 0;
@@ -357,11 +401,28 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        protected override void Reset()
+        protected override async Task PreviewSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
+            var length = 0;
+            foreach (var item in transferBytes)
+            {
+                length += item.Count;
+            }
+
+            if (length > this.MaxPackageSize)
+            {
+                throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
+            }
+
+            using (var byteBlock = new ByteBlock(length))
+            {
+                foreach (var item in transferBytes)
+                {
+                    byteBlock.Write(item.Array, item.Offset, item.Count);
+                }
+                await this.PreviewSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+            }
         }
     }
 }

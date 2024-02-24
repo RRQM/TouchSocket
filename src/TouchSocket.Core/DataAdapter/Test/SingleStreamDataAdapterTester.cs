@@ -82,13 +82,13 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="timeout">超时</param>
+        /// <param name="millisecondsTimeout">超时</param>
         /// <returns></returns>
-        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
+        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int millisecondsTimeout)
         {
             this.m_count = 0;
             this.m_expectedCount = expectedCount;
-            this.m_timeout = timeout;
+            this.m_timeout = millisecondsTimeout;
             this.m_stopwatch = new Stopwatch();
             this.m_stopwatch.Start();
             Task.Run(() =>
@@ -113,10 +113,10 @@ namespace TouchSocket.Core
         /// <param name="buffer"></param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="timeout">超时</param>
-        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
+        /// <param name="millisecondsTimeout">超时</param>
+        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
         {
-            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
         }
 
         private void BeginSend()

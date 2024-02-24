@@ -67,11 +67,11 @@ namespace TouchSocket.Http
         /// <param name="path">Static content path</param>
         /// <param name="prefix">Cache prefix (default is "/")</param>
         /// <param name="filter">Cache filter (default is "*.*")</param>
-        /// <param name="timeout">Refresh cache timeout (default is 1 hour)</param>
-        public void AddFolder(string path, string prefix = "/", string filter = "*.*", TimeSpan? timeout = null)
+        /// <param name="millisecondsTimeout">Refresh cache millisecondsTimeout (default is 1 hour)</param>
+        public void AddFolder(string path, string prefix = "/", string filter = "*.*", TimeSpan? millisecondsTimeout = null)
         {
-            timeout ??= TimeSpan.FromHours(1);
-            this.FileCache.InsertPath(path, prefix, filter, timeout.Value, null);
+            millisecondsTimeout ??= TimeSpan.FromHours(1);
+            this.FileCache.InsertPath(path, prefix, filter, millisecondsTimeout.Value, null);
         }
 
         /// <summary>

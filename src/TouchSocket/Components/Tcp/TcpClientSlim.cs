@@ -302,13 +302,13 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 建立Tcp的连接。
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected void TcpConnect(int timeout, CancellationToken token)
+        protected void TcpConnect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -328,7 +328,7 @@ namespace TouchSocket.Sockets
                     socket.Connect(iPHost.Host, iPHost.Port);
                 }, token);
                 task.ConfigureFalseAwait();
-                if (!task.Wait(timeout, token))
+                if (!task.Wait(millisecondsTimeout, token))
                 {
                     socket.SafeDispose();
                     throw new TimeoutException();
@@ -363,13 +363,13 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected async Task TcpConnectAsync(int timeout, CancellationToken token)
+        protected async Task TcpConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -390,7 +390,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    using (var tokenSource = new CancellationTokenSource(timeout))
+                    using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
                     {
                         try
                         {
@@ -417,10 +417,10 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 异步连接服务器
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        protected async Task TcpConnectAsync(int timeout, CancellationToken token)
+        protected async Task TcpConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -438,7 +438,7 @@ namespace TouchSocket.Sockets
                 var socket = this.CreateSocket(iPHost);
                 await this.PrivateOnConnecting(new ConnectingEventArgs(socket));
                 var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
-                await task.WaitAsync(TimeSpan.FromMilliseconds(timeout));
+                await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout));
                 this.m_online = true;
                 this.SetSocket(socket);
                 this.BeginReceive();
@@ -453,15 +453,15 @@ namespace TouchSocket.Sockets
 #endif
 
         /// <inheritdoc/>
-        public virtual void Connect(int timeout, CancellationToken token)
+        public virtual void Connect(int millisecondsTimeout, CancellationToken token)
         {
-            this.TcpConnect(timeout, token);
+            this.TcpConnect(millisecondsTimeout, token);
         }
 
         /// <inheritdoc/>
-        public virtual async Task ConnectAsync(int timeout, CancellationToken token)
+        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.TcpConnectAsync(timeout, token);
+            await this.TcpConnectAsync(millisecondsTimeout, token);
         }
 
         #endregion Connect

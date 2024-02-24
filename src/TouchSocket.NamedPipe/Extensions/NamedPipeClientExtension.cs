@@ -29,9 +29,9 @@ namespace TouchSocket.NamedPipe
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="pipeName">管道名称</param>
-        /// <param name="timeout">超时设定</param>
+        /// <param name="millisecondsTimeout">超时设定</param>
         /// <returns></returns>
-        public static TClient Connect<TClient>(this TClient client, string pipeName, int timeout = 5000) where TClient : INamedPipeClient
+        public static TClient Connect<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -45,7 +45,7 @@ namespace TouchSocket.NamedPipe
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            client.Connect(timeout, CancellationToken.None);
+            client.Connect(millisecondsTimeout, CancellationToken.None);
             return client;
         }
 
@@ -55,9 +55,9 @@ namespace TouchSocket.NamedPipe
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
         /// <param name="pipeName">管道名称</param>
-        /// <param name="timeout">超时设定</param>
+        /// <param name="millisecondsTimeout">超时设定</param>
         /// <returns></returns>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int timeout = 5000) where TClient : INamedPipeClient
+        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -71,7 +71,7 @@ namespace TouchSocket.NamedPipe
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            await client.ConnectAsync(timeout, CancellationToken.None);
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None);
             return client;
         }
 

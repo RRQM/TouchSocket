@@ -98,13 +98,13 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public Task ConnectAsync(int timeout = 5000)
+        public Task ConnectAsync(int millisecondsTimeout = 5000)
         {
-            return this.ConnectAsync(CancellationToken.None, timeout);
+            return this.ConnectAsync(CancellationToken.None, millisecondsTimeout);
         }
 
         /// <inheritdoc/>
-        public async Task ConnectAsync(CancellationToken token, int timeout = 5000)
+        public async Task ConnectAsync(CancellationToken token, int millisecondsTimeout = 5000)
         {
             try
             {
@@ -143,7 +143,7 @@ namespace TouchSocket.Dmtp
 
                 await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
                      this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id,
-                     timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                     millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
                 this.IsHandshaked = true;
             }
             finally
@@ -153,15 +153,15 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public bool Ping(string targetId, int timeout = 5000)
+        public bool Ping(string targetId, int millisecondsTimeout = 5000)
         {
-            return this.DmtpActor.Ping(targetId, timeout);
+            return this.DmtpActor.Ping(targetId, millisecondsTimeout);
         }
 
         /// <inheritdoc/>
-        public bool Ping(int timeout = 5000)
+        public bool Ping(int millisecondsTimeout = 5000)
         {
-            return this.DmtpActor.Ping(timeout);
+            return this.DmtpActor.Ping(millisecondsTimeout);
         }
 
         /// <inheritdoc/>

@@ -280,14 +280,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>读取到的值集合</returns>
-        public static bool[] ReadCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static bool[] ReadCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadCoils, startingAddress, quantity);
 
-            var response = master.SendModbusRequest(request, timeout, token);
+            var response = master.SendModbusRequest(request, millisecondsTimeout, token);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -298,14 +298,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>读取到的值集合</returns>
-        public static bool[] ReadDiscreteInputs(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static bool[] ReadDiscreteInputs(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadDiscreteInputs, startingAddress, quantity);
 
-            var response = master.SendModbusRequest(request, timeout, token);
+            var response = master.SendModbusRequest(request, millisecondsTimeout, token);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -316,14 +316,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadHoldingRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static IModbusResponse ReadHoldingRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadHoldingRegisters, startingAddress, quantity);
 
-            var response = master.SendModbusRequest(request, timeout, token);
+            var response = master.SendModbusRequest(request, millisecondsTimeout, token);
             return response;
         }
 
@@ -334,14 +334,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadInputRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static IModbusResponse ReadInputRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadInputRegisters, startingAddress, quantity);
 
-            var response = master.SendModbusRequest(request, timeout, token);
+            var response = master.SendModbusRequest(request, millisecondsTimeout, token);
             return response;
         }
 
@@ -356,14 +356,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>读取到的值集合</returns>
-        public static async Task<bool[]> ReadCoilsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static async Task<bool[]> ReadCoilsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadCoils, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, timeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -374,14 +374,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>读取到的值集合</returns>
-        public static async Task<bool[]> ReadDiscreteInputsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static async Task<bool[]> ReadDiscreteInputsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadDiscreteInputs, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, timeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -392,14 +392,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static async Task<IModbusResponse> ReadHoldingRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static async Task<IModbusResponse> ReadHoldingRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadHoldingRegisters, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, timeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
             return response;
         }
 
@@ -410,14 +410,14 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="quantity">读取数量</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static async Task<IModbusResponse> ReadInputRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int timeout, CancellationToken token)
+        public static async Task<IModbusResponse> ReadInputRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort quantity, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadInputRegisters, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, timeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
             return response;
         }
 
@@ -432,15 +432,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static void WriteMultipleCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, bool[] values, int timeout, CancellationToken token)
+        public static void WriteMultipleCoils(this IModbusMaster master, byte slaveId, ushort startingAddress, bool[] values, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteMultipleCoils);
             request.StartingAddress = startingAddress;
             request.SetValue(values);
 
-            master.SendModbusRequest(request, timeout, token);
+            master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -450,15 +450,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static void WriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
+        public static void WriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddress, byte[] bytes, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteMultipleRegisters);
             request.StartingAddress = startingAddress;
             request.SetValue(bytes);
 
-            master.SendModbusRequest(request, timeout, token);
+            master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -468,15 +468,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static void WriteSingleCoil(this IModbusMaster master, byte slaveId, ushort startingAddress, bool value, int timeout, CancellationToken token)
+        public static void WriteSingleCoil(this IModbusMaster master, byte slaveId, ushort startingAddress, bool value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleCoil);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            master.SendModbusRequest(request, timeout, token);
+            master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -486,15 +486,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static void WriteSingleRegister(this IModbusMaster master, byte slaveId, ushort startingAddress, short value, int timeout, CancellationToken token)
+        public static void WriteSingleRegister(this IModbusMaster master, byte slaveId, ushort startingAddress, short value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleRegister);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            master.SendModbusRequest(request, timeout, token);
+            master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -504,15 +504,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static void WriteSingleRegister(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort value, int timeout, CancellationToken token)
+        public static void WriteSingleRegister(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleRegister);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            master.SendModbusRequest(request, timeout, token);
+            master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         #endregion Write
@@ -526,15 +526,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static async Task WriteMultipleCoilsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, bool[] values, int timeout, CancellationToken token)
+        public static async Task WriteMultipleCoilsAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, bool[] values, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteMultipleCoils);
             request.StartingAddress = startingAddress;
             request.SetValue(values);
 
-            await master.SendModbusRequestAsync(request, timeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -544,15 +544,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static async Task WriteMultipleRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
+        public static async Task WriteMultipleRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, byte[] bytes, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteMultipleRegisters);
             request.StartingAddress = startingAddress;
             request.SetValue(bytes);
 
-            await master.SendModbusRequestAsync(request, timeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -562,15 +562,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static async Task WriteSingleCoilAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, bool value, int timeout, CancellationToken token)
+        public static async Task WriteSingleCoilAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, bool value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleCoil);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, timeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -580,15 +580,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static async Task WriteSingleRegisterAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, short value, int timeout, CancellationToken token)
+        public static async Task WriteSingleRegisterAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, short value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleRegister);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, timeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -598,15 +598,15 @@ namespace TouchSocket.Modbus
         /// <param name="slaveId">站点号</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
-        public static async Task WriteSingleRegisterAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort value, int timeout, CancellationToken token)
+        public static async Task WriteSingleRegisterAsync(this IModbusMaster master, byte slaveId, ushort startingAddress, ushort value, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.WriteSingleRegister);
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, timeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         #endregion WriteAsync
@@ -622,17 +622,17 @@ namespace TouchSocket.Modbus
         /// <param name="quantityForRead">读取长度</param>
         /// <param name="startingAddress">写入位置（从0开始）</param>
         /// <param name="bytes">待写入数据</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
+        public static IModbusResponse ReadWriteMultipleRegisters(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadWriteMultipleRegisters);
             request.StartingAddress = startingAddress;
             request.ReadStartAddress = startingAddressForRead;
             request.ReadQuantity = quantityForRead;
             request.SetValue(bytes);
-            return master.SendModbusRequest(request, timeout, token);
+            return master.SendModbusRequest(request, millisecondsTimeout, token);
         }
 
         /// <summary>
@@ -644,17 +644,17 @@ namespace TouchSocket.Modbus
         /// <param name="quantityForRead">读取长度</param>
         /// <param name="startingAddress">写入位置（从0开始）</param>
         /// <param name="bytes">待写入数据</param>
-        /// <param name="timeout">超时时间，单位（ms）</param>
+        /// <param name="millisecondsTimeout">超时时间，单位（ms）</param>
         /// <param name="token">可取消令箭</param>
         /// <returns>响应值</returns>
-        public static async Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes, int timeout, CancellationToken token)
+        public static async Task<IModbusResponse> ReadWriteMultipleRegistersAsync(this IModbusMaster master, byte slaveId, ushort startingAddressForRead, ushort quantityForRead, ushort startingAddress, byte[] bytes, int millisecondsTimeout, CancellationToken token)
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadWriteMultipleRegisters);
             request.StartingAddress = startingAddress;
             request.ReadStartAddress = startingAddressForRead;
             request.ReadQuantity = quantityForRead;
             request.SetValue(bytes);
-            return await master.SendModbusRequestAsync(request, timeout, token);
+            return await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
         }
 
         #endregion ReadWrite

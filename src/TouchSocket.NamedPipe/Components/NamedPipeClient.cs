@@ -308,13 +308,13 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 建立管道的连接。
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected void PipeConnect(int timeout, CancellationToken token)
+        protected void PipeConnect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -340,7 +340,7 @@ namespace TouchSocket.NamedPipe
                 var namedPipe = CreatePipeClient(serverName, pipeName);
                 this.PrivateOnConnecting(new ConnectingEventArgs(null)).GetFalseAwaitResult();
 
-                namedPipe.Connect(timeout);
+                namedPipe.Connect(millisecondsTimeout);
                 if (namedPipe.IsConnected)
                 {
                     this.m_pipeStream = namedPipe;
@@ -360,17 +360,17 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 建立管道的连接。
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
         /// <exception cref="TimeoutException"></exception>
-        protected async Task PipeConnectAsync(int timeout, CancellationToken token)
+        protected async Task PipeConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreSlimForConnect.WaitAsync(timeout, token);
+                await this.m_semaphoreSlimForConnect.WaitAsync(millisecondsTimeout, token);
 
                 if (this.m_online)
                 {
@@ -392,9 +392,9 @@ namespace TouchSocket.NamedPipe
                 var namedPipe = CreatePipeClient(serverName, pipeName);
                 await this.PrivateOnConnecting(new ConnectingEventArgs(null));
 #if NET45
-                namedPipe.Connect(timeout);
+                namedPipe.Connect(millisecondsTimeout);
 #else
-                await namedPipe.ConnectAsync(timeout, token);
+                await namedPipe.ConnectAsync(millisecondsTimeout, token);
 #endif
                 if (namedPipe.IsConnected)
                 {
@@ -413,15 +413,15 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        public virtual void Connect(int timeout, CancellationToken token)
+        public virtual void Connect(int millisecondsTimeout, CancellationToken token)
         {
-            this.PipeConnect(timeout, token);
+            this.PipeConnect(millisecondsTimeout, token);
         }
 
         /// <inheritdoc/>
-        public virtual async Task ConnectAsync(int timeout, CancellationToken token)
+        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.PipeConnectAsync(timeout, token);
+            await this.PipeConnectAsync(millisecondsTimeout, token);
         }
 
         #endregion Connect

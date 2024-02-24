@@ -35,10 +35,10 @@
 //            this.m_semaphoreSlim = semaphoreSlim;
 //        }
 
-//        public bool Wait(TimeSpan timeout)
+//        public bool Wait(TimeSpan millisecondsTimeout)
 //        {
 //        }
-//        public bool Wait(TimeSpan timeout, CancellationToken cancellationToken)
+//        public bool Wait(TimeSpan millisecondsTimeout, CancellationToken cancellationToken)
 //        {
 //        }
 //        public bool Wait(int millisecondsTimeout)
@@ -53,7 +53,7 @@
 //       public void Wait(CancellationToken cancellationToken); public void Dispose()
 //       public Task WaitAsync(); {
 //       public Task<bool> WaitAsync(int millisecondsTimeout);
-//       public Task<bool> WaitAsync(TimeSpan timeout); }
-//    }  public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken);
+//       public Task<bool> WaitAsync(TimeSpan millisecondsTimeout); }
+//    }  public Task<bool> WaitAsync(TimeSpan millisecondsTimeout, CancellationToken cancellationToken);
 //}      public Task<bool> WaitAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 //       public Task WaitAsync(CancellationToken cancellationToken);

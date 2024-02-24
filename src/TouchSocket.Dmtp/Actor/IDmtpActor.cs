@@ -152,32 +152,32 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 向当前对点发送一个Ping报文，并且等待回应。
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        bool Ping(int timeout = 5000);
+        bool Ping(int millisecondsTimeout = 5000);
 
         /// <summary>
         /// 向指定路由点发送一个Ping报文，并且等待回应。
         /// </summary>
         /// <param name="targetId"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        bool Ping(string targetId, int timeout = 5000);
+        bool Ping(string targetId, int millisecondsTimeout = 5000);
 
         /// <summary>
         /// 向当前对点发送一个Ping报文，并且等待回应。
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        Task<bool> PingAsync(int timeout = 5000);
+        Task<bool> PingAsync(int millisecondsTimeout = 5000);
 
         /// <summary>
         /// 向指定路由点发送一个Ping报文，并且等待回应。
         /// </summary>
         /// <param name="targetId"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        Task<bool> PingAsync(string targetId, int timeout = 5000);
+        Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000);
 
         /// <summary>
         /// 重新设置Id,并且同步到对端

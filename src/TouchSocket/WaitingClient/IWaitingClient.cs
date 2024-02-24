@@ -20,7 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 等待型客户端。
     /// </summary>
-    public interface IWaitingClient<TClient> : IWaitSender, IDisposable where TClient : IReceiverObject, ISender
+    public interface IWaitingClient<TClient> : IWaitSender,IDisposableObject where TClient : IReceiverObject, ISender
     {
         /// <summary>
         /// 等待设置。
@@ -43,7 +43,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token);
+        ResponsedData SendThenResponse(byte[] buffer, int offset, int length,CancellationToken token);
 
         /// <summary>
         /// 异步发送

@@ -55,12 +55,12 @@ namespace TouchSocket.Core
         /// <summary>
         ///异步等待指定时间
         /// </summary>
-        /// <param name="timeout">超时时间</param>
-        public async Task<bool> WaitOneAsync(TimeSpan timeout)
+        /// <param name="millisecondsTimeout">超时时间</param>
+        public async Task<bool> WaitOneAsync(TimeSpan millisecondsTimeout)
         {
             try
             {
-                using (var timeoutSource = new CancellationTokenSource(timeout))
+                using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
                 {
                     await this.WaitOneAsync(timeoutSource.Token).ConfigureFalseAwait();
                     return true;

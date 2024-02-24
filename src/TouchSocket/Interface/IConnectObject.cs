@@ -24,19 +24,19 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 连接
         /// </summary>
-        /// <param name="timeout">最大等待时间</param>
+        /// <param name="millisecondsTimeout">最大等待时间</param>
         /// <param name="token">可取消令箭</param>
         /// <exception cref="TimeoutException"></exception>
         /// <exception cref="Exception"></exception>
-        void Connect(int timeout, CancellationToken token);
+        void Connect(int millisecondsTimeout, CancellationToken token);
 
         /// <summary>
         /// 异步连接
         /// </summary>
-        /// <param name="timeout">最大等待时间</param>
+        /// <param name="millisecondsTimeout">最大等待时间</param>
         /// <param name="token">可取消令箭</param>
         /// <exception cref="TimeoutException"></exception>
         /// <exception cref="Exception"></exception>
-        Task ConnectAsync(int timeout, CancellationToken token);
+        Task ConnectAsync(int millisecondsTimeout, CancellationToken token);
     }
 }

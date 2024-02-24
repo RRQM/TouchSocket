@@ -40,7 +40,7 @@ namespace TouchSocket.Modbus
         public override bool CanSetDataHandlingAdapter => false;
 
         /// <inheritdoc/>
-        public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
+        public IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
             var waitData = this.m_waitHandlePool.GetWaitData(out var sign);
 
@@ -50,7 +50,7 @@ namespace TouchSocket.Modbus
 
                 this.Send(modbusTcpRequest);
                 waitData.SetCancellationToken(token);
-                var waitDataStatus = waitData.Wait(timeout);
+                var waitDataStatus = waitData.Wait(millisecondsTimeout);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = waitData.WaitResult;
@@ -64,7 +64,7 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token)
+        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
             var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
             try
@@ -73,7 +73,7 @@ namespace TouchSocket.Modbus
 
                 this.Send(modbusTcpRequest);
                 waitData.SetCancellationToken(token);
-                var waitDataStatus = await waitData.WaitAsync(timeout);
+                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = waitData.WaitResult;

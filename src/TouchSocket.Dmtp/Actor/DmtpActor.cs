@@ -133,7 +133,7 @@ namespace TouchSocket.Dmtp
         /// <exception cref="Exception"></exception>
         /// <exception cref="TokenVerifyException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        public virtual void Handshake(string verifyToken, string id, int timeout, Metadata metadata, CancellationToken token)
+        public virtual void Handshake(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
         {
             if (this.IsHandshaked)
             {
@@ -162,7 +162,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 this.SendJsonObject(P1_Handshake_Request, waitVerify);
-                switch (waitData.Wait(timeout))
+                switch (waitData.Wait(millisecondsTimeout))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -207,7 +207,7 @@ namespace TouchSocket.Dmtp
         /// <exception cref="Exception"></exception>
         /// <exception cref="TokenVerifyException"></exception>
         /// <exception cref="TimeoutException"></exception>
-        public virtual async Task HandshakeAsync(string verifyToken, string id, int timeout, Metadata metadata, CancellationToken token)
+        public virtual async Task HandshakeAsync(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
         {
             if (this.IsHandshaked)
             {
@@ -234,7 +234,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureFalseAwait();
-                switch (await waitData.WaitAsync(timeout).ConfigureFalseAwait())
+                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -745,37 +745,37 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public virtual bool Ping(int timeout = 5000)
+        public virtual bool Ping(int millisecondsTimeout = 5000)
         {
-            return this.PrivatePing(default, timeout);
+            return this.PrivatePing(default, millisecondsTimeout);
         }
 
         /// <inheritdoc/>
-        public virtual bool Ping(string targetId, int timeout = 5000)
+        public virtual bool Ping(string targetId, int millisecondsTimeout = 5000)
         {
             if (this.AllowRoute && this.TryFindDmtpActor(targetId).GetFalseAwaitResult() is DmtpActor actor)
             {
-                return actor.Ping(timeout);
+                return actor.Ping(millisecondsTimeout);
             }
-            return this.PrivatePing(targetId, timeout);
+            return this.PrivatePing(targetId, millisecondsTimeout);
         }
 
         /// <inheritdoc/>
-        public virtual Task<bool> PingAsync(int timeout = 5000)
+        public virtual Task<bool> PingAsync(int millisecondsTimeout = 5000)
         {
-            return this.PrivatePingAsync(default, timeout);
+            return this.PrivatePingAsync(default, millisecondsTimeout);
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> PingAsync(string targetId, int timeout = 5000)
+        public virtual async Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000)
         {
             if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureFalseAwait() is DmtpActor actor)
             {
-                return await actor.PingAsync(timeout).ConfigureFalseAwait();
+                return await actor.PingAsync(millisecondsTimeout).ConfigureFalseAwait();
             }
             else
             {
-                return await this.PrivatePingAsync(targetId, timeout).ConfigureFalseAwait();
+                return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureFalseAwait();
             }
         }
 
@@ -952,7 +952,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private bool PrivatePing(string targetId, int timeout)
+        private bool PrivatePing(string targetId, int millisecondsTimeout)
         {
             var waitPing = new WaitPing
             {
@@ -964,7 +964,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 this.SendJsonObject(P5_Ping_Request, waitPing);
-                switch (waitData.Wait(timeout))
+                switch (waitData.Wait(millisecondsTimeout))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -993,7 +993,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private async Task<bool> PrivatePingAsync(string targetId, int timeout)
+        private async Task<bool> PrivatePingAsync(string targetId, int millisecondsTimeout)
         {
             var waitPing = new WaitPing
             {
@@ -1005,7 +1005,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 this.SendJsonObject(P5_Ping_Request, waitPing);
-                switch (await waitData.WaitAsync(timeout))
+                switch (await waitData.WaitAsync(millisecondsTimeout))
                 {
                     case WaitDataStatus.SetRunning:
                         {

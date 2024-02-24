@@ -268,13 +268,13 @@ namespace TouchSocket.SerialPorts
         #region Connect
 
         /// <inheritdoc/>
-        public void Connect(int timeout, CancellationToken token)
+        public void Connect(int millisecondsTimeout, CancellationToken token)
         {
             this.Open();
         }
 
         /// <inheritdoc/>
-        public Task ConnectAsync(int timeout, CancellationToken token)
+        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             return Task.Run(this.Open);
         }

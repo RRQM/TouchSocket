@@ -41,7 +41,7 @@ namespace TouchSocket.Http
         #endregion 字段
 
         /// <inheritdoc/>
-        public override void Connect(int timeout, CancellationToken token)
+        public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
             if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
@@ -51,13 +51,13 @@ namespace TouchSocket.Http
                 try
                 {
                     this.Config.SetRemoteIPHost(proxyHost);
-                    base.Connect(timeout, token);
+                    base.Connect(millisecondsTimeout, token);
                     var request = new HttpRequest();
                     request.InitHeaders()
                         .SetHost(remoteHost.Host)
                         .SetProxyHost(remoteHost.Host)
                         .AsMethod("CONNECT");
-                    var response = this.Request(request, false, timeout, token);
+                    var response = this.Request(request, false, millisecondsTimeout, token);
                     if (response.IsProxyAuthenticationRequired)
                     {
                         if (credential is null)
@@ -76,10 +76,10 @@ namespace TouchSocket.Http
                         if (!response.KeepAlive)
                         {
                             base.Close("代理要求关闭连接，随后重写连接。");
-                            base.Connect(timeout, token);
+                            base.Connect(millisecondsTimeout, token);
                         }
 
-                        response = this.Request(request, false, timeout, token);
+                        response = this.Request(request, false, millisecondsTimeout, token);
                     }
 
                     if (response.StatusCode != 200)
@@ -94,12 +94,12 @@ namespace TouchSocket.Http
             }
             else
             {
-                base.Connect(timeout, token);
+                base.Connect(millisecondsTimeout, token);
             }
         }
 
         /// <inheritdoc/>
-        public override async Task ConnectAsync(int timeout, CancellationToken token)
+        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
@@ -109,13 +109,13 @@ namespace TouchSocket.Http
                 try
                 {
                     this.Config.SetRemoteIPHost(proxyHost);
-                    await base.ConnectAsync(timeout, token);
+                    await base.ConnectAsync(millisecondsTimeout, token);
                     var request = new HttpRequest();
                     request.InitHeaders()
                         .SetHost(remoteHost.Host)
                         .SetProxyHost(remoteHost.Host)
                         .AsMethod("CONNECT");
-                    var response = await this.RequestAsync(request, false, timeout, token);
+                    var response = await this.RequestAsync(request, false, millisecondsTimeout, token);
                     if (response.IsProxyAuthenticationRequired)
                     {
                         if (credential is null)
@@ -134,10 +134,10 @@ namespace TouchSocket.Http
                         if (!response.KeepAlive)
                         {
                             base.Close("代理要求关闭连接，随后重写连接。");
-                            await base.ConnectAsync(timeout, token);
+                            await base.ConnectAsync(millisecondsTimeout, token);
                         }
 
-                        response = await this.RequestAsync(request, timeout: timeout);
+                        response = await this.RequestAsync(request, millisecondsTimeout: millisecondsTimeout);
                     }
 
                     if (response.StatusCode != 200)
@@ -152,12 +152,12 @@ namespace TouchSocket.Http
             }
             else
             {
-                await base.ConnectAsync(timeout, token);
+                await base.ConnectAsync(millisecondsTimeout, token);
             }
         }
 
         /// <inheritdoc/>
-        public HttpResponse Request(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
+        public HttpResponse Request(HttpRequest request, bool onlyRequest = false, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace TouchSocket.Http
                     {
                         return default;
                     }
-                    switch (this.m_waitData.Wait(timeout))
+                    switch (this.m_waitData.Wait(millisecondsTimeout))
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitData.WaitResult;
@@ -196,11 +196,11 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public async Task<HttpResponse> RequestAsync(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
+        public async Task<HttpResponse> RequestAsync(HttpRequest request, bool onlyRequest = false, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             try
             {
-                await this.m_semaphoreForRequest.WaitAsync(timeout, token);
+                await this.m_semaphoreForRequest.WaitAsync(millisecondsTimeout, token);
                 this.m_getContent = false;
                 using (var byteBlock = new ByteBlock())
                 {
@@ -212,7 +212,7 @@ namespace TouchSocket.Http
                     {
                         return default;
                     }
-                    switch (await this.m_waitDataAsync.WaitAsync(timeout))
+                    switch (await this.m_waitDataAsync.WaitAsync(millisecondsTimeout))
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitDataAsync.WaitResult;
@@ -235,7 +235,7 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public HttpResponse RequestContent(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
+        public HttpResponse RequestContent(HttpRequest request, bool onlyRequest = false, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             try
             {
@@ -253,7 +253,7 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.m_waitData.Wait(timeout))
+                    switch (this.m_waitData.Wait(millisecondsTimeout))
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitData.WaitResult;
@@ -276,11 +276,11 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public async Task<HttpResponse> RequestContentAsync(HttpRequest request, bool onlyRequest = false, int timeout = 10 * 1000, CancellationToken token = default)
+        public async Task<HttpResponse> RequestContentAsync(HttpRequest request, bool onlyRequest = false, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             try
             {
-                await this.m_semaphoreForRequest.WaitAsync(timeout, token);
+                await this.m_semaphoreForRequest.WaitAsync(millisecondsTimeout, token);
                 this.m_getContent = true;
                 using (var byteBlock = new ByteBlock())
                 {
@@ -294,7 +294,7 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (await this.m_waitDataAsync.WaitAsync(timeout))
+                    switch (await this.m_waitDataAsync.WaitAsync(millisecondsTimeout))
                     {
                         case WaitDataStatus.SetRunning:
                             return this.m_waitData.WaitResult;
