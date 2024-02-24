@@ -12,8 +12,8 @@ title: Json序列化
 ## 一、说明
 在TouchSocket中，内置了Json序列化与反序列化。
 ```csharp showLineNumbers
-string jsonstr=SerializeConvert.ToJson(new object());//序列化
-object obj=SerializeConvert.FromJson<object>(jsonstr);//反序列化
+string jsonstr = SerializeConvert.ToJsonString(new object());//序列化
+object obj = SerializeConvert.FromJsonString<object>(jsonstr);//反序列化
 ```
 
 ## 二、动态调整的Json策略 弃用
