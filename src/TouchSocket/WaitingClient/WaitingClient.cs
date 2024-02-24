@@ -17,10 +17,10 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IReceiverObject, ISender
+    internal sealed class WaitingClient<TClient> :DisposableObject, IWaitingClient<TClient> where TClient : IReceiverObject, ISender
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        private CancellationTokenSource m_cancellationTokenSource;
+        //private CancellationTokenSource m_cancellationTokenSource;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
@@ -41,66 +41,68 @@ namespace TouchSocket.Sockets
             try
             {
                 this.m_semaphoreSlim.Wait(token);
-                if (token.CanBeCanceled)
-                {
-                    this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                }
-                else
-                {
-                    this.m_cancellationTokenSource = new CancellationTokenSource(5000);
-                }
-                using (this.m_cancellationTokenSource)
-                {
-                    if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
-                    {
-                        using (var receiver = session.CreateReceiver())
-                        {
-                            session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
 
-                            while (true)
+                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+                {
+                    using (var receiver = session.CreateReceiver())
+                    {
+                        session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+
+                        while (true)
+                        {
+                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
                             {
-                                using (var receiverResult = receiver.ReadAsync(this.m_cancellationTokenSource.Token).GetFalseAwaitResult())
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                if (this.WaitingOptions.FilterFunc == null)
                                 {
-                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                    return response;
                                 }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (var receiver = this.Client.CreateReceiver())
-                        {
-                            this.Client.Send(buffer, offset, length);
-                            while (true)
-                            {
-                                using (var receiverResult = receiver.ReadAsync(this.m_cancellationTokenSource.Token).GetFalseAwaitResult())
+                                else
                                 {
-                                    if (receiverResult.IsClosed)
-                                    {
-                                        this.Cancel();
-                                    }
-                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
-
-                                    if (this.WaitingOptions.FilterFunc == null)
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
                                     {
                                         return response;
                                     }
-                                    else
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var receiver = this.Client.CreateReceiver())
+                    {
+                        this.Client.Send(buffer, offset, length);
+                        while (true)
+                        {
+                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                            {
+                                if (receiverResult.IsClosed)
+                                {
+                                    throw new NotConnectedException();
+                                }
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                if (this.WaitingOptions.FilterFunc == null)
+                                {
+                                    return response;
+                                }
+                                else
+                                {
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
                                     {
-                                        if (this.WaitingOptions.FilterFunc.Invoke(response))
-                                        {
-                                            return response;
-                                        }
+                                        return response;
                                     }
                                 }
                             }
                         }
                     }
                 }
+
             }
             finally
             {
-                this.m_cancellationTokenSource = null;
                 this.m_semaphoreSlim.Release();
             }
         }
@@ -109,57 +111,59 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await this.m_semaphoreSlim.WaitAsync();
-                if (token.CanBeCanceled)
-                {
-                    this.m_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-                }
-                else
-                {
-                    this.m_cancellationTokenSource = new CancellationTokenSource(5000);
-                }
-                using (this.m_cancellationTokenSource)
-                {
-                    if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
-                    {
-                        using (var receiver = session.CreateReceiver())
-                        {
-                            await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                await this.m_semaphoreSlim.WaitAsync(token);
 
-                            while (true)
+                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+                {
+                    using (var receiver = session.CreateReceiver())
+                    {
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+
+                        while (true)
+                        {
+                            using (var receiverResult = await receiver.ReadAsync(token))
                             {
-                                using (var receiverResult = await receiver.ReadAsync(this.m_cancellationTokenSource.Token))
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                if (this.WaitingOptions.FilterFunc == null)
                                 {
-                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                    return response;
+                                }
+                                else
+                                {
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    {
+                                        return response;
+                                    }
                                 }
                             }
                         }
                     }
-                    else
+                }
+                else
+                {
+                    using (var receiver = this.Client.CreateReceiver())
                     {
-                        using (var receiver = this.Client.CreateReceiver())
+                        await this.Client.SendAsync(buffer, offset, length);
+                        while (true)
                         {
-                            await this.Client.SendAsync(buffer, offset, length);
-                            while (true)
+                            using (var receiverResult = await receiver.ReadAsync(token))
                             {
-                                using (var receiverResult = await receiver.ReadAsync(this.m_cancellationTokenSource.Token))
+                                if (receiverResult.IsClosed)
                                 {
-                                    if (receiverResult.IsClosed)
-                                    {
-                                        this.Cancel();
-                                    }
-                                    var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                    throw new NotConnectedException();
+                                }
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
-                                    if (this.WaitingOptions.FilterFunc == null)
+                                if (this.WaitingOptions.FilterFunc == null)
+                                {
+                                    return response;
+                                }
+                                else
+                                {
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
                                     {
                                         return response;
-                                    }
-                                    else
-                                    {
-                                        if (this.WaitingOptions.FilterFunc.Invoke(response))
-                                        {
-                                            return response;
-                                        }
                                     }
                                 }
                             }
@@ -169,17 +173,16 @@ namespace TouchSocket.Sockets
             }
             finally
             {
-                this.m_cancellationTokenSource = null;
                 this.m_semaphoreSlim.Release();
             }
         }
 
-        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token = default)
+        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token)
         {
             return this.SendThenResponse(buffer, offset, length, token).Data;
         }
 
-        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
+        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token)
         {
             return (await this.SendThenResponseAsync(buffer, offset, length, token)).Data;
         }
@@ -188,20 +191,20 @@ namespace TouchSocket.Sockets
 
         protected override void Dispose(bool disposing)
         {
-            this.Cancel();
+            //this.Cancel();
             this.Client = default;
             base.Dispose(disposing);
         }
 
-        private void Cancel()
-        {
-            try
-            {
-                this.m_cancellationTokenSource?.Cancel();
-            }
-            catch
-            {
-            }
-        }
+        //private void Cancel()
+        //{
+        //    try
+        //    {
+        //        this.m_cancellationTokenSource?.Cancel();
+        //    }
+        //    catch
+        //    {
+        //    }
+        //}
     }
 }

@@ -30,10 +30,10 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="timeout"></param>
-        public DmtpInvokeOption(int timeout) : base(timeout)
+        /// <param name="millisecondsTimeout"></param>
+        public DmtpInvokeOption(int millisecondsTimeout) : base(millisecondsTimeout)
         {
-            this.Timeout = timeout;
+            this.Timeout = millisecondsTimeout;
         }
 
         /// <summary>

@@ -51,15 +51,15 @@ namespace TouchSocket.Http
         /// 发起请求，并获取数据体
         /// </summary>
         /// <param name="request">请求体</param>
-        /// <param name="timeout">等待超时时间</param>
+        /// <param name="millisecondsTimeout">等待超时时间</param>
         /// <param name="token">结束等待令箭</param>
         /// <returns></returns>
-        public HttpResponse RequestContent(HttpRequest request, int timeout = 10 * 1000, CancellationToken token = default)
+        public HttpResponse RequestContent(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             var client = this.GetHttpClient();
             try
             {
-                return client.RequestContent(request, false, timeout, token);
+                return client.RequestContent(request, false, millisecondsTimeout, token);
             }
             finally
             {
@@ -71,15 +71,15 @@ namespace TouchSocket.Http
         /// 发起请求，并获取数据体
         /// </summary>
         /// <param name="request">请求体</param>
-        /// <param name="timeout">等待超时时间</param>
+        /// <param name="millisecondsTimeout">等待超时时间</param>
         /// <param name="token">结束等待令箭</param>
         /// <returns></returns>
-        public async Task<HttpResponse> RequestContentAsync(HttpRequest request, int timeout = 10000, CancellationToken token = default)
+        public async Task<HttpResponse> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
         {
             var client = await this.GetHttpClientAsync();
             try
             {
-                return await client.RequestContentAsync(request, false, timeout, token);
+                return await client.RequestContentAsync(request, false, millisecondsTimeout, token);
             }
             finally
             {

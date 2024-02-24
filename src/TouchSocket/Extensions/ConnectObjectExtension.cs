@@ -25,28 +25,28 @@ namespace TouchSocket.Sockets
         #region 连接
 
         /// <inheritdoc cref="IConnectObject.Connect(int, CancellationToken)"/>
-        public static void Connect(this IConnectObject client, int timeout = 5000)
+        public static void Connect(this IConnectObject client, int millisecondsTimeout = 5000)
         {
-            client.Connect(timeout, CancellationToken.None);
+            client.Connect(millisecondsTimeout, CancellationToken.None);
         }
 
         /// <inheritdoc cref="IConnectObject.ConnectAsync(int, CancellationToken)"/>
-        public static async Task ConnectAsync(this IConnectObject client, int timeout = 5000)
+        public static async Task ConnectAsync(this IConnectObject client, int millisecondsTimeout = 5000)
         {
-            await client.ConnectAsync(timeout, CancellationToken.None);
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None);
         }
 
         /// <summary>
         /// 尝试连接。不会抛出异常。
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static Result TryConnect(this IConnectObject client, int timeout = 5000)
+        public static Result TryConnect(this IConnectObject client, int millisecondsTimeout = 5000)
         {
             try
             {
-                client.Connect(timeout);
+                client.Connect(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)
@@ -59,13 +59,13 @@ namespace TouchSocket.Sockets
         /// 尝试连接。不会抛出异常。
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static async Task<Result> TryConnectAsync(this IConnectObject client, int timeout = 5000)
+        public static async Task<Result> TryConnectAsync(this IConnectObject client, int millisecondsTimeout = 5000)
         {
             try
             {
-                await client.ConnectAsync(timeout);
+                await client.ConnectAsync(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)

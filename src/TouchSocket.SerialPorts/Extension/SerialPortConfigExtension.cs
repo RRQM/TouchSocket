@@ -61,7 +61,7 @@ namespace TouchSocket.SerialPorts
         #region 连接
 
         /// <inheritdoc cref="IConnectObject.Connect(int, System.Threading.CancellationToken)"/>
-        public static TClient Connect<TClient>(this TClient client, string portName, int timeout = 5000) where TClient : ISerialPortClient
+        public static TClient Connect<TClient>(this TClient client, string portName, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -88,12 +88,12 @@ namespace TouchSocket.SerialPorts
                     });
                 }
             }
-            client.Connect(timeout);
+            client.Connect(millisecondsTimeout);
             return client;
         }
 
         /// <inheritdoc cref="IConnectObject.ConnectAsync(int, System.Threading.CancellationToken)"/>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string portName, int timeout = 5000) where TClient : ISerialPortClient
+        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string portName, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -120,7 +120,7 @@ namespace TouchSocket.SerialPorts
                     });
                 }
             }
-            await client.ConnectAsync(timeout);
+            await client.ConnectAsync(millisecondsTimeout);
             return client;
         }
 
@@ -129,13 +129,13 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static Result TryConnect<TClient>(this TClient client, int timeout = 5000) where TClient : ISerialPortClient
+        public static Result TryConnect<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
         {
             try
             {
-                client.Connect(timeout);
+                client.Connect(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)
@@ -149,13 +149,13 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int timeout = 5000) where TClient : ISerialPortClient
+        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
         {
             try
             {
-                await client.ConnectAsync(timeout);
+                await client.ConnectAsync(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)

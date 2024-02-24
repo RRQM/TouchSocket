@@ -67,14 +67,14 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="task"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+        public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan millisecondsTimeout)
         {
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
-                var delayTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);
+                var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
                 if (await Task.WhenAny(task, delayTask) == task)
                 {
                     timeoutCancellationTokenSource.Cancel();
@@ -88,14 +88,14 @@ namespace TouchSocket.Core
         /// 异步等待指定最大时间
         /// </summary>
         /// <param name="task"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static async Task WaitAsync(this Task task, TimeSpan timeout)
+        public static async Task WaitAsync(this Task task, TimeSpan millisecondsTimeout)
         {
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
-                var delayTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);
+                var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
                 if (await Task.WhenAny(task, delayTask) == task)
                 {
                     timeoutCancellationTokenSource.Cancel();

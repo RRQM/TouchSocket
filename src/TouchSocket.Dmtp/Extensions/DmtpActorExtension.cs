@@ -23,27 +23,27 @@ namespace TouchSocket.Dmtp
         #region Ping
 
         /// <inheritdoc cref="IDmtpActor.Ping(int)"/>
-        public static bool Ping(this IDmtpActorObject client, int timeout = 5000)
+        public static bool Ping(this IDmtpActorObject client, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.Ping(timeout);
+            return client.DmtpActor.Ping(millisecondsTimeout);
         }
 
         /// <inheritdoc cref="IDmtpActor.Ping(string,int)"/>
-        public static bool Ping(this IDmtpActorObject client, string targetId, int timeout = 5000)
+        public static bool Ping(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.Ping(targetId, timeout);
+            return client.DmtpActor.Ping(targetId, millisecondsTimeout);
         }
 
         /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
-        public static Task<bool> PingAsync(this IDmtpActorObject client, int timeout = 5000)
+        public static Task<bool> PingAsync(this IDmtpActorObject client, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.PingAsync(timeout);
+            return client.DmtpActor.PingAsync(millisecondsTimeout);
         }
 
         /// <inheritdoc cref="IDmtpActor.PingAsync(string,int)"/>
-        public static Task<bool> PingAsync(this IDmtpActorObject client, string targetId, int timeout = 5000)
+        public static Task<bool> PingAsync(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.PingAsync(targetId, timeout);
+            return client.DmtpActor.PingAsync(targetId, millisecondsTimeout);
         }
 
         #endregion Ping

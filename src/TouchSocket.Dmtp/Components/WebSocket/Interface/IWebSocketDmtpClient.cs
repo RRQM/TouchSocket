@@ -24,16 +24,16 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 异步连接
         /// </summary>
-        /// <param name="timeout">验证超时时间</param>
+        /// <param name="millisecondsTimeout">验证超时时间</param>
         /// <returns></returns>
-        Task ConnectAsync(int timeout = 5000);
+        Task ConnectAsync(int millisecondsTimeout = 5000);
 
         /// <summary>
         /// 异步连接
         /// </summary>
         /// <param name="token"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        Task ConnectAsync(CancellationToken token, int timeout = 5000);
+        Task ConnectAsync(CancellationToken token, int millisecondsTimeout = 5000);
     }
 }

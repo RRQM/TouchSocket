@@ -47,10 +47,10 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 使用基于Http升级的协议，连接Dmtp服务器
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="Exception"></exception>
-        public override void Connect(int timeout, CancellationToken token)
+        public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace TouchSocket.Dmtp
                 }
                 if (!this.Online)
                 {
-                    base.Connect(timeout, token);
+                    base.Connect(millisecondsTimeout, token);
                 }
 
                 var request = new HttpRequest()
@@ -76,7 +76,7 @@ namespace TouchSocket.Dmtp
                     this.SwitchProtocolToDmtp();
                     this.m_dmtpActor.Handshake(
 
-                        this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                        this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
                     return;
                 }
                 else
@@ -93,22 +93,22 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 异步使用基于Http升级的协议，连接Dmtp服务器
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public override async Task ConnectAsync(int timeout, CancellationToken token)
+        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreForConnect.WaitAsync(timeout, token);
+                await this.m_semaphoreForConnect.WaitAsync(millisecondsTimeout, token);
                 if (this.IsHandshaked)
                 {
                     return;
                 }
                 if (!this.Online)
                 {
-                    await base.ConnectAsync(timeout, token);
+                    await base.ConnectAsync(millisecondsTimeout, token);
                 }
 
                 var request = new HttpRequest()
@@ -121,7 +121,7 @@ namespace TouchSocket.Dmtp
                 if (response.StatusCode == 101)
                 {
                     this.SwitchProtocolToDmtp();
-                    await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                    await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
                     return;
                 }
                 else

@@ -32,7 +32,7 @@ namespace TouchSocket.Sockets
         private int expectedCount;
         private Action<ByteBlock, IRequestInfo> receivedCallBack;
         private Stopwatch stopwatch;
-        private int timeout;
+        private int millisecondsTimeout;
 
         private UdpDataAdapterTester(int multiThread)
         {
@@ -76,13 +76,13 @@ namespace TouchSocket.Sockets
         /// <param name="length"></param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="timeout">超时</param>
+        /// <param name="millisecondsTimeout">超时</param>
         /// <returns></returns>
-        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int timeout)
+        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int millisecondsTimeout)
         {
             this.count = 0;
             this.expectedCount = expectedCount;
-            this.timeout = timeout;
+            this.millisecondsTimeout = millisecondsTimeout;
             this.stopwatch = new Stopwatch();
             this.stopwatch.Start();
             Task.Run(() =>
@@ -92,7 +92,7 @@ namespace TouchSocket.Sockets
                     this.adapter.SendInput(null, buffer, offset, length);
                 }
             });
-            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.timeout))
+            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.millisecondsTimeout))
             {
                 this.stopwatch.Stop();
                 return this.stopwatch.Elapsed;
@@ -107,10 +107,10 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="timeout">超时</param>
-        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int timeout)
+        /// <param name="millisecondsTimeout">超时</param>
+        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
         {
-            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, timeout);
+            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
         }
 
         private void BeginSend()

@@ -31,9 +31,9 @@ namespace TouchSocket.Http
         /// <param name="cache"></param>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public delegate bool InsertHandler(FileCachePool cache, string key, byte[] value, TimeSpan timeout);
+        public delegate bool InsertHandler(FileCachePool cache, string key, byte[] value, TimeSpan millisecondsTimeout);
 
         #region Cache items access
 
@@ -48,13 +48,13 @@ namespace TouchSocket.Http
         public int Size => this.entriesByKey.Count;
 
         /// <summary>
-        /// Add a new cache value with the given timeout into the file cache
+        /// Add a new cache value with the given millisecondsTimeout into the file cache
         /// </summary>
         /// <param name="key">Key to add</param>
         /// <param name="value">Value to add</param>
-        /// <param name="timeout">Cache timeout (default is 0 - no timeout)</param>
+        /// <param name="millisecondsTimeout">Cache millisecondsTimeout (default is 0 - no millisecondsTimeout)</param>
         /// <returns>'true' if the cache value was added, 'false' if the given key was not added</returns>
-        public bool Add(string key, byte[] value, TimeSpan timeout = new TimeSpan())
+        public bool Add(string key, byte[] value, TimeSpan millisecondsTimeout = new TimeSpan())
         {
             using (new WriteLock(this.lockEx))
             {
@@ -62,7 +62,7 @@ namespace TouchSocket.Http
                 this.entriesByKey.Remove(key);
 
                 // Update the cache entry
-                this.entriesByKey.Add(key, new MemCacheEntry(value, timeout));
+                this.entriesByKey.Add(key, new MemCacheEntry(value, millisecondsTimeout));
 
                 return true;
             }
@@ -107,15 +107,15 @@ namespace TouchSocket.Http
         #region Cache management methods
 
         /// <summary>
-        /// Insert a new cache path with the given timeout into the file cache
+        /// Insert a new cache path with the given millisecondsTimeout into the file cache
         /// </summary>
         /// <param name="path">Path to insert</param>
         /// <param name="prefix">Cache prefix (default is "/")</param>
         /// <param name="filter">Cache filter (default is "*.*")</param>
-        /// <param name="timeout">Cache timeout (default is 0 - no timeout)</param>
-        /// <param name="handler">Cache insert handler (default is 'return cache.Add(key, value, timeout)')</param>
+        /// <param name="millisecondsTimeout">Cache millisecondsTimeout (default is 0 - no millisecondsTimeout)</param>
+        /// <param name="handler">Cache insert handler (default is 'return cache.Add(key, value, millisecondsTimeout)')</param>
         /// <returns>'true' if the cache path was setup, 'false' if failed to setup the cache path</returns>
-        public bool InsertPath(string path, string prefix = "/", string filter = "*.*", TimeSpan timeout = new TimeSpan(), InsertHandler handler = null)
+        public bool InsertPath(string path, string prefix = "/", string filter = "*.*", TimeSpan millisecondsTimeout = new TimeSpan(), InsertHandler handler = null)
         {
             handler ??= (FileCachePool cache, string key, byte[] value, TimeSpan timespan) => cache.Add(key, value, timespan);
 
@@ -125,13 +125,13 @@ namespace TouchSocket.Http
             using (new WriteLock(this.lockEx))
             {
                 // Add the given path to the cache
-                this.pathsByKey.Add(path, new FileCacheEntry(this, prefix, path, filter, handler, timeout));
+                this.pathsByKey.Add(path, new FileCacheEntry(this, prefix, path, filter, handler, millisecondsTimeout));
                 // Create entries by path map
                 this.entriesByPath[path] = new HashSet<string>();
             }
 
             // Insert the cache path
-            return this.InsertPathInternal(path, path, prefix, timeout, handler);
+            return this.InsertPathInternal(path, path, prefix, millisecondsTimeout, handler);
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace TouchSocket.Http
             }
         };
 
-        private bool InsertFileInternal(string path, string file, string key, TimeSpan timeout, InsertHandler handler)
+        private bool InsertFileInternal(string path, string file, string key, TimeSpan millisecondsTimeout, InsertHandler handler)
         {
             try
             {
@@ -326,7 +326,7 @@ namespace TouchSocket.Http
 
                 // Load the cache file content
                 var content = File.ReadAllBytes(file);
-                if (!handler(this, key, content, timeout))
+                if (!handler(this, key, content, millisecondsTimeout))
                     return false;
 
                 using (new WriteLock(this.lockEx))
@@ -357,7 +357,7 @@ namespace TouchSocket.Http
             catch (Exception) { return false; }
         }
 
-        private bool InsertPathInternal(string root, string path, string prefix, TimeSpan timeout, InsertHandler handler)
+        private bool InsertPathInternal(string root, string path, string prefix, TimeSpan millisecondsTimeout, InsertHandler handler)
         {
             try
             {
@@ -369,7 +369,7 @@ namespace TouchSocket.Http
                     var key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
 
                     // Recursively insert sub-directory
-                    if (!this.InsertPathInternal(root, item, key, timeout, handler))
+                    if (!this.InsertPathInternal(root, item, key, millisecondsTimeout, handler))
                         return false;
                 }
 
@@ -378,7 +378,7 @@ namespace TouchSocket.Http
                     var key = keyPrefix + HttpUtility.UrlDecode(Path.GetFileName(item));
 
                     // Insert file into the cache
-                    if (!this.InsertFileInternal(root, item, key, timeout, handler))
+                    if (!this.InsertFileInternal(root, item, key, millisecondsTimeout, handler))
                         return false;
                 }
 

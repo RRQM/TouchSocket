@@ -96,7 +96,7 @@ namespace TouchSocket.Sockets
         #region 连接
 
         /// <inheritdoc cref="IConnectObject.Connect(int, System.Threading.CancellationToken)"/>
-        public static TClient Connect<TClient>(this TClient client, IPHost ipHost, int timeout = 5000) where TClient : ITcpClient
+        public static TClient Connect<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ITcpClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -110,12 +110,12 @@ namespace TouchSocket.Sockets
                 config = client.Config;
                 config.SetRemoteIPHost(ipHost);
             }
-            client.Connect(timeout);
+            client.Connect(millisecondsTimeout);
             return client;
         }
 
         /// <inheritdoc cref="IConnectObject.ConnectAsync(int, System.Threading.CancellationToken)"/>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, IPHost ipHost, int timeout = 5000) where TClient : ITcpClient
+        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, IPHost ipHost, int millisecondsTimeout = 5000) where TClient : ITcpClient
         {
             TouchSocketConfig config;
             if (client.Config == null)
@@ -129,7 +129,7 @@ namespace TouchSocket.Sockets
                 config = client.Config;
                 config.SetRemoteIPHost(ipHost);
             }
-            await client.ConnectAsync(timeout);
+            await client.ConnectAsync(millisecondsTimeout);
             return client;
         }
 
@@ -138,13 +138,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static Result TryConnect<TClient>(this TClient client, int timeout = 5000) where TClient : ITcpClient
+        public static Result TryConnect<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ITcpClient
         {
             try
             {
-                client.Connect(timeout);
+                client.Connect(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)
@@ -158,13 +158,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="client"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
-        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int timeout = 5000) where TClient : ITcpClient
+        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ITcpClient
         {
             try
             {
-                await client.ConnectAsync(timeout);
+                await client.ConnectAsync(millisecondsTimeout);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)

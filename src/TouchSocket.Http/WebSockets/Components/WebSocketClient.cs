@@ -49,17 +49,17 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 连接到ws服务器
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="WebSocketConnectException"></exception>
-        public override void Connect(int timeout, CancellationToken token)
+        public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
                 this.m_semaphoreSlim.Wait(token);
                 if (!this.Online)
                 {
-                    base.Connect(timeout, token);
+                    base.Connect(millisecondsTimeout, token);
                 }
 
                 var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
@@ -68,7 +68,7 @@ namespace TouchSocket.Http.WebSockets
                 this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)))
                     .GetFalseAwaitResult();
 
-                var response = this.Request(request, timeout: timeout, token: token);
+                var response = this.Request(request, millisecondsTimeout: millisecondsTimeout, token: token);
                 if (response.StatusCode != 101)
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
@@ -92,14 +92,14 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public override async Task ConnectAsync(int timeout, CancellationToken token)
+        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreSlim.WaitAsync(timeout, token);
+                await this.m_semaphoreSlim.WaitAsync(millisecondsTimeout, token);
                 if (!this.Online)
                 {
-                    await base.ConnectAsync(timeout, token);
+                    await base.ConnectAsync(millisecondsTimeout, token);
                 }
 
                 var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
@@ -108,7 +108,7 @@ namespace TouchSocket.Http.WebSockets
 
                 await this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
-                var response = await this.RequestAsync(request, timeout: timeout, token: token);
+                var response = await this.RequestAsync(request, millisecondsTimeout: millisecondsTimeout, token: token);
                 if (response.StatusCode != 101)
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));

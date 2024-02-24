@@ -21,17 +21,17 @@ namespace TouchSocket.Rpc
     {
         static InvokeOption()
         {
-            OnlySend = new InvokeOption(timeout: 5000)
+            OnlySend = new InvokeOption(millisecondsTimeout: 5000)
             {
                 FeedbackType = FeedbackType.OnlySend
             };
 
-            WaitSend = new InvokeOption(timeout: 5000)
+            WaitSend = new InvokeOption(millisecondsTimeout: 5000)
             {
                 FeedbackType = FeedbackType.WaitSend
             };
 
-            WaitInvoke = new InvokeOption(timeout: 5000)
+            WaitInvoke = new InvokeOption(millisecondsTimeout: 5000)
             {
                 FeedbackType = FeedbackType.WaitInvoke
             };
@@ -47,10 +47,10 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="timeout"></param>
-        public InvokeOption(int timeout)
+        /// <param name="millisecondsTimeout"></param>
+        public InvokeOption(int millisecondsTimeout)
         {
-            this.Timeout = timeout;
+            this.Timeout = millisecondsTimeout;
         }
 
         /// <summary>

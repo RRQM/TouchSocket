@@ -49,16 +49,16 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        public IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token)
+        public IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                this.m_semaphoreSlimForRequest.Wait(timeout, token);
+                this.m_semaphoreSlimForRequest.Wait(millisecondsTimeout, token);
                 var modbusTcpRequest = new ModbusRtuRequest(request);
 
                 this.Send(modbusTcpRequest);
                 this.m_waitData.SetCancellationToken(token);
-                var waitDataStatus = this.m_waitData.Wait(timeout);
+                var waitDataStatus = this.m_waitData.Wait(millisecondsTimeout);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = m_waitData.WaitResult;
@@ -72,17 +72,17 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token)
+        public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreSlimForRequest.WaitAsync(timeout, token);
+                await this.m_semaphoreSlimForRequest.WaitAsync(millisecondsTimeout, token);
 
                 var modbusTcpRequest = new ModbusRtuRequest(request);
 
                 this.Send(modbusTcpRequest);
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(timeout);
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;

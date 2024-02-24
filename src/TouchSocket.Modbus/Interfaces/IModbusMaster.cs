@@ -24,18 +24,18 @@ namespace TouchSocket.Modbus
         /// 发送Modbus请求
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        IModbusResponse SendModbusRequest(ModbusRequest request, int timeout, CancellationToken token);
+        IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
 
         /// <summary>
         /// 异步发送Modbus请求
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int timeout, CancellationToken token);
+        Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
     }
 }

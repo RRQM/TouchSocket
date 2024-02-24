@@ -91,9 +91,9 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 进行Dmtp协议的握手连接
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
-        public override void Connect(int timeout, CancellationToken token)
+        public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -104,11 +104,11 @@ namespace TouchSocket.Dmtp
                 }
                 if (!this.Online)
                 {
-                    base.Connect(timeout, token);
+                    base.Connect(millisecondsTimeout, token);
                 }
 
                 this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
-                    this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                    this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
             }
             finally
             {
@@ -119,25 +119,25 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 异步进行Dmtp协议的握手连接
         /// </summary>
-        /// <param name="timeout"></param>
+        /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public override async Task ConnectAsync(int timeout, CancellationToken token)
+        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
-                await this.m_semaphoreForConnect.WaitAsync(timeout, token);
+                await this.m_semaphoreForConnect.WaitAsync(millisecondsTimeout, token);
                 if (this.IsHandshaked)
                 {
                     return;
                 }
                 if (!this.Online)
                 {
-                    await base.ConnectAsync(timeout, token);
+                    await base.ConnectAsync(millisecondsTimeout, token);
                 }
 
                 await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
-                     this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, timeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                     this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
             }
             finally
             {
