@@ -31,7 +31,7 @@ namespace GenerateProxyFromServerConsoleApp
             return new Type[] { typeof(IRpcClient) };
         }
 
-        public override string GetDescription(MethodInstance methodInstance)
+        public override string GetDescription(RpcMethod methodInstance)
         {
             return base.GetDescription(methodInstance);
         }

@@ -410,9 +410,78 @@ while (true)
 }
 ```
 
-## 七、鉴权、授权
+## 七、数据格式化
 
-### 7.1 请求插件实现
+数据格式化，就是对`WebApi`执行前后的数据进行序列化和反序列化。一般来说，常用的格式化类型有两种，一种是`JSON`，另一种是`XML`。具体的，应该根据`Accept`请求头中的数据格式来选择。默认情况下：
+
+- 如果Accept请求头中包含`application/json`、`text/json`，则使用JSON格式化。
+- 如果Accept请求头中包含`application/xml`、`text/xml`，则使用XML格式化。
+- 如果Accept请求头中包含`text/plain`，则使用文本格式化(如果是复杂类型，则依然会按照Json或则Xml)。
+
+### 7.1 格式化配置
+
+在添加`WebApi`插件时，可以通过`ConfigureConverter`方法来配置数据格式化。
+
+```csharp {4} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        //配置转换器
+
+        //converter.Clear();//可以选择性的清空现有所有格式化器
+
+        //添加Json格式化器，可以自定义Json的一些设置
+        converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() {Formatting= Newtonsoft.Json.Formatting.None } );
+
+        //添加Xml格式化器
+        converter.AddXmlSerializerFormatter();
+    });
+})
+```
+
+### 7.2 自定义格式化器
+
+TouchSocket的`WebApi`插件支持自定义格式化器。
+
+新建一个类，实现`ISerializerFormatter`接口，并实现相关方法。
+
+```csharp showLineNumbers
+class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
+{
+    public int Order { get; set; }
+
+    public bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
+    {
+        //反序列化
+        throw new NotImplementedException();
+    }
+
+    public bool TrySerialize(HttpContext state, in object target, out string source)
+    {
+        //序列化
+        throw new NotImplementedException();
+    }
+}
+```
+
+添加格式化器
+
+```csharp {6} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        converter.Add(new MySerializerFormatter());
+    });
+})
+```
+
+## 八、鉴权、授权
+
+### 8.1 请求插件实现
 
 在Aspnetcore中，鉴权与授权是通过中间件实现的。而TouchSocket的WebApi（HttpService）在设计时也可以使用类似方式实现该功能。下列就以伪代码jwt鉴权示例。
 
@@ -467,12 +536,12 @@ class AuthenticationPlugin : PluginBase, IHttpPlugin
 :::  
 
 
-### 7.2 Rpc Aop实现
+### 8.2 Rpc Aop实现
 
 WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实现鉴权。具体请看[Rpc服务AOP](./rpcactionfilter.mdx)
 
 
-## 八、跨域
+## 九、跨域
 
 在`WebApi`中的跨域，除了[Cors跨域](./cors.mdx)全局设置之外，还支持特性设置，进行更细粒度的控制。
 

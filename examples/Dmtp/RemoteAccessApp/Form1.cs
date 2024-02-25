@@ -49,7 +49,7 @@ namespace RemoteAccessApp
                     this.m_client.Logger.Warning("路径不可为空。");
                     return;
                 }
-                var result = await this.m_client.GetRemoteAccessActor().CreateDirectoryAsync(this.textBox1.Text, timeout: 30 * 1000);
+                var result = await this.m_client.GetRemoteAccessActor().CreateDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
                 this.m_client.Logger.Info(result.ToString());
             }
             catch (Exception ex)
@@ -67,7 +67,7 @@ namespace RemoteAccessApp
                     this.m_client.Logger.Warning("路径不可为空。");
                     return;
                 }
-                var result = await this.m_client.GetRemoteAccessActor().DeleteDirectoryAsync(this.textBox1.Text, timeout: 30 * 1000);
+                var result = await this.m_client.GetRemoteAccessActor().DeleteDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
                 this.m_client.Logger.Info(result.ToString());
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace RemoteAccessApp
                     this.m_client.Logger.Warning("路径不可为空。");
                     return;
                 }
-                var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync(this.textBox1.Text, timeout: 30 * 1000);
+                var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
                 this.m_client.Logger.Info($"结果：{result.ResultCode}，信息：{result.Message}，更多信息请调试获得。");
             }
             catch (Exception ex)
@@ -103,7 +103,7 @@ namespace RemoteAccessApp
                     this.m_client.Logger.Warning("路径不可为空。");
                     return;
                 }
-                var result = await this.m_client.GetRemoteAccessActor().DeleteFileAsync(this.textBox1.Text, timeout: 30 * 1000);
+                var result = await this.m_client.GetRemoteAccessActor().DeleteFileAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
                 this.m_client.Logger.Info(result.ToString());
             }
             catch (Exception ex)
@@ -121,7 +121,7 @@ namespace RemoteAccessApp
                     this.m_client.Logger.Warning("路径不可为空。");
                     return;
                 }
-                var result = await this.m_client.GetRemoteAccessActor().GetFileInfoAsync(this.textBox1.Text, timeout: 30 * 1000);
+                var result = await this.m_client.GetRemoteAccessActor().GetFileInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
                 this.m_client.Logger.Info($"结果：{result.ResultCode}，信息：{result.Message}更多信息请调试获得。");
             }
             catch (Exception ex)
