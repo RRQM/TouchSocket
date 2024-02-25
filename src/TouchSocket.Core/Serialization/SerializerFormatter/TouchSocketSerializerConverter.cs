@@ -33,13 +33,7 @@ namespace TouchSocket.Core
             {
                 throw new ArgumentNullException();
             }
-            foreach (var item in this.m_converters)
-            {
-                if (item.GetType() == converter.GetType())
-                {
-                    return;
-                }
-            }
+            this.m_converters.RemoveAll(x => x.GetType() == converter.GetType());
 
             this.m_converters.Add(converter);
 
