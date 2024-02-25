@@ -48,7 +48,21 @@ namespace WebApiServerApp
 
                    a.Add<AuthenticationPlugin>();
 
-                   a.UseWebApi();
+                   a.UseWebApi()
+                   .ConfigureConverter(converter =>
+                   {
+                       //配置转换器
+
+                       //converter.Clear();//可以选择性的清空现有所有格式化器
+
+                       //添加Json格式化器，可以自定义Json的一些设置
+                       //converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() {Formatting= Newtonsoft.Json.Formatting.None } );
+
+                       //添加Xml格式化器
+                       //converter.AddXmlSerializerFormatter();
+
+                       //converter.Add(new MySerializerFormatter());
+                   });
 
                    a.UseSwagger()//使用Swagger页面
                    .UseLaunchBrowser();//启动浏览器
@@ -202,6 +216,23 @@ namespace WebApiServerApp
             //   此处可以做一些授权相关的。
             //}
             await e.InvokeNext();
+        }
+    }
+
+    class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
+    {
+        public int Order { get; set; }
+
+        public bool TryDeserialize(HttpContext state, in string source, Type targetType, out object target)
+        {
+            //反序列化
+            throw new NotImplementedException();
+        }
+
+        public bool TrySerialize(HttpContext state, in object target, out string source)
+        {
+            //序列化
+            throw new NotImplementedException();
         }
     }
 }

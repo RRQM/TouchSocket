@@ -22,7 +22,7 @@ namespace ClientConsoleApp
                     .SetHost(client.RemoteIPHost.Host)
                     .AsGet();
 
-                var respose = client.Request(request, timeout: 1000 * 10);
+                var respose = client.Request(request, false,1000 * 10);
                 Console.WriteLine(respose.GetBody());//将接收的数据，一次性转为utf8编码的字符串
             }
 
@@ -34,7 +34,7 @@ namespace ClientConsoleApp
                     .SetHost(client.RemoteIPHost.Host)
                     .AsGet();
 
-                var respose = client.Request(request, timeout: 1000 * 10);
+                var respose = client.Request(request, false, 1000 * 10);
 
                 //一次性接收字节
                 if (respose.TryGetContent(out var content))

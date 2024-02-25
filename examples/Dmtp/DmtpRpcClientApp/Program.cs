@@ -134,7 +134,7 @@ namespace DmtpClientApp
             this.m_route = route;
         }
 
-        public override string GetInvokenKey(MethodInstance methodInstance)
+        public override string GetInvokenKey(RpcMethod methodInstance)
         {
             if (this.m_route.IsNullOrEmpty())
             {
