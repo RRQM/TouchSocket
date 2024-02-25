@@ -56,7 +56,7 @@ namespace WebApiServerApp
                        //converter.Clear();//可以选择性的清空现有所有格式化器
 
                        //添加Json格式化器，可以自定义Json的一些设置
-                       //converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() {Formatting= Newtonsoft.Json.Formatting.None } );
+                       converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings() { Formatting = Newtonsoft.Json.Formatting.None });
 
                        //添加Xml格式化器
                        //converter.AddXmlSerializerFormatter();
@@ -95,6 +95,16 @@ namespace WebApiServerApp
         public int Sum(int a, int b)
         {
             return a + b;
+        }
+
+        [WebApi(HttpMethodType.GET)]
+        public MyClass GetMyClass()
+        {
+            return new MyClass()
+            {
+                A = 1,
+                B = 2
+            };
         }
 
         [WebApi(HttpMethodType.POST)]
