@@ -11,9 +11,9 @@ namespace DmtpConsoleApp
         static void Main(string[] args)
         {
             ConsoleAction action = new ConsoleAction();
-            action.Add("1","测试连接", Connect_1);
-            action.Add("2","测试以普通Tcp连接", Connect_2);
-            action.Add("3","发送消息", Send);
+            action.Add("1", "测试连接", Connect_1);
+            action.Add("2", "测试以普通Tcp连接", Connect_2);
+            action.Add("3", "发送消息", Send);
             action.OnException += Action_OnException;
             var service = CreateTcpDmtpService();
 
@@ -24,22 +24,22 @@ namespace DmtpConsoleApp
 
         private static void Action_OnException(Exception obj)
         {
-            Console.WriteLine(  obj.Message);
+            Console.WriteLine(obj.Message);
         }
 
         static void Send()
         {
             using var client = new TcpDmtpClient();
-          
+
             client.Setup(new TouchSocketConfig()
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
                 })
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     //此处使用委托注册插件。和类插件功能一样
-                    a.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), async (object s, DmtpMessageEventArgs e) => 
+                    a.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), async (object s, DmtpMessageEventArgs e) =>
                     {
                         string msg = e.DmtpMessage.BodyByteBlock.ToString();
                         await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
@@ -65,7 +65,7 @@ namespace DmtpConsoleApp
             //文件传输会用[25,35)的协议。
 
             //此处使用1000，基本就不会冲突。
-            client.Send(1000,Encoding.UTF8.GetBytes("hello"));
+            client.Send(1000, Encoding.UTF8.GetBytes("hello"));
         }
 
         /// <summary>
@@ -79,17 +79,32 @@ namespace DmtpConsoleApp
             {
                 //此处接收服务器返回的消息
 
-                var head = e.ByteBlock.ToArray(0,2);
+                var head = e.ByteBlock.ToArray(0, 2);
                 e.ByteBlock.Seek(2, SeekOrigin.Begin);
-                var flags = e.ByteBlock.ReadUInt16( EndianType.Big);
+                var flags = e.ByteBlock.ReadUInt16(EndianType.Big);
                 var length = e.ByteBlock.ReadInt32(EndianType.Big);
 
                 var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
 
-                ConsoleLogger.Default.Info($"收到响应：flags={flags}，length={length}，json={json}");
+                ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
                 return Task.CompletedTask;
             };
 
+            #region 基础Flag协议
+            Console.WriteLine($"{nameof(DmtpActor.P0_Close)}-flag-->{DmtpActor.P0_Close}");
+            Console.WriteLine($"{nameof(DmtpActor.P1_Handshake_Request)}-flag-->{DmtpActor.P1_Handshake_Request}");
+            Console.WriteLine($"{nameof(DmtpActor.P2_Handshake_Response)}-flag-->{DmtpActor.P2_Handshake_Response}");
+            Console.WriteLine($"{nameof(DmtpActor.P3_ResetId_Request)}-flag-->{DmtpActor.P3_ResetId_Request}");
+            Console.WriteLine($"{nameof(DmtpActor.P4_ResetId_Response)}-flag-->{DmtpActor.P4_ResetId_Response}");
+            Console.WriteLine($"{nameof(DmtpActor.P5_Ping_Request)}-flag-->{DmtpActor.P5_Ping_Request}");
+            Console.WriteLine($"{nameof(DmtpActor.P6_Ping_Response)}-flag-->{DmtpActor.P6_Ping_Response}");
+            Console.WriteLine($"{nameof(DmtpActor.P7_CreateChannel_Request)}-flag-->{DmtpActor.P7_CreateChannel_Request}");
+            Console.WriteLine($"{nameof(DmtpActor.P8_CreateChannel_Response)}-flag-->{DmtpActor.P8_CreateChannel_Response}");
+            Console.WriteLine($"{nameof(DmtpActor.P9_ChannelPackage)}-flag-->{DmtpActor.P9_ChannelPackage}");
+            #endregion
+
+
+            #region 连接
             //开始链接服务器
             tcpClient.Connect("127.0.0.1:7789");
 
@@ -112,6 +127,24 @@ namespace DmtpConsoleApp
 
                 tcpClient.Send(byteBlock);
             }
+            #endregion
+
+            #region Ping
+
+            json = "{\"Sign\":2,\"Route\":false,\"SourceId\":null,\"TargetId\":null}";
+            jsonBytes = Encoding.UTF8.GetBytes(json);
+
+            using (var byteBlock = new ByteBlock())
+            {
+                //按照Head+Flags+Length+Data的格式。
+                byteBlock.Write(Encoding.ASCII.GetBytes("dm"));
+                byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)5));
+                byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
+                byteBlock.Write(jsonBytes);
+
+                tcpClient.Send(byteBlock);
+            }
+            #endregion
 
             await Task.Delay(2000);
         }
@@ -138,6 +171,8 @@ namespace DmtpConsoleApp
                     Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
                 }));
             client.Connect();
+
+            client.Ping();
 
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
         }
@@ -202,7 +237,7 @@ namespace DmtpConsoleApp
                 await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
                 //向客户端回发消息
-                client.Send(1001,Encoding.UTF8.GetBytes("收到"));
+                client.Send(1001, Encoding.UTF8.GetBytes("收到"));
                 return;
             }
 
