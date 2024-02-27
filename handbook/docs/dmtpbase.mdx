@@ -67,7 +67,7 @@ internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
 
 为使Dmtp服务器支持跨语言，Dmtp在设计之初就预留了跨语言连接的便利性。诚如[Dmtp描述](./dmtpdescription.mdx)所示，其基础数据报文为`Flags+Length+Data`。而框架内部的Handshake、Ping、Pong、Close等指令均是采用Json数据格式。但是及时如此，连接时的真正数据，还与其基础协议有关。具体如下：
 
-以连接、操作TcpDmtpService为例。其基础协议即为tcp，则使用常规的tcp客户端即可模拟链接。
+以连接、操作`TcpDmtpService`为例。其基础协议即为`tcp`，则使用常规的`tcp`客户端即可模拟链接。
 
 ```csharp showLineNumbers
 using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
@@ -116,18 +116,49 @@ await Task.Delay(2000);
 收到的Json字符串，会返回服务器最终修改的Token、Metadata。同时还包括分配或指定的Id。Sign会与请求时一致，表示这是同一组请求。Status等于1即为连接成功。其他值则可能在Message表明连接失败的原因。
 
 ```
-收到响应：flags=2，length=81，json={"Token":"Dmtp","Metadata":{"a":"a"},"Id":"2","Message":null,"Sign":1,"Status":1}
+收到响应：flags=2,length=124,json={"Token":"Dmtp","Metadata":{"a":"a"},"Id":"1","Message":null,"Sign":1,"Status":1}
 ```
 
 其他Json请求，包括：
 
 【请求连接】
 
+- Token：连接令牌，字符串类型。
+- Metadata：连接元数据，字典类型。
+- Id：初始连接Id，字符串类型。
+- Sign：请求序号，整数类型，应当每次请求递增。
+- Status(仅返回时携带)：连接状态，整数类型，为1时成功，其他状态可以获取Message。
+- Message(仅返回时携带)：连接消息。
+
 ```javascript
 {"Token":"Dmtp","Metadata":{"a":"a"},"Id":null,"Sign":1}
 ```
 
-待续。。。
+【Ping】
+
+- Sign：请求序号，整数类型，应当每次请求递增。
+- Status(仅返回时携带)：连接状态，整数类型，为1时成功，其他状态可以获取Message。
+- Message(仅返回时携带)：连接消息。
+- Route：是否路由，布尔类型，当TargetId不为空时应设为True。
+- SourceId：源Id，字符串类型，当需要Ping其他客户端时，应该将该值设为自身Id，以保证返回的信息能够顺利路由回来。
+- TargetId：目标Id，字符串类型，当需要Ping其他客户端时，应该将该值设为目标Id，以保证信息能够顺利送达。
+
+```javascript
+{"Sign":0,"Status":0,"Message":null,"Route":false,"SourceId":null,"TargetId":null}
+```
+
+【Close】
+
+Close报文直接采用utf8编码的字符串。
+```
+"close"
+```
+
+:::note 备注
+
+DMTP基础功能是比较容易跨语言的，但这并不意味着DMTP所有的功能都支持。其扩展功能，则需要实际的跨平台设计。不过依靠简单的Head+Flags+Length+Data的格式，也能自己实现很多的功能。
+
+:::  
 
 ## 二、Id同步
 
