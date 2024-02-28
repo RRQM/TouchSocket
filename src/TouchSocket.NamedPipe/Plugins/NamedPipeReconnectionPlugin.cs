@@ -140,7 +140,7 @@ namespace TouchSocket.NamedPipe
         {
             base.Loaded(pluginManager);
             pluginManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
-            pluginManager.Add<TClient, DisconnectEventArgs>(nameof(INamedPipeDisconnectedPlugin), this.OnNamedPipeDisconnected);
+            pluginManager.Add<TClient, DisconnectEventArgs>(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this.OnNamedPipeDisconnected);
         }
 
         private Task OnLoadedConfig(object sender, ConfigEventArgs e)
