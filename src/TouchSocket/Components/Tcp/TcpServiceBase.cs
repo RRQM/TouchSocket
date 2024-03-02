@@ -26,51 +26,31 @@ namespace TouchSocket.Sockets
     {
         private readonly ConcurrentStack<TcpCore> m_tcpCores = new ConcurrentStack<TcpCore>();
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public int Count => this.SocketClients.Count;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public abstract int MaxCount { get; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public abstract IEnumerable<TcpNetworkMonitor> Monitors { get; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public abstract ISocketClientCollection SocketClients { get; }
 
-        /// <summary>
-        /// 添加一个地址监听。支持在服务器运行过程中动态添加。
-        /// </summary>
-        /// <param name="options"></param>
+        /// <inheritdoc/>
         public abstract void AddListen(TcpListenOption options);
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public abstract void Clear();
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
         public IEnumerable<string> GetIds()
         {
             return this.SocketClients.GetIds();
         }
 
-        /// <summary>
-        /// 移除一个地址监听。支持在服务器运行过程中动态移除。
-        /// </summary>
-        /// <param name="monitor">监听器</param>
-        /// <returns>返回是否已成功移除</returns>
+        /// <inheritdoc/>
         public abstract bool RemoveListen(TcpNetworkMonitor monitor);
 
         /// <summary>
@@ -108,11 +88,7 @@ namespace TouchSocket.Sockets
             this.m_tcpCores.Push(tcpCore);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         public abstract bool SocketClientExist(string id);
 
         internal Task OnInternalConnected(ISocketClient socketClient, ConnectedEventArgs e)
@@ -187,17 +163,7 @@ namespace TouchSocket.Sockets
 
         #region Id发送
 
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <inheritdoc/>
         public void Send(string id, byte[] buffer, int offset, int length)
         {
             if (this.SocketClients.TryGetSocketClient(id, out var client))
@@ -210,11 +176,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="requestInfo"></param>
         public void Send(string id, IRequestInfo requestInfo)
         {
             if (this.SocketClients.TryGetSocketClient(id, out var client))
@@ -227,34 +189,30 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSocketClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="NotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <inheritdoc/>
         public Task SendAsync(string id, byte[] buffer, int offset, int length)
         {
-            return this.SocketClients.TryGetSocketClient(id, out var client)
-                ? client.SendAsync(buffer, offset, length)
-                : throw new ClientNotFindException(TouchSocketResource.ClientNotFind.GetDescription(id));
+            if (this.SocketClients.TryGetSocketClient(id, out var client))
+            {
+                return client.SendAsync(buffer, offset, length);
+            }
+            else
+            {
+                throw new ClientNotFindException(TouchSocketResource.ClientNotFind.GetDescription(id));
+            }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="requestInfo"></param>
         public Task SendAsync(string id, IRequestInfo requestInfo)
         {
-            return this.SocketClients.TryGetSocketClient(id, out var client)
-                ? client.SendAsync(requestInfo)
-                : throw new ClientNotFindException(TouchSocketResource.ClientNotFind.GetDescription(id));
+            if (this.SocketClients.TryGetSocketClient(id, out var client))
+            {
+                return client.SendAsync(requestInfo);
+            }
+            else
+            {
+                throw new ClientNotFindException(TouchSocketResource.ClientNotFind.GetDescription(id));
+            }
         }
 
         #endregion Id发送
