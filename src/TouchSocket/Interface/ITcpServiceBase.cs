@@ -42,6 +42,12 @@ namespace TouchSocket.Sockets
         ISocketClientCollection SocketClients { get; }
 
         /// <summary>
+        /// 添加一个地址监听。支持在服务器运行过程中动态添加。
+        /// </summary>
+        /// <param name="options"></param>
+        void AddListen(TcpListenOption options);
+
+        /// <summary>
         /// 清理当前已连接的所有客户端
         /// </summary>
         void Clear();
@@ -51,6 +57,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <returns></returns>
         IEnumerable<string> GetIds();
+
+        /// <summary>
+        /// 移除一个地址监听。支持在服务器运行过程中动态移除。
+        /// </summary>
+        /// <param name="monitor">监听器</param>
+        /// <returns>返回是否已成功移除</returns>
+        bool RemoveListen(TcpNetworkMonitor monitor);
 
         /// <summary>
         /// 重置Id
