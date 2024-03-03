@@ -1,7 +1,7 @@
 ﻿using System;
 using TouchSocket.Core;
-using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Dmtp;
+using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Sockets;
 
 namespace RealityProxyDmtpRpcConsoleApp
@@ -11,10 +11,10 @@ namespace RealityProxyDmtpRpcConsoleApp
     /// </summary>
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var myDmtpRpcRealityProxy = new MyDmtpRpcRealityProxy<IMyRpcServer>();
-            
+
             var myRpcServer = myDmtpRpcRealityProxy.GetTransparentProxy();
 
             var result = myRpcServer.Add(10, 20);
@@ -27,7 +27,7 @@ namespace RealityProxyDmtpRpcConsoleApp
     /// 新建一个类，按照需要，继承DmtpRpcRealityProxy，亦或者RpcRealityProxy基类。
     /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
     /// </summary>
-    class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
+    internal class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
     {
         private readonly TcpDmtpClient m_client;
 
@@ -60,11 +60,11 @@ namespace RealityProxyDmtpRpcConsoleApp
 
         public override IDmtpRpcActor GetClient()
         {
-            return m_client.GetDmtpRpcActor();
+            return this.m_client.GetDmtpRpcActor();
         }
     }
 
-    interface IMyRpcServer
+    internal interface IMyRpcServer
     {
         /// <summary>
         /// 将两个数相加

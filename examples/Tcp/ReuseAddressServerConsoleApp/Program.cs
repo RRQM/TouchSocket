@@ -5,7 +5,7 @@ namespace ReuseAddressServerConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
@@ -29,7 +29,7 @@ namespace ReuseAddressServerConsoleApp
         }
     }
 
-    class MyClassPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>,ITcpDisconnectedPlugin<ISocketClient>,ITcpReceivedPlugin<ISocketClient>
+    internal class MyClassPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
         private readonly ILog m_logger;
 
@@ -37,6 +37,7 @@ namespace ReuseAddressServerConsoleApp
         {
             this.m_logger = logger;
         }
+
         public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
         {
             this.m_logger.Info($"已连接，信息：{client.GetInfo()}");

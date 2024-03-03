@@ -10,7 +10,7 @@ title: 创建WebSocket服务器
 
 ## 一、说明
 
-WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器执行。
+`WebSocket`是基于`Http`协议的升级协议，所以应当挂载在`http`服务器执行。
 
 
 ## 二、可配置项
@@ -31,7 +31,7 @@ WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器
 
 ### 4.1 简单直接创建
 
-通过插件创建的话，只能指定一个特殊url路由。如果想获得连接前的Http请求，也必须再添加一个实现IWebSocketPlugin接口的插件，然后从OnHandshaking方法中捕获。
+通过插件创建的话，只能指定一个特殊`url`路由。如果想获得连接前的`Http`请求，也必须再添加一个实现`IWebSocketPlugin`接口的插件，然后从`OnHandshaking`方法中捕获。
 
 ```csharp showLineNumbers
 var service = new HttpService();
@@ -55,7 +55,7 @@ service.Logger.Info("服务器已启动");
 
 ### 4.2 验证连接
 
-可以对连接的Url、Query、Header等参数进行验证，然后决定是否执行WebSocket连接。
+可以对连接的`Url`、`Query`、`Header`等参数进行验证，然后决定是否执行`WebSocket`连接。
 
 ```csharp showLineNumbers
 var service = new HttpService();
@@ -129,8 +129,8 @@ private static bool VerifyConnection(IHttpSocketClient client, HttpContext conte
 通过WebApi的方式会更加灵活，也能很方便的获得Http相关参数。还能实现多个Url的连接路由。
 实现步骤：
 
-1. 必须配置ConfigureRpcStore，和注册MyServer
-2. 必须添加WebApiParserPlugin
+1. 必须配置`ConfigureRpcStore`，和注册`MyServer`
+2. 必须添加`WebApiParserPlugin`
 
 ```csharp showLineNumbers
 var service = new HttpService();
@@ -181,16 +181,16 @@ public class MyServer : RpcServer
 
 ### 4.4 通过Http上下文直接创建
 
-使用上下文直接创建的优点在于能更加个性化的实现WebSocket的连接。
+使用上下文直接创建的优点在于能更加个性化的实现`WebSocket`的连接。
 
 ```csharp showLineNumbers
-class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
+class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSocketClient>
 {
-    public async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
         {
-            bool result = client.SwitchProtocolToWebSocket(e.Context);
+            var result =await client.SwitchProtocolToWebSocket(e.Context);
             return;
         }
         await e.InvokeNext();
@@ -200,7 +200,7 @@ class MyHttpPlugin : PluginBase, IHttpGetPlugin<IHttpSocketClient>
 
 ### 4.5 创建基于Ssl的WebSocket服务
 
-创建WSs服务器时，其他配置不变，只需要在config中配置SslOption代码即可，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
+创建`WSs`服务器时，其他配置不变，只需要在`config`中配置`SslOption`代码即可，放置了一个自制`Ssl`证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
 
 ```csharp showLineNumbers
 var config = new TouchSocketConfig();
@@ -214,7 +214,7 @@ config.SetServiceSslOption(new ServiceSslOption() //Ssl配置，当为null的时
 
 ## 五、接收消息
 
-WebSocket服务器接收消息，目前有两种方式。第一种就是通过订阅`IWebSocketReceivedPlugin`插件完全异步的接收消息。第二种就是调用`GetWebSocket`扩展方法。获取到显式的WebSocket对象，然后调用`ReadAsync`方法异步阻塞式读取。
+WebSocket服务器接收消息，目前有两种方式。第一种就是通过订阅`IWebSocketReceivedPlugin`插件完全异步的接收消息。第二种就是调用`WebSocket`，然后调用`ReadAsync`方法异步阻塞式读取。
 
 ### 5.1 插件接收消息
 
@@ -223,38 +223,44 @@ WebSocket服务器接收消息，目前有两种方式。第一种就是通过�
 ```csharp showLineNumbers
 public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+    private readonly ILog m_logger;
+
+    public MyWebSocketPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+    public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)
         {
             case WSDataType.Cont:
-                client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                m_logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
 
                 return;
 
             case WSDataType.Text:
-                client.Logger.Info(e.DataFrame.ToText());
+                m_logger.Info(e.DataFrame.ToText());
 
-                if (!client.IsClient)
+                if (!client.Client.IsClient)
                 {
-                    client.SendWithWS("我已收到");
+                    client.Send("我已收到");
                 }
                 return;
 
             case WSDataType.Binary:
                 if (e.DataFrame.FIN)
                 {
-                    client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
                 }
                 else
                 {
-                    client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
                 }
                 return;
 
             case WSDataType.Close:
                 {
-                    client.Logger.Info("远程请求断开");
+                    m_logger.Info("远程请求断开");
                     client.Close("断开");
                 }
                 return;
@@ -313,34 +319,37 @@ class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
     {
         this.m_logger = logger;
     }
-    public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+    public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
     {
-        using (var websocket = client.GetWebSocket())
+        //当WebSocket想要使用ReadAsync时，需要设置此值为true
+        client.AllowAsyncRead = true;
+
+        //此处即表明websocket已连接
+        while (true)
         {
-            //此处即表明websocket已连接
-            while (true)
+            using (var receiveResult = await client.ReadAsync(CancellationToken.None))
             {
-                using (var receiveResult=await websocket.ReadAsync(CancellationToken.None))
+
+                if (receiveResult.DataFrame == null)
                 {
-                    if (receiveResult.DataFrame==null)
+                    break;
+                }
+
+                //判断是否为最后数据
+                //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
+                if (receiveResult.DataFrame.FIN)
+                {
+                    if (receiveResult.DataFrame.IsText)
                     {
-                        break;
-                    }
-                    //判断是否为最后数据
-                    //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
-                    if (receiveResult.DataFrame.FIN)
-                    {
-                        if (receiveResult.DataFrame.IsText)
-                        {
-                            m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
-                        }
+                        m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
                     }
                 }
-            }
 
-            //此处即表明websocket已断开连接
-            m_logger.Info("WebSocket断开连接");
+            }
         }
+
+        //此处即表明websocket已断开连接
+        m_logger.Info("WebSocket断开连接");
         await e.InvokeNext();
     }
 }
@@ -383,13 +392,13 @@ private static HttpService CreateHttpService()
 
 :::caution 注意
 
-使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。并且被调用`GetWebSocket`的客户端，在收到`WebSocket`消息的时候，不会再触发插件。
+使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。在收到`WebSocket`消息的时候，不会再触发插件。
 
 ::: 
 
 ## 六、回复、响应数据
 
-要回复Websocket消息，必须使用**HttpSocketClient**对象。
+要回复`Websocket`消息，必须使用**HttpSocketClient**对象。
 
 ### 6.1 如何获取SocketClient？
 
@@ -413,13 +422,13 @@ foreach (var item in socketClients)
 
 :::caution 注意
 
-由于HttpSocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用HttpSocketClient.Id，然后再通过服务器查找。
+由于`HttpSocketClient`的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用`HttpSocketClient.Id`，然后再通过服务器查找。
 
 :::  
 
 #### （2）通过Id获取
 
-先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
+先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过`TryGetSocketClient`方法，获取到想要的客户端。
 
 ```csharp showLineNumbers
 string[] ids = service.GetIds();
@@ -431,25 +440,17 @@ if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
 ### 6.2 发送文本类消息
 
 ```csharp showLineNumbers
-socketClient.SendWithWS("Text");
+socketClient.WebSocket.Send("Text");
 ```
 
 ### 6.3 发送二进制消息
 
 ```csharp showLineNumbers
-socketClient.SendWithWS(new byte[10]);
+socketClient.WebSocket.Send(new byte[10]);
 ```
 
-### 6.4 发送分包的二进制
 
-例如：发送的数据为[0,1,2,3,4,5,6,7,8,9]，当设置packageSize为5时，会先发送[0,1,2,3,4]作为头包，然后发送[5,6,7,8,9]的后继包。
-
-```csharp showLineNumbers
-byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-socketClient.SubSendWithWS(data, 5);
-```
-
-### 6.5 直接发送自定义构建的数据帧
+### 6.4 直接发送自定义构建的数据帧
 ```csharp showLineNumbers
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
@@ -460,18 +461,14 @@ frame.RSV3= true;
 frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
-socketClient.SendWithWS(frame);
+
+socketClient.WebSocket.Send(frame);
 ```
+
+
 :::info 备注
 
-此部分功能就需要你对Websocket有充分了解才可以操作。
-
-:::  
-
-
-:::caution 注意
-
-Websocket的所有发送，都是形如**SendWithWS**的扩展方法。不可直接Send。
+此部分功能就需要你对`WebSocket`有充分了解才可以操作。
 
 :::  
 
@@ -484,7 +481,7 @@ foreach (var item in service.GetClients())
 {
     if (item.Protocol== Protocol.WebSocket)
     {
-        item.SendWithWS("广播");
+        item.WebSocket.Send("广播");
     }
 }
 ```

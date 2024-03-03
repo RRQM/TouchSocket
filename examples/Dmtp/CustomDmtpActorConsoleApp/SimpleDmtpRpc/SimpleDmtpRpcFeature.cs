@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Dmtp.Rpc;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
+    internal class SimpleDmtpRpcFeature : PluginBase, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
     {
-        readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
+        private readonly Dictionary<string, MethodModel> m_pairs = new Dictionary<string, MethodModel>();
+
         public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
             var actor = new SimpleDmtpRpcActor(client.DmtpActor)
@@ -41,7 +36,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 
             foreach (var item in server.GetType().GetMethods(BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public))
             {
-                m_pairs.Add(item.Name, new MethodModel(item, server));
+                this.m_pairs.Add(item.Name, new MethodModel(item, server));
             }
         }
 
@@ -58,5 +53,4 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             await e.InvokeNext();
         }
     }
-
 }

@@ -176,12 +176,12 @@ namespace WebApiServerApp
         [WebApi(HttpMethodType.POST)]
         public Task<string> UploadBigFile(IWebApiCallContext callContext)
         {
-            using (FileStream stream = File.Create("text.file"))
+            using (var stream = File.Create("text.file"))
             {
-                byte[] buffer = new byte[1024 * 64];
+                var buffer = new byte[1024 * 64];
                 while (true)
                 {
-                    int r = callContext.HttpContext.Request.Read(buffer, 0, buffer.Length);
+                    var r = callContext.HttpContext.Request.Read(buffer, 0, buffer.Length);
 
                     if (r == 0)
                     {
@@ -207,7 +207,7 @@ namespace WebApiServerApp
     /// <summary>
     /// 鉴权插件
     /// </summary>
-    class AuthenticationPlugin : PluginBase, IHttpPlugin
+    internal class AuthenticationPlugin : PluginBase, IHttpPlugin
     {
         public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
@@ -229,7 +229,7 @@ namespace WebApiServerApp
         }
     }
 
-    class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
+    internal class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
     {
         public int Order { get; set; }
 

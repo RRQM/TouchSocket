@@ -10,16 +10,16 @@ namespace DispatchProxyWebApiConsoleApp
         /// 使用DispatchProxy生成调用代理
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var api = MyWebApiDispatchProxy.Create<IApiServer, MyWebApiDispatchProxy>();
             while (true)
             {
                 Console.WriteLine("请输入两个数，中间用空格隔开，回车确认");
-                string str = Console.ReadLine();
+                var str = Console.ReadLine();
                 var strs = str.Split(' ');
-                int a = int.Parse(strs[0]);
-                int b = int.Parse(strs[1]);
+                var a = int.Parse(strs[0]);
+                var b = int.Parse(strs[1]);
 
                 var sum = api.Sum(a, b);
                 Console.WriteLine(sum);
@@ -31,7 +31,7 @@ namespace DispatchProxyWebApiConsoleApp
     /// 新建一个类，继承WebApiDispatchProxy，亦或者RpcDispatchProxy基类。
     /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
     /// </summary>
-    class MyWebApiDispatchProxy : WebApiDispatchProxy
+    internal class MyWebApiDispatchProxy : WebApiDispatchProxy
     {
         private readonly WebApiClient m_client;
 
@@ -56,11 +56,11 @@ namespace DispatchProxyWebApiConsoleApp
 
         public override IWebApiClientBase GetClient()
         {
-            return m_client;
+            return this.m_client;
         }
     }
 
-    interface IApiServer
+    internal interface IApiServer
     {
         [Router("ApiServer/[action]ab")]
         [Router("ApiServer/[action]")]

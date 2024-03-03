@@ -6,7 +6,7 @@ namespace PackageAdapterConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
             var client = CreateClient();
@@ -22,13 +22,13 @@ namespace PackageAdapterConsoleApp
             }
         }
 
-        static SingleStreamDataHandlingAdapter GetAdapter()
+        private static SingleStreamDataHandlingAdapter GetAdapter()
         {
             return new TerminatorPackageAdapter("\r\n");//使用换行终止字符
             //return new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) };//使用周期适配器。
         }
 
-        static TcpClient CreateClient()
+        private static TcpClient CreateClient()
         {
             var client = new TcpClient();
             //载入配置
@@ -45,13 +45,13 @@ namespace PackageAdapterConsoleApp
             return client;
         }
 
-        static TcpService CreateService()
+        private static TcpService CreateService()
         {
             var service = new TcpService();
             service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
                 return EasyTask.CompletedTask;
             };

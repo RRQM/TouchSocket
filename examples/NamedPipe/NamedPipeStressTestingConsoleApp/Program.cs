@@ -1,5 +1,4 @@
-﻿using System.Text;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
@@ -7,7 +6,7 @@ namespace NamedPipeStressTestingConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine("请输入管道名称");
             var name = Console.ReadLine();
@@ -15,9 +14,7 @@ namespace NamedPipeStressTestingConsoleApp
             var service = CreateService(name);
             var client = CreateClient(name);
 
-
-
-            byte[] buffer = new byte[1024 * 1024];
+            var buffer = new byte[1024 * 1024];
             while (true)
             {
                 client.Send(buffer);
@@ -33,7 +30,6 @@ namespace NamedPipeStressTestingConsoleApp
                 .SetPipeName(name)//管道名称
                 .ConfigurePlugins(a =>
                 {
-
                 })
                 .ConfigureContainer(a =>
                 {
@@ -52,7 +48,7 @@ namespace NamedPipeStressTestingConsoleApp
             service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接\
 
             long count = 0;
-            DateTime dateTime = DateTime.Now;
+            var dateTime = DateTime.Now;
             service.Received = (client, e) =>
             {
                 if (DateTime.Now - dateTime > TimeSpan.FromSeconds(1))

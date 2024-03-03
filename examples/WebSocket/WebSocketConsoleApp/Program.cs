@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -33,7 +31,6 @@ namespace WebSocketConsoleApp
             var service = CreateHttpService();
 
             consoleAction.RunCommandLine();
-
         }
 
         private static async void SendAdd()
@@ -55,10 +52,10 @@ namespace WebSocketConsoleApp
                 .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
             client.Connect();
 
-            client.SendWithWS("Add 10 20");
+            client.Send("Add 10 20");
             await Task.Delay(1000);
-
         }
+
         private static void SendSubstringText()
         {
             var client = new WebSocketClient();
@@ -70,10 +67,10 @@ namespace WebSocketConsoleApp
                 .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
             client.Connect();
 
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 var msg = Encoding.UTF8.GetBytes("hello");
-                client.SendWithWS("Hello", i == 9);
+                client.Send("Hello", i == 9);
             }
         }
 
@@ -87,7 +84,7 @@ namespace WebSocketConsoleApp
                 })
                 .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
             client.Connect();
-            client.SendWithWS("hello");
+            client.Send("hello");
         }
 
         private static void ConsoleAction_OnException(Exception obj)
@@ -295,31 +292,37 @@ namespace WebSocketConsoleApp
             return false;
         }
 
-
         public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
         {
-            public async Task OnWebSocketHandshaking(IHttpClientBase client, HttpContextEventArgs e)
+            public MyWebSocketPlugin(ILog logger)
             {
-                client.Logger.Info("WebSocket正在连接");
+                this.m_logger = logger;
+            }
+
+            public async Task OnWebSocketHandshaking(IWebSocket client, HttpContextEventArgs e)
+            {
+                this.m_logger.Info("WebSocket正在连接");
                 await e.InvokeNext();
             }
 
-            public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+            public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
             {
-                client.Logger.Info("WebSocket成功连接");
+                this.m_logger.Info("WebSocket成功连接");
                 await e.InvokeNext();
             }
 
             //此处使用字典，原因是插件是多客户端并发的，所以需要字典找到对应客户端的缓存
-            Dictionary<IHttpClientBase, StringBuilder> m_stringBuilders = new Dictionary<IHttpClientBase, StringBuilder>();//接收临时Text
+            private Dictionary<IWebSocket, StringBuilder> m_stringBuilders = new Dictionary<IWebSocket, StringBuilder>();//接收临时Text
 
-            public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+            private readonly ILog m_logger;
+
+            public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
             {
                 switch (e.DataFrame.Opcode)
                 {
                     case WSDataType.Cont:
                         {
-                            client.Logger.Info($"收到后续包长度：{e.DataFrame.PayloadLength}");
+                            this.m_logger.Info($"收到后续包长度：{e.DataFrame.PayloadLength}");
 
                             //找到客户端对应的缓存
                             if (this.m_stringBuilders.TryGetValue(client, out var stringBuilder))//后续包是文本
@@ -328,7 +331,7 @@ namespace WebSocketConsoleApp
 
                                 if (e.DataFrame.FIN)//完成接收后续包
                                 {
-                                    client.Logger.Info($"完成接收后续包：{stringBuilder.ToString()}");
+                                    this.m_logger.Info($"完成接收后续包：{stringBuilder.ToString()}");
                                     this.m_stringBuilders.Remove(client);//置空
                                 }
                             }
@@ -339,17 +342,16 @@ namespace WebSocketConsoleApp
                     case WSDataType.Text:
                         if (e.DataFrame.FIN)//一个包直接结束接收
                         {
-                            client.Logger.Info(e.DataFrame.ToText());
+                            this.m_logger.Info(e.DataFrame.ToText());
 
-                            if (!client.IsClient)
+                            if (!client.Client.IsClient)
                             {
-                                client.SendWithWS("我已收到");
+                                client.Send("我已收到");
                             }
                         }
                         else//一个包没有结束，还有后续包
                         {
-                            client.Logger.Info($"收到未完成的文本：{e.DataFrame.PayloadLength}");
-
+                            this.m_logger.Info($"收到未完成的文本：{e.DataFrame.PayloadLength}");
 
                             var stringBuilder = new StringBuilder();
                             stringBuilder.Append(e.DataFrame.ToText());
@@ -364,27 +366,27 @@ namespace WebSocketConsoleApp
                             //可以拿到二进制数据。实际上也不需要ToArray。直接使用PayloadData可能更高效。
                             //具体资料可以参考内存池
                             var bytes = e.DataFrame.PayloadData.ToArray();
-                            client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                            this.m_logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
                         }
                         else
                         {
-                            client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                            this.m_logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
                         }
                         return;
 
                     case WSDataType.Close:
                         {
-                            client.Logger.Info("远程请求断开");
+                            this.m_logger.Info("远程请求断开");
                             client.Close("断开");
                         }
                         return;
 
                     case WSDataType.Ping:
-                        client.Logger.Info("Ping");
+                        this.m_logger.Info("Ping");
                         break;
 
                     case WSDataType.Pong:
-                        client.Logger.Info("Pong");
+                        this.m_logger.Info("Pong");
                         break;
 
                     default:
@@ -395,7 +397,7 @@ namespace WebSocketConsoleApp
             }
         }
 
-        class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSocketClient>
+        private class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSocketClient>
         {
             public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
             {

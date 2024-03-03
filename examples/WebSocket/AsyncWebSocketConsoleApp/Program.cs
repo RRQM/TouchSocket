@@ -7,19 +7,14 @@ namespace SyncWebSocketConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateHttpService();
             using (var client = GetClient())
             {
-                //通过GetWebSocket扩展方法，获取到显式的WebSocket终端。
-                //需要注意的是，此处的using，仅仅是释放当前创建的WebSocket。而不是WebSocketClient的连接。
-                using (var websocket=client.GetWebSocket())
+                while (true)
                 {
-                    while (true)
-                    {
-                        websocket.Send(Console.ReadLine());
-                    }
+                    client.Send(Console.ReadLine());
                 }
             }
         }
@@ -67,7 +62,7 @@ namespace SyncWebSocketConsoleApp
         }
     }
 
-    class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
+    internal class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
     {
         private readonly ILog m_logger;
 
@@ -75,37 +70,36 @@ namespace SyncWebSocketConsoleApp
         {
             this.m_logger = logger;
         }
-        public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
-        {
-            using (var websocket = client.GetWebSocket())
-            {
-                //此处即表明websocket已连接
-                while (true)
-                {
-                    using (var receiveResult=await websocket.ReadAsync(CancellationToken.None))
-                    {
-                        
-                        if (receiveResult.DataFrame==null)
-                        {
-                            break;
-                        }
 
-                        //判断是否为最后数据
-                        //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
-                        if (receiveResult.DataFrame.FIN)
+        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        {
+            //当WebSocket想要使用ReadAsync时，需要设置此值为true
+            client.AllowAsyncRead = true;
+
+            //此处即表明websocket已连接
+            while (true)
+            {
+                using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+                {
+                    if (receiveResult.DataFrame == null)
+                    {
+                        break;
+                    }
+
+                    //判断是否为最后数据
+                    //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
+                    if (receiveResult.DataFrame.FIN)
+                    {
+                        if (receiveResult.DataFrame.IsText)
                         {
-                            if (receiveResult.DataFrame.IsText)
-                            {
-                                m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
-                            }
+                            this.m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
                         }
-                        
                     }
                 }
-
-                //此处即表明websocket已断开连接
-                m_logger.Info("WebSocket断开连接");
             }
+
+            //此处即表明websocket已断开连接
+            this.m_logger.Info("WebSocket断开连接");
             await e.InvokeNext();
         }
     }

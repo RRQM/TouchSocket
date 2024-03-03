@@ -1,13 +1,10 @@
-﻿using System.Net.Http.Headers;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.FileTransfer;
-using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Sockets;
 
 namespace FileTransferConsoleApp
 {
-
     internal class Program
     {
         /// <summary>
@@ -59,7 +56,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 多线程推送文件
         /// </summary>
-        static void MultithreadingClientPushFileFromService()
+        private static void MultithreadingClientPushFileFromService()
         {
             using var clientFactory = CreateClientFactory();
             var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
@@ -126,7 +123,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 多线程请求文件
         /// </summary>
-        static void MultithreadingClientPullFileFromService()
+        private static void MultithreadingClientPullFileFromService()
         {
             using var clientFactory = CreateClientFactory();
             var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
@@ -192,7 +189,7 @@ namespace FileTransferConsoleApp
         /// 推送小文件
         /// </summary>
         /// <param name="client"></param>
-        static void PushSmallFileFromService(TcpDmtpClient client)
+        private static void PushSmallFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载小文件");
             var filePath = "PushSmallFileFromService.Test";
@@ -228,7 +225,7 @@ namespace FileTransferConsoleApp
         /// 请求小文件
         /// </summary>
         /// <param name="client"></param>
-        static void PullSmallFileFromService(TcpDmtpClient client)
+        private static void PullSmallFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载小文件");
 
@@ -269,7 +266,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 客户端向其他客户端推送文件。
         /// </summary>
-        static void ClientPushFileFromClient()
+        private static void ClientPushFileFromClient()
         {
             using var client1 = GetTcpDmtpClient();
             using var client2 = GetTcpDmtpClient();
@@ -330,7 +327,7 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 客户端从其他客户端下载文件。
         /// </summary>
-        static void ClientPullFileFromClient()
+        private static void ClientPullFileFromClient()
         {
             using var client1 = GetTcpDmtpClient();
             using var client2 = GetTcpDmtpClient();
@@ -393,7 +390,7 @@ namespace FileTransferConsoleApp
         /// </summary>
         /// <param name="service">服务器</param>
         /// <param name="targetId">服务器要请求的客户端Id</param>
-        static void ServicePushFileFromClient(TcpDmtpService service, string targetId)
+        private static void ServicePushFileFromClient(TcpDmtpService service, string targetId)
         {
             if (!service.TryGetSocketClient(targetId, out var socketClient))
             {
@@ -458,7 +455,7 @@ namespace FileTransferConsoleApp
         /// </summary>
         /// <param name="service">服务器</param>
         /// <param name="targetId">服务器要请求的客户端Id</param>
-        static void ServicePullFileFromClient(TcpDmtpService service, string targetId)
+        private static void ServicePullFileFromClient(TcpDmtpService service, string targetId)
         {
             if (!service.TryGetSocketClient(targetId, out var socketClient))
             {
@@ -522,7 +519,7 @@ namespace FileTransferConsoleApp
         /// 客户端从服务器下载文件。
         /// </summary>
         /// <param name="client"></param>
-        static void ClientPullFileFromService(TcpDmtpClient client)
+        private static void ClientPullFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载文件");
 
@@ -605,7 +602,7 @@ namespace FileTransferConsoleApp
         /// 客户端上传文件到服务器。
         /// </summary>
         /// <param name="client"></param>
-        static void ClientPushFileFromService(TcpDmtpClient client)
+        private static void ClientPushFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("上传文件到服务器");
 
@@ -769,8 +766,6 @@ namespace FileTransferConsoleApp
         }
     }
 
-
-
     internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin, IDmtpRoutingPlugin
     {
         private readonly ILog m_logger;
@@ -805,7 +800,7 @@ namespace FileTransferConsoleApp
         /// 该方法，会在每个文件被请求（推送）时第一时间触发。
         /// 当请求文件时，可以重新指定请求的文件路径，即对e.ResourcePath直接赋值。
         /// 当推送文件时，可以重新指定保存文件路径，即对e.SavePath直接赋值。
-        /// 
+        ///
         /// 注意：当文件夹不存在时，需要手动创建。
         /// </summary>
         /// <param name="client"></param>
@@ -839,5 +834,4 @@ namespace FileTransferConsoleApp
             await e.InvokeNext();
         }
     }
-
 }

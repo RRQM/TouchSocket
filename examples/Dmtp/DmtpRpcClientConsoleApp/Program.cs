@@ -10,7 +10,7 @@ namespace ClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
@@ -32,13 +32,12 @@ namespace ClientConsoleApp
             }
         }
 
-
         private static void ConsoleAction_OnException(Exception obj)
         {
             ConsoleLogger.Default.Exception(obj);
         }
 
-        static void RunInvokeCancellationToken()
+        private static void RunInvokeCancellationToken()
         {
             var client = GetTcpDmtpClient();
 
@@ -70,7 +69,7 @@ namespace ClientConsoleApp
         /// <summary>
         /// 客户端互相调用Rpc
         /// </summary>
-        static void RunInvokeT_2C()
+        private static void RunInvokeT_2C()
         {
             var client1 = GetTcpDmtpClient();
             var client2 = GetTcpDmtpClient();
@@ -85,7 +84,7 @@ namespace ClientConsoleApp
         /// <summary>
         /// 直接调用Rpc
         /// </summary>
-        static void RunInvokeT()
+        private static void RunInvokeT()
         {
             var client = GetTcpDmtpClient();
 
@@ -103,7 +102,7 @@ namespace ClientConsoleApp
             client.Logger.Info($"调用Add方法成功，结果：{sum}");
         }
 
-        static async void RunRpcPullChannel()
+        private static async void RunRpcPullChannel()
         {
             using var client = GetTcpDmtpClient();
             var status = ChannelStatus.Default;
@@ -148,8 +147,7 @@ namespace ClientConsoleApp
             Console.WriteLine($"状态：{status}，result={result}");
         }
 
-
-        static TcpDmtpClient GetTcpDmtpClient()
+        private static TcpDmtpClient GetTcpDmtpClient()
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
@@ -165,7 +163,7 @@ namespace ClientConsoleApp
                 {
                     a.UseDmtpRpc()
                     //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                    .SetCreateDmtpRpcActor((actor, serverprovider,resolver) => new MyDmtpRpcActor(actor, serverprovider, resolver));
+                    .SetCreateDmtpRpcActor((actor, serverprovider, resolver) => new MyDmtpRpcActor(actor, serverprovider, resolver));
 
                     a.UseDmtpHeartbeat()
                     .SetTick(TimeSpan.FromSeconds(3))
@@ -178,34 +176,30 @@ namespace ClientConsoleApp
                 }));
             client.Connect();
 
-            IRpcClient1 rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();
-            IRpcClient2 rpcClient2 = client.GetDmtpRpcActor<IRpcClient2>();
+            var rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();
+            var rpcClient2 = client.GetDmtpRpcActor<IRpcClient2>();
 
             client.Logger.Info($"连接成功，Id={client.Id}");
             return client;
         }
-
-
     }
 
-    interface IRpcClient1 : IDmtpRpcActor
+    internal interface IRpcClient1 : IDmtpRpcActor
     {
-
     }
 
-    interface IRpcClient2 : IDmtpRpcActor
+    internal interface IRpcClient2 : IDmtpRpcActor
     {
-
     }
 
-    class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
+    internal class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     {
         public MyDmtpRpcActor(IDmtpActor smtpActor, IRpcServerProvider rpcServerProvider, IResolver resolver) : base(smtpActor, rpcServerProvider, resolver)
         {
         }
     }
 
-    partial class MyClientRpcServer : RpcServer
+    internal partial class MyClientRpcServer : RpcServer
     {
         private readonly ILog m_logger;
 

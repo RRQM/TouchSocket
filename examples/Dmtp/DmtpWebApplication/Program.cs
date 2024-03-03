@@ -1,6 +1,5 @@
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Sockets;
 
 namespace DmtpWebApplication
 {
@@ -72,7 +71,7 @@ namespace DmtpWebApplication
         }
     }
 
-    class MyClassPlugin : PluginBase, IDmtpHandshakedPlugin
+    internal class MyClassPlugin : PluginBase, IDmtpHandshakedPlugin
     {
         private readonly ILogger<MyClassPlugin> m_logger;
 
@@ -80,9 +79,10 @@ namespace DmtpWebApplication
         {
             this.m_logger = logger;
         }
+
         public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            m_logger.LogInformation("DmtpHandshaked");
+            this.m_logger.LogInformation("DmtpHandshaked");
             await e.InvokeNext();
         }
     }

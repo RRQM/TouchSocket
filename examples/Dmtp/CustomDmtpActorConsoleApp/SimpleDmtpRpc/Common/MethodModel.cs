@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    class MethodModel
+    internal class MethodModel
     {
         public MethodModel(MethodInfo method, object target)
         {

@@ -40,9 +40,8 @@ namespace XmlRpcServerApp
             Console.ReadKey();
         }
 
-        static void a()
+        private static void a()
         {
-            
         }
     }
 

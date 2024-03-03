@@ -2,14 +2,13 @@
 using Newtonsoft.Json.Linq;
 using TouchSocket.Core;
 using TouchSocket.JsonRpc;
-using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace JsonRpcClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;

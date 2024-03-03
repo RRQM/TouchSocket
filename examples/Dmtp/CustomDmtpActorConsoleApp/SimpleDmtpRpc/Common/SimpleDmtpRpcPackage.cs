@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    class SimpleDmtpRpcPackage : WaitRouterPackage
+    internal class SimpleDmtpRpcPackage : WaitRouterPackage
     {
         protected override bool IncludedRouter => true;
 
@@ -39,5 +34,4 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             }
         }
     }
-
 }

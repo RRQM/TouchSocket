@@ -1,5 +1,4 @@
-﻿using System.Text;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
@@ -7,8 +6,7 @@ namespace NamedPipeServiceConsoleApp
 {
     internal class Program
     {
-
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
 
@@ -53,7 +51,7 @@ namespace NamedPipeServiceConsoleApp
         }
     }
 
-    class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
+    internal class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
     {
         private readonly ILog m_logger;
 
@@ -64,19 +62,19 @@ namespace NamedPipeServiceConsoleApp
 
         public async Task OnNamedPipeConnected(INamedPipeClientBase client, ConnectedEventArgs e)
         {
-            m_logger.Info("Connected");
+            this.m_logger.Info("Connected");
             await e.InvokeNext();
         }
 
         public async Task OnNamedPipeDisconnected(INamedPipeClientBase client, DisconnectEventArgs e)
         {
-            m_logger.Info("Disconnected");
+            this.m_logger.Info("Disconnected");
             await e.InvokeNext();
         }
 
         public async Task OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
         {
-            m_logger.Info(e.ByteBlock.ToString());
+            this.m_logger.Info(e.ByteBlock.ToString());
             client.Send(e.ByteBlock);
             await e.InvokeNext();
         }

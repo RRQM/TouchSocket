@@ -201,12 +201,11 @@ namespace HeartbeatConsoleApp
         private readonly ILog logger;
 
         [DependencyInject]
-        public HeartbeatAndReceivePlugin( ILog logger,int timeTick= 1000 * 5)
+        public HeartbeatAndReceivePlugin(ILog logger, int timeTick = 1000 * 5)
         {
             this.m_timeTick = timeTick;
             this.logger = logger;
         }
-
 
         public async Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
         {

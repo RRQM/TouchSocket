@@ -1,14 +1,12 @@
-﻿using Newtonsoft.Json.Linq;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.JsonRpc;
 using TouchSocket.Sockets;
-using TouchSocket.WebApi;
 
 namespace DispatchProxyJsonRpcClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var rpc = MyJsonRpcDispatchProxy.Create<IJsonRpcServer, MyJsonRpcDispatchProxy>();
 
@@ -24,7 +22,7 @@ namespace DispatchProxyJsonRpcClientConsoleApp
     /// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
     /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
     /// </summary>
-    class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
+    internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
     {
         private readonly IJsonRpcClient m_client;
 
@@ -32,6 +30,7 @@ namespace DispatchProxyJsonRpcClientConsoleApp
         {
             this.m_client = CreateJsonRpcClientByTcp();
         }
+
         public override IJsonRpcClient GetClient()
         {
             return this.m_client;
@@ -50,7 +49,7 @@ namespace DispatchProxyJsonRpcClientConsoleApp
         }
     }
 
-    interface IJsonRpcServer
+    internal interface IJsonRpcServer
     {
         [JsonRpc(MethodInvoke = true)]
         string TestJsonRpc(string str);

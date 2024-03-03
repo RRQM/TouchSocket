@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace PluginConsoleApp
@@ -39,7 +39,6 @@ namespace PluginConsoleApp
                     Words = Console.ReadLine()
                 });
             }
-
         }
     }
 
@@ -102,6 +101,7 @@ namespace PluginConsoleApp
             Console.WriteLine($"{this.GetType().Name}------Leave");
         }
     }
+
     internal class LastSayPlugin : PluginBase, ISayPlugin
     {
         public async Task Say(object sender, MyPluginEventArgs e)

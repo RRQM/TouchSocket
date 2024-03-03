@@ -52,7 +52,6 @@ namespace RemoteStreamConsoleApp
             {
                 Console.ReadKey();
             }
-            
         }
 
         private static TcpDmtpClient GetTcpDmtpClient()

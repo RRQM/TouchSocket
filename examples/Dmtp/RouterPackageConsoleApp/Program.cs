@@ -7,7 +7,7 @@ namespace RouterPackageConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -19,7 +19,6 @@ namespace RouterPackageConsoleApp
                 ConsoleLogger.Default.Info(ex.Message);
             }
             var service = GetTcpDmtpService();
-
 
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
@@ -131,7 +130,7 @@ namespace RouterPackageConsoleApp
         /// <summary>
         /// 定义请求包
         /// </summary>
-        class MyRequestPackage : DmtpRouterPackage
+        private class MyRequestPackage : DmtpRouterPackage
         {
             /// <summary>
             /// 包尺寸大小。此值并非需要精准数值，只需要估计数据即可。其作用为申请内存池。所以数据应当大小合适。
@@ -159,7 +158,7 @@ namespace RouterPackageConsoleApp
         /// <summary>
         /// 定义响应包
         /// </summary>
-        class MyResponsePackage : DmtpRouterPackage
+        private class MyResponsePackage : DmtpRouterPackage
         {
             /// <summary>
             /// 包尺寸大小。此值并非需要精准数值，只需要估计数据即可。其作用为申请内存池。所以数据应当大小合适。
@@ -167,7 +166,7 @@ namespace RouterPackageConsoleApp
             public override int PackageSize => 1024;
         }
 
-        class MyPlugin1 : PluginBase, IDmtpRouterPackagePlugin
+        private class MyPlugin1 : PluginBase, IDmtpRouterPackagePlugin
         {
             private readonly ILog m_logger;
 
@@ -175,6 +174,7 @@ namespace RouterPackageConsoleApp
             {
                 this.m_logger = logger;
             }
+
             public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
                 if (e.Metadata?["a"] == "a")
@@ -193,13 +193,12 @@ namespace RouterPackageConsoleApp
                     this.m_logger.Info($"已响应包请求");
                 }
 
-
                 //一般在当前插件无法处理时调用下一插件。
                 await e.InvokeNext();
             }
         }
 
-        class MyPlugin2 : PluginBase, IDmtpRouterPackagePlugin
+        private class MyPlugin2 : PluginBase, IDmtpRouterPackagePlugin
         {
             private readonly ILog m_logger;
 
@@ -207,6 +206,7 @@ namespace RouterPackageConsoleApp
             {
                 this.m_logger = logger;
             }
+
             public async Task OnReceivedRouterPackage(IDmtpActorObject client, RouterPackageEventArgs e)
             {
                 if (e.Metadata?["b"] == "b")
@@ -221,7 +221,6 @@ namespace RouterPackageConsoleApp
                     e.ResponseSuccess();
                     this.m_logger.Info($"已响应包请求");
                 }
-
 
                 //一般在当前插件无法处理时调用下一插件。
                 await e.InvokeNext();

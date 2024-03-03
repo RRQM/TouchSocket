@@ -1,5 +1,4 @@
 ﻿using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace AdapterTesterConsoleApp
 {
