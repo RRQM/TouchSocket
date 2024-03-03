@@ -43,6 +43,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
+
             if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
                 var proxyHost = httpProxy.Host;
@@ -253,20 +254,13 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (this.m_waitData.Wait(millisecondsTimeout))
+                    return this.m_waitData.Wait(millisecondsTimeout) switch
                     {
-                        case WaitDataStatus.SetRunning:
-                            return this.m_waitData.WaitResult;
-
-                        case WaitDataStatus.Overtime:
-                            throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription());
-                        case WaitDataStatus.Canceled:
-                            throw new OperationCanceledException();
-                        case WaitDataStatus.Default:
-                        case WaitDataStatus.Disposed:
-                        default:
-                            throw new Exception(TouchSocketHttpResource.UnknownError.GetDescription());
-                    }
+                        WaitDataStatus.SetRunning => this.m_waitData.WaitResult,
+                        WaitDataStatus.Overtime => throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription()),
+                        WaitDataStatus.Canceled => throw new OperationCanceledException(),
+                        _ => throw new Exception(TouchSocketHttpResource.UnknownError.GetDescription()),
+                    };
                 }
             }
             finally
@@ -294,20 +288,13 @@ namespace TouchSocket.Http
                         return default;
                     }
 
-                    switch (await this.m_waitDataAsync.WaitAsync(millisecondsTimeout))
+                    return await this.m_waitDataAsync.WaitAsync(millisecondsTimeout) switch
                     {
-                        case WaitDataStatus.SetRunning:
-                            return this.m_waitData.WaitResult;
-
-                        case WaitDataStatus.Overtime:
-                            throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription());
-                        case WaitDataStatus.Canceled:
-                            throw new OperationCanceledException();
-                        case WaitDataStatus.Default:
-                        case WaitDataStatus.Disposed:
-                        default:
-                            throw new Exception(TouchSocketHttpResource.UnknownError.GetDescription());
-                    }
+                        WaitDataStatus.SetRunning => this.m_waitData.WaitResult,
+                        WaitDataStatus.Overtime => throw new TimeoutException(TouchSocketHttpResource.Overtime.GetDescription()),
+                        WaitDataStatus.Canceled => throw new OperationCanceledException(),
+                        _ => throw new Exception(TouchSocketHttpResource.UnknownError.GetDescription()),
+                    };
                 }
             }
             finally

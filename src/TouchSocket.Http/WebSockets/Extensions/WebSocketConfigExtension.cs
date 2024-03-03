@@ -44,5 +44,23 @@ namespace TouchSocket.Sockets
         {
             return BuildWithWebSocketClient<WebSocketClient>(config);
         }
+
+        /// <summary>
+        /// WebSocket配置属性
+        /// </summary>
+        public static readonly DependencyProperty<WebSocketOption> WebSocketOptionProperty =
+            DependencyProperty<WebSocketOption>.Register("WebSocketOption", new WebSocketOption());
+
+        /// <summary>
+        /// 设置WebSocket的相关配置
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TouchSocketConfig SetWebSocketOption(this TouchSocketConfig config, WebSocketOption value)
+        {
+            config.SetValue(WebSocketOptionProperty, value);
+            return config;
+        }
     }
 }

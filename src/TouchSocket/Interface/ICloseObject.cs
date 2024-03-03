@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -23,7 +24,13 @@ namespace TouchSocket.Sockets
         /// 关闭客户端。
         /// </summary>
         /// <param name="msg"></param>
-        /// <exception cref="Exception"></exception>
         void Close(string msg);
+
+        ///// <summary>
+        ///// 异步关闭客户端。
+        ///// </summary>
+        ///// <param name="msg"></param>
+        ///// <returns></returns>
+        //Task CloseAsync(string msg);
     }
 }

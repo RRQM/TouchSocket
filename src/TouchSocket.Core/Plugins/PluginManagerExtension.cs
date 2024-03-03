@@ -13,6 +13,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace TouchSocket.Core
 {
@@ -39,7 +40,7 @@ namespace TouchSocket.Core
         /// <param name="pluginManager"></param>
         /// <param name="name"></param>
         /// <param name="func"></param>
-        public static void Add<TSender, TEventArgs>(this IPluginManager pluginManager, string name, Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
+        public static void Add<TSender, TEventArgs>(this IPluginManager pluginManager, string name,Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
         {
             Task newFunc(object sender, TouchSocketEventArgs e)
             {

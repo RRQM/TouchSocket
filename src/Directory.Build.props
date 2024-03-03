@@ -3,12 +3,12 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-beta.280</Version>
+		<Version>2.0.0-rc.1</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<Company>若汝棋茗</Company>
-		<Copyright>Copyright © 2023 若汝棋茗</Copyright>
+		<Copyright>Copyright © 2024 若汝棋茗</Copyright>
 		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -20,6 +20,7 @@
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
 		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<NoWarn>IDE0290;IDE0090</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -27,7 +28,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<DefineConstants>ValueTask;SystemNetHttp</DefineConstants>
+		<DefineConstants>SystemNetHttp</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
 		
@@ -51,6 +52,9 @@
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
 	</PropertyGroup>
 	

@@ -23,7 +23,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WS命令行插件。
     /// </summary>
-    public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
+    public abstract class WebSocketCommandLinePlugin : PluginBase
     {
         private readonly ILog m_logger;
         private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, Method>();
@@ -42,6 +42,14 @@ namespace TouchSocket.Http.WebSockets
             {
                 this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
             }
+        }
+
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            base.Loaded(pluginManager);
+
+            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this.OnWebSocketReceived);
         }
 
         /// <summary>
@@ -65,7 +73,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+        private async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
@@ -81,7 +89,7 @@ namespace TouchSocket.Http.WebSockets
                         {
                             if (ps[i].ParameterType.IsInterface && typeof(ITcpClientBase).IsAssignableFrom(ps[i].ParameterType))
                             {
-                                os[i] = client;
+                                os[i] = webSocket.Client;
                             }
                             else
                             {
@@ -114,28 +122,14 @@ namespace TouchSocket.Http.WebSockets
 
                             if (method.HasReturn)
                             {
-                                if (client is HttpClient httpClient)
-                                {
-                                    httpClient.SendWithWS(this.Converter.Serialize(null, result));
-                                }
-                                else if (client is HttpSocketClient httpSocketClient)
-                                {
-                                    httpSocketClient.SendWithWS(this.Converter.Serialize(null, result));
-                                }
+                                webSocket.Send(this.Converter.Serialize(null, result));
                             }
                         }
                         catch (Exception ex)
                         {
                             if (this.ReturnException)
                             {
-                                if (client is HttpClient httpClient)
-                                {
-                                    httpClient.SendWithWS(this.Converter.Serialize(null, ex.Message));
-                                }
-                                else if (client is HttpSocketClient httpSocketClient)
-                                {
-                                    httpSocketClient.SendWithWS(this.Converter.Serialize(null, ex.Message));
-                                }
+                                webSocket.Send(this.Converter.Serialize(null, ex.Message));
                             }
                         }
                     }

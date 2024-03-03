@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 using System.Security.Authentication;
 using TouchSocket.Core;
 
@@ -505,12 +506,12 @@ namespace TouchSocket.Sockets
         #region 创建
 
         /// <summary>
-        /// 构建Tcp类客户端，并连接
+        /// 构建可配置，可连接类客户端，并连接
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ITcpClient, new()
+        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject,IConnectObject, new()
         {
             var client = new TClient();
             client.Setup(config);

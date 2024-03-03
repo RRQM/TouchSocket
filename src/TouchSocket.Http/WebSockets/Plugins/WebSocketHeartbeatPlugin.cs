@@ -20,10 +20,16 @@ namespace TouchSocket.Http.WebSockets
     /// 初始化一个适用于WebSocket的心跳插件
     /// </summary>
     [PluginOption(Singleton = true)]
-    public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
+    public class WebSocketHeartbeatPlugin : HeartbeatPlugin
     {
         /// <inheritdoc/>
-        public Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            base.Loaded(pluginManager);
+            pluginManager.Add<IWebSocket, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), OnWebSocketHandshaked);
+        }
+
+        private Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             Task.Run(async () =>
             {
@@ -31,14 +37,14 @@ namespace TouchSocket.Http.WebSockets
                 while (true)
                 {
                     await Task.Delay(this.Tick);
-                    if (!client.GetHandshaked())
+                    if (!client.IsHandshaked)
                     {
                         return;
                     }
 
                     try
                     {
-                        client.PingWS();
+                        client.Ping();
                         failedCount = 0;
                     }
                     catch
@@ -47,7 +53,7 @@ namespace TouchSocket.Http.WebSockets
                     }
                     if (failedCount > this.MaxFailCount)
                     {
-                        client.CloseWithWS("自动心跳失败次数达到最大，已断开连接。");
+                        client.Close("自动心跳失败次数达到最大，已断开连接。");
                     }
                 }
             });

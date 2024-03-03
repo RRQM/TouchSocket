@@ -17,9 +17,9 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocketReceiveResult
     /// </summary>
-    public struct WebSocketReceiveResult : IDisposable
+    public readonly struct WebSocketReceiveResult : IDisposable
     {
-        private Action m_disAction;
+        private readonly Action m_disAction;
 
         /// <summary>
         /// WebSocketReceiveResult
@@ -41,7 +41,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// WebSocket数据帧
         /// </summary>
-        public WSDataFrame DataFrame { get; private set; }
+        public WSDataFrame DataFrame { get;}
 
         /// <summary>
         /// 连接已关闭

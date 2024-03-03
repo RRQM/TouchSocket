@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
+
 namespace TouchSocket.Sockets
 {
     /// <summary>
@@ -74,5 +76,65 @@ namespace TouchSocket.Sockets
         {
             SafeClose(client, "SafeClose");
         }
+
+        //#region CloseAsync
+        ///// <summary>
+        ///// <inheritdoc cref="ICloseObject.CloseAsync(string)"/>
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="client"></param>
+        //public static Task CloseAsync<T>(this T client) where T : ICloseObject
+        //{
+        //    return client.CloseAsync(string.Empty);
+        //}
+
+        ///// <summary>
+        ///// <inheritdoc cref="ICloseObject.CloseAsync(string)"/>
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="client"></param>
+        ///// <param name="msg"></param>
+        //public static async Task SafeCloseAsync<T>(this T client, string msg) where T : ICloseObject
+        //{
+        //    try
+        //    {
+        //        if (client == null)
+        //        {
+        //            return;
+        //        }
+        //        if (client is IOnlineClient onlineClient)
+        //        {
+        //            if (onlineClient.Online)
+        //            {
+        //                await client.CloseAsync(msg);
+        //            }
+        //        }
+        //        else if (client is IHandshakeObject handshakeObject)
+        //        {
+        //            if (handshakeObject.IsHandshaked)
+        //            {
+        //                await client.CloseAsync(msg);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            await client.CloseAsync(msg);
+        //        }
+        //    }
+        //    catch
+        //    {
+        //    }
+        //}
+
+        ///// <summary>
+        ///// <inheritdoc cref="ICloseObject.CloseAsync(string)"/>
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="client"></param>
+        //public static Task SafeCloseAsync<T>(this T client) where T : ICloseObject
+        //{
+        //    return SafeCloseAsync(client, "SafeClose");
+        //}
+        //#endregion
     }
 }

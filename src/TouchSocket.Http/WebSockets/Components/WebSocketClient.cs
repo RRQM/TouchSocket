@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -42,8 +43,16 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocket用户终端。
     /// </summary>
-    public class WebSocketClientBase : HttpClientBase, IWebSocketClient
+    public class WebSocketClientBase : IWebSocketClient
     {
+        /// <summary>
+        /// WebSocket用户终端
+        /// </summary>
+        public WebSocketClientBase()
+        {
+            m_client = new PrivateHttpClient(this.OnReceivedWSDataFrame);
+        }
+
         #region Connect
 
         /// <summary>
@@ -52,23 +61,25 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <exception cref="WebSocketConnectException"></exception>
-        public override void Connect(int millisecondsTimeout, CancellationToken token)
+        public virtual void Connect(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
                 this.m_semaphoreSlim.Wait(token);
-                if (!this.Online)
+                if (!this.m_client.Online)
                 {
-                    base.Connect(millisecondsTimeout, token);
+                    this.m_client.Connect(millisecondsTimeout, token);
                 }
 
-                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+                var option = this.m_client.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
+
+                var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
                 var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.RemoteIPHost.Host, url, this.GetWebSocketVersion(), out var base64Key);
+                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Host, url, option.Version, out var base64Key);
                 this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)))
                     .GetFalseAwaitResult();
 
-                var response = this.Request(request, millisecondsTimeout: millisecondsTimeout, token: token);
+                var response = this.m_client.Request(request, millisecondsTimeout: millisecondsTimeout, token: token);
                 if (response.StatusCode != 101)
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
@@ -76,12 +87,12 @@ namespace TouchSocket.Http.WebSockets
                 var accept = response.Headers.Get("sec-websocket-accept").Trim();
                 if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    this.MainSocket.SafeDispose();
+                    this.m_client.MainSocket.SafeDispose();
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
 
-                this.SetAdapter(new WebSocketDataHandlingAdapter());
-                this.SetValue(WebSocketFeature.HandshakedProperty, true);
+                this.m_client.InitWebSocket();
+
                 response.Flag = true;
                 Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
             }
@@ -92,23 +103,25 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
                 await this.m_semaphoreSlim.WaitAsync(millisecondsTimeout, token);
-                if (!this.Online)
+                if (!this.m_client.Online)
                 {
-                    await base.ConnectAsync(millisecondsTimeout, token);
+                    await this.m_client.ConnectAsync(millisecondsTimeout, token);
                 }
 
-                var iPHost = this.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
+                var option = this.m_client.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
+
+                var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
                 var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.RemoteIPHost.Host, url, this.GetWebSocketVersion(), out var base64Key);
+                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Host, url, option.Version, out var base64Key);
 
                 await this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
-                var response = await this.RequestAsync(request, millisecondsTimeout: millisecondsTimeout, token: token);
+                var response = await this.m_client.RequestAsync(request, millisecondsTimeout: millisecondsTimeout, token: token);
                 if (response.StatusCode != 101)
                 {
                     throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
@@ -116,12 +129,12 @@ namespace TouchSocket.Http.WebSockets
                 var accept = response.Headers.Get("sec-websocket-accept").Trim();
                 if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    this.MainSocket.SafeDispose();
+                    this.m_client.MainSocket.SafeDispose();
                     throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
                 }
 
-                this.SetAdapter(new WebSocketDataHandlingAdapter());
-                this.SetValue(WebSocketFeature.HandshakedProperty, true);
+                this.m_client.InitWebSocket();
+
                 response.Flag = true;
                 _ = Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
             }
@@ -136,10 +149,23 @@ namespace TouchSocket.Http.WebSockets
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
+        private PrivateHttpClient m_client;
 
         #endregion 字段
 
+        ///// <inheritdoc/>
+        //public IWebSocket WebSocket => m_client.WebSocket;
+
         #region 事件
+
+        /// <inheritdoc/>
+        public bool AllowAsyncRead { get => this.m_client.WebSocket.AllowAsyncRead; set => this.m_client.WebSocket.AllowAsyncRead = value; }
+
+        /// <inheritdoc/>
+        public IHttpClientBase Client => this.m_client;
+
+        /// <inheritdoc/>
+        public TouchSocketConfig Config => ((IConfigObject)this.m_client).Config;
 
         /// <summary>
         /// 表示完成握手后。
@@ -151,10 +177,29 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public HttpContextEventHandler<WebSocketClientBase> Handshaking { get; set; }
 
-        private Task PrivateOnHandshaked(object obj)
-        {
-            return this.OnHandshaked((HttpContextEventArgs)obj);
-        }
+        /// <inheritdoc/>
+        public bool IsHandshaked => this.m_client.WebSocket.IsHandshaked;
+
+        /// <inheritdoc/>
+        public DateTime LastReceivedTime => ((IClient)this.m_client).LastReceivedTime;
+
+        /// <inheritdoc/>
+        public DateTime LastSendTime => ((IClient)this.m_client).LastSendTime;
+
+        /// <inheritdoc/>
+        public ILog Logger { get => ((ILoggerObject)this.m_client).Logger; set => ((ILoggerObject)this.m_client).Logger = value; }
+
+        /// <inheritdoc/>
+        public IPluginManager PluginManager => ((IPluginObject)this.m_client).PluginManager;
+
+        /// <inheritdoc/>
+        public Protocol Protocol { get => ((IClient)this.m_client).Protocol; set => ((IClient)this.m_client).Protocol = value; }
+
+        /// <inheritdoc/>
+        public IResolver Resolver => ((IResolverObject)this.m_client).Resolver;
+
+        /// <inheritdoc/>
+        public string Version => this.m_client.WebSocket.Version;
 
         /// <summary>
         /// 表示完成握手后。
@@ -174,7 +219,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
+            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
         }
 
         /// <summary>
@@ -195,56 +240,166 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), this, e).ConfigureFalseAwait();
+            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), this, e).ConfigureFalseAwait();
+        }
+
+        private Task PrivateOnHandshaked(object obj)
+        {
+            return this.OnHandshaked((HttpContextEventArgs)obj);
         }
 
         #endregion 事件
 
         /// <inheritdoc/>
-        protected override async Task ReceivedData(ReceivedDataEventArgs e)
+        public void Close(string msg)
         {
-            if (this.GetHandshaked())
-            {
-                var dataFrame = (WSDataFrame)e.RequestInfo;
-
-                if (this.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
-                {
-                    if (await internalWebSocket.TryInputReceiveAsync(dataFrame).ConfigureFalseAwait())
-                    {
-                        return;
-                    }
-                }
-                await this.OnReceivedWSDataFrame(new WSDataFrameEventArgs(dataFrame));
-            }
-            else
-            {
-                if (e.RequestInfo is HttpResponse response)
-                {
-                    response.Flag = false;
-                    await base.ReceivedData(e);
-                    SpinWait.SpinUntil(() =>
-                    {
-                        return (bool)response.Flag;
-                    }, 3000);
-                }
-            }
-
-            await base.ReceivedData(e);
+            this.m_client.WebSocket.Close(msg);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnDisconnected(DisconnectEventArgs e)
+        public void Dispose()
         {
-            this.SetValue(WebSocketFeature.HandshakedProperty, false);
-            if (this.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
-            {
-                _ = internalWebSocket.TryInputReceiveAsync(null);
-            }
-            await base.OnDisconnected(e);
+            ((IDisposable)this.m_client).Dispose();
         }
+
+        /// <inheritdoc/>
+        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp)
+        {
+            return ((IDependencyObject)this.m_client).GetValue(dp);
+        }
+
+        /// <inheritdoc/>
+        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
+        {
+            return ((IDependencyObject)this.m_client).HasValue(dp);
+        }
+
+        /// <inheritdoc/>
+        public void Ping()
+        {
+            this.m_client.WebSocket.Ping();
+        }
+
+        /// <inheritdoc/>
+        public Task PingAsync()
+        {
+            return this.m_client.WebSocket.PingAsync();
+        }
+
+        /// <inheritdoc/>
+        public void Pong()
+        {
+            this.m_client.WebSocket.Pong();
+        }
+
+        /// <inheritdoc/>
+        public Task PongAsync()
+        {
+            return this.m_client.WebSocket.PongAsync();
+        }
+
+        /// <inheritdoc/>
+        public Task<WebSocketReceiveResult> ReadAsync(CancellationToken token)
+        {
+            return this.m_client.WebSocket.ReadAsync(token);
+        }
+
+        /// <inheritdoc/>
+        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp)
+        {
+            return ((IDependencyObject)this.m_client).RemoveValue(dp);
+        }
+
+        /// <inheritdoc/>
+        public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
+        {
+            this.m_client.WebSocket.Send(dataFrame, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public void Send(string text, bool endOfMessage = true)
+        {
+            this.m_client.WebSocket.Send(text, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public void Send(byte[] buffer, int offset, int length, bool endOfMessage = true)
+        {
+            this.m_client.WebSocket.Send(buffer, offset, length, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public void Send(ByteBlock byteBlock, bool endOfMessage = true)
+        {
+            this.m_client.WebSocket.Send(byteBlock, endOfMessage);
+        }
+
+        public void Send(byte[] buffer, bool endOfMessage = true)
+        {
+            this.m_client.WebSocket.Send(buffer, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
+        {
+            return this.m_client.WebSocket.SendAsync(dataFrame, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public Task SendAsync(string text, bool endOfMessage = true)
+        {
+            return this.m_client.WebSocket.SendAsync(text, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public Task SendAsync(byte[] buffer, bool endOfMessage = true)
+        {
+            return this.m_client.WebSocket.SendAsync(buffer, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
+        {
+            return this.m_client.WebSocket.SendAsync(buffer, offset, length, endOfMessage);
+        }
+
+        /// <inheritdoc/>
+        public void Setup(TouchSocketConfig config)
+        {
+            ((ISetupConfigObject)this.m_client).Setup(config);
+        }
+
+        /// <inheritdoc/>
+        public Task SetupAsync(TouchSocketConfig config)
+        {
+            return ((ISetupConfigObject)this.m_client).SetupAsync(config);
+        }
+
+        /// <inheritdoc/>
+        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
+        {
+            return ((IDependencyObject)this.m_client).SetValue(dp, value);
+        }
+
+        /// <inheritdoc/>
+        public bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
+        {
+            return ((IDependencyObject)this.m_client).TryGetValue(dp, out value);
+        }
+
+        /// <inheritdoc/>
+        public bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
+        {
+            return ((IDependencyObject)this.m_client).TryRemoveValue(dp, out value);
+        }
+
+#if ValueTask
+        /// <inheritdoc/>
+        public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
+        {
+            return await this.m_client.WebSocket.ValueReadAsync(token);
+        }
+#endif
 
         /// <summary>
         /// 当收到WS数据时。
@@ -253,7 +408,77 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         protected virtual async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, e).ConfigureFalseAwait();
+            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, e).ConfigureFalseAwait();
         }
+
+        #region InternalClass
+
+        private class PrivateHttpClient : HttpClientBase
+        {
+            private readonly InternalWebSocket m_webSocket;
+
+            private Func<WSDataFrameEventArgs, Task> m_func;
+
+            public PrivateHttpClient(Func<WSDataFrameEventArgs, Task> func)
+            {
+                this.m_webSocket = new InternalWebSocket(this);
+                this.m_func = func;
+            }
+
+            public InternalWebSocket WebSocket { get => m_webSocket; }
+
+            public void InitWebSocket()
+            {
+                this.SetAdapter(new WebSocketDataHandlingAdapter());
+                this.Protocol = Protocol.WebSocket;
+                this.m_webSocket.IsHandshaked = true;
+            }
+
+            /// <summary>
+            /// <inheritdoc/>
+            /// </summary>
+            /// <param name="e"></param>
+            protected override async Task OnDisconnected(DisconnectEventArgs e)
+            {
+                this.m_webSocket.IsHandshaked = false;
+                if (this.m_webSocket.AllowAsyncRead)
+                {
+                    _ = this.m_webSocket.TryInputReceiveAsync(null);
+                }
+                await base.OnDisconnected(e);
+            }
+
+            protected override async Task ReceivedData(ReceivedDataEventArgs e)
+            {
+                if (this.m_webSocket.IsHandshaked)
+                {
+                    var dataFrame = (WSDataFrame)e.RequestInfo;
+
+                    if (this.m_webSocket.AllowAsyncRead)
+                    {
+                        if (await this.m_webSocket.TryInputReceiveAsync(dataFrame).ConfigureFalseAwait())
+                        {
+                            return;
+                        }
+                    }
+                    await this.m_func(new WSDataFrameEventArgs(dataFrame));
+                }
+                else
+                {
+                    if (e.RequestInfo is HttpResponse response)
+                    {
+                        response.Flag = false;
+                        await base.ReceivedData(e);
+                        SpinWait.SpinUntil(() =>
+                        {
+                            return (bool)response.Flag;
+                        }, 3000);
+                    }
+                }
+                await base.ReceivedData(e);
+            }
+        }
+
+        #endregion InternalClass
     }
 }

@@ -56,55 +56,16 @@ namespace TouchSocket.Dmtp
 
         #endregion 字段
 
-        /// <inheritdoc/>
-        public bool CanSend => this.m_client.State == WebSocketState.Open;
-
-        /// <summary>
-        /// 断开连接
-        /// </summary>
-        public DisconnectEventHandler<WebSocketDmtpClient> Disconnected { get; set; }
+        #region 连接
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
-
-        /// <inheritdoc/>
-        public string Id => this.m_dmtpActor?.Id;
-
-        /// <inheritdoc/>
-        public bool IsHandshaked { get; private set; }
-
-        /// <inheritdoc/>
-        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
-
-        /// <inheritdoc/>
-        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
-
-        /// <inheritdoc/>
-        public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
-
-        /// <inheritdoc/>
-        public IPHost RemoteIPHost { get; private set; }
-
-        /// <summary>
-        /// 发送<see cref="IDmtpActor"/>关闭消息。
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public void Close(string msg = "")
+        public void Connect(int millisecondsTimeout, CancellationToken token)
         {
-            this.m_dmtpActor.SendClose(msg);
-            this.m_dmtpActor.Close(msg);
-            this.PrivateClose(msg);
+            this.ConnectAsync(millisecondsTimeout, token).GetFalseAwaitResult();
         }
 
         /// <inheritdoc/>
-        public Task ConnectAsync(int millisecondsTimeout = 5000)
-        {
-            return this.ConnectAsync(CancellationToken.None, millisecondsTimeout);
-        }
-
-        /// <inheritdoc/>
-        public async Task ConnectAsync(CancellationToken token, int millisecondsTimeout = 5000)
+        public async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             try
             {
@@ -150,6 +111,45 @@ namespace TouchSocket.Dmtp
             {
                 this.m_semaphoreForConnect.Release();
             }
+        }
+        #endregion
+
+        /// <summary>
+        /// 断开连接
+        /// </summary>
+        public DisconnectEventHandler<WebSocketDmtpClient> Disconnected { get; set; }
+
+        /// <inheritdoc/>
+        public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
+
+        /// <inheritdoc/>
+        public string Id => this.m_dmtpActor?.Id;
+
+        /// <inheritdoc/>
+        public bool IsHandshaked { get; private set; }
+
+        /// <inheritdoc/>
+        public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
+
+        /// <inheritdoc/>
+        public DateTime LastSendTime => this.m_sendCounter.LastIncrement;
+
+        /// <inheritdoc/>
+        public Protocol Protocol { get; set; } = DmtpUtility.DmtpProtocol;
+
+        /// <inheritdoc/>
+        public IPHost RemoteIPHost { get; private set; }
+
+        /// <summary>
+        /// 发送<see cref="IDmtpActor"/>关闭消息。
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public void Close(string msg)
+        {
+            this.m_dmtpActor.SendClose(msg);
+            this.m_dmtpActor.Close(msg);
+            this.PrivateClose(msg);
         }
 
         /// <inheritdoc/>
@@ -267,7 +267,7 @@ namespace TouchSocket.Dmtp
 
         private void PrivateClose(string msg)
         {
-            this.BreakOut($"调用{nameof(Close)}", true);
+            this.BreakOut(msg, true);
         }
 
         private void PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
@@ -415,28 +415,5 @@ namespace TouchSocket.Dmtp
         }
 
         #endregion 事件触发
-
-        #region Receiver
-
-        /// <summary>
-        /// 不支持该功能
-        /// </summary>
-        /// <exception cref="NotSupportedException"></exception>
-        public void ClearReceiver()
-        {
-            throw new NotSupportedException("不支持该功能");
-        }
-
-        /// <summary>
-        /// 不支持该功能
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
-        public IReceiver CreateReceiver()
-        {
-            throw new NotSupportedException("不支持该功能");
-        }
-
-        #endregion Receiver
     }
 }

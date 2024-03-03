@@ -13,27 +13,14 @@
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject
+    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject,IConnectObject
     {
-        /// <summary>
-        /// 异步连接
-        /// </summary>
-        /// <param name="millisecondsTimeout">验证超时时间</param>
-        /// <returns></returns>
-        Task ConnectAsync(int millisecondsTimeout = 5000);
-
-        /// <summary>
-        /// 异步连接
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns></returns>
-        Task ConnectAsync(CancellationToken token, int millisecondsTimeout = 5000);
     }
 }
