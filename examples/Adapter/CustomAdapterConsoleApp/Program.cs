@@ -6,7 +6,7 @@ namespace CustomAdapterConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
             var client = CreateClient();
@@ -27,7 +27,7 @@ namespace CustomAdapterConsoleApp
                     //构建发送数据
                     using (var byteBlock = new ByteBlock(1024))
                     {
-                        byteBlock.Write((byte)(myRequestInfo.Body.Length+2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                        byteBlock.Write((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
                         byteBlock.Write((byte)myRequestInfo.DataType);//然后数据类型
                         byteBlock.Write((byte)myRequestInfo.OrderType);//然后指令类型
                         byteBlock.Write(myRequestInfo.Body);//再写数据
@@ -37,7 +37,7 @@ namespace CustomAdapterConsoleApp
             }
         }
 
-        static TcpClient CreateClient()
+        private static TcpClient CreateClient()
         {
             var client = new TcpClient();
             //载入配置
@@ -54,7 +54,7 @@ namespace CustomAdapterConsoleApp
             return client;
         }
 
-        static TcpService CreateService()
+        private static TcpService CreateService()
         {
             var service = new TcpService();
             service.Received = (client, e) =>
@@ -79,7 +79,7 @@ namespace CustomAdapterConsoleApp
                 {
                     //a.Add();//此处可以添加插件
                 }));
-                service.Start();//启动
+            service.Start();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }
@@ -87,7 +87,6 @@ namespace CustomAdapterConsoleApp
 
     internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequestInfo>
     {
-
         /// <summary>
         /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
         /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
@@ -108,18 +107,18 @@ namespace CustomAdapterConsoleApp
                 return FilterResult.Cache;//当头部都无法解析时，直接缓存
             }
 
-            int pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
+            var pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
 
-            MyRequestInfo myRequestInfo = new MyRequestInfo();
+            var myRequestInfo = new MyRequestInfo();
 
             //此操作实际上有两个作用，
             //1.填充header
             //2.将byteBlock.Pos递增3的长度。
-            byteBlock.Read(out byte[] header, 3);//填充header
+            byteBlock.Read(out var header, 3);//填充header
 
             //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
             //所有只需呀再读取header[0]-2个长度即可。
-            byte bodyLength = (byte)(header[0] - 2);
+            var bodyLength = (byte)(header[0] - 2);
 
             if (bodyLength > byteBlock.CanReadLen)
             {
@@ -132,7 +131,7 @@ namespace CustomAdapterConsoleApp
                 //此操作实际上有两个作用，
                 //1.填充body
                 //2.将byteBlock.Pos递增bodyLength的长度。
-                byteBlock.Read(out byte[] body, bodyLength);
+                byteBlock.Read(out var body, bodyLength);
 
                 myRequestInfo.DataType = header[1];
                 myRequestInfo.OrderType = header[2];

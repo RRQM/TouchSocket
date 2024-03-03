@@ -21,7 +21,6 @@ namespace ServiceConsoleApp
             consoleAction.RunCommandLine();
         }
 
-
         private static TcpService CreateService()
         {
             var service = new TcpService();
@@ -49,7 +48,6 @@ namespace ServiceConsoleApp
             service.Start();//启动
             return service;
         }
-
 
         /// <summary>
         /// 以Received异步委托接收数据
@@ -122,27 +120,24 @@ namespace ServiceConsoleApp
                         client.Logger.Info($"客户端接收到信息：{mes}");
 
                         //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
-
                     }
                 }
             }
         }
     }
 
-    class MyTcpClient : TcpClientBase
+    internal class MyTcpClient : TcpClientBase
     {
         protected override async Task ReceivedData(ReceivedDataEventArgs e)
         {
             //此处逻辑单线程处理。
 
             //此处处理数据，功能相当于Received委托。
-            string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+            var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
             Console.WriteLine($"已接收到信息：{mes}");
             await base.ReceivedData(e);
         }
     }
-
-
 
     internal class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {
@@ -173,7 +168,7 @@ namespace ServiceConsoleApp
         }
     }
 
-    class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>
+    internal class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>
     {
         public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
         {
@@ -195,14 +190,13 @@ namespace ServiceConsoleApp
                         client.Logger.Info($"客户端接收到信息：{mes}");
 
                         //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
-
                     }
                 }
             }
         }
     }
 
-    class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
+    internal class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
     {
         public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
         {
@@ -235,7 +229,7 @@ namespace ServiceConsoleApp
     /// <summary>
     /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
     /// </summary>
-    class ClosePlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
+    internal class ClosePlugin : PluginBase, ITcpReceivedPlugin<ISocketClient>
     {
         private readonly ILog m_logger;
 
@@ -252,22 +246,22 @@ namespace ServiceConsoleApp
             }
             catch (CloseException ex)
             {
-                m_logger.Info("拦截到CloseException");
+                this.m_logger.Info("拦截到CloseException");
                 client.Close(ex.Message);
             }
             catch (Exception exx)
             {
-
             }
             finally
             {
-
             }
         }
     }
 
-    class CloseException : Exception
+    internal class CloseException : Exception
     {
-        public CloseException(string msg) : base(msg) { }
+        public CloseException(string msg) : base(msg)
+        {
+        }
     }
 }

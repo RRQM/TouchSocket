@@ -7,7 +7,7 @@ namespace ModbusSlaveConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -22,7 +22,7 @@ namespace ModbusSlaveConsoleApp
             Console.ReadKey();
         }
 
-        static ModbusTcpSlave CreateModbusTcpSlave()
+        private static ModbusTcpSlave CreateModbusTcpSlave()
         {
             var service = new ModbusTcpSlave();
             service.Setup(new TouchSocketConfig()
@@ -61,7 +61,7 @@ namespace ModbusSlaveConsoleApp
             return service;
         }
 
-        static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
+        private static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
         {
             var service = new ModbusRtuOverTcpSlave();
             service.Setup(new TouchSocketConfig()
@@ -82,7 +82,7 @@ namespace ModbusSlaveConsoleApp
             return service;
         }
 
-        static ModbusUdpSlave CreateModbusUdpSlave()
+        private static ModbusUdpSlave CreateModbusUdpSlave()
         {
             var service = new ModbusUdpSlave();
             service.Setup(new TouchSocketConfig()
@@ -103,7 +103,7 @@ namespace ModbusSlaveConsoleApp
             return service;
         }
 
-        static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
+        private static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
         {
             var service = new ModbusRtuOverUdpSlave();
             service.Setup(new TouchSocketConfig()
@@ -124,7 +124,7 @@ namespace ModbusSlaveConsoleApp
             return service;
         }
 
-        static ModbusRtuSlave CreateModbusRtuSlave()
+        private static ModbusRtuSlave CreateModbusRtuSlave()
         {
             var service = new ModbusRtuSlave();
             service.Setup(new TouchSocketConfig()
@@ -154,7 +154,7 @@ namespace ModbusSlaveConsoleApp
         }
     }
 
-    class MyModbusSlavePlugin : PluginBase, IModbusSlaveExecutingPlugin, IModbusSlaveExecutedPlugin
+    internal class MyModbusSlavePlugin : PluginBase, IModbusSlaveExecutingPlugin, IModbusSlaveExecutedPlugin
     {
         public async Task OnModbusSlaveExecuted(IModbusSlavePoint sender, ModbusSlaveExecutedEventArgs e)
         {

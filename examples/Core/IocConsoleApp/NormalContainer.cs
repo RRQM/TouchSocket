@@ -14,10 +14,11 @@ namespace IocConsoleApp
             PropertyInject();
             MethodInject();
         }
+
         /// <summary>
         /// 构造函数注入
         /// </summary>
-        static void ConstructorInject()
+        private static void ConstructorInject()
         {
             var container = GetContainer();
             container.RegisterSingleton<MyClass1>();
@@ -32,7 +33,7 @@ namespace IocConsoleApp
         /// <summary>
         /// 属性注入
         /// </summary>
-        static void PropertyInject()
+        private static void PropertyInject()
         {
             var container = GetContainer();
             container.RegisterSingleton<MyClass1>();
@@ -48,7 +49,7 @@ namespace IocConsoleApp
         /// <summary>
         /// 方法注入
         /// </summary>
-        static void MethodInject()
+        private static void MethodInject()
         {
             var container = GetContainer();
             container.RegisterSingleton<MyClass1>();
@@ -58,8 +59,7 @@ namespace IocConsoleApp
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
         }
 
-      
-        static IContainer GetContainer()
+        private static IContainer GetContainer()
         {
             return new Container();//默认IOC容器
 
@@ -67,12 +67,11 @@ namespace IocConsoleApp
         }
     }
 
-    class MyClass1
+    internal class MyClass1
     {
-
     }
 
-    class MyClass2
+    internal class MyClass2
     {
         public MyClass2(MyClass1 myClass1)
         {
@@ -82,7 +81,7 @@ namespace IocConsoleApp
         public MyClass1 MyClass1 { get; }
     }
 
-    class MyClass3
+    internal class MyClass3
     {
         /// <summary>
         /// 直接按类型，默认方式获取
@@ -103,10 +102,9 @@ namespace IocConsoleApp
         public MyClass1 KeyMyClass1 { get; set; }
     }
 
-    class MyClass4
+    internal class MyClass4
     {
         public MyClass1 MyClass1 { get; private set; }
-
 
         [DependencyInject]
         public void MethodInject(MyClass1 myClass1)

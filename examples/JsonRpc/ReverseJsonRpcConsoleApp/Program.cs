@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System.Diagnostics;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.JsonRpc;
@@ -11,7 +9,7 @@ namespace ReverseJsonRpcConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = GetService();
             var client = GetClient();
@@ -19,7 +17,7 @@ namespace ReverseJsonRpcConsoleApp
             Console.ReadKey();
         }
 
-        static WebSocketJsonRpcClient GetClient()
+        private static WebSocketJsonRpcClient GetClient()
         {
             var jsonRpcClient = new WebSocketJsonRpcClient();
             jsonRpcClient.Setup(new TouchSocketConfig()
@@ -36,7 +34,7 @@ namespace ReverseJsonRpcConsoleApp
             return jsonRpcClient;
         }
 
-        static HttpService GetService()
+        private static HttpService GetService()
         {
             var service = new HttpService();
 
@@ -62,18 +60,17 @@ namespace ReverseJsonRpcConsoleApp
         }
     }
 
-    class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>
+    internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IWebSocket>
     {
-        public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             try
             {
                 //获取JsonRpcActionClient，用于执行反向Rpc
-                var jsonRpcClient = client.GetJsonRpcActionClient();
+                var jsonRpcClient = ((IHttpSocketClient)client.Client).GetJsonRpcActionClient();
 
                 var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
                 Console.WriteLine(result);
-
 
                 //Stopwatch stopwatch = Stopwatch.StartNew();
                 //for (int i = 0; i < 10000; i++)
@@ -88,7 +85,6 @@ namespace ReverseJsonRpcConsoleApp
             {
                 Console.WriteLine(ex.Message);
             }
-
 
             await e.InvokeNext();
         }

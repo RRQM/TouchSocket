@@ -8,9 +8,9 @@ namespace DmtpConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            ConsoleAction action = new ConsoleAction();
+            var action = new ConsoleAction();
             action.Add("1", "测试连接", Connect_1);
             action.Add("2", "测试以普通Tcp连接", Connect_2);
             action.Add("3", "发送消息", Send);
@@ -27,7 +27,7 @@ namespace DmtpConsoleApp
             Console.WriteLine(obj.Message);
         }
 
-        static void Send()
+        private static void Send()
         {
             using var client = new TcpDmtpClient();
 
@@ -41,7 +41,7 @@ namespace DmtpConsoleApp
                     //此处使用委托注册插件。和类插件功能一样
                     a.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), async (object s, DmtpMessageEventArgs e) =>
                     {
-                        string msg = e.DmtpMessage.BodyByteBlock.ToString();
+                        var msg = e.DmtpMessage.BodyByteBlock.ToString();
                         await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
                         await e.InvokeNext();
                     });
@@ -72,7 +72,7 @@ namespace DmtpConsoleApp
         /// 使用普通tcp连接
         /// </summary>
         /// <returns></returns>
-        static async void Connect_2()
+        private static async void Connect_2()
         {
             using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
             tcpClient.Received = (client, e) =>
@@ -91,6 +91,7 @@ namespace DmtpConsoleApp
             };
 
             #region 基础Flag协议
+
             Console.WriteLine($"{nameof(DmtpActor.P0_Close)}-flag-->{DmtpActor.P0_Close}");
             Console.WriteLine($"{nameof(DmtpActor.P1_Handshake_Request)}-flag-->{DmtpActor.P1_Handshake_Request}");
             Console.WriteLine($"{nameof(DmtpActor.P2_Handshake_Response)}-flag-->{DmtpActor.P2_Handshake_Response}");
@@ -101,10 +102,11 @@ namespace DmtpConsoleApp
             Console.WriteLine($"{nameof(DmtpActor.P7_CreateChannel_Request)}-flag-->{DmtpActor.P7_CreateChannel_Request}");
             Console.WriteLine($"{nameof(DmtpActor.P8_CreateChannel_Response)}-flag-->{DmtpActor.P8_CreateChannel_Response}");
             Console.WriteLine($"{nameof(DmtpActor.P9_ChannelPackage)}-flag-->{DmtpActor.P9_ChannelPackage}");
-            #endregion
 
+            #endregion 基础Flag协议
 
             #region 连接
+
             //开始链接服务器
             tcpClient.Connect("127.0.0.1:7789");
 
@@ -127,7 +129,8 @@ namespace DmtpConsoleApp
 
                 tcpClient.Send(byteBlock);
             }
-            #endregion
+
+            #endregion 连接
 
             #region Ping
 
@@ -144,7 +147,8 @@ namespace DmtpConsoleApp
 
                 tcpClient.Send(byteBlock);
             }
-            #endregion
+
+            #endregion Ping
 
             await Task.Delay(2000);
         }
@@ -155,7 +159,7 @@ namespace DmtpConsoleApp
         /// 2、设置Metadata，可以传递更多的验证信息。
         /// 3、设置默认Id。
         /// </summary>
-        static void Connect_1()
+        private static void Connect_1()
         {
             using var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
@@ -177,7 +181,7 @@ namespace DmtpConsoleApp
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
         }
 
-        static TcpDmtpService CreateTcpDmtpService()
+        private static TcpDmtpService CreateTcpDmtpService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -233,7 +237,7 @@ namespace DmtpConsoleApp
             if (e.DmtpMessage.ProtocolFlags == 1000)
             {
                 //判断完协议以后，从 e.DmtpMessage.BodyByteBlock可以拿到实际的数据
-                string msg = e.DmtpMessage.BodyByteBlock.ToString();
+                var msg = e.DmtpMessage.BodyByteBlock.ToString();
                 await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
                 //向客户端回发消息

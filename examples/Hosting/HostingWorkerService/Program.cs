@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
@@ -43,13 +41,11 @@ namespace HostingWorkerService
         }
     }
 
-    class MyTcpService : TcpService, IMyTcpService
+    internal class MyTcpService : TcpService, IMyTcpService
     {
-
     }
 
-    interface IMyTcpService : ITcpService
+    internal interface IMyTcpService : ITcpService
     {
-
     }
 }

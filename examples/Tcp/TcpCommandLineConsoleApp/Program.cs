@@ -23,7 +23,7 @@ namespace TcpCommandLineConsoleApp
                   .ConfigurePlugins(a =>
                   {
                       a.UseCheckClear()
-                      .SetCheckClearType( CheckClearType.All)
+                      .SetCheckClearType(CheckClearType.All)
                       .SetTick(TimeSpan.FromSeconds(60));
 
                       a.Add<MyCommandLinePlugin>();

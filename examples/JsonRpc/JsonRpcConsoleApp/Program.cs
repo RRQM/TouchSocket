@@ -40,7 +40,7 @@ namespace JsonRpcConsoleApp
 
             service.Setup(new TouchSocketConfig()
                  .SetListenIPHosts(7706)
-                 .ConfigureContainer(a => 
+                 .ConfigureContainer(a =>
                  {
                      a.AddRpcStore(store =>
                      {
@@ -63,7 +63,7 @@ namespace JsonRpcConsoleApp
 
             service.Setup(new TouchSocketConfig()
                  .SetListenIPHosts(7707)
-                 .ConfigureContainer(a => 
+                 .ConfigureContainer(a =>
                  {
                      a.AddRpcStore(store =>
                      {
@@ -94,7 +94,7 @@ namespace JsonRpcConsoleApp
             service.Setup(new TouchSocketConfig()
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetListenIPHosts(7705)
-                .ConfigureContainer(a => 
+                .ConfigureContainer(a =>
                 {
                     a.AddRpcStore(store =>
                     {
@@ -112,8 +112,6 @@ namespace JsonRpcConsoleApp
                 }));
             service.Start();
         }
-
-
     }
 
     public partial class JsonRpcServer : RpcServer

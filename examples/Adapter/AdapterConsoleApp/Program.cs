@@ -143,7 +143,7 @@ namespace AdapterConsoleApp
         {
             //使用拼接模式发送，在发送流式数据之前
 
-            int dataLen = 0;
+            var dataLen = 0;
             foreach (var item in transferBytes)
             {
                 dataLen += item.Count;
@@ -238,7 +238,7 @@ namespace AdapterConsoleApp
         }
     }
 
-    class MyClass : IRequestInfo
+    internal class MyClass : IRequestInfo
     {
         public OrderType OrderType { get; set; }
         public DataType DataType { get; set; }
@@ -246,13 +246,13 @@ namespace AdapterConsoleApp
         public byte[] Data { get; set; }
     }
 
-    enum DataType : byte
+    internal enum DataType : byte
     {
         Down = 0,
         Up = 1
     }
 
-    enum OrderType : byte
+    internal enum OrderType : byte
     {
         Hold = 0,
         Go = 1

@@ -1,8 +1,6 @@
-﻿using System.ComponentModel;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
-using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace DispatchProxyDmtpRpcConsoleApp
@@ -13,7 +11,7 @@ namespace DispatchProxyDmtpRpcConsoleApp
         /// 调用前先启动DmtpRpcServerConsoleApp项目
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var myRpcServer = DmtpRpcDispatchProxy.Create<IMyRpcServer, MyDmtpRpcDispatchProxy>();
 
@@ -26,7 +24,7 @@ namespace DispatchProxyDmtpRpcConsoleApp
         /// 新建一个类，按照需要，继承DmtpRpcDispatchProxy，亦或者预设的JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
         /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
         /// </summary>
-        class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
+        private class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
         {
             private readonly TcpDmtpClient m_client;
 
@@ -59,11 +57,11 @@ namespace DispatchProxyDmtpRpcConsoleApp
 
             public override IDmtpRpcActor GetClient()
             {
-                return m_client.GetDmtpRpcActor();
+                return this.m_client.GetDmtpRpcActor();
             }
         }
 
-        interface IMyRpcServer
+        private interface IMyRpcServer
         {
             /// <summary>
             /// 将两个数相加

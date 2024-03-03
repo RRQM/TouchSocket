@@ -126,7 +126,7 @@ client.Setup(new TouchSocketConfig()
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Headers.Add("token", "123456");
             await e.InvokeNext();
@@ -157,7 +157,7 @@ client.Setup(new TouchSocketConfig()
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
             await e.InvokeNext();
@@ -183,13 +183,13 @@ client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ### 5.1 发送文本类消息
 
 ```csharp showLineNumbers
-client.SendWithWS("Text");
+client.Send("Text");
 ```
 
 ### 5.2 发送二进制消息
 
 ```csharp showLineNumbers
-client.SendWithWS(new byte[10]);
+client.Send(new byte[10]);
 ```
 
 ### 5.3 直接发送自定义构建的数据帧
@@ -203,17 +203,12 @@ frame.RSV3= true;
 frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
-myWSClient.SendWithWS(frame);
+
+client.Send(frame);
 ```
 :::info 备注
 
 此部分功能就需要你对Websocket有充分了解才可以操作。
-
-:::  
-
-:::caution 注意
-
-Websocket的所有发送，都是形如**SendWithWS**的扩展方法。不可直接Send。
 
 :::  
 
@@ -248,40 +243,46 @@ client.Received = (c, e) =>
 
 【定义插件】
 ```csharp showLineNumbers
-public class MyWebSocketPlugin : PluginBase,IWebSocketReceivedPlugin
+public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 {
-    public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+    private readonly ILog m_logger;
+
+    public MyWebSocketPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+    public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
     {
         switch (e.DataFrame.Opcode)
         {
             case WSDataType.Cont:
-                client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                m_logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
 
                 return;
 
             case WSDataType.Text:
-                client.Logger.Info(e.DataFrame.ToText());
+                m_logger.Info(e.DataFrame.ToText());
 
-                if (!client.IsClient)
+                if (!client.Client.IsClient)
                 {
-                    client.SendWithWS("我已收到");
+                    client.Send("我已收到");
                 }
                 return;
 
             case WSDataType.Binary:
                 if (e.DataFrame.FIN)
                 {
-                    client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
                 }
                 else
                 {
-                    client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                    m_logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
                 }
                 return;
 
             case WSDataType.Close:
                 {
-                    client.Logger.Info("远程请求断开");
+                    m_logger.Info("远程请求断开");
                     client.Close("断开");
                 }
                 return;
@@ -323,28 +324,26 @@ client.Connect();
 ```csharp showLineNumbers
 using (var client = GetClient())
 {
-    //通过GetWebSocket扩展方法，获取到显式的WebSocket终端。
-    //需要注意的是，此处的using，仅仅是释放当前创建的WebSocket。而不是WebSocketClient的连接。
-    using (var websocket=client.GetWebSocket())
-    {
-        while (true)
-        {
-            using (var receiveResult = await websocket.ReadAsync(CancellationToken.None))
-            {
-                if (receiveResult.DataFrame == null)
-                {
-                    //断开连接了
-                    break;
-                }
+    //当WebSocket想要使用ReadAsync时，需要设置此值为true
+    client.AllowAsyncRead = true;
 
-                //判断是否为最后数据
-                //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
-                if (receiveResult.DataFrame.FIN)
+    while (true)
+    {
+        using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+        {
+            if (receiveResult.IsClosed)
+            {
+                //断开连接了
+                break;
+            }
+
+            //判断是否为最后数据
+            //例如发送方发送了一个10Mb的数据，接收时可能会多次接收，所以需要此属性判断。
+            if (receiveResult.DataFrame.FIN)
+            {
+                if (receiveResult.DataFrame.IsText)
                 {
-                    if (receiveResult.DataFrame.IsText)
-                    {
-                        m_logger.Info($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
-                    }
+                    Console.WriteLine($"WebSocket文本：{receiveResult.DataFrame.ToText()}");
                 }
             }
         }
@@ -360,7 +359,7 @@ using (var client = GetClient())
 
 :::caution 注意
 
-使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。并且被调用`GetWebSocket`的客户端，在收到`WebSocket`消息的时候，不会再触发插件。
+使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。在收到`WebSocket`消息的时候，不会再触发插件。
 
 ::: 
 
@@ -368,20 +367,20 @@ using (var client = GetClient())
 
 ### 7.1 握手机制
 
-`WebSocket`是从HttpClient、TcpClient继承来的，所以很多属性仅仅是表示Tcp的状态。要获取握手信息，需要调用client.GetHandshaked()扩展方法获得。
+`WebSocket`拥有独立的握手机制，直接获取`IsHandshaked`属性即可。
 
 ### 7.2 Ping机制
 
-`WebSocket`有自己的Ping、Pong机制。所以直接调用已有方法即可。
+`WebSocket`有自己的`Ping`、`Pong`机制。所以直接调用已有方法即可。
 
 ```csharp showLineNumbers
-client.PingWS();
-client.PongWS();
+client.Ping();
+client.Pong();
 ```
 
 :::tip 建议
 
-WebSocket是双向通讯，所以支持客户端和服务器双向操作Ping和Pong报文。但是一般来说都是客户端执行Ping，服务器回应Pong。
+`WebSocket`是双向通讯，所以支持客户端和服务器双向操作`Ping`和`Pong`报文。但是一般来说都是客户端执行`Ping`，服务器回应`Pong`。
 
 :::  
 
@@ -401,7 +400,7 @@ WebSocket是双向通讯，所以支持客户端和服务器双向操作Ping和P
 关闭Websocket，应该发送关闭报文。
 
 ```csharp showLineNumbers
-myWSClient.CloseWithWS("close");
+myWSClient.Close("close");
 ```
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket/WebSocketConsoleApp)

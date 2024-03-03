@@ -32,7 +32,7 @@ namespace DmtpClientApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//ÅäÖÃ
                    .SetListenIPHosts(port)
-                   .ConfigureContainer(a => 
+                   .ConfigureContainer(a =>
                    {
                        a.AddRpcStore(store =>
                        {
@@ -44,7 +44,7 @@ namespace DmtpClientApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.Add(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), async (c,e) => 
+                       a.Add(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), async (c, e) =>
                        {
                            await e.InvokeNext();
                        });

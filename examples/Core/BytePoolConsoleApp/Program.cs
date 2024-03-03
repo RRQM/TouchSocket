@@ -18,7 +18,7 @@ namespace BytePoolConsoleApp
             Console.ReadKey();
         }
 
-        static void IPackageWriteRead()
+        private static void IPackageWriteRead()
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -32,7 +32,7 @@ namespace BytePoolConsoleApp
             }
         }
 
-        static void BytesPackageWriteRead()
+        private static void BytesPackageWriteRead()
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -40,19 +40,19 @@ namespace BytePoolConsoleApp
 
                 byteBlock.SeekToStart();
 
-                byte[] bytes = byteBlock.ReadBytesPackage();
+                var bytes = byteBlock.ReadBytesPackage();
 
                 byteBlock.SeekToStart();
 
                 //使用下列方式即可高效完成读取
-                if (byteBlock.TryReadBytesPackageInfo(out int pos, out int len))
+                if (byteBlock.TryReadBytesPackageInfo(out var pos, out var len))
                 {
                     var str = Encoding.UTF8.GetString(byteBlock.Buffer, pos, len);
                 }
             }
         }
 
-        static void ObjectWriteRead()
+        private static void ObjectWriteRead()
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -66,7 +66,7 @@ namespace BytePoolConsoleApp
             }
         }
 
-        static void PrimitiveWriteRead()
+        private static void PrimitiveWriteRead()
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -77,14 +77,14 @@ namespace BytePoolConsoleApp
 
                 byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
-                byte byteValue = (byte)byteBlock.ReadByte();
-                int intValue = byteBlock.ReadInt32();
-                long longValue = byteBlock.ReadInt64();
-                string stringValue = byteBlock.ReadString();
+                var byteValue = (byte)byteBlock.ReadByte();
+                var intValue = byteBlock.ReadInt32();
+                var longValue = byteBlock.ReadInt64();
+                var stringValue = byteBlock.ReadString();
             }
         }
 
-        static void BaseWriteRead()
+        private static void BaseWriteRead()
         {
             using (var byteBlock = new ByteBlock())
             {
@@ -97,9 +97,9 @@ namespace BytePoolConsoleApp
             }
         }
 
-        static void NewBytePool()
+        private static void NewBytePool()
         {
-            BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
+            var bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
             {
                 AutoZero = false,//在回收内存时，是否清空内存
                 MaxBucketsToTry = 5//最大梯度跨度
@@ -133,7 +133,7 @@ namespace BytePoolConsoleApp
         }
     }
 
-    class MyPackage : PackageBase
+    internal class MyPackage : PackageBase
     {
         public int Property { get; set; }
 
@@ -148,7 +148,7 @@ namespace BytePoolConsoleApp
         }
     }
 
-    class MyClass
+    internal class MyClass
     {
         public int Property { get; set; }
     }

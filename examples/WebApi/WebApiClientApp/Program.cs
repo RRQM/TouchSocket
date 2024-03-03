@@ -45,7 +45,6 @@ namespace WebApiClientApp
                 Console.WriteLine($"代理调用成功，结果：{sum3}");
             }
 
-
             Console.ReadKey();
         }
 
@@ -78,7 +77,7 @@ namespace WebApiClientApp
         /// <summary>
         /// 此处可以做WebApi的请求之前和之后的拦截。
         /// </summary>
-        class MyWebApiPlugin : PluginBase, IWebApiPlugin<IWebApiClientBase>
+        private class MyWebApiPlugin : PluginBase, IWebApiPlugin<IWebApiClientBase>
         {
             public async Task OnRequest(IWebApiClientBase client, WebApiEventArgs e)
             {

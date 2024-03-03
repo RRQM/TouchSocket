@@ -45,7 +45,7 @@ namespace UdpBroadcastConsoleApp
             }
         }
 
-        class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
+        private class MyPluginClass1 : PluginBase, IUdpReceivedPlugin
         {
             public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {
@@ -62,7 +62,7 @@ namespace UdpBroadcastConsoleApp
             }
         }
 
-        class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
+        private class MyPluginClass2 : PluginBase, IUdpReceivedPlugin
         {
             public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {
@@ -79,7 +79,7 @@ namespace UdpBroadcastConsoleApp
             }
         }
 
-        class MyPluginClass3 : PluginBase, IUdpReceivedPlugin
+        private class MyPluginClass3 : PluginBase, IUdpReceivedPlugin
         {
             public async Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e)
             {

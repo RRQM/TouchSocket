@@ -1,5 +1,4 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using System.Text;
 using TouchSocket.Core;
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
@@ -8,7 +7,7 @@ namespace NamedPipeClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var client = CreateClient();
 
@@ -46,7 +45,6 @@ namespace NamedPipeClientConsoleApp
                 .SetPipeName("touchsocketpipe")//管道名称
                 .ConfigurePlugins(a =>
                 {
-
                 })
                 .ConfigureContainer(a =>
                 {

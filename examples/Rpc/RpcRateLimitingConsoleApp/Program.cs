@@ -11,7 +11,7 @@ namespace RpcRateLimitingConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -25,7 +25,6 @@ namespace RpcRateLimitingConsoleApp
                            store.RegisterServer<MyRpcServer>();//注册服务
                        });
 
-                       
                        a.AddRateLimiter(p =>
                        {
                            //添加一个名称为FixedWindow的固定窗口的限流策略
@@ -36,7 +35,7 @@ namespace RpcRateLimitingConsoleApp
                            });
 
                            //添加一个名称为SlidingWindow的滑动窗口的限流策略
-                           p.AddSlidingWindowLimiter("SlidingWindow", options => 
+                           p.AddSlidingWindowLimiter("SlidingWindow", options =>
                            {
                                options.PermitLimit = 10;
                                options.Window = TimeSpan.FromSeconds(10);

@@ -5,13 +5,13 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
-[assembly:GeneratorRpcServerRegister]//生成注册
+[assembly: GeneratorRpcServerRegister]//生成注册
 
 namespace ConsoleApp2
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -23,8 +23,6 @@ namespace ConsoleApp2
 
                        a.AddRpcStore(store =>
                        {
-                           
-
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
@@ -46,7 +44,6 @@ namespace ConsoleApp2
             service.Setup(config);
             service.Start();
 
-
             service.Logger.Info($"{service.GetType().Name}已启动");
 
             service.Logger.Info($"输入客户端Id，空格输入消息，将通知客户端方法");
@@ -60,7 +57,6 @@ namespace ConsoleApp2
                     service.Logger.Info($"调用结果{result}");
                 }
             }
-
         }
     }
 

@@ -7,7 +7,7 @@ namespace ModbusClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var client = GetModbusTcpMaster();
 
@@ -55,7 +55,6 @@ namespace ModbusClientConsoleApp
             Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
             Console.WriteLine(reader.ReadString());
             Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonString());
-
         }
 
         /// <summary>
@@ -151,7 +150,7 @@ namespace ModbusClientConsoleApp
         }
     }
 
-    class MyClass
+    internal class MyClass
     {
         public int P1 { get; set; }
         public int P2 { get; set; }

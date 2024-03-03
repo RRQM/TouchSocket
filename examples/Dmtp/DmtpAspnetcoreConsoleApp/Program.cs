@@ -6,7 +6,7 @@ namespace DmtpAspnetcoreConsoleApp
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             //WebSocketDmtpClient连接
             var websocketDmtpClient = new WebSocketDmtpClient();

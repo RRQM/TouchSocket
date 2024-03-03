@@ -1,9 +1,6 @@
 ﻿using CustomDmtpActorConsoleApp.SimpleDmtpRpc;
-using System.Reflection;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Dmtp.Rpc;
-using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace CustomDmtpActorConsoleApp
@@ -13,14 +10,14 @@ namespace CustomDmtpActorConsoleApp
     /// </summary>
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
             while (true)
             {
-                string methodName = Console.ReadLine();
+                var methodName = Console.ReadLine();
                 var actor = client.GetSimpleDmtpRpcActor();
 
                 try
@@ -88,15 +85,13 @@ namespace CustomDmtpActorConsoleApp
             service.Logger.Info("服务器成功启动");
             return service;
         }
-
     }
 
-    class MyServer
+    internal class MyServer
     {
         public void SayHello()
         {
             Console.WriteLine("Hello");
         }
     }
-
 }

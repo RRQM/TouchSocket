@@ -4,7 +4,7 @@ namespace GenerateProxyFromServerConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var rpcStore = new RpcStore(new TouchSocket.Core.Container());
 
@@ -12,7 +12,7 @@ namespace GenerateProxyFromServerConsoleApp
         }
     }
 
-    partial class MyRpcClass : RpcServer
+    internal partial class MyRpcClass : RpcServer
     {
         public int Add(int a, int b)
         {
@@ -20,12 +20,13 @@ namespace GenerateProxyFromServerConsoleApp
         }
     }
 
-    class MyRpcAttribute : RpcAttribute
+    internal class MyRpcAttribute : RpcAttribute
     {
         public MyRpcAttribute()
         {
             this.GeneratorFlag = CodeGeneratorFlag.ExtensionAsync | CodeGeneratorFlag.InstanceAsync;
         }
+
         public override Type[] GetGenericConstraintTypes()
         {
             return new Type[] { typeof(IRpcClient) };

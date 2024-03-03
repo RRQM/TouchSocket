@@ -32,7 +32,7 @@ namespace ScreenUdpReceiver
                 this.udpSession.Setup(new TouchSocketConfig()
                .SetBindIPHost(new IPHost("127.0.0.1:7790"))
                .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
-                udpSession.Start();
+                this.udpSession.Start();
             }
             catch (Exception ex)
             {

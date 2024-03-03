@@ -9,7 +9,7 @@ namespace TcpWaitingClientWinFormsApp
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             CreateService();
             // To customize application configuration such as set high DPI settings or default font,
@@ -18,7 +18,7 @@ namespace TcpWaitingClientWinFormsApp
             Application.Run(new Form1());
         }
 
-        static void CreateService()
+        private static void CreateService()
         {
             var service = new TcpService();
 
@@ -37,7 +37,7 @@ namespace TcpWaitingClientWinFormsApp
             service.Logger.Info("服务器已启动");
         }
 
-        class MyPlugin1 : PluginBase, ITcpReceivedPlugin
+        private class MyPlugin1 : PluginBase, ITcpReceivedPlugin
         {
             private readonly ILog m_logger;
 
@@ -45,6 +45,7 @@ namespace TcpWaitingClientWinFormsApp
             {
                 this.m_logger = logger;
             }
+
             public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
             {
                 this.m_logger.Info($"收到数据：{e.ByteBlock.ToString()}");

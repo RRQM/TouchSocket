@@ -178,7 +178,7 @@ namespace ConsoleApp
                     }
                     catch (Exception ex)
                     {
-                        e.Context.Response.SetStatus(403,ex.Message)
+                        e.Context.Response.SetStatus(403, ex.Message)
                             .FromText(ex.Message)
                             .Answer();
                     }

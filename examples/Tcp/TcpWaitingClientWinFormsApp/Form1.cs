@@ -11,7 +11,7 @@ namespace TcpWaitingClientWinFormsApp
             this.InitializeComponent();
         }
 
-        TcpClient m_tcpClient;
+        private TcpClient m_tcpClient;
 
         private void IsConnected()
         {

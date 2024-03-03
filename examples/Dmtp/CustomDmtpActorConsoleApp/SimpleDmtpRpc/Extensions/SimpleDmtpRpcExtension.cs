@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    static class SimpleDmtpRpcExtension
+    internal static class SimpleDmtpRpcExtension
     {
         #region DependencyProperty
 
@@ -31,6 +26,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
         {
             return pluginManager.Add<SimpleDmtpRpcFeature>();
         }
+
         #endregion 插件扩展
 
         /// <summary>
@@ -69,5 +65,4 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             smtpActor.SetValue(SimpleDmtpRpcActorProperty, smtpRpcActor);
         }
     }
-
 }

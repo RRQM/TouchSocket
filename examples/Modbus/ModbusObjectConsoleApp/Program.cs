@@ -6,7 +6,7 @@ namespace ModbusObjectConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -44,13 +44,13 @@ namespace ModbusObjectConsoleApp
         /// Tcp从站
         /// </summary>
         /// <returns></returns>
-        static ModbusTcpSlave CreateModbusTcpSlave()
+        private static ModbusTcpSlave CreateModbusTcpSlave()
         {
             var service = new ModbusTcpSlave();
             service.Setup(new TouchSocketConfig()
                 //监听端口
                 .SetListenIPHosts(7808)
-                .ConfigurePlugins(a => 
+                .ConfigurePlugins(a =>
                 {
                     a.AddModbusSlavePoint()//添加一个从站站点
                     .SetSlaveId(1)//设置站点号
@@ -83,9 +83,10 @@ namespace ModbusObjectConsoleApp
         }
     }
 
-    class MyModbusObject : ModbusObject
+    internal class MyModbusObject : ModbusObject
     {
         #region Coils
+
         /// <summary>
         /// 声明一个来自线圈的bool属性。
         /// <para>
@@ -111,9 +112,11 @@ namespace ModbusObjectConsoleApp
             get { return this.GetValueArray<bool>(); }
             set { this.SetValueArray(value); }
         }
-        #endregion
+
+        #endregion Coils
 
         #region DiscreteInputs
+
         /// <summary>
         /// 声明一个来自离散输入的bool属性。
         /// <para>
@@ -137,9 +140,11 @@ namespace ModbusObjectConsoleApp
         {
             get { return this.GetValue<bool>(); }
         }
-        #endregion
+
+        #endregion DiscreteInputs
 
         #region HoldingRegisters
+
         /// <summary>
         /// 声明一个来自保持寄存器的short属性。
         /// <para>
@@ -165,9 +170,11 @@ namespace ModbusObjectConsoleApp
             get { return this.GetValueArray<short>(); }
             set { this.SetValueArray(value); }
         }
-        #endregion
+
+        #endregion HoldingRegisters
 
         #region InputRegisters
+
         /// <summary>
         /// 声明一个来自输入寄存器的short属性。
         /// <para>
@@ -191,6 +198,7 @@ namespace ModbusObjectConsoleApp
         {
             get { return this.GetValueArray<short>(); }
         }
-        #endregion
+
+        #endregion InputRegisters
     }
 }

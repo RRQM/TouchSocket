@@ -7,7 +7,7 @@ namespace SerialPortClientConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var client = new SerialPortClient();
             client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到端口
@@ -28,7 +28,7 @@ namespace SerialPortClientConsoleApp
                     PortName = "COM1",//COM
                     StopBits = System.IO.Ports.StopBits.One//停止位
                 })
-                .SetSerialDataHandlingAdapter(()=>new PeriodPackageAdapter())
+                .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter())
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyPlugin>();
@@ -61,7 +61,7 @@ namespace SerialPortClientConsoleApp
         }
     }
 
-    class MyClassPlugin : PluginBase, ISerialConnectedPlugin
+    internal class MyClassPlugin : PluginBase, ISerialConnectedPlugin
     {
         public async Task OnSerialConnected(ISerialPortClient client, ConnectedEventArgs e)
         {
@@ -75,8 +75,8 @@ namespace SerialPortClientConsoleApp
         {
             //这里处理数据接收
             //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-            ByteBlock byteBlock = e.ByteBlock;
-            IRequestInfo requestInfo = e.RequestInfo;
+            var byteBlock = e.ByteBlock;
+            var requestInfo = e.RequestInfo;
 
             //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 

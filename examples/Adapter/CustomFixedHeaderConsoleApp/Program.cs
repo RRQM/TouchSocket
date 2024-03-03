@@ -6,7 +6,7 @@ namespace CustomFixedHeaderConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = CreateService();
             var client = CreateClient();
@@ -37,7 +37,7 @@ namespace CustomFixedHeaderConsoleApp
             }
         }
 
-        static TcpClient CreateClient()
+        private static TcpClient CreateClient()
         {
             var client = new TcpClient();
             //载入配置
@@ -54,7 +54,7 @@ namespace CustomFixedHeaderConsoleApp
             return client;
         }
 
-        static TcpService CreateService()
+        private static TcpService CreateService()
         {
             var service = new TcpService();
             service.Received = (client, e) =>
@@ -124,7 +124,6 @@ namespace CustomFixedHeaderConsoleApp
         /// </summary>
         public byte[] Body { get; set; }
 
-
         public bool OnParsingBody(byte[] body)
         {
             if (body.Length == this.BodyLength)
@@ -135,7 +134,6 @@ namespace CustomFixedHeaderConsoleApp
             return false;
         }
 
-
         public bool OnParsingHeader(byte[] header)
         {
             //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
@@ -145,5 +143,4 @@ namespace CustomFixedHeaderConsoleApp
             return true;
         }
     }
-
 }

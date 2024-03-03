@@ -137,21 +137,29 @@ namespace ServiceConsoleApp
     /// <summary>
     /// WS收到数据等业务。
     /// </summary>
-    internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>, IWebSocketReceivedPlugin<IHttpSocketClient>
+    internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin<IWebSocket>, IWebSocketReceivedPlugin<IWebSocket>
     {
-        public Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
-            client.Logger.Info($"WS客户端连接，ID={client.Id}，IPHost={client.IP}:{client.Port}");
-            return Task.CompletedTask;
+            if (client.Client is IHttpSocketClient socketClient)
+            {
+                socketClient.Logger.Info($"WS客户端连接，ID={socketClient.Id}，IPHost={socketClient.IP}:{socketClient.Port}");
+            }
+
+            await e.InvokeNext();
         }
 
-        public Task OnWebSocketReceived(IHttpSocketClient client, WSDataFrameEventArgs e)
+        public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Text)
+            if (client.Client is IHttpSocketClient socketClient)
             {
-                client.Logger.Info($"WS Msg={e.DataFrame.ToText()}");
+                if (e.DataFrame.Opcode == WSDataType.Text)
+                {
+                    socketClient.Logger.Info($"WS Msg={e.DataFrame.ToText()}");
+                }
             }
-            return Task.CompletedTask;
+
+            await e.InvokeNext();
         }
     }
 }

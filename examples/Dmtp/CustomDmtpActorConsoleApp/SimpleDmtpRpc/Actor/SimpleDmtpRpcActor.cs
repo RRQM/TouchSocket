@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TouchSocket.Core;
+﻿using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.Dmtp.Rpc;
-using TouchSocket.Rpc;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
 {
-    class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
+    internal class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
     {
         private ushort m_invoke_Request = 1000;
         private ushort m_invoke_Response = 1001;
@@ -160,6 +153,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
         {
             this.PrivateInvoke(default, methodName);
         }
+
         public async void Invoke(string targetId, string methodName)
         {
             if (string.IsNullOrEmpty(targetId))
@@ -206,10 +200,12 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                         var result = (SimpleDmtpRpcPackage)waitData.WaitResult;
                         result.CheckStatus();
                         return;
+
                     case WaitDataStatus.Overtime:
                         throw new TimeoutException();
                     case WaitDataStatus.Canceled:
                         break;
+
                     case WaitDataStatus.Default:
                     case WaitDataStatus.Disposed:
                     default:

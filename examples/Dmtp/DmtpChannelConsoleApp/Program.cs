@@ -6,23 +6,22 @@ namespace DmtpChannelConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             var service = GetTcpDmtpService();
             var client = GetTcpDmtpClient();
 
             var consoleAction = new ConsoleAction();
 
-            consoleAction.Add("1","测试完成写入", () => { RunComplete(client); });
-            consoleAction.Add("2","测试Hold", () => { RunHoldOn(client); });
-
+            consoleAction.Add("1", "测试完成写入", () => { RunComplete(client); });
+            consoleAction.Add("2", "测试Hold", () => { RunHoldOn(client); });
 
             consoleAction.ShowAll();
 
             consoleAction.RunCommandLine();
         }
 
-        static void RunHoldOn(IDmtpActorObject client)
+        private static void RunHoldOn(IDmtpActorObject client)
         {
             //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
 
@@ -37,7 +36,7 @@ namespace DmtpChannelConsoleApp
 
                 for (var i = 0; i < 100; i++)//循环100次
                 {
-                    for (int j = 0; j < 10; j++)
+                    for (var j = 0; j < 10; j++)
                     {
                         //2.持续写入数据
                         channel.Write(bytes);
@@ -52,7 +51,7 @@ namespace DmtpChannelConsoleApp
             }
         }
 
-        static void RunComplete(IDmtpActorObject client)
+        private static void RunComplete(IDmtpActorObject client)
         {
             var count = 1024 * 1;//测试1Gb数据
 
@@ -134,6 +133,7 @@ namespace DmtpChannelConsoleApp
         {
             this.m_logger = logger;
         }
+
         public async Task OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
         {
             if (client.TrySubscribeChannel(e.ChannelId, out var channel))
@@ -160,7 +160,6 @@ namespace DmtpChannelConsoleApp
 
                         this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
                     }
-                    
                 }
             }
 

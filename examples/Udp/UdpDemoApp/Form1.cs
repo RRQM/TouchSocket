@@ -51,7 +51,7 @@ namespace UdpDemoApp
                  {
                      a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                  }));
-            m_udpSession.Start();
+            this.m_udpSession.Start();
             this.m_udpSession.Logger.Info("等待接收");
         }
 

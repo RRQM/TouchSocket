@@ -61,7 +61,6 @@ namespace UnityServerConsoleApp
                            var code = store.GetProxyCodes("UnityRpcProxy", typeof(DmtpRpcAttribute));
                            File.WriteAllText("../../../UnityRpcProxy.cs", code);
 #endif
-
                        });
                    })
                    .ConfigurePlugins(a =>
@@ -106,7 +105,6 @@ namespace UnityServerConsoleApp
 
     internal class MyPlguin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
     {
-
         public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
         {
             client.Logger.Info($"客户端{client.GetInfo()}已连接");

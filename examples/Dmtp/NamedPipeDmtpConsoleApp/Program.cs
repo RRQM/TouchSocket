@@ -7,7 +7,7 @@ namespace NamedPipeDmtpConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -23,7 +23,7 @@ namespace NamedPipeDmtpConsoleApp
             Console.ReadKey();
         }
 
-        static NamedPipeDmtpClient GetClient()
+        private static NamedPipeDmtpClient GetClient()
         {
             var client = new NamedPipeDmtpClient();
             client.Setup(new TouchSocketConfig()
@@ -42,7 +42,7 @@ namespace NamedPipeDmtpConsoleApp
             return client;
         }
 
-        static NamedPipeDmtpService GetService()
+        private static NamedPipeDmtpService GetService()
         {
             var service = new NamedPipeDmtpService();
             var config = new TouchSocketConfig()//配置
