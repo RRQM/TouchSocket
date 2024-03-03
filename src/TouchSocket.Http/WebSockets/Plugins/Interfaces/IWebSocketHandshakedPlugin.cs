@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebSocketHandshakedPlugin<in TClient> : IPlugin where TClient : IHttpClientBase
+    public interface IWebSocketHandshakedPlugin<in TClient> : IPlugin where TClient : IWebSocket
     {
         /// <summary>
         /// 表示完成握手后。
@@ -32,7 +32,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebSocketHandshakedPlugin : IWebSocketHandshakedPlugin<IHttpClientBase>
+    public interface IWebSocketHandshakedPlugin : IWebSocketHandshakedPlugin<IWebSocket>
     {
     }
 }

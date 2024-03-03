@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketReceivedPlugin
     /// </summary>
-    public interface IWebSocketReceivedPlugin<in TClient> : IPlugin where TClient : IHttpClientBase
+    public interface IWebSocketReceivedPlugin<in TClient> : IPlugin where TClient : IWebSocket
     {
         /// <summary>
         /// 当收到WS数据时。
@@ -32,7 +32,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketReceivedPlugin
     /// </summary>
-    public interface IWebSocketReceivedPlugin : IWebSocketReceivedPlugin<IHttpClientBase>
+    public interface IWebSocketReceivedPlugin : IWebSocketReceivedPlugin<IWebSocket>
     {
     }
 }

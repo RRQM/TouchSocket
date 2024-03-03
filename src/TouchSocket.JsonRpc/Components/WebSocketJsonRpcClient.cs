@@ -11,18 +11,22 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Resources;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
     /// 基于WebSocket协议的JsonRpc客户端。
     /// </summary>
-    public class WebSocketJsonRpcClient : WebSocketClientBase, IWebSocketJsonRpcClient
+    public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcClient
     {
         private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new WaitHandlePool<JsonRpcWaitResult>();
         private IRpcServerProvider m_rpcServerProvider;
@@ -36,6 +40,14 @@ namespace TouchSocket.JsonRpc
         /// WaitHandle
         /// </summary>
         public WaitHandlePool<JsonRpcWaitResult> WaitHandle => this.m_waitHandle;
+
+        /// <inheritdoc/>
+        public bool IsHandshaked => base.ProtectedIsHandshaked;
+
+        private ArraySegment<byte> GetInvokeBytes(JsonRpcRequest request)
+        {
+            return new ArraySegment<byte>(Encoding.UTF8.GetBytes(request.ToJsonString()));
+        }
 
         /// <inheritdoc/>
         public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
@@ -57,7 +69,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                this.SendWithWS(jsonRpcRequest.ToJsonString());
+                this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -131,7 +143,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                this.SendWithWS(jsonRpcRequest.ToJsonString());
+                this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -209,7 +221,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.SendWithWSAsync(jsonRpcRequest.ToJsonString());
+                await this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -275,7 +287,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.SendWithWSAsync(jsonRpcRequest.ToJsonString());
+                await this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -341,39 +353,6 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        /// <inheritdoc/>
-        protected override async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
-        {
-            var dataFrame = e.DataFrame;
-            string jsonString = null;
-            if (dataFrame.Opcode == WSDataType.Text)
-            {
-                jsonString = dataFrame.ToText();
-            }
-
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                await base.OnReceivedWSDataFrame(e);
-                return;
-            }
-
-            if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
-            {
-                _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(this, jsonString));
-            }
-            else
-            {
-                var waitResult = JsonRpcUtility.ToJsonRpcWaitResult(jsonString);
-                if (waitResult != null)
-                {
-                    waitResult.Status = 1;
-                    this.m_waitHandle.SetRun(waitResult);
-                }
-            }
-
-            await base.OnReceivedWSDataFrame(e);
-        }
-
         private void RegisterServer(RpcMethod[] methodInstances)
         {
             foreach (var methodInstance in methodInstances)
@@ -385,7 +364,7 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        private async Task Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -407,21 +386,21 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                this.SendWithWS(str);
+                await this.Client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(str)), WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch
             {
             }
         }
 
-        private void ThisInvoke(object obj)
+        private async Task ThisInvoke(object obj)
         {
             var callContext = (JsonRpcCallContextBase)obj;
             var invokeResult = new InvokeResult();
 
             try
             {
-                JsonRpcUtility.BuildRequestContext(this.Resolver,this.ActionMap, ref callContext);
+                JsonRpcUtility.BuildRequestContext(this.Resolver, this.ActionMap, ref callContext);
             }
             catch (Exception ex)
             {
@@ -451,7 +430,41 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            this.Response(callContext, invokeResult.Result, error);
+            await this.Response(callContext, invokeResult.Result, error);
+        }
+
+        protected override void OnDisconnected(DisconnectEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override async Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
+        {
+
+            if (result.MessageType != WebSocketMessageType.Text)
+            {
+                return;
+            }
+
+            var jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            if (string.IsNullOrEmpty(jsonString))
+            {
+                return;
+            }
+
+            if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
+            {
+                _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(this, jsonString));
+            }
+            else
+            {
+                var waitResult = JsonRpcUtility.ToJsonRpcWaitResult(jsonString);
+                if (waitResult != null)
+                {
+                    waitResult.Status = 1;
+                    this.m_waitHandle.SetRun(waitResult);
+                }
+            }
         }
     }
 }

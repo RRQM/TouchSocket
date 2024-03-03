@@ -18,63 +18,71 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
-    internal class InternalWebSocket : DisposableObject, IWebSocket
+    internal sealed class InternalWebSocket : DisposableObject, IWebSocket
     {
         private readonly IHttpClientBase m_client;
-        private bool m_receive;
         private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
         private readonly AsyncAutoResetEvent m_resetEventForRead = new AsyncAutoResetEvent(false);
         private WSDataFrame m_dataFrame;
-
-        public InternalWebSocket(IHttpClientBase client, bool receive)
+        private bool m_allowAsyncRead;
+        private bool m_isCont;
+        public InternalWebSocket(IHttpClientBase client)
         {
             this.m_client = client;
-            this.m_receive = receive;
         }
+        public bool AllowAsyncRead { get => m_allowAsyncRead; set => m_allowAsyncRead = value; }
 
-        public bool IsHandshaked => this.m_client.GetHandshaked();
+        public bool IsHandshaked { get;set; }
 
-        public string Version => this.m_client.GetWebSocketVersion();
+        public string Version { get; set; }
+
+        public IHttpClientBase Client => this.m_client;
 
         public void Close(string msg)
         {
-            this.m_client.CloseWithWS(msg);
+            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
+            {
+                this.Send(frame);
+            }
             this.m_client.TryShutdown();
             this.m_client.SafeClose(msg);
-            this.m_receive = false;
+            this.m_allowAsyncRead = false;
         }
 
         public async Task CloseAsync(string msg)
         {
-            await this.m_client.CloseWithWSAsync(msg);
+            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
+            {
+               await this.SendAsync(frame);
+            }
             this.m_client.TryShutdown();
             this.m_client.SafeClose(msg);
-            this.m_receive = false;
+            this.m_allowAsyncRead = false;
         }
 
         public void Ping()
         {
-            this.m_client.PingWS();
+            Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
         }
 
-        public Task PingAsync()
+        public async Task PingAsync()
         {
-            return this.m_client.PingWSAsync();
+           await SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
         }
 
         public void Pong()
         {
-            this.m_client.PongWS();
+            this.Send( new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
         }
 
-        public Task PongAsync()
+        public async Task PongAsync()
         {
-            return this.m_client.PongWSAsync();
+           await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
         }
 
         public async Task<WebSocketReceiveResult> ReadAsync(CancellationToken token)
         {
-            if (!this.m_receive)
+            if (!this.m_allowAsyncRead)
             {
                 return new WebSocketReceiveResult(this.ComplateRead, null);
             }
@@ -82,10 +90,10 @@ namespace TouchSocket.Http.WebSockets
             return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
         }
 
-#if NET6_0_OR_GREATER
+#if ValueTask
         public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
         {
-            if (!this.m_receive)
+            if (!this.m_allowAsyncRead)
             {
                 return new WebSocketReceiveResult(this.ComplateRead, null);
             }
@@ -98,54 +106,144 @@ namespace TouchSocket.Http.WebSockets
 
         public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
         {
-            this.m_client.SendWithWS(dataFrame, endOfMessage);
+            WSDataType dataType;
+            if (this.m_isCont)
+            {
+                dataType = WSDataType.Cont;
+                if (endOfMessage)
+                {
+                    m_isCont=false;
+                }
+            }
+            else
+            {
+                dataType = dataFrame.Opcode;
+                if (!endOfMessage)
+                {
+                    m_isCont = true;
+                }
+            }
+            dataFrame.Opcode = dataType;
+            using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
+            {
+                if (m_client.IsClient)
+                {
+                    dataFrame.BuildRequest(byteBlock);
+                }
+                else
+                {
+                    dataFrame.BuildResponse(byteBlock);
+                }
+                m_client.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
+            }
         }
 
         public void Send(string text, bool endOfMessage = true)
         {
-            this.m_client.SendWithWS(text, endOfMessage);
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Text }.AppendText(text))
+            {
+                this.Send(frame, endOfMessage);
+            }
         }
 
-        public Task SendAsync(string text, bool endOfMessage = true)
+        public async Task SendAsync(string text, bool endOfMessage = true)
         {
-            return this.m_client.SendWithWSAsync(text, endOfMessage);
+            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Text }.AppendText(text))
+            {
+                await this.SendAsync(frame, endOfMessage);
+            }
         }
 
         public void Send(byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
-            this.m_client.SendWithWS(buffer, offset, length, endOfMessage);
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
+            {
+                if (offset == 0)
+                {
+                    frame.PayloadData = new ByteBlock(buffer, length);
+                }
+                else
+                {
+                    frame.AppendBinary(buffer, offset, length);
+                }
+                this.Send(frame, endOfMessage);
+            }
         }
 
         public void Send(ByteBlock byteBlock, bool endOfMessage = true)
         {
-            this.m_client.SendWithWS(byteBlock, endOfMessage);
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
+            {
+                frame.PayloadData = byteBlock;
+                this.Send(frame, endOfMessage);
+            }
         }
 
         public Task SendAsync(byte[] buffer, bool endOfMessage = true)
         {
-            return this.m_client.SendWithWSAsync(buffer, endOfMessage);
+            return this.SendAsync(buffer,0,buffer.Length, endOfMessage);
         }
 
         public void Send(byte[] buffer, bool endOfMessage = true)
         {
-            this.m_client.SendWithWS(buffer, endOfMessage);
+            this.Send(buffer,0,buffer.Length, endOfMessage);
         }
 
-        public Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
+        public async Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
-            return this.m_client.SendWithWSAsync(buffer, offset, length, endOfMessage);
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
+            {
+                if (offset == 0)
+                {
+                    frame.PayloadData = new ByteBlock(buffer, length);
+                }
+                else
+                {
+                    frame.AppendBinary(buffer, offset, length);
+                }
+                await this.SendAsync(frame, endOfMessage);
+            }
         }
 
-        public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
+        public async Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
         {
-            return this.m_client.SendWithWSAsync(dataFrame, endOfMessage);
+            WSDataType dataType;
+            if (this.m_isCont)
+            {
+                dataType = WSDataType.Cont;
+                if (endOfMessage)
+                {
+                    m_isCont = false;
+                }
+            }
+            else
+            {
+                dataType = dataFrame.Opcode;
+                if (!endOfMessage)
+                {
+                    m_isCont = true;
+                }
+            }
+            dataFrame.Opcode = dataType;
+            using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
+            {
+                if (m_client.IsClient)
+                {
+                    dataFrame.BuildRequest(byteBlock);
+                }
+                else
+                {
+                    dataFrame.BuildResponse(byteBlock);
+                }
+                await m_client.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+            }
         }
 
         #endregion 发送
 
-        public async Task<bool> TryInputReceiveAsync(WSDataFrame dataFrame)
+        internal async Task<bool> TryInputReceiveAsync(WSDataFrame dataFrame)
         {
-            if (!this.m_receive)
+            if (!this.m_allowAsyncRead)
             {
                 return false;
             }
@@ -164,7 +262,7 @@ namespace TouchSocket.Http.WebSockets
 
         protected override void Dispose(bool disposing)
         {
-            this.m_client.RemoveValue(WebSocketClientExtension.WebSocketProperty);
+            //this.m_client.RemoveValue(WebSocketClientExtension.WebSocketProperty);
             this.m_resetEventForComplateRead.SafeDispose();
             this.m_resetEventForRead.SafeDispose();
             this.m_dataFrame = null;

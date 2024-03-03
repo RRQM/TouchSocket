@@ -39,6 +39,13 @@ namespace TouchSocket.Http
         public HttpResponse(ITcpClientBase client)
         {
             this.m_client = client;
+            if (client==null)
+            {
+                this.m_canRead = false;
+                this.m_canWrite = false;
+
+                return;
+            }
             if (client.IsClient)
             {
                 this.m_canRead = true;

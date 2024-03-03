@@ -27,14 +27,28 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 表示是否完成WS握手
         /// </summary>
+        [Obsolete("此配置已被弃用", true)]
         public static readonly DependencyProperty<bool> HandshakedProperty =
             DependencyProperty<bool>.Register("Handshaked", false);
 
         /// <summary>
         /// 表示WebSocketVersion
         /// </summary>
+        [Obsolete("此配置已被弃用", true)]
         public static readonly DependencyProperty<string> WebSocketVersionProperty =
             DependencyProperty<string>.Register("WebSocketVersion", "13");
+
+        /// <summary>
+        /// 自动响应Close报文
+        /// </summary>
+        public static readonly DependencyProperty<bool> AutoCloseProperty =
+           DependencyProperty<bool>.Register("AutoClose", true);
+
+        /// <summary>
+        /// 自动响应Ping报文
+        /// </summary>
+        public static readonly DependencyProperty<bool> AutoPongProperty =
+           DependencyProperty<bool>.Register("AutoPong", false);
 
         private IPluginManager m_pluginManager;
 
@@ -81,45 +95,6 @@ namespace TouchSocket.Http.WebSockets
         {
             this.AutoClose = false;
             return this;
-        }
-
-        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
-        {
-            if (client.Protocol == Protocol.Http)
-            {
-                if (await this.VerifyConnection.Invoke(client, e.Context))
-                {
-                    e.Handled = true;
-                    await client.SwitchProtocolToWebSocket(e.Context);
-                    return;
-                }
-            }
-            await e.InvokeNext();
-        }
-
-        private async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
-        {
-            client.SetValue(HandshakedProperty, false);
-            if (client.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
-            {
-                _ = internalWebSocket.TryInputReceiveAsync(null);
-            }
-            await e.InvokeNext();
-        }
-
-        /// <inheritdoc/>
-        private async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
-        {
-            if (client.Protocol == Protocol.WebSocket)
-            {
-                if (e.RequestInfo is WSDataFrame dataFrame)
-                {
-                    e.Handled = true;
-                    await this.OnHandleWSDataFrame(client, dataFrame);
-                    return;
-                }
-            }
-            await e.InvokeNext();
         }
 
         /// <summary>
@@ -175,35 +150,29 @@ namespace TouchSocket.Http.WebSockets
         {
             base.Loaded(pluginManager);
             this.m_pluginManager = pluginManager;
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest),this.OnHttpRequest);
-
-            pluginManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived),this.OnTcpReceived);
-
-            pluginManager.Add<ITcpClientBase, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected),this.OnTcpDisconnected);
+            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
         }
 
-        private async Task OnHandleWSDataFrame(ITcpClientBase client, WSDataFrame dataFrame)
+        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (this.AutoClose && dataFrame.IsClose)
+            if (client.Protocol == Protocol.Http)
             {
-                var msg = dataFrame.PayloadData?.ToString();
-                await this.m_pluginManager.RaiseAsync(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), client, new MsgPermitEventArgs() { Message = msg });
-                client.Close(msg);
-                return;
-            }
-            if (this.AutoPong && dataFrame.IsPing)
-            {
-                ((HttpSocketClient)client).PongWS();
-                return;
-            }
-            if (client.TryGetValue(WebSocketClientExtension.WebSocketProperty, out var internalWebSocket))
-            {
-                if (await internalWebSocket.TryInputReceiveAsync(dataFrame))
+                if (await this.VerifyConnection.Invoke(client, e.Context))
                 {
+                    e.Handled = true;
+                    await client.SwitchProtocolToWebSocket(e.Context);
+                    if (!this.AutoClose)
+                    {
+                        client.SetValue(AutoCloseProperty,false);
+                    }
+                    if (this.AutoPong)
+                    {
+                        client.SetValue(AutoPongProperty, true);
+                    }
                     return;
                 }
             }
-            await this.m_pluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), client, new WSDataFrameEventArgs(dataFrame));
+            await e.InvokeNext();
         }
 
         private async Task<bool> ThisVerifyConnection(IHttpSocketClient client, HttpContext context)

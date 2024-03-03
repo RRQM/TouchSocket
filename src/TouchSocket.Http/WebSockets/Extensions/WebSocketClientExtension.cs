@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -22,19 +23,23 @@ namespace TouchSocket.Http.WebSockets
     {
         #region DependencyProperty
 
+        [Obsolete("此配置已被弃用",true)]
         private static readonly DependencyProperty<bool> IsContProperty =
             DependencyProperty<bool>.Register("IsCont", false);
 
+        [Obsolete("此配置已被弃用", true)]
         private static void SetIsCont(this IHttpClientBase client, bool value)
         {
             client.SetValue(IsContProperty, value);
         }
 
+        [Obsolete("此配置已被弃用", true)]
         private static bool GetIsCont(this IHttpClientBase client)
         {
             return client.GetValue(IsContProperty);
         }
 
+        [Obsolete("此配置已被弃用", true)]
         internal static readonly DependencyProperty<InternalWebSocket> WebSocketProperty =
            DependencyProperty<InternalWebSocket>.Register("WebSocket", null);
 
@@ -47,12 +52,13 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="allowReceive"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请直接获取WebSocket属性",true)]
         public static IWebSocket GetWebSocket(this IHttpClientBase client, bool allowReceive = true)
         {
             var websocket = client.GetValue(WebSocketProperty);
             if (websocket == null)
             {
-                websocket = new InternalWebSocket(client, allowReceive);
+                websocket = new InternalWebSocket(client);
                 client.SetValue(WebSocketProperty, websocket);
             }
             return websocket;
@@ -62,6 +68,7 @@ namespace TouchSocket.Http.WebSockets
         /// 清除显式WebSocket终端。
         /// </summary>
         /// <param name="client"></param>
+        [Obsolete("此配置已被弃用", true)]
         public static void ClearWebSocket(this IHttpClientBase client)
         {
             client.RemoveValue(WebSocketProperty);
@@ -75,6 +82,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void CloseWithWS(this IHttpClientBase client, string msg)
         {
             using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
@@ -89,6 +97,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task CloseWithWSAsync(this IHttpClientBase client, string msg)
         {
             using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
@@ -102,6 +111,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请直接获取IsHandshaked属性，或者WebSocket.IsHandshaked", true)]
         public static bool GetHandshaked(this IHttpClientBase client)
         {
             return client.GetValue(WebSocketFeature.HandshakedProperty);
@@ -112,6 +122,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请直接获取Version属性，或者WebSocket.Version", true)]
         public static string GetWebSocketVersion(this IHttpClientBase client)
         {
             return client.GetValue(WebSocketFeature.WebSocketVersionProperty);
@@ -122,6 +133,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void PingWS(this IHttpClientBase client)
         {
             SendWithWS(client, new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
@@ -132,6 +144,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task PingWSAsync(this IHttpClientBase client)
         {
             return SendWithWSAsync(client, new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
@@ -142,6 +155,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void PongWS(this IHttpClientBase client)
         {
             SendWithWS(client, new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
@@ -152,6 +166,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="client"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task PongWSAsync(this IHttpClientBase client)
         {
             return SendWithWSAsync(client, new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
@@ -160,6 +175,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 设置WebSocket版本号。
         /// </summary>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SetWebSocketVersion(this IHttpClientBase client, string value)
         {
             client.SetValue(WebSocketFeature.WebSocketVersionProperty, value);
@@ -175,6 +191,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SendWithWS(this IHttpClientBase client, byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
@@ -197,6 +214,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="byteBlock"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SendWithWS(this IHttpClientBase client, ByteBlock byteBlock, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
@@ -212,6 +230,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="buffer"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SendWithWS(this IHttpClientBase client, byte[] buffer, bool endOfMessage = true)
         {
             SendWithWS(client, buffer, 0, buffer.Length, endOfMessage);
@@ -223,6 +242,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="text"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SendWithWS(this IHttpClientBase client, string text, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Text }.AppendText(text))
@@ -237,6 +257,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static void SendWithWS(this IHttpClientBase client, WSDataFrame dataFrame, bool endOfMessage = true)
         {
             var isCont = client.GetIsCont();
@@ -285,6 +306,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer, int offset, int length, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
@@ -307,6 +329,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="buffer"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task SendWithWSAsync(this IHttpClientBase client, byte[] buffer, bool endOfMessage = true)
         {
             return SendWithWSAsync(client, buffer, 0, buffer.Length, endOfMessage);
@@ -318,6 +341,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="text"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task SendWithWSAsync(this IHttpClientBase client, string text, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Text }.AppendText(text))
@@ -332,6 +356,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="client"></param>
         /// <param name="dataFrame"></param>
         /// <param name="endOfMessage"></param>
+        [Obsolete("此配置已被弃用，服务器请client.WebSocket.Sned执行，客户端可直接Send", true)]
         public static Task SendWithWSAsync(this IHttpClientBase client, WSDataFrame dataFrame, bool endOfMessage = true)
         {
             var isCont = client.GetIsCont();

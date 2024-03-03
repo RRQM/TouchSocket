@@ -29,11 +29,14 @@ namespace TouchSocket.Http.WebSockets
         string Version { get; }
 
         /// <summary>
-        /// 发送Close报文
+        /// 允许异步Read读取
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        Task CloseAsync(string msg);
+        bool AllowAsyncRead { get; set; }
+
+        /// <summary>
+        /// 使用的Http客户端
+        /// </summary>
+        IHttpClientBase Client { get; }
 
         /// <summary>
         /// 发送Ping报文。

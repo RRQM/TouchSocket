@@ -32,12 +32,12 @@ namespace TouchSocket.JsonRpc
 
         protected override void SendJsonString(string jsonString)
         {
-            this.m_client.SendWithWS(jsonString);
+            this.m_client.WebSocket.Send(jsonString);
         }
 
         protected override Task SendJsonStringAsync(string jsonString)
         {
-            return this.m_client.SendWithWSAsync(jsonString);
+            return this.m_client.WebSocket.SendAsync(jsonString);
         }
     }
 }

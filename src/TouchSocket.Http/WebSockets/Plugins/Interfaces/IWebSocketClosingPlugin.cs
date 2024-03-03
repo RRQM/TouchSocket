@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketClosingPlugin
     /// </summary>
-    public interface IWebSocketClosingPlugin<in TClient> : IPlugin where TClient : IHttpClientBase
+    public interface IWebSocketClosingPlugin<in TClient> : IPlugin where TClient : IWebSocket
     {
         /// <summary>
         /// 表示收到断开连接报文。如果对方直接断开连接，此方法则不会触发。
@@ -31,7 +31,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketClosingPlugin
     /// </summary>
-    public interface IWebSocketClosingPlugin : IWebSocketClosingPlugin<IHttpClientBase>
+    public interface IWebSocketClosingPlugin : IWebSocketClosingPlugin<IWebSocket>
     {
     }
 }

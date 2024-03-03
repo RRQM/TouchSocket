@@ -12,6 +12,7 @@
 
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -22,6 +23,7 @@ namespace TouchSocket.Http
     public class HttpSocketClient : SocketClient, IHttpSocketClient
     {
         private HttpContext m_httpContext;
+        private InternalWebSocket m_webSocket;
 
         /// <summary>
         /// 构造函数
@@ -32,10 +34,80 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
+        public IWebSocket WebSocket { get => m_webSocket; }
+
+        /// <inheritdoc/>
+        public async Task<bool> SwitchProtocolToWebSocket(HttpContext httpContext)
+        {
+            if (this.m_webSocket is not null)
+            {
+                return true;
+            }
+            if (this.Protocol == Protocol.Http)
+            {
+                if (WSTools.TryGetResponse(httpContext.Request, httpContext.Response))
+                {
+                    var args = new HttpContextEventArgs(new HttpContext(httpContext.Request, httpContext.Response))
+                    {
+                        IsPermitOperation = true
+                    };
+
+                    var webSocket = new InternalWebSocket(this);
+
+                    await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), webSocket, args).ConfigureAwait(false);
+
+                    if (args.Context.Response.Responsed)
+                    {
+                        return false;
+                    }
+                    if (args.IsPermitOperation)
+                    {
+                        this.InitWebSocket(webSocket);
+                        using (var byteBlock = new ByteBlock())
+                        {
+                            args.Context.Response.Build(byteBlock);
+                            await this.DefaultSendAsync(byteBlock).ConfigureAwait(false);
+                        }
+                        _ = this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), webSocket, new HttpContextEventArgs(httpContext))
+                            .ConfigureAwait(false);
+                        return true;
+                    }
+                    else
+                    {
+                        args.Context.Response.SetStatus(403, "Forbidden");
+                        using (var byteBlock = new ByteBlock())
+                        {
+                            args.Context.Response.Build(byteBlock);
+                            await this.DefaultSendAsync(byteBlock).ConfigureAwait(false);
+                        }
+
+                        this.Close("主动拒绝WebSocket连接");
+                    }
+                }
+                else
+                {
+                    this.Close("WebSocket连接协议不正确");
+                }
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
         protected override async Task OnConnecting(ConnectingEventArgs e)
         {
-            this.SetDataHandlingAdapter(new HttpServerDataHandlingAdapter());
+            this.SetAdapter(new HttpServerDataHandlingAdapter());
             await base.OnConnecting(e).ConfigureFalseAwait();
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnDisconnected(DisconnectEventArgs e)
+        {
+            if (this.m_webSocket != null)
+            {
+                this.m_webSocket.IsHandshaked = false;
+                _ = this.m_webSocket.TryInputReceiveAsync(null);
+            }
+            await base.OnDisconnected(e);
         }
 
         /// <summary>
@@ -43,14 +115,11 @@ namespace TouchSocket.Http
         /// </summary>
         protected virtual async Task OnReceivedHttpRequest(HttpRequest request)
         {
-            m_httpContext ??= new HttpContext(request);
-
             if (this.PluginManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest)) > 0)
             {
                 var e = new HttpContextEventArgs(m_httpContext);
 
                 await this.PluginManager.RaiseAsync(nameof(IHttpPlugin.OnHttpRequest), this, e).ConfigureFalseAwait();
-                m_httpContext.Response.Reset();
             }
         }
 
@@ -59,9 +128,48 @@ namespace TouchSocket.Http
         {
             if (e.RequestInfo is HttpRequest request)
             {
+                m_httpContext ??= new HttpContext(request);
                 await this.OnReceivedHttpRequest(request).ConfigureFalseAwait();
+                m_httpContext.Response.Reset();
+            }
+            else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
+            {
+                e.Handled = true;
+                await this.OnHandleWSDataFrame(dataFrame);
+                return;
             }
             await base.ReceivedData(e).ConfigureFalseAwait();
+        }
+
+        private void InitWebSocket(InternalWebSocket webSocket)
+        {
+            this.SetAdapter(new WebSocketDataHandlingAdapter());
+            this.Protocol = Protocol.WebSocket;
+            this.m_webSocket = webSocket;
+        }
+
+        private async Task OnHandleWSDataFrame(WSDataFrame dataFrame)
+        {
+            if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
+            {
+                var msg = dataFrame.PayloadData?.ToString();
+                await this.PluginManager.RaiseAsync(nameof(IWebSocketClosingPlugin.OnWebSocketClosing), this.m_webSocket, new MsgPermitEventArgs() { Message = msg });
+                this.m_webSocket.Close(msg);
+                return;
+            }
+            if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
+            {
+                this.m_webSocket.Pong();
+                return;
+            }
+            if (this.m_webSocket.AllowAsyncRead)
+            {
+                if (await this.m_webSocket.TryInputReceiveAsync(dataFrame))
+                {
+                    return;
+                }
+            }
+            await this.PluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this.m_webSocket, new WSDataFrameEventArgs(dataFrame));
         }
     }
 }

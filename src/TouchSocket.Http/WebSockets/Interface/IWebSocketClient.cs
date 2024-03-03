@@ -10,12 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+using TouchSocket.Sockets;
+
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
     /// 用户终端接口
     /// </summary>
-    public interface IWebSocketClient : IHttpClient
+    public interface IWebSocketClient : IClient,ICloseObject, ILoggerObject, ISetupConfigObject, IConnectObject, IWebSocket
     {
+       
     }
 }
