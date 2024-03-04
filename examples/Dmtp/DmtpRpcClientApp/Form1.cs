@@ -108,7 +108,8 @@ namespace DmtpClientApp
 
         private void button5_Click(object sender, EventArgs e)
         {
-            this.m_client?.Close();
+            this.m_client.Close();
+            this.m_client.SafeDispose();
         }
 
         private void button6_Click(object sender, EventArgs e)

@@ -3,6 +3,7 @@ using TouchSocket.WebApi;
 
 namespace HttpPerformanceConsoleApp.Controllers
 {
+    [GeneratorRpcServer]
     public partial class ApiServer : RpcServer
     {
         [WebApi(HttpMethodType.GET)]

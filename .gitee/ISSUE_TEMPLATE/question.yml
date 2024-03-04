@@ -23,15 +23,11 @@ body:
         - 其他
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: version
     attributes:
       label: 版本号
-      description: 请选择项目使用的 TouchSocket 版本？
-      options:
-        - 2.0.0.beta (最新)
-        - 1.3.9
-        - 其他版本（请升级）
+      description: 请输入项目使用的 TouchSocket 版本？
     validations:
       required: true
   - type: dropdown
