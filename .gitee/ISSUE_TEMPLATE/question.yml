@@ -37,6 +37,9 @@ body:
       description: 请选择项目使用的 .NET SDK 版本？
       options:
         - .NET Framework 45 以上
+        - .NET Framework 462 以上
+        - .NET Framework 472 以上
+        - .NET Framework 481
         - .NET6
         - .NET7
         - .NET8
