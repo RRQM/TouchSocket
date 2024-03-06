@@ -41,6 +41,12 @@ namespace WebApiServerApp
                                .AllowAnyOrigin();
                        });
                    });
+
+                   a.AddLogger(logger => 
+                   {
+                       logger.AddConsoleLogger();
+                       logger.AddFileLogger();
+                   });
                })
                .ConfigurePlugins(a =>
                {
