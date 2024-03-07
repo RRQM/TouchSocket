@@ -15,6 +15,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -309,6 +310,7 @@ namespace TouchSocket.Sockets
             this.m_receiveCounter.Reset();
             this.m_sendCounter.Reset();
             this.SslStream?.Dispose();
+            this.SetBuffer(null, 0, 0);//清空数据
             this.SslStream = null;
             this.m_socket = null;
             this.OnReceived = null;

@@ -12,11 +12,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -260,6 +260,7 @@ namespace TouchSocket.Sockets
         /// Ssl相关
         /// </summary>
         public ClientSslOption ClientSslOption { get; set; }
+
         #endregion 属性
 
         #region 断开操作
@@ -291,6 +292,7 @@ namespace TouchSocket.Sockets
                     Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
                     this.BreakOut(true, $"{nameof(Dispose)}主动断开");
                 }
+                this.m_tcpCore.Reset();
             }
             base.Dispose(disposing);
         }
@@ -541,7 +543,7 @@ namespace TouchSocket.Sockets
         /// 当收到适配器处理的数据时。
         /// </summary>
         /// <param name="e"></param>
-        protected async virtual Task ReceivedData(ReceivedDataEventArgs e)
+        protected virtual async Task ReceivedData(ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
@@ -549,7 +551,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-       
         /// <summary>
         /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
         /// </summary>
