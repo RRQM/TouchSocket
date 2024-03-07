@@ -17,6 +17,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -261,6 +262,7 @@ namespace TouchSocket.Sockets
                     Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
                     this.BreakOut(true, $"{nameof(Dispose)}主动断开");
                 }
+                this.m_tcpCore.Dispose();
             }
             base.Dispose(disposing);
         }
