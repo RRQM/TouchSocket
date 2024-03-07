@@ -12,11 +12,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -33,7 +33,7 @@ namespace TouchSocket.Sockets
         private volatile bool m_online;
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private readonly InternalTcpCore m_tcpCore = new InternalTcpCore();
-
+        private readonly object m_lock = new object();
         #endregion 变量
 
         #region 事件
@@ -260,7 +260,6 @@ namespace TouchSocket.Sockets
         /// Ssl相关
         /// </summary>
         public ClientSslOption ClientSslOption { get; set; }
-
         #endregion 属性
 
         #region 断开操作
@@ -268,7 +267,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public virtual void Close(string msg)
         {
-            lock (this.GetTcpCore())
+            lock (this.m_lock)
             {
                 if (this.m_online)
                 {
@@ -285,15 +284,20 @@ namespace TouchSocket.Sockets
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            lock (this.GetTcpCore())
+            if (disposing)
             {
-                if (this.m_online)
+                lock (this.m_lock)
                 {
-                    Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
-                    this.BreakOut(true, $"{nameof(Dispose)}主动断开");
+                    if (this.m_online)
+                    {
+                        Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
+                        this.BreakOut(true, $"{nameof(Dispose)}主动断开");
+                    }
                 }
-                this.m_tcpCore.Reset();
+
+                this.m_tcpCore.SafeDispose();
             }
+            
             base.Dispose(disposing);
         }
 
@@ -498,7 +502,7 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         protected void BreakOut(bool manual, string msg)
         {
-            lock (this.GetTcpCore())
+            lock (this.m_lock)
             {
                 if (this.m_online)
                 {
@@ -543,7 +547,7 @@ namespace TouchSocket.Sockets
         /// 当收到适配器处理的数据时。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual async Task ReceivedData(ReceivedDataEventArgs e)
+        protected async virtual Task ReceivedData(ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
@@ -551,6 +555,7 @@ namespace TouchSocket.Sockets
             }
         }
 
+       
         /// <summary>
         /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
         /// </summary>

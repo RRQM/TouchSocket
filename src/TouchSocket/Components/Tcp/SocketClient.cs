@@ -39,7 +39,7 @@ namespace TouchSocket.Sockets
 
         private DelaySender m_delaySender;
         private TcpCore m_tcpCore;
-
+        private readonly object m_lock = new object();
         #endregion 变量
 
         #region 属性
@@ -213,6 +213,10 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         protected void BreakOut(bool manual, string msg)
         {
+            if (this.Id==null) 
+            {
+                return;
+            }
             if (this.GetSocketCliectCollection().TryRemove(this.Id, out _))
             {
                 if (this.Online)
@@ -382,7 +386,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public virtual void Close(string msg)
         {
-            lock (this.GetTcpCore())
+            lock (this.m_lock)
             {
                 if (this.Online)
                 {
@@ -475,14 +479,19 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            lock (this.GetTcpCore())
+            if (disposing)
             {
-                if (this.Online)
+                lock (this.m_lock)
                 {
-                    Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
-                    this.BreakOut(true, $"{nameof(Dispose)}主动断开");
+                    if (this.Online)
+                    {
+                        Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
+                        this.BreakOut(true, $"{nameof(Dispose)}主动断开");
+                    }
                 }
             }
+            
+            base.Dispose(disposing);
         }
 
         /// <summary>

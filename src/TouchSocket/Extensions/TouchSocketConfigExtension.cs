@@ -63,7 +63,7 @@ namespace TouchSocket.Sockets
         /// 最大缓存池尺寸
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int?> MaxBufferSizeProperty = DependencyProperty<int?>.Register("MinBufferSize", default);
+        public static readonly DependencyProperty<int?> MaxBufferSizeProperty = DependencyProperty<int?>.Register("MaxBufferSize", default);
 
         /// <summary>
         /// 最小缓存容量，默认缺省。

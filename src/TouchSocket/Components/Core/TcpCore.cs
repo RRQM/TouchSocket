@@ -15,7 +15,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -43,7 +42,7 @@ namespace TouchSocket.Sockets
         /// 同步根
         /// </summary>
         public readonly object SyncRoot = new object();
-
+        private readonly byte[] m_bufferEmpty = new byte[0];
         private long m_bufferRate;
         private bool m_disposedValue;
         private volatile bool m_online;
@@ -218,12 +217,34 @@ namespace TouchSocket.Sockets
         public virtual void BeginIocpReceive()
         {
             var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
-            this.UserToken = byteBlock;
-            this.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-            if (!this.m_socket.ReceiveAsync(this))
+
+            try
             {
-                this.m_bufferRate += 2;
-                this.ProcessReceived(this);
+                this.UserToken = byteBlock;
+                this.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
+                if (!this.m_socket.ReceiveAsync(this))
+                {
+                    this.m_bufferRate += 2;
+                    this.ProcessReceived(this);
+                }
+            }
+            catch
+            {
+                this.ClearBuffer();
+                byteBlock.Dispose();
+                throw;
+            }
+
+        }
+
+        private void ClearBuffer()
+        {
+            try
+            {
+                this.SetBuffer(null, 0, 0);
+            }
+            catch (Exception ex)
+            {
             }
         }
 
@@ -242,23 +263,25 @@ namespace TouchSocket.Sockets
             }
             while (this.m_online)
             {
-                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
-                try
+                using (var byteBlock = new ByteBlock(this.ReceiveBufferSize))
                 {
-                    var r = await Task<int>.Factory.FromAsync(this.SslStream.BeginRead, this.SslStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default);
-                    if (r == 0)
+                    try
                     {
-                        this.PrivateBreakOut(false, m_msg1);
-                        return;
-                    }
+                        var r = await Task<int>.Factory.FromAsync(this.SslStream.BeginRead, this.SslStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default);
+                        if (r == 0)
+                        {
+                            this.PrivateBreakOut(false, m_msg1);
+                            return;
+                        }
 
-                    byteBlock.SetLength(r);
-                    this.HandleBuffer(byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    byteBlock.Dispose();
-                    this.PrivateBreakOut(false, ex.Message);
+                        byteBlock.SetLength(r);
+                        this.HandleBuffer(byteBlock);
+                    }
+                    catch (Exception ex)
+                    {
+                        byteBlock.Dispose();
+                        this.PrivateBreakOut(false, ex.Message);
+                    }
                 }
             }
         }
@@ -310,14 +333,12 @@ namespace TouchSocket.Sockets
             this.m_receiveCounter.Reset();
             this.m_sendCounter.Reset();
             this.SslStream?.Dispose();
-            this.SetBuffer(null, 0, 0);//清空数据
             this.SslStream = null;
             this.m_socket = null;
             this.OnReceived = null;
             this.OnBreakOut = null;
             this.UserToken = null;
             this.m_bufferRate = 1;
-            //this.m_lock = new SpinLock();
             this.m_receiveBufferSize = this.MinBufferSize;
             this.m_sendBufferSize = this.MinBufferSize;
             this.m_online = false;
@@ -481,56 +502,52 @@ namespace TouchSocket.Sockets
         {
             if (e.LastOperation == SocketAsyncOperation.Receive)
             {
-                try
-                {
-                    this.m_bufferRate = 1;
-                    this.ProcessReceived(e);
-                }
-                catch (Exception ex)
-                {
-                    this.PrivateBreakOut(false, ex.Message);
-                }
+                this.m_bufferRate = 1;
+                this.ProcessReceived(e);
             }
             else
             {
+                this.PrivateBreakOut(false, e.LastOperation.ToString());
             }
-
-            //base.OnCompleted(e);
         }
 
         private void ProcessReceived(SocketAsyncEventArgs e)
         {
-            if (e.SocketError != SocketError.Success)
+            using (var byteBlock = (ByteBlock)e.UserToken)
             {
-                this.PrivateBreakOut(false, e.SocketError.ToString());
-                return;
-            }
-            else if (e.BytesTransferred > 0)
-            {
-                var byteBlock = (ByteBlock)e.UserToken;
-                byteBlock.SetLength(e.BytesTransferred);
-                this.HandleBuffer(byteBlock);
                 try
                 {
-                    var newByteBlock = BytePool.Default.GetByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, this.MaxBufferSize));
-
-                    e.UserToken = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
-
-                    if (!this.m_socket.ReceiveAsync(e))
+                    if (e.SocketError != SocketError.Success)
                     {
-                        this.m_bufferRate += 2;
-                        this.ProcessReceived(e);
+                        this.ClearBuffer();
+                        this.PrivateBreakOut(false, e.SocketError.ToString());
+                    }
+                    else if (e.BytesTransferred > 0)
+                    {
+                        byteBlock.SetLength(e.BytesTransferred);
+                        this.HandleBuffer(byteBlock);
+                        var newByteBlock = BytePool.Default.GetByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, this.MaxBufferSize));
+
+                        e.UserToken = newByteBlock;
+                        e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
+
+                        if (!this.m_socket.ReceiveAsync(e))
+                        {
+                            this.m_bufferRate += 2;
+                            this.ProcessReceived(e);
+                        }
+                    }
+                    else
+                    {
+                        this.ClearBuffer();
+                        this.PrivateBreakOut(false, m_msg1);
                     }
                 }
                 catch (Exception ex)
                 {
+                    this.ClearBuffer();
                     this.PrivateBreakOut(false, ex.Message);
                 }
-            }
-            else
-            {
-                this.PrivateBreakOut(false, m_msg1);
             }
         }
 
@@ -555,10 +572,6 @@ namespace TouchSocket.Sockets
             catch (Exception ex)
             {
                 this.Exception(ex);
-            }
-            finally
-            {
-                byteBlock.Dispose();
             }
         }
 

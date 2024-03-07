@@ -248,27 +248,36 @@ namespace TouchSocket.NamedPipe
             return EasyTask.CompletedTask;
         }
 
+        private int GetReceiveBufferSize()
+        {
+            var minBufferSize = this.Config.GetValue(TouchSocketConfigExtension.MinBufferSizeProperty) ?? 1024 * 10;
+            var maxBufferSize = this.Config.GetValue(TouchSocketConfigExtension.MaxBufferSizeProperty) ?? 1024 * 512;
+            return Math.Min(Math.Max(this.m_receiveBufferSize, minBufferSize), maxBufferSize);
+        }
+
         private async Task BeginBio()
         {
             while (true)
             {
-                var byteBlock = new ByteBlock(this.m_receiveBufferSize);
-                try
+                using (var byteBlock = new ByteBlock(this.GetReceiveBufferSize()))
                 {
-                    var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
-                    if (r == 0)
+                    try
                     {
-                        this.BreakOut("远程终端主动关闭", false);
+                        var r = await Task<int>.Factory.FromAsync(this.m_pipeStream.BeginRead, this.m_pipeStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, null);
+                        if (r == 0)
+                        {
+                            this.BreakOut("远程终端主动关闭", false);
+                            return;
+                        }
+
+                        byteBlock.SetLength(r);
+                        await this.HandleBuffer(byteBlock);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.BreakOut(ex.Message, false);
                         return;
                     }
-
-                    byteBlock.SetLength(r);
-                    this.HandleBuffer(byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    this.BreakOut(ex.Message, false);
-                    return;
                 }
             }
         }
@@ -502,7 +511,7 @@ namespace TouchSocket.NamedPipe
             return this.Service?.SocketClients as NamedPipeSocketClientCollection;
         }
 
-        private void HandleBuffer(ByteBlock byteBlock)
+        private async Task HandleBuffer(ByteBlock byteBlock)
         {
             try
             {
@@ -512,7 +521,7 @@ namespace TouchSocket.NamedPipe
                 }
 
                 this.m_receiveCounter.Increment(byteBlock.Length);
-                if (this.ReceivingData(byteBlock).ConfigureAwait(false).GetAwaiter().GetResult())
+                if (await this.ReceivingData(byteBlock).ConfigureFalseAwait())
                 {
                     return;
                 }
@@ -526,10 +535,6 @@ namespace TouchSocket.NamedPipe
             catch (Exception ex)
             {
                 this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
-            }
-            finally
-            {
-                byteBlock.Dispose();
             }
         }
 
