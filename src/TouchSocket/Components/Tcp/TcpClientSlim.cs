@@ -292,7 +292,6 @@ namespace TouchSocket.Sockets
                     Task.Factory.StartNew(this.PrivateOnDisconnecting, new DisconnectEventArgs(true, $"{nameof(Dispose)}主动断开"));
                     this.BreakOut(true, $"{nameof(Dispose)}主动断开");
                 }
-                this.m_tcpCore.Dispose();
             }
             base.Dispose(disposing);
         }
