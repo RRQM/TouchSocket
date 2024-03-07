@@ -10,10 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -85,7 +85,6 @@ namespace TouchSocket.Sockets
                 tcpCore.SafeDispose();
                 return;
             }
-            tcpCore.Reset();
             this.m_tcpCores.Push(tcpCore);
         }
 
