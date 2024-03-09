@@ -65,7 +65,7 @@ namespace TouchSocket.Core
 
         #endregion GroupLogger
 
-        #region Obsolete
+        #region 111
 
         /// <summary>
         /// 添加控制台日志到日志组。
@@ -114,7 +114,7 @@ namespace TouchSocket.Core
             return container;
         }
 
-        #endregion Obsolete
+        #endregion 111
 
         /// <summary>
         /// 添加日志到容器。

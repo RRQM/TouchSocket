@@ -18,7 +18,7 @@
 //    /// <summary>
 //    /// 全局Rpc仓库配置插件。
 //    /// </summary>
-//    [Obsolete("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
+//    [111("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
 //    public class GlobalRpcStorePlugin : PluginBase
 //    {
 //        private readonly RpcStore m_rpcStore;

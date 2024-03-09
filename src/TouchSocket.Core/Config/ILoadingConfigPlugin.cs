@@ -17,7 +17,6 @@ namespace TouchSocket.Core
     /// <summary>
     /// 当正在配置Config时触发。
     /// </summary>
-    //[Obsolete("此插件已被弃用，原因是在加载配置时，不应该构建插进管理器，也就不能通过插件管理器触发相关业务。同时该插件还会扰乱配置，故此弃用",true)]
     public interface ILoadingConfigPlugin<in TSender> : IPlugin where TSender : IConfigObject
     {
         /// <summary>
@@ -31,7 +30,6 @@ namespace TouchSocket.Core
     /// <summary>
     /// ILoadingConfigPlugin
     /// </summary>
-    //[Obsolete("此插件已被弃用，原因是在加载配置时，不应该构建插进管理器，也就不能通过插件管理器触发相关业务。同时该插件还会扰乱配置，故此弃用", true)]
     public interface ILoadingConfigPlugin : ILoadingConfigPlugin<IConfigObject>
     {
     }

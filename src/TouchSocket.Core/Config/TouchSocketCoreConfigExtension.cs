@@ -28,20 +28,6 @@ namespace TouchSocket.Core
             DependencyProperty<Action<IPluginManager>>.Register("ConfigurePlugins", null);
 
         /// <summary>
-        /// 容器
-        /// </summary>
-        [Obsolete("此配置已被弃用", true)]
-        public static readonly DependencyProperty<IPluginManager> PluginManagerProperty =
-            DependencyProperty<IPluginManager>.Register("PluginManager", null);
-
-        /// <summary>
-        /// 是否使用新插件管理器。
-        /// </summary>
-        [Obsolete("此配置已被弃用", true)]
-        public static readonly DependencyProperty<bool> NewPluginManagerProperty =
-            DependencyProperty<bool>.Register("NewPluginManager", false);
-
-        /// <summary>
         /// 配置插件。
         /// </summary>
         /// <param name="config"></param>
@@ -60,36 +46,6 @@ namespace TouchSocket.Core
             }
             return config;
         }
-
-        /// <summary>
-        /// 使用插件。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用", true)]
-        public static TouchSocketConfig SetPluginManager(this TouchSocketConfig config, IPluginManager value)
-        {
-            config.SetValue(PluginManagerProperty, value);
-            return config;
-        }
-
-        /// <summary>
-        /// 使用新的插件管理器。
-        /// <para>
-        /// 一般的，当在容器<see cref="IContainer"/>中注入<see cref="IPluginManager"/>时。会使用容器中的<see cref="IPluginManager"/>。
-        /// 但是有时候，我们希望个别配置能够独立使用插件管理器。所以可以使用此配置。
-        /// </para>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用", true)]
-        public static TouchSocketConfig UseNewPluginManager(this TouchSocketConfig config)
-        {
-            config.SetValue(NewPluginManagerProperty, true);
-            return config;
-        }
-
         #endregion 插件
 
         #region 容器
@@ -99,13 +55,6 @@ namespace TouchSocket.Core
         /// </summary>
         public static readonly DependencyProperty<Action<IRegistrator>> ConfigureContainerProperty =
             DependencyProperty<Action<IRegistrator>>.Register("ConfigureContainer", null);
-
-        /// <summary>
-        /// 容器
-        /// </summary>
-        [Obsolete("此配置已被弃用", true)]
-        public static readonly DependencyProperty<IContainer> ContainerProperty =
-            DependencyProperty<IContainer>.Register("Container", null);
 
         /// <summary>
         /// 容器注册
@@ -136,19 +85,6 @@ namespace TouchSocket.Core
             {
                 config.SetValue(ConfigureContainerProperty, value);
             }
-            return config;
-        }
-
-        /// <summary>
-        /// 设置容器。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用", true)]
-        public static TouchSocketConfig SetContainer(this TouchSocketConfig config, IContainer value)
-        {
-            config.SetValue(ContainerProperty, value);
             return config;
         }
 

@@ -76,10 +76,6 @@ namespace TouchSocket.Rpc
         }
 
         /// <inheritdoc/>
-        [Obsolete("此配置已被弃用，请使用Token和Cancel()代替该功能。", true)]
-        public CancellationTokenSource TokenSource => throw new NotImplementedException();
-
-        /// <inheritdoc/>
         public void Cancel()
         {
             lock (this.m_locker)

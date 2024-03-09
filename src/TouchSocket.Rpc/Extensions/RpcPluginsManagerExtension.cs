@@ -20,26 +20,5 @@ namespace TouchSocket.Core
     /// </summary>
     public static class RpcPluginManagerExtension
     {
-        /// <summary>
-        /// 使用全局Rpc服务注入。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        [Obsolete("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
-        public static object UseGlobalRpcStore(this IPluginManager pluginManager)
-        {
-            return default;
-        }
-
-        /// <summary>
-        /// 使用全局Rpc服务注入。
-        /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用，请在IContainer中使用AddRpcStore替代", true)]
-        public static object UseGlobalRpcStore(this IPluginManager pluginManager, Action<RpcStore> action)
-        {
-            return default;
-        }
     }
 }

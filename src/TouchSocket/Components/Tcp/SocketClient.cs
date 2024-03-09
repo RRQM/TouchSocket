@@ -90,10 +90,6 @@ namespace TouchSocket.Sockets
         public Protocol Protocol { get; set; }
 
         /// <inheritdoc/>
-        [Obsolete("该配置已被弃用，正式版发布时会直接删除", true)]
-        public ReceiveType ReceiveType { get; private set; }
-
-        /// <inheritdoc/>
         public IResolver Resolver { get; private set; }
 
         /// <inheritdoc/>
@@ -372,7 +368,7 @@ namespace TouchSocket.Sockets
                 var tcp = this.m_tcpCore;
                 this.m_tcpCore = null;
                 this.Service.ReturnTcpCore(tcp);
-                base.Dispose(true);
+                this.Dispose();
             }
         }
 
@@ -395,17 +391,6 @@ namespace TouchSocket.Sockets
                     this.BreakOut(true, msg);
                 }
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        [Obsolete("该方法已被弃用，正式版发布时会直接删除", true)]
-        public Stream GetStream()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -492,19 +477,6 @@ namespace TouchSocket.Sockets
             }
             
             base.Dispose(disposing);
-        }
-
-        /// <summary>
-        /// 处理已接收到的数据。
-        /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
-        /// </summary>
-        /// <param name="byteBlock">以二进制流形式传递</param>
-        /// <param name="requestInfo">以解析的数据对象传递</param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        [Obsolete("此方法已被弃用，请使用ReceivedData替代。本方法将在正式版发布时删除", true)]
-        protected virtual bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
-        {
-            return false;
         }
 
         /// <summary>

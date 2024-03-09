@@ -24,10 +24,4 @@ namespace TouchSocket.Core
         /// </summary>
         bool DisposedValue { get; }
     }
-
-#if NET6_0_OR_GREATER
-    public partial interface IDisposableObject : IAsyncDisposable
-    {
-    }
-#endif
 }

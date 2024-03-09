@@ -35,33 +35,6 @@ namespace TouchSocket.Sockets
             return new WaitingClient<TClient>(client, waitingOptions);
         }
 
-        /// <summary>
-        /// 获取筛选条件的可等待的客户端。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="waitingOptions"></param>
-        /// <param name="func">当条件成立时返回</param>
-        /// <returns></returns>
-        [Obsolete("本方法已被弃用，请使用CreateWaitingClient替代", true)]
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions, Func<ResponsedData, bool> func) where TClient : IClient, ISender,IReceiverObject
-        {
-            return new WaitingClient<TClient>(client, waitingOptions);
-        }
-
-        /// <summary>
-        /// 获取可等待的客户端。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="waitingOptions"></param>
-        /// <returns></returns>
-        [Obsolete("本方法已被弃用，请使用CreateWaitingClient替代", true)]
-        public static IWaitingClient<TClient> GetWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverObject, ISender
-        {
-            return new WaitingClient<TClient>(client, waitingOptions);
-        }
-
         #region 异步发送
         /// <summary>
         /// 发送数据并等待
