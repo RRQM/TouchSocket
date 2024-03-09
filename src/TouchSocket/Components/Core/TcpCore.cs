@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
@@ -22,7 +23,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp核心
     /// </summary>
-    public class TcpCore : SocketAsyncEventArgs, IDisposable, ISender
+    public class TcpCore : SocketAsyncEventArgs, IDisposableObject, ISender
     {
         private const string m_msg1 = "远程终端主动关闭";
 
@@ -42,7 +43,6 @@ namespace TouchSocket.Sockets
         /// 同步根
         /// </summary>
         public readonly object SyncRoot = new object();
-        private readonly byte[] m_bufferEmpty = new byte[0];
         private long m_bufferRate;
         private bool m_disposedValue;
         private volatile bool m_online;
@@ -145,6 +145,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool UseSsl { get; private set; }
 
+        /// <inheritdoc/>
+        public bool DisposedValue =>this.m_disposedValue;
+
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
@@ -243,8 +246,9 @@ namespace TouchSocket.Sockets
             {
                 this.SetBuffer(null, 0, 0);
             }
-            catch (Exception ex)
+            catch
             {
+                this.Dispose();
             }
         }
 
@@ -301,7 +305,7 @@ namespace TouchSocket.Sockets
         public new void Dispose()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(disposing: true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -479,11 +483,11 @@ namespace TouchSocket.Sockets
             {
                 if (disposing)
                 {
+                    base.Dispose();
                 }
 
                 this.m_disposedValue = true;
             }
-            base.Dispose();
         }
 
         /// <summary>

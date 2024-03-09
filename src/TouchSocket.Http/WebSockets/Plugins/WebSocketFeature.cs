@@ -25,20 +25,6 @@ namespace TouchSocket.Http.WebSockets
     public sealed class WebSocketFeature : PluginBase
     {
         /// <summary>
-        /// 表示是否完成WS握手
-        /// </summary>
-        [Obsolete("此配置已被弃用", true)]
-        public static readonly DependencyProperty<bool> HandshakedProperty =
-            DependencyProperty<bool>.Register("Handshaked", false);
-
-        /// <summary>
-        /// 表示WebSocketVersion
-        /// </summary>
-        [Obsolete("此配置已被弃用", true)]
-        public static readonly DependencyProperty<string> WebSocketVersionProperty =
-            DependencyProperty<string>.Register("WebSocketVersion", "13");
-
-        /// <summary>
         /// 自动响应Close报文
         /// </summary>
         public static readonly DependencyProperty<bool> AutoCloseProperty =

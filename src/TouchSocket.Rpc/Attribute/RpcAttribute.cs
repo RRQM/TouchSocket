@@ -63,12 +63,6 @@ namespace TouchSocket.Rpc
         public string InvokeKey { get; set; }
 
         /// <summary>
-        /// 函数标识
-        /// </summary>
-        [Obsolete("此枚举值已被弃用，当第一个参数是ICallContext时，自动识别。", true)]
-        public MethodFlags MethodFlags { get; set; }
-
-        /// <summary>
         /// 是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。
         /// </summary>
         public bool MethodInvoke { get; set; }

@@ -121,16 +121,5 @@ namespace TouchSocket.Core
             this.PluginManager = pluginManager;
             this.Resolver = resolver;
         }
-
-#if NET6_0_OR_GREATER
-
-        /// <inheritdoc/>
-        protected override async ValueTask DisposeAsyncCore()
-        {
-            this.Config.SafeDispose();
-            this.PluginManager.SafeDispose();
-            await base.DisposeAsyncCore();
-        }
-#endif
     }
 }

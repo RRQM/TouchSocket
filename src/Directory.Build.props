@@ -3,7 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0-rc.2</Version>
+		<Version>2.0.0</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -20,7 +20,7 @@
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
 		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
-		<NoWarn>IDE0290;IDE0090</NoWarn>
+		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">

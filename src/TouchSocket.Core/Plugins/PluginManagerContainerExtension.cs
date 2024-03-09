@@ -19,16 +19,5 @@ namespace TouchSocket.Core
     /// </summary>
     public static class PluginManagerContainerExtension
     {
-        /// <summary>
-        /// 添加<see cref="IPluginManager"/>到容器。
-        /// </summary>
-        /// <param name="registrator"></param>
-        /// <returns></returns>
-        [Obsolete("此配置已被弃用，插件管理器后续不再支持共享使用",true)]
-        public static IRegistrator AddPluginManager(this IRegistrator registrator)
-        {
-            registrator.RegisterSingleton<IPluginManager, PluginManager>();
-            return registrator;
-        }
     }
 }

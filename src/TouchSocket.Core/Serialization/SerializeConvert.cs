@@ -395,18 +395,6 @@ namespace TouchSocket.Core
         #endregion Xml序列化和反序列化
 
         #region Json序列化和反序列化
-
-        /// <summary>
-        /// 首先使用NewtonsoftJson.默认True。
-        /// <para>
-        /// 当设置True时，json序列化会优先使用NewtonsoftJson。
-        /// 当设置为FALSE，netstandard2.0和net45平台将继续使用。
-        /// 其他平台将使用System.Text.Json。
-        /// </para>
-        /// </summary>
-        [Obsolete("此配置已被弃用，内部Json序列化均通过NewtonsoftJson完成", true)]
-        public static bool NewtonsoftJsonFirst { get; set; } = true;
-
         /// <summary>
         /// 转换为Json
         /// </summary>

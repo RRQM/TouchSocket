@@ -36,12 +36,6 @@ namespace TouchSocket.Sockets
         public int SendTimeout { get; set; }
 
         /// <summary>
-        /// 接收类型
-        /// </summary>
-        [Obsolete("该配置已被弃用，正式版发布时会直接删除", true)]
-        public ReceiveType ReceiveType { get; set; } = ReceiveType.Iocp;
-
-        /// <summary>
         /// 是否使用地址复用
         /// </summary>
         public bool ReuseAddress { get; set; }

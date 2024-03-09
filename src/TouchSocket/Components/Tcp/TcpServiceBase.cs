@@ -61,7 +61,10 @@ namespace TouchSocket.Sockets
         {
             if (this.m_tcpCores.TryPop(out var tcpCore))
             {
-                return tcpCore;
+                if (!tcpCore.DisposedValue)
+                {
+                    return tcpCore;
+                }
             }
 
             return new InternalTcpCore();
@@ -80,6 +83,11 @@ namespace TouchSocket.Sockets
         /// <param name="tcpCore"></param>
         public void ReturnTcpCore(TcpCore tcpCore)
         {
+            if (tcpCore.DisposedValue)
+            {
+                return;
+            }
+
             if (this.DisposedValue)
             {
                 tcpCore.SafeDispose();

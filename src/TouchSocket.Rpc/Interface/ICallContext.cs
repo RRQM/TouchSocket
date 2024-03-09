@@ -43,12 +43,6 @@ namespace TouchSocket.Rpc
         CancellationToken Token { get; }
 
         /// <summary>
-        /// TokenSource
-        /// </summary>
-        [Obsolete("此配置已被弃用，请使用Token和Cancel()代替该功能。", true)]
-        CancellationTokenSource TokenSource { get; }
-
-        /// <summary>
         /// 执行取消<see cref="ICallContext.Token"/>。
         /// </summary>
         /// <returns></returns>

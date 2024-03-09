@@ -1126,11 +1126,20 @@ namespace TouchSocket.Dmtp
 
         #region IDmtpChannel
 
+        private void CheckChannelShouldBeReliable()
+        {
+            if (!this.IsReliable)
+            {
+                throw new NotSupportedException("Channel不支持在不可靠协议使用。");
+            }
+        }
+
         private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
 
         /// <inheritdoc/>
         public virtual bool ChannelExisted(int id)
         {
+            this.CheckChannelShouldBeReliable();
             return this.m_userChannels.ContainsKey(id);
         }
 
@@ -1262,6 +1271,8 @@ namespace TouchSocket.Dmtp
 
         private IDmtpChannel PrivateCreateChannel(string targetId, bool random, int id, Metadata metadata)
         {
+            this.CheckChannelShouldBeReliable();
+
             if (random)
             {
                 id = new object().GetHashCode();
@@ -1341,6 +1352,8 @@ namespace TouchSocket.Dmtp
 
         private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata)
         {
+            this.CheckChannelShouldBeReliable();
+
             if (random)
             {
                 id = new object().GetHashCode();
