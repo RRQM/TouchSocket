@@ -251,4 +251,14 @@ namespace WebApiServerApp
             throw new NotImplementedException();
         }
     }
+
+    class MyActionFilterAttribute : RpcActionFilterAttribute
+    {
+        public override async Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+        {
+            //输出
+            Console.WriteLine(invokeResult.Message);
+           return await base.ExecutExceptionAsync(callContext, parameters, invokeResult, exception);
+        }
+    }
 }
