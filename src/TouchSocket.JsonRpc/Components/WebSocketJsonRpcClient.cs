@@ -433,23 +433,19 @@ namespace TouchSocket.JsonRpc
             await this.Response(callContext, invokeResult.Result, error);
         }
 
-        protected override void OnDisconnected(DisconnectEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override async Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
+        /// <inheritdoc/>
+        protected override Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
         {
 
             if (result.MessageType != WebSocketMessageType.Text)
             {
-                return;
+                return EasyTask.CompletedTask;
             }
 
             var jsonString = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
             if (string.IsNullOrEmpty(jsonString))
             {
-                return;
+                return EasyTask.CompletedTask;
             }
 
             if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
@@ -465,6 +461,14 @@ namespace TouchSocket.JsonRpc
                     this.m_waitHandle.SetRun(waitResult);
                 }
             }
+
+            return EasyTask.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        protected override void OnDisconnected(DisconnectEventArgs e)
+        {
+            
         }
     }
 }

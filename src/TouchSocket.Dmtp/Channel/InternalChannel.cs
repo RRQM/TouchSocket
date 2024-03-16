@@ -24,10 +24,10 @@ namespace TouchSocket.Dmtp
     internal partial class InternalChannel : DisposableObject, IDmtpChannel
     {
         private readonly DmtpActor m_actor;
-        private readonly AsyncAutoResetEvent m_asyncAutoResetEvent = new AsyncAutoResetEvent(false);
+        //private readonly AsyncAutoResetEvent m_asyncAutoResetEvent = new AsyncAutoResetEvent(false);
         private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
         private readonly FlowGate m_flowGate;
-        private readonly AutoResetEvent m_resetEvent = new AutoResetEvent(false);
+        //private readonly AutoResetEvent m_resetEvent = new AutoResetEvent(false);
         private int m_cacheCapacity;
         private volatile bool m_canFree;
         private ByteBlock m_currentData;
@@ -105,6 +105,8 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public string LastOperationMes { get; private set; }
 
+        public DateTime LastOperationTime { get => this.m_lastOperationTime; }
+
         public long MaxSpeed
         {
             get => this.m_maxSpeed;
@@ -121,28 +123,16 @@ namespace TouchSocket.Dmtp
 
         public Metadata Metadata { get; private set; }
 
-        /// <summary>
-        /// 状态
-        /// </summary>
         public ChannelStatus Status { get; private set; }
 
-        /// <summary>
-        /// 目的Id地址。
-        /// </summary>
         public string TargetId { get; }
 
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
 
-        /// <summary>
-        /// 是否被使用
-        /// </summary>
         public bool Using { get; private set; }
 
         #region 操作
 
-        /// <summary>
-        /// 取消
-        /// </summary>
         public void Cancel(string operationMes = null)
         {
             if ((byte)this.Status > 3)
@@ -178,9 +168,6 @@ namespace TouchSocket.Dmtp
             });
         }
 
-        /// <summary>
-        /// 完成操作
-        /// </summary>
         public void Complete(string operationMes = null)
         {
             if ((byte)this.Status > 3)
@@ -211,11 +198,6 @@ namespace TouchSocket.Dmtp
             });
         }
 
-        /// <summary>
-        /// 继续。
-        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
-        /// </summary>
-        /// <param name="operationMes"></param>
         public void HoldOn(string operationMes = null)
         {
             if ((byte)this.Status > 3)
@@ -297,7 +279,7 @@ namespace TouchSocket.Dmtp
                     case ChannelDataType.DataOrder:
                         {
                             this.m_currentData = channelPackage.Data;
-                            this.m_flowGate.AddCheckWait(channelPackage.Data.Len);
+                            this.m_flowGate.AddCheckWait(channelPackage.Size);
                             return true;
                         }
                     case ChannelDataType.CompleteOrder:
@@ -329,7 +311,7 @@ namespace TouchSocket.Dmtp
                 }
             }
 
-            this.Reset();
+            //this.Reset();
             if (this.Wait())
             {
                 return this.MoveNext();
@@ -354,7 +336,7 @@ namespace TouchSocket.Dmtp
                     case ChannelDataType.DataOrder:
                         {
                             this.m_currentData = channelPackage.Data;
-                            await this.m_flowGate.AddCheckWaitAsync(channelPackage.Data.Len);
+                            await this.m_flowGate.AddCheckWaitAsync(channelPackage.Size);
                             return true;
                         }
                     case ChannelDataType.CompleteOrder:
@@ -386,7 +368,7 @@ namespace TouchSocket.Dmtp
                 }
             }
 
-            this.Reset();
+            //this.Reset();
             if (await this.WaitAsync())
             {
                 return await this.MoveNextAsync();
@@ -489,7 +471,7 @@ namespace TouchSocket.Dmtp
                 }
             }
             this.m_dataQueue.Enqueue(channelPackage);
-            this.Set();
+            //this.Set();
         }
 
         internal void RequestDispose(bool clear)
@@ -527,9 +509,9 @@ namespace TouchSocket.Dmtp
                     });
                     if (this.m_actor.RemoveChannel(this.Id))
                     {
-                        this.Set();
-                        this.m_resetEvent.SafeDispose();
-                        this.m_asyncAutoResetEvent.SafeDispose();
+                        //this.Set();
+                        //this.m_resetEvent.SafeDispose();
+                        //this.m_asyncAutoResetEvent.SafeDispose();
                     }
                 }
             }
@@ -582,26 +564,40 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private void Reset()
-        {
-            this.m_resetEvent.Reset();
-            this.m_asyncAutoResetEvent.Reset();
-        }
+        //private void Reset()
+        //{
+        //    this.m_resetEvent.Reset();
+        //    this.m_asyncAutoResetEvent.Reset();
+        //}
 
-        private void Set()
-        {
-            this.m_resetEvent.Set();
-            this.m_asyncAutoResetEvent.Set();
-        }
+        //private void Set()
+        //{
+        //    this.m_resetEvent.Set();
+        //    this.m_asyncAutoResetEvent.Set();
+        //}
 
         private bool Wait()
         {
-            return this.m_resetEvent.WaitOne(this.Timeout);
+            //return this.m_resetEvent.WaitOne(this.Timeout);
+
+            return SpinWait.SpinUntil(() => this.m_dataQueue.Count > 0, this.Timeout);
         }
 
-        private Task<bool> WaitAsync()
+        private async Task<bool> WaitAsync()
         {
-            return this.m_asyncAutoResetEvent.WaitOneAsync(this.Timeout);
+            var now = DateTime.Now;
+            while (true)
+            {
+                if (this.m_dataQueue.Count > 0)
+                {
+                    return true;
+                }
+                if (DateTime.Now - now > this.Timeout)
+                {
+                    return false;
+                }
+                await Task.Delay(1);
+            }
         }
 
         #region 迭代器

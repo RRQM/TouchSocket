@@ -152,7 +152,7 @@ namespace TouchSocket.Http.WebSockets
         {
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
         }
-
+           
         /// <summary>
         /// 已断开连接。
         /// </summary>

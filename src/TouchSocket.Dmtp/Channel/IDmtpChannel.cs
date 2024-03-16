@@ -81,6 +81,7 @@ namespace TouchSocket.Dmtp
         /// 是否被使用
         /// </summary>
         bool Using { get; }
+        DateTime LastOperationTime { get; }
 
         /// <summary>
         /// 取消

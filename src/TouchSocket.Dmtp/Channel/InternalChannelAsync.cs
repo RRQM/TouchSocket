@@ -16,7 +16,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
 {
-#if NET6_0_OR_GREATER
+#if AsyncEnumerable
     internal partial class InternalChannel
     {
         public async IAsyncEnumerator<ByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)

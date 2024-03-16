@@ -420,6 +420,16 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
+        /// <inheritdoc/>
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (this.ContentLength == 0)
+            {
+                return 0;
+            }
+            return base.Read(buffer, offset, count);
+        }
+
         private void ParseUrl()
         {
             if (this.URL.Contains('?'))

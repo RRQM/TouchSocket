@@ -613,9 +613,9 @@ namespace TouchSocket.Sockets
             }
 
             var noDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty);
-            if (noDelay != null)
+            if (noDelay.HasValue)
             {
-                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay);
+                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay.Value);
             }
 
             if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) != null)
