@@ -3,7 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.0</Version>
+		<Version>2.0.1</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -43,19 +43,19 @@
 		
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	
 	<ItemGroup>

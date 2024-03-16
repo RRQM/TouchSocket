@@ -31,7 +31,7 @@ namespace TouchSocket.Dmtp
         public ByteBlock Data { get; set; }
         public ChannelDataType DataType { get; set; }
         public bool RunNow { get; set; }
-        int IQueueData.Size => this.Data == null ? 0 : this.Data.Len;
+        public int Size => this.Data == null ? 0 : this.Data.Len;
 
         public int GetLen()
         {

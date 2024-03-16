@@ -72,7 +72,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override void PreviewSend(IRequestInfo requestInfo)
         {
-            if (!(requestInfo is DmtpMessage message))
+            if (requestInfo is not DmtpMessage message)
             {
                 throw new Exception($"无法将{nameof(requestInfo)}转换为{nameof(DmtpMessage)}");
             }

@@ -1431,15 +1431,12 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private bool QueueChannelPackage(ChannelPackage channelPackage)
+        private void QueueChannelPackage(ChannelPackage channelPackage)
         {
             if (this.m_userChannels.TryGetValue(channelPackage.ChannelId, out var channel))
             {
                 channel.ReceivedData(channelPackage);
-                return true;
             }
-
-            return false;
         }
 
         private bool RequestCreateChannel(int id, string targetId, Metadata metadata)

@@ -173,7 +173,7 @@ namespace TouchSocket.Core
         /// 入队
         /// </summary>
         /// <param name="item"></param>
-        public void Enqueue(in T item)
+        public new void Enqueue(T item)
         {
             lock (this)
             {

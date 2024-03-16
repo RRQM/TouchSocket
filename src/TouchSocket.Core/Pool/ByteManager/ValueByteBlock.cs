@@ -358,27 +358,31 @@ namespace TouchSocket.Core
         {
             this.ThrowIfDisposed();
 
-            if (this.m_canReturn)
-            {
-                this.m_bytePool.Return(this.m_buffer);
-            }
+            bool canReturn;
 
             byte[] bytes;
             if (this.m_bytePool == null)
             {
                 bytes = new byte[size];
-                this.m_canReturn = false;
+                canReturn = false;
             }
             else
             {
                 bytes = this.m_bytePool.Rent(size);
-                this.m_canReturn = true;
+                canReturn = true;
             }
 
             if (retainedData)
             {
                 Array.Copy(this.m_buffer, 0, bytes, 0, this.m_buffer.Length);
             }
+
+            if (this.m_canReturn)
+            {
+                this.m_bytePool.Return(this.m_buffer);
+            }
+
+            this.m_canReturn = canReturn;
             this.m_buffer = bytes;
         }
 

@@ -218,6 +218,16 @@ namespace TouchSocket.Http
             }
         }
 
+        /// <inheritdoc/>
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (this.ContentLength == 0&&!this.IsChunk)
+            {
+                return 0;
+            }
+            return base.Read(buffer, offset, count);
+        }
+
         /// <summary>
         /// 当传输模式是Chunk时，用于结束传输。
         /// </summary>

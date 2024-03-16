@@ -245,10 +245,6 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (this.ContentLength == 0)
-            {
-                return 0;
-            }
             return base.Read(buffer, offset, count);
         }
 
