@@ -17,7 +17,6 @@ namespace UnityServerConsoleApp
         private static void Main(string[] args)
         {
             //unitypackage在本级目录下。
-            //已发布的apk和exe客户端也在本级目录下。
             StartTcpService(7789);
             StartTcpRpcService(7790);
             StartUdpService(7791);
