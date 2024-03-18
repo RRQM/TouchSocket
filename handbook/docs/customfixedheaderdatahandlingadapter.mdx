@@ -176,4 +176,12 @@ static TcpService CreateService()
 
 :::  
 
+## 五、适配器纠错
+
+该适配器当收到半包数据时，会自动缓存半包数据，然后等后续数据收到以后执行拼接操作。
+
+但有的时候，可能由于其他原因导致后续数据错乱，这时候就需要纠错。详情可看[适配器纠错](./adaptererrorcorrection.mdx)
+
+
+
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/CustomFixedHeaderConsoleApp)
