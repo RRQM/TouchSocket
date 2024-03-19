@@ -25,9 +25,10 @@ title: 组播、广播
 ```csharp {9}
 //创建udpService
 UdpSession udpService = new UdpSession();
-udpService.Received = (remote, byteBlock, requestInfo) =>
+udpService.Received = (remote, e) =>
 {
-    Console.WriteLine(byteBlock.ToString());
+    Console.WriteLine(e.ByteBlock.ToString());
+    return EasyTask.CompletedTask;
 };
 udpService.Setup(new TouchSocketConfig()
     .SetBindIPHost(new IPHost(7789))
@@ -64,9 +65,10 @@ udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8
 ```csharp {9}
 //创建udpService
 UdpSession udpService = new UdpSession();
-udpService.Received = (remote, byteBlock, requestInfo) =>
+udpService.Received = (remote, e) =>
 {
-    Console.WriteLine(byteBlock.ToString());
+    Console.WriteLine(e.ByteBlock.ToString());
+    return EasyTask.CompletedTask;
 };
 udpService.Setup(new TouchSocketConfig()
     .SetBindIPHost(new IPHost(7789))
