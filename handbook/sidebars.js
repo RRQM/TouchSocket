@@ -55,7 +55,7 @@ module.exports = {
         {
           type: "doc",
           id: "enterprise",
-          label: "3.2 企业版相关"
+          label: "3.2 Pro相关"
         },
         {
           // type: "category",

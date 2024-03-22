@@ -88,7 +88,7 @@ try
         .SetRemoteIPHost("127.0.0.1:7789")
         .ConfigurePlugins(a=> 
         {
-            //在企业版中，使用以下任意方式，可实现转发客户端的断线重连。
+            //在Pro中，使用以下任意方式，可实现转发客户端的断线重连。
             a.Add<PollingKeepAlivePlugin<TcpClient>>()
             .SetTick(1000);//每秒检查
             //a.UseReconnection();
