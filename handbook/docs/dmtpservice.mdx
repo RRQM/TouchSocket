@@ -181,7 +181,7 @@ app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之�
 在Services时，添加`AddWebSocketDmtpService`，并且配置相关项。
 
 ```csharp showLineNumbers
-//企业版功能
+//Pro功能
 //添加基于Http升级协议的Dmtp。
 //客户端使用HttpDmtpClient
 builder.Services.AddHttpMiddlewareDmtpService(config =>
