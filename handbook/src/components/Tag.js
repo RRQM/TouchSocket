@@ -46,7 +46,7 @@ export default function (props) {
       bgColor: "#38e550",
     },
 
-    企业版: {
+    Pro: {
       bgColor: "#23AAF2",
     }
   };
