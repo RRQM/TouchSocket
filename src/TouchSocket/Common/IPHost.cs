@@ -56,8 +56,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param>
-        public IPHost(IPAddress address, int port) 
-            : this(address.AddressFamily== System.Net.Sockets.AddressFamily.InterNetworkV6? $"[{address}]:{port}" : $"{address}:{port}")
+        public IPHost(IPAddress address, int port)
+            : this(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? $"[{address}]:{port}" : $"{address}:{port}")
         {
         }
 

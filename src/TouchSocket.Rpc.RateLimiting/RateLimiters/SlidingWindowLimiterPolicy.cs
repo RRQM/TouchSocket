@@ -10,13 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.RateLimiting;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
@@ -31,7 +26,7 @@ namespace TouchSocket.Rpc.RateLimiting
 
         protected override RateLimiter NewRateLimiter(MethodInfo method)
         {
-            return new SlidingWindowRateLimiter(m_options);
+            return new SlidingWindowRateLimiter(this.m_options);
         }
     }
 }

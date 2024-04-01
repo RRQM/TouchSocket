@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
@@ -43,6 +42,7 @@ namespace TouchSocket.Sockets
         /// 同步根
         /// </summary>
         public readonly object SyncRoot = new object();
+
         private long m_bufferRate;
         private bool m_disposedValue;
         private volatile bool m_online;
@@ -146,7 +146,7 @@ namespace TouchSocket.Sockets
         public bool UseSsl { get; private set; }
 
         /// <inheritdoc/>
-        public bool DisposedValue =>this.m_disposedValue;
+        public bool DisposedValue => this.m_disposedValue;
 
         /// <summary>
         /// 以Ssl服务器模式授权
@@ -237,7 +237,6 @@ namespace TouchSocket.Sockets
                 byteBlock.Dispose();
                 throw;
             }
-
         }
 
         private void ClearBuffer()

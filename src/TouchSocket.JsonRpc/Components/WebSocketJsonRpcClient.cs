@@ -69,7 +69,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
+                this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -89,7 +89,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -143,7 +143,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
+                this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).GetFalseAwaitResult();
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -163,7 +163,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -221,7 +221,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
+                await this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -241,7 +241,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -287,7 +287,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.Client.SendAsync(GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
+                await this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -307,7 +307,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -353,13 +353,13 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
+                if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
                 }
             }
         }
@@ -408,9 +408,9 @@ namespace TouchSocket.JsonRpc
                 invokeResult.Message = ex.Message;
             }
 
-            if (callContext.MethodInstance != null)
+            if (callContext.RpcMethod != null)
             {
-                if (!callContext.MethodInstance.IsEnable)
+                if (!callContext.RpcMethod.IsEnable)
                 {
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }
@@ -436,7 +436,6 @@ namespace TouchSocket.JsonRpc
         /// <inheritdoc/>
         protected override Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
         {
-
             if (result.MessageType != WebSocketMessageType.Text)
             {
                 return EasyTask.CompletedTask;
@@ -468,7 +467,6 @@ namespace TouchSocket.JsonRpc
         /// <inheritdoc/>
         protected override void OnDisconnected(DisconnectEventArgs e)
         {
-            
         }
     }
 }

@@ -399,7 +399,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) 
+            if (disposing)
             {
                 this.BreakOut($"{nameof(Dispose)}断开链接", true);
             }

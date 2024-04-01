@@ -52,7 +52,7 @@ namespace TouchSocket.Dmtp.Redis
             };
             if (!(value is byte[]))
             {
-                cache.Value = this.Converter.Serialize(null,value);
+                cache.Value = this.Converter.Serialize(null, value);
             }
             return this.AddCache(cache);
         }
@@ -478,7 +478,7 @@ namespace TouchSocket.Dmtp.Redis
                     value = value1;
                     return true;
                 }
-                value = (TValue)this.Converter.Deserialize(null,cache.Value, typeof(TValue));
+                value = (TValue)this.Converter.Deserialize(null, cache.Value, typeof(TValue));
                 return true;
             }
             value = default;

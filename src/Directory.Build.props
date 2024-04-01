@@ -3,7 +3,7 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.1</Version>
+		<Version>2.0.2</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>

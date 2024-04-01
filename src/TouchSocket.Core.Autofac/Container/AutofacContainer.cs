@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     /// </summary>
     public class AutofacContainer : IRegistrator, IResolver
     {
-        private ContainerBuilder m_containerBuilder;
+        private readonly ContainerBuilder m_containerBuilder;
         private Autofac.IContainer m_serviceProvider;
 
         /// <summary>

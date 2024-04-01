@@ -30,7 +30,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public Span<byte> AsSpan()
         {
-            return new Span<byte>(this.m_buffer,0,this.Len);
+            return new Span<byte>(this.m_buffer, 0, this.Len);
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace TouchSocket.Core
 
                 this.SetCapacity((int)lend, true);
             }
-           
+
         }
-      
+
         #region Int32
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace TouchSocket.Core
         {
             var size = 4;
             this.WriteSize(size);
-            TouchSocketBitConverter.Default.GetBytes(ref this.m_buffer[this.m_position],value);
+            TouchSocketBitConverter.Default.GetBytes(ref this.m_buffer[this.m_position], value);
             this.m_position += size;
             this.m_length = Math.Max(this.m_position, this.m_length);
         }
@@ -99,7 +99,7 @@ namespace TouchSocket.Core
 
         #region Int16
 
-        
+
         /// <summary>
         /// 写入默认端序的<see cref="short"/>值
         /// </summary>
@@ -127,7 +127,7 @@ namespace TouchSocket.Core
 
         #region Int64
 
-        
+
         /// <summary>
         /// 写入默认端序的<see cref="long"/>值
         /// </summary>
@@ -155,7 +155,7 @@ namespace TouchSocket.Core
 
         #region Boolean
 
-       
+
         /// <summary>
         /// 写入<see cref="bool"/>值
         /// </summary>

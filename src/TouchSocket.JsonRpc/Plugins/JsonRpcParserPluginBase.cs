@@ -29,7 +29,7 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider,IResolver resolver)
+        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider, IResolver resolver)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
@@ -68,9 +68,9 @@ namespace TouchSocket.JsonRpc
                 invokeResult.Message = ex.Message;
             }
 
-            if (callContext.MethodInstance != null)
+            if (callContext.RpcMethod != null)
             {
-                if (!callContext.MethodInstance.IsEnable)
+                if (!callContext.RpcMethod.IsEnable)
                 {
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }
@@ -93,13 +93,13 @@ namespace TouchSocket.JsonRpc
             this.Response(callContext, invokeResult.Result, error);
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
+                if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
                 }
             }
         }

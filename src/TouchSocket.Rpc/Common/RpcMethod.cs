@@ -230,50 +230,50 @@ namespace TouchSocket.Rpc
         /// </summary>
         public IList<IRpcActionFilter> GetFilters()
         {
-            if (m_hasFilters[0] || m_hasFilters[1] || m_hasFilters[2] || m_hasFilters[3])
+            if (this.m_hasFilters[0] || this.m_hasFilters[1] || this.m_hasFilters[2] || this.m_hasFilters[3])
             {
                 var actionFilters = new List<IRpcActionFilter>();
                 //注册方法
-                if (m_hasFilters[0])
+                if (this.m_hasFilters[0])
                 {
                     foreach (var item in this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
-                        m_hasFilters[0] = true;
+                        this.m_hasFilters[0] = true;
                         this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
 
-                if (m_hasFilters[1])
+                if (this.m_hasFilters[1])
                 {
                     //实现方法
                     if (this.ServerFromType != this.ServerToType)
                     {
                         foreach (var item in this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false))
                         {
-                            m_hasFilters[1] = true;
+                            this.m_hasFilters[1] = true;
                             this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                         }
                     }
                 }
 
-                if (m_hasFilters[2])
+                if (this.m_hasFilters[2])
                 {
                     //注册类
                     foreach (var item in this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                     {
-                        m_hasFilters[2] = true;
+                        this.m_hasFilters[2] = true;
                         this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                     }
                 }
 
-                if (m_hasFilters[3])
+                if (this.m_hasFilters[3])
                 {
                     //实现类
                     if (this.ServerFromType != this.ServerToType)
                     {
                         foreach (var item in this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false))
                         {
-                            m_hasFilters[3] = true;
+                            this.m_hasFilters[3] = true;
                             this.AddActionFilter((IRpcActionFilter)item, ref actionFilters);
                         }
                     }
@@ -309,21 +309,21 @@ namespace TouchSocket.Rpc
         private void PrivateGetFilters()
         {
             //注册方法
-            m_hasFilters[0] = this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+            this.m_hasFilters[0] = this.Info.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
 
             //实现方法
             if (this.ServerFromType != this.ServerToType)
             {
-                m_hasFilters[1] = this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+                this.m_hasFilters[1] = this.ToMethodInfo.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
             }
 
             //注册类
-            m_hasFilters[2] = this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+            this.m_hasFilters[2] = this.ServerFromType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
 
             //实现类
             if (this.ServerFromType != this.ServerToType)
             {
-                m_hasFilters[3] = this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
+                this.m_hasFilters[3] = this.ServerToType.GetCustomAttributes(typeof(IRpcActionFilter), false).Any();
             }
         }
     }

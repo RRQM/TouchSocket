@@ -34,7 +34,7 @@ namespace TouchSocket.XmlRpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider,IResolver resolver)
+        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
@@ -80,21 +80,21 @@ namespace TouchSocket.XmlRpc
                     var invokeResult = new InvokeResult();
                     XmlRpcCallContext callContext = null;
 
-                    if (this.ActionMap.TryGetMethodInstance(actionKey, out var methodInstance))
+                    if (this.ActionMap.TryGetRpcMethod(actionKey, out var rpcMethod))
                     {
-                        if (methodInstance.IsEnable)
+                        if (rpcMethod.IsEnable)
                         {
                             try
                             {
-                                callContext = new XmlRpcCallContext(client,methodInstance,this.m_resolver,e.Context,xmlstring);
+                                callContext = new XmlRpcCallContext(client, rpcMethod, this.m_resolver, e.Context, xmlstring);
 
-                                ps = new object[methodInstance.Parameters.Length];
+                                ps = new object[rpcMethod.Parameters.Length];
                                 var paramsNode = xml.SelectSingleNode("methodCall/params");
 
                                 var index = 0;
                                 for (var i = 0; i < ps.Length; i++)
                                 {
-                                    var parameter = methodInstance.Parameters[i];
+                                    var parameter = rpcMethod.Parameters[i];
                                     if (parameter.IsCallContext)
                                     {
                                         ps[i] = callContext;
@@ -118,14 +118,14 @@ namespace TouchSocket.XmlRpc
                                     }
                                 }
 
-                                //if (methodInstance.IncludeCallContext)
+                                //if (rpcMethod.IncludeCallContext)
                                 //{
                                 //    ps[0] = callContext;
                                 //    var index = 1;
                                 //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
                                 //    {
                                 //        var valueNode = paramNode.FirstChild.FirstChild;
-                                //        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                //        ps[index] = (XmlDataTool.GetValue(valueNode, rpcMethod.ParameterTypes[index]));
                                 //        index++;
                                 //    }
                                 //}
@@ -135,7 +135,7 @@ namespace TouchSocket.XmlRpc
                                 //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
                                 //    {
                                 //        var valueNode = paramNode.FirstChild.FirstChild;
-                                //        ps[index] = (XmlDataTool.GetValue(valueNode, methodInstance.ParameterTypes[index]));
+                                //        ps[index] = (XmlDataTool.GetValue(valueNode, rpcMethod.ParameterTypes[index]));
                                 //        index++;
                                 //    }
                                 //}
@@ -206,13 +206,13 @@ namespace TouchSocket.XmlRpc
             return this;
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
+                if (rpcMethod.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
                 }
             }
         }

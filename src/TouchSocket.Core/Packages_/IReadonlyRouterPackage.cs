@@ -13,9 +13,23 @@
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// RpcPluginManagerExtension
+    /// 只读的路由包接口
     /// </summary>
-    public static class RpcPluginManagerExtension
+    public interface IReadonlyRouterPackage
     {
+        /// <summary>
+        /// 标识是否路由
+        /// </summary>
+        bool Route { get; }
+
+        /// <summary>
+        /// 源Id
+        /// </summary>
+        string SourceId { get; }
+
+        /// <summary>
+        /// 目标Id
+        /// </summary>
+        string TargetId { get; }
     }
 }

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NETSTANDARD2_0_OR_GREATER||NET481_OR_GREATER||NET6_0_OR_GREATER
+#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -100,7 +100,7 @@ namespace TouchSocket.WebApi
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return this.Converter.Deserialize(null,response.Content.ReadAsStringAsync().GetFalseAwaitResult(), returnType);
+                    return this.Converter.Deserialize(null, response.Content.ReadAsStringAsync().GetFalseAwaitResult(), returnType);
                 }
                 else if ((int)response.StatusCode == 422)
                 {
@@ -322,7 +322,7 @@ namespace TouchSocket.WebApi
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return this.Converter.Deserialize(null,await response.Content.ReadAsStringAsync(), returnType);
+                    return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync(), returnType);
                 }
                 else if ((int)response.StatusCode == 422)
                 {

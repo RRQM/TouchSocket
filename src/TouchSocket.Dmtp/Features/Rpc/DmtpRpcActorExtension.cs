@@ -106,7 +106,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="pluginManager"></param>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static  DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
+        public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)
 #else
 
         public static DmtpRpcFeature UseDmtpRpc(this IPluginManager pluginManager)

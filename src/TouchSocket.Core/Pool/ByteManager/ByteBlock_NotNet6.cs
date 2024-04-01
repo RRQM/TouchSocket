@@ -279,7 +279,7 @@ namespace TouchSocket.Core
 
         #endregion Decimal
 
-       
+
         #region DateTime
         /// <summary>
         /// 写入<see cref="DateTime"/>值

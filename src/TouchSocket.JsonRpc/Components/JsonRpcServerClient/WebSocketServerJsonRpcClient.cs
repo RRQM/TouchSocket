@@ -13,7 +13,6 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Http;
-using TouchSocket.Http.WebSockets;
 
 namespace TouchSocket.JsonRpc
 {

@@ -136,9 +136,8 @@ namespace TouchSocket.JsonRpc
                 }
                 else
                 {
-                    _=Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr));
+                    _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr));
                 }
-
             }
             else
             {

@@ -456,7 +456,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static TResponse SetStatus<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
-            return SetStatus(response,200, "Success");
+            return SetStatus(response, 200, "Success");
         }
 
         /// <summary>

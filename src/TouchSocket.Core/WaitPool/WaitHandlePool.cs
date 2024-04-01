@@ -45,12 +45,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 最大Sign
         /// </summary>
-        public long MaxSign { get => m_maxSign; set => m_maxSign = value; }
+        public long MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
 
         /// <summary>
         /// 最小Sign
         /// </summary>
-        public long MinSign { get => m_minSign; set => m_minSign = value; }
+        public long MinSign { get => this.m_minSign; set => this.m_minSign = value; }
 
         /// <summary>
         /// 取消全部

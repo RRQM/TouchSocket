@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -20,7 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject,IConnectObject
+    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject, IConnectObject
     {
     }
 }

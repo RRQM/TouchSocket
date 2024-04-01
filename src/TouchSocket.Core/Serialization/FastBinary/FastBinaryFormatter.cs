@@ -12,8 +12,8 @@
 
 using System;
 using System.Collections;
-using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace TouchSocket.Core
 {
@@ -23,6 +23,7 @@ namespace TouchSocket.Core
     public static class FastBinaryFormatter
     {
         #region DefaultType
+
         public const byte Empty = 0;
 
         public const byte Boolean = 1;
@@ -63,7 +64,8 @@ namespace TouchSocket.Core
 
         public const byte EnumObject = 19;
 
-        #endregion
+        #endregion DefaultType
+
         /// <summary>
         /// DynamicallyAccessed
         /// </summary>
@@ -142,7 +144,7 @@ namespace TouchSocket.Core
                     var memberInfo = serializObject.MemberInfos[i];
                     if (serializObject.EnableIndex)
                     {
-                        byteBlock.Write((byte)memberInfo.Index);
+                        byteBlock.Write(memberInfo.Index);
                         len += 1;
                     }
                     else
@@ -167,7 +169,6 @@ namespace TouchSocket.Core
         {
             foreach (var item in param.Keys)
             {
-                
             }
             var len = 0;
             if (param != null)
@@ -250,7 +251,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 2 + 4;
-                            
                         }
                     case ushort value:
                         {
@@ -258,7 +258,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 2 + 4;
-                            
                         }
                     case int value:
                         {
@@ -273,7 +272,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 4 + 4;
-                            
                         }
                     case long value:
                         {
@@ -288,7 +286,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 8 + 4;
-                            
                         }
                     case float value:
                         {
@@ -303,7 +300,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 8 + 4;
-                           
                         }
                     case char value:
                         {
@@ -311,7 +307,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value);
                             return 2 + 4;
-                           
                         }
                     case decimal value:
                         {
@@ -326,7 +321,6 @@ namespace TouchSocket.Core
 
                             byteBlock.Write(value.Ticks);
                             return 8 + 4;
-                            
                         }
                     case Enum _:
                         {
@@ -391,7 +385,6 @@ namespace TouchSocket.Core
                                         break;
                                 }
                             }
-
 
                             break;
                         }

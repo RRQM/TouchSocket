@@ -10,14 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.RateLimiting;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
@@ -25,7 +20,7 @@ namespace TouchSocket.Rpc.RateLimiting
     {
         public RateLimiter GetRateLimiter(ICallContext callContext)
         {
-            return this.GetOrAdd(callContext.MethodInstance.Info, a => this.NewRateLimiter(a));
+            return this.GetOrAdd(callContext.RpcMethod.Info, a => this.NewRateLimiter(a));
         }
 
         protected abstract RateLimiter NewRateLimiter(MethodInfo method);

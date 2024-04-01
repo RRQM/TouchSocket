@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Microsoft.Extensions.DependencyInjection;
 using TouchSocket.Dmtp.AspNetCore;
 
 namespace Microsoft.AspNetCore.Builder

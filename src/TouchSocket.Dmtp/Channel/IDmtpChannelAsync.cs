@@ -16,8 +16,10 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
 #if AsyncEnumerable
+
     public partial interface IDmtpChannel : IAsyncEnumerable<ByteBlock>
     {
     }
+
 #endif
 }

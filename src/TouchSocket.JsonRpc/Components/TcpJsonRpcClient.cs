@@ -346,13 +346,13 @@ namespace TouchSocket.JsonRpc
             return base.ReceivedData(e);
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
+                if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
                 }
             }
         }
@@ -393,7 +393,7 @@ namespace TouchSocket.JsonRpc
 
             try
             {
-                JsonRpcUtility.BuildRequestContext(this.Resolver,this.ActionMap, ref callContext);
+                JsonRpcUtility.BuildRequestContext(this.Resolver, this.ActionMap, ref callContext);
             }
             catch (Exception ex)
             {
@@ -401,9 +401,9 @@ namespace TouchSocket.JsonRpc
                 invokeResult.Message = ex.Message;
             }
 
-            if (callContext.MethodInstance != null)
+            if (callContext.RpcMethod != null)
             {
-                if (!callContext.MethodInstance.IsEnable)
+                if (!callContext.RpcMethod.IsEnable)
                 {
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }

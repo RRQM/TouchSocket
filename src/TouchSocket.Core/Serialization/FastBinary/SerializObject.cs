@@ -167,7 +167,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 转化器
         /// </summary>
-        public IFastBinaryConverter Converter { get;private set; }
+        public IFastBinaryConverter Converter { get; private set; }
 
         /// <summary>
         /// 类型

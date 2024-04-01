@@ -300,7 +300,7 @@ namespace TouchSocket.NamedPipe
 
         private Receiver m_receiver;
         private TouchSocketConfig m_config;
-        private object SyncRoot = new object();
+        private readonly object SyncRoot = new object();
 
         /// <inheritdoc/>
         public void ClearReceiver()

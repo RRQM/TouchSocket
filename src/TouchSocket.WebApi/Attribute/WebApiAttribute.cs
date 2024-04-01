@@ -57,14 +57,14 @@ namespace TouchSocket.WebApi
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcMethod"></param>
         /// <returns></returns>
-        public override string GetInvokenKey(RpcMethod methodInstance)
+        public override string GetInvokenKey(RpcMethod rpcMethod)
         {
-            var parameters = methodInstance.GetNormalParameters().ToList();
+            var parameters = rpcMethod.GetNormalParameters().ToList();
             if (this.Method == HttpMethodType.GET)
             {
-                var actionUrl = this.GetRouteUrls(methodInstance)[0];
+                var actionUrl = this.GetRouteUrls(rpcMethod)[0];
                 if (parameters.Count > 0)
                 {
                     var stringBuilder = new StringBuilder();
@@ -84,7 +84,7 @@ namespace TouchSocket.WebApi
             }
             else if (this.Method == HttpMethodType.POST)
             {
-                var actionUrl = this.GetRouteUrls(methodInstance)[0];
+                var actionUrl = this.GetRouteUrls(rpcMethod)[0];
                 if (parameters.Count > 0)
                 {
                     var stringBuilder = new StringBuilder();
@@ -105,10 +105,10 @@ namespace TouchSocket.WebApi
                         }
                     }
 
-                    //for (; i < methodInstance.ParameterNames.Length - 1; i++)
+                    //for (; i < rpcMethod.ParameterNames.Length - 1; i++)
                     //{
-                    //    stringBuilder.Append(methodInstance.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
-                    //    if (i != methodInstance.ParameterNames.Length - 2)
+                    //    stringBuilder.Append(rpcMethod.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
+                    //    if (i != rpcMethod.ParameterNames.Length - 2)
                     //    {
                     //        stringBuilder.Append('&');
                     //    }
@@ -119,7 +119,7 @@ namespace TouchSocket.WebApi
             }
             else
             {
-                return base.GetInvokenKey(methodInstance);
+                return base.GetInvokenKey(rpcMethod);
             }
         }
 
@@ -127,22 +127,22 @@ namespace TouchSocket.WebApi
         /// 获取路由路径。
         /// <para>路由路径的第一个值会被当做调用值。</para>
         /// </summary>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcMethod"></param>
         /// <returns></returns>
-        public virtual string[] GetRouteUrls(RpcMethod methodInstance)
+        public virtual string[] GetRouteUrls(RpcMethod rpcMethod)
         {
-            if (methodInstance.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
+            if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
             {
                 var urls = new List<string>();
 
-                var attrs = methodInstance.Info.GetCustomAttributes(typeof(RouterAttribute), true);
+                var attrs = rpcMethod.Info.GetCustomAttributes(typeof(RouterAttribute), true);
                 if (attrs.Length > 0)
                 {
                     foreach (var item in attrs.Cast<RouterAttribute>())
                     {
                         var url = item.RouteTemple.ToLower()
-                            .Replace("[api]", methodInstance.ServerFromType.Name)
-                            .Replace("[action]", webApiAttribute.GetMethodName(methodInstance, false)).ToLower();
+                            .Replace("[api]", rpcMethod.ServerFromType.Name)
+                            .Replace("[action]", webApiAttribute.GetMethodName(rpcMethod, false)).ToLower();
 
                         if (!urls.Contains(url))
                         {
@@ -152,14 +152,14 @@ namespace TouchSocket.WebApi
                 }
                 else
                 {
-                    attrs = methodInstance.ServerFromType.GetCustomAttributes(typeof(RouterAttribute), true);
+                    attrs = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RouterAttribute), true);
                     if (attrs.Length > 0)
                     {
                         foreach (var item in attrs.Cast<RouterAttribute>())
                         {
                             var url = item.RouteTemple.ToLower()
-                                .Replace("[api]", methodInstance.ServerFromType.Name)
-                                .Replace("[action]", webApiAttribute.GetMethodName(methodInstance, false)).ToLower();
+                                .Replace("[api]", rpcMethod.ServerFromType.Name)
+                                .Replace("[action]", webApiAttribute.GetMethodName(rpcMethod, false)).ToLower();
 
                             if (!urls.Contains(url))
                             {
@@ -169,7 +169,7 @@ namespace TouchSocket.WebApi
                     }
                     else
                     {
-                        urls.Add($"/{methodInstance.Info.DeclaringType.Name}/{methodInstance.Name}".ToLower());
+                        urls.Add($"/{rpcMethod.Info.DeclaringType.Name}/{rpcMethod.Name}".ToLower());
                     }
                 }
 

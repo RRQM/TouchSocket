@@ -33,21 +33,21 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="actionKey"></param>
         /// <returns></returns>
-        public RpcMethod GetMethodInstance(string actionKey)
+        public RpcMethod GetRpcMethod(string actionKey)
         {
-            this.TryGetValue(actionKey, out var methodInstance);
-            return methodInstance;
+            this.TryGetValue(actionKey, out var rpcMethod);
+            return rpcMethod;
         }
 
         /// <summary>
         /// 通过actionKey获取函数实例
         /// </summary>
         /// <param name="actionKey"></param>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcMethod"></param>
         /// <returns></returns>
-        public bool TryGetMethodInstance(string actionKey, out RpcMethod methodInstance)
+        public bool TryGetRpcMethod(string actionKey, out RpcMethod rpcMethod)
         {
-            return this.TryGetValue(actionKey, out methodInstance);
+            return this.TryGetValue(actionKey, out rpcMethod);
         }
     }
 }

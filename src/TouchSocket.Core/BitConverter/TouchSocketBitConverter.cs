@@ -103,7 +103,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 指定大小端。
         /// </summary>
-        public EndianType EndianType { get => m_endianType; }
+        public EndianType EndianType { get => this.m_endianType; }
 
         /// <summary>
         /// 按照枚举值选择默认的端序。
@@ -212,7 +212,7 @@ namespace TouchSocket.Core
             {
                 if (values[index])
                 {
-                    numArray[index / 8] = numArray[index / 8].SetBit((short)(index % 8), 1);
+                    numArray[index / 8] = numArray[index / 8].SetBit(index % 8, 1);
                 }
             }
             return numArray;

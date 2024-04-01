@@ -11,13 +11,12 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Security;
 
 namespace TouchSocket.Core
 {
@@ -337,7 +336,7 @@ namespace TouchSocket.Core
         /// <param name="xmlStream"></param>
         /// <param name="targetType"></param>
         /// <returns></returns>
-        public static object XmlDeserializeFromStream(Stream xmlStream,Type targetType)
+        public static object XmlDeserializeFromStream(Stream xmlStream, Type targetType)
         {
             var xmlserializer = new XmlSerializer(targetType);
             return xmlserializer.Deserialize(xmlStream);
@@ -363,7 +362,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object XmlDeserializeFromString(string xmlString, Type targetType)
         {
-            return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)),targetType);
+            return XmlDeserializeFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xmlString)), targetType);
         }
 
         /// <summary>
@@ -395,6 +394,7 @@ namespace TouchSocket.Core
         #endregion Xml序列化和反序列化
 
         #region Json序列化和反序列化
+
         /// <summary>
         /// 转换为Json
         /// </summary>

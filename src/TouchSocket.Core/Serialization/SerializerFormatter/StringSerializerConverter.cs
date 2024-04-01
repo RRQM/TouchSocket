@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using System;
-using System.Net.NetworkInformation;
-
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -42,9 +38,8 @@ namespace TouchSocket.Core
         /// String类型数据转换器
         /// </summary>
         /// <param name="converters"></param>
-        public StringSerializerConverter(params ISerializerFormatter<string, object>[] converters):base(converters)
-        { 
-        
+        public StringSerializerConverter(params ISerializerFormatter<string, object>[] converters) : base(converters)
+        {
         }
     }
 }

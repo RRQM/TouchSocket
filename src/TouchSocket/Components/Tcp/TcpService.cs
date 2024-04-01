@@ -643,7 +643,7 @@ namespace TouchSocket.Sockets
                 }
                 catch (Exception ex)
                 {
-                    if (this.m_serverState== ServerState.Running)
+                    if (this.m_serverState == ServerState.Running)
                     {
                         this.Logger.Exception(ex);
                     }

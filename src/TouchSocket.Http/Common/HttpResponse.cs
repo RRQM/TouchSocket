@@ -39,7 +39,7 @@ namespace TouchSocket.Http
         public HttpResponse(ITcpClientBase client)
         {
             this.m_client = client;
-            if (client==null)
+            if (client == null)
             {
                 this.m_canRead = false;
                 this.m_canWrite = false;
@@ -221,7 +221,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (this.ContentLength == 0&&!this.IsChunk)
+            if (this.ContentLength == 0 && !this.IsChunk)
             {
                 return 0;
             }
@@ -456,6 +456,24 @@ namespace TouchSocket.Http
             this.IsChunk = false;
             this.StatusCode = 200;
             this.StatusMessage = "Success";
+
+            if (this.m_client == null)
+            {
+                this.m_canRead = false;
+                this.m_canWrite = false;
+
+                return;
+            }
+            if (this.m_client.IsClient)
+            {
+                this.m_canRead = true;
+                this.m_canWrite = false;
+            }
+            else
+            {
+                this.m_canRead = false;
+                this.m_canWrite = true;
+            }
         }
     }
 }

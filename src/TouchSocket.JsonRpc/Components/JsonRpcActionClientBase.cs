@@ -70,7 +70,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -144,7 +144,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -222,7 +222,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);
@@ -288,7 +288,7 @@ namespace TouchSocket.JsonRpc
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
-                                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
+                                        var resultContext = waitData.WaitResult;
                                         if (resultContext.Error != null)
                                         {
                                             throw new RpcException(resultContext.Error.Message);

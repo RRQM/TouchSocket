@@ -11,11 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using TouchSocket.Core;
-using System.Threading.Tasks;
 using System.Threading.RateLimiting;
+using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
@@ -52,7 +50,7 @@ namespace TouchSocket.Rpc.RateLimiting
             var rateLimitLease = await rateLimiter.AcquireAsync();
             if (rateLimitLease.IsAcquired)
             {
-                this.m_rateLimitLease=rateLimitLease;
+                this.m_rateLimitLease = rateLimitLease;
                 return new InvokeResult() { Status = InvokeStatus.Ready };
             }
             else

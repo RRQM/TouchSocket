@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
@@ -25,10 +24,10 @@ namespace TouchSocket.Dmtp.Rpc
         /// DmtpRpcCallContext
         /// </summary>
         /// <param name="caller"></param>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcMethod"></param>
         /// <param name="dmtpRpcPackage"></param>
         /// <param name="resolver"></param>
-        public DmtpRpcCallContext(object caller, RpcMethod methodInstance, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, methodInstance, resolver)
+        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
         {
             this.DmtpRpcPackage = dmtpRpcPackage;
         }

@@ -92,7 +92,7 @@ namespace TouchSocket.WebApi
 
             if (response.StatusCode == 200)
             {
-                return this.Converter.Deserialize(null,response.GetBody(), returnType);
+                return this.Converter.Deserialize(null, response.GetBody(), returnType);
             }
             else if (response.StatusCode == 422)
             {
@@ -298,7 +298,7 @@ namespace TouchSocket.WebApi
 
             if (response.StatusCode == 200)
             {
-                return this.Converter.Deserialize(null,response.GetBody(), returnType);
+                return this.Converter.Deserialize(null, response.GetBody(), returnType);
             }
             else if (response.StatusCode == 422)
             {

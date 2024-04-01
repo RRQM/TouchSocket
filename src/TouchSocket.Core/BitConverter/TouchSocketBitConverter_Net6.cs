@@ -60,7 +60,7 @@ namespace TouchSocket.Core
 
             unsafe
             {
-                fixed (byte* p= &buffer[offset])
+                fixed (byte* p = &buffer[offset])
                 {
                     if (this.IsSameOfSet())
                     {
@@ -88,7 +88,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,ulong value)
+        public void GetBytes(ref byte buffer, ulong value)
         {
             Unsafe.As<byte, ulong>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -141,7 +141,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,bool value)
+        public void GetBytes(ref byte buffer, bool value)
         {
             Unsafe.As<byte, bool>(ref buffer) = value;
         }
@@ -211,7 +211,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,char value)
+        public void GetBytes(ref byte buffer, char value)
         {
             Unsafe.As<byte, char>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -264,7 +264,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,short value)
+        public void GetBytes(ref byte buffer, short value)
         {
             Unsafe.As<byte, short>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -322,7 +322,7 @@ namespace TouchSocket.Core
             Unsafe.As<byte, int>(ref buffer) = value;
             if (!this.IsSameOfSet())
             {
-               this.ByteTransDataFormat4_Net6(ref buffer);
+                this.ByteTransDataFormat4_Net6(ref buffer);
             }
         }
 
@@ -370,7 +370,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,long value)
+        public void GetBytes(ref byte buffer, long value)
         {
             Unsafe.As<byte, long>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -423,7 +423,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,uint value)
+        public void GetBytes(ref byte buffer, uint value)
         {
             Unsafe.As<byte, uint>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -476,7 +476,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,float value)
+        public void GetBytes(ref byte buffer, float value)
         {
             Unsafe.As<byte, float>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -529,7 +529,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,double value)
+        public void GetBytes(ref byte buffer, double value)
         {
             Unsafe.As<byte, double>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -583,7 +583,7 @@ namespace TouchSocket.Core
         public byte[] GetBytes(decimal value)
         {
             var bytes = new byte[16];
-            GetBytes(ref bytes[0],value);
+            this.GetBytes(ref bytes[0], value);
             return bytes;
         }
 
@@ -594,7 +594,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void GetBytes(ref byte buffer,decimal value)
+        public void GetBytes(ref byte buffer, decimal value)
         {
             Unsafe.As<byte, decimal>(ref buffer) = value;
             if (!this.IsSameOfSet())
@@ -667,7 +667,7 @@ namespace TouchSocket.Core
                     var b = Unsafe.ReadUnaligned<byte>(p + 1);
                     var c = Unsafe.ReadUnaligned<byte>(p + 2);
                     var d = Unsafe.ReadUnaligned<byte>(p + 3);
-                    
+
                     switch (this.m_endianType)
                     {
                         case EndianType.Big:
@@ -763,7 +763,7 @@ namespace TouchSocket.Core
             {
                 fixed (byte* p = &value)
                 {
-                    
+
                     switch (this.m_endianType)
                     {
                         case EndianType.Big:

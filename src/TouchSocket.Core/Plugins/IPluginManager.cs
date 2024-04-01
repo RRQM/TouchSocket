@@ -12,15 +12,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 插件管理器接口
     /// </summary>
-    public interface IPluginManager : IDisposableObject,IResolverObject
+    public interface IPluginManager : IDisposableObject, IResolverObject
     {
         /// <summary>
         /// 标识该插件管理器是否可用。
@@ -58,7 +58,7 @@ namespace TouchSocket.Core
         /// <typeparam name="TPlugin"></typeparam>
         /// <param name="func"></param>
         /// <returns></returns>
-        TPlugin Add<TPlugin>(Func<IResolver,TPlugin> func)where TPlugin :IPlugin;
+        TPlugin Add<TPlugin>(Func<IResolver, TPlugin> func) where TPlugin : IPlugin;
 
         /// <summary>
         /// 添加插件异步执行委托

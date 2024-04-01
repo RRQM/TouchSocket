@@ -13,8 +13,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -242,19 +240,19 @@ namespace TouchSocket.Dmtp.Rpc
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-                var methodInstance = this.GetInvokeMethod.Invoke(rpcPackage.MethodName);
+                var rpcMethod = this.GetInvokeMethod.Invoke(rpcPackage.MethodName);
                 DmtpRpcCallContext callContext = null;
-                if (methodInstance != null)
+                if (rpcMethod != null)
                 {
                     try
                     {
-                        if (methodInstance.IsEnable)
+                        if (rpcMethod.IsEnable)
                         {
-                            ps = new object[methodInstance.Parameters.Length];
+                            ps = new object[rpcMethod.Parameters.Length];
 
-                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client, methodInstance, rpcPackage, m_resolver);
+                            callContext = new DmtpRpcCallContext(this.DmtpActor.Client, rpcMethod, rpcPackage, this.m_resolver);
 
-                            if (rpcPackage.Feedback == FeedbackType.WaitInvoke && methodInstance.HasCallContext)
+                            if (rpcPackage.Feedback == FeedbackType.WaitInvoke && rpcMethod.HasCallContext)
                             {
                                 this.TryAdd(rpcPackage.Sign, callContext);
                             }
@@ -262,7 +260,7 @@ namespace TouchSocket.Dmtp.Rpc
                             var index = 0;
                             for (var i = 0; i < ps.Length; i++)
                             {
-                                var parameter = methodInstance.Parameters[i];
+                                var parameter = rpcMethod.Parameters[i];
                                 if (parameter.IsCallContext)
                                 {
                                     ps[i] = callContext;
@@ -273,7 +271,7 @@ namespace TouchSocket.Dmtp.Rpc
                                 }
                                 else if (index < psData.Count)
                                 {
-                                    ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[index++], methodInstance.ParameterTypes[i]);
+                                    ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[index++], rpcMethod.ParameterTypes[i]);
                                 }
                                 else if (parameter.ParameterInfo.HasDefaultValue)
                                 {
@@ -285,21 +283,21 @@ namespace TouchSocket.Dmtp.Rpc
                                 }
                             }
 
-                            //if (methodInstance.IncludeCallContext)
+                            //if (rpcMethod.IncludeCallContext)
                             //{
-                            //    ps = new object[methodInstance.ParameterTypes.Length];
+                            //    ps = new object[rpcMethod.ParameterTypes.Length];
                             //    ps[0] = callContext;
                             //    for (var i = 0; i < psData.Count; i++)
                             //    {
-                            //        ps[i + 1] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i + 1]);
+                            //        ps[i + 1] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], rpcMethod.ParameterTypes[i + 1]);
                             //    }
                             //}
                             //else
                             //{
-                            //    ps = new object[methodInstance.ParameterTypes.Length];
-                            //    for (var i = 0; i < methodInstance.ParameterTypes.Length; i++)
+                            //    ps = new object[rpcMethod.ParameterTypes.Length];
+                            //    for (var i = 0; i < rpcMethod.ParameterTypes.Length; i++)
                             //    {
-                            //        ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], methodInstance.ParameterTypes[i]);
+                            //        ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], rpcMethod.ParameterTypes[i]);
                             //    }
                             //}
                         }
@@ -339,7 +337,7 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case InvokeStatus.Success:
                         {
-                            if (methodInstance.HasReturn)
+                            if (rpcMethod.HasReturn)
                             {
                                 rpcPackage.ReturnParameterBytes = this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, invokeResult.Result);
                             }
@@ -348,14 +346,14 @@ namespace TouchSocket.Dmtp.Rpc
                                 rpcPackage.ReturnParameterBytes = null;
                             }
 
-                            if (methodInstance.HasByRef)
+                            if (rpcMethod.HasByRef)
                             {
                                 rpcPackage.IsByRef = true;
                                 rpcPackage.ParametersBytes = new List<byte[]>();
 
-                                for (var i = 0; i < methodInstance.Parameters.Length; i++)
+                                for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                                 {
-                                    var parameter = methodInstance.Parameters[i];
+                                    var parameter = rpcMethod.Parameters[i];
                                     if (parameter.IsCallContext)
                                     {
                                         continue;
@@ -374,7 +372,7 @@ namespace TouchSocket.Dmtp.Rpc
                                     }
                                 }
                                 //var i = 0;
-                                //if (methodInstance.IncludeCallContext)
+                                //if (rpcMethod.IncludeCallContext)
                                 //{
                                 //    i = 1;
                                 //}
@@ -412,7 +410,7 @@ namespace TouchSocket.Dmtp.Rpc
                         return;
                 }
 
-                if (rpcPackage.Feedback == FeedbackType.WaitInvoke && methodInstance.HasCallContext)
+                if (rpcPackage.Feedback == FeedbackType.WaitInvoke && rpcMethod.HasCallContext)
                 {
                     this.TryRemove(rpcPackage.Sign, out _);
                 }

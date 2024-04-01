@@ -36,6 +36,7 @@ namespace TouchSocket.Sockets
         }
 
         #region 异步发送
+
         /// <summary>
         /// 发送数据并等待
         /// </summary>
@@ -127,7 +128,8 @@ namespace TouchSocket.Sockets
             }
         }
 
-        #endregion
+        #endregion 异步发送
+
         #region 同步发送
 
         /// <summary>
@@ -223,7 +225,7 @@ namespace TouchSocket.Sockets
         public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, ByteBlock byteBlock, int millisecondsTimeout = 5000)
             where TClient : IReceiverObject, ISender
         {
-            return SendThenResponse(client,byteBlock.Buffer,0,byteBlock.Len,millisecondsTimeout);
+            return SendThenResponse(client, byteBlock.Buffer, 0, byteBlock.Len, millisecondsTimeout);
         }
 
         /// <summary>
@@ -237,7 +239,7 @@ namespace TouchSocket.Sockets
         /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer,int offset,int length, int millisecondsTimeout = 5000)
+        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int offset, int length, int millisecondsTimeout = 5000)
             where TClient : IReceiverObject, ISender
         {
             using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
@@ -252,6 +254,7 @@ namespace TouchSocket.Sockets
                 }
             }
         }
-        #endregion 发送
+
+        #endregion 同步发送
     }
 }

@@ -112,7 +112,8 @@ namespace TouchSocket.Dmtp
                 this.m_semaphoreForConnect.Release();
             }
         }
-        #endregion
+
+        #endregion 连接
 
         /// <summary>
         /// 断开连接

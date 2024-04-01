@@ -46,7 +46,7 @@ namespace TouchSocket.Rpc
         /// <param name="registrator"></param>
         /// <returns></returns>
 #if NET6_0_OR_GREATER
-        public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(CoreContainerExtension.DynamicallyAccessed)]TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
+        public static IRegistrator AddRpcServerProvider<[DynamicallyAccessedMembers(CoreContainerExtension.DynamicallyAccessed)] TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider
 #else
 
         public static IRegistrator AddRpcServerProvider<TRpcServerProvider>(this IRegistrator registrator) where TRpcServerProvider : class, IRpcServerProvider

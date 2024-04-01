@@ -18,19 +18,19 @@
 		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" PrivateAssets="All" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" PrivateAssets="All" />
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
-		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net481'">

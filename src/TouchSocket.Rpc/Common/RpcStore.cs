@@ -13,9 +13,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using TouchSocket.Core;
-using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Rpc
 {
@@ -103,7 +103,7 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="serverType"></param>
         /// <returns></returns>
-        public RpcMethod[] GetServerMethodInstances(Type serverType)
+        public RpcMethod[] GetServerRpcMethods(Type serverType)
         {
             return this.m_serverTypes[serverType].ToArray();
         }
@@ -135,9 +135,9 @@ namespace TouchSocket.Rpc
                 }
             }
 
-            var methodInstances = CodeGenerator.GetMethodInstances(serverFromType, rpcServer.GetType());
+            var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, rpcServer.GetType());
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(methodInstances));
+            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(rpcMethods));
             this.m_registrator.RegisterSingleton(serverFromType, rpcServer);
         }
 
@@ -175,9 +175,9 @@ namespace TouchSocket.Rpc
             {
                 this.m_registrator.RegisterSingleton(serverFromType, serverToType);
             }
-            var methodInstances = CodeGenerator.GetMethodInstances(serverFromType, serverToType);
+            var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, serverToType);
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(methodInstances));
+            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(rpcMethods));
         }
 
         #endregion 注册

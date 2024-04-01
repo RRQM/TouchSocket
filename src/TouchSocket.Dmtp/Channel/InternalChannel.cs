@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -24,12 +25,8 @@ namespace TouchSocket.Dmtp
     internal partial class InternalChannel : DisposableObject, IDmtpChannel
     {
         private readonly DmtpActor m_actor;
-        //private readonly AsyncAutoResetEvent m_asyncAutoResetEvent = new AsyncAutoResetEvent(false);
-        private readonly IntelligentDataQueue<ChannelPackage> m_dataQueue;
+        private readonly ConcurrentQueue<ChannelPackage> m_dataQueue;
         private readonly FlowGate m_flowGate;
-        //private readonly AutoResetEvent m_resetEvent = new AutoResetEvent(false);
-        private int m_cacheCapacity;
-        private volatile bool m_canFree;
         private ByteBlock m_currentData;
         private DateTime m_lastOperationTime;
         private long m_maxSpeed;
@@ -40,13 +37,7 @@ namespace TouchSocket.Dmtp
             this.m_lastOperationTime = DateTime.Now;
             this.TargetId = targetId;
             this.Status = ChannelStatus.Default;
-            this.m_cacheCapacity = 1024 * 1024 * 5;
-            this.m_dataQueue = new IntelligentDataQueue<ChannelPackage>(this.m_cacheCapacity)
-            {
-                OverflowWait = false,
-                OnQueueChanged = this.OnQueueChanged
-            };
-            this.m_canFree = true;
+            this.m_dataQueue = new ConcurrentQueue<ChannelPackage>();
             this.m_maxSpeed = int.MaxValue;
             this.m_flowGate = new FlowGate() { Maximum = this.m_maxSpeed };
             this.Metadata = metadata;
@@ -60,24 +51,12 @@ namespace TouchSocket.Dmtp
             this.Dispose(false);
         }
 
-        public long Available => this.m_dataQueue.Count;
+        public int Available => this.m_dataQueue.Count;
 
         /// <summary>
         /// 缓存容量
         /// </summary>
-        public int CacheCapacity
-        {
-            get => this.m_cacheCapacity;
-            set
-            {
-                if (value < 0)
-                {
-                    value = 1024;
-                }
-                this.m_cacheCapacity = value;
-                this.m_dataQueue.MaxSize = value;
-            }
-        }
+        public int CacheCapacity { get; set; }
 
         /// <summary>
         /// 判断当前通道能否调用<see cref="MoveNext()"/>
@@ -160,12 +139,31 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        public Task CancelAsync(string operationMes = null)
+        public async Task CancelAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            if ((byte)this.Status > 3)
             {
-                this.Cancel(operationMes);
-            });
+                return;
+            }
+            try
+            {
+                this.RequestCancel(true);
+                var channelPackage = new ChannelPackage()
+                {
+                    ChannelId = this.Id,
+                    RunNow = true,
+                    DataType = ChannelDataType.CancelOrder,
+                    Message = operationMes,
+                    SourceId = this.m_actor.Id,
+                    TargetId = this.TargetId,
+                    Route = this.TargetId.HasValue()
+                };
+                await this.m_actor.SendChannelPackageAsync(channelPackage);
+                this.m_lastOperationTime = DateTime.Now;
+            }
+            catch
+            {
+            }
         }
 
         public void Complete(string operationMes = null)
@@ -190,12 +188,26 @@ namespace TouchSocket.Dmtp
             this.m_lastOperationTime = DateTime.Now;
         }
 
-        public Task CompleteAsync(string operationMes = null)
+        public async Task CompleteAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            if ((byte)this.Status > 3)
             {
-                this.Complete(operationMes);
-            });
+                return;
+            }
+
+            this.RequestComplete(true);
+            var channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.Id,
+                RunNow = true,
+                DataType = ChannelDataType.CompleteOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.Id,
+                TargetId = this.TargetId,
+                Route = this.TargetId.HasValue()
+            };
+            await this.m_actor.SendChannelPackageAsync(channelPackage);
+            this.m_lastOperationTime = DateTime.Now;
         }
 
         public void HoldOn(string operationMes = null)
@@ -218,12 +230,24 @@ namespace TouchSocket.Dmtp
             this.m_lastOperationTime = DateTime.Now;
         }
 
-        public Task HoldOnAsync(string operationMes = null)
+        public async Task HoldOnAsync(string operationMes = null)
         {
-            return Task.Run(() =>
+            if ((byte)this.Status > 3)
             {
-                this.HoldOn(operationMes);
-            });
+                return;
+            }
+            var channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.Id,
+                RunNow = true,
+                DataType = ChannelDataType.HoldOnOrder,
+                Message = operationMes,
+                SourceId = this.m_actor.Id,
+                TargetId = this.TargetId,
+                Route = this.TargetId.HasValue()
+            };
+            await this.m_actor.SendChannelPackageAsync(channelPackage);
+            this.m_lastOperationTime = DateTime.Now;
         }
 
         protected override void Dispose(bool disposing)
@@ -279,7 +303,6 @@ namespace TouchSocket.Dmtp
                     case ChannelDataType.DataOrder:
                         {
                             this.m_currentData = channelPackage.Data;
-                            this.m_flowGate.AddCheckWait(channelPackage.Size);
                             return true;
                         }
                     case ChannelDataType.CompleteOrder:
@@ -299,11 +322,11 @@ namespace TouchSocket.Dmtp
                         return false;
 
                     case ChannelDataType.QueueRun:
-                        this.m_canFree = true;
+                        //this.m_canFree = true;
                         return false;
 
                     case ChannelDataType.QueuePause:
-                        this.m_canFree = false;
+                        //this.m_canFree = false;
                         return false;
 
                     default:
@@ -336,7 +359,6 @@ namespace TouchSocket.Dmtp
                     case ChannelDataType.DataOrder:
                         {
                             this.m_currentData = channelPackage.Data;
-                            await this.m_flowGate.AddCheckWaitAsync(channelPackage.Size);
                             return true;
                         }
                     case ChannelDataType.CompleteOrder:
@@ -356,11 +378,11 @@ namespace TouchSocket.Dmtp
                         return false;
 
                     case ChannelDataType.QueueRun:
-                        this.m_canFree = true;
+                        //this.m_canFree = true;
                         return false;
 
                     case ChannelDataType.QueuePause:
-                        this.m_canFree = false;
+                        //this.m_canFree = false;
                         return false;
 
                     default:
@@ -393,10 +415,6 @@ namespace TouchSocket.Dmtp
                 throw new Exception($"通道已{this.Status}");
             }
 
-            if (!SpinWait.SpinUntil(() => { return this.m_canFree; }, this.Timeout))
-            {
-                throw new TimeoutException();
-            }
             this.m_flowGate.AddCheckWait(length);
             var channelPackage = new ChannelPackage()
             {
@@ -424,12 +442,38 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        public Task WriteAsync(byte[] data, int offset, int length)
+        public async Task WriteAsync(byte[] data, int offset, int length)
         {
-            return Task.Run(() =>
+            if ((byte)this.Status > 3)
             {
-                this.Write(data, offset, length);
-            });
+                throw new Exception($"通道已{this.Status}");
+            }
+
+            await this.m_flowGate.AddCheckWaitAsync(length);
+            var channelPackage = new ChannelPackage()
+            {
+                ChannelId = this.Id,
+                DataType = ChannelDataType.DataOrder,
+                SourceId = this.m_actor.Id,
+                TargetId = this.TargetId,
+                Route = this.TargetId.HasValue()
+            };
+
+            if (data.Length == length)
+            {
+                channelPackage.Data = new ByteBlock(data);
+            }
+            else
+            {
+                var byteBlock = new ByteBlock(length);
+                byteBlock.Write(data, offset, length);
+                channelPackage.Data = byteBlock;
+            }
+            using (channelPackage.Data)
+            {
+                await this.m_actor.SendChannelPackageAsync(channelPackage);
+                this.m_lastOperationTime = DateTime.Now;
+            }
         }
 
         internal void ReceivedData(ChannelPackage channelPackage)
@@ -459,11 +503,11 @@ namespace TouchSocket.Dmtp
                         break;
 
                     case ChannelDataType.QueueRun:
-                        this.m_canFree = true;
+                        //this.m_canFree = true;
                         return;
 
                     case ChannelDataType.QueuePause:
-                        this.m_canFree = false;
+                        //this.m_canFree = false;
                         return;
 
                     default:
@@ -471,7 +515,6 @@ namespace TouchSocket.Dmtp
                 }
             }
             this.m_dataQueue.Enqueue(channelPackage);
-            //this.Set();
         }
 
         internal void RequestDispose(bool clear)
@@ -501,45 +544,11 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                lock (this)
+                this.m_dataQueue.Clear(package =>
                 {
-                    this.m_dataQueue.Clear(package =>
-                    {
-                        package.Data.SafeDispose();
-                    });
-                    if (this.m_actor.RemoveChannel(this.Id))
-                    {
-                        //this.Set();
-                        //this.m_resetEvent.SafeDispose();
-                        //this.m_asyncAutoResetEvent.SafeDispose();
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        private void OnQueueChanged(bool free)
-        {
-            if ((byte)this.Status > 3)
-            {
-                return;
-            }
-
-            try
-            {
-                var channelPackage = new ChannelPackage()
-                {
-                    ChannelId = this.Id,
-                    RunNow = true,
-                    DataType = free ? ChannelDataType.QueueRun : ChannelDataType.QueuePause,
-                    SourceId = this.m_actor.Id,
-                    TargetId = this.TargetId,
-                    Route = this.TargetId.HasValue()
-                };
-                this.m_actor.SendChannelPackage(channelPackage);
-                this.m_lastOperationTime = DateTime.Now;
+                    package.Data.SafeDispose();
+                });
+                this.m_actor.RemoveChannel(this.Id);
             }
             catch
             {
@@ -564,23 +573,22 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        //private void Reset()
-        //{
-        //    this.m_resetEvent.Reset();
-        //    this.m_asyncAutoResetEvent.Reset();
-        //}
-
-        //private void Set()
-        //{
-        //    this.m_resetEvent.Set();
-        //    this.m_asyncAutoResetEvent.Set();
-        //}
-
         private bool Wait()
         {
-            //return this.m_resetEvent.WaitOne(this.Timeout);
-
-            return SpinWait.SpinUntil(() => this.m_dataQueue.Count > 0, this.Timeout);
+            var spinWait = new SpinWait();
+            var now = DateTime.Now;
+            while (true)
+            {
+                if (this.m_dataQueue.Count > 0)
+                {
+                    return true;
+                }
+                if (DateTime.Now - now > this.Timeout)
+                {
+                    return false;
+                }
+                spinWait.SpinOnce();
+            }
         }
 
         private async Task<bool> WaitAsync()

@@ -74,36 +74,36 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 try
                 {
-                    var waitFileResource = new WaitFileResource();
-                    waitFileResource.UnpackageRouter(byteBlock);
-                    if (waitFileResource.Route && this.DmtpActor.AllowRoute)
+                    var fileTransferRouterPackage = new FileTransferRouterPackage();
+                    fileTransferRouterPackage.Unpackage(byteBlock);
+                    if (fileTransferRouterPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(RouteType.PullFile, waitFileResource)))
+                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)))
                         {
-                            if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId) is DmtpActor actor)
+                            if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId) is DmtpActor actor)
                             {
                                 actor.Send(this.m_pullFileResourceInfo_Request, byteBlock);
                                 return true;
                             }
                             else
                             {
-                                waitFileResource.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
+                                fileTransferRouterPackage.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                             }
                         }
                         else
                         {
-                            waitFileResource.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
+                            fileTransferRouterPackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                         }
-                        waitFileResource.SwitchId();
+                        fileTransferRouterPackage.SwitchId();
                         byteBlock.Reset();
-                        waitFileResource.Package(byteBlock);
+                        fileTransferRouterPackage.Package(byteBlock);
                         this.DmtpActor.Send(this.m_pullFileResourceInfo_Response, byteBlock);
                     }
                     else
                     {
-                        waitFileResource.UnpackageBody(byteBlock);
+                        //fileTransferRouterPackage.UnpackageBody(byteBlock);
 
-                        _ = Task.Factory.StartNew(this.RequestPullFileResourceInfo, waitFileResource);
+                        _ = Task.Factory.StartNew(this.RequestPullFileResourceInfo, fileTransferRouterPackage);
                     }
                 }
                 catch (Exception ex)
@@ -116,7 +116,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 try
                 {
-                    var waitFileResource = new WaitFileResource();
+                    var waitFileResource = new FileTransferRouterPackage();
                     waitFileResource.UnpackageRouter(byteBlock);
                     if (this.DmtpActor.AllowRoute && waitFileResource.Route)
                     {
@@ -200,35 +200,35 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 try
                 {
-                    var waitFileResource = new WaitFileResource();
-                    waitFileResource.UnpackageRouter(byteBlock);
-                    if (waitFileResource.Route && this.DmtpActor.AllowRoute)
+                    var fileTransferRouterPackage = new FileTransferRouterPackage();
+                    fileTransferRouterPackage.Unpackage(byteBlock);
+                    if (fileTransferRouterPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(RouteType.PullFile, waitFileResource)))
+                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(RouteType.PullFile, fileTransferRouterPackage)))
                         {
-                            if (await this.DmtpActor.TryFindDmtpActor(waitFileResource.TargetId) is DmtpActor actor)
+                            if (await this.DmtpActor.TryFindDmtpActor(fileTransferRouterPackage.TargetId) is DmtpActor actor)
                             {
                                 await actor.SendAsync(this.m_pushFileResourceInfo_Request, byteBlock);
                                 return true;
                             }
                             else
                             {
-                                waitFileResource.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
+                                fileTransferRouterPackage.Status = TouchSocketDmtpStatus.ClientNotFind.ToValue();
                             }
                         }
                         else
                         {
-                            waitFileResource.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
+                            fileTransferRouterPackage.Status = TouchSocketDmtpStatus.RoutingNotAllowed.ToValue();
                         }
                         byteBlock.Reset();
-                        waitFileResource.SwitchId();
-                        waitFileResource.Package(byteBlock);
+                        fileTransferRouterPackage.SwitchId();
+                        fileTransferRouterPackage.Package(byteBlock);
                         await this.DmtpActor.SendAsync(this.m_pushFileResourceInfo_Response, byteBlock);
                     }
                     else
                     {
-                        waitFileResource.UnpackageBody(byteBlock);
-                        _ = this.RequestPushFileResourceInfo(waitFileResource);
+                        //fileTransferRouterPackage.UnpackageBody(byteBlock);
+                        _ = this.RequestPushFileResourceInfo(fileTransferRouterPackage);
                     }
                 }
                 catch (Exception ex)
@@ -241,7 +241,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 try
                 {
-                    var waitFileResource = new WaitFileResource();
+                    var waitFileResource = new FileTransferRouterPackage();
                     waitFileResource.UnpackageRouter(byteBlock);
                     if (this.DmtpActor.AllowRoute && waitFileResource.Route)
                     {
@@ -877,7 +877,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         private FileResourceInfoResult PrivatePullFileResourceInfo(string targetId, string path, Metadata metadata = default, int fileSectionSize = 1024 * 512, int millisecondsTimeout = 5000, CancellationToken token = default)
         {
-            var waitFileResource = new WaitFileResource()
+            var waitFileResource = new FileTransferRouterPackage()
             {
                 Path = path,
                 TargetId = targetId,
@@ -902,7 +902,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     case WaitDataStatus.SetRunning:
                         {
-                            var waitFile = (WaitFileResource)waitData.WaitResult;
+                            var waitFile = (FileTransferRouterPackage)waitData.WaitResult;
                             switch (waitFile.Status.ToStatus())
                             {
                                 case TouchSocketDmtpStatus.Success:
@@ -1020,7 +1020,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             var fileResourceInfo = fileResourceLocator.FileResourceInfo;
 
-            var waitFileResource = new WaitFileResource()
+            var waitFileResource = new FileTransferRouterPackage()
             {
                 Path = savePath,
                 TargetId = targetId,
@@ -1048,7 +1048,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     case WaitDataStatus.SetRunning:
                         {
-                            var waitFile = (WaitFileResource)waitData.WaitResult;
+                            var waitFile = (FileTransferRouterPackage)waitData.WaitResult;
                             switch (waitFile.Status.ToStatus())
                             {
                                 case TouchSocketDmtpStatus.Success:
@@ -1287,7 +1287,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             //5.other
             try
             {
-                var waitFileResource = (WaitFileResource)o;
+                var waitFileResource = (FileTransferRouterPackage)o;
 
                 try
                 {
@@ -1401,7 +1401,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             //4.其他
             try
             {
-                var waitFileResource = (WaitFileResource)o;
+                var waitFileResource = (FileTransferRouterPackage)o;
                 try
                 {
                     var args = new FileTransferingEventArgs(TransferType.Push, waitFileResource.Metadata, waitFileResource.FileInfo)
