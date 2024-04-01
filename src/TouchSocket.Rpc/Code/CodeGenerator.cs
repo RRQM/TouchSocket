@@ -259,7 +259,7 @@ namespace TouchSocket.Rpc
         public static ServerCellCode Generator(Type serverType, Type attributeType)
         {
             var serverCellCode = new ServerCellCode();
-            var methodInstances = GetMethodInstances(serverType, serverType);
+            var rpcMethods = GetRpcMethods(serverType, serverType);
 
             var assemblies = new List<Assembly>(m_assemblies);
             assemblies.Add(serverType.Assembly);
@@ -282,25 +282,25 @@ namespace TouchSocket.Rpc
                 classCodeGenerator.AddTypeString(item);
             }
 
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                foreach (var att in methodInstance.RpcAttributes)
+                foreach (var att in rpcMethod.RpcAttributes)
                 {
                     if (attributeType == att.GetType())
                     {
-                        if (methodInstance.ReturnType != null)
+                        if (rpcMethod.ReturnType != null)
                         {
                             var deep = 0;
-                            classCodeGenerator.AddTypeString(methodInstance.ReturnType);
+                            classCodeGenerator.AddTypeString(rpcMethod.ReturnType);
                         }
 
-                        var psTypes=methodInstance.GetNormalParameters().Select(a=>a.Type);
+                        var psTypes = rpcMethod.GetNormalParameters().Select(a => a.Type);
                         foreach (var itemType in psTypes)
                         {
                             var deep = 0;
                             classCodeGenerator.AddTypeString(itemType);
                         }
-                        instances.Add(methodInstance);
+                        instances.Add(rpcMethod);
                         break;
                     }
                 }
@@ -417,9 +417,9 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <typeparam name="TServer"></typeparam>
         /// <returns></returns>
-        public static RpcMethod[] GetMethodInstances<TServer>() where TServer : IRpcServer
+        public static RpcMethod[] GetRpcMethods<TServer>() where TServer : IRpcServer
         {
-            return GetMethodInstances(typeof(TServer), typeof(TServer));
+            return GetRpcMethods(typeof(TServer), typeof(TServer));
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace TouchSocket.Rpc
         /// <param name="serverFromType"></param>
         /// <param name="serverToType"></param>
         /// <returns></returns>
-        public static RpcMethod[] GetMethodInstances(Type serverFromType, Type serverToType)
+        public static RpcMethod[] GetRpcMethods(Type serverFromType, Type serverToType)
         {
             if (!typeof(IRpcServer).IsAssignableFrom(serverFromType))
             {

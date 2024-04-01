@@ -36,7 +36,7 @@ namespace TouchSocket.Dmtp.Redis
         /// 定义元素的序列化和反序列化。
         /// <para>注意：Byte[]类型不用考虑。内部单独会做处理。</para>
         /// </summary>
-        public BytesSerializerConverter Converter { get;private set; }
+        public BytesSerializerConverter Converter { get; private set; }
 
         /// <summary>
         /// 实际储存缓存。

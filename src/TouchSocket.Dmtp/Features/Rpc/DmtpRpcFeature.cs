@@ -107,16 +107,16 @@ namespace TouchSocket.Dmtp.Rpc
 
         private RpcMethod GetInvokeMethod(string name)
         {
-            return this.ActionMap.GetMethodInstance(name);
+            return this.ActionMap.GetRpcMethod(name);
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<DmtpRpcAttribute>() is DmtpRpcAttribute attribute)
+                if (rpcMethod.GetAttribute<DmtpRpcAttribute>() is DmtpRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(methodInstance), methodInstance);
+                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
                 }
             }
         }

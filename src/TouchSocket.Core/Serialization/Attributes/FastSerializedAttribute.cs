@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 显式Fast序列化。一般当某个属性为只读时，使用该特性。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property| AttributeTargets.Class| AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
     public sealed class FastSerializedAttribute : Attribute
     {
         /// <summary>

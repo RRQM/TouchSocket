@@ -29,7 +29,7 @@ namespace TouchSocket.Modbus
         /// <returns>计算后的数组</returns>
         public static byte[] ToModbusCrc(byte[] byteData, int offset, int length)
         {
-            byte[] CRC = new byte[2];
+            var CRC = new byte[2];
 
             ushort wCrc = 0xFFFF;
             for (var i = offset; i < length; i++)

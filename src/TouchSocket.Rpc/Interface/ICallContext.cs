@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Threading;
 using TouchSocket.Core;
 
@@ -33,9 +32,9 @@ namespace TouchSocket.Rpc
         object Caller { get; }
 
         /// <summary>
-        /// 本次调用的<see cref="MethodInstance"/>
+        /// 本次调用的<see cref="RpcMethod"/>
         /// </summary>
-        RpcMethod MethodInstance { get; }
+        RpcMethod RpcMethod { get; }
 
         /// <summary>
         /// 可取消的调用令箭

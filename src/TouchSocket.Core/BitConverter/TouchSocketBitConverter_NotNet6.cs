@@ -95,7 +95,7 @@ namespace TouchSocket.Core
             var bools = new bool[8 * length];
             for (short i = 0; i < bools.Length; i++)
             {
-                bools[i] = Convert.ToBoolean(buffer[offset + i / 8].GetBit(i));
+                bools[i] = Convert.ToBoolean(buffer[offset + i / 8].GetBit(i % 8));
             }
             return bools;
         }

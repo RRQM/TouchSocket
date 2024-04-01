@@ -28,13 +28,14 @@ namespace TouchSocket.Dmtp
         long MaxSpeed { get; set; }
 
         /// <summary>
-        /// 具有可读数据的长度
+        /// 具有可读数据的条目数
         /// </summary>
-        long Available { get; }
+        int Available { get; }
 
         /// <summary>
         /// 缓存容量
         /// </summary>
+        [Obsolete("此配置已被弃用")]
         int CacheCapacity { get; set; }
 
         /// <summary>
@@ -81,6 +82,7 @@ namespace TouchSocket.Dmtp
         /// 是否被使用
         /// </summary>
         bool Using { get; }
+
         DateTime LastOperationTime { get; }
 
         /// <summary>

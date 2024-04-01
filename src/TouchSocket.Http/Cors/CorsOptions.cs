@@ -12,9 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Http
 {
@@ -39,7 +36,7 @@ namespace TouchSocket.Http
         {
             var corsBuilder = new CorsBuilder();
             corsBuilderAction.Invoke(corsBuilder);
-            m_corsPolicys.Add(policyName, corsBuilder.Build());
+            this.m_corsPolicys.Add(policyName, corsBuilder.Build());
         }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace TouchSocket.Http
         /// <param name="corsResult"></param>
         public void Add(string policyName, CorsPolicy corsResult)
         {
-            m_corsPolicys.Add(policyName, corsResult);
+            this.m_corsPolicys.Add(policyName, corsResult);
         }
     }
 }

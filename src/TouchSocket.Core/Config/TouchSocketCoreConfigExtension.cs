@@ -46,6 +46,7 @@ namespace TouchSocket.Core
             }
             return config;
         }
+
         #endregion 插件
 
         #region 容器

@@ -46,7 +46,7 @@ namespace TouchSocket.Rpc
         protected sealed override object Invoke(MethodInfo targetMethod, object[] args)
         {
             var value = this.m_methods.GetOrAdd(targetMethod, this.AddMethod);
-            var methodInstance = value.MethodInstance;
+            var rpcMethod = value.RpcMethod;
             var invokeKey = value.InvokeKey;
 
             var invokeOption = value.InvokeOption ? (IInvokeOption)args.Last() : InvokeOption.WaitInvoke;
@@ -75,35 +75,35 @@ namespace TouchSocket.Rpc
 
             object result = default;
 
-            switch (methodInstance.TaskType)
+            switch (rpcMethod.TaskType)
             {
                 case TaskReturnType.Task:
                     {
-                        this.GetClient().Invoke(invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        this.GetClient().Invoke(invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
                         result = EasyTask.CompletedTask;
                         break;
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        var obj = this.GetClient().Invoke(methodInstance.ReturnType, invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                        var obj = this.GetClient().Invoke(rpcMethod.ReturnType, invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
                         result = value.GenericMethod.Invoke(default, obj);
                         break;
                     }
                 case TaskReturnType.None:
                 default:
                     {
-                        if (methodInstance.HasReturn)
+                        if (rpcMethod.HasReturn)
                         {
-                            result = this.GetClient().Invoke(methodInstance.ReturnType, invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                            result = this.GetClient().Invoke(rpcMethod.ReturnType, invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
                         }
                         else
                         {
-                            this.GetClient().Invoke(invokeKey, invokeOption, ref ps, methodInstance.ParameterTypes);
+                            this.GetClient().Invoke(invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
                         }
                         break;
                     }
             }
-            if (methodInstance.HasByRef)
+            if (rpcMethod.HasByRef)
             {
                 for (var i = 0; i < ps.Length; i++)
                 {
@@ -120,8 +120,8 @@ namespace TouchSocket.Rpc
         private ProxyModel AddMethod(MethodInfo info)
         {
             var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
-            var methodInstance = new RpcMethod(info);
-            var invokeKey = attribute.GetInvokenKey(methodInstance);
+            var rpcMethod = new RpcMethod(info);
+            var invokeKey = attribute.GetInvokenKey(rpcMethod);
             var invokeOption = false;
             if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
             {
@@ -130,9 +130,9 @@ namespace TouchSocket.Rpc
             return new ProxyModel()
             {
                 InvokeKey = invokeKey,
-                MethodInstance = methodInstance,
+                RpcMethod = rpcMethod,
                 InvokeOption = invokeOption,
-                GenericMethod = methodInstance.TaskType == TaskReturnType.TaskObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(methodInstance.ReturnType)) : default
+                GenericMethod = rpcMethod.TaskType == TaskReturnType.TaskObject ? new Method(this.m_fromResultMethod.MakeGenericMethod(rpcMethod.ReturnType)) : default
             };
         }
 

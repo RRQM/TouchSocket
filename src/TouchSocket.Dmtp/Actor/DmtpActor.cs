@@ -1269,6 +1269,15 @@ namespace TouchSocket.Dmtp
             }
         }
 
+        internal async Task SendChannelPackageAsync(ChannelPackage channelPackage)
+        {
+            using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
+            {
+                channelPackage.Package(byteBlock);
+                await this.SendAsync(P9_ChannelPackage, byteBlock);
+            }
+        }
+
         private IDmtpChannel PrivateCreateChannel(string targetId, bool random, int id, Metadata metadata)
         {
             this.CheckChannelShouldBeReliable();

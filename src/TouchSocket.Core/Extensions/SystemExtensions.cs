@@ -139,7 +139,7 @@ namespace TouchSocket.Core
         /// <param name="this">字节</param>
         /// <param name="index">Bit的索引值(0-7)</param>
         /// <returns></returns>
-        public static int GetBit(this byte @this, short index)
+        public static int GetBit(this byte @this, int index)
         {
             byte x;
             switch (index)
@@ -152,7 +152,7 @@ namespace TouchSocket.Core
                 case 5: { x = 0x20; } break;
                 case 6: { x = 0x40; } break;
                 case 7: { x = 0x80; } break;
-                default: { return 0; }
+                default: throw new ArgumentOutOfRangeException(nameof(index));
             }
             return (@this & x) == x ? 1 : 0;
         }
@@ -164,7 +164,7 @@ namespace TouchSocket.Core
         /// <param name="index">Bit的索引值(0-7)</param>
         /// <param name="bitvalue">Bit值(0,1)</param>
         /// <returns></returns>
-        public static byte SetBit(this byte @this, short index, int bitvalue)
+        public static byte SetBit(this byte @this, int index, int bitvalue)
         {
             var _byte = @this;
             if (bitvalue == 1)
@@ -179,7 +179,7 @@ namespace TouchSocket.Core
                     case 5: { return _byte |= 0x20; }
                     case 6: { return _byte |= 0x40; }
                     case 7: { return _byte |= 0x80; }
-                    default: { return _byte; }
+                    default: throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
             else
@@ -194,7 +194,7 @@ namespace TouchSocket.Core
                     case 5: { return _byte &= 0xDF; }
                     case 6: { return _byte &= 0xBF; }
                     case 7: { return _byte &= 0x7F; }
-                    default: { return _byte; }
+                    default: throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
         }

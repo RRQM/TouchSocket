@@ -14,16 +14,45 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
 {
-    internal class WaitFileResource : WaitRouterPackage
+    /// <summary>
+    /// 文件传输请求包
+    /// </summary>
+    public class FileTransferRouterPackage : WaitRouterPackage
     {
-        public RemoteFileInfo FileInfo { get; set; }
-        public int FileSectionSize { get; set; }
-        public Metadata Metadata { get; set; }
-        public string Path { get; set; }
-        public int ResourceHandle { get; set; }
-        protected override bool IncludedRouter => true;
+        /// <summary>
+        /// 续传索引
+        /// </summary>
         public int ContinuationIndex { get; set; }
 
+        /// <summary>
+        /// 文件信息
+        /// </summary>
+        public RemoteFileInfo FileInfo { get; set; }
+
+        /// <summary>
+        /// 分块大小
+        /// </summary>
+        public int FileSectionSize { get; set; }
+
+        /// <summary>
+        /// 元数据
+        /// </summary>
+        public Metadata Metadata { get; set; }
+
+        /// <summary>
+        /// 路径
+        /// </summary>
+        public string Path { get; set; }
+
+        /// <summary>
+        /// 资源句柄
+        /// </summary>
+        public int ResourceHandle { get; set; }
+
+        /// <inheritdoc/>
+        protected override bool IncludedRouter => true;
+
+        /// <inheritdoc/>
         public override void PackageBody(in ByteBlock byteBlock)
         {
             base.PackageBody(byteBlock);
@@ -35,6 +64,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             byteBlock.WritePackage(this.Metadata);
         }
 
+        /// <inheritdoc/>
         public override void UnpackageBody(in ByteBlock byteBlock)
         {
             base.UnpackageBody(byteBlock);

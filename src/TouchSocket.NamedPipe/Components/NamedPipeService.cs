@@ -68,7 +68,7 @@ namespace TouchSocket.NamedPipe
         private int m_maxCount;
         private long m_nextId;
         private ServerState m_serverState;
-        private NamedPipeSocketClientCollection m_socketClients = new NamedPipeSocketClientCollection();
+        private readonly NamedPipeSocketClientCollection m_socketClients = new NamedPipeSocketClientCollection();
 
         #endregion 字段
 

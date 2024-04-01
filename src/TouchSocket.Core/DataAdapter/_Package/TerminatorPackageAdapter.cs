@@ -91,7 +91,7 @@ namespace TouchSocket.Core
             {
                 this.m_tempByteBlock.Write(buffer, 0, r);
                 buffer = this.m_tempByteBlock.Buffer;
-                r = (int)this.m_tempByteBlock.Pos;
+                r = this.m_tempByteBlock.Pos;
             }
 
             var indexes = buffer.IndexOfInclude(0, r, this.m_terminatorCode);
@@ -121,7 +121,7 @@ namespace TouchSocket.Core
                     var packageByteBlock = new ByteBlock(length);
                     packageByteBlock.Write(buffer, startIndex, length);
 
-                    var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, (int)packageByteBlock.Pos);
+                    var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Pos);
 
                     this.PreviewHandle(packageByteBlock);
                     startIndex = lastIndex + 1;

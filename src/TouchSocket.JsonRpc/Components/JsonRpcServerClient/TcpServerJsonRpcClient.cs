@@ -17,7 +17,7 @@ namespace TouchSocket.JsonRpc
 {
     internal class TcpServerJsonRpcClient : JsonRpcActionClientBase
     {
-        private ISocketClient m_client;
+        private readonly ISocketClient m_client;
 
         public TcpServerJsonRpcClient(ISocketClient socketClient)
         {

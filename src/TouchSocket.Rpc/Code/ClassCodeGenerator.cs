@@ -343,11 +343,12 @@ namespace TouchSocket.Rpc
                 return null;
             }
 
-            return className ;
+            return className;
         }
-        private void AddType(Type type,string code)
+
+        private void AddType(Type type, string code)
         {
-            var className=GetClassName(type);
+            var className = this.GetClassName(type);
             if (className.IsNullOrEmpty())
             {
                 return;
@@ -367,7 +368,7 @@ namespace TouchSocket.Rpc
 
             foreach (var item in list)
             {
-                PrivateAddTypeString(item);
+                this.PrivateAddTypeString(item);
             }
         }
 
@@ -381,7 +382,7 @@ namespace TouchSocket.Rpc
             {
                 return;
             }
-           
+
             if (type.IsByRef)
             {
                 type = type.GetRefOutType();
@@ -410,7 +411,7 @@ namespace TouchSocket.Rpc
             if (type.IsEnum)
             {
                 var baseType = Enum.GetUnderlyingType(type);
-                
+
                 stringBuilder.AppendLine($"public enum {className}:{baseType.FullName}");
                 stringBuilder.AppendLine("{");
                 var array = Enum.GetValues(type);
@@ -421,7 +422,7 @@ namespace TouchSocket.Rpc
                 }
                 stringBuilder.AppendLine("}");
 
-                this.AddType(type,stringBuilder.ToString());
+                this.AddType(type, stringBuilder.ToString());
             }
             else
             {
@@ -455,9 +456,7 @@ namespace TouchSocket.Rpc
                             stringBuilder.AppendLine($": {this.GetTypeFullName(type.BaseType)}");
                         }
                     }
-
                 }
-
 
                 stringBuilder.AppendLine("{");
                 foreach (var itemProperty in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.GetProperty | BindingFlags.SetProperty))
@@ -744,7 +743,7 @@ namespace TouchSocket.Rpc
                 //添加类型
                 types.Add(type);
 
-                if (type.BaseType!=null)
+                if (type.BaseType != null)
                 {
                     this.GetTransmitTypes(type.BaseType, ref types);
                 }

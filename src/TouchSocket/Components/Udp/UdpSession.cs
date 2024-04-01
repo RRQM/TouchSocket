@@ -445,7 +445,9 @@ namespace TouchSocket.Sockets
                 }
             }
 #endif
+
             #endregion Windows下UDP连接被重置错误10054
+
             this.PreviewBind(socket);
 
             socket.Bind(iPHost.EndPoint);
@@ -657,7 +659,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public virtual void Send(EndPoint endPoint, IRequestInfo requestInfo)
         {
-            ThorwIfDataHandlingAdapterNull();
+            this.ThorwIfDataHandlingAdapterNull();
             if (!this.DataHandlingAdapter.CanSendRequestInfo)
             {
                 throw new NotSupportedException($"当前适配器不支持对象发送。");
@@ -681,14 +683,14 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            ThorwIfDataHandlingAdapterNull();
+            this.ThorwIfDataHandlingAdapterNull();
             return this.DataHandlingAdapter.SendInputAsync(endPoint, buffer, offset, length);
         }
 
         /// <inheritdoc/>
         public virtual Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo)
         {
-            ThorwIfDataHandlingAdapterNull();
+            this.ThorwIfDataHandlingAdapterNull();
             return this.DataHandlingAdapter.SendInputAsync(this.RemoteIPHost.EndPoint, requestInfo);
         }
 
@@ -784,7 +786,7 @@ namespace TouchSocket.Sockets
 #if NET6_0_OR_GREATER
         public async Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
             if (this.HandleSendingData(endPoint, buffer, offset, length))
             {
                 if (this.CanSend)
@@ -799,7 +801,7 @@ namespace TouchSocket.Sockets
 
         public async Task DefaultSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
         {
-            ThrowIfDisposed();
+            this.ThrowIfDisposed();
             await Task.Run(() =>
             {
                 this.DefaultSend(endPoint, buffer, offset, length);
@@ -829,7 +831,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public void Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            ThorwIfDataHandlingAdapterNull();
+            this.ThorwIfDataHandlingAdapterNull();
 
             if (!this.DataHandlingAdapter.CanSplicingSend)
             {
@@ -855,7 +857,7 @@ namespace TouchSocket.Sockets
         /// <param name="transferBytes"></param>
         public Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
-            ThorwIfDataHandlingAdapterNull();
+            this.ThorwIfDataHandlingAdapterNull();
             return this.DataHandlingAdapter.SendInputAsync(endPoint, transferBytes);
         }
 

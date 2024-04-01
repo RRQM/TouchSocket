@@ -84,7 +84,6 @@ namespace TouchSocket.Modbus
             {
                 this.m_waitHandlePool.Destroy(waitData);
             }
-           
         }
 
         /// <inheritdoc/>

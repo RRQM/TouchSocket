@@ -22,7 +22,7 @@ namespace TouchSocket.Modbus
         protected override ModbusRtuResponse GetInstance()
         {
             var response = new ModbusRtuResponse();
-            response.SetByteBlock(m_byteBlock);
+            response.SetByteBlock(this.m_byteBlock);
             return response;
         }
 

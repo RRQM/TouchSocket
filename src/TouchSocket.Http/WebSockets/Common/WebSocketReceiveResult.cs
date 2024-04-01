@@ -41,7 +41,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// WebSocket数据帧
         /// </summary>
-        public WSDataFrame DataFrame { get;}
+        public WSDataFrame DataFrame { get; }
 
         /// <summary>
         /// 连接已关闭

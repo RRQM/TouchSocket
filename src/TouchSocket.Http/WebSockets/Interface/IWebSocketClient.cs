@@ -18,8 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// 用户终端接口
     /// </summary>
-    public interface IWebSocketClient : IClient,ICloseObject, ILoggerObject, ISetupConfigObject, IConnectObject, IWebSocket
+    public interface IWebSocketClient : IClient, ICloseObject, ILoggerObject, ISetupConfigObject, IConnectObject, IWebSocket
     {
-       
     }
 }

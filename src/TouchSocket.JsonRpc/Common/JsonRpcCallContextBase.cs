@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc
@@ -19,7 +17,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpc调用上下文
     /// </summary>
-    public abstract class JsonRpcCallContextBase :CallContext, IJsonRpcCallContext
+    public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
     {
         /// <summary>
         ///  JsonRpc调用上下文
@@ -42,9 +40,9 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public string JsonString { get; }
 
-        internal void SetMethodInstance(RpcMethod methodInstance)
+        internal void SetRpcMethod(RpcMethod rpcMethod)
         {
-            this.MethodInstance = methodInstance;
+            this.RpcMethod = rpcMethod;
         }
     }
 }

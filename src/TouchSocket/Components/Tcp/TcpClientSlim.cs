@@ -12,7 +12,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 轻量级Tcp客户端
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
+    [DebuggerDisplay("{IP}:{Port}")]
     public class TcpClientSlim : DisposableObject, IReceiverObject, IDisposable, ILoggerObject, ISender, IDefaultSender, IRequsetInfoSender, IOnlineClient, IAdapterObject, ICloseObject, IClientSender, IConnectObject
     {
         #region 变量
@@ -34,6 +34,7 @@ namespace TouchSocket.Sockets
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private readonly InternalTcpCore m_tcpCore = new InternalTcpCore();
         private readonly object m_lock = new object();
+
         #endregion 变量
 
         #region 事件
@@ -260,6 +261,7 @@ namespace TouchSocket.Sockets
         /// Ssl相关
         /// </summary>
         public ClientSslOption ClientSslOption { get; set; }
+
         #endregion 属性
 
         #region 断开操作
@@ -297,7 +299,7 @@ namespace TouchSocket.Sockets
 
                 this.m_tcpCore.SafeDispose();
             }
-            
+
             base.Dispose(disposing);
         }
 
@@ -547,7 +549,7 @@ namespace TouchSocket.Sockets
         /// 当收到适配器处理的数据时。
         /// </summary>
         /// <param name="e"></param>
-        protected async virtual Task ReceivedData(ReceivedDataEventArgs e)
+        protected virtual async Task ReceivedData(ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
@@ -555,7 +557,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-       
         /// <summary>
         /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
         /// </summary>
@@ -595,14 +596,14 @@ namespace TouchSocket.Sockets
             {
                 socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
                 {
-                    SendTimeout = SendTimeout
+                    SendTimeout = this.SendTimeout
                 };
             }
             else
             {
                 socket = new Socket(iPHost.EndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
                 {
-                    SendTimeout = SendTimeout
+                    SendTimeout = this.SendTimeout
                 };
             }
             if (this.KeepAliveValue is KeepAliveValue keepAliveValue)

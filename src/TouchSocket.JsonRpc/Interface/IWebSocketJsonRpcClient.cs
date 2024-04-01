@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Core;
-using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
@@ -19,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// IWebSocketJsonRpcClient
     /// </summary>
-    public interface IWebSocketJsonRpcClient :ISetupConfigObject, IJsonRpcClient,IHandshakeObject,ICloseObject,IConnectObject
+    public interface IWebSocketJsonRpcClient : ISetupConfigObject, IJsonRpcClient, IHandshakeObject, ICloseObject, IConnectObject
     {
     }
 }

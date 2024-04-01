@@ -26,7 +26,7 @@ namespace TouchSocket.Http.WebSockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), OnWebSocketHandshaked);
+            pluginManager.Add<IWebSocket, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this.OnWebSocketHandshaked);
         }
 
         private Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)

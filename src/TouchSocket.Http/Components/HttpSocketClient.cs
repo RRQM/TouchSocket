@@ -34,7 +34,7 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public IWebSocket WebSocket { get => m_webSocket; }
+        public IWebSocket WebSocket { get => this.m_webSocket; }
 
         /// <inheritdoc/>
         public async Task<bool> SwitchProtocolToWebSocket(HttpContext httpContext)
@@ -47,7 +47,7 @@ namespace TouchSocket.Http
             {
                 if (WSTools.TryGetResponse(httpContext.Request, httpContext.Response))
                 {
-                    var args = new HttpContextEventArgs(m_httpContext)
+                    var args = new HttpContextEventArgs(this.m_httpContext)
                     {
                         IsPermitOperation = true
                     };
@@ -56,7 +56,7 @@ namespace TouchSocket.Http
 
                     await this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), webSocket, args).ConfigureAwait(false);
 
-                    if (m_httpContext.Response.Responsed)
+                    if (this.m_httpContext.Response.Responsed)
                     {
                         return false;
                     }
@@ -65,7 +65,7 @@ namespace TouchSocket.Http
                         this.InitWebSocket(webSocket);
                         using (var byteBlock = new ByteBlock())
                         {
-                            m_httpContext.Response.Build(byteBlock);
+                            this.m_httpContext.Response.Build(byteBlock);
                             await this.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
                         _ = this.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), webSocket, new HttpContextEventArgs(httpContext))
@@ -74,10 +74,10 @@ namespace TouchSocket.Http
                     }
                     else
                     {
-                        m_httpContext.Response.SetStatus(403, "Forbidden");
+                        this.m_httpContext.Response.SetStatus(403, "Forbidden");
                         using (var byteBlock = new ByteBlock())
                         {
-                            m_httpContext.Response.Build(byteBlock);
+                            this.m_httpContext.Response.Build(byteBlock);
                             await this.DefaultSendAsync(byteBlock).ConfigureAwait(false);
                         }
 
@@ -117,7 +117,7 @@ namespace TouchSocket.Http
         {
             if (this.PluginManager.GetPluginCount(nameof(IHttpPlugin.OnHttpRequest)) > 0)
             {
-                var e = new HttpContextEventArgs(m_httpContext);
+                var e = new HttpContextEventArgs(this.m_httpContext);
 
                 await this.PluginManager.RaiseAsync(nameof(IHttpPlugin.OnHttpRequest), this, e).ConfigureFalseAwait();
             }
@@ -128,9 +128,9 @@ namespace TouchSocket.Http
         {
             if (e.RequestInfo is HttpRequest request)
             {
-                m_httpContext ??= new HttpContext(request);
+                this.m_httpContext ??= new HttpContext(request);
                 await this.OnReceivedHttpRequest(request).ConfigureFalseAwait();
-                m_httpContext.Response.Reset();
+                this.m_httpContext.Response.Reset();
             }
             else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
             {

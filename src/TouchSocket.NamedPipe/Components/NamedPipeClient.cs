@@ -591,7 +591,6 @@ namespace TouchSocket.NamedPipe
             return Task.FromResult(false);
         }
 
-
         private async Task HandleBuffer(ByteBlock byteBlock)
         {
             try

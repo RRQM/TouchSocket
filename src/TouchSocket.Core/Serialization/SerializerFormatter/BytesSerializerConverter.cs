@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using System;
-using System.Text;
-
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -33,8 +29,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 字节类转换器
     /// </summary>
-    public class BytesSerializerConverter: BytesSerializerConverter<object>
+    public class BytesSerializerConverter : BytesSerializerConverter<object>
     {
-
     }
 }

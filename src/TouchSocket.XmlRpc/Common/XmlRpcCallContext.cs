@@ -10,22 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.XmlRpc
 {
-    internal class XmlRpcCallContext :CallContext, IXmlRpcCallContext
+    internal class XmlRpcCallContext : CallContext, IXmlRpcCallContext
     {
-        public XmlRpcCallContext(object caller, RpcMethod methodInstance, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, methodInstance, resolver)
+        public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, rpcMethod, resolver)
         {
             this.HttpContext = httpContext;
             this.XmlString = xmlString;
         }
 
-        public HttpContext HttpContext { get;}
+        public HttpContext HttpContext { get; }
 
         public string XmlString { get; }
     }

@@ -26,13 +26,15 @@ namespace TouchSocket.Http.WebSockets
         private WSDataFrame m_dataFrame;
         private bool m_allowAsyncRead;
         private bool m_isCont;
+
         public InternalWebSocket(IHttpClientBase client)
         {
             this.m_client = client;
         }
-        public bool AllowAsyncRead { get => m_allowAsyncRead; set => m_allowAsyncRead = value; }
 
-        public bool IsHandshaked { get;set; }
+        public bool AllowAsyncRead { get => this.m_allowAsyncRead; set => this.m_allowAsyncRead = value; }
+
+        public bool IsHandshaked { get; set; }
 
         public string Version { get; set; }
 
@@ -53,7 +55,7 @@ namespace TouchSocket.Http.WebSockets
         {
             using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
             {
-               await this.SendAsync(frame);
+                await this.SendAsync(frame);
             }
             this.m_client.TryShutdown();
             this.m_client.SafeClose(msg);
@@ -62,22 +64,22 @@ namespace TouchSocket.Http.WebSockets
 
         public void Ping()
         {
-            Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
+            this.Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
         }
 
         public async Task PingAsync()
         {
-           await SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
         }
 
         public void Pong()
         {
-            this.Send( new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
+            this.Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
         }
 
         public async Task PongAsync()
         {
-           await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
         }
 
         public async Task<WebSocketReceiveResult> ReadAsync(CancellationToken token)
@@ -91,6 +93,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
 #if ValueTask
+
         public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
         {
             if (!this.m_allowAsyncRead)
@@ -100,6 +103,7 @@ namespace TouchSocket.Http.WebSockets
             await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
             return new WebSocketReceiveResult(this.ComplateRead, this.m_dataFrame);
         }
+
 #endif
 
         #region 发送
@@ -112,7 +116,7 @@ namespace TouchSocket.Http.WebSockets
                 dataType = WSDataType.Cont;
                 if (endOfMessage)
                 {
-                    m_isCont=false;
+                    this.m_isCont = false;
                 }
             }
             else
@@ -120,13 +124,13 @@ namespace TouchSocket.Http.WebSockets
                 dataType = dataFrame.Opcode;
                 if (!endOfMessage)
                 {
-                    m_isCont = true;
+                    this.m_isCont = true;
                 }
             }
             dataFrame.Opcode = dataType;
             using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
             {
-                if (m_client.IsClient)
+                if (this.m_client.IsClient)
                 {
                     dataFrame.BuildRequest(byteBlock);
                 }
@@ -134,7 +138,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     dataFrame.BuildResponse(byteBlock);
                 }
-                m_client.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
+                this.m_client.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
 
@@ -181,12 +185,12 @@ namespace TouchSocket.Http.WebSockets
 
         public Task SendAsync(byte[] buffer, bool endOfMessage = true)
         {
-            return this.SendAsync(buffer,0,buffer.Length, endOfMessage);
+            return this.SendAsync(buffer, 0, buffer.Length, endOfMessage);
         }
 
         public void Send(byte[] buffer, bool endOfMessage = true)
         {
-            this.Send(buffer,0,buffer.Length, endOfMessage);
+            this.Send(buffer, 0, buffer.Length, endOfMessage);
         }
 
         public async Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
@@ -213,7 +217,7 @@ namespace TouchSocket.Http.WebSockets
                 dataType = WSDataType.Cont;
                 if (endOfMessage)
                 {
-                    m_isCont = false;
+                    this.m_isCont = false;
                 }
             }
             else
@@ -221,13 +225,13 @@ namespace TouchSocket.Http.WebSockets
                 dataType = dataFrame.Opcode;
                 if (!endOfMessage)
                 {
-                    m_isCont = true;
+                    this.m_isCont = true;
                 }
             }
             dataFrame.Opcode = dataType;
             using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
             {
-                if (m_client.IsClient)
+                if (this.m_client.IsClient)
                 {
                     dataFrame.BuildRequest(byteBlock);
                 }
@@ -235,7 +239,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     dataFrame.BuildResponse(byteBlock);
                 }
-                await m_client.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+                await this.m_client.DefaultSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
             }
         }
 

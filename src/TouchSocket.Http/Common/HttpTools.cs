@@ -17,7 +17,7 @@ namespace TouchSocket.Http
     /// </summary>
     public static class HttpTools
     {
-        private static FileExtensionContentTypeProvider m_provider = new FileExtensionContentTypeProvider();
+        private static readonly FileExtensionContentTypeProvider m_provider = new FileExtensionContentTypeProvider();
 
         /// <summary>
         /// 从扩展名获取ContentType

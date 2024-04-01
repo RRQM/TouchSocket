@@ -11,9 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core
 {
@@ -323,7 +323,7 @@ namespace TouchSocket.Core
         /// <typeparam name="TTO"></typeparam>
         /// <param name="registrator"></param>
         /// <returns></returns>
-        public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator)where TFrom : class
+        public static IRegistrator RegisterSingleton<TFrom, [DynamicallyAccessedMembers(DynamicallyAccessed)] TTO>(this IRegistrator registrator) where TFrom : class
                      where TTO : class, TFrom
         {
             RegisterSingleton(registrator, typeof(TFrom), typeof(TTO));

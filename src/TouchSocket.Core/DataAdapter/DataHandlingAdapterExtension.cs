@@ -68,7 +68,6 @@ namespace TouchSocket.Core
 
         #endregion SingleStreamDataHandlingAdapter
 
-
         /// <summary>
         /// 设置适配器相关的配置
         /// </summary>

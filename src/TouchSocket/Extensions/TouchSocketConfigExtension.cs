@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Versioning;
 using System.Security.Authentication;
 using TouchSocket.Core;
 
@@ -471,6 +470,7 @@ namespace TouchSocket.Sockets
 #if NET6_0_OR_GREATER
         [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
+
         public static TouchSocketConfig UseUdpConnReset(this TouchSocketConfig config)
         {
             config.SetValue(UdpConnResetProperty, true);
@@ -487,7 +487,7 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject,IConnectObject, new()
+        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject, IConnectObject, new()
         {
             var client = new TClient();
             client.Setup(config);

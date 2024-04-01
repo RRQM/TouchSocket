@@ -56,6 +56,5 @@ namespace TouchSocket.Core
 #else
         public static readonly byte[] ZeroBytes = Array.Empty<byte>();
 #endif
-
     }
 }

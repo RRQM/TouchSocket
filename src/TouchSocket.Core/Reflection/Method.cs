@@ -123,7 +123,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 方法信息
         /// </summary>
-        public MethodInfo Info { get => m_info; }
+        public MethodInfo Info { get => this.m_info; }
 
         /// <summary>
         /// 是否有引用类型
@@ -150,13 +150,13 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return m_info.Equals(obj);
+            return this.m_info.Equals(obj);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return m_info.GetHashCode();
+            return this.m_info.GetHashCode();
         }
 
         /// <summary>

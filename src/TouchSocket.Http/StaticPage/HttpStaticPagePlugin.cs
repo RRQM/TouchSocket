@@ -37,7 +37,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), OnHttpRequest);
+            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
             base.Loaded(pluginManager);
         }
 

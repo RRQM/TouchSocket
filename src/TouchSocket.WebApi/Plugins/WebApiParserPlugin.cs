@@ -10,12 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
@@ -100,23 +97,23 @@ namespace TouchSocket.WebApi
 
         private async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (this.GetRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
+            if (this.GetRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
             {
                 e.Handled = true;
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
 
-                var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
+                var callContext = new WebApiCallContext(client, rpcMethod, this.m_resolver, e.Context);
 
-                if (methodInstance.IsEnable)
+                if (rpcMethod.IsEnable)
                 {
                     try
                     {
-                        ps = new object[methodInstance.Parameters.Length];
-                        for (var i = 0; i < methodInstance.Parameters.Length; i++)
+                        ps = new object[rpcMethod.Parameters.Length];
+                        for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                         {
-                            var parameter = methodInstance.Parameters[i];
+                            var parameter = rpcMethod.Parameters[i];
                             if (parameter.IsCallContext)
                             {
                                 ps[i] = callContext;
@@ -144,30 +141,30 @@ namespace TouchSocket.WebApi
                         }
 
                         //var i = 0;
-                        //if (methodInstance.IncludeCallContext)
+                        //if (rpcMethod.IncludeCallContext)
                         //{
                         //    ps[i] = callContext;
                         //    i++;
                         //}
                         //if (e.Context.Request.Query == null)
                         //{
-                        //    for (; i < methodInstance.Parameters.Length; i++)
+                        //    for (; i < rpcMethod.Parameters.Length; i++)
                         //    {
-                        //        ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //        ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
                         //    }
                         //}
                         //else
                         //{
-                        //    for (; i < methodInstance.Parameters.Length; i++)
+                        //    for (; i < rpcMethod.Parameters.Length; i++)
                         //    {
-                        //        var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                        //        var value = e.Context.Request.Query.Get(rpcMethod.ParameterNames[i]);
                         //        if (!value.IsNullOrEmpty())
                         //        {
-                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, methodInstance.ParameterTypes[i]);
+                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, rpcMethod.ParameterTypes[i]);
                         //        }
                         //        else
                         //        {
-                        //            ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //            ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
                         //        }
                         //    }
                         //}
@@ -199,22 +196,22 @@ namespace TouchSocket.WebApi
 
         private async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
         {
-            if (this.PostRouteMap.TryGetMethodInstance(e.Context.Request.RelativeURL, out var methodInstance))
+            if (this.PostRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
             {
                 e.Handled = true;
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-                if (methodInstance.IsEnable)
+                if (rpcMethod.IsEnable)
                 {
-                    var callContext = new WebApiCallContext(client, methodInstance, m_resolver, e.Context);
+                    var callContext = new WebApiCallContext(client, rpcMethod, this.m_resolver, e.Context);
                     try
                     {
-                        ps = new object[methodInstance.Parameters.Length];
+                        ps = new object[rpcMethod.Parameters.Length];
 
-                        for (var i = 0; i < methodInstance.Parameters.Length; i++)
+                        for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                         {
-                            var parameter = methodInstance.Parameters[i];
+                            var parameter = rpcMethod.Parameters[i];
                             if (parameter.IsCallContext)
                             {
                                 ps[i] = callContext;
@@ -247,47 +244,45 @@ namespace TouchSocket.WebApi
                         }
 
                         //var i = 0;
-                        
-                        //if (methodInstance.IncludeCallContext)
+
+                        //if (rpcMethod.IncludeCallContext)
                         //{
                         //    //包含上下文
                         //    ps[i] = callContext;
                         //    i++;
-                        //    index = methodInstance.Parameters.Length - 2;
+                        //    index = rpcMethod.Parameters.Length - 2;
 
-                           
                         //}
                         //else
                         //{
-                        //    index = methodInstance.Parameters.Length - 1;
+                        //    index = rpcMethod.Parameters.Length - 1;
                         //}
 
-                        //var lastType = methodInstance.ParameterTypes.LastOrDefault();
+                        //var lastType = rpcMethod.ParameterTypes.LastOrDefault();
                         //if (true)
                         //{
-
                         //}
-                        //var psLength = methodInstance.ParameterTypes.Length - 1;
+                        //var psLength = rpcMethod.ParameterTypes.Length - 1;
                         //if (e.Context.Request.Query.Count==0)
                         //{
                         //    for (; i < psLength; i++)
                         //    {
-                        //        ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //        ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
                         //    }
                         //}
                         //else
                         //{
                         //    for (; i < psLength + 1; i++)
                         //    {
-                        //        var value = e.Context.Request.Query.Get(methodInstance.ParameterNames[i]);
+                        //        var value = e.Context.Request.Query.Get(rpcMethod.ParameterNames[i]);
                         //        if (!value.IsNullOrEmpty())
                         //        {
-                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, methodInstance.ParameterTypes[i]);
+                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, rpcMethod.ParameterTypes[i]);
                         //            index--;
                         //        }
                         //        else
                         //        {
-                        //            ps[i] = methodInstance.ParameterTypes[i].GetDefault();
+                        //            ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
                         //        }
                         //    }
                         //}
@@ -295,11 +290,11 @@ namespace TouchSocket.WebApi
                         //if (index >= 0)
                         //{
                         //    var str = e.Context.Request.GetBody();
-                        //    if (methodInstance.IncludeCallContext)
+                        //    if (rpcMethod.IncludeCallContext)
                         //    {
                         //        index++;
                         //    }
-                        //    ps[index] = this.Converter.Deserialize(e.Context, str, methodInstance.ParameterTypes[index]);
+                        //    ps[index] = this.Converter.Deserialize(e.Context, str, rpcMethod.ParameterTypes[index]);
                         //}
                     }
                     catch (Exception ex)
@@ -317,7 +312,6 @@ namespace TouchSocket.WebApi
                     {
                         return;
                     }
-
                 }
                 else
                 {
@@ -348,24 +342,24 @@ namespace TouchSocket.WebApi
             }
         }
 
-        private void RegisterServer(RpcMethod[] methodInstances)
+        private void RegisterServer(RpcMethod[] rpcMethods)
         {
-            foreach (var methodInstance in methodInstances)
+            foreach (var rpcMethod in rpcMethods)
             {
-                if (methodInstance.GetAttribute<WebApiAttribute>() is WebApiAttribute attribute)
+                if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute attribute)
                 {
-                    var actionUrls = attribute.GetRouteUrls(methodInstance);
+                    var actionUrls = attribute.GetRouteUrls(rpcMethod);
                     if (actionUrls != null)
                     {
                         foreach (var item in actionUrls)
                         {
                             if (attribute.Method == HttpMethodType.GET)
                             {
-                                this.GetRouteMap.Add(item, methodInstance);
+                                this.GetRouteMap.Add(item, rpcMethod);
                             }
                             else if (attribute.Method == HttpMethodType.POST)
                             {
-                                this.PostRouteMap.Add(item, methodInstance);
+                                this.PostRouteMap.Add(item, rpcMethod);
                             }
                         }
                     }
@@ -396,18 +390,18 @@ namespace TouchSocket.WebApi
                     break;
             }
 
-            httpResponse.ContentType= contentType;
+            httpResponse.ContentType = contentType;
 
             switch (invokeResult.Status)
             {
                 case InvokeStatus.Success:
                     {
-                        httpResponse.SetContent(this.Converter.Serialize(httpContext,invokeResult.Result)).SetStatus();
+                        httpResponse.SetContent(this.Converter.Serialize(httpContext, invokeResult.Result)).SetStatus();
                         break;
                     }
                 case InvokeStatus.UnFound:
                     {
-                        var jsonString = this.Converter.Serialize(httpContext,new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
+                        var jsonString = this.Converter.Serialize(httpContext, new ActionResult() { Status = invokeResult.Status, Message = invokeResult.Message });
                         httpResponse.SetContent(jsonString).SetStatus(404, "Not Found");
                         break;
                     }

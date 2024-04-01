@@ -10,12 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TouchSocket.Http
 {
     /// <summary>
@@ -123,7 +117,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public CorsPolicy Build()
         {
-            return new CorsPolicy(this.Credentials,this.Headers,this.Methods,this.Origin);
+            return new CorsPolicy(this.Credentials, this.Headers, this.Methods, this.Origin);
         }
     }
 }

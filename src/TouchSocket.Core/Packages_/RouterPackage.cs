@@ -15,7 +15,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 具有目标id和源id的路由包
     /// </summary>
-    public class RouterPackage : PackageBase
+    public class RouterPackage : PackageBase, IReadonlyRouterPackage
     {
         /// <summary>
         /// 标识是否路由

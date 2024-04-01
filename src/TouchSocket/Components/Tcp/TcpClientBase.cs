@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -43,6 +42,7 @@ namespace TouchSocket.Sockets
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private readonly InternalTcpCore m_tcpCore = new InternalTcpCore();
         private readonly object m_lock = new object();
+
         #endregion 变量
 
         #region 事件
@@ -263,7 +263,7 @@ namespace TouchSocket.Sockets
 
                 this.m_tcpCore.SafeDispose();
             }
-           
+
             base.Dispose(disposing);
         }
 

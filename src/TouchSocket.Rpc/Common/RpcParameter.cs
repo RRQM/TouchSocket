@@ -1,5 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Reflection;
 using TouchSocket.Core;
 
@@ -29,7 +40,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 参数名称
         /// </summary>
-        public string Name =>this.ParameterInfo.Name;
+        public string Name => this.ParameterInfo.Name;
 
         /// <summary>
         /// 参数类型，已处理out或者ref
@@ -39,16 +50,16 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 是否为调用上下文
         /// </summary>
-        public bool IsCallContext { get;private set; }
+        public bool IsCallContext { get; private set; }
 
         /// <summary>
         /// 标识参数是否应该来自于服务
         /// </summary>
-        public bool IsFromServices { get;private set; }
+        public bool IsFromServices { get; private set; }
 
         /// <summary>
         /// 包含Out或者Ref
         /// </summary>
-        public bool IsByRef =>this.ParameterInfo.ParameterType.IsByRef;
+        public bool IsByRef => this.ParameterInfo.ParameterType.IsByRef;
     }
 }

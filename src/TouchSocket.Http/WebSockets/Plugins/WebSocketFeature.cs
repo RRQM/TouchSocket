@@ -149,7 +149,7 @@ namespace TouchSocket.Http.WebSockets
                     await client.SwitchProtocolToWebSocket(e.Context);
                     if (!this.AutoClose)
                     {
-                        client.SetValue(AutoCloseProperty,false);
+                        client.SetValue(AutoCloseProperty, false);
                     }
                     if (this.AutoPong)
                     {

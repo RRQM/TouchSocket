@@ -11,11 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.RateLimiting;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
@@ -35,7 +31,7 @@ namespace TouchSocket.Rpc.RateLimiting
         {
             var option = new ConcurrencyLimiterOptions();
             configureOptions.Invoke(option);
-            options.AddPolicy(policyName,new ConcurrencyLimiterPolicy(option));
+            options.AddPolicy(policyName, new ConcurrencyLimiterPolicy(option));
             return options;
         }
 

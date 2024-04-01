@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -40,6 +39,7 @@ namespace TouchSocket.Sockets
         private DelaySender m_delaySender;
         private TcpCore m_tcpCore;
         private readonly object m_lock = new object();
+
         #endregion 变量
 
         #region 属性
@@ -209,7 +209,7 @@ namespace TouchSocket.Sockets
         /// <param name="msg"></param>
         protected void BreakOut(bool manual, string msg)
         {
-            if (this.Id==null) 
+            if (this.Id == null)
             {
                 return;
             }
@@ -475,7 +475,7 @@ namespace TouchSocket.Sockets
                     }
                 }
             }
-            
+
             base.Dispose(disposing);
         }
 

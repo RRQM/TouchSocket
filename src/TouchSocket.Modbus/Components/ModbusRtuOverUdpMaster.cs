@@ -33,8 +33,8 @@ namespace TouchSocket.Modbus
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlimForRequest = new SemaphoreSlim(1, 1);
-        private WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
-        private WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
+        private readonly WaitData<ModbusRtuResponse> m_waitData = new WaitData<ModbusRtuResponse>();
+        private readonly WaitDataAsync<ModbusRtuResponse> m_waitDataAsync = new WaitDataAsync<ModbusRtuResponse>();
 
         #endregion 字段
 
@@ -61,13 +61,13 @@ namespace TouchSocket.Modbus
                 var waitDataStatus = this.m_waitData.Wait(millisecondsTimeout);
                 waitDataStatus.ThrowIfNotRunning();
 
-                var response = m_waitData.WaitResult;
+                var response = this.m_waitData.WaitResult;
                 TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }
             finally
             {
-                m_semaphoreSlimForRequest.Release();
+                this.m_semaphoreSlimForRequest.Release();
             }
         }
 
@@ -91,7 +91,7 @@ namespace TouchSocket.Modbus
             }
             finally
             {
-                m_semaphoreSlimForRequest.Release();
+                this.m_semaphoreSlimForRequest.Release();
             }
         }
 

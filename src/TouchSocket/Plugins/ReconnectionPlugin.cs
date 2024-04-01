@@ -144,7 +144,7 @@ namespace TouchSocket.Sockets
 
         private async Task OnLoadedConfig(object sender, ConfigEventArgs e)
         {
-            _=Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 if (!this.m_polling)
                 {

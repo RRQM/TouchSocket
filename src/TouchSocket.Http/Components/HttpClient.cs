@@ -43,7 +43,6 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override void Connect(int millisecondsTimeout, CancellationToken token)
         {
-
             if (this.Config.GetValue(HttpConfigExtensions.HttpProxyProperty) is HttpProxy httpProxy)
             {
                 var proxyHost = httpProxy.Host;

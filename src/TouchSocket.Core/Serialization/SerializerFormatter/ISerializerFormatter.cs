@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 转换器接口
     /// </summary>
-    public interface ISerializerFormatter<TSource,TState>
+    public interface ISerializerFormatter<TSource, TState>
     {
         /// <summary>
         /// 转换器执行顺序
@@ -43,6 +43,6 @@ namespace TouchSocket.Core
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        bool TrySerialize(TState state,in object target, out TSource source);
+        bool TrySerialize(TState state, in object target, out TSource source);
     }
 }

@@ -27,7 +27,7 @@ namespace TouchSocket.Modbus
             response.SlaveId = byteBlock[0];
             response.FunctionCode = (FunctionCode)byteBlock[1];
 
-            int crcLen = 0;
+            var crcLen = 0;
             if ((byte)response.FunctionCode <= 4)
             {
                 var len = byteBlock[2];

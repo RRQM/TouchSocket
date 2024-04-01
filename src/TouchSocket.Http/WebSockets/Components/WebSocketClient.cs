@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -50,7 +49,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public WebSocketClientBase()
         {
-            m_client = new PrivateHttpClient(this.OnReceivedWSDataFrame);
+            this.m_client = new PrivateHttpClient(this.OnReceivedWSDataFrame);
         }
 
         #region Connect
@@ -149,7 +148,7 @@ namespace TouchSocket.Http.WebSockets
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        private PrivateHttpClient m_client;
+        private readonly PrivateHttpClient m_client;
 
         #endregion 字段
 
@@ -334,6 +333,7 @@ namespace TouchSocket.Http.WebSockets
             this.m_client.WebSocket.Send(byteBlock, endOfMessage);
         }
 
+        /// <inheritdoc/>
         public void Send(byte[] buffer, bool endOfMessage = true)
         {
             this.m_client.WebSocket.Send(buffer, endOfMessage);
@@ -394,11 +394,13 @@ namespace TouchSocket.Http.WebSockets
         }
 
 #if ValueTask
+
         /// <inheritdoc/>
         public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
         {
             return await this.m_client.WebSocket.ValueReadAsync(token);
         }
+
 #endif
 
         /// <summary>
@@ -417,7 +419,7 @@ namespace TouchSocket.Http.WebSockets
         {
             private readonly InternalWebSocket m_webSocket;
 
-            private Func<WSDataFrameEventArgs, Task> m_func;
+            private readonly Func<WSDataFrameEventArgs, Task> m_func;
 
             public PrivateHttpClient(Func<WSDataFrameEventArgs, Task> func)
             {
@@ -425,7 +427,7 @@ namespace TouchSocket.Http.WebSockets
                 this.m_func = func;
             }
 
-            public InternalWebSocket WebSocket { get => m_webSocket; }
+            public InternalWebSocket WebSocket { get => this.m_webSocket; }
 
             public void InitWebSocket()
             {

@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using TouchSocket.Core;
 
@@ -32,12 +28,12 @@ namespace TouchSocket.Rpc
         /// CallContext
         /// </summary>
         /// <param name="caller"></param>
-        /// <param name="methodInstance"></param>
+        /// <param name="rpcMethod"></param>
         /// <param name="resolver"></param>
-        public CallContext(object caller, RpcMethod methodInstance, IResolver resolver)
+        public CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
         {
             this.Caller = caller;
-            this.MethodInstance = methodInstance;
+            this.RpcMethod = rpcMethod;
             this.Resolver = resolver;
         }
 
@@ -52,7 +48,7 @@ namespace TouchSocket.Rpc
         public object Caller { get; protected set; }
 
         /// <inheritdoc/>
-        public RpcMethod MethodInstance { get; protected set; }
+        public RpcMethod RpcMethod { get; protected set; }
 
         /// <inheritdoc/>
         public IResolver Resolver { get; protected set; }

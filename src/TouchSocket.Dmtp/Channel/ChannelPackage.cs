@@ -25,13 +25,12 @@ namespace TouchSocket.Dmtp
         QueuePause
     }
 
-    internal class ChannelPackage : MsgRouterPackage, IQueueData
+    internal class ChannelPackage : MsgRouterPackage
     {
         public int ChannelId { get; set; }
         public ByteBlock Data { get; set; }
         public ChannelDataType DataType { get; set; }
         public bool RunNow { get; set; }
-        public int Size => this.Data == null ? 0 : this.Data.Len;
 
         public int GetLen()
         {

@@ -48,7 +48,7 @@ namespace TouchSocket.Rpc
         public InvokeResult Execute(ICallContext callContext, object[] ps)
         {
             var invokeResult = new InvokeResult();
-            var filters= callContext.MethodInstance.GetFilters();
+            var filters = callContext.RpcMethod.GetFilters();
             try
             {
                 for (var i = 0; i < filters.Count; i++)
@@ -64,18 +64,18 @@ namespace TouchSocket.Rpc
 
                 var rpcServer = this.GetRpcServer(callContext);
                 //调用
-                switch (callContext.MethodInstance.TaskType)
+                switch (callContext.RpcMethod.TaskType)
                 {
                     case TaskReturnType.Task:
                         {
-                            callContext.MethodInstance.InvokeAsync(rpcServer, ps)
+                            callContext.RpcMethod.InvokeAsync(rpcServer, ps)
                                 .GetFalseAwaitResult();
                         }
                         break;
 
                     case TaskReturnType.TaskObject:
                         {
-                            invokeResult.Result = callContext.MethodInstance.InvokeObjectAsync(rpcServer, ps)
+                            invokeResult.Result = callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
                                  .GetFalseAwaitResult();
                         }
                         break;
@@ -83,13 +83,13 @@ namespace TouchSocket.Rpc
                     default:
                     case TaskReturnType.None:
                         {
-                            if (callContext.MethodInstance.HasReturn)
+                            if (callContext.RpcMethod.HasReturn)
                             {
-                                invokeResult.Result = callContext.MethodInstance.Invoke(rpcServer, ps);
+                                invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
                             }
                             else
                             {
-                                callContext.MethodInstance.Invoke(rpcServer, ps);
+                                callContext.RpcMethod.Invoke(rpcServer, ps);
                             }
                         }
                         break;
@@ -133,7 +133,7 @@ namespace TouchSocket.Rpc
         public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps)
         {
             var invokeResult = new InvokeResult();
-            var filters = callContext.MethodInstance.GetFilters();
+            var filters = callContext.RpcMethod.GetFilters();
             try
             {
                 for (var i = 0; i < filters.Count; i++)
@@ -150,17 +150,17 @@ namespace TouchSocket.Rpc
                 var rpcServer = this.GetRpcServer(callContext);
 
                 //调用
-                switch (callContext.MethodInstance.TaskType)
+                switch (callContext.RpcMethod.TaskType)
                 {
                     case TaskReturnType.Task:
                         {
-                            await ((Task)callContext.MethodInstance.Invoke(rpcServer, ps)).ConfigureFalseAwait();
+                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureFalseAwait();
                         }
                         break;
 
                     case TaskReturnType.TaskObject:
                         {
-                            invokeResult.Result = await callContext.MethodInstance.InvokeObjectAsync(rpcServer, ps)
+                            invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
                                 .ConfigureFalseAwait();
                         }
                         break;
@@ -168,13 +168,13 @@ namespace TouchSocket.Rpc
                     default:
                     case TaskReturnType.None:
                         {
-                            if (callContext.MethodInstance.HasReturn)
+                            if (callContext.RpcMethod.HasReturn)
                             {
-                                invokeResult.Result = callContext.MethodInstance.Invoke(rpcServer, ps);
+                                invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
                             }
                             else
                             {
-                                callContext.MethodInstance.Invoke(rpcServer, ps);
+                                callContext.RpcMethod.Invoke(rpcServer, ps);
                             }
                         }
                         break;
@@ -219,7 +219,7 @@ namespace TouchSocket.Rpc
         {
             try
             {
-                var rpcServer = (IRpcServer)this.m_containerProvider.Resolve(callContext.MethodInstance.ServerFromType);
+                var rpcServer = (IRpcServer)this.m_containerProvider.Resolve(callContext.RpcMethod.ServerFromType);
                 if (rpcServer is ITransientRpcServer transientRpcServer)
                 {
                     transientRpcServer.CallContext = callContext;
