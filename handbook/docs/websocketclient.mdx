@@ -219,7 +219,7 @@ client.Send(frame);
 ```csharp showLineNumbers
 client.Received = (c, e) =>
     {
-        switch (e.Opcode)
+        switch (e.DataFrame.Opcode)
         {
             case WSDataType.Cont:
                 break;
