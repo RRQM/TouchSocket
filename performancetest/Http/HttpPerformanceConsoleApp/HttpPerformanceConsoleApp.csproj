@@ -13,11 +13,11 @@
 
 	<ItemGroup>
 	  <PackageReference Include="BeetleX.FastHttpApi" Version="2.2.22.188" />
-	  <PackageReference Include="FastEndpoints" Version="5.23.0.9-beta" />
+	  <PackageReference Include="FastEndpoints" Version="5.24.0" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.1" />
-	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.1" />
-	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.1" />
+	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.2" />
+	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.2" />
+	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.2" />
 	</ItemGroup>
 
 	<!--<ItemGroup>

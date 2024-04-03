@@ -189,7 +189,7 @@ namespace ConsoleApp2
             //};
             if (callContext.Caller is ISocketClient client)
             {
-                client.Logger.Info($"即将执行Rpc-{callContext.MethodInstance.Name}");
+                client.Logger.Info($"即将执行Rpc-{callContext.RpcMethod.Name}");
             }
             return Task.FromResult(invokeResult);
         }
@@ -198,7 +198,7 @@ namespace ConsoleApp2
         {
             if (callContext.Caller is ISocketClient client)
             {
-                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}完成，状态={invokeResult.Status}");
+                client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}完成，状态={invokeResult.Status}");
             }
             return Task.FromResult(invokeResult);
         }
@@ -207,7 +207,7 @@ namespace ConsoleApp2
         {
             if (callContext.Caller is ISocketClient client)
             {
-                client.Logger.Info($"执行RPC-{callContext.MethodInstance.Name}异常，信息={invokeResult.Message}");
+                client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}异常，信息={invokeResult.Message}");
             }
             return Task.FromResult(invokeResult);
         }
