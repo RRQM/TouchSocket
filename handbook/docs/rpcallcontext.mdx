@@ -152,6 +152,6 @@ public async Task<int> TestCancellationToken(ICallContext callContext)
 一般的:
 
 - `Caller`属性就是调用的触发终端。例如：使用DmtpRpc-Tcp，由客户端调用服务器时，`Caller`就是`TcpDmtpSocketClient`。
-- `MethodInstance`属性就是调用的触发方法。
+- `RpcMethod`属性就是调用的触发方法。
 - 其他参数可以参阅注释帮助理解。
 
