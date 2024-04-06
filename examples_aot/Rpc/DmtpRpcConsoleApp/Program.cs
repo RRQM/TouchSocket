@@ -42,7 +42,7 @@ namespace DmtpRpcConsoleApp
         {
             var client = new TcpDmtpClient();
             client.Setup(new TouchSocketConfig()
-                .SetRegistrator(new MyContainer())
+                //.SetRegistrator(new MyContainer())
                 .ConfigureContainer(a =>
                 {
                     a.AddConsoleLogger();
@@ -65,7 +65,7 @@ namespace DmtpRpcConsoleApp
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
-                   .SetRegistrator(new MyContainer())
+                   //.SetRegistrator(new MyContainer())
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -118,25 +118,26 @@ namespace DmtpRpcConsoleApp
 
     #endregion
 
-    #region IOC
-    /// <summary>
-    /// IOC容器
-    /// </summary>
-    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
-    [AddSingletonInject(typeof(DmtpRpcFeature))]
-    [AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
-    [GeneratorContainer]
-    public partial class MyContainer : ManualContainer
-    {
-        public override bool IsRegistered(Type fromType, string key = "")
-        {
-            if (fromType == typeof(IDmtpRouteService))
-            {
-                return false;
-            }
-            return base.IsRegistered(fromType, key);
-        }
-    }
-    #endregion
+    //#region IOC
+    ///// <summary>
+    ///// IOC容器
+    ///// </summary>
+    //[AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
+    //[AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
+    //[AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
+    //[AddSingletonInject(typeof(DmtpRpcFeature))]
+    //[AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
+    //[GeneratorContainer]
+    //public partial class MyContainer : ManualContainer
+    //{
+    //    public override bool IsRegistered(Type fromType, string key = "")
+    //    {
+    //        if (fromType == typeof(IDmtpRouteService))
+    //        {
+    //            return false;
+    //        }
+    //        return base.IsRegistered(fromType, key);
+    //    }
+    //}
+    //#endregion
 }
