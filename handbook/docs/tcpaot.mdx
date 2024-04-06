@@ -21,7 +21,7 @@ Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，�
 /// <summary>
 /// IOC容器
 /// </summary>
-[AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
+[AddSingletonInject(typeof(IPluginManager),typeof(PluginManager))]
 [AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
 [GeneratorContainer]
 public partial class MyContainer : ManualContainer
@@ -157,7 +157,7 @@ class CloseException : Exception
 ```csharp {3}
 var service = new TcpService();
 service.Setup(new TouchSocketConfig()//载入配置
-    .SetContainer(new MyContainer())
+    .SetRegistrator(new MyContainer())
     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
     {
