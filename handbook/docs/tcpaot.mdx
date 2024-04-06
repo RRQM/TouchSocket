@@ -21,7 +21,7 @@ Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，�
 /// <summary>
 /// IOC容器
 /// </summary>
-[AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
+[AddSingletonInject(typeof(IPluginManager),typeof(PluginManager))]
 [AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
 [GeneratorContainer]
 public partial class MyContainer : ManualContainer
