@@ -176,6 +176,31 @@ using (var receiver = client.CreateReceiver())
 }
 ```
 
+带有接收超时的情况：
+
+```csharp {6} showLineNumbers
+client.Connect();
+using (var receiver = client.CreateReceiver())
+{
+    while (true)
+    {
+        using (var tokenSource=new CancellationTokenSource(5000))
+        {
+            using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
+            {
+                if (receiverResult.IsClosed)
+                {
+                    //断开
+                }
+                //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
+                await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(receiverResult.ByteBlock, 0, receiverResult.ByteBlock.Len));
+            }
+        }
+        
+    }
+}
+```
+
 :::tip 提示
 
 `receiver`在被`Create`之后，其优先级最高，即：Received委托和插件都不再被调用。
@@ -232,7 +257,7 @@ client.Connect();
 
 ## 八、发送数据
 
-【同步发送】
+### 8.1 同步发送
 
 SerialPortClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
 
@@ -242,7 +267,7 @@ public virtual void Send(ByteBlock byteBlock);
 public virtual void Send(byte[] buffer, int offset, int length);
 ```
 
-【异步发送】
+### 8.2 异步发送
 
 SerialPortClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
 
@@ -256,6 +281,51 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 ::: 
+
+### 8.3 同步发送等待
+
+WaitingClient是TouchSocket提供的一个等待客户端发送数据的客户端。例如：串口客户端发送一个Hello，等待对方回信Hi，此时即可使用WaitingClient。
+
+```csharp showLineNumbers
+client.Connect();
+
+//调用CreateWaitingClient获取到IWaitingClient的对象。
+var waitClient = client.CreateWaitingClient(new WaitingOptions()
+{
+    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+    {
+        return true;
+
+        //if (response.Data.Length == 1)
+        //{
+        //    return true;
+        //}
+        //return false;
+    }
+});
+
+//然后使用SendThenReturn。
+byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+client.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+//同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+```
+
+:::tip 提示
+
+在SendThenReturn时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+
+:::  
+
+:::danger 注意事项
+
+1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
+2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
+3. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步。
+
+:::
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Serial)
 
