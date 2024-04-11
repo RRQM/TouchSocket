@@ -136,6 +136,11 @@ module.exports = {
             id: "troubleshootunity3d",
             label: "5.2 Unity3D相关",
           },
+          {
+            type: "doc",
+            id: "troubleshootissue",
+            label: "5.3 Issue解答",
+          },
         ]
     },
     {
