@@ -42,13 +42,13 @@ class MyLogger : ILog
 ## 四、日志组记录器（LoggerGroup）
 使用日志组记录器时，可以同时记录多个日志，例如：下列示例就同时在控制台和文件记录日志。
 ```csharp showLineNumbers
-LoggerGroup logger = new LoggerGroup(new ConsoleLogger(),new FileLogger());
+LoggerGroup logger = new LoggerGroup(ConsoleLogger.Default,new FileLogger());
 ```
 
 ## 五、日志扩展
 引入命名空间。可快捷记录日志。
 ```csharp showLineNumbers
-LoggerGroup logger = new LoggerGroup(new ConsoleLogger(),new FileLogger());
+LoggerGroup logger = new LoggerGroup(ConsoleLogger.Default,new FileLogger());
 logger.Info("Message");
 logger.Warning("Warning");
 logger.Error("Error");
