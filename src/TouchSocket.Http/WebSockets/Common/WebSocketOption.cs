@@ -20,6 +20,6 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 版本
         /// </summary>
-        public string Version { get; set; }
+        public string Version { get; set; } = "13";
     }
 }
