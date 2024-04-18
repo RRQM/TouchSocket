@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -301,6 +302,16 @@ namespace WebSocketConsoleApp
 
             public async Task OnWebSocketHandshaking(IWebSocket client, HttpContextEventArgs e)
             {
+                if (client.Client is IHttpSocketClient socketClient)
+                {
+                    //服务端
+
+                    var id=socketClient.Id;
+                }
+                else if (client.Client is IHttpClient httpClient)
+                {
+                    //客户端
+                }
                 this.m_logger.Info("WebSocket正在连接");
                 await e.InvokeNext();
             }
