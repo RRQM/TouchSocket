@@ -81,7 +81,7 @@ namespace TouchSocket.Hosting
         {
             this.m_config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
             this.m_config.SetResolver(this.m_resolver);
-            await this.m_configObject.SetupAsync(this.m_config);
+            await this.m_configObject.SetupAsync(this.m_config.Clone());
         }
 
         /// <inheritdoc/>

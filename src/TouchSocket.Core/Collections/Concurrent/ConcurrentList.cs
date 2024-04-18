@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     /// 线程安全的List，其基本操作和List一致。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ConcurrentList<T> : IList<T>, IReadOnlyList<T>
+    public class ConcurrentList<T> : IList<T>
     {
         private readonly List<T> m_list;
 

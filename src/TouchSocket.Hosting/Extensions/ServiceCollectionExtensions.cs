@@ -92,7 +92,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
                 aspNetCoreContainer.BuildResolver(privoder);
                 config.SetResolver(aspNetCoreContainer);
-                imp.Setup(config);
+                imp.Setup(config.Clone());
                 return imp;
             });
             return services;
@@ -125,7 +125,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
                 aspNetCoreContainer.BuildResolver(privoder);
                 config.SetResolver(aspNetCoreContainer);
-                imp.Setup(config);
+                imp.Setup(config.Clone());
                 return imp;
             });
             return services;
