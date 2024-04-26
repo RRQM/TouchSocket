@@ -1,0 +1,496 @@
+---
+id: upgrade
+title: 历史更新
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import Tag from "@site/src/components/Tag.js";
+import Highlight from '@site/src/components/Highlight.js';
+
+:::tip `TouchSocket` 框架升级/发版规则
+
+**升级前重点关注可能造成【破坏性】的标签类型**：<Tag>修复</Tag>、<Tag>调整</Tag>、<Tag>移除</Tag>、<Tag>升级</Tag>
+
+版本号规则：`主版本号.次版本号.修订版本号`
+
+- 只要【确认】为框架 `bug`，则当天修复，当天发版，修订版本号 `加 1`。
+- 如果 `.csproj` 文件有变更，则当天发版，修订版本号 `加 1`。
+- 其余情况，每年发布一个 `主版本`。
+
+:::
+
+## v2.0.3
+
+**更新日期：**2024.4.14
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> Tcp在接收时，内存池释放存在延迟，可能导致内存池快速扩张，浪费内存。[#I9FVAA](https://gitee.com/RRQM_Home/TouchSocket/issues/I9FVAA)。
+- &nbsp;<Tag>修复</Tag> 在使用Host模型时，注入瞬态的TcpClient，在第一次获取实例是正常的，第二次就失败。[#I9G3SV](https://gitee.com/RRQM_Home/TouchSocket/issues/I9G3SV)。
+- &nbsp;<Tag>修复</Tag> WebSocketClient连接其他服务器时显示 “操作已被取消”。[#I9GG05](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GG05)。
+- &nbsp;<Tag>新增</Tag> ConcurrentList新增实现IReadOnlyList接口。
+
+
+## v2.0.2
+
+**更新日期：**2024.4.1
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> TouchSocketBitConverter中的ToBooleans方法存在Bug[#I9C1UY](https://gitee.com/RRQM_Home/TouchSocket/issues/I9C1UY)。
+- &nbsp;<Tag>修复</Tag> SystemExtensions中的GetBit和SetBit方法[#I9C1WM](https://gitee.com/RRQM_Home/TouchSocket/issues/I9C1WM)。
+- &nbsp;<Tag>修复</Tag> HttpService多次响应下载文件时，不会响应的bug。
+
+
+
+## v2.0.1
+
+**更新日期：**2024.3.16
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> HttpClient，无法通过HttpResponse.GetBody()获取响应内容[#I989SI](https://gitee.com/RRQM_Home/TouchSocket/issues/I989SI)。
+- &nbsp;<Tag>修复</Tag> SetNoDelay 异常[#I979B0](https://gitee.com/RRQM_Home/TouchSocket/issues/I979B0)。
+- &nbsp;<Tag>修复</Tag> 调用Dmtp服务的大数据传输时，如果循环调用会出现收到的数据和发送的数据不一致。实际上该问题是由`ByteBlock`写入扩容bug而导致的[#I96FNF](https://gitee.com/RRQM_Home/TouchSocket/issues/I96FNF)。
+
+
+## v2.0.0
+
+**更新日期：**2024.3.9
+
+**更新描述：**
+
+此版本是大版本更新。可能会产生很多不兼容部分，所以升级之前请做好备份，并且请详细阅读下列更新内容。
+
+**升级指南：**
+
+- 升级时请先升级至`2.0.0-beta.190`，再升级至`2.0.0-rc.2`版本，因为正式版对于[Obsolete]特性的成员直接删除了，所以为友好升级，请先升级至此版本。
+- 由2.0.0-beta.200至2.0.0-beta.220 [#I8DE1D](https://gitee.com/RRQM_Home/TouchSocket/issues/I8DE1D)
+- 由2.0.0-beta.220至2.0.0-beta.230 [#I8LAX4](https://gitee.com/RRQM_Home/TouchSocket/issues/I8LAX4)
+
+**更新详情：**
+
+#### 【TouchSokcet.Core】
+
+- &nbsp;<Tag>优化</Tag> FileLogger支持指定不同目录。
+- &nbsp;<Tag>调整</Tag> 所有自定义插件必须在自身内，主动调用e.InvokeNext()时，才会调用下一个插件。不然会中断插件传递。同时e.Handled功能依然有效。
+- &nbsp;<Tag>调整</Tag> Log项。LogType调整为LogLevel，并且不需要位运算。直接按日志等级输出。
+- &nbsp;<Tag>调整</Tag> 修改IPluginsManager名称为IPluginsManager。
+- &nbsp;<Tag>移除</Tag> DependencyProperty中，移除对类型的定义。
+- &nbsp;<Tag>移除</Tag> 所有组件的基础插件，强制用户插件必须继承PluginBase，然后实现需要的接口。
+- &nbsp;<Tag>移除</Tag> BytePool在创建ByteBlock时，移除EqualSize的设定，因为这会影响内存池的效率。
+- &nbsp;<Tag>调整</Tag> 修改所有委托为异步Task。
+- &nbsp;<Tag>调整</Tag> 修改所有Setup返回值为void。
+- &nbsp;<Tag>修复</Tag> Metadata在0个成员长度时，会被反序列化成null的bug。
+- &nbsp;<Tag>修复</Tag> PluginsManager在注册具有继承的插件时，会无法识别的bug。
+
+#### 【TouchSokcet.Sokcets】
+
+- &nbsp;<Tag>优化</Tag> IPHost支持从int、string直接隐式转换。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有“ID”属性，改名为“Id”。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有插件的执行顺序，移动至内部重写方法之后。
+- &nbsp;<Tag>调整</Tag> TouchSocket所有`ResetID`改名为`ResetId`。
+- &nbsp;<Tag>调整</Tag> UseCheckClear项，SetDuration调整名称为SetTick。
+- &nbsp;<Tag>调整</Tag> UseCheckClear项，不仅可以适用服务器，客户端也适用。
+- &nbsp;<Tag>调整</Tag> Config配置中，SetDataHandlingAdapter调整为SetTcpDataHandlingAdapter。
+- &nbsp;<Tag>调整</Tag> 适配器项，CustomDataHandlingAdapter中的Filter方法中，byteBlock参数使用in修饰。
+- &nbsp;<Tag>调整</Tag> 适配器项，DataHandlingAdapter改名为TcpDataHandlingAdapter。
+- &nbsp;<Tag>调整</Tag> 适配器项，DataAdapterTester改名为TcpDataAdapterTester。
+- &nbsp;<Tag>调整</Tag> Config项，所有适配器的相关配置，使用SetAdapterOption配置。
+- &nbsp;<Tag>移除</Tag> UsePlugin的显式配置，当调用ConfigurePlugins时，会自动启用。
+
+#### 【TouchSokcet.Http】
+
+- &nbsp;<Tag>调整</Tag> WSCommandLinePlugin改名为WebSocketCommandLinePlugin。
+- &nbsp;<Tag>新增</Tag> WebSocket添加[同步非阻塞Read](./websocketservice.mdx#52-websocket显式readasync)。
+- &nbsp;<Tag>新增</Tag> WebSocket的WSDataFrame新增IsPing、IsPong、IsText、IsBinary、IsClose等属性。
+- &nbsp;<Tag>新增</Tag> 静态网页插件新增NavigateAction与ResponseAction等委托，可以在静态页面请求之前重定向，或者请求返回时设置header等。
+
+#### 【TouchSokcet.Rpc】
+
+- &nbsp;<Tag>移除</Tag> 整体功能迁移至TouchSokcet(Pro).Dmtp。
+- &nbsp;<Tag>调整</Tag> [RpcActionFilter](./rpcactionfilter.mdx#33-规则)执行策略和顺序 
+- &nbsp;<Tag>调整</Tag> 修改ConfigureRpcStore为AddRpcStore。 
+- &nbsp;<Tag>新增</Tag> [RealityProxy](./rpcgenerateproxy.mdx)透明代理方式。 
+- &nbsp;<Tag>新增</Tag> [DispatchProxy](./rpcgenerateproxy.mdx)添加OnBefore和OnAfter的AOP调用。
+
+#### 【TouchSokcet(Pro).Dmtp】
+
+- &nbsp;<Tag>调整</Tag> 原TouchRpc全系改名为Dmtp。例如：原TcpTouchRpcClient改名为TcpDmtpClient。
+- &nbsp;<Tag>调整</Tag> 原TouchRpc中InvokeOption，改名为DmtpInvokeOption。InvokeOption依然有效，但是在调用DmtpRpc时，则无法指定序列化方式。所以可能需要使用DmtpInvokeOption。
+- &nbsp;<Tag>调整</Tag> 原TouchRpc中Invoke直接调用的方式，改为InvokeT。
+- &nbsp;<Tag>调整</Tag> Dmtp相关配置，使用SetDmtpOption配置。
+- &nbsp;<Tag>移除</Tag> **暂时**移除EventBus功能，后续可能考虑添加。
+- &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+- &nbsp;<Tag>新增</Tag> 文件传输项，开放增加SetMaxSpeed功能。
+- &nbsp;<Tag>新增</Tag> DmtpRpc。
+- &nbsp;<Tag>新增</Tag> DmtpRpc组件在调用时，可以通过DmtpInvokeOption传入Metadata元数据。
+- &nbsp;<Tag>修复</Tag> DmtpRpc在调用无ref，out的函数时，参数会为null的bug。
+
+#### 【TouchSokcet.JsonRpc】
+
+- &nbsp;<Tag>修复</Tag> JsonRpc使用内联数组调用[#I79OFZ](https://gitee.com/RRQM_Home/TouchSocket/issues/I79OFZ)。
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### 【TouchSokcet.WebApi】
+
+- &nbsp;<Tag>新增</Tag> WebApi新增[Swagger页面](./swagger.mdx)。
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### 【TouchSokcet.XmlRpc】
+
+- &nbsp;<Tag>调整</Tag> Rpc服务使用调用上下文时不需要再添加`IncludeCallContext`。
+
+#### 【TouchSokcet(Pro).Hosting】
+
+- &nbsp;<Tag>新增</Tag> 新发布Hosting的包，用于构建更加强壮的运行程序。
+
+#### 【TouchSokcet.SerialPorts】
+
+- &nbsp;<Tag>新增</Tag> 新发布串口的包。
+
+#### 【TouchSokcet(Pro).Modbus】
+
+- &nbsp;<Tag>新增</Tag> 新发布Modbus的包，支持Tcp、Udp、Rtu、RtuOverTcp、RtuOverUdp协议的主站（Poll）和从站（Slave）。
+---
+
+
+## v1.3
+
+更新日期：2023.3.1
+
+更新描述：兼容性更新。
+
+  - &nbsp;<Tag>优化</Tag> 整体增加异步方法。
+  - &nbsp;<Tag>优化</Tag> Rpc源代码生成策略，支持接口实例并存。
+  - &nbsp;<Tag>修复</Tag> TcpClient在UseReconnect插件时，Disconnect事件不触发bug。
+  - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+---
+
+## v1.2
+
+更新日期：2023.2.15
+
+更新描述：兼容性更新。
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc支持命名元组。
+  - &nbsp;<Tag>优化</Tag> Rpc源代码生成策略。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在Websocket协议下，启动，连接异常bug。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在调用WaitSend下失败的bug。
+  - &nbsp;<Tag>修复</Tag> TouchRpc在Handshaked时，调用Rpc超时bug。
+  - &nbsp;<Tag>修复</Tag> 序列化、反射在unity中使用il2cpp编译的bug。
+  - &nbsp;<Tag>修复</Tag> 反序列化在初次加载时会失败的bug。
+  - &nbsp;<Tag>修复</Tag> BytePool没有公共构造函数的bug。
+  - &nbsp;<Tag>新增</Tag> ws协议的TouchRpc服务端，增加HttpContext上下文获取。
+  - &nbsp;<Tag>新增</Tag> ByteBlock对于int，long等数据，写入和读取的时候支持大小端指定。
+  - &nbsp;<Tag>新增</Tag> IServicePlugin插件，用于显示通知服务器的启动状态。
+  - &nbsp;<Tag>新增</Tag> Rpc支持接口特性标记。
+  - &nbsp;<Tag>调整</Tag> 将BytePool由静态调整为实例，且由其Default实例作为默认。
+---
+
+## v1.1
+
+更新日期：2023.1.13
+
+更新描述：小版本升级，可能会有不兼容。请按下列提示修改。 
+
+  - &nbsp;<Tag>优化</Tag> TouchRpc系文件传输时，文件夹不存在的提示。
+  - &nbsp;<Tag>优化</Tag> WaitingClient，当客户端断开连接时，可选是否抛出异常。
+  - &nbsp;<Tag>优化</Tag> Fast序列化时。可选序列化只读属性。
+  - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
+  - &nbsp;<Tag>新增</Tag> Tcp客户端新增Disconnecting事件。在主动Close时生效。
+  - &nbsp;<Tag>调整</Tag> 多个事件类名称修改，请按照提示修改即可。
+  - &nbsp;<Tag>移除</Tag> 多个无用方法参数。
+---
+
+## v1.0.0
+
+更新日期：2023.1.1
+
+更新描述：大版本升级，请详细阅读下列更新日志。
+
+  - &nbsp;<Tag>升级</Tag> 将最高版本升级为NET7。
+  - &nbsp;<Tag>优化</Tag> Tcp系异步发送效率。
+  - &nbsp;<Tag>优化</Tag> TouchRpc系Channel的稳健性。
+  - &nbsp;<Tag>修复</Tag> 多个不稳定Bug。
+  - &nbsp;<Tag>新增</Tag> ValueByteBlock，在简单代码块里面能有效减少创建的类。
+  - &nbsp;<Tag>新增</Tag> MemoryCache类，其功能类似微软官方。但是支持全部泛型。
+  - &nbsp;<Tag>新增</Tag> [IPackage系](https://www.yuque.com/rrqm/touchsocket/ag9tyar9mmhsme0m)。该系列能以超高效率的进行二进制序列化。
+  - &nbsp;<Tag>新增</Tag> SingleTimer类，不可重入的Timer。
+  - &nbsp;<Tag>新增</Tag> Jsonrpc支持自定义适配器解析（EE）
+  - &nbsp;<Tag>新增</Tag> 严重TouchRpc系OnRouting通知，所有的客户端之间的通信，都必须经过OnRouting的筛查。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系小文件传输，在文件小于1Mb时，其传输效率是常规传输的10倍以上。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系超大文件多链路传输，支持多个客户端协同传输同一个文件，这在互联网环境中，效率比常规传输提高类3-5倍。
+  - &nbsp;<Tag>新增</Tag> TouchRpc系Redis组件，能实现双端共同存储。
+  - &nbsp;<Tag>调整</Tag> 严重精简所有命名空间，删除所有三级命名空间。例如：TouchSocket.Core.ByteManager精简为TouchSocket.Core。
+  - &nbsp;<Tag>调整</Tag> 严重删除Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)
+  - &nbsp;<Tag>调整</Tag> 严重框架默认日志由ConsoleLogger，替换为EmptyLogger（不输出任何东西）。
+  - &nbsp;<Tag>调整</Tag> 严重Tcp全系，在连接时，ID的初始值使用long类型从0递增。
+  - &nbsp;<Tag>调整</Tag> 严重Tcp服务器，将定时清理无数据交互的选项替换为UseCheckClear插件。并且默认没有启用，需要手动加入。
+  - &nbsp;<Tag>调整</Tag> Tcp系适配器，取消部分参数。
+  - &nbsp;<Tag>调整</Tag> DataLock改名为DataSecurity。
+  - &nbsp;<Tag>调整</Tag> EasyAction改名EasyTask。
+  - &nbsp;<Tag>调整</Tag> IMessage改名IMessageObject。
+  - &nbsp;<Tag>调整</Tag> TokenInstance改名MessageInstance。
+  - &nbsp;<Tag>调整</Tag> TouchRpc系，精简常规文件传输操作。
+  - &nbsp;<Tag>调整</Tag> 严重TouchRpc系，所有插件通知参数，默认都设为不允许操作，需要手动设置e.IsPermitOperation=true。
+  - &nbsp;<Tag>移除</Tag> Newtonsoft.Json的源代码嵌入。全局的Json会根据环境动态调整，详情见[Json工具](https://www.yuque.com/rrqm/touchsocket/emqy43#PfVh1)。
+
+*** 更新示例指南 ***
+
+（1）适配器参数报错：直接删除isAsync参数，以及isAsync为**True**的所有逻辑。
+![image.png](@site/static/img/docs/upgrade-1.png)
+（2）依赖属性的声明报错：增加泛型约束即可，详情查看[依赖属性](https://www.yuque.com/rrqm/touchsocket/ubk57o#jyzSl)
+![image.png](@site/static/img/docs/upgrade-2.png)
+（3）服务端定时清理警告：在配置插件中使用UseCheckClear，并且进行相关配置。
+![image.png](@site/static/img/docs/upgrade-3.png)
+![image.png](@site/static/img/docs/upgrade-4.png)
+
+---
+
+
+## 版本号: 0.7.0
+更新日期：2022.9.21
+更新描述：兼容性更新，增强型更新。**RPC内容需要客户端与服务器同步更新**。
+更新详情：
+
+优化
+1. Fast二进制序列化，支持自定义序列化。
+2. TouchRpc全系，在文件传输等大型IO时，由于心跳失败而断开连接。
+3. 优化AspNetCore的IContainer。
+4. TcpCommandLinePlugin与WSCommandLinePlugin支持获取客户端参数。
+
+新增
+1. 插件实例会以单例注入容器。
+2. 所有适配器支持[缓存超时](https://www.yuque.com/rrqm/touchsocket/83526e6320dfc85fef317d850aa51e92#Z0S0g)设定。
+3. 修改所有事件为委托。
+4. 开放[AspnetCore](https://www.yuque.com/rrqm/touchsocket/55e5bbf58745fa639dba511c7bcd54d1#WqOmh)创建Tcp，Http等服务器的配置。
+5. IClient增加发送、接收的最后时间记录。
+6. Http支持多文件上传（目前仅支持小文件，具体大小以实际运行内存为准，实测100Mb没问题）。
+7. Websocket插件默认会处理Close报文。且插件支持Close。
+8. Rpc支持模板代码重写。
+9. TouchRpc支持元组。
+10. JsonRpc支持Websocket协议。
+
+修改 
+1. IScopedContainer修改为IContainerProvider
+ 
+修复
+1. BytePool回收内存时不判断大小的bug。
+
+删除
+1. 无。
+
+
+---
+
+## 版本号: 0.6.0
+更新日期：2022.9.10
+更新描述：兼容性更新，增强型更新。**专为Unity 3D适配**。
+更新详情：
+
+优化
+1. Gzip的压缩效率。
+2. 发送效率。
+
+新增
+1. IDataCompressor数据传输压缩接口。
+2. [RemoteStream](https://www.yuque.com/rrqm/touchsocket/ukq0mu)支持数据读写压缩。
+3. WaitResultPackageBase类，专属非序列化的数据格式化。
+4. DelaySender[延迟缓存发送](https://www.yuque.com/rrqm/touchsocket/1f21a56ee75f896a5b5b38b37b071881#RL0kx)。
+
+修改
+1. 无
+
+修复
+1. Rpc注册服务为单例时，实际上是瞬时服务的bug。
+
+删除
+1. 独立线程发送。
+
+---
+
+## 版本号: 0.5.0
+更新日期：2022.9.1
+更新描述：兼容性更新，增强型更新。
+更新详情：
+
+优化
+1. 全局资源的获取逻辑。
+
+新增
+1. Container增加卸载注册功能。
+2. FilePool新增FileStorageStream的获取。
+3. http客户端（及websocket）支持代理和验证代理。
+4. TouchRpc全系新增[远程文件操作](https://www.yuque.com/rrqm/touchsocket/pearz0)
+5. TouchRpc（除udp）新增[远程流访问](https://www.yuque.com/rrqm/touchsocket/ukq0mu)
+
+修改
+1. 无
+
+修复
+1. 修复Http客户端请求重复Header时的bug。
+
+删除
+1. TouchRpc全系的事件操作，推荐直接插件的方式，或者使用TouchRpcActionPlugin然后添加委托。
+
+
+更新示例
+TouchRpc的相关事件均已使用插件代替。所以请使用插件实现操作。如果需要事件等功能的话，可以用TouchRpcActionPlugin的插件实现。例如：
+```csharp showLineNumbers
+.UsePlugin()
+.ConfigurePlugins(a=> 
+{
+    a.Add<TouchRpcActionPlugin<TcpTouchRpcClient>>()//此处的逻辑可用插件替代完成。
+    .SetFileTransfering((client, e) =>
+    {
+        //有可能是上传，也有可能是下载
+        client.Logger.Info($"服务器请求传输文件，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}");
+    })
+    .SetFileTransfered((client, e) =>
+    {
+        //传输结束，但是不一定成功，需要从e.Result判断状态。
+        client.Logger.Info($"服务器传输文件结束，ID={client.ID}，请求类型={e.TransferType}，文件名={e.FileInfo.FileName}，请求状态={e.Result}");
+    });
+})
+```
+
+---
+
+## 版本号: 0.4.5
+更新日期：2022.8.25
+更新描述：兼容性更新，增强型更新。
+更新详情：
+
+优化
+1. FileLogger的写入逻辑，大大地提升了写入效率。
+
+新增
+1. [Pipeline适配器](https://www.yuque.com/rrqm/touchsocket/ofnliu)
+2. [TLV适配器](https://www.yuque.com/rrqm/touchsocket/wug4bv)
+3. WaitingClient支持按条件等待返回。
+4. 日志系统可以筛选日志的输出类型
+5. Rpc系统，可以使用单例、瞬时生命周期的服务。
+6. Rpc系统，可定义持久化模型。
+7. Rpc在使用瞬时生命周期的服务时，可以直接获取调用上下文。
+8. XmlRpc增加调用上下文。
+
+修改
+1. 日志系统。
+2. Rpc的调用上下文均采用接口，例如：JsonRpc改为IJsonRpcCallContext，WebApi为IWebApiCallContext。
+3. IRpcActionFilter的参数列表。
+
+修复
+1. UdpSession资源不释放的Bug。
+
+删除
+1. 冗余元素。
+
+
+---
+
+## 版本号: 0.3.5
+更新日期：2022.8.12
+更新描述：兼容性更新，增强型更新。
+更新详情：
+
+优化
+1. 各类客户端发送逻辑。
+2. Method类的调用逻辑。
+ 
+新增
+1. 适配器可以设定发送IRequestInfo对象。
+2. 插件新增UseWebSocket的快捷方式。
+3. ReconnectionPlugin插件可以获得重连次数的重载设置。
+4. 【Pro】TcpService的服务注入。
+5. 【Pro】HttpService的服务注入。
+6. 【Pro】IOC容器的共享使用。
+
+修改 
+1. 各类发送逻辑，以最小化发送方法为基础，其余方法改为扩展方法。
+2. 相关接口的实现。
+3. 由网友[修改GetInfo](https://gitee.com/dotnetchina/TouchSocket/pulls/11)
+
+修复
+1. Container获取泛型失败bug。
+2. BetweenAnd适配器适配器部分bug。
+3. Router标签无法路由的bug。
+4. 修复TouchRpc推送文件状态不正确bug
+5. 修复独立线程在断线重连后发送bug。
+
+删除
+1. 冗余的发送方法，不影响上版本任何使用。
+
+
+---
+
+
+## 版本号: 0.2.4
+更新日期：2022.7.28
+更新描述：兼容性更新。
+更新详情：
+
+优化 
+1. 优化IOC容器。
+2. 优化Metadata的写入方式。
+3. FileLogger，当日志文件达到1Mb时，会再新增文件序号。
+
+新增
+1. Mapper类，支持简单类型映射
+2. Tcp服务器、客户端、udp等增加端口复用配置。
+3. 【Pro】轮询式断线重连。
+4. 【Pro】NATService转发客户端重连。
+
+修改
+1. RRQM二进制序列化，改名为Fast。
+2. TouchRpcClient连接时的Metadata，改为由Config配置注入。
+3. FilePool，取消延迟释放机制。
+
+修复
+1. 修复WebSocket连接问题
+
+删除
+1. 客户端直接调用的短线重连方式。仅保留在Config注入的功能。
+
+---
+
+## 版本号: 0.1.0
+更新日期：2022.7.16
+更新描述：初始化版本发布。由RRQMSocket迁移而来。
+
+迁移指南：
+### 1.所有类的命名空间修改，此处如果类型名未修改的话，可由vs智能提示解决。
+### 2.类型名称修改
+| 原类型名称 | 新类型名称 |
+| --- | --- |
+| RRQMBitConverter | TouchSocketBitConverter |
+| RRQMConfig | TouchSocketConfig |
+| RRQMConverter | TouchSocketConverter |
+| RRQMDependencyObject | DependencyObject |
+| MsgEventArgs | MsgEventArgs |
+| RRQMEventAgrs | TouchSocketEventArgs |
+| IServerProvider | IRpcServer |
+| ServerProvider | RpcServer |
+| RRQMOverlengthException | OverlengthException |
+
+### 3.使用逻辑修改
+1）原RRQMConfig设置Logger的方法，改为容器注入：
+![image.png](@site/static/img/docs/upgrade-5.png)
+断线重连逻辑
+![image.png](@site/static/img/docs/upgrade-6.png)
+RpcStore使用变更
+如果是仅有一个Rpc解析器，那么可以直接删除RpcStore的声明，从而使用对应的**解析器实例**，直接注册服务。然后可以通过其属性RpcStore，获取到具体的RpcStore实例。
+
+如果是有多个解析器，那么，首先可以使用任意一个解析器的RpcStore属性实例，作为主RpcStore，然后添加其他解析器。当然也可以直接new RpcStore，然后统一管理解析器。其中构造函数中的Container容器，可以直接new Container()，但是更建议使用和解析器相同的容器，这样注入的服务会变得全局可用。

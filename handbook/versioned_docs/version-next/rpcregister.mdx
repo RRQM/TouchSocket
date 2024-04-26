@@ -1,0 +1,281 @@
+---
+id: rpcregister
+title: 注册服务
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Rpc <br/>
+程序集：[TouchSocket.Rpc.dll](https://www.nuget.org/packages/TouchSocket.Rpc)
+
+
+## 一、直接注册
+
+### 1.1 注册实例服务
+
+当服务仅是一个实例类，则可以在`AddRpcStore`时，可通过`RpcStore`实例，直接注册服务。
+
+```csharp showLineNumbers
+public partial class MyRpcServer : RpcServer
+{
+    /// <summary>
+    /// 将两个数相加
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+```csharp {5,8} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterServer<MyRpcServer>();
+
+        //或者按照类型注册
+        //store.RegisterServer(typeof(MyRpcServer));
+    });
+})
+```
+
+### 1.2 注册接口服务
+
+当服务是一个接口时，则可以在`AddRpcStore`时，通过`RpcStore`实例，按注册接口与实例服务。
+
+```csharp showLineNumbers
+public interface IMyRpcServer2 : IRpcServer
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+
+public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
+{
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterServer<IMyRpcServer2, MyRpcServer2>();
+    });
+})
+```
+
+:::tip 提示
+
+使用接口注册服务时，标识Rpc（例如：DmtpRpc）特性必须放在接口方法中。否则不会生效。
+
+:::  
+
+### 1.3 注册瞬态服务
+
+默认情况下，Rpc服务均是单例注册。当服务实例继承`TransientRpcServer`（或实现`ITransientRpcServer`）接口时，该服务会被注册为瞬态。
+
+注册为瞬态的服务，在每次调用时，都会创建一个新的服务实例。这可能会对性能产生一定影响。但是，瞬态服务可以直接获取调用上下文。
+
+
+```csharp {7} showLineNumbers
+public partial class MyRpcServer : TransientRpcServer
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+甚至直接指定泛型上下文
+
+```csharp {1,7} showLineNumbers
+public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
+{
+    [DmtpRpc(true)]//使用函数名直接调用
+    [Description("将两个数相加")]//其作用是生成代理时，作为注释。
+    public int Add(int a, int b)
+    {
+        var callContext= this.CallContext;
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+
+## 二、注册所有服务
+
+### 2.1 注册指定程序集的服务
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterAllServer(typeof(MyRpcServer).Assembly);
+    });
+})
+```
+
+### 2.2 注册已加载程序集中的所有服务
+
+```csharp {5} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterAllServer();
+    });
+})
+```
+
+:::info 信息
+
+`RegisterAllServer`会搜索已加载的所有类型，所以在AOT时可能无法使用，并且会影响**启动**性能。
+
+:::  
+
+:::caution 警告
+
+`RegisterAllServer`无法实现接口注册，所以如果您的服务是接口，则不会生效。
+
+:::  
+
+## 三、源生成注册
+
+当源生成可用时（一般指vs2019高版本或vs2022、rider、vs code等），TouchSocket.Rpc会自动搜索所有实现了`IRpcServer`接口的类，并生成统一注册的源代码。
+
+### 3.1 启用源生成
+
+首先请先确定是在声明Rpc**实例服务**的程序集中。一般的，如果您只声明了实例服务，或者实例服务和接口在同一程序集中，您将不用关心这个。如果您的声明接口与实现在不同的程序集，那么请您确定下列操作均在**实例服务**的程序集中。
+
+
+为程序集添加`[GeneratorRpcServerRegister]`特性。
+
+一般的您需要新建个类文件，建议文件名为“AssemblyInfo.cs”（如果是Framework项目，则在Properties文件夹中有此文件，所以不必新建。）
+
+然后在该文件中添加新行：
+
+```csharp showLineNumbers
+[assembly:GeneratorRpcServerRegister]
+```
+
+或者指定一些生成属性，不过一般建议默认即可。
+
+```csharp showLineNumbers
+[assembly:GeneratorRpcServerRegister(ClassName = "ClassName", MethodName = "MethodName",Accessibility = Accessibility.Both)]
+```
+
+### 3.2 注册指定程序集的服务
+
+```csharp {6,9} showLineNumbers
+.ConfigureContainer(a =>
+{
+    a.AddRpcStore(store =>
+    {
+        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有公共Rpc服务
+        store.RegisterAllFromDmtpRpcServerConsoleApp();
+
+        //该方法是由源生成提供，可以注册DmtpRpcServerConsoleApp程序集的所有Rpc服务（包含非公共服务）
+        store.InternalRegisterAllFromDmtpRpcServerConsoleApp();
+    });
+})
+```
+
+:::tip 提示
+
+源生成的注册方法名并不固定，而是与**程序集名称**有关，或者如果直接指定的话，则是指定的方法名。例如上程序，默认情况下，程序集名称为DmtpRpcServerConsoleApp，即生成`RegisterAllFromDmtpRpcServerConsoleApp`方法与`InternalRegisterAllFromDmtpRpcServerConsoleApp`方法。
+
+:::  
+
+源生成的注册，支持接口与实例注册。例如下列服务：
+
+```csharp showLineNumbers
+public interface IMyRpcServer : IRpcServer
+{ 
+    [DmtpRpc(true)]//使用函数名直接调用
+    int Add(int a, int b);
+}
+
+public partial class MyRpcServer : RpcServer,IMyRpcServer
+{
+    public int Add(int a, int b)
+    {
+        var sum = a + b;
+        return sum;
+    }
+}
+```
+
+在生成源代码注册时，会以`IMyRpcServer`接口为注册，以`MyRpcServer`为实现。生成以下注册代码：
+
+```csharp showLineNumbers
+/*
+此代码由Rpc工具直接生成，非必要请不要修改此处代码
+*/
+#pragma warning disable
+namespace TouchSocket.Rpc
+{
+    /// <summary>
+    /// RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    /// </summary>
+    public static class RegisterRpcServerFromDmtpRpcServerConsoleAppExtension
+    {
+        /// <summary>
+        /// 注册程序集DmtpRpcServerConsoleApp中的所有公共Rpc服务。包括：
+        /// <list type="number">
+        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// </list>
+        /// </summary>
+        /// <param name="rpcStore"></param>
+        public static void RegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        {
+            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+        }
+        /// <summary>
+        /// 注册程序集DmtpRpcServerConsoleApp中的所有Rpc服务。包括：
+        /// <list type="number">
+        /// <item><see cref="ConsoleApp2.IMyRpcServer"/>:<see cref="ConsoleApp2.MyRpcServer"/></item>
+        /// </list>
+        /// </summary>
+        /// <param name="rpcStore"></param>
+        internal static void InternalRegisterAllFromDmtpRpcServerConsoleApp(this RpcStore rpcStore)
+        {
+            rpcStore.RegisterServer<ConsoleApp2.IMyRpcServer,ConsoleApp2.MyRpcServer>();
+        }
+    }
+}
+
+```
+
+在生成源代码注册时，也会生成注释，来表明注册了哪些类型。
+
+<img src={require('@site/static/img/docs/rpcregister-1.png').default} />
+
+
+:::tip 提示
+
+统一生成的源代码注册**并非**是搜索反射注册，所以并不影响性能，且支持AOT，并且也支持接口注册。
+
+:::  

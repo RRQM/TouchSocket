@@ -148,6 +148,11 @@ module.exports = {
             current: {
               label: '2.0.0',
               path: '/current',
+            },
+            next: {
+              label: '2.1.0-alpha',
+              path: '/next',
+              banner:'none'
             }
           },
           // sidebarCollapsible: true,

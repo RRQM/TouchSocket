@@ -1,0 +1,49 @@
+---
+id: tcpcommonplugins
+title: 常用插件
+---
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、健康活性检验插件
+
+健康活性检验插件（CheckClearPlugin）用于检测当前连接是否有正常的数据交流，如果没有，则主动断开连接。
+
+该插件可以用于客户端或服务器，但是一般建议仅用于服务器即可。
+
+工作原理非常简单。当连接建立时，会自动启动一个定时器，每隔一段时间（默认60秒），就会检验在该连接上，是否有数据交流。如果没有，则判定该客户端静默，或者已经无效。
+
+例如：在Tcp场景中，经常有客户端因为断网等原因，已经断开连接，但是又无法主动发送断开连接报文。则此后，如果服务器不主动发送数据，则会非常久的时间无法得知该客户端已经断开。
+
+所以需要使用该插件进行健康活性检验，以便及时断开无效连接。
+
+代码示例：
+
+只需要在插件中添加UseCheckClear即可。其中，可配置：
+
+- CheckClearType：健康检验类型，默认是所有类型都进行健康检验，即同时开启发送、接收健康检验，只要有一方有数据交互，即认为连接有效。
+- Tick：健康检验的间隔时间，默认是60秒。
+- OnClose：健康检验失败时的回调函数，默认是直接关闭连接。
+
+```csharp {3} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    a.UseCheckClear()
+    .SetCheckClearType( CheckClearType.All)
+    .SetTick(TimeSpan.FromSeconds(60))
+    .SetOnClose((c,t) => 
+    {
+        c.TryShutdown();
+        c.SafeClose("超时无数据");
+    });
+})
+```
+
+:::info 温馨提示
+
+健康检验插件，可能因为操作系定时器原因和检验周期原因，导致检验时间间隔比配置的间隔时间要长。一般来说，最坏情况不会超过设置周期的10%。例如：设置周期为100秒，则最坏情况可能到110秒才会执行清理。
+
+:::  
