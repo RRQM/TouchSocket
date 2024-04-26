@@ -152,7 +152,7 @@ module.exports = {
             next: {
               label: '2.1.0-alpha',
               path: '/next',
-              banner:'none'
+              banner:'unreleased'
             }
           },
           // sidebarCollapsible: true,
