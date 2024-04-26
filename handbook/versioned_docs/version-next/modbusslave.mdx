@@ -1,0 +1,256 @@
+---
+id: modbusslave
+title: Modbus从站（Slave）
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocketPro.Modbus <br/>
+程序集：[TouchSocketPro.Modbus.dll](https://www.nuget.org/packages/TouchSocketPro.Modbus)
+
+
+## 一、说明 <Tag>Pro</Tag>
+
+Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便大家使用。
+
+
+## 二、特点
+
+- 简单易用。
+- 内存池支持
+- 高性能
+- 易扩展。
+- **支持全数据类型的读写**。
+
+## 三、产品应用场景
+
+- 所有Modbus使用场景：可跨平台使用。
+
+## 四、可配置项
+
+无单独配置项。
+
+## 五、支持插件
+
+|  插件方法| 功能 |
+| --- | --- |
+| IModbusSlaveExecutingPlugin | 当有主站请求读写该从站时触发。如果想要拒绝请求，可以通过e.IsPermitOperation = false执行。并且e.ErrorCode可以携带返回错误码。|
+| IModbusSlaveExecutedPlugin | 当有主站完成请求读写该从站时触发 |
+
+## 六、创建
+
+目前TouchSokcet.Modbus从站支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
+
+#### 6.1 创建ModbusTcpSlave
+
+```csharp showLineNumbers
+static ModbusTcpSlave CreateModbusTcpSlave()
+{
+    var service = new ModbusTcpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetListenIPHosts(7808)
+        .ConfigurePlugins(a =>
+        {
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            .UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10,10,10,10));//设置数据区
+        })
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.2 创建ModbusUdpSlave
+
+```csharp showLineNumbers
+static ModbusUdpSlave CreateModbusUdpSlave()
+{
+    var service = new ModbusUdpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetBindIPHost(7809)
+        .ConfigurePlugins(a =>
+        {
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            .UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+        })
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.3 创建ModbusRtuSlave
+
+```csharp showLineNumbers
+static ModbusRtuSlave CreateModbusRtuSlave()
+{
+    var service = new ModbusRtuSlave();
+    service.Setup(new TouchSocketConfig()
+        //设置串口
+        .SetSerialPortOption(new SerialPortOption()
+        {
+            BaudRate = 9600,
+            DataBits = 8,
+            Parity = System.IO.Ports.Parity.Even,
+            PortName = "COM1",
+            StopBits = System.IO.Ports.StopBits.One
+        })
+        .ConfigurePlugins(a =>
+        {
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            //.UseIgnoreSlaveId()//如果不调用，默认会进行站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+        })
+        );
+    service.Connect();
+    Console.WriteLine("已连接COM端口");
+    return service;
+}
+```
+
+#### 6.4 创建ModbusRtuOverTcpSlave
+
+```csharp showLineNumbers
+static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
+{
+    var service = new ModbusRtuOverTcpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetListenIPHosts(7810)
+        .ConfigurePlugins(a =>
+        {
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            .UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+        })
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+#### 6.5 创建ModbusRtuOverUdpSlave
+
+```csharp showLineNumbers
+static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
+{
+    var service = new ModbusRtuOverUdpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetBindIPHost(7811)
+        .ConfigurePlugins(a =>
+        {
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            .UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
+        })
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+## 七、添加多个站点
+
+`Modbus`是一主多从的架构。在实际使用时，一个`ModbusSlave`部署至一个机器（这里不考虑虚拟机），即视为一个从机。但事实上，按照`Modbus`协议，一个`ModbusSlave`可以有多个站点。以`ModbusTcpSlave`为例，他可以通过`IP地址`确定到唯一的设备，同时还可以通过`SlaveId`区分不同的站点。
+
+所以，我们的`ModbusSlave`也可以有多个站点。以`ModbusTcpSlave`为例，具体操作如下：
+
+```csharp {18-28} showLineNumbers
+static ModbusTcpSlave CreateModbusTcpSlave()
+{
+    var service = new ModbusTcpSlave();
+    service.Setup(new TouchSocketConfig()
+        //监听端口
+        .SetListenIPHosts(7808)
+        .ConfigurePlugins(a =>
+        {
+            a.Add<MyModbusSlavePlugin>();
+
+            //当添加多个站点时，需要禁用IgnoreSlaveId的设定
+
+            a.AddModbusSlavePoint()//添加一个从站站点
+            .SetSlaveId(1)//设置站点号
+            //.UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater(10,10,10,10));//设置数据区
+
+            a.AddModbusSlavePoint()//再添加一个从站站点
+            .SetSlaveId(2)//设置站点号
+            //.UseIgnoreSlaveId()//忽略站号验证
+            .SetModbusDataLocater(new ModbusDataLocater()//设置数据区
+            {
+                //下列配置表示，起始地址从1000开始，10个长度
+                Coils = new BooleanDataPartition(1000, 10),
+                DiscreteInputs = new BooleanDataPartition(1000, 10),
+                HoldingRegisters = new ShortDataPartition(1000, 10),
+                InputRegisters = new ShortDataPartition(1000, 10)
+            });
+        })
+        );
+    service.Start();
+    Console.WriteLine("服务已启动");
+    return service;
+}
+```
+
+:::caution 警告
+
+当添加多个站点时，需要**禁用**`IgnoreSlaveId`的设定。
+
+:::  
+
+:::tip 提示
+
+所有的`ModbusSlave`均支持多站点访问。且多个站点还能共用同一个`ModbusDataLocater`。
+
+:::  
+
+## 八、本地读写操作
+
+所有的数据区均在`IModbusSlavePoint`中。所以需要先找到`IModbusSlavePoint`实例。
+
+一般的，如果你使用了插件`IModbusSlaveExecutingPlugin`或者`IModbusSlaveExecutedPlugin`。插件的sender即为`IModbusSlavePoint`。
+
+如果你只能访问到`IModbusSlave`接口（例如：`ModbusTcpSlave`），那么你可以通过`ModbusSlave`的`GetSlavePointBySlaveId`方法获取到`IModbusSlavePoint`。
+
+```csharp showLineNumbers
+var modbusSlavePoint= slave.GetSlavePointBySlaveId(slaveId: 1);
+```
+
+然后在`IModbusSlavePoint`接口中有`ModbusDataLocater`属性，该属性是`Modbus`数据存储区，即`线圈`、`离散输入`、`保持寄存器`、`输入寄存器`。
+
+该属性是可读可写的。所以，即使是不同`IModbusSlavePoint`。也可以二次赋值，使其实现更多功能。
+
+同时。可以通过该属性，创建一个本地`ModbusMaster`，用于直接读写。
+
+具体读写操作和[ModbusMaster读写](./modbusmaster.mdx)一致。
+
+```csharp  showLineNumbers
+var localMaster = modbusSlavePoint.ModbusDataLocater.CreateDataLocaterMaster();
+var coils = localMaster.ReadCoils(0, 1);
+```
+
+:::tip 提示
+
+通过`modbusSlavePoint.ModbusDataLocater.CreateDataLocaterMaster()`创建的Master，具备[ModbusMaster](./modbusmaster.mdx)的所有功能（包括`ModbusObject`操作）。且是直接读取内存的，中间没有任何通信，所以速度非常快。
+
+:::  
+
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusSlaveConsoleApp)
+
