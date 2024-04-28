@@ -202,7 +202,7 @@
 		"description": "importTab"
 	},
 	"Mermaid":{
-		"prefix": "Mermaid",
+		"prefix": "mermaid",
 		"body": [
 			"```mermaid",
 			"graph TD;",
@@ -212,6 +212,6 @@
 			"\tC-->D;",
 			"```"
 		],
-		"description": "Mermaid"
+		"description": "mermaid"
 	}
 }

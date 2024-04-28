@@ -13,7 +13,7 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
-TcpClient是Tcp系客户端基类，他直接参与tcp的连接、发送、接收、处理、断开等，他的业务与服务器的**SessionClient**是一一对应的。
+`TcpClient`是Tcp系客户端基类，他直接参与tcp的连接、发送、接收、处理、断开等，他的业务与服务器的`TcpSessionClient`是一一对应的。
 
 ## 二、特点
 
@@ -37,19 +37,9 @@ TcpClient是Tcp系客户端基类，他直接参与tcp的连接、发送、接�
 <div>
 
 #### SetMaxPackageSize
-
 数据包最大值（单位：byte），默认1024×1024×10。该值会在适当时间，直接作用DataHandlingAdapter.MaxPackageSize。 
 
-#### SetReceiveType
-接收类型。
-- AUTO：自动接收模式。
-- None：不投递IO接收申请，用户可通过GetStream，获取到流以后，自己处理接收。注意：连接端不会感知主动断开。
-
-#### SetServiceSslOption
-Ssl配置，为Null时则不启用。 
-
 #### SetRemoteIPHost
-
 链接到的远程IPHost，支持域名。支持类型：
 1. 使用IPv4，传入形如：127.0.0.1:7789的字符串即可。
 2. 使用IPv6，传入形如：[\*::\*]:7789的字符串即可。
@@ -69,13 +59,6 @@ Ssl配置，为Null时则不启用。
 - 在UdpSessionBase中表示本地监听地址
 - 在TcpClient中表示固定客户端端口号。
 
-#### UseDelaySender
-使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用延迟算法。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-
-如果一个包大于512kb，则不会延迟，直接发送。
-如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
 
 #### UseNoDelay
 设置Socket的NoDelay属性，默认false。
@@ -92,8 +75,8 @@ Ssl配置，为Null时则不启用。
 | --- | --- |
 | ITcpConnectingPlugin | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
 | ITcpConnectedPlugin | 同意连接，且成功启动接收后触发 |
-| ITcpDisconnectingPlugin | 当客户端主动调用Close时触发 |
-| ITcpDisconnectedPlugin | 当客户端断开连接后触发 |
+| ITcpClosingPlugin | 当客户端主动调用Close时触发 |
+| ITcpClosedPlugin | 当客户端断开连接后触发 |
 | ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
@@ -102,16 +85,16 @@ Ssl配置，为Null时则不启用。
 
 #### 6.1 简单创建
 
-简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
+简单的处理逻辑可通过**Connected**、**Closed**、**Received**等委托直接实现。
 
 代码如下：
 
 ```csharp showLineNumbers
 var tcpClient = new TcpClient();
 tcpClient.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建socket，但是还未建立tcp
-tcpClient.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
-tcpClient.Disconnecting = (client, e) => {return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
-tcpClient.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+tcpClient.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+tcpClient.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
+tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
 tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
@@ -121,14 +104,14 @@ tcpClient.Received = (client, e) =>
 };
 
 //载入配置
-tcpClient.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个日志注入
-    }));
+await tcpClient.SetupAsync(new TouchSocketConfig()
+      .SetRemoteIPHost("127.0.0.1:7789")
+      .ConfigureContainer(a =>
+      {
+          a.AddConsoleLogger();//添加一个日志注入
+      }));
 
-tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
+await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 
 //Result result = tcpClient.TryConnect();//或者可以调用TryConnect
 //if (result.IsSuccess())
@@ -138,7 +121,7 @@ tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
 
 tcpClient.Logger.Info("客户端成功连接");
 
-tcpClient.Send("RRQM");
+await tcpClient.SendAsync("RRQM");
 ```
 
 #### 6.2 继承实现
@@ -146,16 +129,16 @@ tcpClient.Send("RRQM");
 一般继承实现的话，可以从TcpClientBase继承。
 
 ```csharp showLineNumbers
-class MyTcpClient : TcpClientBase
+class MyTcpClient : TcpClient
 {
-    protected override async Task ReceivedData(ReceivedDataEventArgs e)
+    protected override Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
         string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
-        await base.ReceivedData(e);
+        return base.OnTcpReceived(e);
     }
 }
 ```
@@ -163,20 +146,20 @@ class MyTcpClient : TcpClientBase
 ```csharp showLineNumbers
 var tcpClient = new MyTcpClient();
 //载入配置
-tcpClient.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个日志注入
-    }));
+await tcpClient.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7789")
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();//添加一个日志注入
+     }));
 
-tcpClient.Connect();//调用连接，当连接不成功时，会抛出异常。
+await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 ```
 
 
 ## 七、接收数据
 
-在TcpClient中，接收数据的方式有很多种。多种方式可以组合使用。
+在`TcpClient`中，接收数据的方式有很多种。多种方式可以组合使用。
 
 ### 7.1 Received委托处理
 
@@ -192,7 +175,7 @@ tcpClient.Received = (client, e) =>
     return EasyTask.CompletedTask;
 };
 
-tcpClient.Connect("127.0.0.1:7789");
+await tcpClient.ConnectAsync("127.0.0.1:7789");
 ```
 
 
@@ -227,18 +210,18 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
 
 ```csharp showLineNumbers
 var client = new TcpClient();
-client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.Add<MyPlugin>();
-    }));
+await client.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7789")
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();
+     })
+     .ConfigurePlugins(a =>
+     {
+         a.Add<MyPlugin>();
+     }));
 
-client.Connect();
+await client.ConnectAsync();
 ```
 
 :::danger 注意
@@ -253,7 +236,7 @@ client.Connect();
 
 ```csharp showLineNumbers
 var client = new TcpClient();
-client.Connect("127.0.0.1:7789");//连接
+await client.ConnectAsync("127.0.0.1:7789");//连接
 
 //receiver可以复用，不需要每次接收都新建
 using (var receiver = client.CreateReceiver())
@@ -263,7 +246,7 @@ using (var receiver = client.CreateReceiver())
         //receiverResult必须释放
         using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
         {
-            if (receiverResult.IsClosed)
+            if (receiverResult.IsCompleted)
             {
                 //断开连接了
                 return;

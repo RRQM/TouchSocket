@@ -49,14 +49,15 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 SessionClient在Service里面以字典映射。ID为键，SessionClient本身为值。
 
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+flowchart TD;
+    Service-->TcpSessionClient-1;
+    Service-->TcpSessionClient-2;
+    Service-->TcpSessionClient-3;
+    TcpSessionClient-1-->TcpClient-1;
+    TcpSessionClient-2-->TcpClient-2;
+    TcpSessionClient-3-->TcpClient-3;
+   
 ```
-
-<img src={require('@site/static/img/docs/createtcpservice-2.png').default} width="500" />
 
 ## 五、可配置项
 
@@ -85,30 +86,17 @@ Tcp半连接挂起连接队列的最大长度。默认为30
 #### SetMaxCount
 最大可连接数，默认为10000 
 
-#### SetReceiveType
-接收类型。
-- AUTO：自动接收模式。
-- None：不投递IO接收申请，用户可通过GetStream，获取到流以后，自己处理接收。注意：连接端不会感知主动断开。
-
 #### SetServiceSslOption
 Ssl配置，为Null时则不启用。 
 
 #### UseNoDelay
 设置Socket的NoDelay属性，默认false。 
 
-#### UseDelaySender
-使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用**延迟算法**。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-1. 如果一个包大于512kb，则不会延迟，直接发送。
-2. 如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10**微秒**左右），则会将这两个包压缩为一个包发送。
-
 #### UseReuseAddress
 启用端口复用。该配置可在服务器、或客户端在监听端口时，运行监听同一个端口。可以一定程度缓解端口来不及释放的问题。
 
 #### SetSendTimeout
 设置发送超时时间，默认0ms，即禁用该配置。
-
 
 </div>
 </details>
@@ -120,12 +108,12 @@ Ssl配置，为Null时则不启用。
 | --- | --- |
 | ITcpConnectingPlugin | 此时Socket实际上已经完成连接，但是并没有启动接收，然后触发。 |
 | ITcpConnectedPlugin | 同意连接，且成功启动接收后触发 |
-| ITcpDisconnectingPlugin | 当客户端主动调用Close时触发 |
-| ITcpDisconnectedPlugin | 当客户端断开连接后触发 |
+| ITcpClosingPlugin | 当客户端主动调用Close时触发 |
+| ITcpClosedPlugin | 当客户端断开连接后触发 |
 | ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
-| IIdChangedPlugin | 当SessionClient的ID发生改变时触发。 |
+| IIdChangedPlugin | 当SessionClient的Id发生改变时触发。 |
 
 ## 七、创建TcpService
 
@@ -140,8 +128,8 @@ Ssl配置，为Null时则不启用。
 var service = new TcpService();
 service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
 service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
-service.Disconnecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
-service.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
+service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 service.Received = (client, e) =>
 {
     //从客户端收到信息
@@ -166,18 +154,18 @@ service.Received = (client, e) =>
     return EasyTask.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+     {
+         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+     })
+     .ConfigurePlugins(a =>
+     {
+         //a.Add();//此处可以添加插件
+     }));
 
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::info 温馨提示
@@ -195,16 +183,17 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 （1）建立SessionClient继承类。
 
 ```csharp showLineNumbers
-public class MySessionClient : SessionClient
+public sealed class MySessionClient : TcpSessionClient
 {
-    protected override async Task ReceivedData(ReceivedDataEventArgs e)
+    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
         var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
-        await base.ReceivedData(e);
+        
+        await base.OnTcpReceived(e);
     }
 }
 ```
@@ -220,7 +209,12 @@ public class MyService : TcpService<MySessionClient>
         base.LoadConfig(config);
     }
 
-    protected override async Task OnConnecting(MySessionClient SessionClient, ConnectingEventArgs e)
+    protected override MySessionClient NewClient()
+    {
+        return new MySessionClient();
+    }
+
+    protected override async Task OnTcpConnecting(MySessionClient socketClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
 
@@ -228,7 +222,8 @@ public class MyService : TcpService<MySessionClient>
         //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
         //e.IsPermitOperation:指示是否允许该客户端链接。
-        await base.OnConnecting(SessionClient, e);
+
+        await base.OnTcpConnecting(socketClient, e);
     }
 }
 ```
@@ -238,37 +233,18 @@ public class MyService : TcpService<MySessionClient>
 ```csharp showLineNumbers
 MyService service = new MyService();
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts("tcp://127.0.0.1:7789")
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
+await service.SetupAsync(new TouchSocketConfig()//载入配置     
+     .SetListenIPHosts("tcp://127.0.0.1:7789")
+     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+     {
+         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+     })
+     .ConfigurePlugins(a =>
+     {
+         //a.Add();//此处可以添加插件
+     }));
 
-service.Start();//启动
-```
-
-（4）创建服务器（不含MyService）。
-
-```csharp showLineNumbers
-TcpService<MySessionClient> service = new TcpService<MySessionClient>();
-
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(7789, 7790)//同时监听两个地址
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
-
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::tip 建议
@@ -294,10 +270,10 @@ service.Start();//启动
 ```csharp showLineNumbers
 TcpService service = new TcpService();
 
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790));
-    
-service.Start();//启动
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790));
+
+await service.StartAsync();//启动
 ```
 
 ### 8.2 直接添加监听配置
@@ -345,8 +321,8 @@ service.Start();//启动
 
 ```csharp {5,16}
 TcpService service = new TcpService();
-service.Setup(new TouchSocketConfig());
-service.Start();//启动
+await service.SetupAsync(new TouchSocketConfig());
+await service.StartAsync();//启动
 
 service.AddListen(new TcpListenOption()//在Service运行时，可以调用，直接添加监听
 {
@@ -354,7 +330,7 @@ service.AddListen(new TcpListenOption()//在Service运行时，可以调用，�
     Name = "server3",//名称用于区分监听
     ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
     Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                       //还有其他可配置项，都是单独对当前地址有效。
+                                                    //还有其他可配置项，都是单独对当前地址有效。
 });
 
 foreach (var item in service.Monitors)
@@ -381,18 +357,18 @@ service.Received = (client, e) =>
     return EasyTask.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    }));
-service.Start();//启动
+await service.SetupAsync(new TouchSocketConfig()//载入配置     
+     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+     {
+         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+     }));
+await service.StartAsync();//启动
 ```
 
-### 9.2 重写SessionClient处理
+### 9.2 重写TcpSessionClient处理
 
-正如6.2所示，可以直接在MySessionClient的重写**HandleReceivedData**中直接处理数据。
+正如6.2所示，可以直接在MySessionClient的重写**OnTcpReceived**中直接处理数据。
 
 ### 9.3 插件处理 <Tag>推荐</Tag>
 
@@ -425,17 +401,17 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin
 
 ```csharp {10}
 var service = new TcpService();
-service.Setup(new TouchSocketConfig()
-    .SetListenIPHosts(7789)
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.Add<MyPlugin>();
-    }));
-service.Start();
+await service.SetupAsync(new TouchSocketConfig()
+     .SetListenIPHosts(7789)
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();
+     })
+     .ConfigurePlugins(a =>
+     {
+         a.Add<MyPlugin>();
+     }));
+await service.StartAsync();
 ```
 
 :::danger 注意
@@ -447,7 +423,7 @@ service.Start();
 
 ### 9.4 异步阻塞接收 <Tag>推荐</Tag>
 
-异步阻塞接收，即使用await的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。
+异步阻塞接收，即使用`await`的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。
 
 只是在服务器使用异步阻塞时，建议直接在`Connected`触发时相关使用。
 
@@ -466,18 +442,24 @@ class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ITcpSession
                 //receiverResult必须释放
                 using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                 {
-                    if (receiverResult.IsClosed)
+                    //收到的数据，此处的数据会根据适配器投递不同的数据。
+                    var byteBlock = receiverResult.ByteBlock;
+                    var requestInfo=receiverResult.RequestInfo;
+
+                    if (receiverResult.IsCompleted)
                     {
                         //断开连接了
+                        Console.WriteLine($"断开信息：{receiverResult.Message}");
                         return;
                     }
 
-                    //从服务器收到信息。
-                    var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
-                    client.Logger.Info($"客户端接收到信息：{mes}");
+                    //如果数据是从ByteBlock投递
+                    if (byteBlock!=null)
+                    {
+                        Console.WriteLine(Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len));
+                    }
 
-                    //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
-
+                    //如果是适配器信息，则可以直接处理requestInfo;
                 }
             }
         }
@@ -495,19 +477,22 @@ class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ITcpSession
 
 按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SessionClient**的实例，通过**该实例**即可将数据发送至**客户端**。
 
-### 10.1 如何获取SessionClient？
+### 10.1 如何获取TcpSessionClient？
 
 （1）直接获取所有在线客户端
 
-通过`service.GetClients`方法，获取当前在线的所有客户端。
+通过`service.Clients`属性，获取当前在线的所有客户端。
 
 ```csharp showLineNumbers
-var SessionClients = service.GetClients();
+foreach (var sessionClient in service.Clients)
+{
+
+}
 ```
 
 :::caution 注意
 
-由于SessionClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SessionClient.Id，然后再通过服务器查找。
+由于`TcpSessionClient`的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用`TcpSessionClient.Id`，然后再通过服务器查找。
 
 :::  
 
@@ -517,7 +502,7 @@ var SessionClients = service.GetClients();
 
 ```csharp showLineNumbers
 var ids = service.GetIds();
-if (service.TryGetClient(ids.First(), out SessionClient SessionClient))
+if (service.TryGetClient(ids.First(), out var sessionClient))
 {
 }
 ```
