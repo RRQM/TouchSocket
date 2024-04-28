@@ -200,5 +200,18 @@
 			"</Tabs>",
 		],
 		"description": "importTab"
+	},
+	"Mermaid":{
+		"prefix": "Mermaid",
+		"body": [
+			"```mermaid",
+			"graph TD;",
+			"\tA-->B;",
+			"\tA-->C;",
+			"\tB-->D;",
+			"\tC-->D;",
+			"```"
+		],
+		"description": "Mermaid"
 	}
 }
