@@ -1,5 +1,5 @@
 ---
-id: websocketclient
+id: webSessionClient
 title: 创建WebSocket客户端
 ---
 
@@ -28,7 +28,7 @@ import Tag from "@site/src/components/Tag.js";
 ### 3.1 创建常规客户端
 
 ```csharp showLineNumbers
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
@@ -50,7 +50,7 @@ wss://127.0.0.1:7789/ws
 **当连接自定义证书的Ssl：wss://127.0.0.1:7789/ws**
 
 ```csharp showLineNumbers
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
@@ -76,14 +76,14 @@ Console.WriteLine("连接成功");
 
 ## 四、连接服务器
 
-WebSocketClient可以使用默认配置直接连接到服务器，同时也支持使用多种方法定义连接。
+WebSessionClient可以使用默认配置直接连接到服务器，同时也支持使用多种方法定义连接。
 
 ### 4.1 直接连接
 
 使用url直接建立连接，这一般是服务器也只是普通的ws服务器的情况下。
 
 ```csharp showLineNumbers
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -100,7 +100,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 带Query参数连接，实际上还是通过url直接连接。
 
 ```csharp showLineNumbers
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -118,7 +118,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功")
 一般的，当某些服务器安全级别较高时，可能会定制特定的header用于验证连接。
 
 ```csharp showLineNumbers
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -149,7 +149,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
 WebSocket默认情况下是基于GET方式连接的，但是在一些更特殊的情况下，需要以POST，甚至其他方式连接，那么可以使用以下方式实现。
 
 ```csharp showLineNumbers
-using var client = new WebSocketClient();
+using var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -305,7 +305,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 【使用】
 
 ```csharp {10}
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>

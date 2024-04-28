@@ -15,7 +15,7 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
-NamedPipeClient是命名管道系客户端基类，他直接参与管道的连接、发送、接收、处理、断开等，他的业务与服务器的**NamedPipeSocketClient**是一一对应的。
+NamedPipeClient是命名管道系客户端基类，他直接参与管道的连接、发送、接收、处理、断开等，他的业务与服务器的**NamedPipeSessionClient**是一一对应的。
 
 ## 二、特点
 
@@ -175,7 +175,7 @@ client.Connect("TouchSocketPipe");
 ```csharp showLineNumbers
 public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
 {
-    public async Task OnNamedPipeReceived(INamedPipeClientBase client, ReceivedDataEventArgs e)
+    public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。

@@ -84,7 +84,7 @@ service.Logger.Info("服务器已启动");
 /// <param name="client"></param>
 /// <param name="context"></param>
 /// <returns></returns>
-private static bool VerifyConnection(IHttpSocketClient client, HttpContext context)
+private static bool VerifyConnection(IHttpSessionClient client, HttpContext context)
 {
     if (!context.Request.IsUpgrade())//如果不包含升级协议的header，就直接返回false。
     {
@@ -168,9 +168,9 @@ public class MyServer : RpcServer
     [WebApi(HttpMethodType.GET)]
     public void ConnectWS(IWebApiCallContext callContext)
     {
-        if (callContext.Caller is HttpSocketClient socketClient)
+        if (callContext.Caller is HttpSessionClient SessionClient)
         {
-            if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
+            if (SessionClient.SwitchProtocolToWebSocket(callContext.HttpContext))
             {
                 m_logger.Info("WS通过WebApi连接");
             }
@@ -184,9 +184,9 @@ public class MyServer : RpcServer
 使用上下文直接创建的优点在于能更加个性化的实现`WebSocket`的连接。
 
 ```csharp showLineNumbers
-class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSocketClient>
+class MyHttpPlugin : PluginBase, IHttpPlugin<IHttpSessionClient>
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/GetSwitchToWebSocket"))
         {
@@ -398,17 +398,17 @@ private static HttpService CreateHttpService()
 
 ## 六、回复、响应数据
 
-要回复`Websocket`消息，必须使用**HttpSocketClient**对象。
+要回复`Websocket`消息，必须使用**HttpSessionClient**对象。
 
-### 6.1 如何获取SocketClient？
+### 6.1 如何获取SessionClient？
 
 #### （1）直接获取所有在线客户端
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
 ```csharp showLineNumbers
-HttpSocketClient[] socketClients = service.GetClients();
-foreach (var item in socketClients)
+HttpSessionClient[] SessionClients = service.GetClients();
+foreach (var item in SessionClients)
 {
     if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
     {
@@ -422,17 +422,17 @@ foreach (var item in socketClients)
 
 :::caution 注意
 
-由于`HttpSocketClient`的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用`HttpSocketClient.Id`，然后再通过服务器查找。
+由于`HttpSessionClient`的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用`HttpSessionClient.Id`，然后再通过服务器查找。
 
 :::  
 
 #### （2）通过Id获取
 
-先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过`TryGetSocketClient`方法，获取到想要的客户端。
+先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过`TryGetClient`方法，获取到想要的客户端。
 
 ```csharp showLineNumbers
 string[] ids = service.GetIds();
-if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
+if (service.TryGetClient(ids[0], out HttpSessionClient SessionClient))
 {
 }
 ```
@@ -440,13 +440,13 @@ if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
 ### 6.2 发送文本类消息
 
 ```csharp showLineNumbers
-socketClient.WebSocket.Send("Text");
+SessionClient.WebSocket.Send("Text");
 ```
 
 ### 6.3 发送二进制消息
 
 ```csharp showLineNumbers
-socketClient.WebSocket.Send(new byte[10]);
+SessionClient.WebSocket.Send(new byte[10]);
 ```
 
 
@@ -462,7 +462,7 @@ frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
 
-socketClient.WebSocket.Send(frame);
+SessionClient.WebSocket.Send(frame);
 ```
 
 

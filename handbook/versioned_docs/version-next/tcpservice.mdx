@@ -12,7 +12,7 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
-TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SocketClient**类实例。而**SocketClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
+TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是配置、激活、管理、注销、重建**SessionClient**类实例。而**SessionClient**是当**TcpClient（客户端）**成功连接服务器以后，由服务器新建的一个实例类，后续的所有通信，也都是通过该实例完成的。
 
 ## 二、特点
 
@@ -44,9 +44,9 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 
 ## 四、服务器架构
 
-服务器在收到**新客户端连接**时，会创建一个SocketClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
+服务器在收到**新客户端连接**时，会创建一个SessionClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
 
-SocketClient在Service里面以字典映射。ID为键，SocketClient本身为值。
+SessionClient在Service里面以字典映射。ID为键，SessionClient本身为值。
 
 <img src={require('@site/static/img/docs/createtcpservice-2.png').default} width="500" />
 
@@ -117,13 +117,13 @@ Ssl配置，为Null时则不启用。
 | ITcpReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | ITcpReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | ITcpSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
-| IIdChangedPlugin | 当SocketClient的ID发生改变时触发。 |
+| IIdChangedPlugin | 当SessionClient的ID发生改变时触发。 |
 
 ## 七、创建TcpService
 
 ### 7.1 简单创建
 
-直接初始化TcpService，会使用默认的**SocketClient**。
+直接初始化TcpService，会使用默认的**SessionClient**。
 简单的处理逻辑可通过**Connecting**、**Connected**、**Received**等委托直接实现。
 
 代码如下：
@@ -184,10 +184,10 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 
 代码如下：
 
-（1）建立SocketClient继承类。
+（1）建立SessionClient继承类。
 
 ```csharp showLineNumbers
-public class MySocketClient : SocketClient
+public class MySessionClient : SessionClient
 {
     protected override async Task ReceivedData(ReceivedDataEventArgs e)
     {
@@ -204,7 +204,7 @@ public class MySocketClient : SocketClient
 （2）建立TcpService继承类。实际上如果业务不涉及服务器配置的话，可以省略该步骤，使用**TcpService的泛型**直接创建。
 
 ```csharp showLineNumbers
-public class MyService : TcpService<MySocketClient>
+public class MyService : TcpService<MySessionClient>
 {
     protected override void LoadConfig(TouchSocketConfig config)
     {
@@ -212,7 +212,7 @@ public class MyService : TcpService<MySocketClient>
         base.LoadConfig(config);
     }
 
-    protected override async Task OnConnecting(MySocketClient socketClient, ConnectingEventArgs e)
+    protected override async Task OnConnecting(MySessionClient SessionClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
 
@@ -220,7 +220,7 @@ public class MyService : TcpService<MySocketClient>
         //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
         //e.IsPermitOperation:指示是否允许该客户端链接。
-        await base.OnConnecting(socketClient, e);
+        await base.OnConnecting(SessionClient, e);
     }
 }
 ```
@@ -247,7 +247,7 @@ service.Start();//启动
 （4）创建服务器（不含MyService）。
 
 ```csharp showLineNumbers
-TcpService<MySocketClient> service = new TcpService<MySocketClient>();
+TcpService<MySessionClient> service = new TcpService<MySessionClient>();
 
 service.Setup(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(7789, 7790)//同时监听两个地址
@@ -382,9 +382,9 @@ service.Setup(new TouchSocketConfig()//载入配置
 service.Start();//启动
 ```
 
-### 9.2 重写SocketClient处理
+### 9.2 重写SessionClient处理
 
-正如6.2所示，可以直接在MySocketClient的重写**HandleReceivedData**中直接处理数据。
+正如6.2所示，可以直接在MySessionClient的重写**HandleReceivedData**中直接处理数据。
 
 ### 9.3 插件处理 <Tag>推荐</Tag>
 
@@ -399,7 +399,7 @@ service.Start();//启动
 ```csharp showLineNumbers
 public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
-    public Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+    public Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -446,9 +446,9 @@ service.Start();
 下列将以插件为例：
 
 ```csharp showLineNumbers
-class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ISocketClient>
+class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ITcpSessionClient>
 {
-    public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
+    public async Task OnTcpConnected(ITcpSessionClient client, ConnectedEventArgs e)
     {
         //receiver可以复用，不需要每次接收都新建
         using (var receiver = client.CreateReceiver())
@@ -485,31 +485,31 @@ class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ISocketClie
 
 ## 十、发送数据
 
-按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SocketClient**的实例，通过**该实例**即可将数据发送至**客户端**。
+按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SessionClient**的实例，通过**该实例**即可将数据发送至**客户端**。
 
-### 10.1 如何获取SocketClient？
+### 10.1 如何获取SessionClient？
 
 （1）直接获取所有在线客户端
 
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
 ```csharp showLineNumbers
-var socketClients = service.GetClients();
+var SessionClients = service.GetClients();
 ```
 
 :::caution 注意
 
-由于SocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SocketClient.Id，然后再通过服务器查找。
+由于SessionClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用SessionClient.Id，然后再通过服务器查找。
 
 :::  
 
 （2）通过Id获取
 
-先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetSocketClient方法，获取到想要的客户端。
+先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetClient方法，获取到想要的客户端。
 
 ```csharp showLineNumbers
 var ids = service.GetIds();
-if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
+if (service.TryGetClient(ids.First(), out SessionClient SessionClient))
 {
 }
 ```
@@ -518,7 +518,7 @@ if (service.TryGetSocketClient(ids.First(), out SocketClient socketClient))
 
 【同步发送】
 
-SocketClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
+SessionClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 ```csharp showLineNumbers
 public virtual void Send(byte[] buffer);
 public virtual void Send(ByteBlock byteBlock);
