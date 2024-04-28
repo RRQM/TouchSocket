@@ -9,6 +9,15 @@ module.exports = {
   favicon: "img/favicon.ico",
   projectName: "TouchSocket",
   scripts: [],
+  i18n: {
+    defaultLocale: 'zh',
+    locales: ['zh'],
+    localeConfigs: {
+      zh: {
+        htmlLang: 'zh-cn',
+      },
+    },
+  },
   themeConfig: {
     zoom: {
       selector:
@@ -168,7 +177,6 @@ module.exports = {
       },
     ],
   ],
-  plugins: [require.resolve("docusaurus-plugin-image-zoom")],
   themes: [
     [
       "@easyops-cn/docusaurus-search-local",

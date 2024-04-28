@@ -1,37 +1,17 @@
-// /**
-//  * Creating a sidebar enables you to:
-//  - create an ordered group of docs
-//  - render a sidebar for each doc of that group
-//  - provide next/previous navigation
+import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-//  The sidebars can be generated from the filesystem, or explicitly defined here.
+/**
+ * Creating a sidebar enables you to:
+ - create an ordered group of docs
+ - render a sidebar for each doc of that group
+ - provide next/previous navigation
 
-//  Create as many sidebars as you want.
-//  */
+ The sidebars can be generated from the filesystem, or explicitly defined here.
 
-// // @ts-check
+ Create as many sidebars as you want.
+ */
 
-// /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
-// const sidebars = {
-
-//   // But you can create a sidebar manually
-  
-//   tutorialSidebar: [
-//     'intro',
-//     'hello',
-//     {
-//       type: 'category',
-//       label: 'Tutorial',
-//       items: ['tutorial-basics/create-a-document'],
-//     },
-//   ],
-   
-// };
-
-// module.exports = sidebars;
-
-
-module.exports = {
+ module.exports = {
   docs: [
     {
       type: "doc",
@@ -669,4 +649,3 @@ module.exports = {
     }
   ]
 };
-
