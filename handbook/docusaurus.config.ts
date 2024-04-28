@@ -1,5 +1,13 @@
+// @ts-check
+// `@type` JSDoc annotations allow editor autocompletion and type checking
+// (when paired with `@ts-check`).
+// There are various equivalent ways to declare your Docusaurus config.
+// See: https://docusaurus.io/docs/api/docusaurus-config
 
-module.exports = {
+import { themes as prismThemes } from 'prism-react-renderer';
+
+/** @type {import('@docusaurus/types').Config} */
+const config = {
   title: "TouchSocket",
   tagline: "网络开发",
   url: "https://touchsocket.net/",
@@ -18,136 +26,18 @@ module.exports = {
       },
     },
   },
-  themeConfig: {
-    zoom: {
-      selector:
-        ".markdown :not(em) > img,.markdown > img, article img[loading]",
-      background: {
-        light: "rgb(255, 255, 255)",
-        dark: "rgb(50, 50, 50)",
-      },
-      // options you can specify via https://github.com/francoischalifour/medium-zoom#usage
-      config: {},
-    },
-    docs: {
-      sidebar: {
-        hideable: true,
-        autoCollapseCategories: true,
-      },
-    },
-    prism: {
-      additionalLanguages: ["powershell", "csharp", "sql"],
-    },
-    navbar: {
-      title: "TouchSocket",
-      logo: {
-        alt: "TouchSocket Logo",
-        src: "img/TouchSocketlogo.png",
-      },
-      hideOnScroll: true,
-      items: [
-        {
-          label: "更新日志",
-          position: "left",
-          to: "docs/current/upgrade"
-        },
-        {
-          label: "博客",
-          position: "left",
-          to: "docs/current/blog"
-        },
-        {
-          label: "视频",
-          position: "left",
-          to: "docs/current/video"
-        },
-        {
-          label: "API手册",
-          position: "left",
-          to: "https://rrqm_home.gitee.io/touchsocketapidoc"
-        },
-        {
-          label: "版本",
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownItemsAfter: [],
-          dropdownActiveClassDisabled: true,
-        },
-        {
-          label: "源码",
-          position: "right",
-          items: [
-            {
-              label: "Gitee（主库）",
-              href: "https://gitee.com/rrqm_home/touchsocket",
-            },
-            {
-              label: "GitHub",
-              href: "https://github.com/RRQM/TouchSocket",
-            },
-            {
-              label: "Nuget",
-              href: "https://www.nuget.org/profiles/rrqm",
-            },
-          ],
-        },
-        {
-          label: "社区",
-          position: "right",
-          href: "https://gitee.com/dotnetchina",
-        },
-      ],
-    },
-    footer: {
-      style: "dark",
-      links: [
-        {
-          title: "文档",
-          items: [
-            {
-              label: "入门",
-              to: "docs/current",
-            },
-            {
-              label: "手册",
-              to: "docs/current",
-            },
-          ],
-        },
-        {
-          title: "社区",
-          items: [
-            {
-              label: "讨论",
-              href: "https://gitee.com/rrqm_home/touchsocket/issues",
-            },
-            {
-              label: "看板",
-              href: "https://gitee.com/rrqm_home/touchsocket/board",
-            },
-          ],
-        },
-        {
-          title: "更多",
-          items: [
-            {
-              label: "仓库",
-              href: "https://gitee.com/rrqm_home/touchsocket",
-            },
-          ],
-        },
-      ],
-      copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗  <a href="https://beian.miit.gov.cn/">赣ICP备2024022829号-1</a>`,
-    },
-  },
+
   presets: [
     [
-      "@docusaurus/preset-classic",
-      {
+      'classic',
+      /** @type {import('@docusaurus/preset-classic').Options} */
+      ({
         docs: {
-          sidebarPath: require.resolve("./sidebars.js"),
+          sidebarPath: './sidebars.ts',
+          // Please change this to your repo.
+          // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
+            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
           showLastUpdateTime: true,
           showLastUpdateAuthor: true,
           sidebarCollapsible: true,
@@ -161,31 +51,177 @@ module.exports = {
             next: {
               label: '2.1.0-alpha',
               path: '/next',
-              banner:'unreleased'
+              banner: 'unreleased'
             }
           },
-          // sidebarCollapsible: true,
         },
         // blog: {
         //   showReadingTime: true,
+        //   // Please change this to your repo.
+        //   // Remove this to remove the "edit this page" links.
         //   editUrl:
-        //     "https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/",
+        //     'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         // },
         theme: {
-          customCss: require.resolve("./src/css/custom.css"),
+          customCss: './src/css/custom.css',
         },
-      },
+      }),
     ],
   ],
+
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      zoom: {
+        selector:
+          ".markdown :not(em) > img,.markdown > img, article img[loading]",
+        background: {
+          light: "rgb(255, 255, 255)",
+          dark: "rgb(50, 50, 50)",
+        },
+        // options you can specify via https://github.com/francoischalifour/medium-zoom#usage
+        config: {},
+      },
+      docs: {
+        sidebar: {
+          hideable: true,
+          autoCollapseCategories: true,
+        },
+      },
+      prism: {
+        additionalLanguages: ["powershell", "csharp", "sql"],
+      },
+      navbar: {
+        title: "TouchSocket",
+        logo: {
+          alt: "TouchSocket Logo",
+          src: "img/TouchSocketlogo.png",
+        },
+        hideOnScroll: true,
+        items: [
+          {
+            label: "更新日志",
+            position: "left",
+            to: "docs/current/upgrade"
+          },
+          {
+            label: "博客",
+            position: "left",
+            to: "docs/current/blog"
+          },
+          {
+            label: "视频",
+            position: "left",
+            to: "docs/current/video"
+          },
+          {
+            label: "API手册",
+            position: "left",
+            to: "https://rrqm_home.gitee.io/touchsocketapidoc"
+          },
+          {
+            label: "版本",
+            type: 'docsVersionDropdown',
+            position: 'right',
+            dropdownItemsAfter: [],
+            dropdownActiveClassDisabled: true,
+          },
+          {
+            label: "源码",
+            position: "right",
+            items: [
+              {
+                label: "Gitee（主库）",
+                href: "https://gitee.com/rrqm_home/touchsocket",
+              },
+              {
+                label: "GitHub",
+                href: "https://github.com/RRQM/TouchSocket",
+              },
+              {
+                label: "Nuget",
+                href: "https://www.nuget.org/profiles/rrqm",
+              },
+            ],
+          },
+          {
+            label: "社区",
+            position: "right",
+            href: "https://gitee.com/dotnetchina",
+          },
+        ],
+      },
+      footer: {
+        style: "dark",
+        links: [
+          {
+            title: "文档",
+            items: [
+              {
+                label: "入门",
+                to: "docs/current",
+              },
+              {
+                label: "手册",
+                to: "docs/current",
+              },
+            ],
+          },
+          {
+            title: "社区",
+            items: [
+              {
+                label: "讨论",
+                href: "https://gitee.com/rrqm_home/touchsocket/issues",
+              },
+              {
+                label: "看板",
+                href: "https://gitee.com/rrqm_home/touchsocket/board",
+              },
+            ],
+          },
+          {
+            title: "更多",
+            items: [
+              {
+                label: "仓库",
+                href: "https://gitee.com/rrqm_home/touchsocket",
+              },
+            ],
+          },
+        ],
+        copyright: `Copyright © 2020-${new Date().getFullYear()} 若汝棋茗  <a href="https://beian.miit.gov.cn/">赣ICP备2024022829号-1</a>`,
+      },
+      mermaid: {
+        theme: { light: 'neutral', dark: 'forest' },
+        options: {
+          maxTextSize: 500,
+        },
+      },
+    }),
+
+  markdown: {
+    mermaid: true,
+  },
   themes: [
+    ['@docusaurus/theme-mermaid',
+      {
+        theme: { light: 'neutral', dark: 'forest' },
+        options: {
+          maxTextSize: 500,
+        },
+      }
+    ],
     [
       "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
-        language: ["zh","en"],
+        language: ["zh", "en"],
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
       },
     ],
-  ],
+  ]
 };
+
+export default config;
