@@ -245,7 +245,7 @@ private static TcpService CreateService()
 面对上述情况，我们可以封装以下函数使用：
 
 ```csharp showLineNumbers
-public class MySocketClient : SimpleSocketClient
+public class MySessionClient : SimpleSessionClient
 {
     public void Up_Go_Send(byte[] data)
     {

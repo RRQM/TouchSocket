@@ -36,7 +36,7 @@ public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
         return a + b;
     }
 
-    //当第一个参数，直接或间接实现ITcpClientBase接口时，会收集到当前请求的客户端，从而可以获取IP等。
+    //当第一个参数，直接或间接实现ITcpSession接口时，会收集到当前请求的客户端，从而可以获取IP等。
     public SumClass SumCommand(IHttpClientBase client, SumClass sumClass)
     {
         sumClass.Sum = sumClass.A + sumClass.B;
@@ -76,7 +76,7 @@ service.Start();
 以事务方法的**方法名**为第一个参数（不包含Command），后续参数直接写，多个参数用**空格**隔开。例如：`Add 10 20`
 
 ```csharp {18} 
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {

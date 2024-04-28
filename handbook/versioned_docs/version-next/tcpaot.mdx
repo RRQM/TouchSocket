@@ -71,7 +71,7 @@ internal partial class MyServicePluginClass : PluginBase
 partial class TcpServiceReceivedPlugin : PluginBase
 {
     [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
         var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
@@ -112,7 +112,7 @@ partial class ClosePlugin : PluginBase
     }
 
     [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         try
         {

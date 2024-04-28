@@ -50,9 +50,9 @@ var remoteStream = client.GetDmtpRemoteStreamActor().LoadRemoteStream(metadata);
 响应端定义一个插件，实现`IDmtpRemoteStreamPlugin`，然后实现需要载入的具体流信息。示例中是以`MemoryStream`作为流主体。
 
 ```csharp showLineNumbers
-internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSocketClient>
+internal class MyRemoteStreamPlugin : PluginBase, IDmtpRemoteStreamPlugin<ITcpDmtpSessionClient>
 {
-    public async Task OnLoadingStream(ITcpDmtpSocketClient client, LoadingStreamEventArgs e)
+    public async Task OnLoadingStream(ITcpDmtpSessionClient client, LoadingStreamEventArgs e)
     {
         if (e.Metadata["tag"] == "tag1")
         {

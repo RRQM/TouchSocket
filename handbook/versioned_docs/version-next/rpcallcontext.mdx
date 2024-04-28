@@ -39,7 +39,7 @@ public class MyRpcServer : RpcServer
     [DmtpRpc]
     public bool Login(ICallContext callContext,string account,string password)
     {
-        if (callContext.Caller is TcpDmtpSocketClient)
+        if (callContext.Caller is TcpDmtpSessionClient)
         {
             Console.WriteLine("TcpDmtpRpc请求");
         }
@@ -68,7 +68,7 @@ public class MyRpcServer : TransientRpcServer
     [DmtpRpc]
     public bool Login(string account,string password)
     {
-        if ( this.CallContext.Caller is TcpDmtpSocketClient)
+        if ( this.CallContext.Caller is TcpDmtpSessionClient)
         {
             Console.WriteLine("TcpDmtpRpc请求");
         }
@@ -88,7 +88,7 @@ public class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
     [DmtpRpc]
     public bool Login(string account, string password)
     {
-        if (this.CallContext.Caller is TcpDmtpSocketClient)
+        if (this.CallContext.Caller is TcpDmtpSessionClient)
         {
             Console.WriteLine("TcpDmtpRpc请求");
         }
@@ -151,7 +151,7 @@ public async Task<int> TestCancellationToken(ICallContext callContext)
 
 一般的:
 
-- `Caller`属性就是调用的触发终端。例如：使用DmtpRpc-Tcp，由客户端调用服务器时，`Caller`就是`TcpDmtpSocketClient`。
+- `Caller`属性就是调用的触发终端。例如：使用DmtpRpc-Tcp，由客户端调用服务器时，`Caller`就是`TcpDmtpSessionClient`。
 - `RpcMethod`属性就是调用的触发方法。
 - 其他参数可以参阅注释帮助理解。
 

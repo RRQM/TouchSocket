@@ -283,11 +283,11 @@ IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
 
 ### 5.3 服务器向客户端请求文件
 
-服务器主动向客户端请求文件，必须通过Id，找到其`SocketClient`的派生类。
+服务器主动向客户端请求文件，必须通过Id，找到其`SessionClient`的派生类。
 
 ```csharp showLineNumbers
 string targetId="targetId";
-if (!service.TryGetSocketClient(targetId, out var socketClient))
+if (!service.TryGetClient(targetId, out var SessionClient))
 {
     throw new Exception($"没有找到Id={targetId}的客户端");
 }
@@ -318,21 +318,21 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
     {
         loop.Dispose();
     }
-    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+    SessionClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
 });
 
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 ### 5.4 服务器向客户端推送文件
 
-服务器主动向客户端推送文件，必须通过Id，找到其`SocketClient`的派生类。
+服务器主动向客户端推送文件，必须通过Id，找到其`SessionClient`的派生类。
 
 ```csharp showLineNumbers
-if (!service.TryGetSocketClient(targetId, out var socketClient))
+if (!service.TryGetClient(targetId, out var SessionClient))
 {
     throw new Exception($"没有找到Id={targetId}的客户端");
 }
@@ -363,13 +363,13 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
     {
         loop.Dispose();
     }
-    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+    SessionClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
 });
 
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-IResult result = socketClient.GetDmtpFileTransferActor().PushFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PushFile(fileOperator);
 ```
 
 ### 5.5 客户端之间传输文件
@@ -486,7 +486,7 @@ var fileOperator = new FileOperator()//实例化本次传输的控制器，用�
     Token = tokenSource.Token
 };
 
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 ### 7.1 使用CancellationFileOperator 
@@ -502,7 +502,7 @@ var fileOperator = new CancellationFileOperator()//实例化本次传输的控�
 //模拟五秒后自动取消传输，或者直接Cancel
 fileOperator.CancelAfter(TimeSpan.FromSeconds(5));
 
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 :::tip 提示

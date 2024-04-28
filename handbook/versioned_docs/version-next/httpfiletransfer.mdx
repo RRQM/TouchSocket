@@ -20,7 +20,7 @@ title: Http文件传输
 ```csharp
 internal class MyHttpPlug : HttpPluginBase
 {
-    protected override void OnGet(ITcpClientBase client, HttpContextEventArgs e)
+    protected override void OnGet(ITcpSession client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/file"))
         {
@@ -41,7 +41,7 @@ internal class MyHttpPlug : HttpPluginBase
 ```csharp
 internal class MyHttpPlug : HttpPluginBase
 {
-    protected override void OnPost(ITcpClientBase client, HttpContextEventArgs e)
+    protected override void OnPost(ITcpSession client, HttpContextEventArgs e)
     {
         if (e.Context.Request.UrlEquals("/uploadfile"))
         {

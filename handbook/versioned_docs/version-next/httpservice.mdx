@@ -26,7 +26,7 @@ title: 创建HttpService
 
 ## 四、服务器架构
 
-服务器在收到新客户端连接时，会创建一个HttpSocketClient的派生类实例，与远程HttpClient对应，后续的数据通信均由此实例负责。
+服务器在收到新客户端连接时，会创建一个HttpSessionClient的派生类实例，与远程HttpClient对应，后续的数据通信均由此实例负责。
 
 <img src={require('@site/static/img/docs/createhttpservice-1.png').default} width="500" />
 
@@ -110,9 +110,9 @@ string value = e.Context.Request.Forms["key"];
 #### 6.3.1 Get请求
 
 ```csharp showLineNumbers
-public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
+public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSessionClient>
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.IsGet())
         {
@@ -134,9 +134,9 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
 #### 6.3.2 Get文件请求
 
 ```csharp showLineNumbers
-public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
+public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSessionClient>
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.IsGet())
         {
@@ -167,9 +167,9 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
 #### 6.3.3 Get页面请求
 
 ```csharp showLineNumbers
-public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
+public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSessionClient>
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.IsGet())
         {
@@ -209,9 +209,9 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
 #### 6.3.4 Post文件请求
 
 ```csharp showLineNumbers
-public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSocketClient>
+public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSessionClient>
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         if (e.Context.Request.IsPost())
         {

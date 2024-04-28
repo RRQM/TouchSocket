@@ -44,14 +44,14 @@ NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
 ```csharp showLineNumbers
  internal class MyNATService : NATService
 {
-    protected override async Task OnConnected(NATSocketClient socketClient, ConnectedEventArgs e)
+    protected override async Task OnConnected(NATSessionClient SessionClient, ConnectedEventArgs e)
     {
-        await base.OnConnected(socketClient, e);
+        await base.OnConnected(SessionClient, e);
         try
         {
             //此处模拟的是只要连接到NAT服务器，就转发。
             //实际上，这个方法可以随时调用。
-            socketClient.AddTargetClient(new TouchSocketConfig()
+            SessionClient.AddTargetClient(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigurePlugins(a =>
                 {
@@ -59,26 +59,26 @@ NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
         }
         catch (Exception ex)
         {
-            socketClient.Logger.Exception(ex);
+            SessionClient.Logger.Exception(ex);
         }
     }
 
-    protected override void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, DisconnectEventArgs e)
+    protected override void OnTargetClientDisconnected(NATSessionClient SessionClient, ITcpClient tcpClient, DisconnectEventArgs e)
     {
-        socketClient.Logger.Info($"{socketClient.IP}:{socketClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
-        base.OnTargetClientDisconnected(socketClient, tcpClient, e);
+        SessionClient.Logger.Info($"{SessionClient.IP}:{SessionClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
+        base.OnTargetClientDisconnected(SessionClient, tcpClient, e);
     }
 
-    protected override byte[] OnNATReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
+    protected override byte[] OnNATReceived(NATSessionClient SessionClient, ReceivedDataEventArgs e)
     {
         //服务器收到的数据
-        return base.OnNATReceived(socketClient, e);
+        return base.OnNATReceived(SessionClient, e);
     }
 
-    protected override byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
+    protected override byte[] OnTargetClientReceived(NATSessionClient SessionClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
     {
         //连接的客户端收到的数据
-        return base.OnTargetClientReceived(socketClient, tcpClient, e);
+        return base.OnTargetClientReceived(SessionClient, tcpClient, e);
     }
 }
 ```
@@ -90,7 +90,7 @@ try
 {
     //此处模拟的是只要连接到NAT服务器，就转发。
     //实际上，这个方法可以随时调用。
-    socketClient.AddTargetClient(new TouchSocketConfig()
+    SessionClient.AddTargetClient(new TouchSocketConfig()
         .SetRemoteIPHost("127.0.0.1:7789")
         .ConfigurePlugins(a=> 
         {
@@ -99,6 +99,6 @@ try
 }
 catch (Exception ex)
 {
-    socketClient.Logger.Exception(ex);
+    SessionClient.Logger.Exception(ex);
 }
 ```

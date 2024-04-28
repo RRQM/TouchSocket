@@ -47,9 +47,9 @@ class MyCommandLinePlugin : TcpCommandLinePlugin
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public int MULCommand(ISocketClient socketClient,int a, int b)
+    public int MULCommand(ITcpSessionClient SessionClient,int a, int b)
     {
-        this.logger.Info($"{socketClient.IP}:{socketClient.Port}执行{nameof(MULCommand)}");
+        this.logger.Info($"{SessionClient.IP}:{SessionClient.Port}执行{nameof(MULCommand)}");
         return a * b;
     }
 

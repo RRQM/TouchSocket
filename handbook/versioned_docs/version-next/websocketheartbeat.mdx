@@ -45,7 +45,7 @@ service.Start();
 #### 2.2 客户端使用心跳插件
 
 ```csharp {10-11}
-var client = new WebSocketClient();
+var client = new WebSessionClient();
 client.Setup(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
