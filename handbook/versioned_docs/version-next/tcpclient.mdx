@@ -297,5 +297,63 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 ::: 
 
+# 九、断线重连
+
+断线重连，即tcp客户端在断开服务器后，主动发起的再次连接请求。
+
+### 9.1 触发型重连
+
+触发型重连，依靠的是Tcp断开事件（Closed）发生时，再次尝试连接。所以，这就要求客户端在初始时，至少完成一次连接。
+
+```csharp {8,11} showLineNumbers
+var tcpClient = new TcpClient();
+
+//载入配置
+await tcpClient.SetupAsync(new TouchSocketConfig()
+      .SetRemoteIPHost("127.0.0.1:7789")
+      .ConfigurePlugins(a => 
+      {
+          a.UseTcpReconnection();
+      }));
+
+await tcpClient.ConnectAsync();//调用连接
+```
+:::caution 注意
+
+**触发重连，必须满足以下几个要求：**
+
+1. 必须完成第一次连接。
+2. 必须是被动断开，如果是客户端主动调用Close、Disposed等方法主动断开的话，一般不会生效。
+3. 必须有显式的断开信息，也就是说，直接拔网线的话，不会立即生效，会等tcp保活到期后再生效。
+
+:::  
+
+
+### 9.2 使用Polling轮询连接插件
+
+使用Polling断线重连，是一种无人值守的连接方式，它不要求首次连接。
+
+```csharp showLineNumbers
+.ConfigurePlugins(a => 
+{
+    a.UseTcpReconnection()
+    .UsePolling(TimeSpan.FromSeconds(1));
+})
+```
+
+:::caution 注意
+
+**Polling重连，必须满足以下几个要求：**
+
+1. 必须有显式的断开信息，也就是说，直接拔网线的话，也不会立即生效，会等tcp保活到期后再生效。
+
+:::  
+
+:::tip 提示
+
+UseReconnection插件，可以通过设置SetActionForCheck，自己规定检查活性的方法。默认情况下，只会检验Online属性，所以无法检验出断网等情况。如果自己控制，则可以发送心跳包，以保证在线状态。
+
+:::  
+
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp)
 
