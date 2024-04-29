@@ -35,7 +35,16 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 
 `NamedPipeSessionClient`在Service里面以字典映射。Id为键，`NamedPipeSessionClient`本身为值。
 
-<img src={require('@site/static/img/docs/namedpipeservice-1.png').default} width="500" />
+```mermaid
+flowchart TD;
+    Service-->NamedPipeSessionClient-1;
+    Service-->NamedPipeSessionClient-2;
+    Service-->NamedPipeSessionClient-3;
+    NamedPipeSessionClient-1-->NamedPipeClient-1;
+    NamedPipeSessionClient-2-->NamedPipeClient-2;
+    NamedPipeSessionClient-3-->NamedPipeClient-3;
+   
+```
 
 ## 五、可配置项
 
@@ -58,13 +67,6 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 #### SetMaxCount
 最大可连接数，默认为10000 
 
-#### UseDelaySender（暂未实现）
-使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用**延迟算法**。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-1. 如果一个包大于512kb，则不会延迟，直接发送。
-2. 如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10**微秒**左右），则会将这两个包压缩为一个包发送。
-
 </div>
 </details>
 
@@ -75,8 +77,8 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 | --- | --- |
 | INamedPipeConnectingPlugin | 此时管道实际上已经完成连接，但是并没有启动接收，然后触发。 |
 | INamedPipeConnectedPlugin | 同意连接，且成功启动接收后触发 |
-| INamedPipeDisconnectingPlugin | 当客户端主动调用Close时触发 |
-| INamedPipeDisconnectedPlugin | 当客户端断开连接后触发 |
+| INamedPipeClosingPlugin | 当客户端主动调用Close时触发 |
+| INamedPipeClosedPlugin | 当客户端断开连接后触发 |
 | INamedPipeReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | INamedPipeReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | INamedPipeSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
@@ -94,9 +96,9 @@ NamedPipeService是命名管道系服务器基类，它不参与实际的数据�
 ```csharp showLineNumbers
 var service = new NamedPipeService();
 service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在连接
-service.Connected = (client, e) => {return EasyTask.CompletedTask; };//有客户端成功连接
-service.Disconnecting = (client, e) => {return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
-service.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//有客户端断开连接
+service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
+service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
+service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
 service.Received = (client, e) =>
 {
     //从客户端收到信息
@@ -121,23 +123,23 @@ service.Received = (client, e) =>
     return Task.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetPipeName("TouchSocketPipe")//设置命名管道名称
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+     })
+     .ConfigurePlugins(a =>
+     {
+         //a.Add();//此处可以添加插件
+     }));
 
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::info 温馨提示
 
-Service.Start()方法并不会阻塞当前运行，所以当在控制台运行时，可能需要使用Console.ReadKey()等操作进行阻塞。
+Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运行时，可能需要使用Console.ReadKey()等操作进行阻塞。
 
 :::  
 
@@ -152,14 +154,14 @@ Service.Start()方法并不会阻塞当前运行，所以当在控制台运行�
 ```csharp showLineNumbers
 public class MySessionClient : NamedPipeSessionClient
 {
-    protected override async Task ReceivedData(ReceivedDataEventArgs e)
+    protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
         string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
-        await base.ReceivedData(e);
+        await base.OnNamedPipeReceived(e);
     }
 }
 ```
@@ -175,7 +177,12 @@ public class MyService : NamedPipeService<MySessionClient>
         base.LoadConfig(config);
     }
 
-    protected override async Task OnConnecting(MySessionClient SessionClient, ConnectingEventArgs e)
+    protected override MySessionClient NewClient()
+    {
+        return new MySessionClient();
+    }
+
+    protected override Task OnNamedPipeConnecting(MySessionClient socketClient, ConnectingEventArgs e)
     {
         //此处逻辑会多线程处理。
 
@@ -183,7 +190,7 @@ public class MyService : NamedPipeService<MySessionClient>
         //但是按照需求，您可以自定义设置，例如设置为其IP地址。但是需要注意的是id必须在生命周期内唯一。
 
         //e.IsPermitOperation:指示是否允许该客户端链接。
-        await base.OnConnecting(SessionClient, e);
+        return base.OnNamedPipeConnecting(socketClient, e);
     }
 }
 ```
@@ -192,37 +199,7 @@ public class MyService : NamedPipeService<MySessionClient>
 
 ```csharp showLineNumbers
 var service = new MyService();
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
-
-service.Start();//启动
-```
-
-（4）创建服务器（不含MyService）。
-
-```csharp showLineNumbers
-var service = new NamedPipeService<MySessionClient>();
-
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
-
-service.Start();//启动
+await service.StartAsync("TouchSocketPipe");//设置命名管道名称，启动
 ```
 
 :::tip 建议
@@ -239,10 +216,10 @@ service.Start();//启动
 
 ```csharp showLineNumbers
 var service = new NamedPipeService();
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetPipeName("TouchSocketPipe"));//设置命名管道名称
-    
-service.Start();//启动
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetPipeName("TouchSocketPipe"));//设置命名管道名称
+
+await service.StartAsync();//启动
 ```
 
 ### 8.2 直接添加监听配置
@@ -251,34 +228,33 @@ service.Start();//启动
 
 ```csharp showLineNumbers
 var service = new NamedPipeService();
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetPipeName("TouchSocketPipe")//设置默认命名管道名称
-    .SetNamedPipeListenOptions(list =>
-    {
-        //如果想实现多个命名管道的监听，即可这样设置，一直Add即可。
-        list.Add(new NamedPipeListenOption()
-        {
-            Adapter = () => new NormalDataHandlingAdapter(),
-            Name = "TouchSocketPipe2"//管道名称
-        });
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetPipeName("TouchSocketPipe")//设置默认命名管道名称
+     .SetNamedPipeListenOptions(list =>
+     {
+         //如果想实现多个命名管道的监听，即可这样设置，一直Add即可。
+         list.Add(new NamedPipeListenOption()
+         {
+             Adapter = () => new NormalDataHandlingAdapter(),
+             Name = "TouchSocketPipe2"//管道名称
+         });
 
-        list.Add(new NamedPipeListenOption()
-        {
-            Adapter = () => new NormalDataHandlingAdapter(),
-            Name = "TouchSocketPipe3"//管道名称
-        });
-    })
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
+         list.Add(new NamedPipeListenOption()
+         {
+             Adapter = () => new NormalDataHandlingAdapter(),
+             Name = "TouchSocketPipe3"//管道名称
+         });
+     })
+     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+     {
+         a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+     })
+     .ConfigurePlugins(a =>
+     {
+         //a.Add();//此处可以添加插件
+     }));
 
-service.Start();//启动
-service.Logger.Info("服务器已启动");
+await service.StartAsync();//启动
 ```
 
 :::info 温馨提示
@@ -294,11 +270,11 @@ service.Logger.Info("服务器已启动");
 
 ```csharp {5,16}
 var service = new NamedPipeService();
-service.Setup(new TouchSocketConfig());
+await service.SetupAsync(new TouchSocketConfig());
 
-service.Start();//启动
+await service.StartAsync();//启动
 
-service.AddListen(new  NamedPipeListenOption()//在Service运行时，可以调用，直接添加监听
+service.AddListen(new NamedPipeListenOption()//在Service运行时，可以调用，直接添加监听
 {
     Name = "TouchSocketPipe4",//名称用于区分监听
     Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器，还有其他可配置项，都是单独对当前地址有效。
@@ -328,7 +304,7 @@ service.Received = (client, e) =>
     return EasyTask.CompletedTask;
 };
 
-service.Start("TouchSocketPipe");//启动
+await service.StartAsync("TouchSocketPipe");//启动
 ```
 
 ### 9.2 重写NamedPipeSessionClient处理
@@ -346,7 +322,7 @@ service.Start("TouchSocketPipe");//启动
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
 ```csharp showLineNumbers
-class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
+class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeClosedPlugin, INamedPipeReceivedPlugin
 {
     private readonly ILog m_logger;
 
@@ -355,22 +331,21 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisco
         this.m_logger = logger;
     }
 
+    public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
+    {
+        m_logger.Info("Disconnected");
+        await e.InvokeNext();
+    }
+
     public async Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e)
     {
         m_logger.Info("Connected");
         await e.InvokeNext();
     }
 
-    public async Task OnNamedPipeDisconnected(INamedPipeSession client, DisconnectEventArgs e)
-    {
-        m_logger.Info("Disconnected");
-        await e.InvokeNext();
-    }
-
     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
         m_logger.Info(e.ByteBlock.ToString());
-        client.Send(e.ByteBlock);
         await e.InvokeNext();
     }
 }
@@ -380,103 +355,71 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisco
 
 ```csharp {10}
 var service = new NamedPipeService();
-service.Setup(new TouchSocketConfig()
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.Add<MyNamedPipePlugin>();
-    }));
-    
-service.Start();
+await service.SetupAsync(new TouchSocketConfig()
+     .SetPipeName("TouchSocketPipe")//设置命名管道名称
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();
+     })
+     .ConfigurePlugins(a =>
+     {
+         a.Add<MyNamedPipePlugin>();
+     }));
+
+await service.StartAsync();
 ```
 
-## 十、AspNetCore中创建 （暂未实现）
+### 9.4 异步阻塞接收 <Tag>推荐</Tag>
 
-首先建议安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`，因为这个里面有很多可以直接使用的注入项。
+异步阻塞接收，即使用`await`的方式接收数据。其特点是能在代码上下文中，直接获取到收到的数据。
 
-:::tip 建议
+只是在服务器使用异步阻塞时，建议直接在`Connected`触发时相关使用。
 
-在安装`TouchSocket.AspNetCore`或者`TouchSocketPro.AspNetCore`的同时，最好也安装`TouchSocket`或者`TouchSocketPro`。这样更新也及时一些。
-
-:::  
-
-在AspNetCore中使用`NamedPipeService`，**不应该**像普通端一样，订阅Received。应该是通过**插件**，**注入**等方式实现。步骤如下：
-
-1. 注入`NamedPipeService`，并做好配置（和常规服务器配置一样）。
-2. 新建插件，处理收到的数据。
-
-代码如下：
-
-（1）声明插件
+下列将以插件为例：
 
 ```csharp showLineNumbers
-class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeDisconnectedPlugin, INamedPipeReceivedPlugin
+class NamedPipeServiceReceiveAsyncPlugin : PluginBase, INamedPipeConnectedPlugin<INamedPipeSessionClient>
 {
-    private readonly ILog m_logger;
-
-    public MyNamedPipePlugin(ILog logger)
+    public async Task OnNamedPipeConnected(INamedPipeSessionClient client, ConnectedEventArgs e)
     {
-        this.m_logger = logger;
-    }
+        //receiver可以复用，不需要每次接收都新建
+        using (var receiver = client.CreateReceiver())
+        {
+            while (true)
+            {
+                //receiverResult必须释放
+                using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                {
+                    //收到的数据，此处的数据会根据适配器投递不同的数据。
+                    var byteBlock = receiverResult.ByteBlock;
+                    var requestInfo = receiverResult.RequestInfo;
 
-    public async Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e)
-    {
-        m_logger.Info("Connected");
-        await e.InvokeNext();
-    }
+                    if (receiverResult.IsCompleted)
+                    {
+                        //断开连接了
+                        Console.WriteLine($"断开信息：{receiverResult.Message}");
+                        return;
+                    }
 
-    public async Task OnNamedPipeDisconnected(INamedPipeSession client, DisconnectEventArgs e)
-    {
-        m_logger.Info("Disconnected");
-        await e.InvokeNext();
-    }
+                    //如果数据是从ByteBlock投递
+                    if (byteBlock != null)
+                    {
+                        Console.WriteLine(Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len));
+                    }
 
-     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
-    {
-        m_logger.Info(e.ByteBlock.ToString());
-        client.Send(e.ByteBlock);
-        await e.InvokeNext();
+                    //如果是适配器信息，则可以直接处理requestInfo;
+                }
+            }
+        }
     }
 }
 ```
-
-（2）注入服务
-
-```csharp showLineNumbers
-public void ConfigureServices(IServiceCollection services)
-{
-    var tcpService = services.AddNamedPipeService(config =>
-      {
-          config.SetPipeName("TouchSocketPipe")//设置命名管道名称
-          .UseAspNetCoreContainer(services)//使用和Aspnetcore一致的容器，可以做到注册类型的共享
-          .ConfigurePlugins(a =>
-          {
-              a.Add<MyNamedPipePlugin>();//此插件就可以处理接收数据
-          });
-      });
-}
-```
-
-:::info 温馨提示
-
-UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但是需要注意的是，`IServiceProvider`并不是同一个实例，所以当使用单例注册时，可能无法做到单例共享。解决方法就是将单例类型，使用实例注册。这样就完全可以。其他生命周期不受影响。
-
-:::  
-
-然后在任意地方，也可获得服务。例如：在控制器中
-
-![image.png](@site/static/img/docs/createtcpservice-1.png)
 
 :::tip 提示
 
-此时，NamedPipeService与整个AspNetCore是共享IOC容器的。即：NamedPipeService中的任何地方（例如：插件）也能获得AspNetCore已注册的服务。
+异步阻塞接收，在等待接收数据时，不会阻塞线程资源，所以即使大量使用，也不会影响性能。
 
-:::
-
+:::  
 
 ## 十一、发送数据
 
@@ -489,7 +432,10 @@ UseAspNetCoreContainer时，可以做到和Aspnetcore注册类型的共享。但
 通过`service.GetClients`方法，获取当前在线的所有客户端。
 
 ```csharp showLineNumbers
-var SessionClients = service.GetClients();
+foreach (var sessionClient in service.Clients)
+{
+
+}
 ```
 
 :::caution 注意
@@ -504,7 +450,7 @@ var SessionClients = service.GetClients();
 
 ```csharp showLineNumbers
 var ids = service.GetIds();
-if (service.TryGetClient(ids.First(), out var SessionClient))
+if (service.TryGetClient(ids.First(), out var sessionClient))
 {
 }
 ```
