@@ -3,8 +3,6 @@ id: namedpipeclient
 title: 创建NamedPipeClient
 ---
 
-
-
 import Tag from "@site/src/components/Tag.js";
 
 ### 定义
@@ -43,14 +41,6 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 #### SetPipeName
 设置管道名称。 
 
-#### UseDelaySender（暂未实现）
-使用延迟发送。众所周知，tcp数据报文为了发送效率，会默认启用延迟算法。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-
-如果一个包大于512kb，则不会延迟，直接发送。
-如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
-
 </div>
 </details>
 
@@ -60,8 +50,8 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 | --- | --- |
 | INamedPipeConnectingPlugin | 此时管道实际上已经完成连接，但是并没有启动接收，然后触发。 |
 | INamedPipeConnectedPlugin | 同意连接，且成功启动接收后触发 |
-| INamedPipeDisconnectingPlugin | 当客户端主动调用Close时触发 |
-| INamedPipeDisconnectedPlugin | 当客户端断开连接后触发 |
+| INamedPipeClosingPlugin | 当客户端主动调用Close时触发 |
+| INamedPipeClosedPlugin | 当客户端断开连接后触发 |
 | INamedPipeReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
 | INamedPipeReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
 | INamedPipeSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
@@ -77,9 +67,9 @@ NamedPipeClient是命名管道系客户端基类，他直接参与管道的连�
 ```csharp showLineNumbers
 var client = new NamedPipeClient();
 client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到服务器，此时已经创建管道，但是还未建立连接
-client.Connected = (client, e) => {return EasyTask.CompletedTask; };//成功连接到服务器
-client.Disconnecting = (client, e) => {return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
-client.Disconnected = (client, e) => {return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+client.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从服务器断开连接。此处仅主动断开才有效。
+client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
 client.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
@@ -89,14 +79,14 @@ client.Received = (client, e) =>
 };
 
 //载入配置
-client.Setup(new TouchSocketConfig()
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个日志注入
-    }));
+await client.SetupAsync(new TouchSocketConfig()
+     .SetPipeName("TouchSocketPipe")//设置命名管道名称
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();//添加一个日志注入
+     }));
 
-client.Connect();//调用连接，当连接不成功时，会抛出异常。
+await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 
 //Result result = tcpClient.TryConnect();//或者可以调用TryConnect
 //if (result.IsSuccess())
@@ -106,7 +96,7 @@ client.Connect();//调用连接，当连接不成功时，会抛出异常。
 
 client.Logger.Info("客户端成功连接");
 
-client.Send("RRQM");
+await client.SendAsync("RRQM");
 ```
 
 #### 6.2 继承实现
@@ -114,9 +104,9 @@ client.Send("RRQM");
 一般继承实现的话，可以从NamedPipeClientBase继承。
 
 ```csharp showLineNumbers
-class MyNamedPipeClient : NamedPipeClientBase
+class MyNamedPipeClient : NamedPipeClient
 {
-    protected override async Task ReceivedData(ReceivedDataEventArgs e)
+    protected override async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
@@ -124,7 +114,7 @@ class MyNamedPipeClient : NamedPipeClientBase
         string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
         Console.WriteLine($"已接收到信息：{mes}");
 
-        await base.ReceivedData(e);
+        await base.OnNamedPipeReceived(e);
     }
 }
 ```
@@ -132,34 +122,34 @@ class MyNamedPipeClient : NamedPipeClientBase
 ```csharp showLineNumbers
 var client = new MyNamedPipeClient();
 //载入配置
-client.Setup(new TouchSocketConfig()
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();//添加一个日志注入
-    }));
+await client.SetupAsync(new TouchSocketConfig()
+     .SetPipeName("TouchSocketPipe")//设置命名管道名称
+     .ConfigureContainer(a =>
+     {
+         a.AddConsoleLogger();//添加一个日志注入
+     }));
 
-client.Connect();//调用连接，当连接不成功时，会抛出异常。
+await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 ```
 
 ## 七、接收数据
 
-在NamedPipeClient中，接收数据的方式有很多种。多种方式可以组合使用。
+在`NamedPipeClient`中，接收数据的方式有很多种。多种方式可以组合使用。
 
 ### 7.1 Received委托处理
 
-当使用TcpClient创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
+当使用`NamedPipeClient`创建客户端时，内部已经定义好了一个外置委托Received，可以通过该委托直接接收数据。
 
 ```csharp showLineNumbers
 var client = new NamedPipeClient();
-client.Received =(client, e) =>
+client.Received = (client, e) =>
 {
     //从服务器收到信息
     string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
     Console.WriteLine($"接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
-client.Connect("TouchSocketPipe");
+await client.ConnectAsync("TouchSocketPipe");
 ```
 
 ### 7.2 插件处理 <Tag>推荐</Tag>
@@ -193,18 +183,18 @@ public class MyPlugin : PluginBase, INamedPipeReceivedPlugin
 
 ```csharp showLineNumbers
 var client = new NamedPipeClient();
-client.Setup(new TouchSocketConfig()
-    .SetPipeName("TouchSocketPipe")//设置命名管道名称
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.Add<MyPlugin>();
-    }));
+await client.SetupAsync(new TouchSocketConfig()
+      .SetPipeName("TouchSocketPipe")//设置命名管道名称
+      .ConfigureContainer(a =>
+      {
+          a.AddConsoleLogger();
+      })
+      .ConfigurePlugins(a =>
+      {
+          a.Add<MyPlugin>();
+      }));
 
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ## 八、发送数据
