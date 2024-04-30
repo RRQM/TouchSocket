@@ -581,19 +581,19 @@ namespace TouchSocket.Sockets
         private void OnReceivePeriod(long value)
         {
             this.m_receiveBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            if (this.m_socket != null)
-            {
-                this.m_socket.ReceiveBufferSize = this.m_receiveBufferSize;
-            }
+            //if (this.m_socket != null)
+            //{
+            //    this.m_socket.ReceiveBufferSize = this.m_receiveBufferSize;
+            //}
         }
 
         private void OnSendPeriod(long value)
         {
             this.m_sendBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            if (this.m_socket != null)
-            {
-                this.m_socket.SendBufferSize = this.m_sendBufferSize;
-            }
+            //if (this.m_socket != null)
+            //{
+            //    this.m_socket.SendBufferSize = this.m_sendBufferSize;
+            //}
         }
 
         private void PrivateBreakOut(bool manual, string msg)

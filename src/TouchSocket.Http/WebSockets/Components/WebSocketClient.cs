@@ -74,7 +74,7 @@ namespace TouchSocket.Http.WebSockets
 
                 var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
                 var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Host, url, option.Version, out var base64Key);
+                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Authority, url, option.Version, out var base64Key);
                 this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)))
                     .GetFalseAwaitResult();
 
@@ -116,7 +116,7 @@ namespace TouchSocket.Http.WebSockets
 
                 var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
                 var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Host, url, option.Version, out var base64Key);
+                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Authority, url, option.Version, out var base64Key);
 
                 await this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
 
