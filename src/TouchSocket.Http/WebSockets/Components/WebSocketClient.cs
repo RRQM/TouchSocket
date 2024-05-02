@@ -29,13 +29,13 @@ namespace TouchSocket.Http.WebSockets
         public WSDataFrameEventHandler<WebSocketClient> Received { get; set; }
 
         /// <inheritdoc/>
-        protected override Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
+        protected override async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
         {
             if (this.Received != null)
             {
-                return this.Received.Invoke(this, e);
+                await this.Received.Invoke(this, e);
             }
-            return base.OnReceivedWSDataFrame(e);
+            await base.OnReceivedWSDataFrame(e);
         }
     }
 

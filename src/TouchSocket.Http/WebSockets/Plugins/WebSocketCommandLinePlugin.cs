@@ -77,71 +77,64 @@ namespace TouchSocket.Http.WebSockets
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
-                try
-                {
-                    var strs = e.DataFrame.ToText().Split(' ');
-                    if (strs.Length > 0 && this.m_pairs.TryGetValue(strs[0], out var method))
-                    {
-                        var ps = method.Info.GetParameters();
-                        var os = new object[ps.Length];
-                        var index = 0;
-                        for (var i = 0; i < ps.Length; i++)
-                        {
-                            if (ps[i].ParameterType.IsInterface && typeof(ITcpClientBase).IsAssignableFrom(ps[i].ParameterType))
-                            {
-                                os[i] = webSocket.Client;
-                            }
-                            else
-                            {
-                                os[i] = this.Converter.Deserialize(null, strs[index + 1], ps[i].ParameterType);
-                                index++;
-                            }
-                        }
-
-                        e.Handled = true;
-
-                        try
-                        {
-                            object result;
-                            switch (method.TaskType)
-                            {
-                                case TaskReturnType.Task:
-                                    await method.InvokeAsync(this, os);
-                                    result = default;
-                                    break;
-
-                                case TaskReturnType.TaskObject:
-                                    result = await method.InvokeObjectAsync(this, os);
-                                    break;
-
-                                case TaskReturnType.None:
-                                default:
-                                    result = method.Invoke(this, os);
-                                    break;
-                            }
-
-                            if (method.HasReturn)
-                            {
-                                webSocket.Send(this.Converter.Serialize(null, result));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            if (this.ReturnException)
-                            {
-                                webSocket.Send(this.Converter.Serialize(null, ex.Message));
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.m_logger.Exception(this, ex);
-                }
+                await e.InvokeNext();
+                return;
             }
-            else
+            var strs = e.DataFrame.ToText().Split(' ');
+            if (!this.m_pairs.TryGetValue(strs[0], out var method))
             {
                 await e.InvokeNext();
+                return;
+            }
+            var ps = method.Info.GetParameters();
+            var os = new object[ps.Length];
+            var index = 0;
+            for (var i = 0; i < ps.Length; i++)
+            {
+                if (ps[i].ParameterType.IsInterface && typeof(ITcpClientBase).IsAssignableFrom(ps[i].ParameterType))
+                {
+                    os[i] = webSocket.Client;
+                }
+                else
+                {
+                    os[i] = this.Converter.Deserialize(null, strs[index + 1], ps[i].ParameterType);
+                    index++;
+                }
+            }
+
+            e.Handled = true;
+
+            try
+            {
+                object result;
+                switch (method.TaskType)
+                {
+                    case TaskReturnType.Task:
+                        await method.InvokeAsync(this, os);
+                        result = default;
+                        break;
+
+                    case TaskReturnType.TaskObject:
+                        result = await method.InvokeObjectAsync(this, os);
+                        break;
+
+                    case TaskReturnType.None:
+                    default:
+                        result = method.Invoke(this, os);
+                        break;
+                }
+
+                if (method.HasReturn)
+                {
+                    webSocket.Send(this.Converter.Serialize(null, result));
+                }
+            }
+            catch (Exception ex)
+            {
+                if (this.ReturnException)
+                {
+                    webSocket.Send(this.Converter.Serialize(null, ex.Message));
+                }
             }
         }
     }
