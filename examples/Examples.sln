@@ -274,7 +274,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpAspnetcoreConsoleApp", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "基于NamedPipe的Dmtp", "基于NamedPipe的Dmtp", "{1B6092F9-4776-4502-818F-B35D153D19D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeDmtpConsoleApp", "Dmtp\NamedPipeDmtpConsoleApp\NamedPipeDmtpConsoleApp.csproj", "{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NamedPipeDmtpConsoleApp", "Dmtp\NamedPipeDmtpConsoleApp\NamedPipeDmtpConsoleApp.csproj", "{5AB49F06-014A-4CAF-9A92-F5B3783E51C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".Solutions", ".Solutions", "{043D35EB-9819-4E9A-BDC7-2974A122195D}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -164,7 +164,7 @@ namespace WebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+                    a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket webSocket, HttpContextEventArgs e) =>
                     {
                         e.Context.Request.Headers.Add("token", "123456");
                         await e.InvokeNext();
@@ -189,7 +189,7 @@ namespace WebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IHttpClientBase client, HttpContextEventArgs e) =>
+                    a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket webSocket, HttpContextEventArgs e) =>
                     {
                         e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
                         await e.InvokeNext();
