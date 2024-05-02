@@ -5,7 +5,28 @@
 		<TargetFramework>net6.0</TargetFramework>
 	</PropertyGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(BuildMode)'=='DebugProSources'">
+	  <Reference Include="Newtonsoft.Json">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Core">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Http">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Http.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.Rpc">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Rpc.dll</HintPath>
+	  </Reference>
+	  <Reference Include="TouchSocket.WebApi">
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.WebApi.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(BuildMode)'!='DebugProSources'">
 		<PackageReference Include="TouchSocket.Http" Version="2.0.4" />
 		<PackageReference Include="TouchSocket.WebApi" Version="2.0.4" />
 	</ItemGroup>
