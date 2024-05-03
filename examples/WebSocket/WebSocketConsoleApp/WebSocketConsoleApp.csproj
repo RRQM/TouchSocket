@@ -5,7 +5,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(BuildMode)'=='DebugProSources'">
+	<ItemGroup Condition="'$(DebugMode)'=='DebugProSources'">
 	  <Reference Include="Newtonsoft.Json">
 	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
 	  </Reference>
@@ -26,9 +26,9 @@
 	  </Reference>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(BuildMode)'!='DebugProSources'">
-		<PackageReference Include="TouchSocket.Http" Version="2.0.4" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.0.4" />
+	<ItemGroup Condition="'$(DebugMode)'!='DebugProSources'">
+		<PackageReference Include="TouchSocket.Http" Version="2.0.5" />
+		<PackageReference Include="TouchSocket.WebApi" Version="2.0.5" />
 	</ItemGroup>
 
 </Project>
