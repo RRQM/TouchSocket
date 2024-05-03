@@ -5,6 +5,6 @@
 		<Copyright>Copyright © 2024 若汝棋茗</Copyright>
 		<Authors>若汝棋茗</Authors>
 		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
-		<!--<BuildMode>DebugProSources</BuildMode>-->
+		<!--<DebugMode>DebugProSources</DebugMode>-->
 	</PropertyGroup>
 </Project>

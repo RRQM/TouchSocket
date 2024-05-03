@@ -17,6 +17,7 @@ namespace TcpFlowStressTestingConsoleApp
 
             Console.WriteLine("请输入BufferLength");
             var bytes = new byte[int.Parse(Console.ReadLine())];
+            //var bytes = new byte[1024*512];
             Random.Shared.NextBytes(bytes);
             while (true)
             {
