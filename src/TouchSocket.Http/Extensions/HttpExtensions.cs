@@ -444,7 +444,7 @@ namespace TouchSocket.Http
             response.StatusCode = status;
             response.StatusMessage = msg;
             response.Headers.Add(HttpHeaders.Server, $"TouchSocket.Http {HttpBase.ServerVersion}");
-            response.Headers.Add(HttpHeaders.Date, DateTime.Now.ToGMTString("r"));
+            response.Headers.Add(HttpHeaders.Date, DateTime.Now.ToGMTString());
             return response;
         }
 
