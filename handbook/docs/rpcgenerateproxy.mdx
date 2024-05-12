@@ -57,18 +57,18 @@ title: 生成、获取代理
                    {
                        a.AddDmtpRouteService();
                        a.AddConsoleLogger();
-                   })
-                   .ConfigurePlugins(a =>
-                   {
-                       a.UseDmtpRpc()
-                       .ConfigureRpcStore(store =>
-                       {
-                           store.RegisterServer<MyRpcServer>();
+                       a.AddRpcStore(store =>
+                        {
+                            store.RegisterServer<TestController>();
 #if DEBUG
                            File.WriteAllText("RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
                            ConsoleLogger.Default.Info("成功生成代理");
 #endif
-                       });
+                        });
+                   })
+                   .ConfigurePlugins(a =>
+                   {
+                       a.UseDmtpRpc();
 
                        a.Add<MyTouchRpcPlugin>();
                    })
