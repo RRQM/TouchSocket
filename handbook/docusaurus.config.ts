@@ -117,7 +117,7 @@ const config = {
           {
             label: "API手册",
             position: "left",
-            to: "https://rrqm_home.gitee.io/touchsocketapidoc"
+            to: "https://rrqm.github.io/TouchSocketApiDoc/"
           },
           {
             label: "版本",
