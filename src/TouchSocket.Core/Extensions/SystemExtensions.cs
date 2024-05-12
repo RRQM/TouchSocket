@@ -98,7 +98,7 @@ namespace TouchSocket.Core
         /// <param name="dt"></param>
         /// <param name="v"></param>
         /// <returns></returns>
-        public static string ToGMTString(this DateTime dt, string v)
+        public static string ToGMTString(this DateTime dt)
         {
             return dt.ToString("r", CultureInfo.InvariantCulture);
         }
