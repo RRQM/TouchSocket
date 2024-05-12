@@ -96,7 +96,6 @@ namespace TouchSocket.Core
         /// 格林尼治标准时间
         /// </summary>
         /// <param name="dt"></param>
-        /// <param name="v"></param>
         /// <returns></returns>
         public static string ToGMTString(this DateTime dt)
         {
