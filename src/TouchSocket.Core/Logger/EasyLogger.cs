@@ -50,7 +50,7 @@ namespace TouchSocket.Core
                 {
                     stringBuilder.Append(" | ");
                     stringBuilder.Append($"【异常消息】：{exception.Message}");
-                    stringBuilder.Append($"【堆栈】：{(exception.StackTrace == null ? "未知" : exception.StackTrace)}");
+                    stringBuilder.Append($"【堆栈】：{exception.StackTrace ?? "未知"}");
                 }
                 stringBuilder.AppendLine();
                 action.Invoke(stringBuilder.ToString());
