@@ -117,7 +117,7 @@ const config = {
           {
             label: "API手册",
             position: "left",
-            to: "https://rrqm.github.io/TouchSocketApiDoc/"
+            to: "https://touchsocketapidoc.netlify.app"
           },
           {
             label: "版本",
