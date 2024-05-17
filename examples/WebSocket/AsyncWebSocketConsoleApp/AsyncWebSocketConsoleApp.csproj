@@ -7,6 +7,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="2.0.6" />
+		<PackageReference Include="TouchSocket.Http" Version="2.0.7" />
 	</ItemGroup>
 </Project>
