@@ -197,6 +197,8 @@ namespace TouchSocket.Sockets
                     throw new Exception("无法重新利用已释放对象");
                 }
 
+                this.m_serverState = ServerState.Running;
+
                 switch (this.m_serverState)
                 {
                     case ServerState.None:
@@ -225,10 +227,7 @@ namespace TouchSocket.Sockets
                         }
                 }
 
-                this.m_serverState = ServerState.Running;
-
                 this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
-                return;
             }
             catch (Exception ex)
             {
@@ -248,6 +247,8 @@ namespace TouchSocket.Sockets
                     throw new Exception("无法重新利用已释放对象");
                 }
 
+                this.m_serverState = ServerState.Running;
+
                 switch (this.m_serverState)
                 {
                     case ServerState.None:
@@ -276,10 +277,7 @@ namespace TouchSocket.Sockets
                         }
                 }
 
-                this.m_serverState = ServerState.Running;
-
                 await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
-                return;
             }
             catch (Exception ex)
             {
