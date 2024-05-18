@@ -192,39 +192,17 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (this.m_serverState == ServerState.Disposed)
+                this.ThrowIfDisposed();
+                if (this.m_serverState== ServerState.Running)
                 {
-                    throw new Exception("无法重新利用已释放对象");
+                    return;
                 }
 
                 this.m_serverState = ServerState.Running;
 
-                switch (this.m_serverState)
+                if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
                 {
-                    case ServerState.None:
-                        {
-                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                            {
-                                this.BeginReceive(iPHost);
-                            }
-
-                            break;
-                        }
-                    case ServerState.Running:
-                        return;
-
-                    case ServerState.Stopped:
-                        {
-                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                            {
-                                this.BeginReceive(iPHost);
-                            }
-                            break;
-                        }
-                    case ServerState.Disposed:
-                        {
-                            throw new Exception("无法再次利用已释放对象");
-                        }
+                    this.BeginReceive(iPHost);
                 }
 
                 this.PluginManager.Raise(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default));
@@ -242,39 +220,17 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                if (this.m_serverState == ServerState.Disposed)
+                this.ThrowIfDisposed();
+                if (this.m_serverState == ServerState.Running)
                 {
-                    throw new Exception("无法重新利用已释放对象");
+                    return;
                 }
 
                 this.m_serverState = ServerState.Running;
 
-                switch (this.m_serverState)
+                if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
                 {
-                    case ServerState.None:
-                        {
-                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                            {
-                                this.BeginReceive(iPHost);
-                            }
-
-                            break;
-                        }
-                    case ServerState.Running:
-                        return;
-
-                    case ServerState.Stopped:
-                        {
-                            if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) is IPHost iPHost)
-                            {
-                                this.BeginReceive(iPHost);
-                            }
-                            break;
-                        }
-                    case ServerState.Disposed:
-                        {
-                            throw new Exception("无法再次利用已释放对象");
-                        }
+                    this.BeginReceive(iPHost);
                 }
 
                 await this.PluginManager.RaiseAsync(nameof(IServerStartedPlugin.OnServerStarted), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
