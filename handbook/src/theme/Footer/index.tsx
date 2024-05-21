@@ -23,7 +23,7 @@ function Footer(): JSX.Element | null
         logo={logo && <FooterLogo logo={logo} />}
         copyright={copyright && <FooterCopyright copyright={copyright} />}
       />
-      <script defer src="http://umami.touchsocket.net:3000/script.js" data-website-id="9a4065f2-8c32-4727-9b5f-bc6a92843fa5"></script>
+      <script defer src="https://umami.touchsocket.net:10086/script.js" data-website-id="9a4065f2-8c32-4727-9b5f-bc6a92843fa5"></script>
     </span>
   );
 }
