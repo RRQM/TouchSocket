@@ -187,6 +187,10 @@ const config = {
                 label: "仓库",
                 href: "https://gitee.com/rrqm_home/touchsocket",
               },
+              {
+                label: "统计",
+                href: "https://umami.touchsocket.net:10086/share/52srUBHSadfSOngf/touchsocket.net",
+              },
             ],
           },
         ],
