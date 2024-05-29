@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -118,7 +119,7 @@ namespace TouchSocket.Core
                 return instance;
             }
 
-            throw new Exception($"没有解决容器所需类型：{fromType.FullName}");
+            throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
         }
 
         /// <inheritdoc/>
@@ -135,7 +136,7 @@ namespace TouchSocket.Core
                 return instance;
             }
 
-            throw new Exception($"没有解决容器所需类型：{fromType.FullName}");
+            throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
         }
 
         /// <summary>

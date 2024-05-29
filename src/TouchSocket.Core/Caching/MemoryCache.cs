@@ -22,7 +22,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 一个简单的内存缓存
     /// </summary>
-    public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>, ICache<TKey, TValue>
+    public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>, ICache<TKey, TValue>,ICacheAsync<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, ICacheEntry<TKey, TValue>> m_pairs = new ConcurrentDictionary<TKey, ICacheEntry<TKey, TValue>>();
         private readonly Timer m_timer;

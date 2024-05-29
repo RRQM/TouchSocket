@@ -11,8 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -73,14 +75,15 @@ namespace TouchSocket.Dmtp.Rpc
                 try
                 {
                     var rpcPackage = new DmtpRpcPackage();
-                    rpcPackage.UnpackageRouter(byteBlock);
+
+                    rpcPackage.UnpackageRouter(ref byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureFalseAwait())
+                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureFalseAwait())
                         {
                             if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
                             {
-                                actor.Send(this.m_invoke_Request, byteBlock);
+                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
                                 return true;
                             }
                             else
@@ -96,14 +99,17 @@ namespace TouchSocket.Dmtp.Rpc
                         byteBlock.Reset();
                         rpcPackage.SwitchId();
 
-                        rpcPackage.Package(byteBlock);
-                        this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                        var block = byteBlock;
+                        rpcPackage.Package(ref block);
+
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
                     }
                     else
                     {
-                        rpcPackage.UnpackageBody(byteBlock);
+                        rpcPackage.UnpackageBody(ref byteBlock);
                         //await this.InvokeThis(rpcPackage);
                         //ThreadPool.QueueUserWorkItem(this.InvokeThis, rpcPackage);
+
                         _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
@@ -118,17 +124,18 @@ namespace TouchSocket.Dmtp.Rpc
                 try
                 {
                     var rpcPackage = new DmtpRpcPackage();
-                    rpcPackage.UnpackageRouter(byteBlock);
+                   
+                    rpcPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
                         {
-                            actor.Send(this.m_invoke_Response, byteBlock);
+                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
                         }
                     }
                     else
                     {
-                        rpcPackage.UnpackageBody(byteBlock);
+                        rpcPackage.UnpackageBody(ref byteBlock);
                         this.DmtpActor.WaitHandlePool.SetRun(rpcPackage);
                     }
                 }
@@ -143,17 +150,18 @@ namespace TouchSocket.Dmtp.Rpc
                 try
                 {
                     var canceledPackage = new CanceledPackage();
-                    canceledPackage.UnpackageRouter(byteBlock);
+                    
+                    canceledPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && canceledPackage.Route)
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
                         {
-                            actor.Send(this.m_cancelInvoke, byteBlock);
+                            await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureFalseAwait();
                         }
                     }
                     else
                     {
-                        canceledPackage.UnpackageBody(byteBlock);
+                        canceledPackage.UnpackageBody(ref byteBlock);
                         if (this.TryGetValue(canceledPackage.Sign, out var context))
                         {
                             context.Cancel();
@@ -194,7 +202,7 @@ namespace TouchSocket.Dmtp.Rpc
                 case WaitDataStatus.Default:
                 default:
                     {
-                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                        throw new UnknownErrorException();
                     }
             }
         }
@@ -205,8 +213,10 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 using (var byteBlock = new ByteBlock())
                 {
-                    canceled.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_cancelInvoke, byteBlock);
+                    var block = byteBlock;
+                    canceled.Package(ref block);
+                   
+                    this.DmtpActor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).GetFalseAwaitResult();
                 }
             }
         }
@@ -222,25 +232,28 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     using (var returnByteBlock = new ByteBlock())
                     {
-                        var methodName = rpcPackage.MethodName;
+                        var methodName = rpcPackage.InvokeKey;
                         var parametersBytes = rpcPackage.ParametersBytes;
 
                         rpcPackage.SwitchId();
-                        rpcPackage.MethodName = default;
+                        rpcPackage.InvokeKey = default;
                         rpcPackage.ParametersBytes = default;
                         rpcPackage.Status = TouchSocketDmtpStatus.Success.ToValue();
-                        rpcPackage.Package(returnByteBlock);
-                        this.DmtpActor.Send(this.m_invoke_Response, returnByteBlock);
+
+                        var block = returnByteBlock;
+                        rpcPackage.Package(ref block);
+                        
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureFalseAwait();
 
                         rpcPackage.SwitchId();
-                        rpcPackage.MethodName = methodName;
+                        rpcPackage.InvokeKey = methodName;
                         rpcPackage.ParametersBytes = parametersBytes;
                     }
                 }
 
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
-                var rpcMethod = this.GetInvokeMethod.Invoke(rpcPackage.MethodName);
+                var rpcMethod = this.GetInvokeMethod.Invoke(rpcPackage.InvokeKey);
                 DmtpRpcCallContext callContext = null;
                 if (rpcMethod != null)
                 {
@@ -283,23 +296,6 @@ namespace TouchSocket.Dmtp.Rpc
                                 }
                             }
 
-                            //if (rpcMethod.IncludeCallContext)
-                            //{
-                            //    ps = new object[rpcMethod.ParameterTypes.Length];
-                            //    ps[0] = callContext;
-                            //    for (var i = 0; i < psData.Count; i++)
-                            //    {
-                            //        ps[i + 1] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], rpcMethod.ParameterTypes[i + 1]);
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    ps = new object[rpcMethod.ParameterTypes.Length];
-                            //    for (var i = 0; i < rpcMethod.ParameterTypes.Length; i++)
-                            //    {
-                            //        ps[i] = this.SerializationSelector.DeserializeParameter(rpcPackage.SerializationType, psData[i], rpcMethod.ParameterTypes[i]);
-                            //    }
-                            //}
                         }
                         else
                         {
@@ -417,10 +413,13 @@ namespace TouchSocket.Dmtp.Rpc
 
                 using (var byteBlock = new ByteBlock())
                 {
-                    rpcPackage.MethodName = default;
+                    rpcPackage.InvokeKey = default;
                     rpcPackage.SwitchId();
-                    rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+
+                    var block = byteBlock;
+                    rpcPackage.Package(ref block);
+                   
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
                 }
             }
             catch
@@ -444,149 +443,1053 @@ namespace TouchSocket.Dmtp.Rpc
             return default;
         }
 
+        //#region Rpc
+
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            var datas = new List<byte[]>();
+        //            foreach (var parameter in parameters)
+        //            {
+        //                datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //            }
+        //            rpcPackage.ParametersBytes = datas;
+        //            rpcPackage.Package(byteBlock);
+
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    if (resultContext.IsByRef)
+        //                    {
+        //                        try
+        //                        {
+        //                            for (var i = 0; i < parameters.Length; i++)
+        //                            {
+        //                                parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+        //                            }
+        //                        }
+        //                        catch (Exception e)
+        //                        {
+        //                            throw new Exception(e.Message);
+        //                        }
+        //                    }
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            var datas = new List<byte[]>();
+        //            foreach (var parameter in parameters)
+        //            {
+        //                datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //            }
+        //            rpcPackage.ParametersBytes = datas;
+        //            rpcPackage.Package(byteBlock);
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                break;
+
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    break;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    if (resultContext.IsByRef)
+        //                    {
+        //                        for (var i = 0; i < parameters.Length; i++)
+        //                        {
+        //                            parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+        //                        }
+        //                    }
+        //                    break;
+        //                }
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                break;
+
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    break;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    break;
+        //                }
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public async Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+        //            await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                break;
+
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    break;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    break;
+        //                }
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public async Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        SourceId = this.DmtpActor.Id
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
+        //            }
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+
+        //            await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        //#endregion Rpc
+
+        //#region IdRpc
+
+        ///// <inheritdoc/>
+        //public void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
+        //    {
+        //        actor.Invoke(invokeKey, invokeOption, parameters);
+        //        return;
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        Route = true,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                break;
+
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    break;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    break;
+        //                }
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
+        //    {
+        //        return actor.Invoke(returnType, invokeKey, invokeOption, parameters);
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //        Route = true
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
+        //    {
+        //        actor.Invoke(invokeKey, invokeOption, ref parameters, types);
+        //        return;
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //        Route = true
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            var datas = new List<byte[]>();
+        //            foreach (var parameter in parameters)
+        //            {
+        //                datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //            }
+        //            rpcPackage.ParametersBytes = datas;
+        //            rpcPackage.Package(byteBlock);
+
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return;
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    return;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    if (resultContext.IsByRef)
+        //                    {
+        //                        for (var i = 0; i < parameters.Length; i++)
+        //                        {
+        //                            parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+        //                        }
+        //                    }
+        //                    return;
+        //                }
+
+        //            default:
+        //                return;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
+        //    {
+        //        return actor.Invoke(returnType, invokeKey, invokeOption, ref parameters, types);
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //        Route = true
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            var datas = new List<byte[]>();
+        //            foreach (var parameter in parameters)
+        //            {
+        //                datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //            }
+        //            rpcPackage.ParametersBytes = datas;
+        //            rpcPackage.Package(byteBlock);
+        //            this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len).GetFalseAwaitResult();
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    if (resultContext.IsByRef)
+        //                    {
+        //                        for (var i = 0; i < parameters.Length; i++)
+        //                        {
+        //                            parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+        //                        }
+        //                    }
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public async Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId).ConfigureFalseAwait() is DmtpRpcActor actor)
+        //    {
+        //        await actor.InvokeAsync(invokeKey, invokeOption, parameters).ConfigureFalseAwait();
+        //        return;
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        Route = true,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+
+        //            await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                break;
+
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    break;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    break;
+        //                }
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+
+        ///// <inheritdoc/>
+        //public async Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    if (string.IsNullOrEmpty(targetId))
+        //    {
+        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+        //    }
+
+        //    if (string.IsNullOrEmpty(invokeKey))
+        //    {
+        //        throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
+        //    }
+
+        //    if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId).ConfigureFalseAwait() is DmtpRpcActor actor)
+        //    {
+        //        return await actor.InvokeAsync(returnType, invokeKey, invokeOption, parameters).ConfigureFalseAwait();
+        //    }
+
+        //    var rpcPackage = new DmtpRpcPackage
+        //    {
+        //        InvokeKey = invokeKey,
+        //        TargetId = targetId,
+        //        SourceId = this.DmtpActor.Id,
+        //        Route = true
+        //    };
+
+        //    var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
+
+        //    try
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            if (invokeOption == default)
+        //            {
+        //                invokeOption = DmtpInvokeOption.WaitInvoke;
+        //            }
+
+        //            if (invokeOption.Token.CanBeCanceled)
+        //            {
+        //                waitData.SetCancellationToken(invokeOption.Token);
+        //                invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
+        //            }
+        //            rpcPackage.LoadInvokeOption(invokeOption);
+        //            if (parameters != null)
+        //            {
+        //                var datas = new List<byte[]>();
+        //                foreach (var parameter in parameters)
+        //                {
+        //                    datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+        //                }
+        //                rpcPackage.ParametersBytes = datas;
+        //            }
+
+        //            rpcPackage.Package(byteBlock);
+
+        //            await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+        //        }
+
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //                {
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    return returnType.GetDefault();
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //                {
+        //                    CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+        //                    var resultContext = (DmtpRpcPackage)waitData.WaitResult;
+        //                    resultContext.ThrowStatus();
+        //                    return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+        //                }
+
+        //            default:
+        //                return returnType.GetDefault();
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.DmtpActor.WaitHandlePool.Destroy(waitData);
+        //    }
+        //}
+        //#endregion IdRpc
+
+
         #region Rpc
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public async Task<RpcResponse> InvokeAsync(RpcRequest request)
         {
             var rpcPackage = new DmtpRpcPackage
             {
-                MethodName = invokeKey,
+                InvokeKey = request.InvokeKey,
                 SourceId = this.DmtpActor.Id
             };
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+            var invokeOption = request.InvokeOption ?? InvokeOption.WaitInvoke;
+            var returnType = request.ReturnType;
 
             try
             {
                 using (var byteBlock = new ByteBlock())
                 {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
                     if (invokeOption.Token.CanBeCanceled)
                     {
                         waitData.SetCancellationToken(invokeOption.Token);
                         invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
                     }
                     rpcPackage.LoadInvokeOption(invokeOption);
-                    var datas = new List<byte[]>();
-                    foreach (var parameter in parameters)
-                    {
-                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                    }
-                    rpcPackage.ParametersBytes = datas;
-                    rpcPackage.Package(byteBlock);
 
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    var parameters = request.Parameters;
+                    if (parameters != null && parameters.Length > 0)
+                    {
+                        var datas = new byte[parameters.Length][];
+                        for (var i = 0; i < parameters.Length; i++)
+                        {
+                            datas[i] = this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameters[i]);
+                        }
+                        rpcPackage.ParametersBytes = datas;
+                    }
+
+                    var block = byteBlock;
+                    rpcPackage.Package(ref block);
+
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
 
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
                         {
-                            return returnType.GetDefault();
+                            return new RpcResponse(returnType.GetDefault(), default);
                         }
                     case FeedbackType.WaitSend:
                         {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            return returnType.GetDefault();
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            return new RpcResponse(returnType.GetDefault(), default);
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             var resultContext = (DmtpRpcPackage)waitData.WaitResult;
                             resultContext.ThrowStatus();
+
+                            object[] parameters;
                             if (resultContext.IsByRef)
                             {
-                                try
-                                {
-                                    for (var i = 0; i < parameters.Length; i++)
-                                    {
-                                        parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    throw new Exception(e.Message);
-                                }
-                            }
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
-                    default:
-                        return returnType.GetDefault();
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                SourceId = this.DmtpActor.Id
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    var datas = new List<byte[]>();
-                    foreach (var parameter in parameters)
-                    {
-                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                    }
-                    rpcPackage.ParametersBytes = datas;
-                    rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        break;
-
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            break;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            if (resultContext.IsByRef)
-                            {
+                                parameters = new object[resultContext.ParametersBytes.Count];
                                 for (var i = 0; i < parameters.Length; i++)
                                 {
-                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], request.ParameterTypes[i]);
                                 }
                             }
-                            break;
+                            else
+                            {
+                                parameters = default;
+                            }
+                            object returnValue;
+                            if (returnType == null)
+                            {
+                                returnValue = default;
+                            }
+                            else
+                            {
+                                returnValue = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+                            }
+                            return new RpcResponse(returnValue, parameters);
+
                         }
                     default:
-                        break;
+                        throw new Exception();
                 }
             }
             finally
@@ -595,634 +1498,101 @@ namespace TouchSocket.Dmtp.Rpc
             }
         }
 
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public async Task<RpcResponse> InvokeAsync(string targetId, RpcRequest request)
         {
+            if (string.IsNullOrEmpty(targetId))
+            {
+                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+            }
+
+            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
+            {
+                return await actor.InvokeAsync(request);
+            }
+
             var rpcPackage = new DmtpRpcPackage
             {
-                MethodName = invokeKey,
-                SourceId = this.DmtpActor.Id
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        break;
-
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            break;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                SourceId = this.DmtpActor.Id
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
-
-                    default:
-                        return returnType.GetDefault();
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                SourceId = this.DmtpActor.Id
+                InvokeKey = request.InvokeKey,
+                TargetId = targetId,
+                SourceId = this.DmtpActor.Id,
+                Route = true
             };
 
             var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
+            var invokeOption = request.InvokeOption ?? InvokeOption.WaitInvoke;
+            var returnType = request.ReturnType;
 
             try
             {
                 using (var byteBlock = new ByteBlock())
                 {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        break;
-
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            break;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                SourceId = this.DmtpActor.Id
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
                     if (invokeOption.Token.CanBeCanceled)
                     {
                         waitData.SetCancellationToken(invokeOption.Token);
                         invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, Sign = rpcPackage.Sign });
                     }
                     rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
+                    var parameters = request.Parameters;
+                    if (parameters != null && parameters.Length > 0)
                     {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
+                        var datas = new byte[parameters.Length][];
+                        for (var i = 0; i < parameters.Length; i++)
                         {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
+                            datas[i] = this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameters[i]);
                         }
                         rpcPackage.ParametersBytes = datas;
                     }
 
-                    rpcPackage.Package(byteBlock);
+                    var block = byteBlock;
+                    rpcPackage.Package(ref block);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
 
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
                         {
-                            return returnType.GetDefault();
+                            return new RpcResponse(returnType.GetDefault(), default);
                         }
                     case FeedbackType.WaitSend:
                         {
                             CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            return returnType.GetDefault();
+                            return new RpcResponse(returnType.GetDefault(), default);
                         }
                     case FeedbackType.WaitInvoke:
                         {
                             CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
                             var resultContext = (DmtpRpcPackage)waitData.WaitResult;
                             resultContext.ThrowStatus();
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
 
-                    default:
-                        return returnType.GetDefault();
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        #endregion Rpc
-
-        #region IdRpc
-
-        /// <inheritdoc/>
-        public void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
-            {
-                actor.Invoke(invokeKey, invokeOption, parameters);
-                return;
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                Route = true,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        break;
-
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            break;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
-            {
-                return actor.Invoke(returnType, invokeKey, invokeOption, parameters);
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-                Route = true
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
-
-                    default:
-                        return returnType.GetDefault();
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
-            {
-                actor.Invoke(invokeKey, invokeOption, ref parameters, types);
-                return;
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-                Route = true
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    var datas = new List<byte[]>();
-                    foreach (var parameter in parameters)
-                    {
-                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                    }
-                    rpcPackage.ParametersBytes = datas;
-                    rpcPackage.Package(byteBlock);
-
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            return;
-                        }
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            return;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
+                            object[] parameters;
                             if (resultContext.IsByRef)
                             {
+                                parameters = new object[resultContext.ParametersBytes.Count];
                                 for (var i = 0; i < parameters.Length; i++)
                                 {
-                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
+                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], request.ParameterTypes[i]);
                                 }
                             }
-                            return;
-                        }
-
-                    default:
-                        return;
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && this.TryFindDmtpRpcActor(targetId).GetFalseAwaitResult() is DmtpRpcActor actor)
-            {
-                return actor.Invoke(returnType, invokeKey, invokeOption, ref parameters, types);
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-                Route = true
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    var datas = new List<byte[]>();
-                    foreach (var parameter in parameters)
-                    {
-                        datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                    }
-                    rpcPackage.ParametersBytes = datas;
-                    rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(waitData.Wait(invokeOption.Timeout));
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            if (resultContext.IsByRef)
+                            else
                             {
-                                for (var i = 0; i < parameters.Length; i++)
-                                {
-                                    parameters[i] = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ParametersBytes[i], types[i]);
-                                }
+                                parameters = default;
                             }
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
+                            object returnValue;
+                            if (returnType == null)
+                            {
+                                returnValue = default;
+                            }
+                            else
+                            {
+                                returnValue = this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
+                            }
+                            return new RpcResponse(returnValue, parameters);
 
+                        }
                     default:
-                        return returnType.GetDefault();
+                        throw new Exception();
                 }
             }
             finally
@@ -1231,180 +1601,6 @@ namespace TouchSocket.Dmtp.Rpc
             }
         }
 
-        /// <inheritdoc/>
-        public async Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId).ConfigureFalseAwait() is DmtpRpcActor actor)
-            {
-                await actor.InvokeAsync(invokeKey, invokeOption, parameters).ConfigureFalseAwait();
-                return;
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                Route = true,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        break;
-
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            break;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
-            if (string.IsNullOrEmpty(invokeKey))
-            {
-                throw new ArgumentException($"“{nameof(invokeKey)}”不能为 null 或空。", nameof(invokeKey));
-            }
-
-            if (this.DmtpActor.AllowRoute && await this.TryFindDmtpRpcActor(targetId).ConfigureFalseAwait() is DmtpRpcActor actor)
-            {
-                return await actor.InvokeAsync(returnType, invokeKey, invokeOption, parameters).ConfigureFalseAwait();
-            }
-
-            var rpcPackage = new DmtpRpcPackage
-            {
-                MethodName = invokeKey,
-                TargetId = targetId,
-                SourceId = this.DmtpActor.Id,
-                Route = true
-            };
-
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitDataAsync(rpcPackage);
-
-            try
-            {
-                using (var byteBlock = new ByteBlock())
-                {
-                    if (invokeOption == default)
-                    {
-                        invokeOption = DmtpInvokeOption.WaitInvoke;
-                    }
-
-                    if (invokeOption.Token.CanBeCanceled)
-                    {
-                        waitData.SetCancellationToken(invokeOption.Token);
-                        invokeOption.Token.Register(this.CanceledInvoke, new CanceledPackage() { SourceId = this.DmtpActor.Id, TargetId = targetId, Sign = rpcPackage.Sign, Route = true });
-                    }
-                    rpcPackage.LoadInvokeOption(invokeOption);
-                    if (parameters != null)
-                    {
-                        var datas = new List<byte[]>();
-                        foreach (var parameter in parameters)
-                        {
-                            datas.Add(this.SerializationSelector.SerializeParameter(rpcPackage.SerializationType, parameter));
-                        }
-                        rpcPackage.ParametersBytes = datas;
-                    }
-
-                    rpcPackage.Package(byteBlock);
-
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Buffer, 0, byteBlock.Len);
-                }
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                        {
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitSend:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            return returnType.GetDefault();
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
-                            var resultContext = (DmtpRpcPackage)waitData.WaitResult;
-                            resultContext.ThrowStatus();
-                            return this.SerializationSelector.DeserializeParameter(resultContext.SerializationType, resultContext.ReturnParameterBytes, returnType);
-                        }
-
-                    default:
-                        return returnType.GetDefault();
-                }
-            }
-            finally
-            {
-                this.DmtpActor.WaitHandlePool.Destroy(waitData);
-            }
-        }
-
-        #endregion IdRpc
+        #endregion
     }
 }

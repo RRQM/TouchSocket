@@ -12,6 +12,7 @@
 
 using System;
 using System.Net.Sockets;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -29,7 +30,7 @@ namespace TouchSocket.Sockets
         public UdpNetworkMonitor(IPHost iPHost, Socket socket)
         {
             this.IPHost = iPHost;
-            this.Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket,nameof(socket));
         }
 
         /// <summary>

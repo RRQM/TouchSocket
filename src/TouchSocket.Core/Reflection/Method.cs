@@ -290,7 +290,7 @@ namespace TouchSocket.Core
                         {
                             task = (Task)this.m_invoker.Invoke(instance, parameters);
                         }
-                        await task;
+                        await task.ConfigureFalseAwait();
                         return DynamicMethodMemberAccessor.Default.GetValue(task, "Result");
                     }
                 default:

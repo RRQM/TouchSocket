@@ -94,10 +94,15 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
         {
-            using (var byteBlock = new ByteBlock(requestInfo.MaxLength))
+            var byteBlock = new ByteBlock(requestInfo.MaxLength);
+            try
             {
-                requestInfo.Build(byteBlock);
+                requestInfo.Build(ref byteBlock);
                 return byteBlock.ToArray();
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 

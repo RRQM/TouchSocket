@@ -49,7 +49,7 @@ namespace TouchSocket.Core
         /// </summary>
         public async Task WaitOneAsync()
         {
-            await this.WaitOneAsync(CancellationToken.None);
+            await this.WaitOneAsync(CancellationToken.None).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -80,13 +80,7 @@ namespace TouchSocket.Core
         {
             if (cancellationToken.IsCancellationRequested)
             {
-#if NET45
-                var tcs = new TaskCompletionSource<bool>();
-                tcs.TrySetCanceled();
-                return tcs.Task;
-#else
-                return Task.FromCanceled(cancellationToken);
-#endif
+                return EasyTask.FromCanceled(cancellationToken);
             }
 
             lock (this.m_locker)

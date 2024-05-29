@@ -10,7 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -19,6 +22,8 @@ namespace TouchSocket.Core
     /// </summary>
     public static class SystemThreadingExtension
     {
+        #region ReaderWriterLockSlim
+
         /// <summary>
         /// 创建一个可释放的读取锁
         /// </summary>
@@ -38,5 +43,138 @@ namespace TouchSocket.Core
         {
             return new WriteLock(lockSlim);
         }
+
+        #endregion ReaderWriterLockSlim
+
+        #region SemaphoreSlim
+
+        public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+        {
+            if (!semaphoreSlim.Wait(millisecondsTimeout, token))
+            {
+                ThrowHelper.ThrowTimeoutException();
+            }
+        }
+
+        public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
+        {
+            if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureFalseAwait())
+            {
+                ThrowHelper.ThrowTimeoutException();
+            }
+        }
+
+        #endregion SemaphoreSlim
+
+        #region Task
+
+        /// <summary>
+        /// 同步获取配置ConfigureAwait为false时的结果。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T GetFalseAwaitResult<T>(this Task<T> task)
+        {
+            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 同步配置ConfigureAwait为false时的执行。
+        /// </summary>
+        /// <param name="task"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void GetFalseAwaitResult(this Task task)
+        {
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 配置ConfigureAwait为false。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ConfiguredTaskAwaitable<T> ConfigureFalseAwait<T>(this Task<T> task)
+        {
+            return task.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 配置ConfigureAwait为false。
+        /// </summary>
+        /// <param name="task"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ConfiguredTaskAwaitable ConfigureFalseAwait(this Task task)
+        {
+            return task.ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 异步等待指定最大时间
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="task"></param>
+        /// <param name="millisecondsTimeout"></param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan millisecondsTimeout)
+        {
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
+                _ = delayTask.ConfigureFalseAwait();
+                if (await Task.WhenAny(task, delayTask).ConfigureFalseAwait() == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    return await task.ConfigureFalseAwait();
+                }
+                ThrowHelper.ThrowTimeoutException();
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// 异步等待指定最大时间
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="millisecondsTimeout"></param>
+        /// <returns></returns>
+        /// <exception cref="TimeoutException"></exception>
+        public static async Task WaitAsync(this Task task, TimeSpan millisecondsTimeout)
+        {
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
+                _ = delayTask.ConfigureFalseAwait();
+                if (await Task.WhenAny(task, delayTask).ConfigureFalseAwait() == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    await task.ConfigureFalseAwait();
+                    return;
+                }
+                ThrowHelper.ThrowTimeoutException();
+                return;
+            }
+        }
+
+        public static void FireAndForget(this Task task)
+        {
+            if (task is null)
+            {
+                return;
+            }
+
+            if (task.IsCompleted)
+            {
+                GC.KeepAlive(task.Exception);
+                return;
+            }
+            task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
+        }
+
+        #endregion Task
     }
 }

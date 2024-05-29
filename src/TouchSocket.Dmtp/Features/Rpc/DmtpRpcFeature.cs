@@ -127,8 +127,8 @@ namespace TouchSocket.Dmtp.Rpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this.OnDmtpHandshaking);
-            pluginManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this.OnDmtpReceived);
+            pluginManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(typeof(IDmtpHandshakingPlugin), this.OnDmtpHandshaking);
+            pluginManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(typeof(IDmtpReceivedPlugin), this.OnDmtpReceived);
         }
 
         private async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)

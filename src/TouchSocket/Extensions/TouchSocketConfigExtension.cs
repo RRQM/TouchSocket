@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using TouchSocket.Core;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -32,16 +33,16 @@ namespace TouchSocket.Sockets
             DependencyProperty<int>.Register("SendTimeout", 0);
 
         /// <summary>
-        /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
+        /// 数据处理适配器
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("TcpDataHandlingAdapter", () => { return new NormalDataHandlingAdapter(); });
+        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("TcpDataHandlingAdapter", null);
 
         /// <summary>
-        /// 数据处理适配器，默认为获取<see cref="UdpDataHandlingAdapter"/>
+        /// 数据处理适配器
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = DependencyProperty<Func<UdpDataHandlingAdapter>>.Register("UdpDataHandlingAdapter", () => { return new NormalUdpDataHandlingAdapter(); });
+        public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = DependencyProperty<Func<UdpDataHandlingAdapter>>.Register("UdpDataHandlingAdapter", null);
 
         /// <summary>
         /// 最小缓存池尺寸
@@ -63,11 +64,11 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig MinBufferSize(this TouchSocketConfig config, int value)
+        public static TouchSocketConfig SetMinBufferSize(this TouchSocketConfig config, int value)
         {
-            if (value < 1024)
+            if (value<1024)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), value, "数值不能小于1024");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
             }
             config.SetValue(MinBufferSizeProperty, value);
             return config;
@@ -81,12 +82,13 @@ namespace TouchSocket.Sockets
         /// <param name="config"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static TouchSocketConfig MaxBufferSize(this TouchSocketConfig config, int value)
+        public static TouchSocketConfig SetMaxBufferSize(this TouchSocketConfig config, int value)
         {
-            if (value < 1024)
+            if (value<1024)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), value, "数值不能小于1024");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
             }
+            
             config.SetValue(MaxBufferSizeProperty, value);
             return config;
         }
@@ -179,12 +181,6 @@ namespace TouchSocket.Sockets
         public static readonly DependencyProperty<IPHost> BindIPHostProperty = DependencyProperty<IPHost>.Register("BindIPHost", null);
 
         /// <summary>
-        /// 是否使用延迟合并发送。默认null。不开启
-        /// 所需类型<see cref="DelaySenderOption"/>
-        /// </summary>
-        public static readonly DependencyProperty<DelaySenderOption> DelaySenderProperty = DependencyProperty<DelaySenderOption>.Register("DelaySender", null);
-
-        /// <summary>
         /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
         /// 所需类型<see cref="bool"/>
         /// </summary>
@@ -274,23 +270,6 @@ namespace TouchSocket.Sockets
 #endif
                 });
             }
-            return config;
-        }
-
-        /// <summary>
-        /// 使用默认配置延迟合并发送。
-        /// 所需类型<see cref="DelaySenderOption"/>
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
-        public static TouchSocketConfig UseDelaySender(this TouchSocketConfig config, DelaySenderOption option = default)
-        {
-            if (option == default)
-            {
-                option = new DelaySenderOption();
-            }
-            config.SetValue(DelaySenderProperty, option);
             return config;
         }
 
@@ -487,22 +466,12 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TClient BuildClient<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject, IConnectObject, new()
+        public static async Task<TClient> BuildClientAsync<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject, IConnectableClient, new()
         {
             var client = new TClient();
-            client.Setup(config);
-            client.Connect();
+            await client.SetupAsync(config).ConfigureFalseAwait();
+            await client.ConnectAsync().ConfigureFalseAwait();
             return client;
-        }
-
-        /// <summary>
-        /// 构建Tcp类客户端，并连接
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TcpClient BuildWithTcpClient(this TouchSocketConfig config)
-        {
-            return BuildClient<TcpClient>(config);
         }
 
         /// <summary>
@@ -511,48 +480,13 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TService"></typeparam>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static TService BuildService<TService>(this TouchSocketConfig config) where TService : ITcpServiceBase, new()
+        public static async Task<TService> BuildServiceAsync<TService>(this TouchSocketConfig config) where TService : IServiceBase, new()
         {
             var service = new TService();
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config).ConfigureFalseAwait();
+            await service.StartAsync().ConfigureFalseAwait();
             return service;
         }
-
-        /// <summary>
-        /// 构建Tcp类服务器，并启动。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TcpService BuildWithTcpService(this TouchSocketConfig config)
-        {
-            return BuildService<TcpService>(config);
-        }
-
-        /// <summary>
-        /// 构建UDP类，并启动。
-        /// </summary>
-        /// <typeparam name="TSession"></typeparam>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TSession BuildUdp<TSession>(this TouchSocketConfig config) where TSession : IUdpSession, new()
-        {
-            var service = new TSession();
-            service.Setup(config);
-            service.Start();
-            return service;
-        }
-
-        /// <summary>
-        /// 构建UDP类，并启动。
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static UdpSession BuildWithUdpSession(this TouchSocketConfig config)
-        {
-            return BuildUdp<UdpSession>(config);
-        }
-
         #endregion 创建
     }
 }

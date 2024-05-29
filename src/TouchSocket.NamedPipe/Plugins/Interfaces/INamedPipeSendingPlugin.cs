@@ -19,7 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// INamedPipeSendingPlugin
     /// </summary>
-    public interface INamedPipeSendingPlugin<in TClient> : IPlugin where TClient : INamedPipeClientBase
+    public interface INamedPipeSendingPlugin: IPlugin
     {
         /// <summary>
         /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
@@ -27,13 +27,6 @@ namespace TouchSocket.NamedPipe
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnNamedPipeSending(TClient client, SendingEventArgs e);
-    }
-
-    /// <summary>
-    /// INamedPipeSendingPlugin
-    /// </summary>
-    public interface INamedPipeSendingPlugin : INamedPipeSendingPlugin<INamedPipeClientBase>
-    {
+        Task OnNamedPipeSending(INamedPipeSession client, SendingEventArgs e);
     }
 }

@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 提供一个基于Dmtp协议的，可以独立读写的通道。
     /// </summary>
-    public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
+    public partial interface IDmtpChannel : IDisposable, IEnumerable<IByteBlock>
     {
         /// <summary>
         /// 通道传输速度限制
@@ -31,12 +31,6 @@ namespace TouchSocket.Dmtp
         /// 具有可读数据的条目数
         /// </summary>
         int Available { get; }
-
-        /// <summary>
-        /// 缓存容量
-        /// </summary>
-        [Obsolete("此配置已被弃用")]
-        int CacheCapacity { get; set; }
 
         /// <summary>
         /// 判断当前通道能否调用<see cref="MoveNext()"/>
@@ -86,20 +80,10 @@ namespace TouchSocket.Dmtp
         DateTime LastOperationTime { get; }
 
         /// <summary>
-        /// 取消
-        /// </summary>
-        void Cancel(string operationMes = null);
-
-        /// <summary>
         /// 异步取消
         /// </summary>
         /// <returns></returns>
         Task CancelAsync(string operationMes = null);
-
-        /// <summary>
-        /// 完成操作
-        /// </summary>
-        void Complete(string operationMes = null);
 
         /// <summary>
         /// 异步完成操作
@@ -113,14 +97,8 @@ namespace TouchSocket.Dmtp
         ByteBlock GetCurrent();
 
         /// <summary>
-        /// 继续。
-        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
-        /// </summary>
-        /// <param name="operationMes"></param>
-        void HoldOn(string operationMes = null);
-
-        /// <summary>
         /// 异步调用继续
+        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
         /// </summary>
         /// <param name="operationMes"></param>
         /// <returns></returns>
@@ -144,14 +122,6 @@ namespace TouchSocket.Dmtp
         /// <param name="data"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        void Write(byte[] data, int offset, int length);
-
-        /// <summary>
-        /// 写入通道
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        Task WriteAsync(byte[] data, int offset, int length);
+        Task WriteAsync(ReadOnlyMemory<byte> memory);
     }
 }

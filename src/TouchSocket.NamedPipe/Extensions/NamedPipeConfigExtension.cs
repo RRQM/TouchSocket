@@ -27,7 +27,8 @@ namespace TouchSocket.NamedPipe
         /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("NamedPipeDataHandlingAdapter", () => { return new NormalDataHandlingAdapter(); });
+        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("NamedPipeDataHandlingAdapter", null
+            );
 
         /// <summary>
         /// 直接单个配置命名管道监听的地址组。所需类型<see cref="Action"/>
@@ -133,8 +134,8 @@ namespace TouchSocket.NamedPipe
                         }
                         else
                         {
-                            await Task.Delay(1000);
-                            await client.ConnectAsync();
+                            await Task.Delay(1000).ConfigureFalseAwait();
+                            await client.ConnectAsync().ConfigureFalseAwait();
                         }
                         successCallback?.Invoke(client);
                         return true;
@@ -145,7 +146,7 @@ namespace TouchSocket.NamedPipe
                         {
                             client.Logger.Log(LogLevel.Error, client, "断线重连失败。", ex);
                         }
-                        await Task.Delay(sleepTime);
+                        await Task.Delay(sleepTime).ConfigureFalseAwait();
                     }
                 }
                 return true;
@@ -181,7 +182,7 @@ namespace TouchSocket.NamedPipe
                         }
                         else
                         {
-                            await Task.Delay(1000);
+                            await Task.Delay(1000).ConfigureFalseAwait();
                             await client.ConnectAsync();
                         }
 
@@ -190,7 +191,7 @@ namespace TouchSocket.NamedPipe
                     }
                     catch (Exception ex)
                     {
-                        await Task.Delay(sleepTime);
+                        await Task.Delay(sleepTime).ConfigureFalseAwait();
                         if (failCallback?.Invoke(client, ++tryT, ex) != true)
                         {
                             return true;

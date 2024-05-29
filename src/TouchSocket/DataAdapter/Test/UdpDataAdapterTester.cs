@@ -25,18 +25,18 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class UdpDataAdapterTester : IDisposable
     {
-        private readonly IntelligentDataQueue<QueueDataBytes> asyncBytes;
-        private UdpDataHandlingAdapter adapter;
-        private int count;
-        private bool dispose;
-        private int expectedCount;
-        private Action<ByteBlock, IRequestInfo> receivedCallBack;
-        private Stopwatch stopwatch;
-        private int millisecondsTimeout;
+        private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
+        private UdpDataHandlingAdapter m_adapter;
+        private int m_count;
+        private bool m_dispose;
+        private int m_expectedCount;
+        private Func<ByteBlock, IRequestInfo, Task> m_receivedCallBack;
+        private Stopwatch m_stopwatch;
+        private int m_millisecondsTimeout;
 
         private UdpDataAdapterTester(int multiThread)
         {
-            this.asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
+            this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
             for (var i = 0; i < multiThread; i++)
             {
                 Task.Run(this.BeginSend);
@@ -50,13 +50,13 @@ namespace TouchSocket.Sockets
         /// <param name="multiThread">并发多线程数量</param>
         /// <param name="receivedCallBack">收到数据回调</param>
         /// <returns></returns>
-        public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
+        public static UdpDataAdapterTester CreateTester(UdpDataHandlingAdapter adapter, int multiThread, Func<ByteBlock, IRequestInfo, Task> receivedCallBack = default)
         {
             var tester = new UdpDataAdapterTester(multiThread);
-            tester.adapter = adapter;
-            adapter.SendCallBack = tester.SendCallback;
+            tester.m_adapter = adapter;
+            adapter.SendCallBackAsync = tester.SendCallback;
             adapter.ReceivedCallBack = tester.OnReceived;
-            tester.receivedCallBack = receivedCallBack;
+            tester.m_receivedCallBack = receivedCallBack;
             return tester;
         }
 
@@ -65,7 +65,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public void Dispose()
         {
-            this.dispose = true;
+            this.m_dispose = true;
         }
 
         /// <summary>
@@ -78,52 +78,52 @@ namespace TouchSocket.Sockets
         /// <param name="expectedCount">期待测试次数</param>
         /// <param name="millisecondsTimeout">超时</param>
         /// <returns></returns>
-        public TimeSpan Run(byte[] buffer, int offset, int length, int testCount, int expectedCount, int millisecondsTimeout)
+        public TimeSpan Run(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int millisecondsTimeout)
         {
-            this.count = 0;
-            this.expectedCount = expectedCount;
-            this.millisecondsTimeout = millisecondsTimeout;
-            this.stopwatch = new Stopwatch();
-            this.stopwatch.Start();
-            Task.Run(() =>
+            this.m_count = 0;
+            this.m_expectedCount = expectedCount;
+            this.m_millisecondsTimeout = millisecondsTimeout;
+            this.m_stopwatch = new Stopwatch();
+            this.m_stopwatch.Start();
+            Task.Run(async () =>
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    this.adapter.SendInput(null, buffer, offset, length);
+                    await this.m_adapter.SendInputAsync(null, memory).ConfigureFalseAwait();
                 }
             });
-            if (SpinWait.SpinUntil(() => this.count == this.expectedCount, this.millisecondsTimeout))
+            if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_millisecondsTimeout))
             {
-                this.stopwatch.Stop();
-                return this.stopwatch.Elapsed;
+                this.m_stopwatch.Stop();
+                return this.m_stopwatch.Elapsed;
             }
 
             throw new TimeoutException();
         }
 
-        /// <summary>
-        /// 模拟发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="testCount">测试次数</param>
-        /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="millisecondsTimeout">超时</param>
-        public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
-        {
-            return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
-        }
+        ///// <summary>
+        ///// 模拟发送
+        ///// </summary>
+        ///// <param name="buffer"></param>
+        ///// <param name="testCount">测试次数</param>
+        ///// <param name="expectedCount">期待测试次数</param>
+        ///// <param name="millisecondsTimeout">超时</param>
+        //public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
+        //{
+        //    return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
+        //}
 
-        private void BeginSend()
+        private async Task BeginSend()
         {
-            while (!this.dispose)
+            while (!this.m_dispose)
             {
-                if (this.tryGet(out var byteBlocks))
+                if (this.TryGet(out var byteBlocks))
                 {
                     foreach (var block in byteBlocks)
                     {
                         try
                         {
-                            this.adapter.ReceivedInput(null, block);
+                            await this.m_adapter.ReceivedInput(null, block).ConfigureFalseAwait();
                         }
                         finally
                         {
@@ -138,24 +138,29 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void OnReceived(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
+        private async Task OnReceived(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.receivedCallBack?.Invoke(byteBlock, requestInfo);
-            Interlocked.Increment(ref this.count);
+            if (this.m_receivedCallBack != null)
+            {
+                await this.m_receivedCallBack(byteBlock, requestInfo).ConfigureFalseAwait();
+            }
+            Interlocked.Increment(ref this.m_count);
         }
 
-        private void SendCallback(EndPoint endPoint, byte[] buffer, int offset, int length)
+        private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            var asyncByte = new QueueDataBytes(new byte[length], 0, length);
-            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
-            this.asyncBytes.Enqueue(asyncByte);
+            var array=memory.ToArray();
+            var asyncByte = new QueueDataBytes(array, 0, array.Length);
+            //Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
+            this.m_asyncBytes.Enqueue(asyncByte);
+            return EasyTask.CompletedTask;
         }
 
-        private bool tryGet(out List<ByteBlock> byteBlocks)
+        private bool TryGet(out List<ByteBlock> byteBlocks)
         {
             byteBlocks = new List<ByteBlock>();
 
-            while (this.asyncBytes.TryDequeue(out var asyncByte))
+            while (this.m_asyncBytes.TryDequeue(out var asyncByte))
             {
                 var block = new ByteBlock(asyncByte.Length);
                 block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);

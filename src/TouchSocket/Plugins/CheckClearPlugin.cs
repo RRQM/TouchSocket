@@ -11,8 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -20,35 +22,34 @@ namespace TouchSocket.Sockets
     /// 检查清理连接插件。服务器与客户端均适用。
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : ITcpClientBase
+    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : IClient, IClosableClient
     {
+        private static readonly DependencyProperty<bool> s_checkClearProperty =
+            DependencyProperty<bool>.Register("CheckClear", false);
+
+        private readonly ILog m_logger;
+
         /// <summary>
         /// 检查清理连接插件。服务器与客户端均适用。
         /// </summary>
-        public CheckClearPlugin()
+        public CheckClearPlugin(ILog logger)
         {
             this.OnClose = (client, type) =>
             {
                 if (this.CheckClearType == CheckClearType.OnlyReceive)
                 {
-                    client.Close("超时无数据Receive交互，主动断开连接");
+                    client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving);
                 }
                 else if (this.CheckClearType == CheckClearType.OnlySend)
                 {
-                    client.Close("超时无数据Send交互，主动断开连接");
+                    client.CloseAsync(TouchSocketResource.TimedoutWithoutSending);
                 }
                 else
                 {
-                    client.Close("超时无数据交互，主动断开连接");
+                    client.CloseAsync(TouchSocketResource.TimedoutWithoutAll);
                 }
             };
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<TClient, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), this.OnTcpConnected);
-            base.Loaded(pluginManager);
+            this.m_logger = logger;
         }
 
         /// <summary>
@@ -66,55 +67,6 @@ namespace TouchSocket.Sockets
         /// 获取或设置清理无数据交互的Client，默认60秒。
         /// </summary>
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
-
-        /// <inheritdoc/>
-        private async Task OnTcpConnected(TClient client, ConnectedEventArgs e)
-        {
-            _ = Task.Run(async () =>
-            {
-                var first = true;
-                while (true)
-                {
-                    if (first)
-                    {
-                        await Task.Delay(this.Tick).ConfigureFalseAwait();
-                        first = false;
-                    }
-                    else
-                    {
-                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
-                    }
-
-                    if (!client.Online)
-                    {
-                        return;
-                    }
-                    if (this.CheckClearType == CheckClearType.OnlyReceive)
-                    {
-                        if (DateTime.Now - client.LastReceivedTime > this.Tick)
-                        {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
-                        }
-                    }
-                    else if (this.CheckClearType == CheckClearType.OnlySend)
-                    {
-                        if (DateTime.Now - client.LastSendTime > this.Tick)
-                        {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
-                        }
-                    }
-                    else
-                    {
-                        if (DateTime.Now - client.GetLastActiveTime() > this.Tick)
-                        {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
-                        }
-                    }
-                }
-            });
-
-            await e.InvokeNext();
-        }
 
         /// <summary>
         /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
@@ -148,6 +100,103 @@ namespace TouchSocket.Sockets
         {
             this.Tick = timeSpan;
             return this;
+        }
+
+        /// <inheritdoc/>
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            pluginManager.Add<IConfigObject, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
+            base.Loaded(pluginManager);
+        }
+
+        private void CheckClient(TClient client)
+        {
+            if (client.GetValue(s_checkClearProperty))
+            {
+                return;
+            }
+
+            client.SetValue(s_checkClearProperty, true);
+
+            _ = Task.Run(async () =>
+            {
+                var first = true;
+                while (true)
+                {
+                    if (first)
+                    {
+                        await Task.Delay(this.Tick).ConfigureFalseAwait();
+                        first = false;
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                    }
+
+                    if (client is IOnlineClient onlineClient && !onlineClient.Online)
+                    {
+                        return;
+                    }
+                    //else if (client is IOnlineClient handshakeObject && !handshakeObject.Online)
+                    //{
+                    //    return;
+                    //}
+
+                    if (this.CheckClearType == CheckClearType.OnlyReceive)
+                    {
+                        if (DateTime.Now - client.LastReceivedTime > this.Tick)
+                        {
+                            this.OnClose?.Invoke(client, this.CheckClearType);
+                        }
+                    }
+                    else if (this.CheckClearType == CheckClearType.OnlySend)
+                    {
+                        if (DateTime.Now - client.LastSentTime > this.Tick)
+                        {
+                            this.OnClose?.Invoke(client, this.CheckClearType);
+                        }
+                    }
+                    else
+                    {
+                        if (DateTime.Now - client.GetLastActiveTime() > this.Tick)
+                        {
+                            this.OnClose?.Invoke(client, this.CheckClearType);
+                        }
+                    }
+                }
+            });
+        }
+
+        private Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        {
+            Task.Factory.StartNew(this.Polling,sender);
+            return EasyTask.CompletedTask;
+        }
+
+        private async Task Polling(object sender)
+        {
+            while (true)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                    if (sender is IConnectableService connectableService)
+                    {
+                        foreach (var client in connectableService.GetClients())
+                        {
+                            this.CheckClient((TClient)client);
+                        }
+                    }
+                    else if (sender is IClient client)
+                    {
+                        this.CheckClient((TClient)client);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.m_logger.Exception(ex);
+                }
+            }
         }
     }
 }

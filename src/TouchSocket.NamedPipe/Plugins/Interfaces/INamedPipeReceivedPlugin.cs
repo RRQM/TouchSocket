@@ -19,7 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// INamedPipeReceivedPlugin
     /// </summary>
-    public interface INamedPipeReceivedPlugin<in TClient> : IPlugin where TClient : INamedPipeClientBase
+    public interface INamedPipeReceivedPlugin: IPlugin
     {
         /// <summary>
         /// 在收到数据时触发
@@ -27,13 +27,6 @@ namespace TouchSocket.NamedPipe
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnNamedPipeReceived(TClient client, ReceivedDataEventArgs e);
-    }
-
-    /// <summary>
-    /// INamedPipeReceivedPlugin
-    /// </summary>
-    public interface INamedPipeReceivedPlugin : INamedPipeReceivedPlugin<INamedPipeClientBase>
-    {
+        Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e);
     }
 }

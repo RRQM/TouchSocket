@@ -23,27 +23,27 @@ namespace TouchSocket.Core
         /// <summary>
         /// 成功
         /// </summary>
-        public static readonly Result Success = new Result(ResultCode.Success, "Success");
+        public static readonly Result Success = new Result(ResultCode.Success, TouchSocketCoreResource.OperationSuccessful);
 
         /// <summary>
         /// 初始状态
         /// </summary>
-        public static readonly Result Default = new Result(ResultCode.Default, "Default");
+        public static readonly Result Default = new Result(ResultCode.Default, TouchSocketCoreResource.Default);
 
         /// <summary>
         /// 未知失败
         /// </summary>
-        public static readonly Result UnknownFail = new Result(ResultCode.Fail, TouchSocketCoreResource.UnknownError.GetDescription());
+        public static readonly Result UnknownFail = new Result(ResultCode.Fail, TouchSocketCoreResource.UnknownError);
 
         /// <summary>
         /// 超时
         /// </summary>
-        public static readonly Result Overtime = new Result(ResultCode.Overtime, TouchSocketCoreResource.Overtime.GetDescription());
+        public static readonly Result Overtime = new Result(ResultCode.Overtime, TouchSocketCoreResource.OperationOvertime);
 
         /// <summary>
         /// 取消
         /// </summary>
-        public static readonly Result Canceled = new Result(ResultCode.Canceled, TouchSocketCoreResource.Canceled.GetDescription());
+        public static readonly Result Canceled = new Result(ResultCode.Canceled, TouchSocketCoreResource.OperationCanceled);
 
         /// <summary>
         /// 构造函数
@@ -160,9 +160,9 @@ namespace TouchSocket.Core
         /// ToString
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public override readonly string ToString()
         {
-            return $"类型：{this.ResultCode}，信息：{this.Message}";
+            return TouchSocketCoreResource.ResultToString.Format(this.ResultCode, this.Message);
         }
     }
 
@@ -225,7 +225,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public override string ToString()
         {
-            return $"类型：{this.ResultCode}，信息：{this.Message}";
+            return TouchSocketCoreResource.ResultToString.Format(this.ResultCode, this.Message);
         }
     }
 

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Net;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -20,7 +21,7 @@ namespace TouchSocket.Modbus
     {
         public override bool CanSendRequestInfo => true;
 
-        protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        protected override async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             var response = new ModbusTcpResponse();
 
@@ -28,7 +29,7 @@ namespace TouchSocket.Modbus
             {
                 if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
                 {
-                    this.GoReceived(remoteEndPoint, default, response);
+                    await this.GoReceived(remoteEndPoint, default, response).ConfigureFalseAwait();
                 }
             }
         }

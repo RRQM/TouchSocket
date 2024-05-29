@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
@@ -120,39 +121,39 @@ namespace TouchSocket.Http.WebSockets
         /// 当接收到数据时处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            var buffer = byteBlock.Buffer;
-            var r = byteBlock.Len;
+            var buffer = byteBlock.Memory.GetArray().Array;
+            var r = byteBlock.Length;
 
             if (this.m_tempByteBlock != null)
             {
                 this.m_tempByteBlock.Write(buffer, 0, r);
                 buffer = this.m_tempByteBlock.ToArray();
-                r = this.m_tempByteBlock.Pos;
+                r = this.m_tempByteBlock.Position;
                 this.m_tempByteBlock.Dispose();
                 this.m_tempByteBlock = null;
             }
 
             if (this.m_dataFrameTemp == null)
             {
-                this.SplitPackage(buffer, 0, r);
+                await this.SplitPackage(buffer, 0, r).ConfigureFalseAwait();
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_dataFrameTemp);
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
                     this.m_dataFrameTemp = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_dataFrameTemp);
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
                     this.m_dataFrameTemp = null;
-                    this.SplitPackage(buffer, this.m_surPlusLength, r);
+                    await this.SplitPackage(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
                 }
                 else
                 {
@@ -174,15 +175,15 @@ namespace TouchSocket.Http.WebSockets
             base.Reset();
         }
 
-        private void PreviewHandle(WSDataFrame dataFrame)
+        private async Task PreviewHandle(WSDataFrame dataFrame)
         {
             try
             {
                 if (dataFrame.Mask)
                 {
-                    WSTools.DoMask(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Len, dataFrame.MaskingKey);
+                    WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory, dataFrame.MaskingKey);
                 }
-                this.GoReceived(null, dataFrame);
+                await this.GoReceivedAsync(null, dataFrame).ConfigureFalseAwait();
             }
             finally
             {
@@ -196,7 +197,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataBuffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        private void SplitPackage(byte[] dataBuffer, int offset, int length)
+        private async Task SplitPackage(byte[] dataBuffer, int offset, int length)
         {
             while (offset < length)
             {
@@ -217,13 +218,13 @@ namespace TouchSocket.Http.WebSockets
                         }
                     case FilterResult.Success:
                         {
-                            if (dataFrame.PayloadLength == dataFrame.PayloadData.Len)
+                            if (dataFrame.PayloadLength == dataFrame.PayloadData.Length)
                             {
-                                this.PreviewHandle(dataFrame);
+                                await this.PreviewHandle(dataFrame).ConfigureFalseAwait();
                             }
                             else
                             {
-                                this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
+                                this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Length;
                                 this.m_dataFrameTemp = dataFrame;
                             }
                         }

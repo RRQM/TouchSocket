@@ -20,84 +20,86 @@ namespace TouchSocket.Rpc
     /// </summary>
     public interface ITargetRpcClient
     {
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey">方法名</param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey">方法名</param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        //Task InvokeAsync(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="returnType"></param>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey"></param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回值</returns>
-        Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="returnType"></param>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey"></param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回值</returns>
+        //Task<object> InvokeAsync(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey"></param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey"></param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        //void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="returnType"></param>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey"></param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回值</returns>
-        object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="returnType"></param>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey"></param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回值</returns>
+        //object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
 
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey"></param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="types"></param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey"></param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <param name="types"></param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        //void Invoke(string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
 
-        /// <summary>
-        /// 调用对应Id的客户端Rpc
-        /// </summary>
-        /// <param name="returnType"></param>
-        /// <param name="targetId">客户端Id</param>
-        /// <param name="invokeKey"></param>
-        /// <param name="invokeOption">调用配置</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="types"></param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">调用内部异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回值</returns>
-        object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
+        ///// <summary>
+        ///// 调用对应Id的客户端Rpc
+        ///// </summary>
+        ///// <param name="returnType"></param>
+        ///// <param name="targetId">客户端Id</param>
+        ///// <param name="invokeKey"></param>
+        ///// <param name="invokeOption">调用配置</param>
+        ///// <param name="parameters">参数</param>
+        ///// <param name="types"></param>
+        ///// <exception cref="TimeoutException">调用超时</exception>
+        ///// <exception cref="RpcInvokeException">调用内部异常</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回值</returns>
+        //object Invoke(Type returnType, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
+
+        Task<RpcResponse> InvokeAsync(string targetId,RpcRequest request);
     }
 }

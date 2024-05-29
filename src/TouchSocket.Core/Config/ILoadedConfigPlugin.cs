@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 当配置Config完成时触发。
     /// </summary>
-    public interface ILoadedConfigPlugin<in TSender> : IPlugin where TSender : IConfigObject
+    public interface ILoadedConfigPlugin : IPlugin
     {
         /// <summary>
         /// 当完成配置载入时
@@ -25,13 +25,6 @@ namespace TouchSocket.Core
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnLoadedConfig(TSender sender, ConfigEventArgs e);
-    }
-
-    /// <summary>
-    /// 当配置Config完成时触发。
-    /// </summary>
-    public interface ILoadedConfigPlugin : ILoadedConfigPlugin<IConfigObject>
-    {
+        Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e);
     }
 }

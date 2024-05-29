@@ -19,21 +19,8 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// ISerialSendingPlugin
     /// </summary>
-    public interface ISerialSendingPlugin<in TClient> : IPlugin where TClient : ISerialPortClient
+    public interface ISerialSendingPlugin : IPlugin
     {
-        /// <summary>
-        /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnSerialSending(TClient client, SendingEventArgs e);
-    }
-
-    /// <summary>
-    /// ISerialSendingPlugin
-    /// </summary>
-    public interface ISerialSendingPlugin : ISerialSendingPlugin<ISerialPortClient>
-    {
+        Task OnSerialSending(ISerialPortClient client, SendingEventArgs e);
     }
 }

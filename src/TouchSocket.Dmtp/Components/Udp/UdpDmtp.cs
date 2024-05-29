@@ -35,28 +35,28 @@ namespace TouchSocket.Dmtp
         {
             this.m_timer = new Timer((obj) =>
             {
-                //this.m_udpDmtpClients.RemoveWhen((kv) =>
-                //{
-                //    if (DateTime.Now - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
-                //    {
-                //        return true;
-                //    }
-                //    return false;
-                //});
+                this.m_udpDmtpClients.RemoveWhen((kv) =>
+                {
+                    if (DateTime.Now - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
+                    {
+                        return true;
+                    }
+                    return false;
+                });
             }, null, 1000 * 10, 1000 * 10);
         }
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor => this.PrivateGetUdpDmtpClient().DmtpActor;
+        public IDmtpActor DmtpActor => this.PrivateGetUdpDmtpClientAsync().DmtpActor;
 
         /// <summary>
         /// 通过终结点获取<see cref="IUdpDmtpClient"/>
         /// </summary>
         /// <param name="endPoint"></param>
         /// <returns></returns>
-        public IUdpDmtpClient GetUdpDmtpClient(EndPoint endPoint)
+        public async Task<IUdpDmtpClient> GetUdpDmtpClientAsync(EndPoint endPoint)
         {
-            return this.PrivateGetUdpDmtpClient(endPoint);
+            return await this.PrivateGetUdpDmtpClient(endPoint).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>
@@ -68,20 +68,20 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        protected override async Task ReceivedData(UdpReceivedDataEventArgs e)
+        protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
-            var client = this.PrivateGetUdpDmtpClient(e.EndPoint);
+            var client =await this.PrivateGetUdpDmtpClient(e.EndPoint).ConfigureFalseAwait();
             if (client == null)
             {
                 return;
             }
 
-            var message = DmtpMessage.CreateFrom(e.ByteBlock);
-            if (!await client.InputReceivedData(message))
+            var message = DmtpMessage.CreateFrom(e.ByteBlock.Span);
+            if (!await client.InputReceivedData(message).ConfigureFalseAwait())
             {
                 if (this.PluginManager.Enable)
                 {
-                    await this.PluginManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), client, new DmtpMessageEventArgs(message));
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), client, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
                 }
             }
         }
@@ -92,7 +92,7 @@ namespace TouchSocket.Dmtp
             base.LoadConfig(config);
         }
 
-        private UdpDmtpClient PrivateGetUdpDmtpClient(EndPoint endPoint)
+        private async Task<UdpDmtpClient> PrivateGetUdpDmtpClient(EndPoint endPoint)
         {
             if (!this.m_udpDmtpClients.TryGetValue(endPoint, out var udpRpcActor))
             {
@@ -100,7 +100,7 @@ namespace TouchSocket.Dmtp
                 {
                     Client = this,
                 };
-                if (udpRpcActor.Created(this.PluginManager))
+                if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureFalseAwait())
                 {
                     this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
                 }
@@ -108,13 +108,23 @@ namespace TouchSocket.Dmtp
             return udpRpcActor;
         }
 
-        private IUdpDmtpClient PrivateGetUdpDmtpClient()
+        private IUdpDmtpClient PrivateGetUdpDmtpClientAsync()
         {
             if (this.RemoteIPHost == null)
             {
                 throw new ArgumentNullException(nameof(this.RemoteIPHost));
             }
-            return this.PrivateGetUdpDmtpClient(this.RemoteIPHost.EndPoint);
+            return this.PrivateGetUdpDmtpClient(this.RemoteIPHost.EndPoint).GetFalseAwaitResult();
+        }
+
+        //internal void InternalSend(EndPoint m_endPoint, ArraySegment<byte>[] transferBytes)
+        //{
+        //    this.ProtectedSend(m_endPoint, transferBytes);
+        //}
+
+        internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory)
+        {
+            return this.ProtectedSendAsync(m_endPoint, memory);
         }
     }
 }

@@ -27,7 +27,32 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="RefShared\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="RefShared\InternalVisible.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="RefShared\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketHttpResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketHttpResource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketHttpResource.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TouchSocketHttpResource.Designer.cs</LastGenOutput>
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

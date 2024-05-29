@@ -10,7 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Threading.Tasks;
 using TouchSocket.Http.WebSockets;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Core
 {
@@ -38,5 +41,34 @@ namespace TouchSocket.Core
             pluginManager.Add(heartbeatPlugin);
             return heartbeatPlugin;
         }
+
+        #region WebSocketReconnection
+
+        /// <summary>
+        /// 使用<see cref="IWebSocketClient"/>断线重连。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<TClient> UseWebSocketReconnection<TClient>(this IPluginManager pluginManager) where TClient : IWebSocketClient
+        {
+            var reconnectionPlugin = new WebSocketReconnectionPlugin<TClient>();
+            pluginManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
+        /// <summary>
+        /// 使用<see cref="IWebSocketClient"/>断线重连。
+        /// </summary>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<IWebSocketClient> UseWebSocketReconnection(this IPluginManager pluginManager)
+        {
+            var reconnectionPlugin = new WebSocketReconnectionPlugin<IWebSocketClient>();
+            pluginManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
+        #endregion WebSocketReconnection
     }
 }

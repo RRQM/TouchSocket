@@ -49,7 +49,7 @@ namespace TouchSocket.Http.WebSockets
         {
             base.Loaded(pluginManager);
 
-            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this.OnWebSocketReceived);
+            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(typeof(IWebSocketReceivedPlugin), this.OnWebSocketReceived);
         }
 
         /// <summary>
@@ -77,13 +77,13 @@ namespace TouchSocket.Http.WebSockets
         {
             if (e.DataFrame.Opcode == WSDataType.Text)
             {
-                await e.InvokeNext();
+                await e.InvokeNext().ConfigureFalseAwait();
                 return;
             }
             var strs = e.DataFrame.ToText().Split(' ');
             if (!this.m_pairs.TryGetValue(strs[0], out var method))
             {
-                await e.InvokeNext();
+                await e.InvokeNext().ConfigureFalseAwait();
                 return;
             }
             var ps = method.Info.GetParameters();
@@ -91,7 +91,7 @@ namespace TouchSocket.Http.WebSockets
             var index = 0;
             for (var i = 0; i < ps.Length; i++)
             {
-                if (ps[i].ParameterType.IsInterface && typeof(ITcpClientBase).IsAssignableFrom(ps[i].ParameterType))
+                if (ps[i].ParameterType.IsInterface && typeof(IHttpSession).IsAssignableFrom(ps[i].ParameterType))
                 {
                     os[i] = webSocket.Client;
                 }
@@ -110,12 +110,12 @@ namespace TouchSocket.Http.WebSockets
                 switch (method.TaskType)
                 {
                     case TaskReturnType.Task:
-                        await method.InvokeAsync(this, os);
+                        await method.InvokeAsync(this, os).ConfigureFalseAwait();
                         result = default;
                         break;
 
                     case TaskReturnType.TaskObject:
-                        result = await method.InvokeObjectAsync(this, os);
+                        result = await method.InvokeObjectAsync(this, os).ConfigureFalseAwait();
                         break;
 
                     case TaskReturnType.None:
@@ -126,14 +126,14 @@ namespace TouchSocket.Http.WebSockets
 
                 if (method.HasReturn)
                 {
-                    webSocket.Send(this.Converter.Serialize(null, result));
+                    await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureFalseAwait();
                 }
             }
             catch (Exception ex)
             {
                 if (this.ReturnException)
                 {
-                    webSocket.Send(this.Converter.Serialize(null, ex.Message));
+                    await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureFalseAwait();
                 }
             }
         }

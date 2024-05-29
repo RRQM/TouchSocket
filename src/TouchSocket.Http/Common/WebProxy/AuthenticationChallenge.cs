@@ -19,6 +19,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// 处理代理认证凭证
     /// </summary>
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
     internal class AuthenticationChallenge
     {
         /// <summary>

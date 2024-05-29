@@ -33,26 +33,12 @@ namespace TouchSocket.Core
         void ClearCache();
 
         /// <summary>
-        /// 清空所有缓存
-        /// </summary>
-        /// <returns></returns>
-        Task ClearCacheAsync();
-
-        /// <summary>
         /// 判断缓存是否存在，且在生命周期内。
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         bool ContainsCache(TKey key);
-
-        /// <summary>
-        /// 判断缓存是否存在，且在生命周期内。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        Task<bool> ContainsCacheAsync(TKey key);
 
         /// <summary>
         /// 设置缓存，不管缓存存不存在，都会添加。
@@ -63,14 +49,6 @@ namespace TouchSocket.Core
         bool SetCache(ICacheEntry<TKey, TValue> entity);
 
         /// <summary>
-        /// 设置缓存，不管缓存存不存在，都会添加。
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity);
-
-        /// <summary>
         /// 获取指定键的缓存。
         /// </summary>
         /// <param name="key">键</param>
@@ -79,27 +57,11 @@ namespace TouchSocket.Core
         ICacheEntry<TKey, TValue> GetCache(TKey key);
 
         /// <summary>
-        /// 获取指定键的缓存。
-        /// </summary>
-        /// <param name="key">键</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key);
-
-        /// <summary>
         /// 移除指定键的缓存。
         /// </summary>
         /// <param name="key">键</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         bool RemoveCache(TKey key);
-
-        /// <summary>
-        /// 移除指定键的缓存。
-        /// </summary>
-        /// <param name="key">键</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        Task<bool> RemoveCacheAsync(TKey key);
     }
 }

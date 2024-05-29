@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 具有释放的对象。内部实现了GC.SuppressFinalize，但不包括析构函数相关。
     /// </summary>
-    public partial class DisposableObject : IDisposableObject
+    public abstract partial class DisposableObject : IDisposableObject
     {
         /// <summary>
         /// 判断是否已释放。
@@ -28,7 +28,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool DisposedValue { get => this.m_disposedValue; }
+        public bool DisposedValue => this.m_disposedValue;
 
         /// <summary>
         /// 判断是否已经被释放，如果是，则抛出异常。
@@ -39,7 +39,7 @@ namespace TouchSocket.Core
         {
             if (this.m_disposedValue)
             {
-                throw new ObjectDisposedException(this.GetType().Name);
+                ThrowHelper.ThrowObjectDisposedException(this);
             }
         }
 

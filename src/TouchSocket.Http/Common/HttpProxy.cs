@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
@@ -17,6 +18,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http代理
     /// </summary>
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
     public class HttpProxy
     {
         /// <summary>

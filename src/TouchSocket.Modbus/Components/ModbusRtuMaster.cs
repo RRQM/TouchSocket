@@ -21,7 +21,7 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// 基于串口的Modbus主站接口
     /// </summary>
-    public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
+    public class ModbusRtuMaster : SerialPortClient, IModbusRtuMaster
     {
         /// <summary>
         /// 基于串口的Modbus主站接口
@@ -31,44 +31,41 @@ namespace TouchSocket.Modbus
             this.Protocol = TouchSocketModbusUtility.ModbusRtu;
         }
 
-        /// <inheritdoc/>
-        public override bool CanSetDataHandlingAdapter => false;
+        ///// <inheritdoc/>
+        //public IModbusResponse 123SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+        //{
+        //    this.m_semaphoreSlimForRequest.WaitTime(millisecondsTimeout, token);
+        //    try
+        //    {
+        //        var modbusTcpRequest = new ModbusRtuRequest(request);
 
-        /// <inheritdoc/>
-        public IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
-        {
-            try
-            {
-                this.m_semaphoreSlimForRequest.Wait(millisecondsTimeout, token);
-                var modbusTcpRequest = new ModbusRtuRequest(request);
+        //        this.123Send(modbusTcpRequest);
+        //        this.m_waitData.SetCancellationToken(token);
+        //        var waitDataStatus = this.m_waitData.Wait(millisecondsTimeout);
+        //        waitDataStatus.ThrowIfNotRunning();
 
-                this.Send(modbusTcpRequest);
-                this.m_waitData.SetCancellationToken(token);
-                var waitDataStatus = this.m_waitData.Wait(millisecondsTimeout);
-                waitDataStatus.ThrowIfNotRunning();
-
-                var response = this.m_waitData.WaitResult;
-                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-                return response;
-            }
-            finally
-            {
-                this.m_semaphoreSlimForRequest.Release();
-            }
-        }
+        //        var response = this.m_waitData.WaitResult;
+        //        TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+        //        return response;
+        //    }
+        //    finally
+        //    {
+        //        this.m_semaphoreSlimForRequest.Release();
+        //    }
+        //}
 
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
+            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+
             try
             {
-                await this.m_semaphoreSlimForRequest.WaitAsync(millisecondsTimeout, token);
-
                 var modbusTcpRequest = new ModbusRtuRequest(request);
 
-                this.Send(modbusTcpRequest);
+                await this.SendAsync(modbusTcpRequest).ConfigureFalseAwait();
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout);
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
@@ -82,11 +79,10 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        protected override Task OnConnecting(SerialConnectingEventArgs e)
+        protected override async Task OnSerialConnecting(ConnectingEventArgs e)
         {
-            //this.SetAdapter(new ModbusRtuAdapter());
             this.SetAdapter(new ModbusRtuAdapter2());
-            return base.OnConnecting(e);
+            await base.OnSerialConnecting(e).ConfigureFalseAwait();
         }
 
         #region 字段
@@ -98,13 +94,13 @@ namespace TouchSocket.Modbus
         #endregion 字段
 
         /// <inheritdoc/>
-        protected override async Task ReceivedData(ReceivedDataEventArgs e)
+        protected override async Task OnSerialReceived(ReceivedDataEventArgs e)
         {
             if (e.RequestInfo is ModbusRtuResponse response)
             {
                 this.SetRun(response);
             }
-            await base.ReceivedData(e);
+            await base.OnSerialReceived(e).ConfigureFalseAwait();
         }
 
         private void SetRun(ModbusRtuResponse response)

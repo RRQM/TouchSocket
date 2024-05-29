@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Linq;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Modbus
@@ -23,12 +25,16 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// CRC16_Modbus效验
         /// </summary>
-        /// <param name="byteData">要进行计算的字节数组</param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory"></param>
         /// <returns>计算后的数组</returns>
-        public static byte[] ToModbusCrc(byte[] byteData, int offset, int length)
+        public static byte[] ToModbusCrc(ReadOnlyMemory<byte> memory)
         {
+            var memoryArray = memory.GetArray();
+
+            byte[] byteData = memoryArray.Array;
+            int offset = memoryArray.Offset;
+            int length = memoryArray.Count;
+
             var CRC = new byte[2];
 
             ushort wCrc = 0xFFFF;

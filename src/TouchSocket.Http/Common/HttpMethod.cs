@@ -11,13 +11,15 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 
 namespace TouchSocket.Http
 {
     /// <summary>
     /// HttpMethod
     /// </summary>
-    public readonly struct HttpMethod
+    [DebuggerDisplay("{m_value}")]
+    public readonly record struct HttpMethod
     {
         /// <summary>
         /// 值
@@ -73,39 +75,6 @@ namespace TouchSocket.Http
         public override int GetHashCode()
         {
             return this.m_value.GetHashCode();
-        }
-
-        /// <summary>
-        /// 比较是否和目标相等
-        /// </summary>
-        /// <param name="obj">目标</param>
-        /// <returns></returns>
-        public override bool Equals(object obj)
-        {
-            return obj is HttpMethod && this.GetHashCode() == obj.GetHashCode();
-        }
-
-        /// <summary>
-        /// 等于
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public static bool operator ==(HttpMethod a, HttpMethod b)
-        {
-            return string.IsNullOrEmpty(a.m_value) && string.IsNullOrEmpty(b.m_value) || string.Equals(a.m_value, b.m_value, StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// 不等于
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public static bool operator !=(HttpMethod a, HttpMethod b)
-        {
-            var state = a == b;
-            return !state;
         }
     }
 }

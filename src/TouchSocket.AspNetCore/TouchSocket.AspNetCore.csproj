@@ -9,14 +9,21 @@
 		<Title>TouchSocket.AspNetCore</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.AspNetCore</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Dmtp\Common\InternalClientCollection.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App"/>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.Dmtp\TouchSocket.Dmtp.csproj" />
 	  <ProjectReference Include="..\TouchSocket.Hosting\TouchSocket.Hosting.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Dmtp\Common\" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

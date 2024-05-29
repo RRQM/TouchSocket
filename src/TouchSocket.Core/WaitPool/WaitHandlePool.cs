@@ -320,19 +320,19 @@ namespace TouchSocket.Core
         /// <param name="sign"></param>
         public bool SetRun(long sign)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(sign, out var waitData))
-            {
-                waitData.Set();
-                result = true;
-            }
-
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set();
-                result = true;
+                return true;
             }
-            return result;
+
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set();
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -342,19 +342,18 @@ namespace TouchSocket.Core
         /// <param name="waitResult"></param>
         public bool SetRun(long sign, T waitResult)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(sign, out var waitData))
-            {
-                waitData.Set(waitResult);
-                result = true;
-            }
-
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
-                result = true;
+                return true;
             }
-            return result;
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -363,19 +362,19 @@ namespace TouchSocket.Core
         /// <param name="waitResult"></param>
         public bool SetRun(T waitResult)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
-            {
-                waitData.Set(waitResult);
-                result = true;
-            }
-
             if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
-                result = true;
+                return true;
             }
-            return result;
+
+            if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -384,17 +383,21 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            foreach (var item in this.m_waitDic.Values)
+            if (disposing) 
             {
-                item.SafeDispose();
-            }
-            foreach (var item in this.m_waitQueue)
-            {
-                item.SafeDispose();
-            }
-            this.m_waitDic.Clear();
+                foreach (var item in this.m_waitDic.Values)
+                {
+                    item.SafeDispose();
+                }
+                foreach (var item in this.m_waitQueue)
+                {
+                    item.SafeDispose();
+                }
+                this.m_waitDic.Clear();
 
-            this.m_waitQueue.Clear();
+                this.m_waitQueue.Clear();
+            }
+            
             base.Dispose(disposing);
         }
 

@@ -14,6 +14,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -619,7 +620,7 @@ namespace TouchSocket.Core
                 //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
                 if (fromType.GetConstructors().Length == 0)
                 {
-                    throw new Exception($"没有找到类型{fromType.FullName}的公共构造函数。");
+                    throw new Exception(TouchSocketCoreResource.NotFindPublicConstructor.Format(fromType));
                 }
                 ctor = fromType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }

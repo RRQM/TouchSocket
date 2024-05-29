@@ -20,15 +20,24 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// TcpDmtpService
     /// </summary>
-    public class TcpDmtpService : TcpDmtpService<TcpDmtpSocketClient>, ITcpDmtpService
+    public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpService
     {
+        /// <inheritdoc/>
+        protected override sealed TcpDmtpSessionClient NewClient()
+        {
+            return new PrivateTcpDmtpSessionClient();
+        }
+
+        private class PrivateTcpDmtpSessionClient : TcpDmtpSessionClient
+        {
+        }
     }
 
     /// <summary>
     /// TcpDmtpService泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public class TcpDmtpService<TClient> : TcpService<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSocketClient, new()
+    public abstract class TcpDmtpService<TClient> : TcpServiceBase<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSessionClient
     {
         #region 字段
 
@@ -43,9 +52,16 @@ namespace TouchSocket.Dmtp
         public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <inheritdoc/>
+        protected override void ClientInitialized(TClient client)
+        {
+            base.ClientInitialized(client);
+            client.InternalSetAction(this.PrivateConnecting);
+        }
+
+        /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
-            config.SetTcpDataHandlingAdapter(() => new DmtpAdapter());
+            config.SetTcpDataHandlingAdapter(default);
             base.LoadConfig(config);
 
             if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
@@ -55,19 +71,14 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <summary>
-        /// 客户端请求连接
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override async Task OnConnecting(TClient socketClient, ConnectingEventArgs e)
+        private Task PrivateConnecting(TcpDmtpSessionClient socketClient, ConnectingEventArgs e)
         {
-            socketClient.SetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
+            socketClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
             {
                 Id = e.Id,
                 FindDmtpActor = this.FindDmtpActor
             });
-            await base.OnConnecting(socketClient, e);
+            return EasyTask.CompletedTask;
         }
 
         private async Task<IDmtpActor> FindDmtpActor(string id)
@@ -76,9 +87,9 @@ namespace TouchSocket.Dmtp
             {
                 if (this.m_findDmtpActor != null)
                 {
-                    return await this.m_findDmtpActor.Invoke(id);
+                    return await this.m_findDmtpActor.Invoke(id).ConfigureFalseAwait();
                 }
-                return this.TryGetSocketClient(id, out var client) ? client.DmtpActor : null;
+                return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
             }
             else
             {

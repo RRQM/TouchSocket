@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
@@ -33,5 +34,34 @@ namespace TouchSocket.Dmtp
             pluginManager.Add(heartbeat);
             return heartbeat;
         }
+
+        #region WebSocketReconnection
+
+        /// <summary>
+        /// 使用<see cref="IDmtpClient"/>断线重连。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<TClient> UseDmtpReconnection<TClient>(this IPluginManager pluginManager) where TClient : IDmtpClient
+        {
+            var reconnectionPlugin = new DmtpReconnectionPlugin<TClient>();
+            pluginManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
+        /// <summary>
+        /// 使用<see cref="IDmtpClient"/>断线重连。
+        /// </summary>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<IDmtpClient> UseWebSocketReconnection(this IPluginManager pluginManager)
+        {
+            var reconnectionPlugin = new DmtpReconnectionPlugin<IDmtpClient>();
+            pluginManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+
+        #endregion WebSocketReconnection
     }
 }

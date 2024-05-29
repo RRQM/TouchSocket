@@ -11,16 +11,17 @@
 //------------------------------------------------------------------------------
 
 using System.IO;
+using System.Threading;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// FileStorageStream。非线程安全。
+    /// FileStorageStream。
     /// </summary>
-
     public partial class FileStorageStream : Stream
     {
         private long m_position;
+        private int m_dis = 1;
 
         /// <summary>
         /// 构造函数
@@ -28,7 +29,7 @@ namespace TouchSocket.Core
         /// <param name="fileStorage"></param>
         public FileStorageStream(FileStorage fileStorage)
         {
-            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
         }
 
         /// <summary>
@@ -145,7 +146,11 @@ namespace TouchSocket.Core
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            FilePool.TryReleaseFile(this.FileStorage.Path);
+            if (Interlocked.Decrement(ref this.m_dis) == 0)
+            {
+                FilePool.TryReleaseFile(this.FileStorage.Path);
+                this.FileStorage = null;
+            }
             base.Dispose(disposing);
         }
     }

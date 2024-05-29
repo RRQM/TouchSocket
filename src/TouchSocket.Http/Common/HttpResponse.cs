@@ -11,9 +11,11 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -25,58 +27,47 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpResponse : HttpBase
     {
+        #region 字段
+
+        private readonly HttpClientBase m_httpClientBase;
+        private readonly HttpSessionClient m_httpSessionClient;
+        private readonly bool m_isServer;
         private bool m_canRead;
         private bool m_canWrite;
-        private ITcpClientBase m_client;
         private byte[] m_content;
         private bool m_sentHeader;
         private long m_sentLength;
 
+        #endregion 字段
+
         /// <summary>
         /// Http响应
         /// </summary>
-        /// <param name="client"></param>
-        public HttpResponse(ITcpClientBase client)
+        /// <param name="httpClientBase"></param>
+        internal HttpResponse(HttpClientBase httpClientBase)
         {
-            this.m_client = client;
-            if (client == null)
-            {
-                this.m_canRead = false;
-                this.m_canWrite = false;
-
-                return;
-            }
-            if (client.IsClient)
-            {
-                this.m_canRead = true;
-                this.m_canWrite = false;
-            }
-            else
-            {
-                this.m_canRead = false;
-                this.m_canWrite = true;
-            }
+            this.m_isServer = false;
+            this.m_canRead = true;
+            this.m_canWrite = false;
+            this.m_httpClientBase = httpClientBase;
         }
 
         /// <summary>
         /// 从<see cref="HttpRequest"/>创建一个Http响应
         /// </summary>
         /// <param name="request"></param>
-        public HttpResponse(HttpRequest request) : this(request.Client)
+        internal HttpResponse(HttpRequest request)
         {
+            this.m_canRead = false;
+            this.m_canWrite = true;
+            this.m_isServer = true;
+            this.m_httpSessionClient = (HttpSessionClient)request.Client;
             this.ProtocolVersion = request.ProtocolVersion;
             this.Protocols = request.Protocols;
             this.KeepAlive = request.KeepAlive;
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public HttpResponse()
-        {
-            this.m_canRead = false;
-            this.m_canWrite = false;
-        }
+        #region 属性
 
         /// <summary>
         /// <inheritdoc/>
@@ -91,7 +82,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public override ITcpClientBase Client => this.m_client;
+        public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
 
         /// <summary>
         /// 是否分块
@@ -101,24 +92,12 @@ namespace TouchSocket.Http
         /// <summary>
         /// 是否代理权限验证。
         /// </summary>
-        public bool IsProxyAuthenticationRequired
-        {
-            get
-            {
-                return this.StatusCode == 407;
-            }
-        }
+        public bool IsProxyAuthenticationRequired => this.StatusCode == 407;
 
         /// <summary>
         /// 是否重定向
         /// </summary>
-        public bool IsRedirect
-        {
-            get
-            {
-                return this.StatusCode == 301 || this.StatusCode == 302;
-            }
-        }
+        public bool IsRedirect => this.StatusCode == 301 || this.StatusCode == 302;
 
         /// <summary>
         /// 是否已经响应数据。
@@ -135,23 +114,22 @@ namespace TouchSocket.Http
         /// </summary>
         public string StatusMessage { get; set; } = "Success";
 
-        /// <summary>
-        /// 构建数据并回应。
-        /// <para>该方法仅在具有Client实例时有效。</para>
-        /// </summary>
-        public void Answer()
-        {
-            this.ThrowIfResponsed();
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                if (this.m_client.CanSend)
-                {
-                    this.m_client.DefaultSend(byteBlock);
-                }
-                this.Responsed = true;
-            }
-        }
+        #endregion 属性
+
+        ///// <summary>
+        ///// 构建数据并回应。
+        ///// <para>该方法仅在具有Client实例时有效。</para>
+        ///// </summary>
+        //public void Answer()
+        //{
+        //    this.ThrowIfResponsed();
+        //    using (var byteBlock = new ByteBlock())
+        //    {
+        //        this.Build(byteBlock);
+        //        this.InternalSend(byteBlock.Buffer, 0, byteBlock.Length);
+        //        this.Responsed = true;
+        //    }
+        //}
 
         /// <summary>
         /// 构建数据并回应。
@@ -163,25 +141,14 @@ namespace TouchSocket.Http
             using (var byteBlock = new ByteBlock())
             {
                 this.Build(byteBlock);
-                if (this.m_client.CanSend)
-                {
-                    await this.m_client.DefaultSendAsync(byteBlock);
-                }
+                await this.InternalSendAsync(byteBlock.Memory);
                 this.Responsed = true;
-            }
-        }
-
-        private void ThrowIfResponsed()
-        {
-            if (this.Responsed)
-            {
-                throw new Exception("该对象已被响应。");
             }
         }
 
         /// <summary>
         ///  构建响应数据。
-        /// <para>当数据较大时，不建议这样操作，可直接<see cref="WriteContent(byte[], int, int)"/></para>
+        /// <para>当数据较大时，不建议这样操作，可直接<see cref="Write(byte[], int, int)"/></para>
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="responsed"></param>
@@ -191,18 +158,6 @@ namespace TouchSocket.Http
             this.BuildHeader(byteBlock);
             this.BuildContent(byteBlock);
             this.Responsed = responsed;
-        }
-
-        /// <summary>
-        /// 输出
-        /// </summary>
-        public override string ToString()
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock, false);
-                return byteBlock.ToString();
-            }
         }
 
         /// <summary>
@@ -218,20 +173,10 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <inheritdoc/>
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            if (this.ContentLength == 0 && !this.IsChunk)
-            {
-                return 0;
-            }
-            return base.Read(buffer, offset, count);
-        }
-
         /// <summary>
         /// 当传输模式是Chunk时，用于结束传输。
         /// </summary>
-        public void Complete()
+        public async Task CompleteChunkAsync()
         {
             this.m_canWrite = false;
             if (this.IsChunk)
@@ -240,10 +185,95 @@ namespace TouchSocket.Http
                 {
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    this.m_client.DefaultSend(byteBlock);
+                    await this.InternalSendAsync(byteBlock.Memory);
                     this.Responsed = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public override async ValueTask<byte[]> GetContentAsync(CancellationToken cancellationToken = default)
+        {
+            if (!this.ContentComplated.HasValue)
+            {
+                if (!this.IsChunk && this.ContentLength == 0)
+                {
+                    this.m_content = new byte[0];
+                    return this.m_content;
+                }
+
+                if (!this.IsChunk && this.ContentLength > MaxCacheSize)
+                {
+                    ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
+                }
+
+                try
+                {
+                    using (var memoryStream = new MemoryStream(1024 * 1024))
+                    {
+                        while (true)
+                        {
+                            using (var blockResult = await this.ReadAsync(cancellationToken))
+                            {
+                                var segment = blockResult.Memory.GetArray();
+                                if (blockResult.IsCompleted)
+                                {
+                                    break;
+                                }
+                                memoryStream.Write(segment.Array, segment.Offset, segment.Count);
+                            }
+
+                            if (memoryStream.Length > MaxCacheSize)
+                            {
+                                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
+                            }
+                        }
+                        this.ContentComplated = true;
+                        this.m_content = memoryStream.ToArray();
+                        return this.m_content;
+                    }
+                }
+                catch
+                {
+                    this.ContentComplated = false;
+                    this.m_content = null;
+                    return this.m_content;
+                }
+                finally
+                {
+                    this.m_canRead = false;
+                }
+            }
+            else if (this.ContentComplated == true)
+            {
+                return this.m_content;
+            }
+            else
+            {
+                return default;
+            }
+        }
+
+        public override async ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken = default)
+        {
+            if (this.ContentLength == 0 && !this.IsChunk)
+            {
+                return InternalBlockResult.Completed;
+            }
+
+            if (this.ContentComplated.HasValue && this.ContentComplated.Value)
+            {
+                return new InternalBlockResult(new ArraySegment<byte>(this.m_content), true);
+            }
+            var blockResult = await base.ReadAsync(cancellationToken);
+            if (blockResult == InternalBlockResult.Completed)
+            {
+                this.ContentComplated = true;
+            }
+            return blockResult;
         }
 
         /// <summary>
@@ -258,73 +288,69 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 输出
         /// </summary>
-        /// <returns></returns>
-        public override bool TryGetContent(out byte[] content)
+        public override string ToString()
         {
-            if (!this.ContentComplated.HasValue)
+            using (var byteBlock = new ByteBlock())
             {
-                if (!this.IsChunk && this.ContentLength == 0)
-                {
-                    this.m_content = new byte[0];
-                    content = this.m_content;
-                    return true;
-                }
-
-                try
-                {
-                    using (var block1 = new ByteBlock(1024 * 1024))
-                    {
-                        using (var block2 = new ByteBlock())
-                        {
-                            var buffer = block2.Buffer;
-                            while (true)
-                            {
-                                var r = this.Read(buffer, 0, buffer.Length);
-                                if (r == 0)
-                                {
-                                    break;
-                                }
-                                block1.Write(buffer, 0, r);
-                            }
-                            this.ContentComplated = true;
-                            this.m_content = block1.ToArray();
-                            content = this.m_content;
-                            return true;
-                        }
-                    }
-                }
-                catch
-                {
-                    this.ContentComplated = false;
-                    content = null;
-                    return false;
-                }
-                finally
-                {
-                    this.m_canRead = false;
-                }
-            }
-            else if (this.ContentComplated == true)
-            {
-                content = this.m_content;
-                return true;
-            }
-            else
-            {
-                content = null;
-                return false;
+                this.Build(byteBlock, false);
+                return byteBlock.ToString();
             }
         }
 
-        /// <summary>
+        #region Write
+
+        ///// <inheritdoc/>
+        //public override void Write(byte[] buffer, int offset, int count)
+        //{
+        //    if (this.Responsed)
+        //    {
+        //        throw new Exception("该对象已被响应。");
+        //    }
+
+        //    if (!this.CanWrite)
+        //    {
+        //        throw new NotSupportedException("该对象不支持持续写入内容。");
+        //    }
+
+        //    if (!this.m_sentHeader)
+        //    {
+        //        using (var byteBlock = new ByteBlock())
+        //        {
+        //            this.BuildHeader(byteBlock);
+        //            this.InternalSend(byteBlock.Buffer, 0, byteBlock.Length);
+        //        }
+        //        this.m_sentHeader = true;
+        //    }
+        //    if (this.IsChunk)
+        //    {
+        //        using (var byteBlock = new ByteBlock(count + 1024))
+        //        {
+        //            byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
+        //            byteBlock.Write(buffer, offset, count);
+        //            byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
+        //            this.InternalSend(byteBlock.Buffer, 0, byteBlock.Length);
+        //            this.m_sentLength += count;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (this.m_sentLength + count <= this.ContentLength)
+        //        {
+        //            this.InternalSend(buffer, offset, count);
+        //            this.m_sentLength += count;
+        //            if (this.m_sentLength == this.ContentLength)
+        //            {
+        //                this.m_canWrite = false;
+        //                this.Responsed = true;
+        //            }
+        //        }
+        //    }
+        //}
+
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        public override void WriteContent(byte[] buffer, int offset, int count)
+        public override async Task WriteAsync(ReadOnlyMemory<byte> memory)
         {
             if (this.Responsed)
             {
@@ -341,18 +367,21 @@ namespace TouchSocket.Http
                 using (var byteBlock = new ByteBlock())
                 {
                     this.BuildHeader(byteBlock);
-                    this.m_client.DefaultSend(byteBlock);
+                    await this.InternalSendAsync(byteBlock.Memory);
                 }
                 this.m_sentHeader = true;
             }
+
+            var count = memory.Length;
+
             if (this.IsChunk)
             {
                 using (var byteBlock = new ByteBlock(count + 1024))
                 {
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
-                    byteBlock.Write(buffer, offset, count);
+                    byteBlock.Write(memory.Span);
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    this.m_client.DefaultSend(byteBlock);
+                    await this.InternalSendAsync(byteBlock.Memory);
                     this.m_sentLength += count;
                 }
             }
@@ -360,7 +389,7 @@ namespace TouchSocket.Http
             {
                 if (this.m_sentLength + count <= this.ContentLength)
                 {
-                    this.m_client.DefaultSend(buffer, offset, count);
+                    await this.InternalSendAsync(memory);
                     this.m_sentLength += count;
                     if (this.m_sentLength == this.ContentLength)
                     {
@@ -371,14 +400,27 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        #endregion Write
+
+        internal override void ResetHttp()
         {
-            this.m_client = null;
-            base.Dispose(disposing);
+            base.ResetHttp();
+            this.m_sentHeader = false;
+            this.m_sentLength = 0;
+            this.Responsed = false;
+            this.IsChunk = false;
+            this.StatusCode = 200;
+            this.StatusMessage = "Success";
+            if (this.m_isServer)
+            {
+                this.m_canRead = false;
+                this.m_canWrite = true;
+            }
+            else
+            {
+                this.m_canRead = true;
+                this.m_canWrite = false;
+            }
         }
 
         /// <summary>
@@ -446,33 +488,35 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        /// <inheritdoc/>
-        public override void Reset()
+        //private void InternalSend(byte[] buffer, int offset, int count)
+        //{
+        //    if (this.m_isServer)
+        //    {
+        //        this.m_httpSessionClient.InternalSend(buffer, offset, count);
+        //    }
+        //    else
+        //    {
+        //        this.m_httpClientBase.InternalSend(buffer, offset, count);
+        //    }
+        //}
+
+        private Task InternalSendAsync(ReadOnlyMemory<byte> memory)
         {
-            base.Reset();
-            this.m_sentHeader = false;
-            this.m_sentLength = 0;
-            this.Responsed = false;
-            this.IsChunk = false;
-            this.StatusCode = 200;
-            this.StatusMessage = "Success";
-
-            if (this.m_client == null)
+            if (this.m_isServer)
             {
-                this.m_canRead = false;
-                this.m_canWrite = false;
-
-                return;
-            }
-            if (this.m_client.IsClient)
-            {
-                this.m_canRead = true;
-                this.m_canWrite = false;
+                return this.m_httpSessionClient.InternalSendAsync(memory);
             }
             else
             {
-                this.m_canRead = false;
-                this.m_canWrite = true;
+                return this.m_httpClientBase.InternalSendAsync(memory);
+            }
+        }
+
+        private void ThrowIfResponsed()
+        {
+            if (this.Responsed)
+            {
+                throw new Exception("该对象已被响应。");
             }
         }
     }

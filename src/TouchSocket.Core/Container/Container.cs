@@ -159,7 +159,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.GetDescription(fromType));
+                    throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
                 }
             }
         }
@@ -244,7 +244,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.GetDescription(fromType));
+                    throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
                 }
             }
         }
@@ -271,7 +271,7 @@ namespace TouchSocket.Core
                 //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
                 if (toType.GetConstructors().Length == 0)
                 {
-                    throw new Exception($"没有找到类型{toType.FullName}的公共构造函数。");
+                    throw new Exception(TouchSocketCoreResource.NotFindPublicConstructor.Format(toType));
                 }
                 ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }

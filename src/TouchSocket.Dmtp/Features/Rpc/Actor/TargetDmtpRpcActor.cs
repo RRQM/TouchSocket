@@ -35,40 +35,45 @@ namespace TouchSocket.Dmtp.Rpc
             this.m_rpcActor = rpcActor;
         }
 
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, parameters);
-        }
+        ///// <inheritdoc/>
+        //public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, parameters);
+        //}
 
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
-        }
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
+        //}
 
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, ref parameters, types);
-        }
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, ref parameters, types);
+        //}
 
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, ref parameters, types);
-        }
+        ///// <inheritdoc/>
+        //public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, ref parameters, types);
+        //}
 
-        /// <inheritdoc/>
-        public Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, invokeOption, parameters);
-        }
+        ///// <inheritdoc/>
+        //public Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, invokeOption, parameters);
+        //}
 
-        /// <inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        ///// <inheritdoc/>
+        //public Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    return this.m_rpcActor.InvokeAsync(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
+        //}
+
+        public Task<RpcResponse> InvokeAsync(RpcRequest request)
         {
-            return this.m_rpcActor.InvokeAsync(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
+            return this.m_rpcActor.InvokeAsync(request);
         }
     }
 }

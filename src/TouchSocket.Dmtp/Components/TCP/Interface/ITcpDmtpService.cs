@@ -18,14 +18,14 @@ namespace TouchSocket.Dmtp
     /// ITcpDmtpService
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface ITcpDmtpService<TClient> : ITcpDmtpServiceBase, ITcpService<TClient> where TClient : ITcpDmtpSocketClient
+    public interface ITcpDmtpService<TClient> : ITcpDmtpServiceBase, ITcpServiceBase<TClient> where TClient : ITcpDmtpSessionClient
     {
     }
 
     /// <summary>
     /// ITcpDmtpService
     /// </summary>
-    public interface ITcpDmtpService : ITcpDmtpService<TcpDmtpSocketClient>
+    public interface ITcpDmtpService : ITcpDmtpService<TcpDmtpSessionClient>
     {
     }
 }

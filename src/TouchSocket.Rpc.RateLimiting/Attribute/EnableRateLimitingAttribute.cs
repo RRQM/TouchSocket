@@ -47,7 +47,7 @@ namespace TouchSocket.Rpc.RateLimiting
             var rateLimiterPolicy = rateLimitService.GetRateLimiterPolicy(this.PolicyName) ?? throw new Exception($"没有找到名称为“{this.PolicyName}”的限流策略。");
 
             var rateLimiter = rateLimiterPolicy.GetRateLimiter(callContext);
-            var rateLimitLease = await rateLimiter.AcquireAsync();
+            var rateLimitLease = await rateLimiter.AcquireAsync().ConfigureAwait(false);
             if (rateLimitLease.IsAcquired)
             {
                 this.m_rateLimitLease = rateLimitLease;
@@ -60,14 +60,7 @@ namespace TouchSocket.Rpc.RateLimiting
         }
 
         /// <inheritdoc/>
-        public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
-        {
-            this.m_rateLimitLease.SafeDispose();
-            return Task.FromResult(invokeResult);
-        }
-
-        /// <inheritdoc/>
-        public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+        public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
             this.m_rateLimitLease.SafeDispose();
             return Task.FromResult(invokeResult);

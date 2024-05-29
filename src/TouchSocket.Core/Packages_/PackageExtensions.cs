@@ -20,14 +20,19 @@ namespace TouchSocket.Core
         /// <summary>
         /// 打包为字节
         /// </summary>
-        /// <param name="packageBase"></param>
+        /// <param name="package"></param>
         /// <returns></returns>
-        public static byte[] PackageAsBytes(this PackageBase packageBase)
+        public static byte[] PackageAsBytes(this IPackage package)
         {
-            using (var byteBlock = new ByteBlock())
+            var byteBlock = new ByteBlock();
+            try
             {
-                packageBase.Package(byteBlock);
+                package.Package(ref byteBlock);
                 return byteBlock.ToArray();
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
     }

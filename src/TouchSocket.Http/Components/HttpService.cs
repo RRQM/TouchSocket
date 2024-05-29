@@ -17,14 +17,23 @@ namespace TouchSocket.Http
     /// <summary>
     /// HTTP/HTTPS服务器
     /// </summary>
-    public class HttpService<TClient> : TcpService<TClient>, IHttpService<TClient> where TClient : HttpSocketClient, new()
+    public abstract class HttpService<TClient> : TcpServiceBase<TClient>, IHttpService<TClient> where TClient : HttpSessionClient
     {
     }
 
     /// <summary>
     /// HTTP/HTTPS服务器
     /// </summary>
-    public class HttpService : HttpService<HttpSocketClient>, IHttpService
+    public class HttpService : HttpService<HttpSessionClient>, IHttpService
     {
+        /// <inheritdoc/>
+        protected override HttpSessionClient NewClient()
+        {
+            return new PrivateHttpSessionClient();
+        }
+
+        private sealed class PrivateHttpSessionClient : HttpSessionClient
+        {
+        }
     }
 }

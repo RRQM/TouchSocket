@@ -20,14 +20,6 @@ namespace TouchSocket.Rpc
     public interface IRpcServerProvider
     {
         /// <summary>
-        /// 执行Rpc
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
-        InvokeResult Execute(ICallContext callContext, object[] ps);
-
-        /// <summary>
         /// 异步执行Rpc
         /// </summary>
         /// <param name="callContext"></param>

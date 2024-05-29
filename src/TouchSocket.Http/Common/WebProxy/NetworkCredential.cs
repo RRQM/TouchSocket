@@ -17,6 +17,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// 代理身份认证
     /// </summary>
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
     public class NetworkCredential
     {
         /// <summary>

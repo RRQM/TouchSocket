@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -19,10 +20,11 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 重连插件
     /// </summary>
-    [PluginOption(Singleton = true)]
-    public sealed class ReconnectionPlugin<TClient> : PluginBase where TClient : class, ITcpClient
+    public abstract class ReconnectionPlugin<TClient> : PluginBase where TClient : IConnectableClient,IOnlineClient,ILoggerObject
     {
         private bool m_polling;
+        private TimeSpan m_tick = TimeSpan.FromSeconds(1);
+        private Task m_beginReconnectTask;
 
         /// <summary>
         /// 重连插件
@@ -41,17 +43,12 @@ namespace TouchSocket.Sockets
                     return false;
                 }
             };
-
-            this.ActionForCheck = (c, i) =>
-            {
-                return Task.FromResult<bool?>(c.Online);
-            };
         }
 
         /// <summary>
         /// 每个周期可执行的委托。用于检验客户端活性。返回true表示存活，返回
         /// </summary>
-        public Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
+        public abstract Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
         /// <summary>
         /// ActionForConnect
@@ -61,7 +58,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 检验时间间隔
         /// </summary>
-        public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(1);
+        public TimeSpan Tick => this.m_tick;
 
         /// <summary>
         /// 每个周期可执行的委托。返回值为True标识客户端存活。返回False，表示失活，立即重连。返回null时，表示跳过此次检验。
@@ -103,33 +100,107 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 设置连接动作
         /// </summary>
-        /// <param name="tryConnect"></param>
-        /// <returns>无论如何，只要返回True，则结束本轮尝试</returns>
-        public ReconnectionPlugin<TClient> SetConnectAction(Func<TClient, bool> tryConnect)
+        /// <param name="sleepTime">失败时间隔时间</param>
+        /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为null或者返回false，则终止尝试下次连接。</param>
+        /// <param name="successCallback">成功连接时回调</param>
+        /// <returns></returns>
+        public ReconnectionPlugin<TClient> SetConnectAction(TimeSpan sleepTime,
+            Func<TClient, int, Exception, bool> failCallback = default,
+            Action<TClient> successCallback = default)
         {
-            this.ActionForConnect = (c) =>
+            this.SetConnectAction(async client =>
             {
-                return Task.FromResult(tryConnect.Invoke(c));
-            };
+                var tryT = 0;
+                while (true)
+                {
+                    try
+                    {
+                        if (client.Online)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            await Task.Delay(1000).ConfigureFalseAwait();
+                            await client.ConnectAsync().ConfigureFalseAwait();
+                        }
+
+                        successCallback?.Invoke(client);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        await Task.Delay(sleepTime).ConfigureFalseAwait();
+                        if (failCallback?.Invoke(client, ++tryT, ex) != true)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            });
             return this;
         }
 
         /// <summary>
-        /// 检验时间间隔
+        /// 设置连接动作
         /// </summary>
-        /// <param name="tick"></param>
+        /// <param name="tryCount">尝试重连次数，设为-1时则永远尝试连接</param>
+        /// <param name="printLog">是否输出日志。</param>
+        /// <param name="sleepTime">失败时，停留时间</param>
+        /// <param name="successCallback">成功回调函数</param>
         /// <returns></returns>
-        public ReconnectionPlugin<TClient> SetTick(TimeSpan tick)
+        public ReconnectionPlugin<TClient> SetConnectAction(int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<TClient> successCallback = null)
         {
-            this.Tick = tick;
+            this.SetConnectAction(async client =>
+            {
+                var tryT = tryCount;
+                while (tryCount < 0 || tryT-- > 0)
+                {
+                    try
+                    {
+                        if (client.Online)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            await Task.Delay(1000).ConfigureFalseAwait();
+                            await client.ConnectAsync().ConfigureFalseAwait();
+                        }
+                        successCallback?.Invoke(client);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (printLog)
+                        {
+                            client.Logger.Exception(ex);
+                        }
+                        await Task.Delay(sleepTime).ConfigureFalseAwait();
+                    }
+                }
+                return true;
+            });
+            return this;
+        }
+
+        /// <summary>
+        /// 设置连接动作
+        /// </summary>
+        /// <param name="tryConnect"></param>
+        /// <returns>无论如何，只要返回True，则结束本轮尝试</returns>
+        public ReconnectionPlugin<TClient> SetConnectAction(Func<TClient, bool> tryConnect)
+        {
+            this.ActionForConnect = (c) => Task.FromResult(tryConnect.Invoke(c));
             return this;
         }
 
         /// <summary>
         /// 使用轮询保持活性。
         /// </summary>
-        public ReconnectionPlugin<TClient> UsePolling()
+        public ReconnectionPlugin<TClient> UsePolling(TimeSpan tick)
         {
+            this.m_tick = tick;
             this.m_polling = true;
             return this;
         }
@@ -138,75 +209,67 @@ namespace TouchSocket.Sockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
-            pluginManager.Add<TClient, DisconnectEventArgs>(nameof(ITcpDisconnectedPlugin.OnTcpDisconnected), this.OnTcpDisconnected);
+            pluginManager.Add<IConfigObject, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
         }
 
-        private async Task OnLoadedConfig(object sender, ConfigEventArgs e)
+        private async Task BeginReconnect(TClient client)
         {
-            _ = Task.Run(async () =>
+            if (!this.m_polling)
             {
-                if (!this.m_polling)
+                return;
+            }
+            var failCount = 0;
+
+            await Task.Yield();
+
+            while (true)
+            {
+                if (this.DisposedValue)
                 {
                     return;
                 }
-                if (sender is TClient client)
+                await Task.Delay(this.Tick).ConfigureFalseAwait();
+                try
                 {
-                    var failCount = 0;
-                    while (true)
+                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureFalseAwait();
+                    if (b == null)
                     {
-                        if (this.DisposedValue)
+                        continue;
+                    }
+                    else if (b == false)
+                    {
+                        if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
                         {
-                            return;
-                        }
-                        await Task.Delay(this.Tick).ConfigureFalseAwait();
-                        try
-                        {
-                            var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureFalseAwait();
-                            if (b == null)
-                            {
-                                continue;
-                            }
-                            else if (b == false)
-                            {
-                                if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
-                                {
-                                    failCount = 0;
-                                }
-                            }
-                            else
-                            {
-                                failCount = 0;
-                            }
-                        }
-                        catch
-                        {
+                            failCount = 0;
                         }
                     }
+                    else
+                    {
+                        failCount = 0;
+                    }
                 }
-            });
+                catch
+                {
+                }
+            }
+        }
+
+        private async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        {
+            this.m_beginReconnectTask= Task.Run(()=>this.BeginReconnect((TClient)sender));
 
             await e.InvokeNext();
         }
 
-        private async Task OnTcpDisconnected(TClient client, DisconnectEventArgs e)
-        {
-            await e.InvokeNext();
-            _ = Task.Run(async () =>
-            {
-                if (e.Manual)
-                {
-                    return;
-                }
 
-                while (true)
-                {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
-                    {
-                        return;
-                    }
-                }
-            });
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.m_beginReconnectTask.GetFalseAwaitResult();
+            }
+            base.Dispose(disposing);
         }
     }
 }

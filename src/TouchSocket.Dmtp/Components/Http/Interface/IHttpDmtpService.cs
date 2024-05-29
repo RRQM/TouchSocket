@@ -17,14 +17,14 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IHttpDmtpService
     /// </summary>
-    public interface IHttpDmtpService<TClient> : IHttpDmtpServiceBase, IHttpService<TClient> where TClient : IHttpDmtpSocketClient
+    public interface IHttpDmtpService<TClient> : IHttpDmtpServiceBase, IHttpService<TClient> where TClient : IHttpDmtpSessionClient
     {
     }
 
     /// <summary>
     /// IHttpDmtpService
     /// </summary>
-    public interface IHttpDmtpService : IHttpDmtpService<HttpDmtpSocketClient>
+    public interface IHttpDmtpService : IHttpDmtpService<HttpDmtpSessionClient>
     {
     }
 }

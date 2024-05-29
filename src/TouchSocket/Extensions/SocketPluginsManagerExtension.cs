@@ -28,9 +28,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static CheckClearPlugin<ITcpClientBase> UseCheckClear(this IPluginManager pluginManager)
+        public static CheckClearPlugin<ITcpSession> UseCheckClear(this IPluginManager pluginManager)
         {
-            return pluginManager.Add<CheckClearPlugin<ITcpClientBase>>();
+            return pluginManager.Add<CheckClearPlugin<ITcpSession>>();
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="pluginManager"></param>
         /// <returns></returns>
-        public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager) where TClient : ITcpClientBase
+        public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager) where TClient : IClient, IClosableClient
         {
             return pluginManager.Add<CheckClearPlugin<TClient>>();
         }
@@ -53,11 +53,10 @@ namespace TouchSocket.Sockets
         /// <typeparam name="TClient"></typeparam>
         /// <param name="pluginManager"></param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用UseTcpReconnection代替", true)]
         public static ReconnectionPlugin<TClient> UseReconnection<TClient>(this IPluginManager pluginManager) where TClient : class, ITcpClient
         {
-            var reconnectionPlugin = new ReconnectionPlugin<TClient>();
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -70,41 +69,10 @@ namespace TouchSocket.Sockets
         /// <param name="printLog">是否输出日志。</param>
         /// <param name="sleepTime">失败时，停留时间</param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用UseTcpReconnection代替", true)]
         public static ReconnectionPlugin<ITcpClient> UseReconnection(this IPluginManager pluginManager, int tryCount = 10, bool printLog = false, int sleepTime = 1000, Action<ITcpClient> successCallback = null)
         {
-            var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>();
-            reconnectionPlugin.SetConnectAction(async client =>
-            {
-                var tryT = tryCount;
-                while (tryCount < 0 || tryT-- > 0)
-                {
-                    try
-                    {
-                        if (client.Online)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            await Task.Delay(1000);
-                            await client.ConnectAsync();
-                        }
-                        successCallback?.Invoke(client);
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (printLog)
-                        {
-                            client.Logger.Log(LogLevel.Error, client, "断线重连失败。", ex);
-                        }
-                        await Task.Delay(sleepTime);
-                    }
-                }
-                return true;
-            });
-            pluginManager.Add(reconnectionPlugin);
-            return reconnectionPlugin;
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -116,45 +84,37 @@ namespace TouchSocket.Sockets
         /// <param name="failCallback">失败时回调（参数依次为：客户端，本轮尝试重连次数，异常信息）。如果回调为null或者返回false，则终止尝试下次连接。</param>
         /// <param name="successCallback">成功连接时回调。</param>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，请使用UseTcpReconnection代替", true)]
         public static ReconnectionPlugin<ITcpClient> UseReconnection(this IPluginManager pluginManager, TimeSpan sleepTime,
             Func<ITcpClient, int, Exception, bool> failCallback = default,
             Action<ITcpClient> successCallback = default)
         {
-            var reconnectionPlugin = new ReconnectionPlugin<ITcpClient>();
-            reconnectionPlugin.SetConnectAction(async client =>
-            {
-                var tryT = 0;
-                while (true)
-                {
-                    try
-                    {
-                        if (client.Online)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            await Task.Delay(1000);
-                            await client.ConnectAsync();
-                        }
+            throw new NotImplementedException();
+        }
 
-                        successCallback?.Invoke(client);
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        await Task.Delay(sleepTime);
-                        if (failCallback?.Invoke(client, ++tryT, ex) != true)
-                        {
-                            return true;
-                        }
-                    }
-                }
-            });
+        #endregion Reconnection
+
+        #region TcpReconnection
+
+        /// <summary>
+        /// 使用断线重连。
+        /// </summary>
+        /// <typeparam name="TClient"></typeparam>
+        /// <param name="pluginManager"></param>
+        /// <returns></returns>
+        public static ReconnectionPlugin<TClient> UseTcpReconnection<TClient>(this IPluginManager pluginManager) where TClient : ITcpClient
+        {
+            var reconnectionPlugin = new TcpReconnectionPlugin<TClient>();
             pluginManager.Add(reconnectionPlugin);
             return reconnectionPlugin;
         }
 
-        #endregion Reconnection
+        public static ReconnectionPlugin<ITcpClient> UseTcpReconnection(this IPluginManager pluginManager)
+        {
+            var reconnectionPlugin = new TcpReconnectionPlugin<ITcpClient>();
+            pluginManager.Add(reconnectionPlugin);
+            return reconnectionPlugin;
+        }
+        #endregion TcpReconnection
     }
 }

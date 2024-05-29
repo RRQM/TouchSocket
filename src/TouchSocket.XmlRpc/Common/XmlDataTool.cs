@@ -98,7 +98,7 @@ namespace TouchSocket.XmlRpc
             }
         }
 
-        public static HttpRequest CreateRequest(string host, string url, string method, object[] parameters)
+        public static HttpRequest CreateRequest(HttpClientBase httpClientBase, string method, object[] parameters)
         {
             var xml = new XmlDocument();
 
@@ -129,11 +129,11 @@ namespace TouchSocket.XmlRpc
                 }
             }
 
-            var request = new HttpRequest();
+            var request = new HttpRequest(httpClientBase);
             request.FromXML(xml.OuterXml)
                 .InitHeaders()
-                .SetUrl(url)
-                .SetHost(host)
+                .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)
+                .SetHost(httpClientBase.RemoteIPHost.Host)
                 .AsPost();
             return request;
         }
@@ -248,9 +248,9 @@ namespace TouchSocket.XmlRpc
 
             using (var xmlBlock = new ByteBlock())
             {
-                xml.Save(xmlBlock);
+                xml.Save(xmlBlock.AsStream());
 
-                var xmlString = Encoding.UTF8.GetString(xmlBlock.Buffer, 0, xmlBlock.Len);
+                var xmlString =xmlBlock.Span.ToString(Encoding.UTF8);
 
                 httpResponse.FromXML(xmlString);
             }

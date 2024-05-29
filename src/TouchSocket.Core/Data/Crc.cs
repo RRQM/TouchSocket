@@ -30,11 +30,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc1(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -42,9 +58,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0x0C);//0x0C = (reverse 0x03)>>(8-4)
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { crc };
@@ -60,11 +80,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc2(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0x48;// Initial value: 0x48 = 0x09<<(8-5)
             for (var i = start; i < length; i++)
             {
@@ -72,9 +108,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 0x80) > 0)
+                    {
                         crc = (byte)((crc << 1) ^ 0x48);// 0x48 = 0x09<<(8-5)
+                    }
                     else
+                    {
                         crc = (byte)(crc << 1);
+                    }
                 }
             }
             return new byte[] { (byte)(crc >> 3) };
@@ -90,11 +130,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc3(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -102,9 +158,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0x15);// 0x15 = (reverse 0x15)>>(8-5)
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { crc };
@@ -120,11 +180,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc4(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0x1F;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -132,9 +208,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0x14);// 0x14 = (reverse 0x05)>>(8-5)
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { (byte)(crc ^ 0x1F) };
@@ -150,11 +230,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc5(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -162,9 +258,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0x30);// 0x30 = (reverse 0x03)>>(8-6)
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { crc };
@@ -180,11 +280,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc6(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -192,9 +308,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 0x80) > 0)
+                    {
                         crc = (byte)((crc << 1) ^ 0x12);// 0x12 = 0x09<<(8-7)
+                    }
                     else
+                    {
                         crc = (byte)(crc << 1);
+                    }
                 }
             }
             return new byte[] { (byte)(crc >> 1) };
@@ -210,11 +330,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc7(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -237,11 +373,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc8(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -264,11 +416,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc9(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -276,9 +444,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0x8C);// 0x8C = reverse 0x31
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { crc };
@@ -294,11 +466,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc10(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             byte crc = 0xFF;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -306,9 +494,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (byte)((crc >> 1) ^ 0xE0);// 0xE0 = reverse 0x07
+                    }
                     else
+                    {
                         crc = (byte)(crc >> 1);
+                    }
                 }
             }
             return new byte[] { crc };
@@ -352,11 +544,27 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] Crc11(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             int i;
             byte crc = 0x00;
             int tableIndex;
@@ -378,11 +586,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc12(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             ushort crc = 0;// Initial value
             short iQ = 0, iR = 0;
             for (var i = start; i < length; i++)
@@ -432,11 +656,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc13(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             ushort crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -444,9 +684,13 @@ namespace TouchSocket.Core
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (ushort)((crc >> 1) ^ 0x8408);// 0x8408 = reverse 0x1021
+                    }
                     else
+                    {
                         crc = (ushort)(crc >> 1);
+                    }
                 }
             }
             var ret = BitConverter.GetBytes(crc);
@@ -464,11 +708,27 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc14(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
+            if (start < 0)
+            {
+                return null;
+            }
+
+            if (len == 0)
+            {
+                len = buffer.Length - start;
+            }
+
             var length = start + len;
-            if (length > buffer.Length) return null;
+            if (length > buffer.Length)
+            {
+                return null;
+            }
+
             ushort crc = 0xFFFF;// Initial value
             for (var i = start; i < length; i++)
             {
@@ -493,7 +753,11 @@ namespace TouchSocket.Core
         ///*************************************************************************
         public static byte[] Crc15(byte[] buffer, int start = 0, int len = 0)
         {
-            if (buffer == null || buffer.Length == 0) return null;
+            if (buffer == null || buffer.Length == 0)
+            {
+                return null;
+            }
+
             if (start < 0) return null;
             if (len == 0) len = buffer.Length - start;
             var length = start + len;
@@ -515,6 +779,41 @@ namespace TouchSocket.Core
             return ret;
         }
 
+        public static void WriteCrc16(Span<byte> storeSpan,ReadOnlySpan<byte> span)
+        {
+            if (storeSpan.Length<2)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(storeSpan.Length),storeSpan.Length,2);
+            }
+
+            if (span.IsEmpty)
+            {
+                return;
+            }
+
+            var length = span.Length;
+            var start = 0;
+
+            ushort crc = 0;// Initial value
+            for (var i = start; i < length; i++)
+            {
+                crc ^= span[i];
+                for (var j = 0; j < 8; j++)
+                {
+                    if ((crc & 1) > 0)
+                    {
+                        crc = (ushort)((crc >> 1) ^ 0xA001);// 0xA001 = reverse 0x8005
+                    }
+                    else
+                    {
+                        crc = (ushort)(crc >> 1);
+                    }
+                }
+            }
+
+            TouchSocketBitConverter.BigEndian.WriteBytes(storeSpan,crc);
+        }
+
         /// **********************************************************************
         /// Name: CRC-16/IBM    x16+x15+x2+1
         /// Poly: 0x8005
@@ -523,28 +822,40 @@ namespace TouchSocket.Core
         /// Refout: true
         /// Xorout: 0x0000
         ///*************************************************************************
-        public static byte[] Crc16(byte[] buffer, int start = 0, int len = 0)
+        public static byte[] Crc16(ReadOnlySpan<byte> span)
         {
-            if (buffer == null || buffer.Length == 0) return null;
-            if (start < 0) return null;
-            if (len == 0) len = buffer.Length - start;
-            var length = start + len;
-            if (length > buffer.Length) return null;
+            var ret = BitConverter.GetBytes(Crc16Value(span));
+            Array.Reverse(ret);
+            return ret;
+        }
+
+        public static ushort Crc16Value(ReadOnlySpan<byte> span)
+        {
+            if (span.IsEmpty)
+            {
+                ThrowHelper.ThrowArgumentNullException(nameof(span));
+            }
+
+            var length = span.Length;
+            var start = 0;
+
             ushort crc = 0;// Initial value
             for (var i = start; i < length; i++)
             {
-                crc ^= buffer[i];
+                crc ^= span[i];
                 for (var j = 0; j < 8; j++)
                 {
                     if ((crc & 1) > 0)
+                    {
                         crc = (ushort)((crc >> 1) ^ 0xA001);// 0xA001 = reverse 0x8005
+                    }
                     else
+                    {
                         crc = (ushort)(crc >> 1);
+                    }
                 }
             }
-            var ret = BitConverter.GetBytes(crc);
-            Array.Reverse(ret);
-            return ret;
+           return crc;
         }
 
         /// **********************************************************************

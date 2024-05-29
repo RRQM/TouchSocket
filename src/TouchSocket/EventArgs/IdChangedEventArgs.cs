@@ -22,12 +22,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// IdChangedEventArgs
         /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        public IdChangedEventArgs(string oldId, string newId)
+        /// <param name="sourceId"></param>
+        /// <param name="targetId"></param>
+        public IdChangedEventArgs(string sourceId, string targetId)
         {
-            this.OldId = oldId;
-            this.NewId = newId;
+            this.OldId = sourceId;
+            this.NewId = targetId;
         }
 
         /// <summary>

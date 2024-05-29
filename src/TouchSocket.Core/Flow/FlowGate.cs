@@ -43,7 +43,7 @@ namespace TouchSocket.Core
                 {
                     var time = (DateTime.Now - this.LastIncrement);
                     var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
-                    waitTime=waitTime<TimeSpan.Zero ? TimeSpan.Zero : waitTime;
+                    waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
                     Thread.Sleep(waitTime);
                 }
             }
@@ -63,7 +63,7 @@ namespace TouchSocket.Core
                     var time = (DateTime.Now - this.LastIncrement);
                     var waitTime = this.Period - time <= TimeSpan.Zero ? TimeSpan.Zero : (this.GetBaseTime() - time);
                     waitTime = waitTime < TimeSpan.Zero ? TimeSpan.Zero : waitTime;
-                    await Task.Delay(waitTime);
+                    await Task.Delay(waitTime).ConfigureFalseAwait();
                 }
             }
         }

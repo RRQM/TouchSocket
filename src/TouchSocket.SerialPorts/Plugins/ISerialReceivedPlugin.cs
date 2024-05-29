@@ -19,21 +19,8 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// ISerialReceivedPlugin
     /// </summary>
-    public interface ISerialReceivedPlugin<in TClient> : IPlugin where TClient : ISerialPortClient
+    public interface ISerialReceivedPlugin : IPlugin
     {
-        /// <summary>
-        /// 在收到数据时触发
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnSerialReceived(TClient client, ReceivedDataEventArgs e);
-    }
-
-    /// <summary>
-    /// ISerialReceivedPlugin
-    /// </summary>
-    public interface ISerialReceivedPlugin : ISerialReceivedPlugin<ISerialPortClient>
-    {
+        Task OnSerialReceived(ISerialPortClient client, ReceivedDataEventArgs e);
     }
 }

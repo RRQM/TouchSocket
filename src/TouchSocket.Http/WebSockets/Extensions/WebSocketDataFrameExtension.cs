@@ -120,7 +120,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public static string ToText(this WSDataFrame dataFrame, Encoding encoding = default)
         {
-            return (encoding == default ? Encoding.UTF8 : encoding).GetString(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadLength);
+            return dataFrame.PayloadData.Span.ToString(encoding == default ? Encoding.UTF8 : encoding);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WSTools
     /// </summary>
-    public static class WSTools
+    internal static class WSTools
     {
         /// <summary>
         /// 应答。
@@ -35,11 +35,13 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, byte[] buffer, int offset, int length)
+        public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
         {
             int payloadLength;
 
             byte[] extLen;
+
+            var length = memory.Length;
 
             if (length < 126)
             {
@@ -83,16 +85,16 @@ namespace TouchSocket.Http.WebSockets
             {
                 if (dataFrame.Mask)
                 {
-                    if (byteBlock.Capacity < byteBlock.Pos + length)
+                    if (byteBlock.Capacity < byteBlock.Position + length)
                     {
-                        byteBlock.SetCapacity(byteBlock.Pos + length, true);
+                        byteBlock.SetCapacity(byteBlock.Position + length, true);
                     }
-                    WSTools.DoMask(byteBlock.Buffer, byteBlock.Pos, buffer, offset, length, dataFrame.MaskingKey);
-                    byteBlock.SetLength(byteBlock.Pos + length);
+                    WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory, dataFrame.MaskingKey);
+                    byteBlock.SetLength(byteBlock.Position + length);
                 }
                 else
                 {
-                    byteBlock.Write(buffer, offset, length);
+                    byteBlock.Write(memory.Span);
                 }
             }
             return true;
@@ -119,36 +121,45 @@ namespace TouchSocket.Http.WebSockets
             return Convert.ToBase64String(src);
         }
 
-        /// <summary>
-        /// 掩码运算
-        /// </summary>
-        /// <param name="storeBuf"></param>
-        /// <param name="sOffset"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="masks"></param>
-        public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
+        ///// <summary>
+        ///// 掩码运算
+        ///// </summary>
+        ///// <param name="storeBuf"></param>
+        ///// <param name="sOffset"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        ///// <param name="masks"></param>
+        //public static void DoMask(byte[] storeBuf, int sOffset, byte[] buffer, int offset, int length, byte[] masks)
+        //{
+        //    for (var i = 0; i < length; i++)
+        //    {
+        //        storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
+        //    }
+        //}
+
+        public static void DoMask(Span<byte> span, ReadOnlyMemory<byte> memory, byte[] masks)
         {
-            for (var i = 0; i < length; i++)
+            var memorySpan = memory.Span;
+
+            for (var i = 0; i < memory.Length; i++)
             {
-                storeBuf[sOffset + i] = (byte)(buffer[offset + i] ^ masks[i % 4]);
+                span[i] = (byte)(memorySpan[i] ^ masks[i % 4]);
             }
         }
 
         /// <summary>
         /// 获取WS的请求头
         /// </summary>
-        /// <param name="host"></param>
-        /// <param name="url"></param>
+        /// <param name="httpClientBase"></param>
         /// <param name="version"></param>
         /// <param name="base64Key"></param>
         /// <returns></returns>
-        public static HttpRequest GetWSRequest(string host, string url, string version, out string base64Key)
+        public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
         {
-            var request = new HttpRequest();
-            request.SetUrl(url);
-            request.Headers.Add(HttpHeaders.Host, host);
+            var request = new HttpRequest(httpClientBase);
+            request.SetUrl(httpClientBase.RemoteIPHost.PathAndQuery);
+            request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
             request.Headers.Add(HttpHeaders.Connection, "upgrade");
             request.Headers.Add(HttpHeaders.Upgrade, "websocket");
             request.Headers.Add("Sec-WebSocket-Version", $"{version}");

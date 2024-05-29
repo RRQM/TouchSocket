@@ -20,27 +20,23 @@ namespace TouchSocket.Sockets
     /// </summary>
     public static class ServiceExtension
     {
-        #region ITcpService
+        #region IServiceBase
 
-        /// <inheritdoc cref="IService.Start"/>
-        public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
+        public static void Start<TService>(this TService service) where TService : IServiceBase
         {
-            TouchSocketConfig config;
-            if (service.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetListenIPHosts(iPHosts);
-                service.Setup(config);
-            }
-            else
-            {
-                config = service.Config;
-                config.SetListenIPHosts(iPHosts);
-            }
-            service.Start();
+            service.StartAsync().GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IService.StartAsync"/>
+        public static void Stop<TService>(this TService service) where TService : IServiceBase
+        {
+            service.StopAsync().GetFalseAwaitResult();
+        }
+
+        #endregion IServiceBase
+
+        #region ITcpService
+
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
         public static async Task StartAsync<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
         {
             TouchSocketConfig config;
@@ -48,39 +44,27 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetListenIPHosts(iPHosts);
-                service.Setup(config);
+                await service.SetupAsync(config).ConfigureFalseAwait();
             }
             else
             {
                 config = service.Config;
                 config.SetListenIPHosts(iPHosts);
             }
-            await service.StartAsync();
+            await service.StartAsync().ConfigureFalseAwait();
+        }
+
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
+        public static void Start<TService>(this TService service, params IPHost[] iPHosts) where TService : ITcpServiceBase
+        {
+            StartAsync(service, iPHosts).GetFalseAwaitResult();
         }
 
         #endregion ITcpService
 
         #region Udp
 
-        /// <inheritdoc cref="IService.Start"/>
-        public static void Start<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
-        {
-            TouchSocketConfig config;
-            if (service.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetBindIPHost(iPHost);
-                service.Setup(config);
-            }
-            else
-            {
-                config = service.Config;
-                config.SetBindIPHost(iPHost);
-            }
-            service.Start();
-        }
-
-        /// <inheritdoc cref="IService.Start"/>
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
         public static async Task StartAsync<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
         {
             TouchSocketConfig config;
@@ -88,16 +72,38 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetBindIPHost(iPHost);
-                service.Setup(config);
+                await service.SetupAsync(config).ConfigureFalseAwait();
             }
             else
             {
                 config = service.Config;
                 config.SetBindIPHost(iPHost);
             }
-            await service.StartAsync();
+            await service.StartAsync().ConfigureFalseAwait();
+        }
+
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
+        public static void Start<TService>(this TService service, IPHost iPHost) where TService : IUdpSession
+        {
+            StartAsync(service, iPHost).GetFalseAwaitResult();
         }
 
         #endregion Udp
+
+        #region IConnectableService<TClient>
+
+        public static TClient GetClient<TClient>(this IConnectableService<TClient> connectableService, string id)
+            where TClient : IIdClient, IClient
+        {
+            return connectableService.Clients.TryGetClient(id, out var client) ? client : throw new ClientNotFindException();
+        }
+
+        public static bool TryGetClient<TClient>(this IConnectableService<TClient> connectableService, string id, out TClient client)
+                    where TClient : IIdClient, IClient
+        {
+            return connectableService.Clients.TryGetClient(id, out client);
+        }
+
+        #endregion IConnectableService<TClient>
     }
 }

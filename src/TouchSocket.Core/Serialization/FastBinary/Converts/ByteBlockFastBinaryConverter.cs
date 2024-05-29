@@ -10,22 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     internal class ByteBlockFastBinaryConverter : FastBinaryConverter<ByteBlock>
     {
-        protected override ByteBlock Read(byte[] buffer, int offset, int len)
+        protected override ByteBlock Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            var byteBlock = new ByteBlock(len);
-            byteBlock.Write(buffer, offset, len);
-            byteBlock.SeekToStart();
-            return byteBlock;
+            return byteBlock.ReadByteBlock();
         }
 
-        protected override int Write(ByteBlock byteBlock, ByteBlock obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in ByteBlock obj)
         {
-            byteBlock.Write(obj.Buffer, 0, obj.Len);
-            return obj.Len;
+            byteBlock.WriteByteBlock(obj);
         }
     }
 }

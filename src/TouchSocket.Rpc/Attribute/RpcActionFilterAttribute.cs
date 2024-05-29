@@ -24,13 +24,7 @@ namespace TouchSocket.Rpc
         public virtual Type[] MutexAccessTypes => new Type[] { };
 
         /// <inheritdoc/>
-        public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
-        {
-            return Task.FromResult(invokeResult);
-        }
-
-        /// <inheritdoc/>
-        public virtual Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
+        public virtual Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
             return Task.FromResult(invokeResult);
         }

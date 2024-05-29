@@ -10,8 +10,10 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Dmtp.FileTransfer;
 
 namespace TouchSocket.Dmtp
 {
@@ -22,16 +24,16 @@ namespace TouchSocket.Dmtp
     {
         #region Ping
 
-        /// <inheritdoc cref="IDmtpActor.Ping(int)"/>
+        /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
         public static bool Ping(this IDmtpActorObject client, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.Ping(millisecondsTimeout);
+            return client.DmtpActor.PingAsync(millisecondsTimeout).GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IDmtpActor.Ping(string,int)"/>
+        /// <inheritdoc cref="IDmtpActor.PingAsync(string, int)"/>
         public static bool Ping(this IDmtpActorObject client, string targetId, int millisecondsTimeout = 5000)
         {
-            return client.DmtpActor.Ping(targetId, millisecondsTimeout);
+            return client.DmtpActor.PingAsync(targetId, millisecondsTimeout).GetFalseAwaitResult();
         }
 
         /// <inheritdoc cref="IDmtpActor.PingAsync(int)"/>
@@ -56,28 +58,28 @@ namespace TouchSocket.Dmtp
             return client.DmtpActor.ChannelExisted(id);
         }
 
-        /// <inheritdoc cref="IDmtpActor.CreateChannel(Metadata)"/>
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(metadata);
+            return client.DmtpActor.CreateChannelAsync(metadata).GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IDmtpActor.CreateChannel(int, Metadata)"/>
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(int, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(id, metadata);
+            return client.DmtpActor.CreateChannelAsync(id, metadata).GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IDmtpActor.CreateChannel(string, int, Metadata)"/>
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, int, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, int id, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(targetId, id, metadata);
+            return client.DmtpActor.CreateChannelAsync(targetId, id, metadata).GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IDmtpActor.CreateChannel(string, Metadata)"/>
+        /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(string, Metadata)"/>
         public static IDmtpChannel CreateChannel(this IDmtpActorObject client, string targetId, Metadata metadata = default)
         {
-            return client.DmtpActor.CreateChannel(targetId, metadata);
+            return client.DmtpActor.CreateChannelAsync(targetId, metadata).GetFalseAwaitResult();
         }
 
         /// <inheritdoc cref="IDmtpActor.CreateChannelAsync(Metadata)"/>
@@ -112,91 +114,6 @@ namespace TouchSocket.Dmtp
 
         #endregion IDmtpChannel
 
-        #region 尝试发送
-
-        /// <summary>
-        /// 尝试发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol, byte[] buffer, int offset, int length)
-        {
-            try
-            {
-                client.DmtpActor.Send(protocol, buffer, offset, length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 尝试发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol, byte[] buffer)
-        {
-            try
-            {
-                client.DmtpActor.Send(protocol, buffer, 0, buffer.Length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 尝试发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <returns></returns>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol)
-        {
-            try
-            {
-                client.DmtpActor.Send(protocol, TouchSocketCoreUtility.ZeroBytes, 0, 0);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 尝试发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        /// <returns></returns>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol, ByteBlock byteBlock)
-        {
-            try
-            {
-                client.DmtpActor.Send(protocol, byteBlock);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        #endregion 尝试发送
-
         #region 尝试异步发送
 
         /// <summary>
@@ -208,31 +125,11 @@ namespace TouchSocket.Dmtp
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static async Task<bool> TrySendAsync(this IDmtpActorObject client, ushort protocol, byte[] buffer, int offset, int length)
+        public static async Task<bool> TrySendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory)
         {
             try
             {
-                await client.DmtpActor.SendAsync(protocol, buffer, offset, length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 尝试发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public static async Task<bool> TrySendAsync(this IDmtpActorObject client, ushort protocol, byte[] buffer)
-        {
-            try
-            {
-                await client.DmtpActor.SendAsync(protocol, buffer, 0, buffer.Length);
+                await client.DmtpActor.SendAsync(protocol, memory).ConfigureFalseAwait();
                 return true;
             }
             catch
@@ -251,7 +148,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await client.DmtpActor.SendAsync(protocol, TouchSocketCoreUtility.ZeroBytes, 0, 0);
+                await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureFalseAwait();
                 return true;
             }
             catch
@@ -264,32 +161,33 @@ namespace TouchSocket.Dmtp
 
         #region 发送Package
 
-        /// <summary>
-        /// 发送<see cref="IPackage"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol">协议</param>
-        /// <param name="package">包</param>
-        /// <param name="maxSize">估计的包最大值，其作用是用于<see cref="ByteBlock"/>的申请。</param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
-        {
-            using (var byteBlock = new ByteBlock(maxSize))
-            {
-                package.Package(byteBlock);
-                client.DmtpActor.Send(protocol, byteBlock);
-            }
-        }
+        ///// <summary>
+        ///// 发送<see cref="IPackage"/>
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol">协议</param>
+        ///// <param name="package">包</param>
+        ///// <param name="maxSize">估计的包最大值，其作用是用于<see cref="ByteBlock"/>的申请。</param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
+        //{
+        //    using (var byteBlock = new ByteBlock(maxSize))
+        //    {
+        //        var block = byteBlock;
+        //        package.Package(ref block);
+        //        client.DmtpActor.SendAsync(protocol, byteBlock.Memory).GetFalseAwaitResult();
+        //    }
+        //}
 
-        /// <summary>
-        /// 发送估计小于64K的<see cref="IPackage"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol">协议</param>
-        /// <param name="package">包</param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, IPackage package)
-        {
-            Send(client, protocol, package, 1024 * 64);
-        }
+        ///// <summary>
+        ///// 发送估计小于64K的<see cref="IPackage"/>
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol">协议</param>
+        ///// <param name="package">包</param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol, IPackage package)
+        //{
+        //    Send(client, protocol, package, 1024 * 64);
+        //}
 
         /// <summary>
         /// 发送<see cref="IPackage"/>
@@ -302,8 +200,9 @@ namespace TouchSocket.Dmtp
         {
             using (var byteBlock = new ByteBlock(maxSize))
             {
-                package.Package(byteBlock);
-                await client.DmtpActor.SendAsync(protocol, byteBlock);
+                var block = byteBlock;
+                package.Package(ref block);
+                await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureFalseAwait();
             }
         }
 
@@ -322,44 +221,44 @@ namespace TouchSocket.Dmtp
 
         #region 尝试发送Package
 
-        /// <summary>
-        /// 发送<see cref="IPackage"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol">协议</param>
-        /// <param name="package">包</param>
-        /// <param name="maxSize">估计的包最大值，其作用是用于<see cref="ByteBlock"/>的申请。</param>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
-        {
-            try
-            {
-                Send(client, protocol, package, maxSize);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        ///// <summary>
+        ///// 发送<see cref="IPackage"/>
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol">协议</param>
+        ///// <param name="package">包</param>
+        ///// <param name="maxSize">估计的包最大值，其作用是用于<see cref="ByteBlock"/>的申请。</param>
+        //public static bool TrySend(this IDmtpActorObject client, ushort protocol, IPackage package, int maxSize)
+        //{
+        //    try
+        //    {
+        //        Send(client, protocol, package, maxSize);
+        //        return true;
+        //    }
+        //    catch
+        //    {
+        //        return false;
+        //    }
+        //}
 
-        /// <summary>
-        /// 发送估计小于64K的<see cref="IPackage"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol">协议</param>
-        /// <param name="package">包</param>
-        public static bool TrySend(this IDmtpActorObject client, ushort protocol, IPackage package)
-        {
-            try
-            {
-                Send(client, protocol, package, 1024 * 64);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        ///// <summary>
+        ///// 发送估计小于64K的<see cref="IPackage"/>
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol">协议</param>
+        ///// <param name="package">包</param>
+        //public static bool TrySend(this IDmtpActorObject client, ushort protocol, IPackage package)
+        //{
+        //    try
+        //    {
+        //        Send(client, protocol, package, 1024 * 64);
+        //        return true;
+        //    }
+        //    catch
+        //    {
+        //        return false;
+        //    }
+        //}
 
         /// <summary>
         /// 发送<see cref="IPackage"/>
@@ -372,7 +271,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await SendAsync(client, protocol, package, maxSize);
+                await SendAsync(client, protocol, package, maxSize).ConfigureFalseAwait();
                 return true;
             }
             catch
@@ -391,7 +290,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await SendAsync(client, protocol, package, 1024 * 64);
+                await SendAsync(client, protocol, package, 1024 * 64).ConfigureFalseAwait();
                 return true;
             }
             catch
@@ -404,50 +303,50 @@ namespace TouchSocket.Dmtp
 
         #region 发送
 
-        /// <summary>
-        /// 发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, byte[] buffer)
-        {
-            client.DmtpActor.Send(protocol, buffer, 0, buffer.Length);
-        }
+        ///// <summary>
+        ///// 发送
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol"></param>
+        ///// <param name="buffer"></param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol, byte[] buffer)
+        //{
+        //    client.DmtpActor.SendAsync(protocol, buffer, 0, buffer.Length).GetFalseAwaitResult();
+        //}
 
-        /// <summary>
-        /// 发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, byte[] buffer, int offset, int length)
-        {
-            client.DmtpActor.Send(protocol, buffer, offset, length);
-        }
+        ///// <summary>
+        ///// 发送
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory)
+        //{
+        //    client.DmtpActor.SendAsync(protocol, buffer, offset, length).GetFalseAwaitResult();
+        //}
 
-        /// <summary>
-        ///  发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        public static void Send(this IDmtpActorObject client, ushort protocol)
-        {
-            client.DmtpActor.Send(protocol, TouchSocketCoreUtility.ZeroBytes, 0, 0);
-        }
+        ///// <summary>
+        /////  发送
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol"></param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol)
+        //{
+        //    client.DmtpActor.SendAsync(protocol, TouchSocketCoreUtility.ZeroBytes, 0, 0).GetFalseAwaitResult();
+        //}
 
-        /// <summary>
-        ///  发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        public static void Send(this IDmtpActorObject client, ushort protocol, ByteBlock byteBlock)
-        {
-            client.DmtpActor.Send(protocol, byteBlock.Buffer, 0, byteBlock.Len);
-        }
+        ///// <summary>
+        /////  发送
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="protocol"></param>
+        ///// <param name="byteBlock"></param>
+        //public static void Send(this IDmtpActorObject client, ushort protocol, ByteBlock byteBlock)
+        //{
+        //    client.DmtpActor.SendAsync(protocol, byteBlock.Buffer, 0, byteBlock.Length).GetFalseAwaitResult();
+        //}
 
         /// <summary>
         /// 发送
@@ -456,9 +355,9 @@ namespace TouchSocket.Dmtp
         /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        public static Task SendAsync(this IDmtpActorObject client, ushort protocol, byte[] buffer)
+        public static Task SendAsync(this IDmtpActorObject client, ushort protocol, ReadOnlyMemory<byte> memory)
         {
-            return client.DmtpActor.SendAsync(protocol, buffer, 0, buffer.Length);
+            return client.DmtpActor.SendAsync(protocol, memory);
         }
 
         /// <summary>
@@ -469,7 +368,7 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public static Task SendAsync(this IDmtpActorObject client, ushort protocol)
         {
-            return client.DmtpActor.SendAsync(protocol, TouchSocketCoreUtility.ZeroBytes, 0, 0);
+            return client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty);
         }
 
         #endregion 发送
@@ -481,25 +380,14 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public static ResultCode ToResultCode(this ChannelStatus channelStatus)
         {
-            switch (channelStatus)
+            return channelStatus switch
             {
-                case ChannelStatus.Default:
-                    return ResultCode.Default;
-
-                case ChannelStatus.Overtime:
-                    return ResultCode.Overtime;
-
-                case ChannelStatus.Cancel:
-                    return ResultCode.Canceled;
-
-                case ChannelStatus.Completed:
-                    return ResultCode.Success;
-
-                case ChannelStatus.Moving:
-                case ChannelStatus.Disposed:
-                default:
-                    return ResultCode.Error;
-            }
+                ChannelStatus.Default => ResultCode.Default,
+                ChannelStatus.Overtime => ResultCode.Overtime,
+                ChannelStatus.Cancel => ResultCode.Canceled,
+                ChannelStatus.Completed => ResultCode.Success,
+                _ => ResultCode.Error,
+            };
         }
     }
 }

@@ -16,11 +16,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Hosting.Sockets.HostService
 {
-    internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IService
+    internal class ServiceHost<TService> : SetupConfigObjectHostedService<TService> where TService : ISetupConfigObject, IServiceBase
     {
         private ILogger<ServiceHost<TService>> m_logger;
 
@@ -34,9 +35,10 @@ namespace TouchSocket.Hosting.Sockets.HostService
         {
             try
             {
-                await base.StartAsync(cancellationToken);
-                await this.ConfigObject.StartAsync();
-                this.m_logger.LogInformation($"{typeof(TService)}启动成功。");
+                await base.StartAsync(cancellationToken).ConfigureFalseAwait();
+                await this.ConfigObject.StartAsync().ConfigureFalseAwait();
+
+                this.m_logger.LogInformation(TouchSocketHostingResource.HostServerStarted);
             }
             catch (Exception ex)
             {

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using TouchSocket.Core;
 using System.Net.Sockets;
 
 namespace TouchSocket.Sockets
@@ -29,8 +30,8 @@ namespace TouchSocket.Sockets
         /// <exception cref="ArgumentNullException"></exception>
         public TcpNetworkMonitor(TcpListenOption option, Socket socket, SocketAsyncEventArgs e)
         {
-            this.Option = option ?? throw new ArgumentNullException(nameof(option));
-            this.Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            this.Option = ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
+            this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
             this.SocketAsyncEvent = e;
         }
 

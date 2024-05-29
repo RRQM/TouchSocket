@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// ITcpSendingPlugin
     /// </summary>
-    public interface ITcpSendingPlugin<in TClient> : IPlugin where TClient : ITcpClientBase
+    public interface ITcpSendingPlugin : IPlugin
     {
         /// <summary>
         /// 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。
@@ -26,13 +26,6 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnTcpSending(TClient client, SendingEventArgs e);
-    }
-
-    /// <summary>
-    /// ITcpSendingPlugin
-    /// </summary>
-    public interface ITcpSendingPlugin : ITcpSendingPlugin<ITcpClientBase>
-    {
+        Task OnTcpSending(ITcpSession client, SendingEventArgs e);
     }
 }

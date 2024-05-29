@@ -19,6 +19,7 @@ namespace TouchSocket.Core
     /// </summary>
     public static class CacheManagementExtensions
     {
+        #region ICache
         /// <summary>
         /// <inheritdoc cref="ICache{TKey, TValue}.AddCache(ICacheEntry{TKey, TValue})"/>
         /// </summary>
@@ -54,5 +55,7 @@ namespace TouchSocket.Core
                 Duration = TimeSpan.FromMilliseconds(duration)
             });
         }
+        #endregion
+
     }
 }

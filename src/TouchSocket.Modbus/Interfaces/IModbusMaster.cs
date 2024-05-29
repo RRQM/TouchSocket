@@ -20,14 +20,14 @@ namespace TouchSocket.Modbus
     /// </summary>
     public interface IModbusMaster
     {
-        /// <summary>
-        /// 发送Modbus请求
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
+        ///// <summary>
+        ///// 发送Modbus请求
+        ///// </summary>
+        ///// <param name="request"></param>
+        ///// <param name="millisecondsTimeout"></param>
+        ///// <param name="token"></param>
+        ///// <returns></returns>
+        //IModbusResponse 123SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
 
         /// <summary>
         /// 异步发送Modbus请求

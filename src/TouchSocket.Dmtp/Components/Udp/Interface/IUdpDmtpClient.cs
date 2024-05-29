@@ -28,6 +28,6 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 默认通信的udp终端。
         /// </summary>
-        IUdpSession UdpSession { get; }
+        UdpSessionBase UdpSession { get; }
     }
 }

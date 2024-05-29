@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -21,45 +22,39 @@ namespace TouchSocket.Rpc
     public static class RpcClientExtension
     {
         #region RpcClient
-
-        /// <inheritdoc cref="IRpcClient.Invoke(Type, string, IInvokeOption, object[])"/>
+        public static RpcResponse Invoke(this IRpcClient client, RpcRequest request)
+        {
+            return client.InvokeAsync(request).GetFalseAwaitResult();
+        }
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(RpcRequest)"/>
         public static T InvokeT<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return (T)client.Invoke(typeof(T), invokeKey, invokeOption, parameters);
+            return (T)(client.Invoke(new RpcRequest(invokeKey,typeof(T), invokeOption, parameters,default)).ReturnValue);
         }
 
-        /// <inheritdoc cref="IRpcClient.Invoke(Type, string, IInvokeOption, ref object[], Type[])"/>
-        public static T InvokeT<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            return (T)client.Invoke(typeof(T), invokeKey, invokeOption, ref parameters, types);
-        }
-
-        /// <inheritdoc cref="IRpcClient.InvokeAsync(Type, string, IInvokeOption, object[])"/>
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(RpcRequest)"/>
         public static async Task<T> InvokeTAsync<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return (T)await client.InvokeAsync(typeof(T), invokeKey, invokeOption, parameters);
+            return (T)(await client.InvokeAsync(new RpcRequest(invokeKey, typeof(T), invokeOption, parameters, default)).ConfigureFalseAwait()).ReturnValue;
         }
 
         #endregion RpcClient
 
         #region ITargetRpcClient
-
-        /// <inheritdoc cref="ITargetRpcClient.Invoke(Type, string, string, IInvokeOption, object[])"/>
+        public static RpcResponse Invoke(this ITargetRpcClient client, string targetId, RpcRequest request)
+        {
+            return client.InvokeAsync(targetId,request).GetFalseAwaitResult();
+        }
+        /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(string, RpcRequest)"/>
         public static T InvokeT<T>(this ITargetRpcClient client, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return (T)client.Invoke(typeof(T), targetId, invokeKey, invokeOption, parameters);
+            return (T)(client.Invoke(targetId,new RpcRequest(invokeKey, typeof(T), invokeOption, parameters, default)).ReturnValue);
         }
 
-        /// <inheritdoc cref="ITargetRpcClient.Invoke(Type, string, string, IInvokeOption, ref object[], Type[])"/>
-        public static T InvokeT<T>(this ITargetRpcClient client, string targetId, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            return (T)client.Invoke(typeof(T), targetId, invokeKey, invokeOption, ref parameters, types);
-        }
-
-        /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(Type, string, string, IInvokeOption, object[])"/>
+        /// <inheritdoc cref="ITargetRpcClient.InvokeAsync(string, RpcRequest)"/>
         public static async Task<T> InvokeTAsync<T>(this ITargetRpcClient client, string targetId, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return (T)await client.InvokeAsync(typeof(T), targetId, invokeKey, invokeOption, parameters);
+            return (T)(await client.InvokeAsync(targetId,new RpcRequest(invokeKey, typeof(T), invokeOption, parameters, default)).ConfigureFalseAwait()).ReturnValue;
         }
 
         #endregion ITargetRpcClient

@@ -25,16 +25,16 @@ namespace TouchSocket.Dmtp.FileTransfer
             this.Value?.Dispose();
         }
 
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
+            base.PackageBody(ref byteBlock);
             byteBlock.WritePackage(this.FileSection);
             byteBlock.WriteByteBlock(this.Value);
         }
 
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.FileSection = byteBlock.ReadPackage<FileSection>();
             this.Value = byteBlock.ReadByteBlock();
         }

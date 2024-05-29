@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp.Redis
     /// <summary>
     /// 具有远程键值存贮的操作端。
     /// </summary>
-    public interface IDmtpRedisActor : ICache<string, byte[]>, IActor
+    public interface IDmtpRedisActor : ICacheAsync<string, byte[]>, IActor
     {
         /// <summary>
         /// 序列化转换器。
@@ -37,7 +37,7 @@ namespace TouchSocket.Dmtp.Redis
         int Timeout { get; set; }
 
         /// <summary>
-        /// <inheritdoc cref="ICache{TKey, TValue}.AddCache(ICacheEntry{TKey, TValue})"/>
+        /// <inheritdoc cref="ICacheAsync{TKey, TValue}.AddCacheAsync(ICacheEntry{TKey, TValue})"/>
         /// </summary>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="key"></param>
@@ -47,17 +47,7 @@ namespace TouchSocket.Dmtp.Redis
         /// <exception cref="ArgumentNullException">参数为空</exception>
         /// <exception cref="TimeoutException">操作超时</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public bool Add<TValue>(string key, TValue value, int duration = 60000);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity);
+        public Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000);
 
         /// <summary>
         /// 获取缓存的键值对。
@@ -68,7 +58,7 @@ namespace TouchSocket.Dmtp.Redis
         /// <exception cref="ArgumentNullException">参数为空</exception>
         /// <exception cref="TimeoutException">操作超时</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public TValue Get<TValue>(string key);
+        public Task<TValue> GetAsync<TValue>(string key);
 
         /// <summary>
         /// <inheritdoc cref="ICache{TKey, TValue}.SetCache(ICacheEntry{TKey, TValue})"/>
@@ -81,18 +71,6 @@ namespace TouchSocket.Dmtp.Redis
         /// <exception cref="ArgumentNullException">参数为空</exception>
         /// <exception cref="TimeoutException">操作超时</exception>
         /// <exception cref="Exception">其他异常</exception>
-        public bool Set<TValue>(string key, TValue value, int duration = 60000);
-
-        /// <summary>
-        /// 获取指定键的值。
-        /// </summary>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public bool TryGet<TValue>(string key, out TValue value);
+        public Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000);
     }
 }

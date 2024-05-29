@@ -17,7 +17,6 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件读取器
     /// </summary>
-
     public partial class FileStorageReader : DisposableObject
     {
         private int m_dis = 1;
@@ -28,7 +27,7 @@ namespace TouchSocket.Core
         /// <param name="fileStorage"></param>
         public FileStorageReader(FileStorage fileStorage)
         {
-            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
         }
 
         /// <summary>

@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp
     /// IDmtpHandshakedPlugin
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpHandshakedPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpHandshakedPlugin: IPlugin
     {
         /// <summary>
         /// 在完成握手连接时。
@@ -27,13 +27,6 @@ namespace TouchSocket.Dmtp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnDmtpHandshaked(TClient client, DmtpVerifyEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpHandshakedPlugin
-    /// </summary>
-    public interface IDmtpHandshakedPlugin : IDmtpHandshakedPlugin<IDmtpActorObject>
-    {
+        Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e);
     }
 }

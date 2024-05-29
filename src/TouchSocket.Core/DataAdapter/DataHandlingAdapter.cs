@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -39,6 +41,15 @@ namespace TouchSocket.Core
         /// </summary>
         public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void ThrowIfMoreThanMaxPackageSize(int length)
+        {
+            if (length>this.MaxPackageSize)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(length), length, this.MaxPackageSize);
+            }
+        }
+
         /// <summary>
         /// 适配器所有者
         /// </summary>
@@ -53,7 +64,7 @@ namespace TouchSocket.Core
         {
             if (this.Owner != null)
             {
-                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
+                throw new Exception(TouchSocketCoreResource.AdapterAlreadyUsed);
             }
             this.Owner = owner;
         }

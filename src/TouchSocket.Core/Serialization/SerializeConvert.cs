@@ -179,73 +179,68 @@ namespace TouchSocket.Core
 
 #pragma warning restore SYSLIB0011 // 微软觉得不安全，不推荐使用
 
-        #region Fast二进制序列化
+        //#region Fast二进制序列化
 
-        /// <summary>
-        /// Fast二进制序列化对象
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static void FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ByteBlock stream, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
-        {
-            FastBinaryFormatter.Serialize(stream, obj);
-        }
+        ///// <summary>
+        ///// Fast二进制序列化对象
+        ///// </summary>
+        ///// <param name="byteBlock"></param>
+        ///// <param name="obj"></param>
+        ///// <returns></returns>
+        //public static void FastBinarySerialize<TByteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock,  in T obj)
+        //    where TByteBlock:IByteBlock
+        //{
+        //    FastBinaryFormatter.Serialize(ref byteBlock, obj);
+        //    byteBlock.SetLength(byteBlock.Length);
+        //}
 
-        /// <summary>
-        /// Fast二进制序列化对象
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                FastBinarySerialize(byteBlock, obj);
-                return byteBlock.ToArray();
-            }
-        }
+        ///// <summary>
+        ///// Fast二进制序列化对象
+        ///// </summary>
+        ///// <param name="obj"></param>
+        ///// <returns></returns>
+        //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
+        //{
+        //    var byteBlock = new ByteBlock();
+        //    try
+        //    {
+        //        FastBinarySerialize(ref byteBlock, obj);
+        //        return byteBlock.ToArray();
+        //    }
+        //    finally
+        //    {
+        //        byteBlock.Dispose();
+        //    }
+        //}
 
-        #endregion Fast二进制序列化
+        //#endregion Fast二进制序列化
 
-        #region Fast二进制反序列化
+        //#region Fast二进制反序列化
 
-        /// <summary>
-        /// Fast反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data, int offset)
-        {
-            return (T)FastBinaryFormatter.Deserialize(data, offset, typeof(T));
-        }
+        ///// <summary>
+        ///// Fast反序列化
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="data"></param>
+        ///// <param name="offset"></param>
+        ///// <returns></returns>
+        //public static T FastBinaryDeserialize<TByteBlock,[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        //{
+        //    return (T)FastBinaryFormatter.Deserialize(ref byteBlock, typeof(T));
+        //}
 
-        /// <summary>
-        /// Fast反序列化
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object FastBinaryDeserialize(byte[] data, int offset, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)
-        {
-            return FastBinaryFormatter.Deserialize(data, offset, type);
-        }
-
-        /// <summary>
-        /// 从Byte[]中反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data)
-        {
-            return FastBinaryDeserialize<T>(data, 0);
-        }
-
-        #endregion Fast二进制反序列化
+        ///// <summary>
+        ///// Fast反序列化
+        ///// </summary>
+        ///// <param name="data"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static object FastBinaryDeserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)where TByteBlock:IByteBlock
+        //{
+        //    return FastBinaryFormatter.Deserialize(ref byteBlock, type);
+        //}
+        //#endregion Fast二进制反序列化
 
         #region Xml序列化和反序列化
 

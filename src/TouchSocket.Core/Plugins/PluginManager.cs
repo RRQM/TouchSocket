@@ -24,7 +24,8 @@ namespace TouchSocket.Core
     public class PluginManager : DisposableObject, IPluginManager
     {
         private readonly object m_locker = new object();
-        private readonly Dictionary<string, PluginModel> m_pluginMethods = new Dictionary<string, PluginModel>();
+        private readonly Dictionary<Type, PluginModel> m_pluginMethods = new Dictionary<Type, PluginModel>();
+
         private readonly List<IPlugin> m_plugins = new List<IPlugin>();
         private readonly IResolver m_resolver;
 
@@ -41,26 +42,23 @@ namespace TouchSocket.Core
         public bool Enable { get; set; }
 
         /// <inheritdoc/>
-        public IEnumerable<IPlugin> Plugins => this.m_plugins;
+        public IEnumerable<IPlugin> Plugins=> this.m_plugins;
 
         IResolver IResolverObject.Resolver => this.m_resolver;
 
         void IPluginManager.Add(IPlugin plugin)
         {
-            if (plugin is null)
-            {
-                throw new ArgumentNullException(nameof(plugin));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIf(plugin);
+
+            this.ThrowIfDisposed();
 
             lock (this.m_locker)
             {
-                this.ThrowIfDisposed();
-
                 if (plugin.GetType().GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
                 {
                     if (optionAttribute.Singleton)
                     {
-                        foreach (var item in this.m_plugins)
+                        foreach (var item in this.Plugins)
                         {
                             if (item.GetType() == plugin.GetType())
                             {
@@ -72,31 +70,51 @@ namespace TouchSocket.Core
                     }
                 }
 
-                var list = this.SearchPluginMethod(plugin);
+                var list = PluginManager.SearchPluginMethod(plugin);
 
-                var pairs = new List<string>();
-                var methodInfos = plugin.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                foreach (var methodInfo in methodInfos)
+                foreach (var item in list)
                 {
-                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-                    {
-                        var name = methodInfo.GetName();
+                    var pluginModel = this.GetPluginModel(item);
 
-                        if (pairs.Contains(name))
+                    var methodInfo = item.GetMethods(BindingFlags.Instance | BindingFlags.Public| BindingFlags.DeclaredOnly)
+                        .Where(a => 
                         {
-                            throw new Exception("插件的接口方法不允许重载");
-                        }
-                        if (list.Contains(name))
-                        {
-                            var pluginModel = this.GetPluginModel(name);
-                            var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
-                            pluginModel.Funcs.Add(pluginEntity.Run);
-                        }
-                        pairs.Add(name);
+                            return a.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(a.GetParameters()[1].ParameterType) && a.ReturnType == typeof(Task);
+                        })
+                        .FirstOrDefault();
+
+                    if (methodInfo!=null)
+                    {
+                        var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
+                        pluginModel.Add(pluginEntity.Run);
                     }
                 }
-                this.m_plugins.Add(plugin);
                 plugin.Loaded(this);
+                this.m_plugins.Add(plugin);
+
+                //var pairs = new List<string>();
+                //var methodInfos = plugin.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                //foreach (var methodInfo in methodInfos)
+                //{
+                //    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
+                //    {
+                //        var name = methodInfo.GetName();
+
+                //        if (pairs.Contains(name))
+                //        {
+                //            throw new Exception("插件的接口方法不允许重载");
+                //        }
+                //        if (list.Contains(name))
+                //        {
+                //            var pluginModel = this.GetPluginModel(name);
+                //            var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
+                //            pluginModel.Add(pluginEntity.Run);
+                //        }
+                //        pairs.Add(name);
+                //    }
+                //}
+                //plugin.Loaded(this);
+                //this.m_plugins.Add(plugin);
             }
         }
 
@@ -106,9 +124,9 @@ namespace TouchSocket.Core
             {
                 if (optionAttribute.Singleton)
                 {
-                    foreach (var item in this.m_plugins)
+                    foreach (var item in this.Plugins)
                     {
-                        if (item.GetType().FullName == pluginType.FullName)
+                        if (item.GetType() == pluginType)
                         {
                             return item;
                         }
@@ -129,12 +147,12 @@ namespace TouchSocket.Core
             return plugin;
         }
 
-        void IPluginManager.Add(string name, Func<object, PluginEventArgs, Task> func)
+        void IPluginManager.Add(Type interfeceType, Func<object, PluginEventArgs, Task> func)
         {
             lock (this.m_locker)
             {
-                var pluginModel = this.GetPluginModel(name);
-                pluginModel.Funcs.Add(func);
+                var pluginModel = this.GetPluginModel(interfeceType);
+                pluginModel.Add(func);
             }
         }
 
@@ -152,40 +170,29 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public int GetPluginCount(string name)
+        public int GetPluginCount(Type interfeceType)
         {
-            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
             {
-                return pluginModel.Funcs.Count;
+                return pluginModel.Count;
             }
             return 0;
         }
 
-        bool IPluginManager.Raise(string name, object sender, PluginEventArgs e)
+        async Task<bool> IPluginManager.RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
                 return false;
             }
-            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            if (e.Handled)
+            {
+                return true;
+            }
+            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
             {
                 e.LoadModel(pluginModel, sender);
-                e.InvokeNext().ConfigureAwait(false).GetAwaiter().GetResult();
-                return e.Handled;
-            }
-            return false;
-        }
-
-        async Task<bool> IPluginManager.RaiseAsync(string name, object sender, PluginEventArgs e)
-        {
-            if (!this.Enable)
-            {
-                return false;
-            }
-            if (this.m_pluginMethods.TryGetValue(name, out var pluginModel))
-            {
-                e.LoadModel(pluginModel, sender);
-                await e.InvokeNext();
+                await e.InvokeNext().ConfigureFalseAwait();
                 return e.Handled;
             }
             return false;
@@ -196,53 +203,56 @@ namespace TouchSocket.Core
         {
             lock (this.m_locker)
             {
-                foreach (var item in this.m_plugins)
+                foreach (var item in this.Plugins)
                 {
                     item.SafeDispose();
                 }
+                this.m_pluginMethods.Clear();
                 this.m_plugins.Clear();
             }
             base.Dispose(disposing);
         }
 
-        private PluginModel GetPluginModel(string name)
+        private PluginModel GetPluginModel(Type interfeceType)
         {
-            if (!this.m_pluginMethods.TryGetValue(name, out var pluginModel))
+            if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
             {
                 pluginModel = new PluginModel();
-                this.m_pluginMethods.Add(name, pluginModel);
+                this.m_pluginMethods.Add(interfeceType, pluginModel);
             }
             return pluginModel;
         }
 
-        private List<string> SearchPluginMethod(IPlugin plugin)
+        private static List<Type> SearchPluginMethod(IPlugin plugin)
         {
             var pluginMethodNames = new List<string>();
-            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToArray();
-            foreach (var type in pluginInterfacetypes)
-            {
-                var pairs = new List<string>();
+            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToList();
 
-                var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-                foreach (var methodInfo in methodInfos)
-                {
-                    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-                    {
-                        var name = methodInfo.GetName();
-                        if (pairs.Contains(name))
-                        {
-                            throw new Exception("插件的接口方法不允许重载");
-                        }
-                        if (!pluginMethodNames.Contains(name))
-                        {
-                            pluginMethodNames.Add(name);
-                        }
+            return pluginInterfacetypes;
+            //foreach (var type in pluginInterfacetypes)
+            //{
+            //    var pairs = new List<string>();
 
-                        pairs.Add(name);
-                    }
-                }
-            }
-            return pluginMethodNames;
+            //    var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            //    foreach (var methodInfo in methodInfos)
+            //    {
+            //        if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
+            //        {
+            //            var name = methodInfo.GetName();
+            //            if (pairs.Contains(name))
+            //            {
+            //                throw new Exception("插件的接口方法不允许重载");
+            //            }
+            //            if (!pluginMethodNames.Contains(name))
+            //            {
+            //                pluginMethodNames.Add(name);
+            //            }
+
+            //            pairs.Add(name);
+            //        }
+            //    }
+            //}
+            //return pluginMethodNames;
         }
     }
 }

@@ -29,9 +29,9 @@ namespace TouchSocket.Core
         protected virtual bool IncludedRouter { get; }
 
         /// <inheritdoc/>
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
+            base.PackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
                 byteBlock.Write(this.Sign);
@@ -40,9 +40,9 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public override void PackageRouter(in ByteBlock byteBlock)
+        public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageRouter(byteBlock);
+            base.PackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
                 byteBlock.Write(this.Sign);
@@ -51,9 +51,9 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
                 this.Sign = byteBlock.ReadInt64();
@@ -62,9 +62,9 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public override void UnpackageRouter(in ByteBlock byteBlock)
+        public override void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageRouter(byteBlock);
+            base.UnpackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
                 this.Sign = byteBlock.ReadInt64();

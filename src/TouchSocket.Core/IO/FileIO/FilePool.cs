@@ -26,15 +26,15 @@ namespace TouchSocket.Core
 
     public static partial class FilePool
     {
-        private static readonly object m_locker = new object();
+        private static readonly object s_locker = new object();
 
         private static readonly ConcurrentDictionary<string, FileStorage> m_pathStorage = new ConcurrentDictionary<string, FileStorage>();
 
-        private static readonly Timer m_timer;
+        private static readonly Timer s_timer;
 
         static FilePool()
         {
-            m_timer = new Timer(OnTimer, null, 1000 * 60, 1000 * 60);
+            s_timer = new Timer(OnTimer, null, 1000 * 60, 1000 * 60);
         }
 
         /// <summary>
@@ -46,6 +46,14 @@ namespace TouchSocket.Core
             return m_pathStorage.Keys;
         }
 
+        private static void ThrowIfPathIsNull(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                ThrowHelper.ThrowArgumentNullException(nameof(path));
+            }
+        }
+
         /// <summary>
         /// 加载文件为读取流
         /// </summary>
@@ -55,10 +63,7 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public static FileStorage GetFileStorageForRead(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
-            }
+            ThrowIfPathIsNull(path);
             return GetFileStorageForRead(new FileInfo(path));
         }
 
@@ -74,12 +79,12 @@ namespace TouchSocket.Core
             {
                 if (storage.FileAccess != FileAccess.Read)
                 {
-                    throw new Exception("该路径的文件已经被加载为仅写入模式。");
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(fileInfo.FullName));
                 }
                 Interlocked.Increment(ref storage.m_reference);
                 return storage;
             }
-            lock (m_locker)
+            lock (s_locker)
             {
                 storage = new FileStorage(fileInfo, FileAccess.Read);
                 if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
@@ -100,10 +105,7 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public static FileStorage GetFileStorageForWrite(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
-            }
+            ThrowIfPathIsNull(path);
             return GetFileStorageForWrite(new FileInfo(path));
         }
 
@@ -120,12 +122,12 @@ namespace TouchSocket.Core
             {
                 if (storage.FileAccess != FileAccess.Write)
                 {
-                    throw new Exception("该路径的文件已经被加载为仅读取模式。");
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileReadOnly.Format(fileInfo.FullName));
                 }
                 Interlocked.Increment(ref storage.m_reference);
                 return storage;
             }
-            lock (m_locker)
+            lock (s_locker)
             {
                 storage = new FileStorage(fileInfo, FileAccess.Write);
                 if (m_pathStorage.TryAdd(fileInfo.FullName, storage))
@@ -194,10 +196,7 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public static int GetReferenceCount(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                return 0;
-            }
+            ThrowIfPathIsNull(path);
             return m_pathStorage.TryGetValue(path, out var fileStorage) ? fileStorage.m_reference : 0;
         }
 
@@ -234,17 +233,14 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public static void LoadFileForCacheRead(string path)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new System.ArgumentException($"“{nameof(path)}”不能为 null 或空。", nameof(path));
-            }
+            ThrowIfPathIsNull(path);
 
             path = Path.GetFullPath(path);
             if (m_pathStorage.TryGetValue(path, out var storage))
             {
                 if (storage.FileAccess != FileAccess.Read || !storage.Cache)
                 {
-                    throw new Exception("该路径的文件已经被加载为其他模式。");
+                    ThrowHelper.ThrowUnknownErrorException();
                 }
                 return;
             }
@@ -262,7 +258,7 @@ namespace TouchSocket.Core
         {
             Task.Run(async () =>
             {
-                await Task.Delay(time);
+                await Task.Delay(time).ConfigureFalseAwait();
                 if (GetReferenceCount(path) == 0)
                 {
                     if (m_pathStorage.TryRemove(path, out var fileStorage))
@@ -283,10 +279,7 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public static Result TryReleaseFile(string path, int delayTime = 0)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                return new Result(ResultCode.Error, TouchSocketCoreResource.ArgumentNull.GetDescription(nameof(path)));
-            }
+            ThrowIfPathIsNull(path);
             path = Path.GetFullPath(path);
             if (m_pathStorage.TryGetValue(path, out var fileStorage))
             {
@@ -295,7 +288,7 @@ namespace TouchSocket.Core
                     if (delayTime > 0)
                     {
                         DelayRunReleaseFile(path, delayTime);
-                        return new Result(ResultCode.Success, $"如果在{delayTime}ms后引用仍然为0的话，即被释放。");
+                        return new Result(ResultCode.Success);
                     }
                     else
                     {
@@ -303,17 +296,17 @@ namespace TouchSocket.Core
                         {
                             fileStorage.Dispose();
                         }
-                        return new Result(ResultCode.Success, "流成功释放。");
+                        return new Result(ResultCode.Success);
                     }
                 }
                 else
                 {
-                    return new Result(ResultCode.Error, TouchSocketCoreResource.StreamReferencing.GetDescription(path, fileStorage.m_reference));
+                    return new Result(ResultCode.Error, TouchSocketCoreResource.StreamReferencing.Format(path, fileStorage.m_reference));
                 }
             }
             else
             {
-                return new Result(ResultCode.Success, TouchSocketCoreResource.StreamNotFind.GetDescription(path));
+                return new Result(ResultCode.Success, TouchSocketCoreResource.StreamNotFind.Format(path));
             }
         }
 

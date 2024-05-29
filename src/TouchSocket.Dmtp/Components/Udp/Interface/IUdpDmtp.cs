@@ -17,7 +17,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IUdpDmtpService
     /// </summary>
-    public interface IUdpDmtp : IUdpSession, IDmtpActorObject
+    public interface IUdpDmtp : IServiceBase, IClient, IDmtpActorObject
     {
     }
 }

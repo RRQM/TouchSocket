@@ -19,20 +19,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IServerStopedPlugin
     /// </summary>
-    public interface IServerStopedPlugin<in TServer> : IPlugin where TServer : IService
+    public interface IServerStopedPlugin : IPlugin
     {
         /// <summary>
-        /// 当服务器调用<see cref="IService.Stop"/>或者<see cref="IDisposable.Dispose"/>时
+        /// 当服务器调用<see cref="IServiceBase.StopAsync"/>或者<see cref="IDisposable.Dispose"/>时
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        Task OnServerStoped(TServer sender, ServiceStateEventArgs e);
-    }
-
-    /// <summary>
-    /// IServerStopedPlugin
-    /// </summary>
-    public interface IServerStopedPlugin : IServerStopedPlugin<IService>
-    {
+        Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e);
     }
 }

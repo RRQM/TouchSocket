@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Linq;
 using TouchSocket.Core;
 
@@ -29,35 +30,35 @@ namespace TouchSocket.Modbus
 
         public ModbusErrorCode ErrorCode { get; set; }
 
-        bool IFixedHeaderRequestInfo.OnParsingBody(byte[] body)
+        bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
         {
             if (this.m_isError)
             {
-                this.ErrorCode = (ModbusErrorCode)body.First();
+                this.ErrorCode = (ModbusErrorCode)body[0];
                 return true;
             }
             if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                this.Data = body.Take(body.Length - 2).ToArray();
+                this.Data = body.Slice(0,body.Length - 2).ToArray();
                 return true;
             }
             else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
             {
-                this.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(body, 0);
-                this.Data = body.Skip(2).Take(body.Length - 4).ToArray();
+                this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+                this.Data = body.Slice(2,body.Length - 4).ToArray();
                 return true;
             }
             else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
             {
-                this.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(body, 0);
-                this.Quantity = TouchSocketBitConverter.BigEndian.ToUInt16(body, 2);
+                this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+                this.Quantity = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(2));
                 this.Data = new byte[0];
                 return true;
             }
             return false;
         }
 
-        bool IFixedHeaderRequestInfo.OnParsingHeader(byte[] header)
+        bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
         {
             if (header.Length == 3)
             {
@@ -82,7 +83,7 @@ namespace TouchSocket.Modbus
                 }
                 else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
                 {
-                    this.m_byteBlock.Pos--;//回退一个游标
+                    this.m_byteBlock.Position--;//回退一个游标
                     this.m_bodyLength = 6;
                     return true;
                 }

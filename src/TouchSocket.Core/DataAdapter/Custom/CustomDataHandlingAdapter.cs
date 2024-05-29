@@ -11,6 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -18,19 +22,20 @@ namespace TouchSocket.Core
     /// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，
     /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
     /// </summary>
-    public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : class, IRequestInfo
+    public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest :IRequestInfo
     {
-        /// <summary>
-        /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="IDisposable.Dispose"/>后，再置空；
-        /// </summary>
-        protected ByteBlock TempByteBlock;
+       
+        private ValueByteBlock m_tempByteBlock;
 
-        /// <summary>
-        /// 缓存对象。
-        /// </summary>
-        protected TRequest TempRequest;
+        private readonly Type m_requestType;
 
-        private bool m_needReset;
+        public CustomDataHandlingAdapter()
+        {
+            this.m_requestType = typeof(TRequest);
+        }
+
+
+        private TRequest m_tempRequest;
 
         /// <summary>
         /// <inheritdoc/>
@@ -42,18 +47,64 @@ namespace TouchSocket.Core
         /// </summary>
         public override bool CanSplicingSend => false;
 
+        protected int SurLength { get; set; }
+
+        public bool TryParseRequest<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
+        {
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            {
+                this.Reset();
+            }
+
+            if (this.m_tempByteBlock.IsEmpty)
+            {
+                return this.Single(ref byteBlock, out request);
+            }
+            else
+            {
+                if (this.SurLength <= 0)
+                {
+                    throw new Exception();
+                }
+
+                var len = Math.Min(this.SurLength, byteBlock.CanReadLength);
+
+                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, len));
+                byteBlock.Position += len;
+                this.SurLength -= len;
+                var block = this.m_tempByteBlock;
+                this.m_tempByteBlock = ValueByteBlock.Empty;
+                try
+                {
+                    block.SeekToStart();
+                    var success = this.Single(ref block, out request);
+                    if (!success&& (!this.m_tempByteBlock.IsEmpty))
+                    {
+                        byteBlock.Position += this.m_tempByteBlock.Length;
+                    }
+                    return success;
+                }
+                finally
+                {
+                    block.Dispose();
+                }
+            }
+
+        }
+
         /// <summary>
         /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
-        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
-        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
-        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
+        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLength"/>的数据</para>
+        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
         /// </summary>
         /// <param name="byteBlock">字节块</param>
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
         /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
         /// <returns></returns>
-        protected abstract FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref TRequest request, ref int tempCapacity);
+        protected abstract FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TRequest request, ref int tempCapacity)
+            where TByteBlock : IByteBlock;
 
         /// <summary>
         /// 成功执行接收以后。
@@ -64,7 +115,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 即将执行<see cref="SingleStreamDataHandlingAdapter.GoReceived(ByteBlock, IRequestInfo)"/>。
+        /// 即将执行<see cref="SingleStreamDataHandlingAdapter.GoReceivedAsync(ByteBlock, IRequestInfo)"/>。
         /// </summary>
         /// <param name="request"></param>
         /// <returns>返回值标识是否继续执行</returns>
@@ -77,35 +128,23 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            if (this.m_needReset || this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
-                this.m_needReset = false;
             }
-            if (this.TempByteBlock == null)
+            if (this.m_tempByteBlock.IsEmpty)
             {
-                this.Single(byteBlock, false);
+                await this.Single(byteBlock, false).ConfigureFalseAwait();
             }
             else
             {
-                this.TempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                var block = this.TempByteBlock;
-                this.TempByteBlock = null;
-                this.Single(block, true);
+                this.m_tempByteBlock.Write(byteBlock.Span);
+                var block = this.m_tempByteBlock;
+                this.m_tempByteBlock = ValueByteBlock.Empty;
+                await this.Single(block, true).ConfigureFalseAwait();
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
-        {
-            this.GoSend(buffer, offset, length);
         }
 
         /// <summary>
@@ -113,55 +152,108 @@ namespace TouchSocket.Core
         /// </summary>
         protected override void Reset()
         {
-            this.TempByteBlock.SafeDispose();
-            this.TempByteBlock = null;
-            this.TempRequest = default;
-            this.m_needReset = true;
+            this.m_tempByteBlock.SafeDispose();
+            this.m_tempByteBlock = ValueByteBlock.Empty;
+            this.m_tempRequest = default;
+            this.SurLength = 0;
             base.Reset();
         }
 
-        private void Single(ByteBlock byteBlock, bool temp)
+        protected virtual bool IsBeCached(in TRequest request)
         {
-            byteBlock.Pos = 0;
-            while (byteBlock.Pos < byteBlock.Len)
+            if (this.m_requestType.IsValueType)
             {
-                if (this.m_needReset)
-                {
-                    return;
-                }
+                return request.GetHashCode()!=default(TRequest).GetHashCode();
+            }
+            return request != null;
+        }
+
+        private bool Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
+        {
+            if (this.m_tempRequest is null)
+            {
+
+            }
+            var tempCapacity = 1024 * 64;
+            var filterResult = this.Filter(ref byteBlock,  this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
+            switch (filterResult)
+            {
+                case FilterResult.Success:
+
+                    request = this.m_tempRequest;
+                    this.m_tempRequest = default;
+                    return true;
+
+                case FilterResult.Cache:
+                    if (byteBlock.CanReadLength > 0)
+                    {
+                        this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
+                        this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
+
+                        if (this.m_tempByteBlock.Length > this.MaxPackageSize)
+                        {
+                            throw new Exception("缓存的数据长度大于设定值的情况下未收到解析信号");
+                        }
+
+                        byteBlock.SeekToEnd();
+                    }
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
+                    request = default;
+                    return false;
+
+                case FilterResult.GoOn:
+                default:
+                    if (this.UpdateCacheTimeWhenRev)
+                    {
+                        this.LastCacheTime = DateTime.Now;
+                    }
+                    request = default;
+                    return false;
+            }
+        }
+
+        private async Task Single<TByteBlock>(TByteBlock byteBlock, bool temp)where TByteBlock:IByteBlock
+        {
+            byteBlock.Position = 0;
+            while (byteBlock.Position < byteBlock.Length)
+            {
                 if (this.DisposedValue)
                 {
                     return;
                 }
                 var tempCapacity = 1024 * 64;
-                var filterResult = this.Filter(byteBlock, this.TempRequest != null, ref this.TempRequest, ref tempCapacity);
+                var filterResult = this.Filter(ref byteBlock, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
+
                 switch (filterResult)
                 {
                     case FilterResult.Success:
-                        if (this.OnReceivingSuccess(this.TempRequest))
+                        if (this.OnReceivingSuccess(this.m_tempRequest))
                         {
-                            this.GoReceived(null, this.TempRequest);
-                            this.OnReceivedSuccess(this.TempRequest);
+                            await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureFalseAwait();
+                            this.OnReceivedSuccess(this.m_tempRequest);
                         }
-                        this.TempRequest = default;
+                        this.m_tempRequest = default;
                         break;
 
                     case FilterResult.Cache:
-                        if (byteBlock.CanReadLen > 0)
+                        if (byteBlock.CanReadLength > 0)
                         {
                             if (temp)
                             {
-                                this.TempByteBlock = new ByteBlock(tempCapacity);
-                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
+                                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
                                 byteBlock.Dispose();
                             }
                             else
                             {
-                                this.TempByteBlock = new ByteBlock(tempCapacity);
-                                this.TempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
+                                this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
+                                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
                             }
 
-                            if (this.TempByteBlock.Len > this.MaxPackageSize)
+                            if (this.m_tempByteBlock.Length > this.MaxPackageSize)
                             {
                                 this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                             }

@@ -33,12 +33,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 周期内的累计计数值。
         /// </summary>
-        public long Count { get => this.m_count; }
+        public long Count => this.m_count;
 
         /// <summary>
         /// 最后一次递增时间
         /// </summary>
-        public DateTime LastIncrement { get => this.m_lastIncrement; }
+        public DateTime LastIncrement => this.m_lastIncrement;
 
         /// <summary>
         /// 当达到一个周期时触发。

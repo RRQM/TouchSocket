@@ -63,7 +63,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置Tcp适配器
         /// </summary>
-        public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; } =
-            () => new NormalDataHandlingAdapter();
+        public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; }
     }
 }

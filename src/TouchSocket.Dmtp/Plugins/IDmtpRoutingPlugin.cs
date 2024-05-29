@@ -19,20 +19,13 @@ namespace TouchSocket.Dmtp
     /// IDmtpRoutingPlugin
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpRoutingPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpRoutingPlugin: IPlugin
     {
         /// <summary>
         /// 当需要转发路由包时
         /// </summary>
         /// <param name="client"></param>
         /// <param name="e"></param>
-        Task OnDmtpRouting(TClient client, PackageRouterEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpRoutingPlugin
-    /// </summary>
-    public interface IDmtpRoutingPlugin : IDmtpRoutingPlugin<IDmtpActorObject>
-    {
+        Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e);
     }
 }
