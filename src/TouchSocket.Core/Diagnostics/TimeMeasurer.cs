@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -30,7 +31,21 @@ namespace TouchSocket.Core
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            action?.Invoke();
+            action.Invoke();
+            stopwatch.Stop();
+            return stopwatch.Elapsed;
+        }
+
+        /// <summary>
+        /// 开始运行
+        /// </summary>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public static TimeSpan Run(Func<Task> func)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            func.Invoke().GetFalseAwaitResult();
             stopwatch.Stop();
             return stopwatch.Elapsed;
         }
@@ -44,19 +59,9 @@ namespace TouchSocket.Core
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            await func?.Invoke();
+            await func.Invoke().ConfigureFalseAwait();
             stopwatch.Stop();
             return stopwatch.Elapsed;
-        }
-
-        /// <summary>
-        /// 异步执行
-        /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
-        public static Task<TimeSpan> RunAsync(Action action)
-        {
-            return Task.Run(() => { return Run(action); });
         }
     }
 }

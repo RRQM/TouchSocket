@@ -38,7 +38,7 @@ namespace TouchSocket.JsonRpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -87,25 +87,25 @@ namespace TouchSocket.JsonRpc
 
                 var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
                 httpResponse.FromJson(str);
-                httpResponse.Answer();
+                await httpResponse.AnswerAsync().ConfigureFalseAwait();
             }
             catch
             {
             }
         }
 
-        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Post)
             {
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context)).ConfigureFalseAwait();
                     return;
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
         }
     }
 }

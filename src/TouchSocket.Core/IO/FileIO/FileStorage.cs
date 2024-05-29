@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TouchSocket.Resources;
 
@@ -105,7 +106,7 @@ namespace TouchSocket.Core
             if (!File.Exists(path))
             {
                 fileStorage = null;
-                msg = TouchSocketCoreResource.FileNotExists.GetDescription(path);
+                msg = TouchSocketCoreResource.FileNotExists.Format(path);
                 return false;
             }
             try
@@ -158,7 +159,7 @@ namespace TouchSocket.Core
                 }
                 if (this.FileAccess == FileAccess.Write)
                 {
-                    throw new Exception("该流不允许读取。");
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(this.FileInfo.FullName));
                 }
                 if (this.Cache)
                 {
@@ -170,6 +171,33 @@ namespace TouchSocket.Core
                 {
                     this.FileStream.Position = stratPos;
                     return this.FileStream.Read(buffer, offset, length);
+                }
+            }
+        }
+
+        public int Read(long stratPos, Span<byte> span)
+        {
+            this.AccessTime = DateTime.Now;
+            using (var writeLock = new WriteLock(this.m_lockSlim))
+            {
+                if (this.m_disposedValue)
+                {
+                    throw new ObjectDisposedException(this.GetType().FullName);
+                }
+                if (this.FileAccess == FileAccess.Write)
+                {
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(this.FileInfo.FullName));
+                }
+                if (this.Cache)
+                {
+                    var r = (int)Math.Min(this.m_fileData.Length - stratPos, span.Length);
+                    Unsafe.CopyBlock(ref span[0],ref this.m_fileData[stratPos], (uint)r);
+                    return r;
+                }
+                else
+                {
+                    this.FileStream.Position = stratPos;
+                    return this.FileStream.Read(span);
                 }
             }
         }
@@ -200,11 +228,11 @@ namespace TouchSocket.Core
             {
                 if (this.m_disposedValue)
                 {
-                    throw new ObjectDisposedException(this.GetType().FullName);
+                    ThrowHelper.ThrowObjectDisposedException(this);
                 }
                 if (this.FileAccess == FileAccess.Read)
                 {
-                    throw new Exception("该流不允许写入。");
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileReadOnly.Format(this.FileInfo.FullName));
                 }
                 this.FileStream.Position = stratPos;
                 this.FileStream.Write(buffer, offset, length);

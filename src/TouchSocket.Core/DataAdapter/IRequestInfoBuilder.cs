@@ -26,6 +26,6 @@ namespace TouchSocket.Core
         /// 构建对象到<see cref="ByteBlock"/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        void Build(ByteBlock byteBlock);
+        void Build<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock;
     }
 }

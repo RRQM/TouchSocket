@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -24,7 +26,7 @@ namespace TouchSocket.Core
         /// <param name="offset">内存偏移</param>
         /// <param name="len">该数据对象应该占用的长度</param>
         /// <returns>返回实际对象</returns>
-        object Read(byte[] buffer, int offset, int len);
+        object Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
 
         /// <summary>
         /// 写入对象，不需要考虑为null的情况。
@@ -32,7 +34,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">存储内存块</param>
         /// <param name="obj">需要序列化的对象</param>
         /// <returns>返回该对象实际占用的字节长度。</returns>
-        int Write(ByteBlock byteBlock, object obj);
+        void Write<TByteBlock>(ref TByteBlock byteBlock,in object obj) where TByteBlock : IByteBlock;
     }
 
     /// <summary>
@@ -41,20 +43,20 @@ namespace TouchSocket.Core
     /// <typeparam name="T"></typeparam>
     public abstract class FastBinaryConverter<T> : IFastBinaryConverter
     {
-        object IFastBinaryConverter.Read(byte[] buffer, int offset, int len)
+        object IFastBinaryConverter.Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            return this.Read(buffer, offset, len);
+            return this.Read(ref byteBlock, type);
         }
 
-        int IFastBinaryConverter.Write(ByteBlock byteBlock, object obj)
+        void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock,in object obj)
         {
-            return this.Write(byteBlock, (T)obj);
+            this.Write(ref byteBlock, (T)obj);
         }
 
-        /// <inheritdoc cref="IFastBinaryConverter.Read(byte[], int, int)"/>
-        protected abstract T Read(byte[] buffer, int offset, int len);
+        /// <inheritdoc cref="IFastBinaryConverter.Read{TByteBlock}(ref TByteBlock, Type)"/>
+        protected abstract T Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
 
-        /// <inheritdoc cref="IFastBinaryConverter.Write(ByteBlock, object)"/>
-        protected abstract int Write(ByteBlock byteBlock, T obj);
+        /// <inheritdoc cref="IFastBinaryConverter.Write{TByteBlock}(ref TByteBlock,in object)"/>
+        protected abstract void Write<TByteBlock>(ref TByteBlock byteBlock,in T obj) where TByteBlock : IByteBlock;
     }
 }

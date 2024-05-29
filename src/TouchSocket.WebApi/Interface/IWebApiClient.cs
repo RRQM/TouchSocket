@@ -10,14 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Http;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.WebApi
 {
     /// <summary>
     /// IWebApiClient
     /// </summary>
-    public interface IWebApiClient : IWebApiClientBase, IHttpClient
+    public interface IWebApiClient : IWebApiClientBase, IHttpSession, ISetupConfigObject, IOnlineClient, ITcpConnectableClient
     {
     }
 }

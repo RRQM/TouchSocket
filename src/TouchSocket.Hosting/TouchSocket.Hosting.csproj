@@ -56,4 +56,20 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketHostingResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketHostingResource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketHostingResource.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TouchSocketHostingResource.Designer.cs</LastGenOutput>
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	  </EmbeddedResource>
+	</ItemGroup>
+
 </Project>

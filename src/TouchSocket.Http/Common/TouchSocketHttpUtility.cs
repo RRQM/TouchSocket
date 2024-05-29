@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Http
 {
     /// <summary>
@@ -17,6 +19,7 @@ namespace TouchSocket.Http
     /// </summary>
     public static class TouchSocketHttpUtility
     {
+        public static ReadOnlySpan<byte> CRLF => new byte[] { (byte)'\r', (byte)'\n' };
         /// <summary>
         /// 非缓存上限
         /// </summary>

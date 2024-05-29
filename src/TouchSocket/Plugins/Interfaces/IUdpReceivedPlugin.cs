@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// IUdpReceivedPlugin
     /// </summary>
-    public interface IUdpReceivedPlugin<in TClient> : IPlugin where TClient : IUdpSession
+    public interface IUdpReceivedPlugin: IPlugin
     {
         /// <summary>
         /// 在收到数据时触发
@@ -26,13 +26,6 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnUdpReceived(TClient client, UdpReceivedDataEventArgs e);
-    }
-
-    /// <summary>
-    /// IUdpReceivedPlugin
-    /// </summary>
-    public interface IUdpReceivedPlugin : IUdpReceivedPlugin<IUdpSession>
-    {
+        Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e);
     }
 }

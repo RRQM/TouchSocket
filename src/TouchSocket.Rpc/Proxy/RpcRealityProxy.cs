@@ -89,20 +89,21 @@ namespace TouchSocket.Rpc
 
             this.OnBefore(targetMethod, value.InvokeKey, ref ps);
 
-            object result = default;
+            RpcResponse response = default ;
+            object result;
 
             switch (rpcMethod.TaskType)
             {
                 case TaskReturnType.Task:
                     {
-                        this.GetClient().Invoke(invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
-                        result = EasyTask.CompletedTask;
+                        response = this.GetClient().InvokeAsync(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes)).GetFalseAwaitResult();
+                        result = default;
                         break;
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        var obj = this.GetClient().Invoke(rpcMethod.ReturnType, invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
-                        result = value.GenericMethod.Invoke(default, obj);
+                        response = this.GetClient().InvokeAsync(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes)).GetFalseAwaitResult();
+                        result = value.GenericMethod.Invoke(default, response.ReturnValue);
                         break;
                     }
                 case TaskReturnType.None:
@@ -110,11 +111,15 @@ namespace TouchSocket.Rpc
                     {
                         if (rpcMethod.HasReturn)
                         {
-                            result = this.GetClient().Invoke(rpcMethod.ReturnType, invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
+                            response = this.GetClient().InvokeAsync(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes)).GetFalseAwaitResult();
+
+                            result = response.ReturnValue;
                         }
                         else
                         {
-                            this.GetClient().Invoke(invokeKey, invokeOption, ref ps, rpcMethod.ParameterTypes);
+                            this.GetClient().InvokeAsync(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes)).GetFalseAwaitResult();
+
+                            result = default;
                         }
                         break;
                     }
@@ -123,12 +128,12 @@ namespace TouchSocket.Rpc
             {
                 for (var i = 0; i < ps.Length; i++)
                 {
-                    args[i] = ps[i];
+                    args[i] = response.Parameters[i];
                 }
             }
 
             this.OnAfter(targetMethod, invokeKey, ref args, ref result);
-
+            
             return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
         }
 

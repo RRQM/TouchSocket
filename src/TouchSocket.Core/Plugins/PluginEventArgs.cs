@@ -53,10 +53,10 @@ namespace TouchSocket.Core
                 return EasyTask.CompletedTask;
             }
 
-            if (this.m_pluginModel.Funcs.Count > this.m_index)
+            if (this.m_pluginModel.Count > this.m_index)
             {
                 this.Count++;
-                return this.m_pluginModel.Funcs[this.m_index++].Invoke(this.m_sender, this);
+                return this.m_pluginModel[this.m_index++].Invoke(this.m_sender, this);
             }
             else
             {

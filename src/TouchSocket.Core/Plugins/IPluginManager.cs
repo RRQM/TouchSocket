@@ -30,9 +30,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取已添加的指定名称的插件数量。
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <returns></returns>
-        int GetPluginCount(string name);
+        int GetPluginCount(Type interfeceType);
 
         /// <summary>
         /// 所包含的所有插件。
@@ -63,27 +63,18 @@ namespace TouchSocket.Core
         /// <summary>
         /// 添加插件异步执行委托
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        void Add(string name, Func<object, PluginEventArgs, Task> func);
+        void Add(Type interfeceType, Func<object, PluginEventArgs, Task> func);
 
         /// <summary>
         /// 触发对应插件
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task<bool> RaiseAsync(string name, object sender, PluginEventArgs e);
-
-        /// <summary>
-        /// 触发对应插件
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        bool Raise(string name, object sender, PluginEventArgs e);
+        Task<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e);
     }
 }

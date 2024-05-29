@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -19,24 +18,17 @@ namespace TouchSocket.Core
     /// <summary>
     /// 循环动作
     /// </summary>
-    public class LoopAction : EasyTask, IDisposable
+    public sealed class LoopAction : DisposableObject
     {
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~LoopAction()
-        {
-            this.Dispose();
-        }
+        private readonly AsyncAutoResetEvent m_waitHandle;
+        private readonly Func<LoopAction, Task> m_executeAction;
 
-        private readonly EventWaitHandle m_waitHandle;
-
-        private LoopAction(int count, TimeSpan interval, Action<LoopAction> action)
+        public LoopAction(int count, TimeSpan interval, Func<LoopAction, Task> action)
         {
             this.LoopCount = count;
-            this.ExecuteAction = action;
+            this.m_executeAction = action;
             this.Interval = interval;
-            this.m_waitHandle = new AutoResetEvent(false);
+            this.m_waitHandle = new AsyncAutoResetEvent(false);
         }
 
         /// <summary>
@@ -48,7 +40,12 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static LoopAction CreateLoopAction(int count, TimeSpan interval, Action<LoopAction> action)
         {
-            return new LoopAction(count, interval, action);
+            Task Run(LoopAction loop)
+            {
+                action(loop);
+                return EasyTask.CompletedTask;
+            }
+            return new LoopAction(count, interval, Run);
         }
 
         /// <summary>
@@ -60,7 +57,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static LoopAction CreateLoopAction(int count, int intervalMS, Action<LoopAction> action)
         {
-            return new LoopAction(count, TimeSpan.FromMilliseconds(intervalMS), action);
+            return CreateLoopAction(count, TimeSpan.FromMilliseconds(intervalMS), action);
         }
 
         /// <summary>
@@ -111,11 +108,6 @@ namespace TouchSocket.Core
         public int LoopCount { get; }
 
         /// <summary>
-        /// 执行委托
-        /// </summary>
-        public Action<LoopAction> ExecuteAction { get; private set; }
-
-        /// <summary>
         /// 是否在运行
         /// </summary>
         public RunStatus RunStatus { get; private set; }
@@ -125,45 +117,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Run()
         {
-            if (this.RunStatus == RunStatus.None)
-            {
-                this.RunStatus = RunStatus.Running;
-                if (this.LoopCount >= 0)
-                {
-                    for (var i = 0; i < this.LoopCount; i++)
-                    {
-                        if (this.RunStatus == RunStatus.Disposed)
-                        {
-                            return;
-                        }
-                        this.ExecuteAction.Invoke(this);
-                        this.ExecutedCount++;
-                        if (this.RunStatus == RunStatus.Paused)
-                        {
-                            this.m_waitHandle.WaitOne();
-                        }
-                        this.m_waitHandle.WaitOne(this.Interval);
-                    }
-                }
-                else
-                {
-                    while (true)
-                    {
-                        if (this.RunStatus == RunStatus.Disposed)
-                        {
-                            return;
-                        }
-                        this.ExecuteAction.Invoke(this);
-                        this.ExecutedCount++;
-                        if (this.RunStatus == RunStatus.Paused)
-                        {
-                            this.m_waitHandle.WaitOne();
-                        }
-                        this.m_waitHandle.WaitOne(this.Interval);
-                    }
-                }
-                this.RunStatus = RunStatus.Completed;
-            }
+            this.RunAsync().GetFalseAwaitResult();
         }
 
         /// <summary>
@@ -171,10 +125,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Rerun()
         {
-            if (this.RunStatus == RunStatus.Disposed)
-            {
-                throw new Exception("无法利用已释放的资源");
-            }
+            this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
             this.Run();
         }
@@ -183,14 +134,11 @@ namespace TouchSocket.Core
         /// 以异步重新运行
         /// </summary>
         /// <returns></returns>
-        public Task RerunAsync()
+        public async Task RerunAsync()
         {
-            if (this.RunStatus == RunStatus.Disposed)
-            {
-                throw new Exception("无法利用已释放的资源");
-            }
+            this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
-            return this.RunAsync();
+            await this.RunAsync().ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -199,10 +147,50 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public Task RunAsync()
         {
-            return Task.Run(() =>
+            if (this.RunStatus != RunStatus.None)
             {
-                this.Run();
-            });
+                return EasyTask.CompletedTask;
+            }
+
+            return Task.Run(async () =>
+             {
+                 this.RunStatus = RunStatus.Running;
+                 if (this.LoopCount >= 0)
+                 {
+                     for (var i = 0; i < this.LoopCount; i++)
+                     {
+                         if (this.RunStatus == RunStatus.Disposed)
+                         {
+                             return;
+                         }
+                         await this.m_executeAction.Invoke(this).ConfigureFalseAwait();
+                         this.ExecutedCount++;
+                         if (this.RunStatus == RunStatus.Paused)
+                         {
+                             await this.m_waitHandle.WaitOneAsync().ConfigureFalseAwait();
+                         }
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureFalseAwait();
+                     }
+                 }
+                 else
+                 {
+                     while (true)
+                     {
+                         if (this.RunStatus == RunStatus.Disposed)
+                         {
+                             return;
+                         }
+                         await this.m_executeAction.Invoke(this).ConfigureFalseAwait();
+                         this.ExecutedCount++;
+                         if (this.RunStatus == RunStatus.Paused)
+                         {
+                             await this.m_waitHandle.WaitOneAsync().ConfigureFalseAwait();
+                         }
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureFalseAwait();
+                     }
+                 }
+                 this.RunStatus = RunStatus.Completed;
+             });
         }
 
         /// <summary>
@@ -218,7 +206,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 回复
+        /// 恢复
         /// </summary>
         public void Resume()
         {
@@ -229,20 +217,15 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (this.RunStatus == RunStatus.Disposed)
+            if (this.DisposedValue)
             {
                 return;
             }
-            if (this.RunStatus == RunStatus.Completed)
-            {
-                this.m_waitHandle.Dispose();
-            }
+            this.m_waitHandle.Dispose();
             this.RunStatus = RunStatus.Disposed;
+            base.Dispose(disposing);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// IHttpPlugin
     /// </summary>
-    public interface IHttpPlugin<in TClient> : IPlugin where TClient : IHttpSocketClient
+    public interface IHttpPlugin : IPlugin
     {
         /// <summary>
         /// 在收到Http请求。
@@ -26,13 +26,6 @@ namespace TouchSocket.Http
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnHttpRequest(TClient client, HttpContextEventArgs e);
-    }
-
-    /// <summary>
-    /// IHttpPlugin
-    /// </summary>
-    public interface IHttpPlugin : IHttpPlugin<IHttpSocketClient>
-    {
+        Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e);
     }
 }

@@ -21,15 +21,24 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// HttpDmtpService
     /// </summary>
-    public class HttpDmtpService : HttpDmtpService<HttpDmtpSocketClient>, IHttpDmtpService
+    public class HttpDmtpService : HttpDmtpService<HttpDmtpSessionClient>, IHttpDmtpService
     {
+        /// <inheritdoc/>
+        protected override sealed HttpDmtpSessionClient NewClient()
+        {
+            return new PrivateHttpDmtpSessionClient();
+        }
+
+        private class PrivateHttpDmtpSessionClient : HttpDmtpSessionClient
+        {
+        }
     }
 
     /// <summary>
     /// HttpDmtpService泛型类型
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSocketClient, new()
+    public abstract partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSessionClient
     {
         /// <summary>
         /// 连接令箭
@@ -44,6 +53,13 @@ namespace TouchSocket.Dmtp
         #endregion 字段
 
         /// <inheritdoc/>
+        protected override void ClientInitialized(TClient client)
+        {
+            base.ClientInitialized(client);
+            client.m_internalOnRpcActorInit = this.PrivateOnRpcActorInit;
+        }
+
+        /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
@@ -54,11 +70,20 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <inheritdoc/>
-        protected override async Task OnConnected(TClient socketClient, ConnectedEventArgs e)
+        private async Task<IDmtpActor> FindDmtpActor(string id)
         {
-            socketClient.m_internalOnRpcActorInit = this.PrivateOnRpcActorInit;
-            await base.OnConnected(socketClient, e);
+            if (this.m_allowRoute)
+            {
+                if (this.m_findDmtpActor != null)
+                {
+                    return await this.m_findDmtpActor.Invoke(id).ConfigureFalseAwait();
+                }
+                return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private DmtpActor PrivateOnRpcActorInit()
@@ -67,22 +92,6 @@ namespace TouchSocket.Dmtp
             {
                 FindDmtpActor = this.FindDmtpActor
             };
-        }
-
-        private async Task<IDmtpActor> FindDmtpActor(string id)
-        {
-            if (this.m_allowRoute)
-            {
-                if (this.m_findDmtpActor != null)
-                {
-                    return await this.m_findDmtpActor.Invoke(id);
-                }
-                return this.TryGetSocketClient(id, out var client) ? client.DmtpActor : null;
-            }
-            else
-            {
-                return null;
-            }
         }
     }
 }

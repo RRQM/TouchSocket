@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.Sockets;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -23,10 +22,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="socket"></param>
-        public ConnectingEventArgs(Socket socket)
+        public ConnectingEventArgs()
         {
-            this.Socket = socket;
             this.IsPermitOperation = true;
         }
 
@@ -34,10 +31,5 @@ namespace TouchSocket.Sockets
         /// 客户端Id。该Id的赋值，仅在服务器适用。
         /// </summary>
         public string Id { get; set; }
-
-        /// <summary>
-        /// 新初始化的通信器
-        /// </summary>
-        public Socket Socket { get; private set; }
     }
 }

@@ -38,11 +38,11 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
             base.Loaded(pluginManager);
         }
 
-        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             var corsPolicy = this.m_corsService.GetPolicy(this.m_policyName) ?? throw new Exception($"没有找到名称为{this.m_policyName}的跨域策略。");
 

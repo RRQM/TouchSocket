@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using System.Collections.Generic;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -39,12 +40,12 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 函数名
         /// </summary>
-        public string MethodName { get; internal set; }
+        public string InvokeKey { get; internal set; }
 
         /// <summary>
         /// 参数数据
         /// </summary>
-        public List<byte[]> ParametersBytes { get; internal set; }
+        public IList<byte[]> ParametersBytes { get; internal set; }
 
         /// <summary>
         /// 返回参数数据
@@ -62,13 +63,13 @@ namespace TouchSocket.Dmtp.Rpc
         public Metadata Metadata { get; internal set; }
 
         /// <inheritdoc/>
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
+            base.PackageBody(ref byteBlock);
             byteBlock.Write((byte)this.SerializationType);
             byteBlock.Write((byte)this.Feedback);
             byteBlock.Write(this.IsByRef);
-            byteBlock.Write(this.MethodName);
+            byteBlock.Write(this.InvokeKey);
             byteBlock.WriteBytesPackage(this.ReturnParameterBytes);
 
             if (this.ParametersBytes != null && this.ParametersBytes.Count > 0)
@@ -88,26 +89,28 @@ namespace TouchSocket.Dmtp.Rpc
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.SerializationType = (SerializationType)byteBlock.ReadByte();
             this.Feedback = (FeedbackType)byteBlock.ReadByte();
             this.IsByRef = byteBlock.ReadBoolean();
-            this.MethodName = byteBlock.ReadString();
+            this.InvokeKey = byteBlock.ReadString();
             this.ReturnParameterBytes = byteBlock.ReadBytesPackage();
 
             var countPar = (byte)byteBlock.ReadByte();
-            this.ParametersBytes = new List<byte[]>();
+            var parametersBytes =new byte[countPar][];
             for (var i = 0; i < countPar; i++)
             {
-                this.ParametersBytes.Add(byteBlock.ReadBytesPackage());
+                parametersBytes[i]= byteBlock.ReadBytesPackage();
             }
+
+            this.ParametersBytes = parametersBytes;
 
             if (!byteBlock.ReadIsNull())
             {
                 var package = new Metadata();
-                package.Unpackage(byteBlock);
+                package.Unpackage(ref byteBlock);
                 this.Metadata = package;
             }
         }

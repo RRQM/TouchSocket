@@ -10,11 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Http
 {
     /// <summary>
     /// 代理身份认证类型
     /// </summary>
+    [Obsolete("此配置已被弃用，不再支持代理", true)]
     public enum AuthenticationType
     {  /// <summary>
        /// 不允许身份认证

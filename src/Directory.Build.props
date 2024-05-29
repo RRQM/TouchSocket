@@ -1,9 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.9</Version>
+		<Version>2.1.0-alpha.14</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -13,34 +11,38 @@
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<PackageIcon>logo.png</PackageIcon>
 		<Authors>若汝棋茗</Authors>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
-		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
-		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
+		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300</NoWarn>
+		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
+		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageIcon>logo.png</PackageIcon>
+		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<DefineConstants>SystemNetHttp</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
@@ -49,13 +51,13 @@
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync</DefineConstants>
 	</PropertyGroup>
 	
 	<ItemGroup>

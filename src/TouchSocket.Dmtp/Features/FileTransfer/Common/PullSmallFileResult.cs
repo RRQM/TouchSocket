@@ -65,9 +65,9 @@ namespace TouchSocket.Dmtp.FileTransfer
                 {
                     FileUtility.Delete(path);
                 }
-                using (var writer = FilePool.GetWriter(path))
+                using (var byteBlock = FilePool.GetWriter(path))
                 {
-                    writer.Write(this.Value);
+                    byteBlock.Write(this.Value);
                     return Result.Success;
                 }
             }

@@ -67,7 +67,7 @@ namespace TouchSocket.Dmtp.Rpc
             var dmtpRpcActor = client.DmtpActor.GetDmtpRpcActor();
             if (dmtpRpcActor is null)
             {
-                throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull.GetDescription());
+                throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
             }
             return dmtpRpcActor;
         }
@@ -83,7 +83,7 @@ namespace TouchSocket.Dmtp.Rpc
             var dmtpRpcActor = client.DmtpActor.GetDmtpRpcActor();
             if (dmtpRpcActor is null)
             {
-                throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull.GetDescription());
+                throw new ArgumentNullException(nameof(dmtpRpcActor), TouchSocketDmtpResource.DmtpRpcActorArgumentNull);
             }
             return (TDmtpRpcActor)dmtpRpcActor;
         }

@@ -39,7 +39,7 @@ namespace TouchSocket.WebApi
         public string PolicyName { get; set; }
 
         /// <inheritdoc/>
-        public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+        public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
             if (callContext is IHttpCallContext httpCallContext && httpCallContext.HttpContext != default)
             {
@@ -48,7 +48,8 @@ namespace TouchSocket.WebApi
 
                 corsPolicy.Apply(httpCallContext.HttpContext);
             }
-            return await base.ExecutedAsync(callContext, parameters, invokeResult);
+
+            return base.ExecutedAsync(callContext, parameters, invokeResult, exception);
         }
     }
 }

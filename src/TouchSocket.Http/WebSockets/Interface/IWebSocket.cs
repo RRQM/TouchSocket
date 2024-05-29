@@ -21,7 +21,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocket
     /// </summary>
-    public interface IWebSocket : IDisposable, IHandshakeObject, ICloseObject
+    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient
     {
         /// <summary>
         /// WebSocket版本
@@ -36,12 +36,12 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 使用的Http客户端
         /// </summary>
-        IHttpClientBase Client { get; }
+        IHttpSession Client { get; }
 
-        /// <summary>
-        /// 发送Ping报文。
-        /// </summary>
-        void Ping();
+        ///// <summary>
+        ///// 发送Ping报文。
+        ///// </summary>
+        //void Ping();
 
         /// <summary>
         /// 发送Ping报文
@@ -49,10 +49,10 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         Task PingAsync();
 
-        /// <summary>
-        /// 发送Pong报文。
-        /// </summary>
-        void Pong();
+        ///// <summary>
+        ///// 发送Pong报文。
+        ///// </summary>
+        //void Pong();
 
         /// <summary>
         /// 发送Pong报文
@@ -65,53 +65,51 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<WebSocketReceiveResult> ReadAsync(CancellationToken token);
+        Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token);
 
-#if NET6_0_OR_GREATER
         /// <summary>
         /// 值异步等待读取数据
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token);
-#endif
+        ValueTask<IWebSocketReceiveResult> ValueReadAsync(CancellationToken token);
 
-        /// <summary>
-        /// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>
-        /// </summary>
-        /// <param name="dataFrame"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(WSDataFrame dataFrame, bool endOfMessage = true);
+        ///// <summary>
+        ///// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>
+        ///// </summary>
+        ///// <param name="dataFrame"></param>
+        ///// <param name="endOfMessage"></param>
+        //void Send(WSDataFrame dataFrame, bool endOfMessage = true);
 
-        /// <summary>
-        /// 发送文本消息
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(string text, bool endOfMessage = true);
+        ///// <summary>
+        ///// 发送文本消息
+        ///// </summary>
+        ///// <param name="text"></param>
+        ///// <param name="endOfMessage"></param>
+        //void Send(string text, bool endOfMessage = true);
 
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(byte[] buffer, int offset, int length, bool endOfMessage = true);
+        ///// <summary>
+        ///// 发送二进制消息
+        ///// </summary>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        ///// <param name="endOfMessage"></param>
+        //void Send(byte[] buffer, int offset, int length, bool endOfMessage = true);
 
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(ByteBlock byteBlock, bool endOfMessage = true);
+        ///// <summary>
+        ///// 发送二进制消息
+        ///// </summary>
+        ///// <param name="byteBlock"></param>
+        ///// <param name="endOfMessage"></param>
+        //void Send(ByteBlock byteBlock, bool endOfMessage = true);
 
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(byte[] buffer, bool endOfMessage = true);
+        ///// <summary>
+        ///// 发送二进制消息
+        ///// </summary>
+        ///// <param name="buffer"></param>
+        ///// <param name="endOfMessage"></param>
+        //void Send(byte[] buffer, bool endOfMessage = true);
 
         /// <summary>
         /// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>

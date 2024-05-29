@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IDmtpPlugin
     /// </summary>
-    public interface IDmtpReceivedPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpReceivedPlugin : IPlugin
     {
         /// <summary>
         /// 收到DmtpMessage数据
@@ -26,13 +26,6 @@ namespace TouchSocket.Dmtp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnDmtpReceived(TClient client, DmtpMessageEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpReceivedPlugin
-    /// </summary>
-    public interface IDmtpReceivedPlugin : IDmtpReceivedPlugin<IDmtpActorObject>
-    {
+        Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e);
     }
 }

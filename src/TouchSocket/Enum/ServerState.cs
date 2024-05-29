@@ -35,11 +35,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 已停止
         /// </summary>
-        Stopped,
-
-        /// <summary>
-        /// 已释放
-        /// </summary>
-        Disposed
+        Stopped
     }
 }

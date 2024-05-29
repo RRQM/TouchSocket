@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// IDmtpFileTransferedPlugin
     /// </summary>
-    public interface IDmtpFileTransferedPlugin<TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpFileTransferedPlugin: IPlugin
     {
         /// <summary>
         /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferedEventArgs.Result"/>属性值进行判断。
@@ -26,13 +26,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnDmtpFileTransfered(TClient client, FileTransferedEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpFileTransferedPlugin
-    /// </summary>
-    public interface IDmtpFileTransferedPlugin : IDmtpFileTransferedPlugin<IDmtpActorObject>
-    {
+        Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e);
     }
 }

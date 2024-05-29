@@ -18,9 +18,9 @@ namespace TouchSocket.JsonRpc
 {
     internal sealed class WebSocketServerJsonRpcClient : JsonRpcActionClientBase
     {
-        private readonly IHttpSocketClient m_client;
+        private readonly IHttpSessionClient m_client;
 
-        public WebSocketServerJsonRpcClient(IHttpSocketClient client)
+        public WebSocketServerJsonRpcClient(IHttpSessionClient client)
         {
             if (client.Protocol != Sockets.Protocol.WebSocket)
             {
@@ -29,10 +29,10 @@ namespace TouchSocket.JsonRpc
             this.m_client = client;
         }
 
-        protected override void SendJsonString(string jsonString)
-        {
-            this.m_client.WebSocket.Send(jsonString);
-        }
+        //protected override void SendJsonString(string jsonString)
+        //{
+        //    this.m_client.WebSocket.Send(jsonString);
+        //}
 
         protected override Task SendJsonStringAsync(string jsonString)
         {

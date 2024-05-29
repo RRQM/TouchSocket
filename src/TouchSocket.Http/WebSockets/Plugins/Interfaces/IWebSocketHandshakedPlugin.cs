@@ -18,21 +18,14 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebSocketHandshakedPlugin<in TClient> : IPlugin where TClient : IWebSocket
+    public interface IWebSocketHandshakedPlugin: IPlugin
     {
         /// <summary>
         /// 表示完成握手后。
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="webSocket"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnWebSocketHandshaked(TClient client, HttpContextEventArgs e);
-    }
-
-    /// <summary>
-    /// IWebSocketHandshakedPlugin
-    /// </summary>
-    public interface IWebSocketHandshakedPlugin : IWebSocketHandshakedPlugin<IWebSocket>
-    {
+        Task OnWebSocketHandshaked(IWebSocket webSocket, HttpContextEventArgs e);
     }
 }

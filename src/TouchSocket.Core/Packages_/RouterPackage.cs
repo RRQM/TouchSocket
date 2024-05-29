@@ -33,13 +33,13 @@ namespace TouchSocket.Core
         public string TargetId { get; set; }
 
         /// <summary>
-        /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter(in ByteBlock)"/>，然后<see cref="PackageBody(in ByteBlock)"/>
+        /// 打包所有的路由包信息。顺序为：先调用<see cref="PackageRouter{TByteBlock}(ref TByteBlock)"/>，然后<see cref="PackageBody{TByteBlock}(ref TByteBlock)"/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public override sealed void Package(in ByteBlock byteBlock)
+        public override sealed void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            this.PackageRouter(byteBlock);
-            this.PackageBody(byteBlock);
+            this.PackageRouter(ref byteBlock);
+            this.PackageBody(ref byteBlock);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace TouchSocket.Core
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public virtual void PackageBody(in ByteBlock byteBlock)
+        public virtual void PackageBody<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
         }
 
@@ -55,8 +55,7 @@ namespace TouchSocket.Core
         /// 打包路由。
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
-        /// <param name="byteBlock"></param>
-        public virtual void PackageRouter(in ByteBlock byteBlock)
+        public virtual void PackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock
         {
             byteBlock.Write(this.Route);
             byteBlock.Write(this.SourceId);
@@ -74,10 +73,10 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public override sealed void Unpackage(in ByteBlock byteBlock)
+        public override sealed void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
-            this.UnpackageRouter(byteBlock);
-            this.UnpackageBody(byteBlock);
+            this.UnpackageRouter(ref byteBlock);
+            this.UnpackageBody(ref byteBlock);
         }
 
         /// <summary>
@@ -85,7 +84,7 @@ namespace TouchSocket.Core
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public virtual void UnpackageBody(in ByteBlock byteBlock)
+        public virtual void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock
         {
         }
 
@@ -94,7 +93,7 @@ namespace TouchSocket.Core
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        public virtual void UnpackageRouter(in ByteBlock byteBlock)
+        public virtual void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             this.Route = byteBlock.ReadBoolean();
             this.SourceId = byteBlock.ReadString();

@@ -64,7 +64,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// 从内存初始化资源
         /// </summary>
         /// <param name="byteBlock"></param>
-        public FileResourceInfo(ByteBlock byteBlock)
+        public FileResourceInfo(in IByteBlock byteBlock)
         {
             this.FileSectionSize = byteBlock.ReadInt32();
             this.ResourceHandle = byteBlock.ReadInt32();
@@ -135,7 +135,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             byteBlock.Write(this.ResourceHandle);
             byteBlock.WritePackage(this.FileInfo);
@@ -155,7 +155,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.ResourceHandle = byteBlock.ReadInt32();
             this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();
@@ -187,7 +187,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// 将<see cref="FileResourceInfo"/>对象保存到内存。
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Save(ByteBlock byteBlock)
+        public void Save<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
             byteBlock.Write(this.FileSectionSize);
             byteBlock.Write(this.ResourceHandle);

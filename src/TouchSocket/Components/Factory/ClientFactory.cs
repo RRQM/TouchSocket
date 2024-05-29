@@ -12,6 +12,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -22,34 +24,56 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class ClientFactory<TClient> : DependencyObject where TClient : IClient
     {
-        /// <summary>
-        /// Client工厂
-        /// </summary>
+        private readonly ConcurrentList<TClient> m_createdClients = new ConcurrentList<TClient>();
+        private readonly ConcurrentQueue<TClient> m_freeClients = new ConcurrentQueue<TClient>();
+        private readonly SingleTimer m_singleTimer;
+
         public ClientFactory()
         {
-            this.MainConfig = new TouchSocketConfig();
+            this.m_singleTimer = new SingleTimer(1000, () =>
+            {
+                var list = new List<TClient>();
+
+                this.m_createdClients.RemoveAll(a =>
+                {
+                    if (!this.IsAlive(a))
+                    {
+                        this.DisposeClient(a);
+                        return true;
+                    }
+                    return false;
+                });
+
+                //if (this.CreatedClients.Count < this.MinCount)
+                //{
+                //    using (this.GetClient())
+                //    {
+                //    }
+                //}
+            });
         }
 
-        /// <summary>
-        /// 已创建的客户端安全列表，一般不要直接操作。
-        /// </summary>
-        public ConcurrentList<TClient> CreatedClients { get; } = new ConcurrentList<TClient>();
+        #region 属性
 
         /// <summary>
-        /// 空闲客户端的安全队列，一般不要直接操作。
-        /// </summary>
-        public ConcurrentQueue<TClient> FreeClients { get; } = new ConcurrentQueue<TClient>();
-
-        /// <summary>
-        /// 主通信客户端。
-        /// </summary>
-        public abstract TClient MainClient { get; }
-
-        /// <summary>
-        /// 主客户端配置
+        /// 获取可用的客户端数量。
+        /// <para>
+        /// 该值指示了当前空闲的客户端数量和未创建的客户端数量。
+        /// </para>
         /// </summary>
         /// <returns></returns>
-        public virtual TouchSocketConfig MainConfig { get; }
+        public int AvailableCount => Math.Max(0, this.MaxCount - this.CreatedClients.Count) + this.FreeClients.Count;
+
+        /// <summary>
+        /// 获取已经创建的客户端数量。
+        /// </summary>
+        /// <returns></returns>
+        public int CreatedCount => this.CreatedClients.Count;
+
+        /// <summary>
+        /// 获取空闲的客户端数量。
+        /// </summary>
+        public int FreeCount => this.FreeClients.Count;
 
         /// <summary>
         /// 最大客户端数量。默认10。
@@ -62,24 +86,16 @@ namespace TouchSocket.Sockets
         public int MinCount { get; set; }
 
         /// <summary>
-        /// 检验主通信状态。最好在每次操作时都调用。
+        /// 已创建的客户端安全列表，一般不要直接操作。
         /// </summary>
-        /// <param name="tryInit">如果状态异常，是否进行再次初始化</param>
-        /// <returns></returns>
-        public abstract Result CheckStatus(bool tryInit = true);
+        protected IReadOnlyList<TClient> CreatedClients => this.m_createdClients;
 
         /// <summary>
-        /// 检验主通信状态。最好在每次操作时都调用。
+        /// 空闲客户端的安全队列，一般不要直接操作。
         /// </summary>
-        /// <param name="tryInit">如果状态异常，是否进行再次初始化</param>
-        /// <returns></returns>
-        public virtual Task<Result> CheckStatusAsync(bool tryInit = true)
-        {
-            return Task.Run(() =>
-              {
-                  return this.CheckStatus(tryInit);
-              });
-        }
+        protected ConcurrentQueue<TClient> FreeClients => this.m_freeClients;
+
+        #endregion 属性
 
         /// <summary>
         /// 清理池中的所有客户端。
@@ -98,54 +114,37 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 清理池中的所有客户端。
-        /// </summary>
-        /// <returns></returns>
-        public virtual Task<int> ClearAsync()
-        {
-            return Task.Run(this.Clear);
-        }
-
-        /// <summary>
         /// 释放客户端最后的调用。
         /// </summary>
         /// <param name="client"></param>
-        public abstract void DisposeClient(TClient client);
-
-        /// <summary>
-        /// 释放客户端最后的调用。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        public virtual Task DisposeClientAsync(TClient client)
+        public virtual void DisposeClient(TClient client)
         {
-            return Task.Run(() =>
-             {
-                 this.DisposeClient(client);
-             });
+            client.SafeDispose();
+            this.m_createdClients.Remove(client);
         }
 
-        /// <summary>
-        /// 获取空闲可用的客户端数量。
-        /// </summary>
-        public abstract int GetAvailableCount();
-
-        /// <summary>
-        /// 获取用于传输的客户端。在此处返回的结果，必须完成基本初始化，例如连接等。
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public abstract TClient GetTransferClient(TimeSpan waitTime);
+        #region GetClient
 
         /// <summary>
         /// 获取用于传输的客户端结果。可以支持<see cref="IDisposable"/>。
         /// </summary>
         /// <param name="waitTime"></param>
         /// <returns></returns>
-        public virtual ClientFactoryResult<TClient> GetTransferClientResult(TimeSpan waitTime)
+        public virtual async ValueTask<ClientFactoryResult<TClient>> GetClient(TimeSpan waitTime)
         {
-            return new ClientFactoryResult<TClient>(this.GetTransferClient(waitTime), this.ReleaseTransferClient);
+            return new ClientFactoryResult<TClient>(await this.RentClient(waitTime).ConfigureAwait(false), this.ReturnClient);
         }
+
+        /// <summary>
+        /// 获取一个指定客户端，默认情况下等待1秒。
+        /// </summary>
+        /// <returns></returns>
+        public ValueTask<ClientFactoryResult<TClient>> GetClient()
+        {
+            return this.GetClient(TimeSpan.FromSeconds(1));
+        }
+
+        #endregion GetClient
 
         /// <summary>
         /// 判断客户端是不是存活状态。
@@ -155,23 +154,74 @@ namespace TouchSocket.Sockets
         public abstract bool IsAlive(TClient client);
 
         /// <summary>
-        /// 释放使用完成的客户端
+        /// 创建客户端
         /// </summary>
-        /// <param name="client"></param>
-        public abstract void ReleaseTransferClient(TClient client);
+        /// <returns></returns>
+        protected abstract Task<TClient> CreateClient();
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                this.m_singleTimer.SafeDispose();
+                this.Clear();
+            }
             base.Dispose(disposing);
-            this.DisposeClient(this.MainClient);
-            this.Clear();
         }
 
         /// <summary>
-        /// 获取用于传输的客户端配置
+        /// 租赁客户端
         /// </summary>
+        /// <param name="waitTime"></param>
         /// <returns></returns>
-        protected abstract TouchSocketConfig GetTransferConfig();
+        protected virtual async ValueTask<TClient> RentClient(TimeSpan waitTime)
+        {
+            while (this.FreeClients.TryDequeue(out var client))
+            {
+                if (this.IsAlive(client))
+                {
+                    return client;
+                }
+            }
+
+            if (this.CreatedClients.Count > this.MaxCount)
+            {
+                if (SpinWait.SpinUntil(this.Wait, waitTime))
+                {
+                    return await this.RentClient(waitTime).ConfigureAwait(false);
+                }
+            }
+
+            var clientRes = await this.CreateClient().ConfigureFalseAwait();
+            this.m_createdClients.Add(clientRes);
+            return clientRes;
+        }
+
+        /// <summary>
+        /// 放回使用完成的客户端
+        /// </summary>
+        /// <param name="client"></param>
+        protected virtual void ReturnClient(TClient client)
+        {
+            if (!this.IsAlive(client))
+            {
+                this.DisposeClient(client);
+                return;
+            }
+            if (this.FreeClients.Count < this.MaxCount)
+            {
+                this.FreeClients.Enqueue(client);
+            }
+            else
+            {
+                this.DisposeClient(client);
+            }
+        }
+
+        private bool Wait()
+        {
+            return !this.FreeClients.IsEmpty;
+        }
     }
 }

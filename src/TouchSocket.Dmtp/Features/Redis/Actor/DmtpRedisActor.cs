@@ -10,9 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Dmtp.FileTransfer;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis
@@ -44,7 +46,7 @@ namespace TouchSocket.Dmtp.Redis
         public int Timeout { get; set; } = 30 * 1000;
 
         /// <inheritdoc/>
-        public bool Add<TValue>(string key, TValue value, int duration = 60000)
+        public async Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000)
         {
             var cache = new CacheEntry<string, byte[]>(key)
             {
@@ -54,41 +56,33 @@ namespace TouchSocket.Dmtp.Redis
             {
                 cache.Value = this.Converter.Serialize(null, value);
             }
-            return this.AddCache(cache);
+            return await this.AddCacheAsync(cache).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>
-        public bool AddCache(ICacheEntry<string, byte[]> entity)
+        public async Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity)
         {
-            return !this.ContainsCache(entity.Key) && this.SetCache(entity);
+            return !await this.ContainsCacheAsync(entity.Key).ConfigureFalseAwait() && await this.SetCacheAsync(entity).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>
-        public Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity)
-        {
-            return Task.Run(() =>
-            {
-                return this.AddCache(entity);
-            });
-        }
-
-        /// <inheritdoc/>
-        public void ClearCache()
+        public async Task ClearCacheAsync()
         {
             var package = new RedisRequestWaitPackage
             {
                 packageType = RedisPackageType.Clear
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
             try
             {
                 using (var byteBlock = new ByteBlock())
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_redis_Request, byteBlock);
+                    var block = byteBlock;
+                    package.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
-                switch (waitData.Wait(this.Timeout))
+                switch (await waitData.WaitAsync(this.Timeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -116,16 +110,7 @@ namespace TouchSocket.Dmtp.Redis
         }
 
         /// <inheritdoc/>
-        public Task ClearCacheAsync()
-        {
-            return Task.Run(() =>
-            {
-                this.ClearCache();
-            });
-        }
-
-        /// <inheritdoc/>
-        public bool ContainsCache(string key)
+        public async Task<bool> ContainsCacheAsync(string key)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -138,15 +123,16 @@ namespace TouchSocket.Dmtp.Redis
                 packageType = RedisPackageType.Contains
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
             try
             {
                 using (var byteBlock = new ByteBlock())
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_redis_Request, byteBlock);
+                    var block = byteBlock;
+                    package.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
-                switch (waitData.Wait(this.Timeout))
+                switch (await waitData.WaitAsync(this.Timeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -169,22 +155,28 @@ namespace TouchSocket.Dmtp.Redis
         }
 
         /// <inheritdoc/>
-        public Task<bool> ContainsCacheAsync(string key)
+        public async Task<TValue> GetAsync<TValue>(string key)
         {
-            return Task.Run(() =>
+            var cache = await this.GetCacheAsync(key).ConfigureFalseAwait();
+
+            if (cache != null)
             {
-                return this.ContainsCache(key);
-            });
+                if (cache.Value is null)
+                {
+                    return default;
+                }
+                if (cache.Value is TValue value1)
+                {
+                    return value1;
+                }
+                var value = (TValue)this.Converter.Deserialize(null, cache.Value, typeof(TValue));
+                return value;
+            }
+            return default;
         }
 
         /// <inheritdoc/>
-        public TValue Get<TValue>(string key)
-        {
-            return this.TryGet(key, out TValue cache) ? cache : default;
-        }
-
-        /// <inheritdoc/>
-        public ICacheEntry<string, byte[]> GetCache(string key)
+        public async Task<ICacheEntry<string, byte[]>> GetCacheAsync(string key)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -197,15 +189,16 @@ namespace TouchSocket.Dmtp.Redis
                 packageType = RedisPackageType.Get
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
             try
             {
                 using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_redis_Request, byteBlock);
+                    var block = byteBlock;
+                    package.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
-                switch (waitData.Wait(this.Timeout))
+                switch (await waitData.WaitAsync(this.Timeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -231,15 +224,6 @@ namespace TouchSocket.Dmtp.Redis
             }
         }
 
-        /// <inheritdoc/>
-        public Task<ICacheEntry<string, byte[]>> GetCacheAsync(string key)
-        {
-            return Task.Run(() =>
-            {
-                return this.GetCache(key);
-            });
-        }
-
         /// <summary>
         /// 处理收到的消息
         /// </summary>
@@ -253,7 +237,8 @@ namespace TouchSocket.Dmtp.Redis
                 try
                 {
                     var package = new RedisRequestWaitPackage();
-                    package.Unpackage(message.BodyByteBlock);
+                    var block = message.BodyByteBlock;
+                    package.Unpackage(ref block);
                     waitResult.Sign = package.Sign;
 
                     switch (package.packageType)
@@ -314,15 +299,17 @@ namespace TouchSocket.Dmtp.Redis
 
                 using (var byteBlock = new ByteBlock())
                 {
-                    waitResult.Package(byteBlock);
-                    await this.DmtpActor.SendAsync(this.m_redis_Response, byteBlock);
+                    var block = byteBlock;
+                    waitResult.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Response, byteBlock.Memory).ConfigureFalseAwait();
                 }
                 return true;
             }
             else if (message.ProtocolFlags == this.m_redis_Response)
             {
                 var waitResult = new RedisResponseWaitPackage();
-                waitResult.Unpackage(message.BodyByteBlock);
+                var block = message.BodyByteBlock;
+                waitResult.Unpackage(ref block);
                 this.DmtpActor.WaitHandlePool.SetRun(waitResult);
                 return true;
             }
@@ -330,7 +317,7 @@ namespace TouchSocket.Dmtp.Redis
         }
 
         /// <inheritdoc/>
-        public bool RemoveCache(string key)
+        public async Task<bool> RemoveCacheAsync(string key)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -343,15 +330,16 @@ namespace TouchSocket.Dmtp.Redis
                 packageType = RedisPackageType.Remove
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
             try
             {
                 using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_redis_Request, byteBlock);
+                    var block = byteBlock;
+                    package.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
-                switch (waitData.Wait(this.Timeout))
+                switch (await waitData.WaitAsync(this.Timeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -374,27 +362,18 @@ namespace TouchSocket.Dmtp.Redis
         }
 
         /// <inheritdoc/>
-        public Task<bool> RemoveCacheAsync(string key)
-        {
-            return Task.Run(() =>
-            {
-                return this.RemoveCache(key);
-            });
-        }
-
-        /// <inheritdoc/>
-        public bool Set<TValue>(string key, TValue value, int duration = 60000)
+        public async Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000)
         {
             var cache = new CacheEntry<string, byte[]>(key)
             {
-                Duration = TimeSpan.FromSeconds(duration)
+                Duration = TimeSpan.FromSeconds(duration),
+                Value = value is byte[] bytes ? bytes : this.Converter.Serialize(null, value)
             };
-            cache.Value = value is byte[] bytes ? bytes : this.Converter.Serialize(null, value);
-            return this.SetCache(cache);
+            return await this.SetCacheAsync(cache).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>
-        public bool SetCache(ICacheEntry<string, byte[]> cache)
+        public async Task<bool> SetCacheAsync(ICacheEntry<string, byte[]> cache)
         {
             if (string.IsNullOrEmpty(cache.Key))
             {
@@ -414,15 +393,16 @@ namespace TouchSocket.Dmtp.Redis
                 packageType = RedisPackageType.Set
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitDataAsync(package);
             try
             {
                 using (var byteBlock = new ByteBlock((package.value == null ? 0 : package.value.Length) + 1024))
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_redis_Request, byteBlock);
+                    var block = byteBlock;
+                    package.Package(ref block);
+                    await this.DmtpActor.SendAsync(this.m_redis_Request, byteBlock.Memory).ConfigureFalseAwait();
                 }
-                switch (waitData.Wait(this.Timeout))
+                switch (await waitData.WaitAsync(this.Timeout).ConfigureFalseAwait())
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -442,15 +422,6 @@ namespace TouchSocket.Dmtp.Redis
             }
         }
 
-        /// <inheritdoc/>
-        public Task<bool> SetCacheAsync(ICacheEntry<string, byte[]> entity)
-        {
-            return Task.Run(() =>
-            {
-                return this.SetCache(entity);
-            });
-        }
-
         /// <summary>
         /// 设置处理协议标识的起始标识。
         /// </summary>
@@ -459,30 +430,6 @@ namespace TouchSocket.Dmtp.Redis
         {
             this.m_redis_Request = start++;
             this.m_redis_Response = start++;
-        }
-
-        /// <inheritdoc/>
-        public bool TryGet<TValue>(string key, out TValue value)
-        {
-            var cache = this.GetCache(key);
-
-            if (cache != null)
-            {
-                if (cache.Value is null)
-                {
-                    value = default;
-                    return true;
-                }
-                if (cache.Value is TValue value1)
-                {
-                    value = value1;
-                    return true;
-                }
-                value = (TValue)this.Converter.Deserialize(null, cache.Value, typeof(TValue));
-                return true;
-            }
-            value = default;
-            return false;
         }
 
         #region 字段

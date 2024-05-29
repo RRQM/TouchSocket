@@ -100,7 +100,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public async Task<WaitDataStatus> WaitAsync(TimeSpan timeSpan)
         {
-            if (!await this.m_asyncWaitHandle.WaitOneAsync(timeSpan))
+            if (!await this.m_asyncWaitHandle.WaitOneAsync(timeSpan).ConfigureFalseAwait())
             {
                 this.m_status = WaitDataStatus.Overtime;
             }

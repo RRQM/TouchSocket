@@ -15,6 +15,23 @@ using System.Threading.Tasks;
 namespace TouchSocket.Sockets
 {
     /// <summary>
+    /// 客户端已断开连接
+    /// </summary>
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    public delegate Task ClosedEventHandler<TClient>(TClient client, ClosedEventArgs e);
+
+    /// <summary>
+    /// 客户端即将断开连接
+    /// </summary>
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="client"></param>
+    /// <param name="e"></param>
+    public delegate Task ClosingEventHandler<TClient>(TClient client, ClosingEventArgs e);
+
+    /// <summary>
     /// Connected
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
@@ -31,19 +48,20 @@ namespace TouchSocket.Sockets
     public delegate Task ConnectingEventHandler<TClient>(TClient client, ConnectingEventArgs e);
 
     /// <summary>
-    /// 客户端断开连接
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    public delegate Task DisconnectEventHandler<TClient>(TClient client, DisconnectEventArgs e);
-
-    /// <summary>
     /// 接收数据
     /// </summary>
     /// <param name="client"></param>
     /// <param name="e"></param>
     public delegate Task ReceivedEventHandler<TClient>(TClient client, ReceivedDataEventArgs e);
+
+    /// <summary>
+    /// 尝试out委托
+    /// </summary>
+    /// <typeparam name="TClient"></typeparam>
+    /// <param name="id"></param>
+    /// <param name="client"></param>
+    /// <returns></returns>
+    public delegate bool TryOutEventHandler<TClient>(string id, out TClient client);
 
     /// <summary>
     /// Udp接收

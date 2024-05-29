@@ -38,46 +38,43 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        protected override Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            this.GoReceived(remoteEndPoint, byteBlock, null);
+            return this.GoReceived(remoteEndPoint, byteBlock, null);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
-        {
-            this.GoSend(endPoint, buffer, offset, length);
-        }
+        ///// <summary>
+        ///// <inheritdoc/>
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        //protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
+        //{
+        //    this.GoSend(endPoint, buffer, offset, length);
+        //}
 
-        /// <inheritdoc/>
-        protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-        {
-            var length = 0;
-            foreach (var item in transferBytes)
-            {
-                length += item.Count;
-            }
+        ///// <inheritdoc/>
+        //protected override void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
+        //{
+        //    var length = 0;
+        //    foreach (var item in transferBytes)
+        //    {
+        //        length += item.Count;
+        //    }
 
-            if (length > this.MaxPackageSize)
-            {
-                throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
-            }
+        //    this.ThrowIfMoreThanMaxPackageSize(length);
 
-            using (var byteBlock = new ByteBlock(length))
-            {
-                foreach (var item in transferBytes)
-                {
-                    byteBlock.Write(item.Array, item.Offset, item.Count);
-                }
-                this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-            }
-        }
+        //    using (var byteBlock = new ByteBlock(length))
+        //    {
+        //        foreach (var item in transferBytes)
+        //        {
+        //            byteBlock.Write(item.Array, item.Offset, item.Count);
+        //        }
+        //        this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+        //    }
+        //}
 
         /// <inheritdoc/>
         protected override async Task PreviewSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
@@ -88,10 +85,7 @@ namespace TouchSocket.Sockets
                 length += item.Count;
             }
 
-            if (length > this.MaxPackageSize)
-            {
-                throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
-            }
+            this.ThrowIfMoreThanMaxPackageSize(length);
 
             using (var byteBlock = new ByteBlock(length))
             {
@@ -99,15 +93,8 @@ namespace TouchSocket.Sockets
                 {
                     byteBlock.Write(item.Array, item.Offset, item.Count);
                 }
-                await this.GoSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        protected override void Reset()
-        {
         }
     }
 }

@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -35,13 +34,11 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] EncryptDES(byte[] data, string encryptKey)
         {
-            if (encryptKey.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException(nameof(encryptKey));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
+
             if (encryptKey.Length < 8)
             {
-                throw new Exception("密钥长度不足8位。");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(encryptKey), encryptKey.Length, 8);
             }
             var rgbKey = Encoding.UTF8.GetBytes(encryptKey.Substring(0, 8));
             using (var des = DES.Create())
@@ -66,14 +63,13 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] DecryptDES(byte[] data, string encryptKey)
         {
-            if (encryptKey.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException(nameof(encryptKey));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
+
             if (encryptKey.Length < 8)
             {
-                throw new Exception("密钥长度不足8位。");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(encryptKey), encryptKey.Length, 8);
             }
+
             var rgbKey = Encoding.UTF8.GetBytes(encryptKey);
             using (var des = DES.Create())
             {
@@ -99,14 +95,13 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static void StreamEncryptDES(Stream inStream, Stream outStream, string encryptKey)
         {
-            if (encryptKey.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException(nameof(encryptKey));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
+
             if (encryptKey.Length < 8)
             {
-                throw new Exception("密钥长度不足8位。");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(encryptKey), encryptKey.Length, 8);
             }
+
             var rgbKeys = Encoding.UTF8.GetBytes(encryptKey.Substring(0, 8));
             var byteIn = new byte[1024 * 64];
             long readLen = 0;
@@ -133,14 +128,13 @@ namespace TouchSocket.Core
         /// <param name="encryptKey">解密口令（长度为8）</param>
         public static void StreamDecryptDES(Stream inStream, Stream outStream, string encryptKey)
         {
-            if (encryptKey.IsNullOrEmpty())
-            {
-                throw new ArgumentNullException(nameof(encryptKey));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(encryptKey, nameof(encryptKey));
+
             if (encryptKey.Length < 8)
             {
-                throw new Exception("密钥长度不足8位。");
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(encryptKey), encryptKey.Length, 8);
             }
+
             var rgbKeys = Encoding.UTF8.GetBytes(encryptKey.Substring(0, 8));
             var byteIn = new byte[1024 * 64];
             long readLen = 0;

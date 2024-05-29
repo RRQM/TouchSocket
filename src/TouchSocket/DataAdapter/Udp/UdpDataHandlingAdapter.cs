@@ -23,31 +23,37 @@ namespace TouchSocket.Sockets
     /// </summary>
     public abstract class UdpDataHandlingAdapter : DataHandlingAdapter
     {
+        /// <inheritdoc/>
+        public override bool CanSendRequestInfo => false;
+
+        /// <inheritdoc/>
+        public override bool CanSplicingSend => false;
+
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
         /// </summary>
-        public Action<EndPoint, ByteBlock, IRequestInfo> ReceivedCallBack { get; set; }
+        public Func<EndPoint, ByteBlock, IRequestInfo, Task> ReceivedCallBack { get; set; }
 
-        /// <summary>
-        /// 当接收数据处理完成后，回调该函数执行发送
-        /// </summary>
-        public Action<EndPoint, byte[], int, int> SendCallBack { get; set; }
+        ///// <summary>
+        ///// 当接收数据处理完成后，回调该函数执行发送
+        ///// </summary>
+        //public Action<EndPoint, byte[], int, int> SendCallBack { get; set; }
 
         /// <summary>
         /// 当接收数据处理完成后，异步回调该函数执行发送
         /// </summary>
-        public Func<EndPoint, byte[], int, int, Task> SendCallBackAsync { get; set; }
+        public Func<EndPoint, ReadOnlyMemory<byte>, Task> SendCallBackAsync { get; set; }
 
         /// <summary>
         /// 收到数据的切入点，该方法由框架自动调用。
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
-        public virtual void ReceivedInput(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        public virtual async Task ReceivedInput(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
             try
             {
-                this.PreviewReceived(remoteEndPoint, byteBlock);
+                await this.PreviewReceived(remoteEndPoint, byteBlock).ConfigureFalseAwait();
             }
             catch (Exception ex)
             {
@@ -55,47 +61,41 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <inheritdoc/>
-        public override bool CanSendRequestInfo => false;
+        //#region SendInput
 
-        /// <inheritdoc/>
-        public override bool CanSplicingSend => false;
+        ///// <summary>
+        ///// 发送数据的切入点，该方法由框架自动调用。
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        //public void SendInput(EndPoint endPoint, byte[] buffer, int offset, int length)
+        //{
+        //    this.PreviewSend(endPoint, buffer, offset, length);
+        //}
 
-        #region SendInput
+        ///// <summary>
+        ///// 发送数据的切入点，该方法由框架自动调用。
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="requestInfo"></param>
+        //public void SendInput(EndPoint endPoint, IRequestInfo requestInfo)
+        //{
+        //    this.PreviewSend(endPoint, requestInfo);
+        //}
 
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void SendInput(EndPoint endPoint, byte[] buffer, int offset, int length)
-        {
-            this.PreviewSend(endPoint, buffer, offset, length);
-        }
+        ///// <summary>
+        ///// 发送数据的切入点，该方法由框架自动调用。
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="transferBytes"></param>
+        //public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
+        //{
+        //    this.PreviewSend(endPoint, transferBytes);
+        //}
 
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="requestInfo"></param>
-        public void SendInput(EndPoint endPoint, IRequestInfo requestInfo)
-        {
-            this.PreviewSend(endPoint, requestInfo);
-        }
-
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
-        public void SendInput(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-        {
-            this.PreviewSend(endPoint, transferBytes);
-        }
-
-        #endregion SendInput
+        //#endregion SendInput
 
         #region SendInputAsync
 
@@ -106,9 +106,9 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public Task SendInputAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        public Task SendInputAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            return this.PreviewSendAsync(endPoint, buffer, offset, length);
+            return this.PreviewSendAsync(endPoint, memory);
         }
 
         /// <summary>
@@ -139,22 +139,22 @@ namespace TouchSocket.Sockets
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock">以二进制形式传递</param>
         /// <param name="requestInfo">以解析实例传递</param>
-        protected void GoReceived(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected Task GoReceived(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
+            return this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
         }
 
-        /// <summary>
-        /// 发送已经经过预先处理后的数据
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        protected void GoSend(EndPoint endPoint, byte[] buffer, int offset, int length)
-        {
-            this.SendCallBack.Invoke(endPoint, buffer, offset, length);
-        }
+        ///// <summary>
+        ///// 发送已经经过预先处理后的数据
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="length"></param>
+        //protected void GoSend(EndPoint endPoint, byte[] buffer, int offset, int length)
+        //{
+        //    this.SendCallBack.Invoke(endPoint, buffer, offset, length);
+        //}
 
         /// <summary>
         /// 发送已经经过预先处理后的数据
@@ -164,9 +164,9 @@ namespace TouchSocket.Sockets
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        protected Task GoSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            return this.SendCallBackAsync.Invoke(endPoint, buffer, offset, length);
+            return this.SendCallBackAsync.Invoke(endPoint, memory);
         }
 
         /// <summary>
@@ -174,74 +174,71 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
-        protected virtual void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+        protected virtual async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            this.GoReceived(remoteEndPoint, byteBlock, default);
+            await this.GoReceived(remoteEndPoint, byteBlock, default).ConfigureFalseAwait();
         }
+
+        ///// <summary>
+        ///// 当发送数据前预先处理数据
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="requestInfo"></param>
+        //protected virtual void PreviewSend(EndPoint endPoint, IRequestInfo requestInfo)
+        //{
+        //    ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo,nameof(requestInfo));
+
+        //    var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
+        //    using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
+        //    {
+        //        requestInfoBuilder.Build(byteBlock);
+        //        this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 当发送数据前预先处理数据
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="buffer">数据</param>
+        ///// <param name="offset">偏移</param>
+        ///// <param name="length">长度</param>
+        //protected virtual void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
+        //{
+        //    this.GoSend(endPoint, buffer, offset, length);
+        //}
+
+        ///// <summary>
+        ///// 组合发送预处理数据，
+        ///// 当属性SplicingSend实现为True时，系统才会调用该方法。
+        ///// </summary>
+        ///// <param name="endPoint"></param>
+        ///// <param name="transferBytes">代发送数据组合</param>
+        //protected virtual void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         /// <summary>
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="endPoint"></param>
         /// <param name="requestInfo"></param>
-        protected virtual void PreviewSend(EndPoint endPoint, IRequestInfo requestInfo)
+        protected virtual async Task PreviewSendAsync(EndPoint endPoint, IRequestInfo requestInfo)
         {
-            if (requestInfo == null)
-            {
-                throw new ArgumentNullException(nameof(requestInfo));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
+
             var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
+
+            var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength);
+            try
             {
-                requestInfoBuilder.Build(byteBlock);
-                this.GoSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+                requestInfoBuilder.Build(ref byteBlock);
+                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
             }
-        }
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected virtual void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length)
-        {
-            this.GoSend(endPoint, buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 组合发送预处理数据，
-        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes">代发送数据组合</param>
-        protected virtual void PreviewSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        protected override void Reset()
-        {
-        }
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="requestInfo"></param>
-        protected virtual Task PreviewSendAsync(EndPoint endPoint, IRequestInfo requestInfo)
-        {
-            if (requestInfo == null)
+            finally
             {
-                throw new ArgumentNullException(nameof(requestInfo));
-            }
-            var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
-            {
-                requestInfoBuilder.Build(byteBlock);
-                return this.GoSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+                byteBlock.Dispose();
             }
         }
 
@@ -253,9 +250,9 @@ namespace TouchSocket.Sockets
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        protected virtual Task PreviewSendAsync(EndPoint endPoint, byte[] buffer, int offset, int length)
+        protected virtual Task PreviewSendAsync(EndPoint endPoint,ReadOnlyMemory<byte> memory)
         {
-            return this.GoSendAsync(endPoint, buffer, offset, length);
+            return this.GoSendAsync(endPoint, memory);
         }
 
         /// <summary>
@@ -268,6 +265,12 @@ namespace TouchSocket.Sockets
         protected virtual Task PreviewSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        protected override void Reset()
+        {
+
         }
     }
 }

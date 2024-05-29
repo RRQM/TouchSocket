@@ -10,31 +10,32 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// IReceiver
     /// </summary>
-    public interface IReceiver : IDisposable
+    public interface IReceiver<TResult> : IDisposableObject where TResult : IReceiverResult
     {
+        bool CacheMode { get; set; }
+        int MaxCacheSize { get; set; }
+
         /// <summary>
         /// 异步等待并读取
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        Task<ReceiverResult> ReadAsync(CancellationToken token);
+        Task<TResult> ReadAsync(CancellationToken token);
 
-#if NET6_0_OR_GREATER
         /// <summary>
         /// 值异步等待并读取
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        public ValueTask<ReceiverResult> ValueReadAsync(CancellationToken token);
-#endif
+        public ValueTask<TResult> ValueReadAsync(CancellationToken token);
     }
 }

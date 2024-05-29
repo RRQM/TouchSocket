@@ -13,6 +13,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -23,18 +24,6 @@ namespace TouchSocket.Http
     /// </summary>
     public static class HttpExtensions
     {
-        /// <summary>
-        /// 根据字符串获取枚举
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="str"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool GetEnum<T>(string str, out T result) where T : struct
-        {
-            return Enum.TryParse<T>(str, out result);
-        }
-
         #region HttpBase
 
         /// <summary>
@@ -113,7 +102,14 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static string GetBody(this HttpBase httpBase)
         {
-            return httpBase.TryGetContent(out var data) ? Encoding.UTF8.GetString(data) : throw new Exception("获取数据体错误。");
+            return GetBodyAsync(httpBase).GetFalseAwaitResult();
+        }
+
+        public static async Task<string> GetBodyAsync(this HttpBase httpBase)
+        {
+            var bytes = await httpBase.GetContentAsync(CancellationToken.None) ?? throw new Exception("获取数据体错误。");
+
+            return Encoding.UTF8.GetString(bytes);
         }
 
         /// <summary>
@@ -177,20 +173,32 @@ namespace TouchSocket.Http
             return httpBase;
         }
 
-        /// <summary>
-        /// 写入
-        /// </summary>
-        /// <param name="httpBase"></param>
-        /// <param name="buffer"></param>
-        public static T WriteContent<T>(this T httpBase, byte[] buffer) where T : HttpBase
-        {
-            httpBase.WriteContent(buffer, 0, buffer.Length);
-            return httpBase;
-        }
+        ///// <summary>
+        ///// 写入
+        ///// </summary>
+        ///// <param name="httpBase"></param>
+        ///// <param name="buffer"></param>
+        //public static Task WriteAsync<T>(this T httpBase, byte[] buffer) where T : HttpBase
+        //{
+        //    return httpBase.WriteAsync(buffer, 0, buffer.Length);
+        //}
 
         #endregion HttpBase
 
         #region HttpRequest
+
+        /// <summary>
+        /// 添加Query参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TRequest AddQuery<TRequest>(this TRequest request, string key, string value) where TRequest : HttpRequest
+        {
+            request.Query.Add(key, value);
+            return request;
+        }
 
         /// <summary>
         /// 获取多文件集合。如果不存在，则返回null。
@@ -231,19 +239,6 @@ namespace TouchSocket.Http
         public static TRequest SetHost<TRequest>(this TRequest request, string host) where TRequest : HttpRequest
         {
             request.Headers.Add(HttpHeaders.Host, host);
-            return request;
-        }
-
-        /// <summary>
-        /// 添加Query参数
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static TRequest AddQuery<TRequest>(this TRequest request, string key, string value) where TRequest : HttpRequest
-        {
-            request.Query.Add(key, value);
             return request;
         }
 
@@ -399,19 +394,6 @@ namespace TouchSocket.Http
         #region HttpResponse
 
         /// <summary>
-        /// 设置文件类型。
-        /// </summary>
-        /// <param name="response"></param>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static TResponse SetContentTypeFromFileName<TResponse>(this TResponse response, string fileName) where TResponse : HttpResponse
-        {
-            var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName);
-            response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
-            return response;
-        }
-
-        /// <summary>
         /// 判断返回的状态码是否为成功。
         /// </summary>
         /// <param name="response"></param>
@@ -430,6 +412,19 @@ namespace TouchSocket.Http
             {
                 return response.StatusCode >= 200 && response.StatusCode < 300;
             }
+        }
+
+        /// <summary>
+        /// 设置文件类型。
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static TResponse SetContentTypeFromFileName<TResponse>(this TResponse response, string fileName) where TResponse : HttpResponse
+        {
+            var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName);
+            response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+            return response;
         }
 
         /// <summary>
@@ -472,7 +467,9 @@ namespace TouchSocket.Http
             return response;
         }
 
-        #region FromFile
+        #endregion HttpResponse
+
+        #region FromFileAsync
 
         /// <summary>
         /// 从文件响应。
@@ -483,18 +480,18 @@ namespace TouchSocket.Http
         /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
         /// <param name="filePath">文件路径</param>
         /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度（仅企业版有效）。</param>
+        /// <param name="maxSpeed">最大速度。</param>
         /// <param name="bufferLen">读取长度。</param>
         /// <exception cref="Exception"></exception>
         /// <exception cref="Exception"></exception>
         /// <returns></returns>
-        public static HttpResponse FromFile(this HttpResponse response, string filePath, HttpRequest request, string fileName = null, int maxSpeed = 1024 * 1024 * 10, int bufferLen = 1024 * 64)
+        public static async Task FromFileAsync(this HttpResponse response, string filePath, HttpRequest request = default, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64)
         {
             using (var reader = FilePool.GetReader(filePath))
             {
                 response.SetContentTypeByExtension(Path.GetExtension(filePath));
-                var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+                //var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
+                //response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
                 response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
 
                 if (response.CanWrite)
@@ -529,19 +526,25 @@ namespace TouchSocket.Http
                         Maximum = maxSpeed
                     };
 
-                    using (var block = new ByteBlock(bufferLen))
+                    var buffer = BytePool.Default.Rent(bufferLen);
+                    try
                     {
                         while (surLen > 0)
                         {
-                            var r = reader.Read(block.Buffer, 0, (int)Math.Min(bufferLen, surLen));
+                            var r = reader.Read(buffer, 0, (int)Math.Min(bufferLen, surLen));
                             if (r == 0)
                             {
                                 break;
                             }
-                            flowGate.AddCheckWait(r);
-                            response.WriteContent(block.Buffer, 0, r);
+
+                            await flowGate.AddCheckWaitAsync(r);
+                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer,0,r));
                             surLen -= r;
                         }
+                    }
+                    finally
+                    {
+                        BytePool.Default.Return(buffer);
                     }
                 }
                 else
@@ -553,23 +556,27 @@ namespace TouchSocket.Http
 
                     using (var byteBlock = new ByteBlock((int)reader.FileStorage.FileInfo.Length))
                     {
-                        using (var block = new ByteBlock(bufferLen))
+                        var buffer = BytePool.Default.Rent(bufferLen);
+                        try
                         {
                             while (true)
                             {
-                                var r = reader.Read(block.Buffer, 0, bufferLen);
+                                var r = reader.Read(buffer, 0, bufferLen);
                                 if (r == 0)
                                 {
                                     break;
                                 }
-                                byteBlock.Write(block.Buffer, 0, r);
+                                byteBlock.Write(buffer, 0, r);
                             }
                             response.SetContent(byteBlock.ToArray());
                         }
+                        finally
+                        {
+                            BytePool.Default.Return(buffer);
+                        }
                     }
                 }
             }
-            return response;
         }
 
         /// <summary>
@@ -580,144 +587,16 @@ namespace TouchSocket.Http
         /// <param name="context">上下文</param>
         /// <param name="filePath">文件路径</param>
         /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度（仅企业版有效）。</param>
+        /// <param name="maxSpeed">最大速度。</param>
         /// <param name="bufferLen">读取长度。</param>
         /// <exception cref="Exception"></exception>
         /// <exception cref="Exception"></exception>
         /// <returns></returns>
-        public static HttpResponse FromFile(this HttpContext context, string filePath, string fileName = null, int maxSpeed = 1024 * 1024 * 10, int bufferLen = 1024 * 64)
+        public static async Task FromFileAsync(this HttpContext context, string filePath, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64)
         {
-            using (var reader = FilePool.GetReader(filePath))
-            {
-                context.Response.SetContentTypeByExtension(Path.GetExtension(filePath));
-                var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                context.Response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
-                context.Response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
-
-                if (context.Response.CanWrite)
-                {
-                    HttpRange httpRange;
-                    var range = context.Request?.Headers.Get(HttpHeaders.Range);
-                    if (string.IsNullOrEmpty(range))
-                    {
-                        context.Response.SetStatus();
-                        context.Response.ContentLength = reader.FileStorage.FileInfo.Length;
-                        httpRange = new HttpRange() { Start = 0, Length = reader.FileStorage.FileInfo.Length };
-                    }
-                    else
-                    {
-                        httpRange = HttpRange.GetRange(range, reader.FileStorage.FileInfo.Length);
-                        if (httpRange == null)
-                        {
-                            context.Response.ContentLength = reader.FileStorage.FileInfo.Length;
-                            httpRange = new HttpRange() { Start = 0, Length = reader.FileStorage.FileInfo.Length };
-                        }
-                        else
-                        {
-                            context.Response.SetContentLength(httpRange.Length)
-                                .SetStatus(206, "Partial Content");
-                            context.Response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, reader.FileStorage.FileInfo.Length));
-                        }
-                    }
-                    reader.Position = httpRange.Start;
-                    var surLen = httpRange.Length;
-                    var flowGate = new FlowGate
-                    {
-                        Maximum = maxSpeed
-                    };
-
-                    using (var block = new ByteBlock(bufferLen))
-                    {
-                        while (surLen > 0)
-                        {
-                            var r = reader.Read(block.Buffer, 0, (int)Math.Min(bufferLen, surLen));
-                            if (r == 0)
-                            {
-                                break;
-                            }
-                            flowGate.AddCheckWait(r);
-                            context.Response.WriteContent(block.Buffer, 0, r);
-                            surLen -= r;
-                        }
-                    }
-                }
-                else
-                {
-                    if (reader.FileStorage.FileInfo.Length > 1024 * 1024)
-                    {
-                        throw new OverlengthException("当该对象不支持写入时，仅支持1Mb以内的文件。");
-                    }
-
-                    using (var byteBlock = new ByteBlock((int)reader.FileStorage.FileInfo.Length))
-                    {
-                        using (var block = new ByteBlock(bufferLen))
-                        {
-                            while (true)
-                            {
-                                var r = reader.Read(block.Buffer, 0, bufferLen);
-                                if (r == 0)
-                                {
-                                    break;
-                                }
-                                byteBlock.Write(block.Buffer, 0, r);
-                            }
-                            context.Response.SetContent(byteBlock.ToArray());
-                        }
-                    }
-                }
-            }
-            return context.Response;
-        }
-
-        #endregion FromFile
-
-        #region FromFileAsync
-
-        /// <summary>
-        /// 从文件响应。
-        /// <para>当response支持持续写入时，会直接回复响应。并阻塞执行，直到完成。所以在执行该方法之前，请确保已设置完成所有状态字</para>
-        /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
-        /// </summary>
-        /// <param name="response">响应</param>
-        /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
-        /// <param name="filePath">文件路径</param>
-        /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度（仅企业版有效）。</param>
-        /// <param name="bufferLen">读取长度。</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="Exception"></exception>
-        /// <returns></returns>
-        public static Task<HttpResponse> FromFileAsync(this HttpResponse response, string filePath, HttpRequest request, string fileName = null, int maxSpeed = 1024 * 1024 * 10, int bufferLen = 1024 * 64)
-        {
-            return Task.Run(() =>
-             {
-                 return FromFile(response, filePath, request, fileName, maxSpeed, bufferLen);
-             });
-        }
-
-        /// <summary>
-        /// 从文件响应。
-        /// <para>当response支持持续写入时，会直接回复响应。并阻塞执行，直到完成。所以在执行该方法之前，请确保已设置完成所有状态字</para>
-        /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
-        /// </summary>
-        /// <param name="context">上下文</param>
-        /// <param name="filePath">文件路径</param>
-        /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度（仅企业版有效）。</param>
-        /// <param name="bufferLen">读取长度。</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="Exception"></exception>
-        /// <returns></returns>
-        public static Task<HttpResponse> FromFileAsync(this HttpContext context, string filePath, string fileName = null, int maxSpeed = 1024 * 1024 * 10, int bufferLen = 1024 * 64)
-        {
-            return Task.Run(() =>
-            {
-                return FromFile(context, filePath, fileName, maxSpeed, bufferLen);
-            });
+            await FromFileAsync(context.Response, filePath, context.Request, fileName, maxSpeed, bufferLen);
         }
 
         #endregion FromFileAsync
-
-        #endregion HttpResponse
     }
 }

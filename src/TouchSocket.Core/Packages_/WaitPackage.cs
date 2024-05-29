@@ -33,7 +33,7 @@ namespace TouchSocket.Core
         public byte Status { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             byteBlock.Write(this.Sign);
             byteBlock.Write(this.Status);
@@ -41,7 +41,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.Sign = byteBlock.ReadInt64();
             this.Status = (byte)byteBlock.ReadByte();

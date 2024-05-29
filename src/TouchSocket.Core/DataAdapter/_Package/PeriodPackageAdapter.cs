@@ -26,16 +26,17 @@ namespace TouchSocket.Core
         private long m_count;
 
         /// <inheritdoc/>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
             this.m_bytes.Enqueue(byteBlock.ToArray());
             Interlocked.Increment(ref this.m_count);
             Task.Run(this.DelayGo);
+            return EasyTask.CompletedTask;
         }
 
         private async Task DelayGo()
         {
-            await Task.Delay(this.CacheTimeout);
+            await Task.Delay(this.CacheTimeout).ConfigureFalseAwait();
             if (Interlocked.Decrement(ref this.m_count) == 0)
             {
                 using (var byteBlock = new ByteBlock())
@@ -49,7 +50,7 @@ namespace TouchSocket.Core
 
                     try
                     {
-                        this.GoReceived(byteBlock, default);
+                        await this.GoReceivedAsync(byteBlock, default).ConfigureFalseAwait();
                     }
                     catch (Exception ex)
                     {

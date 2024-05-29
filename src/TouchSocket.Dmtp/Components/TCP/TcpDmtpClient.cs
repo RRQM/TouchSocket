@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -33,7 +32,7 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public IDmtpActor DmtpActor { get => this.m_dmtpActor; }
+        public IDmtpActor DmtpActor => this.m_dmtpActor;
 
         /// <inheritdoc cref="IDmtpActor.Id"/>
         public string Id => this.m_dmtpActor.Id;
@@ -44,11 +43,11 @@ namespace TouchSocket.Dmtp
         private bool m_allowRoute;
         private SealedDmtpActor m_dmtpActor;
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
-
+        private DmtpAdapter m_dmtpAdapter;
         #endregion 字段
 
-        /// <inheritdoc cref="IHandshakeObject.IsHandshaked"/>
-        public bool IsHandshaked => this.m_dmtpActor != null && this.m_dmtpActor.IsHandshaked;
+        /// <inheritdoc cref="IOnlineClient.Online"/>
+        public override bool Online => this.m_dmtpActor != null && this.m_dmtpActor.Online;
 
         #region 断开
 
@@ -57,31 +56,14 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public override void Close(string msg)
+        public override async Task CloseAsync(string msg)
         {
-            if (this.IsHandshaked)
+            if (this.m_dmtpActor != null)
             {
-                this.m_dmtpActor?.SendClose(msg);
-                this.m_dmtpActor?.Close(msg);
+                await this.m_dmtpActor.CloseAsync(msg).ConfigureFalseAwait();
             }
-            base.Close(msg);
-        }
 
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (this.IsHandshaked)
-            {
-                this.m_dmtpActor?.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnDisconnected(DisconnectEventArgs e)
-        {
-            this.m_dmtpActor?.Close(e.Message);
-            await base.OnDisconnected(e).ConfigureFalseAwait();
+            await base.CloseAsync(msg).ConfigureFalseAwait();
         }
 
         #endregion 断开
@@ -89,55 +71,27 @@ namespace TouchSocket.Dmtp
         #region 连接
 
         /// <summary>
-        /// 进行Dmtp协议的握手连接
-        /// </summary>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="token"></param>
-        public override void Connect(int millisecondsTimeout, CancellationToken token)
-        {
-            try
-            {
-                this.m_semaphoreForConnect.Wait(token);
-                if (this.IsHandshaked)
-                {
-                    return;
-                }
-                if (!this.Online)
-                {
-                    base.Connect(millisecondsTimeout, token);
-                }
-
-                this.m_dmtpActor.Handshake(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
-                    this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
-            }
-            finally
-            {
-                this.m_semaphoreForConnect.Release();
-            }
-        }
-
-        /// <summary>
         /// 异步进行Dmtp协议的握手连接
         /// </summary>
         /// <param name="millisecondsTimeout"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        public override async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+
             try
             {
-                await this.m_semaphoreForConnect.WaitAsync(millisecondsTimeout, token);
-                if (this.IsHandshaked)
+                if (this.Online)
                 {
                     return;
                 }
-                if (!this.Online)
+                if (!base.Online)
                 {
-                    await base.ConnectAsync(millisecondsTimeout, token);
+                    await base.TcpConnectAsync(millisecondsTimeout, token).ConfigureFalseAwait();
                 }
 
-                await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken,
-                     this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token);
+                await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureFalseAwait();
             }
             finally
             {
@@ -149,68 +103,17 @@ namespace TouchSocket.Dmtp
 
         #region ResetId
 
-        ///<inheritdoc cref="IDmtpActor.ResetId(string)"/>
-        public void ResetId(string id)
+        ///<inheritdoc/>
+        public Task ResetIdAsync(string targetId)
         {
-            this.m_dmtpActor.ResetId(id);
-        }
-
-        ///<inheritdoc cref="IDmtpActor.ResetIdAsync(string)"/>
-        public Task ResetIdAsync(string newId)
-        {
-            return this.m_dmtpActor.ResetIdAsync(newId);
+            return this.m_dmtpActor.ResetIdAsync(targetId);
         }
 
         #endregion ResetId
 
-        #region 发送
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public override void Send(byte[] buffer, int offset, int length)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        public override void Send(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public override Task SendAsync(byte[] buffer, int offset, int length)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        /// <summary>
-        /// 不允许直接发送
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        public override Task SendAsync(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new Exception("不允许直接发送，请指定任意大于0的协议，然后发送。");
-        }
-
-        #endregion 发送
-
         /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
-            config.SetTcpDataHandlingAdapter(() => new DmtpAdapter());
             base.LoadConfig(config);
             if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
             {
@@ -219,12 +122,12 @@ namespace TouchSocket.Dmtp
             }
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
-                OutputSend = this.DmtpActorSend,
+                //OutputSend = this.DmtpActorSend,
                 OutputSendAsync = this.DmtpActorSendAsync,
                 Routing = this.OnDmtpActorRouting,
                 Handshaking = this.OnDmtpActorHandshaking,
                 Handshaked = this.OnDmtpActorHandshaked,
-                Closed = this.OnDmtpActorClose,
+                Closing = this.OnDmtpActorClose,
                 Logger = this.Logger,
                 Client = this,
                 FindDmtpActor = this.m_findDmtpActor,
@@ -232,54 +135,41 @@ namespace TouchSocket.Dmtp
             };
         }
 
-        /// <inheritdoc/>
-        protected override async Task ReceivedData(ReceivedDataEventArgs e)
-        {
-            var message = (DmtpMessage)e.RequestInfo;
-            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
-            {
-                await this.PluginManager.RaiseAsync(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
-            }
-
-            await base.ReceivedData(e).ConfigureFalseAwait();
-        }
-
         #region 内部委托绑定
 
-        private void DmtpActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
-            base.Send(transferBytes);
+            if (memory.Length>this.m_dmtpAdapter.MaxPackageSize)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(memory.Length),memory.Length, this.m_dmtpAdapter.MaxPackageSize);
+            }
+            return base.ProtectedDefaultSendAsync(memory);
         }
 
-        private Task DmtpActorSendAsync(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        private async Task OnDmtpActorClose(DmtpActor actor, string msg)
         {
-            return base.SendAsync(transferBytes);
-        }
-
-        private Task OnDmtpActorClose(DmtpActor actor, string msg)
-        {
-            this.BreakOut(false, msg);
-            return EasyTask.CompletedTask;
+            await this.OnDmtpClosing(new ClosingEventArgs(msg)).ConfigureFalseAwait();
+            this.Abort(false, msg);
         }
 
         private Task OnDmtpActorCreateChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            return this.OnCreatedChannel(e);
+            return this.OnDmtpCreatedChannel(e);
         }
 
         private Task OnDmtpActorHandshaked(DmtpActor actor, DmtpVerifyEventArgs e)
         {
-            return this.OnHandshaked(e);
+            return this.OnDmtpHandshaked(e);
         }
 
         private Task OnDmtpActorHandshaking(DmtpActor actor, DmtpVerifyEventArgs e)
         {
-            return this.OnHandshaking(e);
+            return this.OnDmtpHandshaking(e);
         }
 
         private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
         {
-            return this.OnRouting(e);
+            return this.OnDmtpRouting(e);
         }
 
         #endregion 内部委托绑定
@@ -287,58 +177,152 @@ namespace TouchSocket.Dmtp
         #region 事件触发
 
         /// <summary>
+        /// 当Dmtp关闭以后。
+        /// </summary>
+        /// <param name="e">事件参数</param>
+        /// <returns></returns>
+        protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
+        {
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureFalseAwait();
+        }
+
+        /// <summary>
+        /// 当Dmtp即将被关闭时触发。
+        /// <para>
+        /// 该触发条件有2种：
+        /// <list type="number">
+        /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+        /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        protected virtual async Task OnDmtpClosing(ClosingEventArgs e)
+        {
+            if (e.Handled)
+            {
+                return;
+            }
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureFalseAwait();
+        }
+
+        /// <summary>
         /// 当创建通道
         /// </summary>
         /// <param name="e"></param>
-        protected virtual async Task OnCreatedChannel(CreateChannelEventArgs e)
+        protected virtual async Task OnDmtpCreatedChannel(CreateChannelEventArgs e)
         {
             if (e.Handled)
             {
                 return;
             }
 
-            await this.PluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
         /// 在完成握手连接时
         /// </summary>
         /// <param name="e"></param>
-        protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
+        protected virtual async Task OnDmtpHandshaked(DmtpVerifyEventArgs e)
         {
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
         /// 即将握手连接时
         /// </summary>
         /// <param name="e">参数</param>
-        protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
+        protected virtual async Task OnDmtpHandshaking(DmtpVerifyEventArgs e)
         {
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureFalseAwait();
         }
 
         /// <summary>
         /// 当需要转发路由包时
         /// </summary>
         /// <param name="e"></param>
-        protected virtual async Task OnRouting(PackageRouterEventArgs e)
+        protected virtual async Task OnDmtpRouting(PackageRouterEventArgs e)
         {
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(nameof(IDmtpRoutingPlugin.OnDmtpRouting), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureFalseAwait();
         }
 
         #endregion 事件触发
+
+        #region Override
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            this.m_dmtpActor?.SafeDispose();
+            base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosed(ClosedEventArgs e)
+        {
+            await this.OnDmtpClosed(e).ConfigureFalseAwait();
+        }
+
+        /// <inheritdoc/>
+        protected override Task OnTcpClosing(ClosingEventArgs e)
+        {
+            return this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e);
+        }
+
+        /// <inheritdoc/>
+        protected override sealed Task OnTcpConnecting(ConnectingEventArgs e)
+        {
+            this.m_dmtpAdapter = new DmtpAdapter();
+            this.SetAdapter(this.m_dmtpAdapter);
+            return base.OnTcpConnecting(e);
+        }
+
+        protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
+        {
+            while (byteBlock.CanRead)
+            {
+                if (this.m_dmtpAdapter.TryParseRequest(ref byteBlock, out var message))
+                {
+                    using (message)
+                    {
+                        if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
+                        {
+                            await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc/>
+        protected override sealed async Task OnTcpReceived(ReceivedDataEventArgs e)
+        {
+            var message = (DmtpMessage)e.RequestInfo;
+            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
+            {
+                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+            }
+        }
+
+        #endregion Override
     }
 }

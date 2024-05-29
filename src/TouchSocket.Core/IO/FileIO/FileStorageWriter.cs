@@ -27,7 +27,7 @@ namespace TouchSocket.Core
         /// <param name="fileStorage"></param>
         public FileStorageWriter(FileStorage fileStorage)
         {
-            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
         }
 
         /// <summary>

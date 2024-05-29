@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp
     internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     {
         private readonly EndPoint m_endPoint;
-        private readonly UdpSessionBase m_udpSession;
+        private readonly UdpDmtp m_udpSession;
         private IPluginManager m_pluginManager;
 
         /// <summary>
@@ -33,10 +33,10 @@ namespace TouchSocket.Dmtp
         /// <param name="udpSession"></param>
         /// <param name="endPoint"></param>
         /// <param name="logger"></param>
-        public UdpDmtpClient(UdpSessionBase udpSession, EndPoint endPoint, ILog logger) : base(false, false)
+        public UdpDmtpClient(UdpDmtp udpSession, EndPoint endPoint, ILog logger) : base(false, false)
         {
             this.Id = endPoint.ToString();
-            this.OutputSend = this.RpcActorSend;
+            //this.OutputSend = this.RpcActorSend;
             this.OutputSendAsync = this.RpcActorSendAsync;
             this.CreatedChannel = this.OnDmtpActorCreatedChannel;
             this.m_udpSession = udpSession;
@@ -47,10 +47,10 @@ namespace TouchSocket.Dmtp
 
         private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            return this.m_pluginManager.RaiseAsync(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), this, e);
+            return this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e);
         }
 
-        public bool Created(IPluginManager pluginManager)
+        public async Task<bool> CreatedAsync(IPluginManager pluginManager)
         {
             this.m_pluginManager = pluginManager;
             var args = new DmtpVerifyEventArgs()
@@ -58,20 +58,20 @@ namespace TouchSocket.Dmtp
                 Id = this.Id,
                 IsPermitOperation = true
             };
-            pluginManager.Raise(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this, args);
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, args).ConfigureFalseAwait();
 
             if (args.IsPermitOperation == false)
             {
                 return false;
             }
 
-            this.IsHandshaked = true;
+            this.Online = true;
 
             args = new DmtpVerifyEventArgs()
             {
                 Id = this.Id
             };
-            pluginManager.Raise(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), this, args);
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, args).ConfigureFalseAwait();
 
             return true;
         }
@@ -83,17 +83,7 @@ namespace TouchSocket.Dmtp
         public EndPoint EndPoint => this.m_endPoint;
 
         /// <inheritdoc/>
-        public IUdpSession UdpSession => this.m_udpSession;
-
-        /// <summary>
-        /// 不支持该操作
-        /// </summary>
-        /// <param name="id"></param>
-        /// <exception cref="NotSupportedException">该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。</exception>
-        public override void ResetId(string id)
-        {
-            throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
-        }
+        public UdpSessionBase UdpSession => this.m_udpSession;
 
         /// <summary>
         /// 不支持该操作
@@ -106,14 +96,14 @@ namespace TouchSocket.Dmtp
             throw new NotSupportedException("该客户端的Id为实际通信EndPoint值，所以不支持重置Id的操作。");
         }
 
-        private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-        {
-            this.m_udpSession.Send(this.m_endPoint, transferBytes);
-        }
+        //private void RpcActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        //{
+        //    this.m_udpSession.InternalSend(this.m_endPoint, transferBytes);
+        //}
 
-        private Task RpcActorSendAsync(DmtpActor actor, ArraySegment<byte>[] transferBytes)
+        private Task RpcActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
-            return this.m_udpSession.SendAsync(this.m_endPoint, transferBytes);
+            return this.m_udpSession.InternalSendAsync(this.m_endPoint, memory);
         }
     }
 }

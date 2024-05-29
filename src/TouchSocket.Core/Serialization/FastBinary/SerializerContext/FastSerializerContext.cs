@@ -30,7 +30,6 @@ namespace TouchSocket.Core
         /// </summary>
         public FastSerializerContext()
         {
-            this.AddConverter(typeof(string), new StringFastBinaryConverter());
             this.AddConverter(typeof(Version), new VersionFastBinaryConverter());
             this.AddConverter(typeof(ByteBlock), new ByteBlockFastBinaryConverter());
             this.AddConverter(typeof(MemoryStream), new MemoryStreamFastBinaryConverter());
@@ -46,7 +45,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public virtual object GetNewInstance(Type type)
         {
-            return Activator.CreateInstance(type);
+            return InstanceCreater.Create(type,null);
         }
 
         /// <summary>

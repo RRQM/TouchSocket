@@ -23,13 +23,13 @@ namespace TouchSocket.Core
         public string Message { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             byteBlock.Write(this.Message);
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.Message = byteBlock.ReadString();
         }

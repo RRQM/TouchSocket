@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
 using System.Text;
 using TouchSocket.Core;
@@ -39,7 +40,8 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 case SerializationType.FastBinary:
                     {
-                        return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
+                        var block = new ValueByteBlock(parameterBytes);
+                        return FastBinaryFormatter.Deserialize(ref block, parameterType);
                     }
                 case SerializationType.SystemBinary:
                     {
@@ -47,7 +49,7 @@ namespace TouchSocket.Dmtp.Rpc
                     }
                 case SerializationType.Json:
                     {
-                        return SerializeConvert.FromJsonString(Encoding.UTF8.GetString(parameterBytes), parameterType);
+                        return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(parameterBytes), parameterType);
                     }
                 case SerializationType.Xml:
                     {
@@ -74,7 +76,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 case SerializationType.FastBinary:
                     {
-                        return SerializeConvert.FastBinarySerialize(parameter);
+                        return FastBinaryFormatter.SerializeToBytes(parameter);
                     }
                 case SerializationType.SystemBinary:
                     {
@@ -82,7 +84,7 @@ namespace TouchSocket.Dmtp.Rpc
                     }
                 case SerializationType.Json:
                     {
-                        return SerializeConvert.JsonSerializeToBytes(parameter);
+                        return JsonConvert.SerializeObject(parameter).ToUTF8Bytes();
                     }
                 case SerializationType.Xml:
                     {

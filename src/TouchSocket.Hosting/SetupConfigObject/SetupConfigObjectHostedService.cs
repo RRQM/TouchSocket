@@ -31,17 +31,17 @@ namespace TouchSocket.Hosting
         /// <summary>
         /// Config配置
         /// </summary>
-        public TouchSocketConfig Config { get => this.m_config; }
+        public TouchSocketConfig Config => this.m_config;
 
         /// <summary>
         /// 实际对象。
         /// </summary>
-        public TConfigObject ConfigObject { get => this.m_configObject; }
+        public TConfigObject ConfigObject => this.m_configObject;
 
         /// <summary>
         /// IResolver
         /// </summary>
-        public IResolver Resolver { get => this.m_resolver; }
+        public IResolver Resolver => this.m_resolver;
 
         #region Internal
 
@@ -81,7 +81,7 @@ namespace TouchSocket.Hosting
         {
             this.m_config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
             this.m_config.SetResolver(this.m_resolver);
-            await this.m_configObject.SetupAsync(this.m_config.Clone());
+            await this.m_configObject.SetupAsync(this.m_config.Clone()).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>

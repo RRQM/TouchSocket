@@ -19,21 +19,8 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 具有预备连接的插件接口
     /// </summary>
-    public interface ISerialConnectingPlugin<in TClient> : IPlugin where TClient : ISerialPortClient
+    public interface ISerialConnectingPlugin : IPlugin
     {
-        /// <summary>
-        /// 在即将完成连接时触发。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnSerialConnecting(TClient client, ConnectingEventArgs e);
-    }
-
-    /// <summary>
-    /// ISerialConnectingPlugin
-    /// </summary>
-    public interface ISerialConnectingPlugin : ISerialConnectingPlugin<ISerialPortClient>
-    {
+        Task OnSerialConnecting(ISerialPortClient client, ConnectingEventArgs e);
     }
 }

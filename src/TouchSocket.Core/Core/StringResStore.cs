@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     /// </summary>
     public static class StringResStore
     {
-        private static readonly ConcurrentDictionary<Enum, string> m_cache = new ConcurrentDictionary<Enum, string>();
+        private static readonly ConcurrentDictionary<Enum, string> s_cache = new ConcurrentDictionary<Enum, string>();
 
         /// <summary>
         /// 获取资源字符
@@ -31,14 +31,14 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string GetDescription(this Enum @enum, params object[] objs)
         {
-            if (m_cache.TryGetValue(@enum, out var str))
+            if (s_cache.TryGetValue(@enum, out var str))
             {
                 return string.IsNullOrEmpty(str) ? @enum.ToString() : str.Format(objs);
             }
             if (@enum.GetAttribute<DescriptionAttribute>() is DescriptionAttribute description)
             {
                 var res = description.Description;
-                m_cache.TryAdd(@enum, res);
+                s_cache.TryAdd(@enum, res);
                 if (!string.IsNullOrEmpty(res))
                 {
                     return objs.Length > 0 ? res.Format(objs) : res;

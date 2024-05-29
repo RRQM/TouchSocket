@@ -10,10 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Serialization;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -22,25 +28,18 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http基础头部
     /// </summary>
-    public abstract class HttpBase : BlockReader, IRequestInfo
+    public abstract class HttpBase : IRequestInfo
     {
         /// <summary>
         /// 服务器版本
         /// </summary>
         public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-        private static readonly byte[] m_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+        private static readonly byte[] s_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
 
-        private readonly InternalHttpHeader m_headers;
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public HttpBase()
-        {
-            this.ReadTimeout = 1000 * 30;
-            this.m_headers = new InternalHttpHeader();
-        }
+        private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
+        private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
+        public const int MaxCacheSize = 1024 * 1024 * 100;
 
         /// <summary>
         /// 能否写入。
@@ -48,9 +47,14 @@ namespace TouchSocket.Http
         public abstract bool CanWrite { get; }
 
         /// <summary>
+        /// 能否读取。
+        /// </summary>
+        public abstract bool CanRead { get; }
+
+        /// <summary>
         /// 客户端
         /// </summary>
-        public abstract ITcpClientBase Client { get; }
+        public abstract IClient Client { get; }
 
         /// <summary>
         /// 内容填充完成
@@ -75,10 +79,7 @@ namespace TouchSocket.Http
                 }
                 return 0;
             }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
-            }
+            set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
         }
 
         /// <summary>
@@ -143,14 +144,8 @@ namespace TouchSocket.Http
         /// </summary>
         public string ContentType
         {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.ContentType);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.ContentType, value);
-            }
+            get => this.m_headers.Get(HttpHeaders.ContentType);
+            set => this.m_headers.Add(HttpHeaders.ContentType, value);
         }
 
         /// <summary>
@@ -158,14 +153,8 @@ namespace TouchSocket.Http
         /// </summary>
         public string AcceptEncoding
         {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.AcceptEncoding);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
-            }
+            get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
+            set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
         }
 
         /// <summary>
@@ -173,36 +162,24 @@ namespace TouchSocket.Http
         /// </summary>
         public string Accept
         {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.Accept);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.Accept, value);
-            }
+            get => this.m_headers.Get(HttpHeaders.Accept);
+            set => this.m_headers.Add(HttpHeaders.Accept, value);
         }
 
-        /// <summary>
-        /// 传递标识
-        /// </summary>
-        public object Flag { get; set; }
+        ///// <summary>
+        ///// 传递标识
+        ///// </summary>
+        //public object Flag { get; set; }
 
         /// <summary>
         /// 请求头集合
         /// </summary>
-        public IHttpHeader Headers
-        {
-            get
-            {
-                return this.m_headers;
-            }
-        }
+        public IHttpHeader Headers => this.m_headers;
 
         /// <summary>
         /// 协议名称，默认HTTP
         /// </summary>
-        public Protocol Protocols { get; set; } = Protocol.Http;
+        public Protocol Protocols { get; protected set; } = Protocol.Http;
 
         /// <summary>
         /// HTTP协议版本，默认1.1
@@ -214,20 +191,15 @@ namespace TouchSocket.Http
         /// </summary>
         public string RequestLine { get; private set; }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public bool ParsingHeader(ByteBlock byteBlock, int length)
+        internal bool ParsingHeader(ByteBlock byteBlock, int length)
         {
-            var index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, length, m_rnrnCode);
+            var index = byteBlock.Span.Slice(byteBlock.Position, length).IndexOf(s_rnrnCode);
             if (index > 0)
             {
-                var headerLength = index - byteBlock.Pos;
-                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
-                byteBlock.Pos += headerLength;
+                var headerLength = index - byteBlock.Position;
+                this.ReadHeaders(byteBlock.Span.Slice(byteBlock.Position, headerLength));
+                byteBlock.Position += headerLength;
+                byteBlock.Position += 4;
                 return true;
             }
             else
@@ -236,27 +208,9 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// 从Request中持续读取数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public override int Read(byte[] buffer, int offset, int count)
+        private void ReadHeaders(ReadOnlySpan<byte> span)
         {
-            return base.Read(buffer, offset, count);
-        }
-
-        /// <summary>
-        /// 从内存中读取
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void ReadHeaders(byte[] buffer, int offset, int length)
-        {
-            var data = Encoding.UTF8.GetString(buffer, offset, length);
+            var data = span.ToString(Encoding.UTF8);
             var rows = Regex.Split(data, "\r\n");
 
             //Request URL & Method & Version
@@ -266,6 +220,8 @@ namespace TouchSocket.Http
             this.GetRequestHeaders(rows);
             this.LoadHeaderProterties();
         }
+
+        #region Content
 
         /// <summary>
         /// 设置一次性内容
@@ -278,33 +234,27 @@ namespace TouchSocket.Http
         /// 获取一次性内容。
         /// </summary>
         /// <returns></returns>
-        public abstract bool TryGetContent(out byte[] content);
+        public abstract ValueTask<byte[]> GetContentAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 持续写入内容。
+        /// 获取一次性内容。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        public abstract void WriteContent(byte[] buffer, int offset, int count);
-
-        internal bool InternalInput(byte[] buffer, int offset, int length)
+        /// <returns></returns>
+        public virtual byte[] GetContent(CancellationToken cancellationToken = default)
         {
-            return this.Input(buffer, offset, length);
+            return Task.Run(async () => await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!this.DisposedValue && this.CanRead)
-            {
-                this.TryGetContent(out _);
-            }
+        #endregion Content
 
-            base.Dispose(disposing);
+        internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+        {
+            return this.m_httpBlockSegment.InternalInputAsync(memory);
+        }
+
+        internal Task CompleteInput()
+        {
+            return this.m_httpBlockSegment.InternalComplete();
         }
 
         /// <summary>
@@ -331,15 +281,81 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// 重置Http状态。
-        /// </summary>
-        public virtual void Reset()
+        internal virtual void ResetHttp()
         {
-            base.ResetBlock();
             this.m_headers.Clear();
             this.ContentComplated = null;
             this.RequestLine = default;
+
+            m_httpBlockSegment.InternalReset();
         }
+
+        #region Read
+
+        public virtual ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken)
+        {
+            return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
+        }
+
+        public async Task ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
+        {
+            while (true)
+            {
+                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                    {
+                        var memory = blockResult.Memory;
+#if NET6_0_OR_GREATER
+                        await stream.WriteAsync(memory, cancellationToken);
+#else
+                        var segment = memory.GetArray();
+                        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
+#endif
+                    }
+                    if (blockResult.IsCompleted)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        #endregion Read
+
+        #region Write
+
+        public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
+
+        //public abstract void Write(byte[] buffer, int offset, int count);
+
+        #endregion Write
+
+        #region Class
+
+        private class HttpBlockSegment : BlockSegment<byte>
+        {
+            internal Task InternalComplete()
+            {
+                return base.Complete(string.Empty);
+            }
+
+            internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+            {
+                return base.InputAsync(memory);
+            }
+
+            internal void InternalReset()
+            {
+                base.Reset();
+            }
+
+            internal ValueTask<IBlockResult<byte>> InternalValueWaitAsync(CancellationToken cancellationToken)
+            {
+                return base.ValueWaitAsync(cancellationToken);
+            }
+        }
+
+        #endregion Class
     }
 }

@@ -61,7 +61,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 验证连接
         /// </summary>
-        public Func<IHttpSocketClient, HttpContext, Task<bool>> VerifyConnection { get; set; }
+        public Func<IHttpSessionClient, HttpContext, Task<bool>> VerifyConnection { get; set; }
 
         /// <summary>
         /// 用于WebSocket连接的路径，默认为“/ws”
@@ -88,11 +88,11 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public WebSocketFeature SetVerifyConnection(Func<IHttpSocketClient, HttpContext, bool> func)
+        public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, bool> func)
         {
             this.VerifyConnection = async (client, context) =>
             {
-                await EasyTask.CompletedTask;
+                await EasyTask.CompletedTask.ConfigureFalseAwait();
                 return func.Invoke(client, context);
             };
             return this;
@@ -103,7 +103,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public WebSocketFeature SetVerifyConnection(Func<IHttpSocketClient, HttpContext, Task<bool>> func)
+        public WebSocketFeature SetVerifyConnection(Func<IHttpSessionClient, HttpContext, Task<bool>> func)
         {
             this.VerifyConnection = func;
             return this;
@@ -136,17 +136,17 @@ namespace TouchSocket.Http.WebSockets
         {
             base.Loaded(pluginManager);
             this.m_pluginManager = pluginManager;
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
-        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (client.Protocol == Protocol.Http)
             {
-                if (await this.VerifyConnection.Invoke(client, e.Context))
+                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureFalseAwait())
                 {
                     e.Handled = true;
-                    await client.SwitchProtocolToWebSocket(e.Context);
+                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureFalseAwait();
                     if (!this.AutoClose)
                     {
                         client.SetValue(AutoCloseProperty, false);
@@ -158,12 +158,12 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
         }
 
-        private async Task<bool> ThisVerifyConnection(IHttpSocketClient client, HttpContext context)
+        private async Task<bool> ThisVerifyConnection(IHttpSessionClient client, HttpContext context)
         {
-            await EasyTask.CompletedTask;
+            await EasyTask.CompletedTask.ConfigureFalseAwait();
             if (context.Request.Method == HttpMethod.Get)
             {
                 if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))

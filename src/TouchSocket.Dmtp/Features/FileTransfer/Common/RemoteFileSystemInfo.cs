@@ -52,7 +52,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public string Name { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             byteBlock.Write(this.LastWriteTime);
             byteBlock.Write(this.LastAccessTime);
@@ -63,7 +63,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.LastWriteTime = byteBlock.ReadDateTime();
             this.LastAccessTime = byteBlock.ReadDateTime();

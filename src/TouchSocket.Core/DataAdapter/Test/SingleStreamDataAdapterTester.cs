@@ -21,16 +21,14 @@ namespace TouchSocket.Core
     /// <summary>
     ///单线程状况的流式数据处理适配器测试
     /// </summary>
-    public class SingleStreamDataAdapterTester : IDisposable
+    public class SingleStreamDataAdapterTester : DisposableObject
     {
         private readonly IntelligentDataQueue<QueueDataBytes> m_asyncBytes;
-        private readonly Thread m_sendThread;
         private SingleStreamDataHandlingAdapter m_adapter;
         private int m_bufferLength;
         private int m_count;
-        private bool m_dispose;
         private int m_expectedCount;
-        private Action<ByteBlock, IRequestInfo> m_receivedCallBack;
+        private Func<ByteBlock, IRequestInfo, Task> m_receivedCallBack;
         private Stopwatch m_stopwatch;
         private int m_timeout;
 
@@ -40,10 +38,8 @@ namespace TouchSocket.Core
         protected SingleStreamDataAdapterTester()
         {
             this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
-            this.m_sendThread = new Thread(this.BeginSend);
-            this.m_sendThread.IsBackground = true;
-            this.m_sendThread.Name = "DataAdapterTesterThread";
-            this.m_sendThread.Start();
+
+            Task.Run(this.BeginSend);
         }
 
         /// <summary>
@@ -53,25 +49,17 @@ namespace TouchSocket.Core
         /// <param name="receivedCallBack">收到数据回调</param>
         /// <param name="bufferLength">缓存数据长度</param>
         /// <returns></returns>
-        public static SingleStreamDataAdapterTester CreateTester(SingleStreamDataHandlingAdapter adapter, int bufferLength = 1024, Action<ByteBlock, IRequestInfo> receivedCallBack = default)
+        public static SingleStreamDataAdapterTester CreateTester(SingleStreamDataHandlingAdapter adapter, int bufferLength = 1024, Func<ByteBlock, IRequestInfo, Task> receivedCallBack = default)
         {
             var tester = new SingleStreamDataAdapterTester
             {
                 m_adapter = adapter,
                 m_bufferLength = bufferLength
             };
-            adapter.SendCallBack = tester.SendCallback;
-            adapter.ReceivedCallBack = tester.OnReceived;
+            adapter.SendAsyncCallBack = tester.SendCallback;
+            adapter.ReceivedAsyncCallBack = tester.OnReceived;
             tester.m_receivedCallBack = receivedCallBack;
             return tester;
-        }
-
-        /// <summary>
-        /// 释放
-        /// </summary>
-        public void Dispose()
-        {
-            this.m_dispose = true;
         }
 
         /// <summary>
@@ -91,11 +79,11 @@ namespace TouchSocket.Core
             this.m_timeout = millisecondsTimeout;
             this.m_stopwatch = new Stopwatch();
             this.m_stopwatch.Start();
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    this.m_adapter.SendInput(buffer, offset, length);
+                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureFalseAwait();
                 }
             });
 
@@ -119,9 +107,9 @@ namespace TouchSocket.Core
             return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
         }
 
-        private void BeginSend()
+        private async Task BeginSend()
         {
-            while (!this.m_dispose)
+            while (!this.DisposedValue)
             {
                 if (this.TryGet(out var byteBlocks))
                 {
@@ -129,7 +117,7 @@ namespace TouchSocket.Core
                     {
                         try
                         {
-                            this.m_adapter.ReceivedInput(block);
+                            await this.m_adapter.ReceivedInputAsync(block).ConfigureFalseAwait();
                         }
                         finally
                         {
@@ -139,22 +127,26 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    Thread.Sleep(1);
+                    await Task.Delay(1).ConfigureFalseAwait();
                 }
             }
         }
 
-        private void OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
+        private async Task OnReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             this.m_count++;
-            this.m_receivedCallBack?.Invoke(byteBlock, requestInfo);
+            if (this.m_receivedCallBack != null)
+            {
+                await this.m_receivedCallBack.Invoke(byteBlock, requestInfo).ConfigureFalseAwait();
+            }
         }
 
-        private void SendCallback(byte[] buffer, int offset, int length)
+        private Task SendCallback(ReadOnlyMemory<byte> memory)
         {
-            var asyncByte = new QueueDataBytes(new byte[length], 0, length);
-            Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
+            var array = memory.ToArray();
+            var asyncByte = new QueueDataBytes(array, 0, array.Length);
             this.m_asyncBytes.Enqueue(asyncByte);
+            return EasyTask.CompletedTask;
         }
 
         private bool TryGet(out List<ByteBlock> byteBlocks)
@@ -170,7 +162,7 @@ namespace TouchSocket.Core
                         block = BytePool.Default.GetByteBlock(this.m_bufferLength);
                         byteBlocks.Add(block);
                     }
-                    var surLen = this.m_bufferLength - block.Pos;
+                    var surLen = this.m_bufferLength - block.Position;
                     if (surLen < asyncByte.Length)//不能完成写入
                     {
                         block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);

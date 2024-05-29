@@ -34,7 +34,7 @@ namespace TouchSocket.NamedPipe
             {
                 try
                 {
-                    await c.ConnectAsync();
+                    await c.ConnectAsync().ConfigureFalseAwait();
                     return true;
                 }
                 catch
@@ -84,7 +84,7 @@ namespace TouchSocket.NamedPipe
         {
             this.ActionForCheck = async (c, i) =>
             {
-                await EasyTask.CompletedTask;
+                await EasyTask.CompletedTask.ConfigureFalseAwait();
                 return actionForCheck.Invoke(c, i);
             };
             return this;
@@ -139,8 +139,8 @@ namespace TouchSocket.NamedPipe
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<object, ConfigEventArgs>(nameof(ILoadedConfigPlugin.OnLoadedConfig), this.OnLoadedConfig);
-            pluginManager.Add<TClient, DisconnectEventArgs>(nameof(INamedPipeDisconnectedPlugin.OnNamedPipeDisconnected), this.OnNamedPipeDisconnected);
+            pluginManager.Add<object, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
+            pluginManager.Add<TClient, ClosedEventArgs>(typeof(INamedPipeClosedPlugin), this.OnNamedPipeDisconnected);
         }
 
         private Task OnLoadedConfig(object sender, ConfigEventArgs e)
@@ -160,17 +160,17 @@ namespace TouchSocket.NamedPipe
                         {
                             return;
                         }
-                        await Task.Delay(this.Tick);
+                        await Task.Delay(this.Tick).ConfigureFalseAwait();
                         try
                         {
-                            var b = await this.ActionForCheck.Invoke(client, failCount);
+                            var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureFalseAwait();
                             if (b == null)
                             {
                                 continue;
                             }
                             else if (b == false)
                             {
-                                if (await this.ActionForConnect.Invoke(client))
+                                if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
                                 {
                                     failCount = 0;
                                 }
@@ -190,9 +190,9 @@ namespace TouchSocket.NamedPipe
             return e.InvokeNext();
         }
 
-        private async Task OnNamedPipeDisconnected(TClient client, DisconnectEventArgs e)
+        private async Task OnNamedPipeDisconnected(TClient client, ClosedEventArgs e)
         {
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
             _ = Task.Run(async () =>
             {
                 if (e.Manual)
@@ -202,7 +202,7 @@ namespace TouchSocket.NamedPipe
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client))
+                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
                     {
                         return;
                     }

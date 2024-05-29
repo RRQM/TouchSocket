@@ -56,7 +56,7 @@ namespace TouchSocket.WebApi.Swagger
         public string Prefix { get; set; } = "swagger";
 
         /// <inheritdoc/>
-        public async Task OnServerStarted(IService sender, ServiceStateEventArgs e)
+        public async Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
         {
             if (e.ServerState != ServerState.Running)
             {
@@ -100,11 +100,13 @@ namespace TouchSocket.WebApi.Swagger
                     this.m_swagger.Add(key, bytes);
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
 
             if (this.LaunchBrowser)
             {
-                var iphost = (sender as ITcpServiceBase).Monitors.First().Option.IpHost;
+                var monitor = (sender as ITcpServiceBase).Monitors.First();
+
+                var iphost = monitor.Option.IpHost;
                 string host;
                 if (iphost.IsLoopback || iphost.DnsSafeHost == "127.0.0.1" || iphost.DnsSafeHost == "0.0.0.0")
                 {
@@ -115,7 +117,7 @@ namespace TouchSocket.WebApi.Swagger
                     host = iphost.DnsSafeHost;
                 }
 
-                var scheme = iphost.Scheme == "https" ? iphost.Scheme : "http";
+                var scheme = monitor.Option.UseSsl ? "https" : "http";
 
                 var prefix = this.Prefix.IsNullOrEmpty() ? "/" : (this.Prefix.StartsWith("/") ? this.Prefix : $"/{this.Prefix}");
                 var index = prefix == "/" ? $"/index.html" : $"{prefix}/index.html";
@@ -148,7 +150,7 @@ namespace TouchSocket.WebApi.Swagger
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -661,7 +663,7 @@ namespace TouchSocket.WebApi.Swagger
             return tags;
         }
 
-        private Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             var context = e.Context;
             var request = context.Request;
@@ -674,10 +676,10 @@ namespace TouchSocket.WebApi.Swagger
                     .SetStatus()
                     .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                     .SetContent(bytes);
-                context.Response.Answer();
-                return EasyTask.CompletedTask;
+                await context.Response.AnswerAsync().ConfigureFalseAwait();
+                return;
             }
-            return e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
         }
 
         private OpenApiDataTypes ParseDataTypes(Type type)

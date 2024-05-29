@@ -17,7 +17,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IReceiverObject, ISender
+    internal sealed class WaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> where TClient : IReceiverClient<TResult>, ISender where TResult : IReceiverResult
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
         //private CancellationTokenSource m_cancellationTokenSource;
@@ -28,29 +28,97 @@ namespace TouchSocket.Sockets
             this.WaitingOptions = waitingOptions;
         }
 
-        public bool CanSend => this.Client.CanSend;
-
         public TClient Client { get; private set; }
 
         public WaitingOptions WaitingOptions { get; set; }
 
         #region 发送
 
-        public ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
+        //public ResponsedData 123SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
+        //{
+        //    this.m_semaphoreSlim.Wait(token);
+
+        //    try
+        //    {
+        //        if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+        //        {
+        //            using (var receiver = session.CreateReceiver())
+        //            {
+        //                session.123Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+
+        //                while (true)
+        //                {
+        //                    using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+        //                    {
+        //                        var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+        //                        if (this.WaitingOptions.FilterFunc == null)
+        //                        {
+        //                            return response;
+        //                        }
+        //                        else
+        //                        {
+        //                            if (this.WaitingOptions.FilterFunc.Invoke(response))
+        //                            {
+        //                                return response;
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        else
+        //        {
+        //            using (var receiver = this.Client.CreateReceiver())
+        //            {
+        //                this.Client.123Send(buffer, offset, length);
+        //                while (true)
+        //                {
+        //                    using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+        //                    {
+        //                        if (receiverResult.IsCompleted)
+        //                        {
+        //                            ThrowHelper.ThrowClientNotConnectedException();
+        //                        }
+        //                        var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+        //                        if (this.WaitingOptions.FilterFunc == null)
+        //                        {
+        //                            return response;
+        //                        }
+        //                        else
+        //                        {
+        //                            if (this.WaitingOptions.FilterFunc.Invoke(response))
+        //                            {
+        //                                return response;
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.m_semaphoreSlim.Release();
+        //    }
+        //}
+
+        public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureFalseAwait();
+
             try
             {
-                this.m_semaphoreSlim.Wait(token);
-
                 if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureFalseAwait();
 
                         while (true)
                         {
-                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                            using (var receiverResult = await receiver.ValueReadAsync(token).ConfigureAwait(false))
                             {
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -73,14 +141,14 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        this.Client.Send(buffer, offset, length);
+                        await this.Client.SendAsync(memory).ConfigureFalseAwait();
                         while (true)
                         {
-                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureFalseAwait())
                             {
-                                if (receiverResult.IsClosed)
+                                if (receiverResult.IsCompleted)
                                 {
-                                    throw new NotConnectedException();
+                                    ThrowHelper.ThrowClientNotConnectedException();
                                 }
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -106,84 +174,9 @@ namespace TouchSocket.Sockets
             }
         }
 
-        public async Task<ResponsedData> SendThenResponseAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
+        public async Task<byte[]> SendThenReturnAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
         {
-            try
-            {
-                await this.m_semaphoreSlim.WaitAsync(token);
-
-                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
-                {
-                    using (var receiver = session.CreateReceiver())
-                    {
-                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-
-                        while (true)
-                        {
-                            using (var receiverResult = await receiver.ReadAsync(token))
-                            {
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
-
-                                if (this.WaitingOptions.FilterFunc == null)
-                                {
-                                    return response;
-                                }
-                                else
-                                {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
-                                    {
-                                        return response;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var receiver = this.Client.CreateReceiver())
-                    {
-                        await this.Client.SendAsync(buffer, offset, length);
-                        while (true)
-                        {
-                            using (var receiverResult = await receiver.ReadAsync(token))
-                            {
-                                if (receiverResult.IsClosed)
-                                {
-                                    throw new NotConnectedException();
-                                }
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
-
-                                if (this.WaitingOptions.FilterFunc == null)
-                                {
-                                    return response;
-                                }
-                                else
-                                {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
-                                    {
-                                        return response;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                this.m_semaphoreSlim.Release();
-            }
-        }
-
-        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token)
-        {
-            return this.SendThenResponse(buffer, offset, length, token).Data;
-        }
-
-        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token)
-        {
-            return (await this.SendThenResponseAsync(buffer, offset, length, token)).Data;
+            return (await this.SendThenResponseAsync(memory, token).ConfigureFalseAwait()).Data;
         }
 
         #endregion 发送
@@ -194,16 +187,5 @@ namespace TouchSocket.Sockets
             this.Client = default;
             base.Dispose(disposing);
         }
-
-        //private void Cancel()
-        //{
-        //    try
-        //    {
-        //        this.m_cancellationTokenSource?.Cancel();
-        //    }
-        //    catch
-        //    {
-        //    }
-        //}
     }
 }

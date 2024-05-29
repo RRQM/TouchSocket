@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -17,37 +19,26 @@ namespace TouchSocket.Core
     /// </summary>
     internal sealed class MetadataFastBinaryConverter : FastBinaryConverter<Metadata>
     {
-        protected override Metadata Read(byte[] buffer, int offset, int len)
+        protected override Metadata Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            var byteBlock = new ValueByteBlock(buffer);
-            byteBlock.Pos = offset;
+            var count = byteBlock.ReadInt32();
 
-            var isNull = byteBlock.ReadIsNull();
-            if (isNull)
+            var metadata = new Metadata();
+            for (var i = 0; i < count; i++)
             {
-                return null;
+                metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
             }
-            else
-            {
-                var metadata = new Metadata();
-                while (byteBlock.Pos < offset + len)
-                {
-                    metadata.Add(byteBlock.ReadString(), byteBlock.ReadString());
-                }
-                return metadata;
-            }
+            return metadata;
         }
 
-        protected override int Write(ByteBlock byteBlock, Metadata obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Metadata obj)
         {
-            var pos = byteBlock.Pos;
-            byteBlock.WriteIsNull(obj);
-            foreach (var item in obj.Keys)
+            byteBlock.Write(obj.Count);
+            foreach (var item in obj)
             {
-                byteBlock.Write(item);
-                byteBlock.Write(obj[item]);
+                byteBlock.Write(item.Key);
+                byteBlock.Write(item.Value);
             }
-            return byteBlock.Pos - pos;
         }
     }
 }

@@ -118,7 +118,7 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         protected virtual async Task ProtectedAddFlowAsync(int flow)
         {
-            await this.m_flowGate.AddCheckWaitAsync(flow);
+            await this.m_flowGate.AddCheckWaitAsync(flow).ConfigureFalseAwait();
             Interlocked.Add(ref this.m_speedTemp, flow);
             this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
         }

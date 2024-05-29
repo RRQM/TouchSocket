@@ -30,28 +30,45 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="waitingOptions"></param>
         /// <returns></returns>
-        public static IWaitingClient<TClient> CreateWaitingClient<TClient>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverObject, ISender
+        public static IWaitingClient<TClient, TResult> CreateWaitingClient<TClient, TResult>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
-            return new WaitingClient<TClient>(client, waitingOptions);
+            return new WaitingClient<TClient, TResult>(client, waitingOptions);
+        }
+
+        public static IWaitingClient<IUdpSession, IUdpReceiverResult> CreateWaitingClient(this IUdpSession client, WaitingOptions waitingOptions)
+        {
+            return client.CreateWaitingClient<IUdpSession, IUdpReceiverResult>(waitingOptions);
+        }
+
+        public static IWaitingClient<ITcpClient, IReceiverResult> CreateWaitingClient(this ITcpClient client, WaitingOptions waitingOptions)
+        {
+            return client.CreateWaitingClient<ITcpClient, IReceiverResult>(waitingOptions);
+        }
+
+        public static IWaitingClient<ITcpSessionClient, IReceiverResult> CreateWaitingClient(this ITcpSessionClient client, WaitingOptions waitingOptions)
+        {
+            return client.CreateWaitingClient<ITcpSessionClient, IReceiverResult>(waitingOptions);
         }
 
         #region 异步发送
 
-        /// <summary>
-        /// 发送数据并等待
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, byte[] buffer, CancellationToken token)
-            where TClient : IReceiverObject, ISender
-        {
-            return client.SendThenResponseAsync(buffer, 0, buffer.Length, token);
-        }
+        ///// <summary>
+        ///// 发送数据并等待
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="token">取消令箭</param>
+        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
+        ///// <exception cref="OverlengthException">发送数据超长</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回的数据</returns>
+        //public static Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, byte[] buffer, CancellationToken token)
+        //    where TClient : IReceiverClient<TResult>, ISender
+        //    where TResult : IReceiverResult
+        //{
+        //    return client.SendThenResponseAsync(buffer, 0, buffer.Length, token);
+        //}
 
         /// <summary>
         /// 发送数据并等待
@@ -59,31 +76,33 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, string msg, CancellationToken token)
-            where TClient : IReceiverObject, ISender
+        public static Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, CancellationToken token)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             return client.SendThenResponseAsync(Encoding.UTF8.GetBytes(msg), token);
         }
 
-        /// <summary>
-        /// 发送数据并等待
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
-        {
-            return client.SendThenResponseAsync(buffer, 0, buffer.Length, millisecondsTimeout);
-        }
+        ///// <summary>
+        ///// 发送数据并等待
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="buffer"></param>
+        ///// <param name="millisecondsTimeout">超时时间</param>
+        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
+        ///// <exception cref="OverlengthException">发送数据超长</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回的数据</returns>
+        //public static Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, byte[] buffer, int millisecondsTimeout = 5000)
+        //    where TClient : IReceiverClient<TResult>, ISender
+        //    where TResult : IReceiverResult
+        //{
+        //    return client.SendThenResponseAsync(buffer, 0, buffer.Length, millisecondsTimeout);
+        //}
 
         /// <summary>
         /// 发送数据并等待
@@ -91,12 +110,13 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <param name="millisecondsTimeout">超时时间</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, string msg, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
+        public static Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             return client.SendThenResponseAsync(Encoding.UTF8.GetBytes(msg), millisecondsTimeout);
         }
@@ -112,14 +132,15 @@ namespace TouchSocket.Sockets
         /// <param name="millisecondsTimeout">超时时间</param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static async Task<ResponsedData> SendThenResponseAsync<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int offset, int length, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
+        public static async Task<ResponsedData> SendThenResponseAsync<TClient, TResult>(this IWaitingClient<TClient, TResult> client, Memory<byte> memory, int millisecondsTimeout = 5000)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
             {
                 try
                 {
-                    return await client.SendThenResponseAsync(buffer, offset, length, tokenSource.Token);
+                    return await client.SendThenResponseAsync(memory, tokenSource.Token).ConfigureFalseAwait();
                 }
                 catch (OperationCanceledException)
                 {
@@ -132,20 +153,28 @@ namespace TouchSocket.Sockets
 
         #region 同步发送
 
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ReadOnlyMemory<byte> memory, CancellationToken token)
+           where TClient : IReceiverClient<TResult>, ISender
+           where TResult : IReceiverResult
+        {
+            return client.SendThenResponseAsync(memory,token).GetFalseAwaitResult();
+        }
+
         /// <summary>
         /// 发送数据并等待
         /// </summary>
         /// <param name="client"></param>
         /// <param name="buffer">数据缓存区</param>
         /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, CancellationToken token)
-            where TClient : IReceiverObject, ISender
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, byte[] buffer, CancellationToken token)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
-            return client.SendThenResponse(buffer, 0, buffer.Length, token);
+            return client.SendThenResponse(new Memory<byte>(buffer), token);
         }
 
         /// <summary>
@@ -154,12 +183,13 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, string msg, CancellationToken token)
-            where TClient : IReceiverObject, ISender
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, CancellationToken token)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             return client.SendThenResponse(Encoding.UTF8.GetBytes(msg), token);
         }
@@ -170,12 +200,13 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="msg"></param>
         /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, string msg, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, string msg, int millisecondsTimeout = 5000)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             return client.SendThenResponse(Encoding.UTF8.GetBytes(msg), millisecondsTimeout);
         }
@@ -186,47 +217,50 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="byteBlock">数据块载体</param>
         /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
+        /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
         /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, ByteBlock byteBlock, CancellationToken token)
-            where TClient : IReceiverObject, ISender
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ByteBlock byteBlock, CancellationToken token)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
-            return client.SendThenResponse(byteBlock.Buffer, 0, byteBlock.Len, token);
+            return client.SendThenResponse(byteBlock.Memory, token);
         }
 
-        /// <summary>
-        /// 发送数据并等待
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
-        {
-            return SendThenResponse(client, buffer, 0, buffer.Length, millisecondsTimeout);
-        }
+        ///// <summary>
+        ///// 发送数据并等待
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="buffer">数据缓存区</param>
+        ///// <param name="millisecondsTimeout">超时时间</param>
+        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
+        ///// <exception cref="OverlengthException">发送数据超长</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回的数据</returns>
+        //public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, byte[] buffer, int millisecondsTimeout = 5000)
+        //    where TClient : IReceiverClient<TResult>, ISender
+        //    where TResult : IReceiverResult
+        //{
+        //    return SendThenResponse(client, buffer, 0, buffer.Length, millisecondsTimeout);
+        //}
 
-        /// <summary>
-        /// 发送数据并等待
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="byteBlock">数据块载体</param>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, ByteBlock byteBlock, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
-        {
-            return SendThenResponse(client, byteBlock.Buffer, 0, byteBlock.Len, millisecondsTimeout);
-        }
+        ///// <summary>
+        ///// 发送数据并等待
+        ///// </summary>
+        ///// <param name="client"></param>
+        ///// <param name="byteBlock">数据块载体</param>
+        ///// <param name="millisecondsTimeout">超时时间</param>
+        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
+        ///// <exception cref="OverlengthException">发送数据超长</exception>
+        ///// <exception cref="Exception">其他异常</exception>
+        ///// <returns>返回的数据</returns>
+        //public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, ByteBlock byteBlock, int millisecondsTimeout = 5000)
+        //    where TClient : IReceiverClient<TResult>, ISender
+        //    where TResult : IReceiverResult
+        //{
+        //    return SendThenResponse(client, byteBlock.Buffer, 0, byteBlock.Length, millisecondsTimeout);
+        //}
 
         /// <summary>
         /// 发送数据并等待
@@ -239,14 +273,15 @@ namespace TouchSocket.Sockets
         /// <param name="millisecondsTimeout"></param>
         /// <returns></returns>
         /// <exception cref="TimeoutException"></exception>
-        public static ResponsedData SendThenResponse<TClient>(this IWaitingClient<TClient> client, byte[] buffer, int offset, int length, int millisecondsTimeout = 5000)
-            where TClient : IReceiverObject, ISender
+        public static ResponsedData SendThenResponse<TClient, TResult>(this IWaitingClient<TClient, TResult> client, Memory<byte> memory, int millisecondsTimeout = 5000)
+            where TClient : IReceiverClient<TResult>, ISender
+            where TResult : IReceiverResult
         {
             using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
             {
                 try
                 {
-                    return client.SendThenResponse(buffer, offset, length, tokenSource.Token);
+                    return client.SendThenResponse(memory, tokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {

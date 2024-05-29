@@ -12,6 +12,8 @@
 
 using System;
 using System.Net.Sockets;
+using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
@@ -36,7 +38,7 @@ namespace TouchSocket.Sockets
                     var r = socket.Send(buffer, offset, length, SocketFlags.None);
                     if (r == 0 && length > 0)
                     {
-                        throw new Exception("发送数据不完全");
+                        ThrowHelper.ThrowException(TouchSocketResource.IncompleteDataTransmission);
                     }
                     offset += r;
                     length -= r;
@@ -50,18 +52,15 @@ namespace TouchSocket.Sockets
         /// <param name="socket"></param>
         public static void TryClose(this Socket socket)
         {
-            lock (socket)
+            try
             {
-                try
+                if (socket.Connected)
                 {
-                    if (socket.Connected)
-                    {
-                        socket.Close();
-                    }
+                    socket.Close();
                 }
-                catch
-                {
-                }
+            }
+            catch
+            {
             }
         }
     }

@@ -41,7 +41,7 @@ namespace TouchSocket.Modbus
         int IRequestInfoBuilder.MaxLength => 1024;
 
         /// <inheritdoc/>
-        public void Build(ByteBlock byteBlock)
+        public void Build<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock: IByteBlock
         {
             byteBlock.Write(this.TransactionId, EndianType.Big);
             byteBlock.Write(this.ProtocolId, EndianType.Big);

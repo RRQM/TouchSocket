@@ -16,7 +16,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
-    internal class InternalHttpParams : Dictionary<string, string>, IHttpParams
+    internal sealed class InternalHttpParams : Dictionary<string, string>, IHttpParams
     {
         public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
         {

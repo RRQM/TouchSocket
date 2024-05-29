@@ -29,23 +29,14 @@ namespace TouchSocket.Rpc
         Type[] MutexAccessTypes { get; }
 
         /// <summary>
-        /// 成功执行Rpc后。
-        /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响Rpc最终结果</para>
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="parameters"></param>
-        /// <param name="invokeResult"></param>
-        Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult);
-
-        /// <summary>
-        /// 执行Rpc遇见异常。
+        /// 执行Rpc之后。
         /// <para>如果修改<paramref name="invokeResult"/>的InvokeStatus，或Result。则会影响Rpc最终结果</para>
         /// </summary>
         /// <param name="callContext"></param>
         /// <param name="parameters"></param>
         /// <param name="invokeResult"></param>
         /// <param name="exception"></param>
-        Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception);
+        Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception);
 
         /// <summary>
         /// 在执行Rpc之前。

@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 提供Dmtp协议的最基础功能件
     /// </summary>
-    public interface IDmtpActor : IDependencyObject, IHandshakeObject, ICloseObject
+    public interface IDmtpActor : IDependencyObject, IOnlineClient, IClosableClient,IIdClient
     {
         #region 属性
 
@@ -30,19 +30,14 @@ namespace TouchSocket.Dmtp
         bool AllowRoute { get; }
 
         /// <summary>
-        /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
-        /// </summary>
-        bool IsReliable { get; }
-
-        /// <summary>
         /// 包含当前功能件的宿主通讯端。
         /// </summary>
         IDmtpActorObject Client { get; }
 
         /// <summary>
-        /// 本节点Id
+        /// 是否基于可靠协议构建。例如：基于Tcp则为<see langword="true"/>，基于Udp则为<see langword="false"/>。
         /// </summary>
-        string Id { get; }
+        bool IsReliable { get; }
 
         /// <summary>
         /// 最后一次活动时间。
@@ -74,37 +69,6 @@ namespace TouchSocket.Dmtp
         /// <param name="id"></param>
         /// <returns></returns>
         bool ChannelExisted(int id);
-
-        /// <summary>
-        /// 在当前对点创建一个随机Id的通道
-        /// </summary>
-        /// <returns></returns>
-        IDmtpChannel CreateChannel(Metadata metadata = default);
-
-        /// <summary>
-        /// 在当前对点创建一个指定Id的通道
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        IDmtpChannel CreateChannel(int id, Metadata metadata = default);
-
-        /// <summary>
-        /// 在指定路由点创建一个指定Id的通道
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="id"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        IDmtpChannel CreateChannel(string targetId, int id, Metadata metadata = default);
-
-        /// <summary>
-        /// 在指定路由点创建一个随机Id的通道
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="metadata"></param>
-        /// <returns></returns>
-        IDmtpChannel CreateChannel(string targetId, Metadata metadata = default);
 
         /// <summary>
         /// 在当前对点创建一个随机Id的通道
@@ -154,21 +118,6 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="millisecondsTimeout"></param>
         /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        bool Ping(int millisecondsTimeout = 5000);
-
-        /// <summary>
-        /// 向指定路由点发送一个Ping报文，并且等待回应。
-        /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
-        bool Ping(string targetId, int millisecondsTimeout = 5000);
-
-        /// <summary>
-        /// 向当前对点发送一个Ping报文，并且等待回应。
-        /// </summary>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns>一般的，当返回<see langword="true"/>时，则表明对点一定存在。而其他情况则返回<see langword="false"/></returns>
         Task<bool> PingAsync(int millisecondsTimeout = 5000);
 
         /// <summary>
@@ -180,74 +129,35 @@ namespace TouchSocket.Dmtp
         Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000);
 
         /// <summary>
-        /// 重新设置Id,并且同步到对端
-        /// </summary>
-        /// <param name="id"></param>
-        /// <exception cref="Exception"></exception>
-        void ResetId(string id);
-
-        /// <summary>
-        /// 重新设置Id,并且同步到对端
-        /// </summary>
-        /// <param name="id"></param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="TimeoutException"></exception>
-        Task ResetIdAsync(string id);
-
-        /// <summary>
-        /// 发送字节
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        void Send(ushort protocol, byte[] buffer, int offset, int length);
-
-        /// <summary>
-        /// 发送字节块
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        void Send(ushort protocol, ByteBlock byteBlock);
-
-        /// <summary>
         /// 异步发送字节
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        Task SendAsync(ushort protocol, byte[] buffer, int offset, int length);
+        Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory);
 
-        /// <summary>
-        /// 异步发送字节块
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="byteBlock"></param>
-        /// <returns></returns>
-        Task SendAsync(ushort protocol, ByteBlock byteBlock);
+        ///// <summary>
+        ///// 异步发送字节块
+        ///// </summary>
+        ///// <param name="protocol"></param>
+        ///// <param name="byteBlock"></param>
+        ///// <returns></returns>
+        //Task SendAsync(ushort protocol, ByteBlock byteBlock);
 
-        /// <summary>
-        /// 以Fast序列化，发送小（64K）对象。接收方需要使用ReadObject读取对象。
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="obj"></param>
-        void SendFastObject<T>(ushort protocol, in T obj);
+        ///// <summary>
+        ///// 以Fast序列化，发送小（64K）对象。接收方需要使用ReadObject读取对象。
+        ///// </summary>
+        ///// <param name="protocol"></param>
+        ///// <param name="obj"></param>
+        //Task SendFastObjectAsync<T>(ushort protocol, T obj);
 
         /// <summary>
         /// 以包发送小（64K）对象。接收方ReadPackage即可。
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="package"></param>
-        void SendPackage(ushort protocol, in IPackage package);
-
-        /// <summary>
-        /// 发送以utf-8编码的字符串。
-        /// </summary>
-        /// <param name="protocol"></param>
-        /// <param name="value"></param>
-        /// <see cref="ArgumentNullException"/>
-        void SendString(ushort protocol, string value);
+        Task SendPackageAsync(ushort protocol, IPackage package);
 
         /// <summary>
         /// 发送以utf-8编码的字符串。
@@ -268,13 +178,7 @@ namespace TouchSocket.Dmtp
         /// 尝试请求路由，触发路由相关插件。并在路由失败时向<see cref="MsgPermitEventArgs.Message"/>中传递消息。
         /// </summary>
         /// <returns></returns>
-        Task<bool> TryRoute(PackageRouterEventArgs e);
-
-        /// <summary>
-        /// 发送Close请求
-        /// </summary>
-        /// <param name="msg"></param>
-        bool SendClose(string msg);
+        Task<bool> TryRouteAsync(PackageRouterEventArgs e);
 
         #endregion 方法
     }

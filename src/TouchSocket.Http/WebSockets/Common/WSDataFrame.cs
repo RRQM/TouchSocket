@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Text;
 using TouchSocket.Core;
 
@@ -83,13 +84,10 @@ namespace TouchSocket.Http.WebSockets
                 {
                     return this.m_payloadLength;
                 }
-                return this.PayloadData != null ? this.PayloadData.Len : 0;
+                return this.PayloadData != null ? this.PayloadData.Length : 0;
             }
 
-            set
-            {
-                this.m_payloadLength = value;
-            }
+            set => this.m_payloadLength = value;
         }
 
         /// <summary>
@@ -116,11 +114,11 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.PayloadData == null)
             {
-                return WSTools.Build(byteBlock, this, new byte[0], 0, 0);
+                return WSTools.Build(byteBlock, this, ReadOnlyMemory<byte>.Empty);
             }
             else
             {
-                return WSTools.Build(byteBlock, this, this.PayloadData.Buffer, 0, this.PayloadLength);
+                return WSTools.Build(byteBlock, this, this.PayloadData.Memory);
             }
         }
 

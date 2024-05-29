@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// IWebSocketDmtpClient
     /// </summary>
-    public interface IWebSocketDmtpClient : IWebSocketDmtpClientBase, ISetupConfigObject, IConnectObject
+    public interface IWebSocketDmtpClient : IClient, IDmtpActorObject, IOnlineClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient,IIdClient
     {
     }
 }

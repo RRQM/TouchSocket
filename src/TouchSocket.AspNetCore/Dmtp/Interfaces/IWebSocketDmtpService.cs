@@ -11,16 +11,15 @@
 //------------------------------------------------------------------------------
 
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using TouchSocket.Core;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
     /// <summary>
     /// IWebSocketDmtpService服务器接口
     /// </summary>
-    public interface IWebSocketDmtpService : IDmtpService, ISetupConfigObject
+    public interface IWebSocketDmtpService : IDmtpService, IConnectableService
     {
         /// <summary>
         /// 转换客户端
@@ -28,24 +27,5 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <param name="context"></param>
         /// <returns></returns>
         Task SwitchClientAsync(HttpContext context);
-
-        /// <summary>
-        /// 重置Id
-        /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        void ResetId(string oldId, string newId);
-
-        /// <summary>
-        /// 获取所有的客户端
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<WebSocketDmtpSocketClient> GetClients();
-
-        /// <summary>
-        /// 获取所有在线客户端的Id集合。
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<string> GetIds();
     }
 }

@@ -207,13 +207,13 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public object GetAttribute(Type attributeType)
         {
-            object attribute = this.RpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
+            object attribute = this.RpcAttributes.FirstOrDefault((a) => attributeType.IsAssignableFrom(a.GetType()));
             if (attribute != null)
             {
                 return attribute;
             }
 
-            attribute = this.ServerRpcAttributes.FirstOrDefault((a) => { return attributeType.IsAssignableFrom(a.GetType()); });
+            attribute = this.ServerRpcAttributes.FirstOrDefault((a) => attributeType.IsAssignableFrom(a.GetType()));
             return attribute ?? default;
         }
 

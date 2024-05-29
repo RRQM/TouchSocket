@@ -126,10 +126,10 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public int ReadBytes(long pos, byte[] buffer, int offset, int length)
+        public int ReadBytes(long pos,Span<byte> span)
         {
             this.LastActiveTime = DateTime.Now;
-            return this.FileStorage.Read(pos, buffer, offset, length);
+            return this.FileStorage.Read(pos, span);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     return new FileSectionResult(ResultCode.Error, "数据块不一致。", default, fileSection);
                 }
                 var bufferByteBlock = new ByteBlock(fileSection.Length);
-                var r = this.FileStorage.Read(oldFileSection.Offset, bufferByteBlock.Buffer, 0, fileSection.Length);
+                var r = this.FileStorage.Read(oldFileSection.Offset, bufferByteBlock.TotalMemory.Span.Slice(0, fileSection.Length));
                 if (r != fileSection.Length)
                 {
                     return new FileSectionResult(ResultCode.Error, "读取长度不一致。", default, fileSection);
@@ -301,7 +301,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 }
                 else
                 {
-                    return this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value);
+                    return this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value.AsSegment());
                 }
             }
         }

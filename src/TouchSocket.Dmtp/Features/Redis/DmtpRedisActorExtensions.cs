@@ -36,7 +36,7 @@ namespace TouchSocket.Dmtp.Redis
         public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActorObject client)
         {
             var redisClient = client.DmtpActor.GetValue(DmtpRedisActorProperty);
-            return redisClient ?? throw new ArgumentException(TouchSocketDmtpResource.RedisActorNull.GetDescription());
+            return redisClient ?? throw new ArgumentException(TouchSocketDmtpResource.RedisActorNull);
         }
 
         /// <summary>

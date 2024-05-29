@@ -36,31 +36,28 @@ namespace TouchSocket.Modbus
             };
         }
 
-        /// <inheritdoc/>
-        public override bool CanSetDataHandlingAdapter => false;
+        ///// <inheritdoc/>
+        //public IModbusResponse 123SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+        //{
+        //    var waitData = this.m_waitHandlePool.GetWaitData(out var sign);
+        //    try
+        //    {
+        //        var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-        /// <inheritdoc/>
-        public IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
-        {
-            var waitData = this.m_waitHandlePool.GetWaitData(out var sign);
-            try
-            {
-                var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
+        //        this.ProtectedSend(modbusTcpRequest);
+        //        waitData.SetCancellationToken(token);
+        //        var waitDataStatus = waitData.Wait(millisecondsTimeout);
+        //        waitDataStatus.ThrowIfNotRunning();
 
-                this.Send(modbusTcpRequest);
-                waitData.SetCancellationToken(token);
-                var waitDataStatus = waitData.Wait(millisecondsTimeout);
-                waitDataStatus.ThrowIfNotRunning();
-
-                var response = waitData.WaitResult;
-                TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-                return response;
-            }
-            finally
-            {
-                this.m_waitHandlePool.Destroy(waitData);
-            }
-        }
+        //        var response = waitData.WaitResult;
+        //        TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
+        //        return response;
+        //    }
+        //    finally
+        //    {
+        //        this.m_waitHandlePool.Destroy(waitData);
+        //    }
+        //}
 
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
@@ -70,9 +67,9 @@ namespace TouchSocket.Modbus
             {
                 var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-                this.Send(modbusTcpRequest);
+                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureFalseAwait();
                 waitData.SetCancellationToken(token);
-                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout);
+                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = waitData.WaitResult;
@@ -93,13 +90,13 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        protected override async Task ReceivedData(UdpReceivedDataEventArgs e)
+        protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
             if (e.RequestInfo is ModbusTcpResponse response)
             {
                 this.m_waitHandlePool.SetRun(response);
             }
-            await base.ReceivedData(e);
+            await base.OnUdpReceived(e).ConfigureFalseAwait();
         }
     }
 }

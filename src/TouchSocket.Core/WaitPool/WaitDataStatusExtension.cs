@@ -37,7 +37,7 @@ namespace TouchSocket.Core
                 case WaitDataStatus.Default:
                 default:
                     {
-                        throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                        throw new Exception(TouchSocketCoreResource.UnknownError);
                     }
             }
         }

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -20,8 +21,8 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public static class NamedPipeServiceExtension
     {
-        /// <inheritdoc cref="IService.Start"/>
-        public static TService Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
+        public static void Start<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
         {
             TouchSocketConfig config;
             if (service.Config == null)
@@ -36,7 +37,24 @@ namespace TouchSocket.NamedPipe
                 config.SetPipeName(pipeName);
             }
             service.Start();
-            return service;
+        }
+
+        /// <inheritdoc cref="IServiceBase.StartAsync"/>
+        public static async Task StartAsync<TService>(this TService service, string pipeName) where TService : INamedPipeServiceBase
+        {
+            TouchSocketConfig config;
+            if (service.Config == null)
+            {
+                config = new TouchSocketConfig();
+                config.SetPipeName(pipeName);
+                await service.SetupAsync(config).ConfigureFalseAwait();
+            }
+            else
+            {
+                config = service.Config;
+                config.SetPipeName(pipeName);
+            }
+            await service.StartAsync().ConfigureFalseAwait();
         }
     }
 }
