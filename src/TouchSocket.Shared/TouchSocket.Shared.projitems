@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>ba463f9b-d28c-4c8a-aeb7-ecdc7fc1c3a1</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>TouchSocket.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Core\ThrowHelperCore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InternalVisible.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalClientCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalReceiver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\InternalReceiverResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Sockets\ThrowHelperSockets.cs" />
+  </ItemGroup>
+</Project>

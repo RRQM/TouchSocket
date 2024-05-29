@@ -44,6 +44,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc.SourceGener
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TouchSocket.Rpc.RateLimiting", "TouchSocket.Rpc.RateLimiting\TouchSocket.Rpc.RateLimiting.csproj", "{0D15A74A-3129-495E-A24A-D90145BD8DD8}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TouchSocket.Shared", "TouchSocket.Shared\TouchSocket.Shared.shproj", "{BA463F9B-D28C-4C8A-AEB7-ECDC7FC1C3A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,5 +130,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		TouchSocket.Shared\TouchSocket.Shared.projitems*{ba463f9b-d28c-4c8a-aeb7-ecdc7fc1c3a1}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
