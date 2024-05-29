@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\WebApiServer\WebApiProxy.cs" Link="WebApiProxy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+	  <PackageReference Include="TouchSocket.WebApi" Version="2.1.0-alpha.14" />
+  </ItemGroup>
+</Project>
