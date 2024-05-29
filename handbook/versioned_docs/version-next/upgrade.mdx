@@ -25,14 +25,26 @@ import Highlight from '@site/src/components/Highlight.js';
 
 **更新描述：**
 
-较大版本升级，有部分不兼容性升级。请在升级前做好备份。
+大版本升级，有部分不兼容性升级。所以请在升级前做好备份，同时在升级之后，请务必阅读[v2.1升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/I9QSDK)。
+
+**更新亮点：**
+
+本次更新，主要有以下亮点：
+
+1. 从net45开始，全系支持Span、ValueTask、Memory、Unsafe等操作。大幅提升并发性能与低GC能力。
+2. 全系组件，尽量多的提供了异步Api，这可能会降低小部分串行执行能力，但是会大幅度提个并发能力。
+3. 重构fast序列化，Package包模式、Http、WebSocket等组件，使之更加易用。
 
 **更新详情：**
 
 #### 【TouchSokcet.Core】
 
-- &nbsp;<Tag>修复</Tag> UdpPackage适配器在工作时调时导致的bug。 [#I9SYTR](https://gitee.com/RRQM_Home/TouchSocket/issues/I9SYTR)。
-- &nbsp;<Tag>修复</Tag> Http在GetBoundary时bug。 [#I9PXWT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PXWT)。
+- &nbsp;<Tag>新增</Tag> TouchSocketBitConverter新增To、UnsafeTo、WriteBytes、UnsafeWriteBytes等可以直接操作Span。 
+- &nbsp;<Tag>新增</Tag> Crc类新增Span相关转换。 
+- &nbsp;<Tag>调整</Tag> 分离MemoryCache的同步和异步接口。 
+- &nbsp;<Tag>调整</Tag> ByteBlock取消Stream的继承，如果需要使用Stream，可以使用ByteBlock.AsStream()。 
+- &nbsp;<Tag>调整</Tag> Gzip类调整ByteBlock参数为Stream。 
+ 
 
 
 
