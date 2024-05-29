@@ -51,7 +51,7 @@ const config = {
             next: {
               label: '2.1.0-alpha',
               path: '/next',
-              banner: 'unreleased'
+              banner: 'none'
             }
           },
         },
