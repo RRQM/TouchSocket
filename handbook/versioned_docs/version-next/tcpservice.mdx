@@ -130,32 +130,15 @@ service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客�
 service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
 service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
 service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
-service.Received = (client, e) =>
+service.Received = async (client, e) =>
 {
     //从客户端收到信息
-    var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
-
-    client.Send(mes);//将收到的信息直接返回给发送方
-
-    //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
-
-    //将收到的信息返回给在线的所有客户端。
-    //注意：这里只是一个建议思路，实际上群发应该使用生产者消费者模式设计
-    //var ids = service.GetIds();
-    //foreach (var clientId in ids)
-    //{
-    //    if (clientId != client.Id)//不给自己发
-    //    {
-    //        service.Send(clientId, mes);
-    //    }
-    //}
-
-    return EasyTask.CompletedTask;
 };
 
 await service.SetupAsync(new TouchSocketConfig()//载入配置
-     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//可以同时监听两个地址
      .ConfigureContainer(a =>//容器的配置顺序应该在最前面
      {
          a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -170,7 +153,7 @@ await service.StartAsync();//启动
 
 :::info 温馨提示
 
-Service.Start()方法并不会阻塞当前运行，所以当在控制台运行时，可能需要使用Console.ReadKey()等操作进行阻塞。
+Service.StartAsync()方法并不会阻塞当前运行，所以当在控制台运行时，可能需要使用Console.ReadKey()等操作进行阻塞。
 
 :::  
 
@@ -190,9 +173,9 @@ public sealed class MySessionClient : TcpSessionClient
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
-        
+
         await base.OnTcpReceived(e);
     }
 }
@@ -228,7 +211,7 @@ public class MyService : TcpService<MySessionClient>
 }
 ```
 
-（3）创建服务器（包含MyService）。
+（3）创建服务器。
 
 ```csharp showLineNumbers
 MyService service = new MyService();
