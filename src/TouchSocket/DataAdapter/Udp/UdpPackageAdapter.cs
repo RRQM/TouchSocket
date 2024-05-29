@@ -196,7 +196,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class UdpPackageAdapter : UdpDataHandlingAdapter
     {
-        private readonly SnowflakeIdGenerator m_iDGenerator;
         private readonly ConcurrentDictionary<long, UdpPackage> m_revStore;
         private int m_mtu = 1472;
 
@@ -206,7 +205,6 @@ namespace TouchSocket.Sockets
         public UdpPackageAdapter()
         {
             this.m_revStore = new ConcurrentDictionary<long, UdpPackage>();
-            this.m_iDGenerator = new SnowflakeIdGenerator(4);
         }
 
         /// <summary>
@@ -270,7 +268,7 @@ namespace TouchSocket.Sockets
             {
                 throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            var id = this.m_iDGenerator.NextId();
+            var id = TouchSocketCoreUtility.GenerateRandomInt64();
             var off = 0;
             var surLen = length;
             var freeRoom = this.m_mtu - 11;
@@ -327,7 +325,7 @@ namespace TouchSocket.Sockets
             {
                 throw new OverlengthException("发送数据大于设定值，相同解析器可能无法收到有效数据，已终止发送");
             }
-            var id = this.m_iDGenerator.NextId();
+            var id = TouchSocketCoreUtility.GenerateRandomInt64();
             var off = 0;
             var surLen = length;
             var freeRoom = this.m_mtu - 11;

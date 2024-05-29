@@ -134,7 +134,7 @@ namespace TouchSocket.Http
                 strs = strs[1].Split('=');
                 if (strs.Length == 2)
                 {
-                    return strs[1].Trim();
+                    return strs[1].Replace("\"",string.Empty).Trim();
                 }
             }
             return string.Empty;
