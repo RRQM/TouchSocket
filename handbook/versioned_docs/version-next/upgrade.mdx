@@ -19,9 +19,94 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v2.1.0-alpha
+
+**更新日期：** 2024.5.29
+
+**更新描述：**
+
+较大版本升级，有部分不兼容性升级。请在升级前做好备份。
+
+**更新详情：**
+
+#### 【TouchSokcet.Core】
+
+- &nbsp;<Tag>修复</Tag> UdpPackage适配器在工作时调时导致的bug。 [#I9SYTR](https://gitee.com/RRQM_Home/TouchSocket/issues/I9SYTR)。
+- &nbsp;<Tag>修复</Tag> Http在GetBoundary时bug。 [#I9PXWT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PXWT)。
+
+
+
+
+## v2.0.9
+
+**更新日期：** 2024.5.29
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> UdpPackage适配器在工作时调时导致的bug。 [#I9SYTR](https://gitee.com/RRQM_Home/TouchSocket/issues/I9SYTR)。
+- &nbsp;<Tag>修复</Tag> Http在GetBoundary时bug。 [#I9PXWT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PXWT)。
+
+
+
+## v2.0.(7)8
+
+**更新日期：** 2024.5.17
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> udp首次建立连接无法接收数据的bug。 [#I9PV7C](https://gitee.com/RRQM_Home/TouchSocket/issues/I9PV7C)。
+
+## v2.0.6
+
+**更新日期：** 2024.5.12
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> FlowGate的waitTime小于0时bug。
+
+
+## v2.0.5
+
+**更新日期：** 2024.5.2
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> wsclient Received事件与插件触发bug。[#I9L9WI](https://gitee.com/RRQM_Home/TouchSocket/issues/I9L9WI)。
+- &nbsp;<Tag>修复</Tag> ws命令行执行bug。
+
+## v2.0.4
+
+**更新日期：** 2024.4.30
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>修复</Tag> linux平台下，Socket吞吐量大幅降低。[#I9KURV](https://gitee.com/RRQM_Home/TouchSocket/issues/I9KURV)。
+- &nbsp;<Tag>修复</Tag> WebSocket在进行连接时，Host的Header写法错误，没有包含端口。[#I9KUVI](https://gitee.com/RRQM_Home/TouchSocket/issues/I9KUVI)。
+
+
 ## v2.0.3
 
-**更新日期：**2024.4.14
+**更新日期：** 2024.4.14
 
 **更新描述：**
 
@@ -31,13 +116,13 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - &nbsp;<Tag>修复</Tag> Tcp在接收时，内存池释放存在延迟，可能导致内存池快速扩张，浪费内存。[#I9FVAA](https://gitee.com/RRQM_Home/TouchSocket/issues/I9FVAA)。
 - &nbsp;<Tag>修复</Tag> 在使用Host模型时，注入瞬态的TcpClient，在第一次获取实例是正常的，第二次就失败。[#I9G3SV](https://gitee.com/RRQM_Home/TouchSocket/issues/I9G3SV)。
-- &nbsp;<Tag>修复</Tag> WebSessionClient连接其他服务器时显示 “操作已被取消”。[#I9GG05](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GG05)。
+- &nbsp;<Tag>修复</Tag> WebSocketClient连接其他服务器时显示 “操作已被取消”。[#I9GG05](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GG05)。
 - &nbsp;<Tag>新增</Tag> ConcurrentList新增实现IReadOnlyList接口。
 
 
 ## v2.0.2
 
-**更新日期：**2024.4.1
+**更新日期：** 2024.4.1
 
 **更新描述：**
 
@@ -53,7 +138,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ## v2.0.1
 
-**更新日期：**2024.3.16
+**更新日期：** 2024.3.16
 
 **更新描述：**
 
@@ -68,7 +153,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ## v2.0.0
 
-**更新日期：**2024.3.9
+**更新日期：** 2024.3.9
 
 **更新描述：**
 
