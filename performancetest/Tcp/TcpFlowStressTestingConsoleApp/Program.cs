@@ -36,10 +36,11 @@ namespace TcpFlowStressTestingConsoleApp
                 }
             };
             var service = new TcpService();
-            service.Received = (client, e) =>
+            service.Received = async (client, e) =>
             {
+                //await Task.Delay(10);
                 counter.Increment(e.ByteBlock.Length);
-                return EasyTask.CompletedTask;
+                await Task.CompletedTask;
             };
             service.Start(7789);
             service.Logger.Info("服务器已启动");
