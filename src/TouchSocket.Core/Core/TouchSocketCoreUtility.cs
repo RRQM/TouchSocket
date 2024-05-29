@@ -56,5 +56,12 @@ namespace TouchSocket.Core
 #else
         public static readonly byte[] ZeroBytes = Array.Empty<byte>();
 #endif
+
+        private static int s_seed;
+
+        public static long GenerateRandomInt64()
+        {
+            return (long)Math.Floor((new Random(s_seed++)).NextDouble() * 10000000D);
+        }
     }
 }
