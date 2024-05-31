@@ -44,7 +44,7 @@ namespace WebSocketConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
+                    a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IWebSocket c, WSDataFrameEventArgs e) =>
                     {
                         client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
                         await e.InvokeNext();
@@ -441,7 +441,7 @@ namespace WebSocketConsoleApp
             }
 
             //当第一个参数，直接或间接实现ITcpClientBase接口时，会收集到当前请求的客户端，从而可以获取IP等。
-            public SumClass SumCommand(IHttpClientBase client, SumClass sumClass)
+            public SumClass SumCommand(IWebSocket webSocket , SumClass sumClass)
             {
                 sumClass.Sum = sumClass.A + sumClass.B;
                 return sumClass;
