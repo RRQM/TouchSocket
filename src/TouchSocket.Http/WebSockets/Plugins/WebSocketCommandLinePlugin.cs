@@ -75,7 +75,7 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         private async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Text)
+            if (e.DataFrame.Opcode != WSDataType.Text)
             {
                 await e.InvokeNext();
                 return;
