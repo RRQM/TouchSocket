@@ -27,9 +27,9 @@ namespace CustomAdapterConsoleApp
                     //构建发送数据
                     using (var byteBlock = new ByteBlock(1024))
                     {
-                        byteBlock.Write((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                        byteBlock.Write((byte)myRequestInfo.DataType);//然后数据类型
-                        byteBlock.Write((byte)myRequestInfo.OrderType);//然后指令类型
+                        byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                        byteBlock.WriteByte((byte)myRequestInfo.DataType);//然后数据类型
+                        byteBlock.WriteByte((byte)myRequestInfo.OrderType);//然后指令类型
                         byteBlock.Write(myRequestInfo.Body);//再写数据
                         client.Send(byteBlock.Memory);
                     }
@@ -114,7 +114,7 @@ namespace CustomAdapterConsoleApp
             //此操作实际上有两个作用，
             //1.填充header
             //2.将byteBlock.Pos递增3的长度。
-            byteBlock.Read(out var header, 3);//填充header
+            var header = byteBlock.ReadToSpan(3);//填充header
 
             //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
             //所有只需呀再读取header[0]-2个长度即可。
@@ -131,11 +131,11 @@ namespace CustomAdapterConsoleApp
                 //此操作实际上有两个作用，
                 //1.填充body
                 //2.将byteBlock.Pos递增bodyLength的长度。
-                byteBlock.Read(out var body, bodyLength);
+                var body = byteBlock.ReadToSpan(bodyLength);
 
                 myRequestInfo.DataType = header[1];
                 myRequestInfo.OrderType = header[2];
-                myRequestInfo.Body = body;
+                myRequestInfo.Body = body.ToArray();
                 request = myRequestInfo;//赋值ref
                 return FilterResult.Success;//返回成功
             }

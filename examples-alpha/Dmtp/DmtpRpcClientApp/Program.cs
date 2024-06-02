@@ -107,15 +107,6 @@ namespace DmtpClientApp
         {
             return a;
         }
-
-        [Description("≤‚ ‘out")]
-        [DmtpRpc(MethodInvoke = true)]
-        [MyRpcActionFilter]
-        public bool OutBytes(out byte[] bytes)
-        {
-            bytes = Encoding.UTF8.GetBytes("RRQM");
-            return true;
-        }
     }
 
     public class RegisterModel

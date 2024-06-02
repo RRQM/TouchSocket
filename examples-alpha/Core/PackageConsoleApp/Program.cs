@@ -85,10 +85,10 @@ namespace PackageConsoleApp
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             //基础类型直接写入。
-            byteBlock.Write(this.P1);
-            byteBlock.Write(this.P2);
-            byteBlock.Write(this.P3);
-            byteBlock.Write(this.P4);
+            byteBlock.WriteInt32(this.P1);
+            byteBlock.WriteString(this.P2);
+            byteBlock.WriteChar(this.P3);
+            byteBlock.WriteDouble(this.P4);
 
             //集合类型，可以先判断是否为null
             byteBlock.WriteIsNull(this.P5);
@@ -97,10 +97,10 @@ namespace PackageConsoleApp
                 //如果不为null
                 //就先写入集合长度
                 //然后遍历将每个项写入
-                byteBlock.Write(this.P5.Count);
+                byteBlock.WriteInt32(this.P5.Count);
                 foreach (var item in this.P5)
                 {
-                    byteBlock.Write(item);
+                    byteBlock.WriteInt32(item);
                 }
             }
 
@@ -111,10 +111,10 @@ namespace PackageConsoleApp
                 //如果不为null
                 //就先写入字典长度
                 //然后遍历将每个项，按键、值写入
-                byteBlock.Write(this.P6.Count);
+                byteBlock.WriteInt32(this.P6.Count);
                 foreach (var item in this.P6)
                 {
-                    byteBlock.Write(item.Key);
+                    byteBlock.WriteInt32(item.Key);
                     byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
                 }
             }
@@ -175,7 +175,7 @@ namespace PackageConsoleApp
 
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.P1);
+            byteBlock.WriteDateTime(this.P1);
         }
 
         public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)

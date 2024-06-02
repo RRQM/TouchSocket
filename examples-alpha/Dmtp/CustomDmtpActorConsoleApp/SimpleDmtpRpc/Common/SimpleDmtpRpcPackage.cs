@@ -12,7 +12,7 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.Write(this.MethodName);
+            byteBlock.WriteString(this.MethodName);
         }
 
         public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)

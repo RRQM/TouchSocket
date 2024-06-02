@@ -26,13 +26,13 @@ namespace ModbusClientConsoleApp
 
             using (var valueByteBlock = new ValueByteBlock(1024))
             {
-                valueByteBlock.Write((ushort)2, EndianType.Big);//ABCD端序
-                valueByteBlock.Write((ushort)2000, EndianType.Little);//DCBA端序
-                valueByteBlock.Write(int.MaxValue, EndianType.BigSwap);//BADC端序
-                valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+                valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
+                valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
+                valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
+                valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
                 //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-                valueByteBlock.Write("Hello");
+                valueByteBlock.WriteString("Hello");
 
                 //写入到寄存器
                 client.WriteMultipleRegisters(1, 2, valueByteBlock.ToArray());

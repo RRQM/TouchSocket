@@ -27,9 +27,9 @@ namespace CustomFixedHeaderConsoleApp
                     //构建发送数据
                     using (var byteBlock = new ByteBlock(1024))
                     {
-                        byteBlock.Write((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                        byteBlock.Write((byte)myRequestInfo.DataType);//然后数据类型
-                        byteBlock.Write((byte)myRequestInfo.OrderType);//然后指令类型
+                        byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                        byteBlock.WriteByte((byte)myRequestInfo.DataType);//然后数据类型
+                        byteBlock.WriteByte((byte)myRequestInfo.OrderType);//然后指令类型
                         byteBlock.Write(myRequestInfo.Body);//再写数据
 
                         await client.SendAsync(byteBlock.Memory);
