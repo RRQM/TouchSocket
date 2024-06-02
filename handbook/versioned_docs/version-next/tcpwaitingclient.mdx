@@ -41,11 +41,11 @@ var waitClient = client.CreateWaitingClient(new WaitingOptions()
 });
 
 //然后使用SendThenReturn。
-byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
 Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
 IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
 ```
 
@@ -53,10 +53,10 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 ```csharp showLineNumbers
 var service = new TcpService();
-service.Start(7789);//启动服务器
+await service.StartAsync(7789);//启动服务器
 
 //在服务器中，找到指定Id的会话客户端
-if (service.TryGetClient("targetId",out var tcpSessionClient))
+if (service.TryGetClient("targetId", out var tcpSessionClient))
 {
     //调用CreateWaitingClient获取到IWaitingClient的对象。
     var waitClient = tcpSessionClient.CreateWaitingClient(new WaitingOptions()
@@ -76,18 +76,25 @@ if (service.TryGetClient("targetId",out var tcpSessionClient))
     //然后使用SendThenReturn。
     byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
     Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
-    
+
     //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-    ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+    ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
     IRequestInfo responseRequestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
 }
 ```
 
 :::tip 提示
 
-在SendThenReturn时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+在SendThenReturnAsync时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
 
 :::  
+
+:::caution 注意
+
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
+
+:::  
+
 
 :::danger 注意事项
 

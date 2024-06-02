@@ -74,16 +74,16 @@ partial class TcpServiceReceivedPlugin : PluginBase
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
-        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         if (mes == "close")
         {
             throw new CloseException(mes);
         }
         client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
 
-        client.Send(mes);//将收到的信息直接返回给发送方
+        client.SendAsync(mes);//将收到的信息直接返回给发送方
 
-        //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+        //client.SendAsync("id",mes);//将收到的信息返回给特定ID的客户端
 
         //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
         var ids = client.Service.GetIds();

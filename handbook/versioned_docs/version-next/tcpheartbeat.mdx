@@ -126,7 +126,7 @@ internal static class DependencyExtensions
     {
         try
         {
-            client.Send(new MyRequestInfo() { DataType = DataType.Ping }.PackageAsBytes());
+            client.SendAsync(new MyRequestInfo() { DataType = DataType.Ping }.PackageAsBytes());
             return true;
         }
         catch (Exception ex)
@@ -141,7 +141,7 @@ internal static class DependencyExtensions
     {
         try
         {
-            client.Send(new MyRequestInfo() { DataType = DataType.Pong }.PackageAsBytes());
+            client.SendAsync(new MyRequestInfo() { DataType = DataType.Pong }.PackageAsBytes());
             return true;
         }
         catch (Exception ex)
@@ -269,7 +269,7 @@ private static void Main(string[] args)
       });
     consoleAction.Add("2", "发送数据", () =>
       {
-          tcpClient.Send(new MyRequestInfo()
+          tcpClient.SendAsync(new MyRequestInfo()
           {
               DataType = DataType.Data,
               Data = Encoding.UTF8.GetBytes(Console.ReadLine())

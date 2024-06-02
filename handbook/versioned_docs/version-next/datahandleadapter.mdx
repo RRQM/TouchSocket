@@ -198,7 +198,7 @@ private static TcpService CreateService()
     service.Received = (client, e) =>
     {
         //从客户端收到信息
-        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
         return EasyTask.CompletedTask;
     };
@@ -255,7 +255,7 @@ public class MySessionClient : SimpleSessionClient
         byteBlock.Write(data);
         try
         {
-            this.Send(byteBlock);
+            this.SendAsync(byteBlock);
         }
         finally
         {
@@ -270,7 +270,7 @@ public class MySessionClient : SimpleSessionClient
         byteBlock.Write(data);
         try
         {
-            this.Send(byteBlock);
+            this.SendAsync(byteBlock);
         }
         finally
         {
@@ -285,7 +285,7 @@ public class MySessionClient : SimpleSessionClient
         byteBlock.Write(data);
         try
         {
-            this.Send(byteBlock);
+            this.SendAsync(byteBlock);
         }
         finally
         {
@@ -300,7 +300,7 @@ public class MySessionClient : SimpleSessionClient
         byteBlock.Write(data);
         try
         {
-            this.Send(byteBlock);
+            this.SendAsync(byteBlock);
         }
         finally
         {
@@ -355,7 +355,7 @@ public void Up_Go_SplicingSend(byte[] data)
     transferBytes.Add(new TransferByte(new byte[] { 1}));
     transferBytes.Add(new TransferByte(new byte[] { 1}));
     transferBytes.Add(new TransferByte(data));
-    this.Send(transferBytes);
+    this.SendAsync(transferBytes);
 }
 public void Down_Go_SplicingSend(byte[] data)
 {
@@ -363,7 +363,7 @@ public void Down_Go_SplicingSend(byte[] data)
     transferBytes.Add(new TransferByte(new byte[] { 0 }));
     transferBytes.Add(new TransferByte(new byte[] { 1 }));
     transferBytes.Add(new TransferByte(data));
-    this.Send(transferBytes);
+    this.SendAsync(transferBytes);
 }
 public void Up_Hold_SplicingSend(byte[] data)
 {
@@ -371,7 +371,7 @@ public void Up_Hold_SplicingSend(byte[] data)
     transferBytes.Add(new TransferByte(new byte[] { 1 }));
     transferBytes.Add(new TransferByte(new byte[] { 0 }));
     transferBytes.Add(new TransferByte(data));
-    this.Send(transferBytes);
+    this.SendAsync(transferBytes);
 }
 public void Down_Hold_SplicingSend(byte[] data)
 {
@@ -379,7 +379,7 @@ public void Down_Hold_SplicingSend(byte[] data)
     transferBytes.Add(new TransferByte(new byte[] { 0 }));
     transferBytes.Add(new TransferByte(new byte[] { 0 }));
     transferBytes.Add(new TransferByte(data));
-    this.Send(transferBytes);
+    this.SendAsync(transferBytes);
 }
 ```
 

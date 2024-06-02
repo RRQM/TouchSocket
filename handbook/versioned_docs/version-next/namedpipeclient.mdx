@@ -73,7 +73,7 @@ client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器
 client.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"客户端接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -111,7 +111,7 @@ class MyNamedPipeClient : NamedPipeClient
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
 
         await base.OnNamedPipeReceived(e);
@@ -145,7 +145,7 @@ var client = new NamedPipeClient();
 client.Received = (client, e) =>
 {
     //从服务器收到信息
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     Console.WriteLine($"接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -204,9 +204,9 @@ await client.ConnectAsync();
 NamedPipeClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
 
 ```csharp showLineNumbers
-public virtual void Send(byte[] buffer);
-public virtual void Send(ByteBlock byteBlock);
-public virtual void Send(byte[] buffer, int offset, int length);
+public virtual void SendAsync(byte[] buffer);
+public virtual void SendAsync(ByteBlock byteBlock);
+public virtual void SendAsync(byte[] buffer, int offset, int length);
 ```
 
 【异步发送】
@@ -220,7 +220,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 :::tip 提示
 
-框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+框架不仅内置了`SendAsync`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 ::: 
 

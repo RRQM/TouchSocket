@@ -106,7 +106,7 @@ using (var byteBlock = new ByteBlock())
     byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
     byteBlock.Write(jsonBytes);
 
-    tcpClient.Send(byteBlock);
+    tcpClient.SendAsync(byteBlock);
 }
 await Task.Delay(2000);
 ```
@@ -174,7 +174,7 @@ Dmtp提供协议发送数据，又叫协议扩展功能，就是对现有的Dmtp
 第一个参数为ushort类型，使用者可以**约定任意大于20数值**。
 
 ```csharp showLineNumbers
-client.Send(1000,Encoding.UTF8.GetBytes("RRQM"));
+client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
 ```
 
 :::caution 注意

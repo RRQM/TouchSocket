@@ -243,7 +243,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
                 if (!client.Client.IsClient)
                 {
-                    client.Send("我已收到");
+                    client.SendAsync("我已收到");
                 }
                 return;
 
@@ -440,13 +440,13 @@ if (service.TryGetClient(ids[0], out HttpSessionClient SessionClient))
 ### 6.2 发送文本类消息
 
 ```csharp showLineNumbers
-SessionClient.WebSocket.Send("Text");
+SessionClient.WebSocket.SendAsync("Text");
 ```
 
 ### 6.3 发送二进制消息
 
 ```csharp showLineNumbers
-SessionClient.WebSocket.Send(new byte[10]);
+SessionClient.WebSocket.SendAsync(new byte[10]);
 ```
 
 
@@ -462,7 +462,7 @@ frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
 
-SessionClient.WebSocket.Send(frame);
+SessionClient.WebSocket.SendAsync(frame);
 ```
 
 
@@ -481,7 +481,7 @@ foreach (var item in service.GetClients())
 {
     if (item.Protocol== Protocol.WebSocket)
     {
-        item.WebSocket.Send("广播");
+        item.WebSocket.SendAsync("广播");
     }
 }
 ```

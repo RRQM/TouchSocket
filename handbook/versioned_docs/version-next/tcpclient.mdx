@@ -98,7 +98,7 @@ tcpClient.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务
 tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息。但是一般byteBlock和requestInfo会根据适配器呈现不同的值。
-    var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     tcpClient.Logger.Info($"客户端接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -113,32 +113,30 @@ await tcpClient.SetupAsync(new TouchSocketConfig()
 
 await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 
-//Result result = tcpClient.TryConnect();//或者可以调用TryConnect
-//if (result.IsSuccess())
-//{
+Result result = await tcpClient.TryConnectAsync();//或者可以调用TryConnectAsync
+if (result.IsSuccess())
+{
 
-//}
+}
 
 tcpClient.Logger.Info("客户端成功连接");
-
-await tcpClient.SendAsync("RRQM");
 ```
 
 #### 6.2 继承实现
 
-一般继承实现的话，可以从TcpClientBase继承。
+一般继承实现的话，可以从`TcpClient`继承。如果有特殊需求，也可以从`TcpClientBase`继承。
 
 ```csharp showLineNumbers
 class MyTcpClient : TcpClient
 {
-    protected override Task OnTcpReceived(ReceivedDataEventArgs e)
+    protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        string mes =e.ByteBlock.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
-        return base.OnTcpReceived(e);
+        await base.OnTcpReceived(e);
     }
 }
 ```
@@ -170,7 +168,7 @@ var tcpClient = new TcpClient();
 tcpClient.Received = (client, e) =>
 {
     //从服务器收到信息
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     Console.WriteLine($"接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -190,9 +188,9 @@ await tcpClient.ConnectAsync("127.0.0.1:7789");
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
 ```csharp showLineNumbers
-public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
+public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
-    public Task OnTcpReceived(TcpClient client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -201,7 +199,7 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin<TcpClient>
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
-        return e.InvokeNext();
+        await e.InvokeNext();
     }
 }
 ```
@@ -226,7 +224,7 @@ await client.ConnectAsync();
 
 :::danger 注意
 
-当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。并且，当数据存于ByteBlock时，其实际的数据长度是ByteBlock.Length(Len)。而不是ByteBlock.Buffer.Length
+当接收数据时，ByteBlock与RequestInfo的值会根据适配器类型不同而不同。
 
 :::  
 
@@ -248,16 +246,75 @@ using (var receiver = client.CreateReceiver())
         {
             if (receiverResult.IsCompleted)
             {
+                Console.WriteLine($"客户端已断开，信息：{receiverResult.Message}");
                 //断开连接了
                 return;
             }
 
-            //从服务器收到信息。
-            var mes = Encoding.UTF8.GetString(receiverResult.ByteBlock.Buffer, 0, receiverResult.ByteBlock.Len);
-            client.Logger.Info($"客户端接收到信息：{mes}");
-
             //如果是适配器信息，则可以直接获取receiverResult.RequestInfo;
+            var requestInfo = receiverResult.RequestInfo;
+            var byteBlock = receiverResult.ByteBlock;
 
+            //从服务器收到信息。
+            var mes = byteBlock.Span.ToString(Encoding.UTF8);
+            client.Logger.Info($"客户端接收到信息：{mes}");
+        }
+    }
+}
+```
+
+在异步阻塞接收时，当接收的数据不满足解析条件时，还可以缓存起来，下次一起处理。
+
+例如：下列将演示接收字符串，当没有发现“\r\n”时，将缓存数据，直到发现重要字符。
+
+其中，`CacheMode`与`MaxCacheSize`是启用缓存的重要属性。`byteBlock.Seek`则是将已读取的数据游标移动至指定位置。
+
+```csharp {7-8,45} showLineNumbers
+var client = new TcpClient();
+await client.ConnectAsync("127.0.0.1:7789");//连接
+
+//receiver可以复用，不需要每次接收都新建
+using (var receiver = client.CreateReceiver())
+{
+    receiver.CacheMode = true;
+    receiver.MaxCacheSize = 1024 * 1024;
+
+    var rn = Encoding.UTF8.GetBytes("\r\n");
+    while (true)
+    {
+        //receiverResult每次接收完必须释放
+        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+        {
+            //收到的数据，此处的数据会根据适配器投递不同的数据。
+            var byteBlock = receiverResult.ByteBlock;
+            var requestInfo = receiverResult.RequestInfo;
+
+            if (receiverResult.IsCompleted)
+            {
+                //断开连接了
+                Console.WriteLine($"断开信息：{receiverResult.Message}");
+                return;
+            }
+
+            //在CacheMode下，byteBlock将不可能为null
+
+            var index = 0;
+            while (true)
+            {
+                var r = byteBlock.Span.Slice(index).IndexOf(rn);
+                if (r < 0)
+                {
+                    break;
+                }
+
+                var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
+                Console.WriteLine(str);
+
+                index += rn.Length;
+                index += r;
+            }
+
+            byteBlock.Seek(index);
         }
     }
 }
@@ -272,30 +329,26 @@ using (var receiver = client.CreateReceiver())
 
 ## 八、发送数据
 
-【同步发送】
-
-TcpClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
+TcpClient已经内置了发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 
 ```csharp showLineNumbers
-public virtual void Send(byte[] buffer);
-public virtual void Send(ByteBlock byteBlock);
-public virtual void Send(byte[] buffer, int offset, int length);
-```
-
-【异步发送】
-
-TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
-
-```csharp showLineNumbers
-public virtual Task SendAsync(byte[] buffer);
-public virtual Task SendAsync(byte[] buffer, int offset, int length);
+//原生
+public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
+public Task SendAsync(string id, IRequestInfo requestInfo);
 ```
 
 :::tip 提示
 
-框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+框架不仅内置了字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 ::: 
+
+:::caution 注意
+
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
+
+:::  
+
 
 # 九、断线重连
 

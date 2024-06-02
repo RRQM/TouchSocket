@@ -99,28 +99,26 @@ service.Connecting = (client, e) => { return EasyTask.CompletedTask; };//有客�
 service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
 service.Closing = (client, e) => { return EasyTask.CompletedTask; };//有客户端正在断开连接，只有当主动断开时才有效。
 service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接
-service.Received = (client, e) =>
+service.Received = async (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
 
-    client.Send(mes);//将收到的信息直接返回给发送方
+    await client.SendAsync(mes);//将收到的信息直接返回给发送方
 
-    //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+    //await client.SendAsync("id",mes);//将收到的信息返回给特定ID的客户端
 
-    //将收到的信息返回给在线的所有客户端。
-    //注意：这只是个设计建议，实际上群发应该使用生产者消费者的设计模式
+    ////将收到的信息返回给在线的所有客户端。
+    ////注意：这只是个设计建议，实际上群发应该使用生产者消费者的设计模式
     //var ids = service.GetIds();
     //foreach (var clientId in ids)
     //{
     //    if (clientId != client.Id)//不给自己发
     //    {
-    //        service.Send(clientId, mes);
+    //        await service.SendAsync(clientId, mes);
     //    }
     //}
-
-    return Task.CompletedTask;
 };
 
 await service.SetupAsync(new TouchSocketConfig()//载入配置
@@ -159,7 +157,7 @@ public class MySessionClient : NamedPipeSessionClient
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
         await base.OnNamedPipeReceived(e);
     }
@@ -299,7 +297,7 @@ var service = new NamedPipeService();
 service.Received = (client, e) =>
 {
     //从客户端收到信息
-    string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -461,9 +459,9 @@ if (service.TryGetClient(ids.First(), out var sessionClient))
 
 NamedPipeSessionClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
 ```csharp showLineNumbers
-public virtual void Send(byte[] buffer);
-public virtual void Send(ByteBlock byteBlock);
-public virtual void Send(byte[] buffer, int offset, int length);
+public virtual void SendAsync(byte[] buffer);
+public virtual void SendAsync(ByteBlock byteBlock);
+public virtual void SendAsync(byte[] buffer, int offset, int length);
 ```
 
 【异步发送】
@@ -487,9 +485,9 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 通过Id发送数据。
 
 ```csharp showLineNumbers
-public virtual void Send(string id, ByteBlock byteBlock);
-public virtual void Send(string id, byte[] buffer, int offset, int length);
-public virtual void Send(string id, byte[] buffer);
+public virtual void SendAsync(string id, ByteBlock byteBlock);
+public virtual void SendAsync(string id, byte[] buffer, int offset, int length);
+public virtual void SendAsync(string id, byte[] buffer);
 public virtual Task SendAsync(string id, ByteBlock byteBlock);
 public virtual Task SendAsync(string id, byte[] buffer, int offset, int length);
 public virtual Task SendAsync(string id, byte[] buffer);
@@ -497,7 +495,7 @@ public virtual Task SendAsync(string id, byte[] buffer);
 
 :::tip 提示
 
-框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+框架不仅内置了`SendAsync`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 :::  
 
