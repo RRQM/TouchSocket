@@ -21,7 +21,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 ## v2.1.0-alpha
 
-**更新日期：** 2024.5.29
+**更新日期：** 2024.6.2
 
 **更新描述：**
 
@@ -31,7 +31,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 本次更新，主要有以下亮点：
 
-1. 从net45开始，全系支持Span、ValueTask、Memory、Unsafe等操作。大幅提升并发性能与低GC能力。
+1. 从net45开始，全系支持Span、ValueTask、Memory、Unsafe等操作。大幅提升并发性能与低GC能力  <Highlight color="#e61cff">亮点</Highlight>
 2. 全系组件，尽量多的提供了异步Api，这可能会降低小部分串行执行能力，但是会大幅度提个并发能力。
 3. 重构fast序列化，Package包模式、Http、WebSocket等组件，使之更加易用。
 4. 资源国际化。本次更新会在内部使用中英双语信息提示，这在日志记录，堆栈跟踪等场景更加简单。
@@ -45,6 +45,7 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>新增</Tag> CustomDataHandlingAdapter新增`bool TryParseRequest(ref TByteBlock byteBlock, out TRequest request)`方法，可以同步完成适配器数据解析。 
 - &nbsp;<Tag>新增</Tag> SingleStreamDataAdapterTester泛型测试器，可以对TryParseRequest进行完整性测试。 
 - &nbsp;<Tag>新增</Tag> IPackage源生成器新增自定义PackageMember特性，用来定义打包的顺序和自定义转换器。 
+- &nbsp;<Tag>新增</Tag> SetupConfigObject的SetupAsync。 
 - &nbsp;<Tag>优化</Tag> CustomDataHandlingAdapter支持结构体作为泛型类型。 
 - &nbsp;<Tag>优化</Tag> Fast序列化支持自定义FastSerializerContext，这可以极大的利用源生成来决定序列化和反序列化。 
 - &nbsp;<Tag>调整</Tag> 分离MemoryCache的同步和异步接口。 
@@ -56,9 +57,10 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>调整</Tag> ByteBlock、ValueByteBlock均继承IByteBlock接口规范。
 - &nbsp;<Tag>移除</Tag> ByteBlock、ValueByteBlock移除Buffer属性，如果想获取有效数据，可以通过Memory、Span等获取，如果想获取容量可以使用TotalMemory属性。
  
+#### 【TouchSokcet.Sockets】
 
-
-
+- &nbsp;<Tag>调整</Tag> Tcp、Udp组件，默认情况下适配器将为null，并且可以正常工作。 
+- &nbsp;<Tag>调整</Tag> SocketClient、ISocketClient等服务器辅助类，改名为TcpSessionClient和ITcpSessionClient。 
 
 ## v2.0.9
 

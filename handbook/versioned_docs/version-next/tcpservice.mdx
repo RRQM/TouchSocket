@@ -266,29 +266,29 @@ await service.StartAsync();//启动
 ```csharp showLineNumbers
 var service = new TcpService();
 
-service.Setup(new TouchSocketConfig()//载入配置
-    .SetListenOptions(option =>
-    {
-        option.Add(new TcpListenOption()
-        {
-            IpHost = "127.0.0.1:7789",
-            Name = "server1",//名称用于区分监听
-            ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-            Adapter = () => new NormalDataHandlingAdapter(),//可以单独对当前地址监听，配置适配器
-                                                            //还有其他可配置项，都是单独对当前地址有效。
-        });
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+     .SetListenOptions(option =>
+     {
+         option.Add(new TcpListenOption()
+         {
+             IpHost = "127.0.0.1:7789",
+             Name = "server1",//名称用于区分监听
+             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+             Adapter = () => new NormalDataHandlingAdapter(),//可以单独对当前地址监听，配置适配器
+                                                             //还有其他可配置项，都是单独对当前地址有效。
+         });
 
-        option.Add(new TcpListenOption()
-        {
-            IpHost = 7790,
-            Name = "server2",//名称用于区分监听
-            ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
-            Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
-                                                            //还有其他可配置项，都是单独对当前地址有效。
-        });
-    }));
+         option.Add(new TcpListenOption()
+         {
+             IpHost = 7790,
+             Name = "server2",//名称用于区分监听
+             ServiceSslOption = null,//可以针对当前监听，单独启用ssl加密
+             Adapter = () => new FixedHeaderPackageAdapter(),//可以单独对当前地址监听，配置适配器
+                                                             //还有其他可配置项，都是单独对当前地址有效。
+         });
+     }));
 
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::info 温馨提示
@@ -335,7 +335,7 @@ var service = new TcpService();
 service.Received = (client, e) =>
 {
     //从客户端收到信息
-    var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+    var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
     client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
     return EasyTask.CompletedTask;
 };
@@ -366,7 +366,7 @@ await service.StartAsync();//启动
 ```csharp showLineNumbers
 public class MyPlugin : PluginBase, ITcpReceivedPlugin
 {
-    public Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
@@ -375,7 +375,7 @@ public class MyPlugin : PluginBase, ITcpReceivedPlugin
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
-        return e.InvokeNext();//如果本插件无法处理当前数据，请将数据转至下一个插件。
+        await e.InvokeNext();//如果本插件无法处理当前数据，请将数据转至下一个插件。
     }
 }
 ```
@@ -413,39 +413,109 @@ await service.StartAsync();
 下列将以插件为例：
 
 ```csharp showLineNumbers
-class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ITcpSessionClient>
+class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
 {
-    public async Task OnTcpConnected(ITcpSessionClient client, ConnectedEventArgs e)
+    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
     {
-        //receiver可以复用，不需要每次接收都新建
-        using (var receiver = client.CreateReceiver())
+        if (client is ITcpSessionClient sessionClient)
         {
-            while (true)
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = sessionClient.CreateReceiver())
             {
-                //receiverResult必须释放
-                using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                while (true)
                 {
-                    //收到的数据，此处的数据会根据适配器投递不同的数据。
-                    var byteBlock = receiverResult.ByteBlock;
-                    var requestInfo=receiverResult.RequestInfo;
-
-                    if (receiverResult.IsCompleted)
+                    //receiverResult每次接收完必须释放
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
-                        //断开连接了
-                        Console.WriteLine($"断开信息：{receiverResult.Message}");
-                        return;
-                    }
+                        //收到的数据，此处的数据会根据适配器投递不同的数据。
+                        var byteBlock = receiverResult.ByteBlock;
+                        var requestInfo = receiverResult.RequestInfo;
 
-                    //如果数据是从ByteBlock投递
-                    if (byteBlock!=null)
-                    {
-                        Console.WriteLine(Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len));
-                    }
+                        if (receiverResult.IsCompleted)
+                        {
+                            //断开连接了
+                            Console.WriteLine($"断开信息：{receiverResult.Message}");
+                            return;
+                        }
 
-                    //如果是适配器信息，则可以直接处理requestInfo;
+                        //如果数据是从ByteBlock投递
+                        if (byteBlock != null)
+                        {
+                            Console.WriteLine(byteBlock.Span.ToString(Encoding.UTF8));
+                        }
+
+                        //如果是适配器信息，则可以直接处理requestInfo;
+                    }
                 }
             }
         }
+
+        await e.InvokeNext();
+    }
+}
+```
+
+在异步阻塞接收时，当接收的数据不满足解析条件时，还可以缓存起来，下次一起处理。
+
+例如：下列将演示接收字符串，当没有发现“\r\n”时，将缓存数据，直到发现重要字符。
+
+其中，`CacheMode`与`MaxCacheSize`是启用缓存的重要属性。`byteBlock.Seek`则是将已读取的数据游标移动至指定位置。
+
+```csharp {10-11,48} showLineNumbers
+class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin
+{
+    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
+    {
+        if (client is ITcpSessionClient sessionClient)
+        {
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = sessionClient.CreateReceiver())
+            {
+                receiver.CacheMode = true;
+                receiver.MaxCacheSize = 1024 * 1024;
+
+                var rn = Encoding.UTF8.GetBytes("\r\n");
+                while (true)
+                {
+                    //receiverResult每次接收完必须释放
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                    {
+                        //收到的数据，此处的数据会根据适配器投递不同的数据。
+                        var byteBlock = receiverResult.ByteBlock;
+                        var requestInfo = receiverResult.RequestInfo;
+
+                        if (receiverResult.IsCompleted)
+                        {
+                            //断开连接了
+                            Console.WriteLine($"断开信息：{receiverResult.Message}");
+                            return;
+                        }
+
+                        //在CacheMode下，byteBlock将不可能为null
+                       
+                        var index = 0;
+                        while (true)
+                        {
+                            var r = byteBlock.Span.Slice(index).IndexOf(rn);
+                            if (r < 0)
+                            {
+                                break;
+                            }
+
+                            var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
+                            Console.WriteLine(str);
+
+                            index += rn.Length;
+                            index += r;
+                        }
+
+                        byteBlock.Seek(index);
+                    }
+                }
+            }
+        }
+
+        await e.InvokeNext();
     }
 }
 ```
@@ -458,19 +528,38 @@ class TcpServiceReceiveAsyncPlugin : PluginBase, ITcpConnectedPlugin<ITcpSession
 
 ## 十、发送数据
 
-按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**SessionClient**的实例，通过**该实例**即可将数据发送至**客户端**。
+按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**TcpSessionClient**的实例，并将其存以生成的Id为键，存在一个字典中。
 
-### 10.1 如何获取TcpSessionClient？
-
-（1）直接获取所有在线客户端
-
-通过`service.Clients`属性，获取当前在线的所有客户端。
+所以，service提供了一下原生方法，可以通过id直接将数据发送至指定客户端。
 
 ```csharp showLineNumbers
-foreach (var sessionClient in service.Clients)
-{
+//原生
+public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
+public Task SendAsync(string id, IRequestInfo requestInfo);
+```
 
+例如：
+
+```csharp showLineNumbers
+await service.SendAsync("id",Encoding.UTF8.GetBytes("hello"));
+```
+
+亦或者，可以先用id查到对应的TcpSessionClient，然后用其提供的方法直接发送。
+
+例如：
+
+```csharp showLineNumbers
+//尝试性获取
+if (service.TryGetClient("id", out var sessionClient))
+{
+    await sessionClient.SendAsync("hello");
 }
+```
+
+```csharp showLineNumbers
+//直接获取，如果id不存在，则会抛出异常
+var sessionClient = service.GetClient("id");
+await sessionClient.SendAsync("hello");
 ```
 
 :::caution 注意
@@ -479,60 +568,15 @@ foreach (var sessionClient in service.Clients)
 
 :::  
 
-（2）通过Id获取
+:::caution 注意
 
-先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetClient方法，获取到想要的客户端。
-
-```csharp showLineNumbers
-var ids = service.GetIds();
-if (service.TryGetClient(ids.First(), out var sessionClient))
-{
-}
-```
-
-### 10.2 发送
-
-【同步发送】
-
-SessionClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
-```csharp showLineNumbers
-public virtual void Send(byte[] buffer);
-public virtual void Send(ByteBlock byteBlock);
-public virtual void Send(byte[] buffer, int offset, int length);
-```
-
-【异步发送】
-
-TcpClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
-
-```csharp showLineNumbers
-public virtual Task SendAsync(byte[] buffer);
-public virtual Task SendAsync(ByteBlock byteBlock);
-public virtual Task SendAsync(byte[] buffer, int offset, int length);
-```
-
-:::tip 提示
-
-通过上述方法发送的数据，都会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
 
 :::  
 
-### 10.3 通过TcpService发送
-
-通过Id发送数据。
-
-```csharp showLineNumbers
-public virtual void Send(string id, ByteBlock byteBlock);
-public virtual void Send(string id, byte[] buffer, int offset, int length);
-public virtual void Send(string id, byte[] buffer);
-public virtual Task SendAsync(string id, ByteBlock byteBlock);
-public virtual Task SendAsync(string id, byte[] buffer, int offset, int length);
-public virtual Task SendAsync(string id, byte[] buffer);
-```
-
 :::tip 提示
 
-框架不仅内置了`Send`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+框架不仅内置了字节的发送，也扩展了**字符串**等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 :::  
 

@@ -183,13 +183,13 @@ client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ### 5.1 发送文本类消息
 
 ```csharp showLineNumbers
-client.Send("Text");
+client.SendAsync("Text");
 ```
 
 ### 5.2 发送二进制消息
 
 ```csharp showLineNumbers
-client.Send(new byte[10]);
+client.SendAsync(new byte[10]);
 ```
 
 ### 5.3 直接发送自定义构建的数据帧
@@ -204,7 +204,7 @@ frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
 
-client.Send(frame);
+client.SendAsync(frame);
 ```
 :::info 备注
 
@@ -265,7 +265,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
                 if (!client.Client.IsClient)
                 {
-                    client.Send("我已收到");
+                    client.SendAsync("我已收到");
                 }
                 return;
 
