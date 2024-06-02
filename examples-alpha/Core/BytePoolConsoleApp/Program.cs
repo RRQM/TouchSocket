@@ -53,10 +53,10 @@ namespace BytePoolConsoleApp
         {
             using (var byteBlock = new ByteBlock())
             {
-                byteBlock.Write(byte.MaxValue);//写入byte类型
-                byteBlock.Write(int.MaxValue);//写入int类型
-                byteBlock.Write(long.MaxValue);//写入long类型
-                byteBlock.Write("RRQM");//写入字符串类型
+                byteBlock.WriteByte(byte.MaxValue);//写入byte类型
+                byteBlock.WriteInt32(int.MaxValue);//写入int类型
+                byteBlock.WriteInt64(long.MaxValue);//写入long类型
+                byteBlock.WriteString("RRQM");//写入字符串类型
 
                 byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
@@ -123,7 +123,7 @@ namespace BytePoolConsoleApp
         /*新写法*/
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(Property);
+            byteBlock.WriteInt32(Property);
         }
 
         public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)

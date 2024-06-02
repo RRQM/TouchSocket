@@ -195,7 +195,6 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             var package = new SimpleDmtpRpcPackage()
             {
                 MethodName = methodName,
-                Route = id.HasValue(),
                 SourceId = this.DmtpActor.Id,
                 TargetId = id
             };

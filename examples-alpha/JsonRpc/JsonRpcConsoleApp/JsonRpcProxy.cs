@@ -90,32 +90,25 @@ public IRpcClient Client{get;private set; }
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String TestGetContext(System.String str,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestGetContext",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response = Client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{str};
+System.String returnData=(System.String)this.Client.Invoke("TestGetContext",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public async Task<System.String> TestGetContextAsync(System.String str,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestGetContext",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response =await Client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{str};
+return (System.String) await this.Client.InvokeAsync("TestGetContext",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -126,32 +119,25 @@ return (System.String)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public Newtonsoft.Json.Linq.JObject TestJObject(Newtonsoft.Json.Linq.JObject obj,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption,
-new object[]{obj},
-default);
-var @_response = Client.Invoke(@_request);
-return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
+object[] @_parameters = new object[]{obj};
+Newtonsoft.Json.Linq.JObject returnData=(Newtonsoft.Json.Linq.JObject)this.Client.Invoke("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync(Newtonsoft.Json.Linq.JObject obj,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption,
-new object[]{obj},
-default);
-var @_response =await Client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
+object[] parameters = new object[]{obj};
+return (Newtonsoft.Json.Linq.JObject) await this.Client.InvokeAsync("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, parameters);
 }
 
 ///<summary>
@@ -162,32 +148,25 @@ return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String TestJsonRpc(System.String str,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestJsonRpc",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response = Client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{str};
+System.String returnData=(System.String)this.Client.Invoke("TestJsonRpc",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public async Task<System.String> TestJsonRpcAsync(System.String str,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"TestJsonRpc",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response =await Client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{str};
+return (System.String) await this.Client.InvokeAsync("TestJsonRpc",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -198,32 +177,25 @@ return (System.String)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String Show(System.Int32 a,System.Int32 b,System.Int32 c,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"Show",typeof(System.String),invokeOption,
-new object[]{a,b,c},
-default);
-var @_response = Client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{a,b,c};
+System.String returnData=(System.String)this.Client.Invoke("Show",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public async Task<System.String> ShowAsync(System.Int32 a,System.Int32 b,System.Int32 c,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-var @_request = new RpcRequest(
-"Show",typeof(System.String),invokeOption,
-new object[]{a,b,c},
-default);
-var @_response =await Client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{a,b,c};
+return (System.String) await this.Client.InvokeAsync("Show",typeof(System.String),invokeOption, parameters);
 }
 
 }
@@ -237,24 +209,17 @@ public static class JsonRpcServerExtensions
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String TestGetContext<TClient>(this TClient client,System.String str,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestGetContext",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response = client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{str};
+System.String returnData=(System.String)client.Invoke("TestGetContext",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public static async Task<System.String> TestGetContextAsync<TClient>(this TClient client,System.String str,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestGetContext",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response =await client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{str};
+return (System.String) await client.InvokeAsync("TestGetContext",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -265,24 +230,17 @@ return (System.String)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public static Newtonsoft.Json.Linq.JObject TestJObject<TClient>(this TClient client,Newtonsoft.Json.Linq.JObject obj,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption,
-new object[]{obj},
-default);
-var @_response = client.Invoke(@_request);
-return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
+object[] @_parameters = new object[]{obj};
+Newtonsoft.Json.Linq.JObject returnData=(Newtonsoft.Json.Linq.JObject)client.Invoke("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public static async Task<Newtonsoft.Json.Linq.JObject> TestJObjectAsync<TClient>(this TClient client,Newtonsoft.Json.Linq.JObject obj,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption,
-new object[]{obj},
-default);
-var @_response =await client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
+object[] parameters = new object[]{obj};
+return (Newtonsoft.Json.Linq.JObject) await client.InvokeAsync("TestJObject",typeof(Newtonsoft.Json.Linq.JObject),invokeOption, parameters);
 }
 
 ///<summary>
@@ -293,24 +251,17 @@ return (Newtonsoft.Json.Linq.JObject)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String TestJsonRpc<TClient>(this TClient client,System.String str,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestJsonRpc",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response = client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{str};
+System.String returnData=(System.String)client.Invoke("TestJsonRpc",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public static async Task<System.String> TestJsonRpcAsync<TClient>(this TClient client,System.String str,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"TestJsonRpc",typeof(System.String),invokeOption,
-new object[]{str},
-default);
-var @_response =await client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{str};
+return (System.String) await client.InvokeAsync("TestJsonRpc",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -321,24 +272,17 @@ return (System.String)@_response.ReturnValue;
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String Show<TClient>(this TClient client,System.Int32 a,System.Int32 b,System.Int32 c,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"Show",typeof(System.String),invokeOption,
-new object[]{a,b,c},
-default);
-var @_response = client.Invoke(@_request);
-return (System.String)@_response.ReturnValue;
+object[] @_parameters = new object[]{a,b,c};
+System.String returnData=(System.String)client.Invoke("Show",typeof(System.String),invokeOption, @_parameters);
+return returnData;
 }
 ///<summary>
 ///无注释信息
 ///</summary>
 public static async Task<System.String> ShowAsync<TClient>(this TClient client,System.Int32 a,System.Int32 b,System.Int32 c,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
-var @_request = new RpcRequest(
-"Show",typeof(System.String),invokeOption,
-new object[]{a,b,c},
-default);
-var @_response =await client.InvokeAsync(@_request).ConfigureFalseAwait();
-return (System.String)@_response.ReturnValue;
+object[] parameters = new object[]{a,b,c};
+return (System.String) await client.InvokeAsync("Show",typeof(System.String),invokeOption, parameters);
 }
 
 }

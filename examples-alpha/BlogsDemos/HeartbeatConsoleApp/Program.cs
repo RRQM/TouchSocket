@@ -119,8 +119,8 @@ namespace HeartbeatConsoleApp
 
         public void Package(ByteBlock byteBlock)
         {
-            byteBlock.Write((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
-            byteBlock.Write((byte)this.DataType);
+            byteBlock.WriteUInt16((ushort)((this.Data == null ? 0 : this.Data.Length) + 1));
+            byteBlock.WriteByte((byte)this.DataType);
             if (this.Data != null)
             {
                 byteBlock.Write(this.Data);

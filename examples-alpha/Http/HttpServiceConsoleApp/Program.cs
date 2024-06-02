@@ -186,7 +186,7 @@ namespace ConsoleApp
                         //直接回应文件。
                       await  e.Context.Response
                             .SetStatus()//必须要有状态
-                            .FromFileAsync(@"D:\System\Windows.iso", e.Context.Request);
+                            .FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), e.Context.Request);
                     }
                     catch (Exception ex)
                     {

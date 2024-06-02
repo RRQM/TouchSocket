@@ -100,21 +100,21 @@ namespace AdapterConsoleApp
             {
                 if (this.m_surPlusLength == r)//接收长度正好等于剩余长度，组合完数据以后直接处理数据。
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandleAsync(this.m_tempByteBlock);
                     this.m_tempByteBlock = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)//接收长度大于剩余长度，先组合包，然后处理包，然后将剩下的分包。
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandleAsync(this.m_tempByteBlock);
                     this.m_tempByteBlock = null;
                     await this.SplitPackageAsync(buffer, this.m_surPlusLength, r);
                 }
                 else//接收长度小于剩余长度，无法处理包，所以必须先组合包，然后等下次接收。
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, r));
                     this.m_surPlusLength -= (byte)r;
                 }
             }
@@ -135,7 +135,7 @@ namespace AdapterConsoleApp
             //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
             using (var byteBlock = new ByteBlock(1024))
             {
-                byteBlock.Write((byte)length);//先写长度
+                byteBlock.WriteByte((byte)length);//先写长度
                 byteBlock.Write(memory.Span);//再写数据
                 await this.GoSendAsync(byteBlock.Memory);
             }
@@ -160,10 +160,10 @@ namespace AdapterConsoleApp
 
             using (var byteBlock = new ByteBlock(1024))
             {
-                byteBlock.Write((byte)dataLen);//先写长度
+                byteBlock.WriteByte((byte)dataLen);//先写长度
                 foreach (var item in transferBytes)
                 {
-                    byteBlock.Write(item.Array, item.Offset, item.Count);//依次写入
+                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));//依次写入
                 }
                 await this.GoSendAsync(byteBlock.Memory);
             }
@@ -185,9 +185,9 @@ namespace AdapterConsoleApp
                 //ByteBlock byteBlock = new ByteBlock(dataLen+1);//实际写法。
                 using (var byteBlock = new ByteBlock(1024))
                 {
-                    byteBlock.Write((byte)data.Length);//先写长度
-                    byteBlock.Write((byte)myClass.DataType);//然后数据类型
-                    byteBlock.Write((byte)myClass.OrderType);//然后指令类型
+                    byteBlock.WriteByte((byte)data.Length);//先写长度
+                    byteBlock.WriteByte((byte)myClass.DataType);//然后数据类型
+                    byteBlock.WriteByte((byte)myClass.OrderType);//然后指令类型
                     byteBlock.Write(data);//再写数据
                     await this.GoSendAsync(byteBlock.Memory);
                 }
@@ -225,7 +225,7 @@ namespace AdapterConsoleApp
                 if (recedSurPlusLength >= length)
                 {
                     var byteBlock = new ByteBlock(length);
-                    byteBlock.Write(dataBuffer, index + 1, length);
+                    byteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + 1, length));
                     await this.PreviewHandleAsync(byteBlock);
                     this.m_surPlusLength = 0;
                 }
@@ -233,7 +233,7 @@ namespace AdapterConsoleApp
                 {
                     this.m_tempByteBlock = new ByteBlock(length);
                     this.m_surPlusLength = (byte)(length - recedSurPlusLength);
-                    this.m_tempByteBlock.Write(dataBuffer, index + 1, recedSurPlusLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + 1, recedSurPlusLength));
                 }
                 index += length + 1;
             }

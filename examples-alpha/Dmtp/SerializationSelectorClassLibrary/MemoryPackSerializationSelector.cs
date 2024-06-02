@@ -1,32 +1,32 @@
 ﻿using MemoryPack;
 using System;
+using System.IO;
 using TouchSocket.Core;
 using TouchSocket.Dmtp.Rpc;
 
 namespace SerializationSelectorClassLibrary
 {
-    public class MemoryPackSerializationSelector : DefaultSerializationSelector
+    public class MemoryPackSerializationSelector : ISerializationSelector
     {
-        public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+        public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
         {
-            if ((byte)serializationType == 4)
-            {
-                return MemoryPackSerializer.Serialize(parameter.GetType(), parameter);
-            }
-            return base.SerializeParameter(serializationType, parameter);
+            var len = byteBlock.ReadInt32();
+            var span = byteBlock.ReadToSpan(len);
+            return MemoryPackSerializer.Deserialize(parameterType, span);
         }
 
-        public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+        public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
         {
-            if ((byte)serializationType == 4)
-            {
-                if (parameterBytes == null)
-                {
-                    return default;
-                }
-                return MemoryPackSerializer.Deserialize(parameterType, parameterBytes);
-            }
-            return base.DeserializeParameter(serializationType, parameterBytes, parameterType);
+            var pos = byteBlock.Position;
+            byteBlock.Seek(4, SeekOrigin.Current);
+            var memoryPackWriter = new MemoryPack.MemoryPackWriter<TByteBlock>(ref byteBlock, null);
+
+            MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
+
+            var newPos = byteBlock.Position;
+            byteBlock.Position = pos;
+            byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
+            byteBlock.Position = newPos;
         }
     }
 }

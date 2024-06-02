@@ -213,78 +213,16 @@ namespace ClientConsoleApp
     /// <summary>
     /// 序列化选择器
     /// </summary>
-    public class MySerializationSelector : SerializationSelector
+    public class MySerializationSelector : ISerializationSelector
     {
-        /// <summary>
-        /// 反序列化
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameterBytes"></param>
-        /// <param name="parameterType"></param>
-        /// <returns></returns>
-        public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+        public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
         {
-            if (parameterBytes == null)
-            {
-                return parameterType.GetDefault();
-            }
-            switch (serializationType)
-            {
-                case SerializationType.FastBinary:
-                    {
-                        var byteBlock = new ValueByteBlock(parameterBytes);
-                        return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType);
-                    }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
-                    }
-                case SerializationType.Json:
-                    {
-                        return Encoding.UTF8.GetString(parameterBytes).FromJsonString(parameterType);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
-                    }
-                default:
-                    throw new RpcException("未指定的反序列化方式");
-            }
+            throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 序列化参数
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+        public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
         {
-            if (parameter == null)
-            {
-                return null;
-            }
-            switch (serializationType)
-            {
-                case SerializationType.FastBinary:
-                    {
-                        return FastBinaryFormatter.SerializeToBytes(parameter);
-                    }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinarySerialize(parameter);
-                    }
-                case SerializationType.Json:
-                    {
-                        return SerializeConvert.JsonSerializeToBytes(parameter);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlSerializeToBytes(parameter);
-                    }
-                default:
-                    throw new RpcException("未指定的序列化方式");
-            }
+            throw new NotImplementedException();
         }
     }
 }

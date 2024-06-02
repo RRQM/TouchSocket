@@ -128,7 +128,7 @@ namespace WebApiServerApp
         {
             if (id == "rrqm")
             {
-                await callContext.HttpContext.Response.FromFileAsync(@"D:\System\Windows.iso", callContext.HttpContext.Request);
+                await callContext.HttpContext.Response.FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), callContext.HttpContext.Request);
                 return "ok";
             }
             return "id不正确。";
@@ -168,7 +168,7 @@ namespace WebApiServerApp
                     Console.WriteLine($"fileName={item.FileName},name={item.Name}");
 
                     //写入实际数据
-                    File.WriteAllBytes(item.FileName, item.Data);
+                    File.WriteAllBytes(item.FileName, item.Data.ToArray());
                 }
             }
             return Task.FromResult("ok");

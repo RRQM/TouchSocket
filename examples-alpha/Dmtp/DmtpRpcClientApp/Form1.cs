@@ -118,10 +118,6 @@ namespace DmtpClientApp
 
         private void button7_Click(object sender, EventArgs e)
         {
-            //扩展调用时，首先要保证本地已有代理文件，然后调用和和本地调用一样。只是会多一个调用配置参数。
-            var result = this.m_client.GetDmtpRpcActor().OutBytes(out var bytes, InvokeOption.WaitInvoke);
-
-            MessageBox.Show(result.ToString());
         }
     }
 }
