@@ -219,7 +219,7 @@ public class MyTClient : TcpClient
     {
         Task.Run(()=> 
         {
-            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
             Console.WriteLine($"已接收到信息：{mes}");
         });
         return true;
@@ -237,7 +237,7 @@ public class MyTClient : TcpClient
         byteBlock.SetHolding(true);//异步前锁定
         Task.Run(()=> 
         {
-            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
             byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
             Console.WriteLine($"已接收到信息：{mes}");
         });

@@ -331,19 +331,19 @@ class MyNamedPipePlugin : PluginBase, INamedPipeConnectedPlugin, INamedPipeClose
 
     public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
     {
-        m_logger.Info("Disconnected");
+        this.m_logger.Info("Disconnected");
         await e.InvokeNext();
     }
 
     public async Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e)
     {
-        m_logger.Info("Connected");
+        this.m_logger.Info("Connected");
         await e.InvokeNext();
     }
 
     public async Task OnNamedPipeReceived(INamedPipeSession client, ReceivedDataEventArgs e)
     {
-        m_logger.Info(e.ByteBlock.ToString());
+        this.m_logger.Info(e.ByteBlock.ToString());
         await e.InvokeNext();
     }
 }
@@ -376,36 +376,103 @@ await service.StartAsync();
 下列将以插件为例：
 
 ```csharp showLineNumbers
-class NamedPipeServiceReceiveAsyncPlugin : PluginBase, INamedPipeConnectedPlugin<INamedPipeSessionClient>
+class NamedPipeServiceReceiveAsyncPlugin : PluginBase, INamedPipeConnectedPlugin
 {
-    public async Task OnNamedPipeConnected(INamedPipeSessionClient client, ConnectedEventArgs e)
+    public async Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e)
     {
-        //receiver可以复用，不需要每次接收都新建
-        using (var receiver = client.CreateReceiver())
+        if (client is INamedPipeSessionClient sessionClient)
         {
-            while (true)
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = sessionClient.CreateReceiver())
             {
-                //receiverResult必须释放
-                using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+                while (true)
                 {
-                    //收到的数据，此处的数据会根据适配器投递不同的数据。
-                    var byteBlock = receiverResult.ByteBlock;
-                    var requestInfo = receiverResult.RequestInfo;
-
-                    if (receiverResult.IsCompleted)
+                    //receiverResult每次接收完必须释放
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
-                        //断开连接了
-                        Console.WriteLine($"断开信息：{receiverResult.Message}");
-                        return;
-                    }
+                        //收到的数据，此处的数据会根据适配器投递不同的数据。
+                        var byteBlock = receiverResult.ByteBlock;
+                        var requestInfo = receiverResult.RequestInfo;
 
-                    //如果数据是从ByteBlock投递
-                    if (byteBlock != null)
+                        if (receiverResult.IsCompleted)
+                        {
+                            //断开连接了
+                            Console.WriteLine($"断开信息：{receiverResult.Message}");
+                            return;
+                        }
+
+                        //如果数据是从ByteBlock投递
+                        if (byteBlock != null)
+                        {
+                            Console.WriteLine(byteBlock.Span.ToString(Encoding.UTF8));
+                        }
+
+                        //如果是适配器信息，则可以直接处理requestInfo;
+                    }
+                }
+            }
+        }
+        
+    }
+}
+```
+
+在异步阻塞接收时，当接收的数据不满足解析条件时，还可以缓存起来，下次一起处理。
+
+例如：下列将演示接收字符串，当没有发现“\r\n”时，将缓存数据，直到发现重要字符。
+
+其中，`CacheMode`与`MaxCacheSize`是启用缓存的重要属性。`byteBlock.Seek`则是将已读取的数据游标移动至指定位置。
+
+```csharp showLineNumbers
+class NamedPipeServiceReceiveAsyncPlugin : PluginBase, INamedPipeConnectedPlugin
+{
+    public async Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e)
+    {
+        if (client is INamedPipeSessionClient sessionClient)
+        {
+            //receiver可以复用，不需要每次接收都新建
+            using (var receiver = sessionClient.CreateReceiver())
+            {
+                receiver.CacheMode = true;
+                receiver.MaxCacheSize = 1024 * 1024;
+
+                var rn = Encoding.UTF8.GetBytes("\r\n");
+                while (true)
+                {
+                    //receiverResult每次接收完必须释放
+                    using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
                     {
-                        Console.WriteLine(Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len));
-                    }
+                        //收到的数据，此处的数据会根据适配器投递不同的数据。
+                        var byteBlock = receiverResult.ByteBlock;
+                        var requestInfo = receiverResult.RequestInfo;
 
-                    //如果是适配器信息，则可以直接处理requestInfo;
+                        if (receiverResult.IsCompleted)
+                        {
+                            //断开连接了
+                            Console.WriteLine($"断开信息：{receiverResult.Message}");
+                            return;
+                        }
+
+                        //在CacheMode下，byteBlock将不可能为null
+
+                        var index = 0;
+                        while (true)
+                        {
+                            var r = byteBlock.Span.Slice(index).IndexOf(rn);
+                            if (r < 0)
+                            {
+                                break;
+                            }
+
+                            var str = byteBlock.Span.Slice(index, r).ToString(Encoding.UTF8);
+                            Console.WriteLine(str);
+
+                            index += rn.Length;
+                            index += r;
+                        }
+
+                        byteBlock.Seek(index);
+                    }
                 }
             }
         }
@@ -419,83 +486,57 @@ class NamedPipeServiceReceiveAsyncPlugin : PluginBase, INamedPipeConnectedPlugin
 
 :::  
 
-## 十一、发送数据
+## 十、发送数据
 
-按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**NamedPipeSessionClient**的实例，通过**该实例**即可将数据发送至**客户端**。
+按照架构图，每个客户端成功连接后，**服务器**都会创建一个派生自**NamedPipeSessionClient**的实例，并将其存以生成的Id为键，存在一个字典中。
 
-### 11.1 如何获取NamedPipeSessionClient？
-
-（1）直接获取所有在线客户端
-
-通过`service.GetClients`方法，获取当前在线的所有客户端。
+所以，service提供了一下原生方法，可以通过id直接将数据发送至指定客户端。
 
 ```csharp showLineNumbers
-foreach (var sessionClient in service.Clients)
-{
+//原生
+public Task SendAsync(string id, ReadOnlyMemory<byte> memory);
+public Task SendAsync(string id, IRequestInfo requestInfo);
+```
 
+例如：
+
+```csharp showLineNumbers
+await service.SendAsync("id",Encoding.UTF8.GetBytes("hello"));
+```
+
+亦或者，可以先用id查到对应的`NamedPipeSessionClient`，然后用其提供的方法直接发送。
+
+例如：
+
+```csharp showLineNumbers
+//尝试性获取
+if (service.TryGetClient("id", out var sessionClient))
+{
+    await sessionClient.SendAsync("hello");
 }
+```
+
+```csharp showLineNumbers
+//直接获取，如果id不存在，则会抛出异常
+var sessionClient = service.GetClient("id");
+await sessionClient.SendAsync("hello");
 ```
 
 :::caution 注意
 
-由于NamedPipeSessionClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用NamedPipeSessionClient.Id，然后再通过服务器查找。
+由于`NamedPipeSessionClient`的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用`NamedPipeSessionClient.Id`，然后再通过服务器查找。
 
 :::  
 
-（2）通过Id获取
+:::caution 注意
 
-先调用`service.GetIds`方法，获取当前在线的所有客户端的Id，然后选择需要的Id，通过TryGetClient方法，获取到想要的客户端。
-
-```csharp showLineNumbers
-var ids = service.GetIds();
-if (service.TryGetClient(ids.First(), out var sessionClient))
-{
-}
-```
-
-### 11.2 发送
-
-【同步发送】
-
-NamedPipeSessionClient已经内置了三种同步发送方法，直接调用就可以发送，如果发送失败，则会立即抛出异常。
-```csharp showLineNumbers
-public virtual void SendAsync(byte[] buffer);
-public virtual void SendAsync(ByteBlock byteBlock);
-public virtual void SendAsync(byte[] buffer, int offset, int length);
-```
-
-【异步发送】
-
-NamedPipeClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
-
-```csharp showLineNumbers
-public virtual Task SendAsync(byte[] buffer);
-public virtual Task SendAsync(ByteBlock byteBlock);
-public virtual Task SendAsync(byte[] buffer, int offset, int length);
-```
-
-:::tip 提示
-
-通过上述方法发送的数据，都会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
 
 :::  
 
-### 11.3 通过NamedPipeService发送
-
-通过Id发送数据。
-
-```csharp showLineNumbers
-public virtual void SendAsync(string id, ByteBlock byteBlock);
-public virtual void SendAsync(string id, byte[] buffer, int offset, int length);
-public virtual void SendAsync(string id, byte[] buffer);
-public virtual Task SendAsync(string id, ByteBlock byteBlock);
-public virtual Task SendAsync(string id, byte[] buffer, int offset, int length);
-public virtual Task SendAsync(string id, byte[] buffer);
-```
-
 :::tip 提示
 
-框架不仅内置了`SendAsync`字节的发送，也扩展了字符串等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
+框架不仅内置了字节的发送，也扩展了**字符串**等常见数据的发送。而且还包括了`TrySend`等不会抛出异常的发送方法。
 
 :::  
 

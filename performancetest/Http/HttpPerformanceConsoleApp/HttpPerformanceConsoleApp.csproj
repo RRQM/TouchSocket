@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -12,12 +12,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="BeetleX.FastHttpApi" Version="2.2.22.188" />
-	  <PackageReference Include="FastEndpoints" Version="5.24.0.1-beta" />
+	  <PackageReference Include="BeetleX.FastHttpApi" Version="2.2.24.425" />
+	  <PackageReference Include="FastEndpoints" Version="5.26.0" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.3" />
-	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.3" />
-	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.3" />
+	  <PackageReference Include="TouchSocket.Hosting" Version="2.0.10" />
+	  <PackageReference Include="TouchSocket.WebApi" Version="2.0.10" />
+	  <PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.10" />
 	</ItemGroup>
 
 	<!--<ItemGroup>
