@@ -52,7 +52,6 @@ title: 用户自定义适配器
 ```csharp showLineNumbers
 internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequestInfo>
 {
-
     /// <summary>
     /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
     /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
@@ -64,32 +63,32 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
     /// <param name="request">对象。</param>
     /// <param name="tempCapacity">缓存容量指导，指示当需要缓存时，应该申请多大的内存。</param>
     /// <returns></returns>
-    protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+    protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
     {
         //以下解析思路为一次性解析，不考虑缓存的临时对象。
 
-        if (byteBlock.CanReadLen < 3)
+        if (byteBlock.CanReadLength < 3)
         {
             return FilterResult.Cache;//当头部都无法解析时，直接缓存
         }
 
-        int pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
+        var pos = byteBlock.Position;//记录初始游标位置，防止本次无法解析时，回退游标。
 
-        MyRequestInfo myRequestInfo = new MyRequestInfo();
+        var myRequestInfo = new MyRequestInfo();
 
         //此操作实际上有两个作用，
         //1.填充header
         //2.将byteBlock.Pos递增3的长度。
-        byteBlock.Read(out byte[] header, 3);//填充header
+        var header = byteBlock.ReadToSpan(3);//填充header
 
         //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
         //所有只需呀再读取header[0]-2个长度即可。
-        byte bodyLength = (byte)(header[0] - 2);
+        var bodyLength = (byte)(header[0] - 2);
 
-        if (bodyLength > byteBlock.CanReadLen)
+        if (bodyLength > byteBlock.CanReadLength)
         {
             //body数据不足。
-            byteBlock.Pos = pos;//回退游标
+            byteBlock.Position = pos;//回退游标
             return FilterResult.Cache;
         }
         else
@@ -97,11 +96,11 @@ internal class MyCustomDataHandlingAdapter : CustomDataHandlingAdapter<MyRequest
             //此操作实际上有两个作用，
             //1.填充body
             //2.将byteBlock.Pos递增bodyLength的长度。
-            byteBlock.Read(out byte[] body, bodyLength);
+            var body = byteBlock.ReadToSpan(bodyLength);
 
             myRequestInfo.DataType = header[1];
             myRequestInfo.OrderType = header[2];
-            myRequestInfo.Body = body;
+            myRequestInfo.Body = body.ToArray();
             request = myRequestInfo;//赋值ref
             return FilterResult.Success;//返回成功
         }
@@ -129,28 +128,28 @@ internal class MyRequestInfo : IRequestInfo
 
 使用
 
-```csharp {7,30}
-static TcpClient CreateClient()
+```csharp {7,34} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
-    service.Received = (client,e) =>
+    service.Received = (client, e) =>
     {
         //从客户端收到信息
 
@@ -158,21 +157,21 @@ static TcpService CreateService()
         {
             client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
         }
-        return EasyTask.CompletedTask;
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
@@ -180,7 +179,7 @@ static TcpService CreateService()
 
 :::tip 提示
 
-使用自定义适配器的数据，只能通过IRequestInfo来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
+使用自定义适配器的数据，只能通过`IRequestInfo`来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
 
 :::  
 
