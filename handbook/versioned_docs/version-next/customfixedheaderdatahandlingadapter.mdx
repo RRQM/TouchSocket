@@ -65,19 +65,17 @@ public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
     /// </summary>
     public byte[] Body { get; set; }
 
-
-    public bool OnParsingBody(byte[] body)
+    public bool OnParsingBody(ReadOnlySpan<byte> body)
     {
         if (body.Length == this.BodyLength)
         {
-            this.Body = body;
+            this.Body = body.ToArray();
             return true;
         }
         return false;
     }
 
-
-    public bool OnParsingHeader(byte[] header)
+    public bool OnParsingHeader(ReadOnlySpan<byte> header)
     {
         //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
         this.BodyLength = header[0] - 2;
@@ -116,24 +114,24 @@ public class MyFixedHeaderCustomDataHandlingAdapter : CustomFixedHeaderDataHandl
 ## 四、使用
 
 ```csharp {7,30}
-static TcpClient CreateClient()
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
     service.Received = (client, e) =>
@@ -144,21 +142,21 @@ static TcpService CreateService()
         {
             client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
         }
-        return EasyTask.CompletedTask;
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
@@ -166,7 +164,7 @@ static TcpService CreateService()
 
 :::tip 提示
 
-使用自定义适配器的数据，只能通过IRequestInfo来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
+使用自定义适配器的数据，只能通过`IRequestInfo`来抛出，所以如果有传递其他数据的需求，可以多声明一些属性来完成。
 
 :::  
 

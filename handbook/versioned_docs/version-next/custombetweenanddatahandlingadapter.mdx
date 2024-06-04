@@ -42,22 +42,23 @@ title: 模板解析“区间数据”数据适配器
 /// </summary>
 class MyBetweenAndRequestInfo : IBetweenAndRequestInfo
 {
-    public void OnParsingBody(byte[] body)
+    public byte[] Body { get; private set; }
+
+    public void OnParsingBody(ReadOnlySpan<byte> body)
     {
-        //这里的Body应该为12##12
+        this.Body = body.ToArray();
     }
 
-    public bool OnParsingEndCode(byte[] endCode)
+    public bool OnParsingEndCode(ReadOnlySpan<byte> endCode)
     {
         return true;//该返回值决定，是否执行Receive
     }
 
-    public bool OnParsingStartCode(byte[] startCode)
+    public bool OnParsingStartCode(ReadOnlySpan<byte> startCode)
     {
         return true;
     }
 }
-
 ```
 
 新建MyCustomBetweenAndDataHandlingAdapter继承**CustomBetweenAndDataHandlingAdapter**，然后对StartCode、EndCode作出赋值，以此表明起始字符与结束字符的值。
@@ -68,11 +69,17 @@ class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapte
     public MyCustomBetweenAndDataHandlingAdapter()
     {
         this.MinSize = 5;//表示，实际数据体不会小于5，例如“**12##12##”数据，解析后会解析成“12##12”
+
+        this.m_startCode=Encoding.UTF8.GetBytes("**");//可以为0长度字节，意味着没有起始标识。
+        this.m_endCode=Encoding.UTF8.GetBytes("##");//必须为有效值。
     }
 
-    public override byte[] StartCode => Encoding.UTF8.GetBytes("**");//可以为0长度字节，意味着没有起始标识。
+    private readonly byte[] m_startCode;
+    private readonly byte[] m_endCode;
 
-    public override byte[] EndCode => Encoding.UTF8.GetBytes("##");//必须为有效值。
+    public override byte[] StartCode => m_startCode;
+
+    public override byte[] EndCode => m_endCode;
 
     protected override MyBetweenAndRequestInfo GetInstance()
     {
@@ -84,21 +91,52 @@ class MyCustomBetweenAndDataHandlingAdapter : CustomBetweenAndDataHandlingAdapte
 【接收】
 
 ```csharp showLineNumbers
-TcpService service = new TcpService();
-service.Received = (client, e) =>
+private static async Task<TcpClient> CreateClient()
 {
-    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (e.RequestInfo is MyBetweenAndRequestInfo myRequestInfo)
-    {
-        //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
-    }
-    return EasyTask.CompletedTask;
-};
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new MyCustomBetweenAndDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetTcpDataHandlingAdapter(() => { return new MyCustomBetweenAndDataHandlingAdapter(); }));//配置适配器
-service.Start();//启动
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+
+        if (e.RequestInfo is MyBetweenAndRequestInfo myRequest)
+        {
+            client.Logger.Info($"已从{client.Id}接收到：消息={Encoding.UTF8.GetString(myRequest.Body)}");
+        }
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new MyCustomBetweenAndDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
 ```
 
 :::tip 提示
