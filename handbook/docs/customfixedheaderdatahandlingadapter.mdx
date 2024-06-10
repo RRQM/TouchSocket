@@ -80,10 +80,14 @@ public class MyFixedHeaderRequestInfo : IFixedHeaderRequestInfo
     public bool OnParsingHeader(byte[] header)
     {
         //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.BodyLength = header[0] - 2;
-        this.DataType = header[1];
-        this.OrderType = header[2];
-        return true;
+        if (header.Length == 3)
+        {
+            this.BodyLength = header[0] - 2;
+            this.DataType = header[1];
+            this.OrderType = header[2];
+            return true;
+        }
+        return false;
     }
 }
 ```
