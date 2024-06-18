@@ -163,7 +163,7 @@ namespace TouchSocket.Sockets
             while (this.m_asyncBytes.TryDequeue(out var asyncByte))
             {
                 var block = new ByteBlock(asyncByte.Length);
-                block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                block.Write(new ReadOnlySpan<byte>(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length));
                 byteBlocks.Add(block);
             }
             return byteBlocks.Count > 0;

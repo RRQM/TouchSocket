@@ -18,9 +18,9 @@ namespace TouchSocket.Core
     public class RouterPackage : PackageBase, IReadonlyRouterPackage
     {
         /// <summary>
-        /// 标识是否路由
+        /// 获取是否路由此包数据。实际上是判断<see cref="TargetId"/>与<see cref="SourceId"/>是否有值。
         /// </summary>
-        public bool Route { get; set; }
+        public bool Route => this.TargetId.HasValue()&&this.SourceId.HasValue();
 
         /// <summary>
         /// 源Id
@@ -57,9 +57,8 @@ namespace TouchSocket.Core
         /// </summary>
         public virtual void PackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock
         {
-            byteBlock.Write(this.Route);
-            byteBlock.Write(this.SourceId);
-            byteBlock.Write(this.TargetId);
+            byteBlock.WriteString(this.SourceId, FixedHeaderType.Byte);
+            byteBlock.WriteString(this.TargetId, FixedHeaderType.Byte);
         }
 
         /// <summary>
@@ -95,9 +94,8 @@ namespace TouchSocket.Core
         /// <param name="byteBlock"></param>
         public virtual void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
-            this.Route = byteBlock.ReadBoolean();
-            this.SourceId = byteBlock.ReadString();
-            this.TargetId = byteBlock.ReadString();
+            this.SourceId = byteBlock.ReadString(FixedHeaderType.Byte);
+            this.TargetId = byteBlock.ReadString(FixedHeaderType.Byte);
         }
     }
 }

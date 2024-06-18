@@ -129,12 +129,17 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T BinaryDeserialize<T>(Stream stream, SerializationBinder binder = null)
         {
+            return (T)BinaryDeserialize(stream);
+        }
+
+        public static object BinaryDeserialize(Stream stream, SerializationBinder binder = null)
+        {
             var bf = new BinaryFormatter();
             if (binder != null)
             {
                 bf.Binder = binder;
             }
-            return (T)bf.Deserialize(stream);
+            return bf.Deserialize(stream);
         }
 
         /// <summary>

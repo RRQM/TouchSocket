@@ -37,8 +37,8 @@ namespace TouchSocket.Dmtp
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.Write(this.Random);
-            byteBlock.Write(this.ChannelId);
+            byteBlock.WriteBoolean(this.Random);
+            byteBlock.WriteInt32(this.ChannelId);
             byteBlock.WritePackage(this.Metadata);
         }
 

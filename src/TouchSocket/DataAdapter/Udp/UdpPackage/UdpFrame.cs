@@ -51,7 +51,7 @@ namespace TouchSocket.Sockets
             {
                 this.Id = TouchSocketBitConverter.Default.To<long>(span);
                 this.SN = TouchSocketBitConverter.Default.To<ushort>(span.Slice(8));
-                this.FIN = span[10].GetBit(7) == 1;
+                this.FIN = span[10].GetBit(7) == true;
                 if (this.FIN)
                 {
                     this.Data = length > 13 ? (new byte[length - 13]) : (new byte[0]);

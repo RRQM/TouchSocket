@@ -159,6 +159,7 @@ namespace TouchSocket.WebApi
                 }
 
                 await this.ResponseAsync(client, e.Context, invokeResult).ConfigureFalseAwait();
+                return;
             }
             await e.InvokeNext().ConfigureFalseAwait();
         }

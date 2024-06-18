@@ -71,7 +71,7 @@ namespace TouchSocket.Modbus
                 }
                 else
                 {
-                    code = code.SetBit(7, 0);
+                    code = code.SetBit(7, false);
                     this.FunctionCode = (FunctionCode)code;
                     this.m_isError = true;
                 }

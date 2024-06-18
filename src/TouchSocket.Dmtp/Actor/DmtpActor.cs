@@ -129,80 +129,7 @@ namespace TouchSocket.Dmtp
         {
         }
 
-        ///// <summary>
-        ///// 建立对点
-        ///// </summary>
-        ///// <exception cref="Exception"></exception>
-        ///// <exception cref="TokenVerifyException"></exception>
-        ///// <exception cref="TimeoutException"></exception>
-        //public virtual void Handshake(string verifyToken, string id, int millisecondsTimeout, Metadata metadata, CancellationToken token)
-        //{
-        //    if (this.Online)
-        //    {
-        //        return;
-        //    }
-
-        //    var args = new DmtpVerifyEventArgs()
-        //    {
-        //        Token = verifyToken,
-        //        Id = id,
-        //        Metadata = metadata
-        //    };
-
-        //    this.OnHandshaking(args).GetFalseAwaitResult();
-
-        //    var waitVerify = new WaitVerify()
-        //    {
-        //        Token = args.Token,
-        //        Id = args.Id,
-        //        Metadata = args.Metadata
-        //    };
-
-        //    var waitData = this.WaitHandlePool.GetWaitData(waitVerify);
-        //    waitData.SetCancellationToken(token);
-
-        //    try
-        //    {
-        //        this.SendJsonObject(P1_Handshake_Request, waitVerify);
-        //        switch (waitData.Wait(millisecondsTimeout))
-        //        {
-        //            case WaitDataStatus.SetRunning:
-        //                {
-        //                    var verifyResult = (WaitVerify)waitData.WaitResult;
-        //                    if (verifyResult.Status == 1)
-        //                    {
-        //                        this.Id = verifyResult.Id;
-        //                        this.Online = true;
-
-        //                        Task.Factory.StartNew(this.PrivateOnHandshaked, new DmtpVerifyEventArgs()
-        //                        {
-        //                            Id = verifyResult.Id,
-        //                            Metadata = verifyResult.Metadata,
-        //                            Token = verifyResult.Token,
-        //                        });
-        //                        verifyResult.Handle = true;
-        //                        break;
-        //                    }
-        //                    else
-        //                    {
-        //                        verifyResult.Handle = true;
-        //                        throw new TokenVerifyException(verifyResult.Message);
-        //                    }
-        //                }
-        //            case WaitDataStatus.Overtime:
-        //                throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
-        //            case WaitDataStatus.Canceled:
-        //            case WaitDataStatus.Disposed:
-        //            default:
-        //                throw new OperationCanceledException();
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        this.WaitHandlePool.Destroy(waitData);
-        //    }
-        //}
-
+       
         /// <summary>
         /// 建立对点
         /// </summary>
@@ -885,8 +812,7 @@ namespace TouchSocket.Dmtp
             var waitPing = new WaitPing
             {
                 TargetId = targetId,
-                SourceId = this.Id,
-                Route = targetId.HasValue()
+                SourceId = this.Id
             };
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
             try
@@ -957,12 +883,11 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public async Task CloseAsync(string msg)
         {
-            await this.SendCloseAsync(msg).ConfigureFalseAwait();
             await this.OnClosed(true, msg).ConfigureFalseAwait();
         }
 
         /// <inheritdoc/>
-        private async Task<bool> SendCloseAsync(string msg)
+        public async Task<bool> SendCloseAsync(string msg)
         {
             if (!this.Online)
             {
@@ -981,30 +906,6 @@ namespace TouchSocket.Dmtp
 
         #endregion 断开
 
-        //#region 协议同步发送
-
-        ///// <inheritdoc/>
-        //public virtual void 123Send(ushort protocol, byte[] buffer, int offset, int length)
-        //{
-        //    var transferBytes = new ArraySegment<byte>[]
-        //   {
-        //        new ArraySegment<byte>(DmtpMessage.Head),
-        //        new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(protocol)),
-        //        new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
-        //        new ArraySegment<byte>(buffer,offset,length)
-        //   };
-        //    this.OutputSend.Invoke(this, transferBytes);
-        //    this.LastActiveTime = DateTime.Now;
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual void 123Send(ushort protocol, ByteBlock byteBlock)
-        //{
-        //    this.123Send(protocol, byteBlock.Buffer, 0, byteBlock.Len);
-        //}
-
-        //#endregion 协议同步发送
-
         #region 协议异步发送
 
         /// <inheritdoc/>
@@ -1013,8 +914,8 @@ namespace TouchSocket.Dmtp
             using (var byteBlock=new ValueByteBlock(memory.Length+8)) 
             {
                 byteBlock.Write(DmtpMessage.Head);
-                byteBlock.Write(protocol, EndianType.Big);
-                byteBlock.Write(memory.Length, EndianType.Big);
+                byteBlock.WriteUInt16(protocol, EndianType.Big);
+                byteBlock.WriteInt32(memory.Length, EndianType.Big);
                 byteBlock.Write(memory.Span);
 
                 await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureFalseAwait();
@@ -1296,8 +1197,7 @@ namespace TouchSocket.Dmtp
                 ChannelId = id,
                 SourceId = this.Id,
                 TargetId = targetId,
-                Metadata = metadata,
-                Route = targetId.HasValue()
+                Metadata = metadata
             };
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitCreateChannel);
 

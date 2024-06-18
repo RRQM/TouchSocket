@@ -27,13 +27,13 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="rpcMethod"></param>
         /// <param name="dmtpRpcPackage"></param>
         /// <param name="resolver"></param>
-        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, DmtpRpcPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
+        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, IDmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
         {
             this.DmtpRpcPackage = dmtpRpcPackage;
         }
 
         /// <inheritdoc/>
-        public DmtpRpcPackage DmtpRpcPackage { get; }
+        public IDmtpRpcRequestPackage DmtpRpcPackage { get; }
 
         /// <inheritdoc/>
         public Metadata Metadata => this.DmtpRpcPackage.Metadata;

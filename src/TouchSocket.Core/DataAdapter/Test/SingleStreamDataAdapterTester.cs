@@ -165,7 +165,7 @@ namespace TouchSocket.Core
                     var surLen = this.m_bufferLength - block.Position;
                     if (surLen < asyncByte.Length)//不能完成写入
                     {
-                        block.Write(asyncByte.Buffer, asyncByte.Offset, surLen);
+                        block.Write(new ReadOnlySpan<byte>(asyncByte.Buffer, asyncByte.Offset, surLen));
                         var offset = surLen;
                         while (offset < asyncByte.Length)
                         {
@@ -180,7 +180,7 @@ namespace TouchSocket.Core
                     }
                     else//本次能完成写入
                     {
-                        block.Write(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length);
+                        block.Write(new ReadOnlySpan<byte>(asyncByte.Buffer, asyncByte.Offset, asyncByte.Length));
                         if (byteBlocks.Count > 10)
                         {
                             break;
@@ -206,7 +206,7 @@ namespace TouchSocket.Core
         {
             var block = BytePool.Default.GetByteBlock(this.m_bufferLength);
             var len = Math.Min(transferByte.Length - offset, this.m_bufferLength);
-            block.Write(transferByte.Buffer, offset, len);
+            block.Write(new ReadOnlySpan<byte>(transferByte.Buffer, offset, len));
             offset += len;
 
             return block;

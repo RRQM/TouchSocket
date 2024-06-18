@@ -74,46 +74,28 @@ namespace TouchSocket.Rpc
             this.OnBefore(targetMethod, value.InvokeKey, ref ps);
 
             object result = default;
-            RpcResponse response = default;
 
             switch (rpcMethod.TaskType)
             {
                 case TaskReturnType.Task:
                     {
-                        response = this.GetClient().Invoke(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes));
-                        result = EasyTask.CompletedTask;
+                        result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps);
                         break;
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        response = this.GetClient().Invoke(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes));
-                        result = value.GenericMethod.Invoke(default, response.ReturnValue);
+                        result = this.GetClient().InvokeAsync(invokeKey, rpcMethod.ReturnType, invokeOption, ps).GetFalseAwaitResult();
+                        result = value.GenericMethod.Invoke(default, result);
                         break;
                     }
                 case TaskReturnType.None:
                 default:
                     {
-                        if (rpcMethod.HasReturn)
-                        {
-                            response = this.GetClient().Invoke(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes));
-                            result = response.ReturnValue;
-                        }
-                        else
-                        {
-                            response = this.GetClient().Invoke(new RpcRequest(invokeKey, rpcMethod.ReturnType, invokeOption, ps, rpcMethod.ParameterTypes));
-                            result = default;
-                        }
+                        result = this.GetClient().Invoke(invokeKey, rpcMethod.ReturnType, invokeOption, ps);
                         break;
                     }
             }
-            if (rpcMethod.HasByRef)
-            {
-                for (var i = 0; i < ps.Length; i++)
-                {
-                    args[i] = response.Parameters[i];
-                }
-            }
-
+           
             this.OnAfter(targetMethod, invokeKey, ref args, ref result);
 
             return result;

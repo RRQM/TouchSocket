@@ -20,19 +20,13 @@ namespace TouchSocket.Core
     [Serializable]
     public class WaitResult : IWaitResult
     {
-        /// <summary>
-        /// 消息
-        /// </summary>
+        /// <inheritdoc/>
         public string Message { get; set; }
 
-        /// <summary>
-        /// 标记号
-        /// </summary>
-        public long Sign { get; set; }
+        /// <inheritdoc/>
+        public int Sign { get; set; }
 
-        /// <summary>
-        /// 状态
-        /// </summary>
+        /// <inheritdoc/>
         public byte Status { get; set; }
     }
 }

@@ -54,7 +54,7 @@ namespace TouchSocket.JsonRpc
 #endif
 
         [JsonIgnore]
-        public long Sign { get => (long)this.Id; set => this.Id = value; }
+        public int Sign { get => (int)this.Id; set => this.Id = value; }
 
         /// <inheritdoc/>
 #if NET6_0_OR_GREATER

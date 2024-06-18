@@ -40,9 +40,9 @@ namespace TouchSocket.Dmtp
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.Write(this.RunNow);
-            byteBlock.Write((byte)this.DataType);
-            byteBlock.Write(this.ChannelId);
+            byteBlock.WriteBoolean(this.RunNow);
+            byteBlock.WriteByte((byte)this.DataType);
+            byteBlock.WriteInt32(this.ChannelId);
 
             byteBlock.WriteByteBlock(this.Data);
         }

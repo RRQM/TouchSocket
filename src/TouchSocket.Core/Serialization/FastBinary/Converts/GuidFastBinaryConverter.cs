@@ -23,7 +23,7 @@ namespace TouchSocket.Core
 
         protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Guid obj)
         {
-            byteBlock.Write(obj);
+            byteBlock.WriteGuid(obj);
         }
     }
 }

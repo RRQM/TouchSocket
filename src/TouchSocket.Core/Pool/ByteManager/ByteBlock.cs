@@ -28,17 +28,25 @@ namespace TouchSocket.Core
     /// 字节块流
     /// </summary>
     [DebuggerDisplay("Length={Length},Position={Position},Capacity={Capacity}")]
-    public sealed partial class ByteBlock :DisposableObject, IByteBlock
+    public sealed partial class ByteBlock : DisposableObject, IByteBlock
     {
         private byte[] m_buffer;
         private BytePool m_bytePool;
-        private bool m_canReturn;
         private int m_dis;
         private bool m_holding;
         private int m_length;
         private int m_position;
 
         #region 构造函数
+
+        public ByteBlock(in ValueByteBlock valueByteBlock)
+        {
+            this.m_buffer = valueByteBlock.TotalMemory.GetArray().Array;
+            this.m_bytePool = valueByteBlock.BytePool;
+            this.m_position=valueByteBlock.Position;
+            this.m_length=valueByteBlock.Length;
+            this.m_dis = 1;
+        }
 
         /// <summary>
         ///  字节块流
@@ -48,7 +56,6 @@ namespace TouchSocket.Core
         {
             this.m_bytePool = BytePool.Default;
             this.m_buffer = BytePool.Default.Rent(byteSize);
-            this.m_canReturn = true;
         }
 
         /// <summary>
@@ -58,9 +65,8 @@ namespace TouchSocket.Core
         /// <param name="bytePool"></param>
         public ByteBlock(int byteSize, BytePool bytePool)
         {
-            this.m_bytePool = bytePool;
+            this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool);
             this.m_buffer = bytePool.Rent(byteSize);
-            this.m_canReturn = true;
         }
 
         /// <summary>
@@ -86,19 +92,15 @@ namespace TouchSocket.Core
 
         #region 属性
 
-        ///// <summary>
-        ///// 字节实例
-        ///// </summary>
-        //public byte[] Buffer => this.m_buffer;
         public ReadOnlyMemory<byte> Memory
         {
             get
             {
                 this.ThrowIfDisposed();
-                return new Memory<byte>(this.m_buffer, 0, this.m_length);
+                return new ReadOnlyMemory<byte>(this.m_buffer, 0, this.m_length);
             }
-        } 
-        
+        }
+
         public Memory<byte> TotalMemory
         {
             get
@@ -161,6 +163,10 @@ namespace TouchSocket.Core
         /// </summary>
         public bool Using => this.m_dis == 0;
 
+        public bool IsStruct => false;
+
+        public BytePool BytePool { get => this.m_bytePool; }
+
         /// <summary>
         /// 返回或设置索引对应的值。
         /// </summary>
@@ -204,17 +210,13 @@ namespace TouchSocket.Core
 
                 if (Interlocked.Increment(ref this.m_dis) == 1)
                 {
-                    if (this.m_canReturn)
-                    {
-                        this.m_bytePool.Return(this.m_buffer);
-                    }
+                    this.m_bytePool?.Return(this.m_buffer);
 
                     this.m_holding = false;
                     this.m_position = 0;
                     this.m_length = 0;
                     this.m_buffer = null;
                     this.m_bytePool = null;
-                    this.m_canReturn = false;
                 }
             }
             base.Dispose(disposing);
@@ -243,36 +245,34 @@ namespace TouchSocket.Core
         {
             this.ThrowIfDisposed();
 
-            if (this.Capacity==capacity)
+            if (this.Capacity == capacity)
             {
                 return;
             }
 
-            bool canReturn;
-
             byte[] bytes;
+            bool canReturn;
             if (this.m_bytePool == null)
             {
-                bytes = new byte[capacity];
+                this.m_bytePool = BytePool.Default;
                 canReturn = false;
             }
             else
             {
-                bytes = this.m_bytePool.Rent(capacity);
                 canReturn = true;
             }
+
+            bytes = this.m_bytePool.Rent(capacity);
 
             if (retainedData)
             {
                 Array.Copy(this.m_buffer, 0, bytes, 0, this.m_buffer.Length);
             }
 
-            if (this.m_canReturn)
+            if (canReturn)
             {
                 this.m_bytePool.Return(this.m_buffer);
             }
-
-            this.m_canReturn = canReturn;
             this.m_buffer = bytes;
         }
 
@@ -574,28 +574,25 @@ namespace TouchSocket.Core
 
         #endregion ToString
 
-        #region Enumerator
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<byte> GetEnumerator()
+        #region BufferWriter
+        public void Advance(int count)
         {
-            var pos = 0;
-            while (true)
-            {
-                if (pos < this.m_length)
-                {
-                    yield return this.m_buffer[pos++];
-                }
-                else
-                {
-                    yield break;
-                }
-            }
+            this.m_position += count;
+            this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        #endregion Enumerator
+        public Memory<byte> GetMemory(int sizeHint = 0)
+        {
+            this.ExtendSize(sizeHint);
+            return new Memory<byte>(this.m_buffer, this.m_position, this.m_buffer.Length - this.m_position);
+        }
+
+        public Span<byte> GetSpan(int sizeHint = 0)
+        {
+            this.ExtendSize(sizeHint);
+            return new Span<byte>(this.m_buffer, this.m_position, this.m_buffer.Length - this.m_position);
+        }
+
+        #endregion
     }
 }

@@ -28,7 +28,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 标记号
         /// </summary>
-        public long Sign { get; set; }
+        public int Sign { get; set; }
 
         /// <summary>
         /// 状态

@@ -56,8 +56,8 @@ namespace TouchSocket.Dmtp.FileTransfer
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.Package(ref byteBlock);
-            byteBlock.Write(this.MD5);
-            byteBlock.Write(this.Length);
+            byteBlock.WriteString(this.MD5);
+            byteBlock.WriteInt64(this.Length);
         }
 
         /// <inheritdoc/>

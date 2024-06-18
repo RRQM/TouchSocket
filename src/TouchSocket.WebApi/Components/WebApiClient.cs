@@ -25,6 +25,7 @@ namespace TouchSocket.WebApi
     /// </summary>
     public class WebApiClient : HttpClientBase, IWebApiClient
     {
+        private readonly object[] m_empty=new object[0];
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -46,302 +47,21 @@ namespace TouchSocket.WebApi
 
         #region Rpc调用
 
-        /////<inheritdoc/>
-        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        //{
-        //    var strs = invokeKey.Split(':');
-        //    if (strs.Length != 2)
-        //    {
-        //        throw new RpcException("不是有效的url请求。");
-        //    }
-        //    if (invokeOption == default)
-        //    {
-        //        invokeOption = InvokeOption.WaitInvoke;
-        //    }
 
-        //    var request = new HttpRequest(this);
-
-        //    switch (strs[0])
-        //    {
-        //        case "GET":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsGet();
-        //                break;
-        //            }
-        //        case "POST":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsPost();
-        //                if (parameters.Length > 0)
-        //                {
-        //                    request.FromJson(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]));
-        //                }
-        //                break;
-        //            }
-        //        default:
-        //            break;
-        //    }
-
-        //    this.PluginManager.Raise(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
-
-        //    using (var responseResult = this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).GetFalseAwaitResult())
-        //    {
-        //        var response = responseResult.Response;
-        //        this.PluginManager.Raise(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
-
-        //        if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
-        //        {
-        //            return default;
-        //        }
-
-        //        if (response.StatusCode == 200)
-        //        {
-        //            return this.Converter.Deserialize(null, response.GetBody(), returnType);
-        //        }
-        //        else if (response.StatusCode == 422)
-        //        {
-        //            throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.GetBody()).Message);
-        //        }
-        //        else
-        //        {
-        //            throw new RpcException(response.StatusMessage);
-        //        }
-        //    }
-        //}
-
-        /////<inheritdoc/>
-        //public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        //{
-        //    var strs = invokeKey.Split(':');
-        //    if (strs.Length != 2)
-        //    {
-        //        throw new RpcException("不是有效的url请求。");
-        //    }
-        //    if (invokeOption == default)
-        //    {
-        //        invokeOption = InvokeOption.WaitInvoke;
-        //    }
-
-        //    var request = new HttpRequest(this);
-
-        //    switch (strs[0])
-        //    {
-        //        case "GET":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsGet();
-        //                break;
-        //            }
-        //        case "POST":
-        //            {
-        //                request.InitHeaders()
-        //                .SetHost(this.RemoteIPHost.Host)
-        //                .SetUrl(strs[1].Format(parameters))
-        //                .AsPost();
-        //                if (parameters.Length > 0)
-        //                {
-        //                    request.FromJson(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]));
-        //                }
-        //                break;
-        //            }
-        //        default:
-        //            break;
-        //    }
-
-        //    this.PluginManager.Raise(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
-
-        //    using (var responseResult = this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).GetFalseAwaitResult())
-        //    {
-        //        var response = responseResult.Response;
-        //        this.PluginManager.Raise(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
-
-        //        if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
-        //        {
-        //            return;
-        //        }
-
-        //        if (response.StatusCode == 200)
-        //        {
-        //            return;
-        //        }
-        //        else if (response.StatusCode == 422)
-        //        {
-        //            throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.GetBody()).Message);
-        //        }
-        //        else
-        //        {
-        //            throw new RpcException(response.StatusMessage);
-        //        }
-        //    }
-        //}
-
-        /////<inheritdoc/>
-        //public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        //{
-        //    this.Invoke(invokeKey, invokeOption, ref parameters, null);
-        //}
-
-        /////<inheritdoc/>
-        //public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        //{
-        //    return this.Invoke(returnType, invokeKey, invokeOption, ref parameters, null);
-        //}
-
-        /////<inheritdoc/>
-        //public async Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        //{
-        //    var strs = invokeKey.Split(':');
-        //    if (strs.Length != 2)
-        //    {
-        //        throw new RpcException("不是有效的url请求。");
-        //    }
-        //    if (invokeOption == default)
-        //    {
-        //        invokeOption = InvokeOption.WaitInvoke;
-        //    }
-
-        //    var request = new HttpRequest(this);
-
-        //    switch (strs[0])
-        //    {
-        //        case "GET":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsGet();
-        //                break;
-        //            }
-        //        case "POST":
-        //            {
-        //                request.InitHeaders()
-        //                .SetHost(this.RemoteIPHost.Host)
-        //                .SetUrl(strs[1].Format(parameters))
-        //                .AsPost();
-        //                if (parameters.Length > 0)
-        //                {
-        //                    request.FromJson(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]));
-        //                }
-        //                break;
-        //            }
-        //        default:
-        //            break;
-        //    }
-
-        //    await this.PluginManager.RaiseAsync(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
-
-        //    using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
-        //    {
-        //        var response = responseResult.Response;
-        //        await this.PluginManager.RaiseAsync(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
-
-        //        if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
-        //        {
-        //            return;
-        //        }
-
-        //        if (response.StatusCode == 200)
-        //        {
-        //            return;
-        //        }
-        //        else if (response.StatusCode == 422)
-        //        {
-        //            throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.GetBody()).Message);
-        //        }
-        //        else
-        //        {
-        //            throw new RpcException(response.StatusMessage);
-        //        }
-        //    }
-        //}
-
-        /////<inheritdoc/>
-        //public async Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        //{
-        //    var strs = invokeKey.Split(':');
-        //    if (strs.Length != 2)
-        //    {
-        //        throw new RpcException("不是有效的url请求。");
-        //    }
-        //    if (invokeOption == default)
-        //    {
-        //        invokeOption = InvokeOption.WaitInvoke;
-        //    }
-
-        //    var request = new HttpRequest(this);
-
-        //    switch (strs[0])
-        //    {
-        //        case "GET":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsGet();
-        //                break;
-        //            }
-        //        case "POST":
-        //            {
-        //                request.InitHeaders()
-        //                    .SetHost(this.RemoteIPHost.Host)
-        //                    .SetUrl(strs[1].Format(parameters))
-        //                    .AsPost();
-        //                if (parameters.Length > 0)
-        //                {
-        //                    request.FromJson(SerializeConvert.ToJsonString(parameters[parameters.Length - 1]));
-        //                }
-        //                break;
-        //            }
-        //        default:
-        //            break;
-        //    }
-
-        //    await this.PluginManager.RaiseAsync(nameof(IWebApiPlugin.OnRequest), this, new WebApiEventArgs(request, default));
-
-        //    using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
-        //    {
-        //        var response = responseResult.Response;
-        //        await this.PluginManager.RaiseAsync(nameof(IWebApiPlugin.OnResponse), this, new WebApiEventArgs(request, response));
-
-        //        if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
-        //        {
-        //            return default;
-        //        }
-
-        //        if (response.StatusCode == 200)
-        //        {
-        //            return this.Converter.Deserialize(null, response.GetBody(), returnType);
-        //        }
-        //        else if (response.StatusCode == 422)
-        //        {
-        //            throw new RpcException(SerializeConvert.FromJsonString<ActionResult>(response.GetBody()).Message);
-        //        }
-        //        else
-        //        {
-        //            throw new RpcException(response.StatusMessage);
-        //        }
-        //    }
-        //}
-
-        public async Task<RpcResponse> InvokeAsync(RpcRequest rpcRequest)
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            var strs = rpcRequest.InvokeKey.Split(':');
+            var strs = invokeKey.Split(':');
             if (strs.Length != 2)
             {
                 throw new RpcException("不是有效的url请求。");
             }
-            var invokeOption = rpcRequest.InvokeOption ?? InvokeOption.WaitInvoke;
+            if (invokeOption == default)
+            {
+                invokeOption = InvokeOption.WaitInvoke;
+            }
 
+            parameters ??= m_empty;
             var request = new HttpRequest(this);
-            var parameters = rpcRequest.Parameters;
-            var returnType = rpcRequest.ReturnType;
 
             switch (strs[0])
             {
@@ -369,12 +89,12 @@ namespace TouchSocket.WebApi
                     break;
             }
 
-           await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default));
+            await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default));
 
-            using (var responseResult =await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
+            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
             {
                 var response = responseResult.Response;
-               await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response));
+                await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response));
 
                 if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {
@@ -383,15 +103,15 @@ namespace TouchSocket.WebApi
 
                 if (response.StatusCode == 200)
                 {
-                    if (rpcRequest.HasReturn)
+                    if (returnType != null)
                     {
-                        return new RpcResponse(this.Converter.Deserialize(null, response.GetBody(), returnType));
+                        return this.Converter.Deserialize(null, await response.GetBodyAsync().ConfigureFalseAwait(), returnType);
                     }
                     else
                     {
-                        return new RpcResponse();
+                        return default;
                     }
-                    
+
                 }
                 else if (response.StatusCode == 422)
                 {

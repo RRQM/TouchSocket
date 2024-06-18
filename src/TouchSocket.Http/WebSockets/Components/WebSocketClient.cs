@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -150,36 +151,6 @@ namespace TouchSocket.Http.WebSockets
             return this.WebSocket.ReadAsync(token);
         }
 
-        ///// <inheritdoc/>
-        //public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
-        //{
-        //    this.WebSocket.Send(dataFrame, endOfMessage);
-        //}
-
-        ///// <inheritdoc/>
-        //public void Send(string text, bool endOfMessage = true)
-        //{
-        //    this.WebSocket.Send(text, endOfMessage);
-        //}
-
-        ///// <inheritdoc/>
-        //public void Send(byte[] buffer, int offset, int length, bool endOfMessage = true)
-        //{
-        //    this.WebSocket.Send(buffer, offset, length, endOfMessage);
-        //}
-
-        ///// <inheritdoc/>
-        //public void Send(ByteBlock byteBlock, bool endOfMessage = true)
-        //{
-        //    this.WebSocket.Send(byteBlock, endOfMessage);
-        //}
-
-        ///// <inheritdoc/>
-        //public void Send(byte[] buffer, bool endOfMessage = true)
-        //{
-        //    this.WebSocket.Send(buffer, endOfMessage);
-        //}
-
         /// <inheritdoc/>
         public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
         {
@@ -193,15 +164,9 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public Task SendAsync(byte[] buffer, bool endOfMessage = true)
+        public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true)
         {
-            return this.WebSocket.SendAsync(buffer, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
-        {
-            return this.WebSocket.SendAsync(buffer, offset, length, endOfMessage);
+            return this.WebSocket.SendAsync(memory, endOfMessage);
         }
 
         /// <inheritdoc/>

@@ -91,7 +91,7 @@ namespace TouchSocket.Sockets
             {
                 foreach (var item in transferBytes)
                 {
-                    byteBlock.Write(item.Array, item.Offset, item.Count);
+                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                 }
                 await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
             }

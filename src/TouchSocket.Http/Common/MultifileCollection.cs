@@ -44,9 +44,12 @@ namespace TouchSocket.Http
         {
             if (this.m_request.ContentComplated == null || this.m_request.ContentComplated == true)
             {
-                var context = this.m_request.GetContent(CancellationToken.None) ?? throw new Exception("管道状态异常");
+                var context = this.m_request.GetContent(CancellationToken.None);
+
                 var boundary = $"--{this.m_request.GetBoundary()}".ToUTF8Bytes();
-                var indexs = context.IndexOfInclude(0, context.Length, boundary);
+
+               
+                var indexs = context.Span.IndexOfInclude(0, context.Length, boundary);
                 if (indexs.Count <= 0)
                 {
                     throw new Exception("没有发现由Boundary包裹的数据。");
@@ -58,8 +61,8 @@ namespace TouchSocket.Http
                     {
                         var internalFormFile = new InternalFormFile();
                         //files.Add(internalFormFile);
-                        var index = context.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
-                        var line = Encoding.UTF8.GetString(context, indexs[i] + 3, index - indexs[i] - 6);
+                        var index = context.Span.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
+                        var line = context.Span.Slice(indexs[i] + 3, index - indexs[i] - 6).ToString(Encoding.UTF8);
                         var lines = line.Split(new string[] { ";", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                         internalFormFile.DataPair = new NameValueCollection();
                         foreach (var item in lines)
@@ -72,10 +75,10 @@ namespace TouchSocket.Http
                         }
 
                         var length = indexs[i + 1] - (index + 2) - boundary.Length;
-                        var data = new byte[length];
-                        Array.Copy(context, index + 1, data, 0, length);
+                        //var data = new byte[length];
+                        //Array.Copy(context, index + 1, data, 0, length);
                         //string ssss = Encoding.UTF8.GetString(data);
-                        internalFormFile.Data = data;
+                        internalFormFile.Data = context.Slice(index + 1,length);
                         yield return internalFormFile;
                     }
                 }
@@ -102,21 +105,25 @@ namespace TouchSocket.Http
         {
             if (this.m_request.ContentComplated == null || this.m_request.ContentComplated == true)
             {
-                var context = await this.m_request.GetContentAsync(cancellationToken) ?? throw new Exception("管道状态异常");
+                var context =await this.m_request.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
+
                 var boundary = $"--{this.m_request.GetBoundary()}".ToUTF8Bytes();
-                var indexs = context.IndexOfInclude(0, context.Length, boundary);
+
+
+                var indexs = context.Span.IndexOfInclude(0, context.Length, boundary);
                 if (indexs.Count <= 0)
                 {
                     throw new Exception("没有发现由Boundary包裹的数据。");
                 }
-
+                //var files = new List<IFormFile>();
                 for (var i = 0; i < indexs.Count; i++)
                 {
                     if (i + 1 < indexs.Count)
                     {
                         var internalFormFile = new InternalFormFile();
-                        var index = context.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
-                        var line = Encoding.UTF8.GetString(context, indexs[i] + 3, index - indexs[i] - 6);
+                        //files.Add(internalFormFile);
+                        var index = context.Span.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
+                        var line = context.Span.Slice(indexs[i] + 3, index - indexs[i] - 6).ToString(Encoding.UTF8);
                         var lines = line.Split(new string[] { ";", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                         internalFormFile.DataPair = new NameValueCollection();
                         foreach (var item in lines)
@@ -129,13 +136,15 @@ namespace TouchSocket.Http
                         }
 
                         var length = indexs[i + 1] - (index + 2) - boundary.Length;
-                        var data = new byte[length];
-                        Array.Copy(context, index + 1, data, 0, length);
+                        //var data = new byte[length];
+                        //Array.Copy(context, index + 1, data, 0, length);
                         //string ssss = Encoding.UTF8.GetString(data);
-                        internalFormFile.Data = data;
+                        internalFormFile.Data = context.Slice(index + 1, length);
                         yield return internalFormFile;
                     }
                 }
+
+                //return files.GetEnumerator();
             }
             else
             {

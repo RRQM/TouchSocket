@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Reflection;
 using System.Text;
 using TouchSocket.Core;
 
@@ -19,8 +20,9 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocket数据帧
     /// </summary>
-    public class WSDataFrame : DisposableObject, IRequestInfo
+    public class WSDataFrame : DisposableObject, IRequestInfo, IRequestInfoBuilder, IBigUnfixedHeaderRequestInfo
     {
+        private int m_headerLength;
         private int m_payloadLength;
 
         /// <summary>
@@ -62,6 +64,9 @@ namespace TouchSocket.Http.WebSockets
         /// 掩码值
         /// </summary>
         public byte[] MaskingKey { get; set; }
+
+        /// <inheritdoc/>
+        public int MaxLength => this.PayloadLength + 100;
 
         /// <summary>
         /// 数据类型
@@ -105,30 +110,80 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public bool RSV3 { get; set; }
 
-        /// <summary>
-        /// 构建数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns></returns>
-        public bool Build(ByteBlock byteBlock)
+        public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
+            ReadOnlyMemory<byte> memory;
             if (this.PayloadData == null)
             {
-                return WSTools.Build(byteBlock, this, ReadOnlyMemory<byte>.Empty);
+                memory = ReadOnlyMemory<byte>.Empty;
             }
             else
             {
-                return WSTools.Build(byteBlock, this, this.PayloadData.Memory);
+                memory = this.PayloadData.Memory;
             }
-        }
 
-        /// <summary>
-        /// TotalSize
-        /// </summary>
-        /// <returns></returns>
-        public int GetTotalSize()
-        {
-            return this.PayloadLength + 100;
+            int payloadLength;
+
+            Span<byte> extLen = stackalloc byte[8];
+
+            var length = memory.Length;
+
+            if (length < 126)
+            {
+                payloadLength = length;
+                extLen = Span<byte>.Empty;
+            }
+            else if (length < 65536)
+            {
+                payloadLength = 126;
+
+                TouchSocketBitConverter.BigEndian.WriteBytes(extLen, (ushort)length);
+                extLen = extLen.Slice(0, 2);
+            }
+            else
+            {
+                payloadLength = 127;
+                TouchSocketBitConverter.BigEndian.WriteBytes(extLen, (ulong)length);
+            }
+
+            var header = this.FIN ? 1 : 0;
+            header = (header << 1) + (this.RSV1 ? 1 : 0);
+            header = (header << 1) + (this.RSV2 ? 1 : 0);
+            header = (header << 1) + (this.RSV3 ? 1 : 0);
+            header = (header << 4) + (ushort)this.Opcode;
+
+            header = this.Mask ? (header << 1) + 1 : (header << 1) + 0;
+
+            header = (header << 7) + payloadLength;
+
+            byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((ushort)header));
+
+            if (payloadLength > 125)
+            {
+                byteBlock.Write(extLen);
+            }
+
+            if (this.Mask)
+            {
+                byteBlock.Write(new ReadOnlySpan<byte>(this.MaskingKey, 0, 4));
+            }
+
+            if (payloadLength > 0)
+            {
+                if (this.Mask)
+                {
+                    if (byteBlock.Capacity < byteBlock.Position + length)
+                    {
+                        byteBlock.SetCapacity(byteBlock.Position + length, true);
+                    }
+                    WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, this.MaskingKey);
+                    byteBlock.SetLength(byteBlock.Position + length);
+                }
+                else
+                {
+                    byteBlock.Write(memory.Span);
+                }
+            }
         }
 
         /// <summary>
@@ -156,5 +211,121 @@ namespace TouchSocket.Http.WebSockets
             }
             base.Dispose(disposing);
         }
+
+        #region UnfixedHeader
+
+        long IBigUnfixedHeaderRequestInfo.BodyLength => m_payloadLength;
+        int IBigUnfixedHeaderRequestInfo.HeaderLength => m_headerLength;
+
+        void IBigUnfixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
+        {
+            this.PayloadData.Write(buffer);
+        }
+
+        bool IBigUnfixedHeaderRequestInfo.OnFinished()
+        {
+            if (this.m_payloadLength > 0)
+            {
+                if (this.m_payloadLength != this.PayloadData.Length)
+                {
+                    return false;
+                }
+
+                if (this.Mask)
+                {
+                    WSTools.DoMask(this.PayloadData.TotalMemory.Span, this.PayloadData.Memory.Span, this.MaskingKey);
+                }
+            }
+
+            return true;
+        }
+
+        bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            var offset = byteBlock.Position;
+            var index = offset;
+            var dataBuffer = byteBlock.Span.Slice(offset);
+            var length = dataBuffer.Length;
+            if (length < 2)
+            {
+                return false;
+            }
+
+            this.RSV1 = dataBuffer[offset].GetBit(6);
+            this.RSV2 = dataBuffer[offset].GetBit(5);
+            this.RSV3 = dataBuffer[offset].GetBit(4);
+            this.FIN = (dataBuffer[offset] >> 7) == 1;
+            this.Opcode = (WSDataType)(dataBuffer[offset] & 0xf);
+            this.Mask = (dataBuffer[++offset] >> 7) == 1;
+
+            var payloadLength = dataBuffer[offset] & 0x7f;
+            if (payloadLength < 126)
+            {
+                offset++;
+            }
+            else if (payloadLength == 126)
+            {
+                if (length < 4)
+                {
+                    //offset = index;
+                    //cache
+                    return false;
+                }
+                payloadLength = TouchSocketBitConverter.BigEndian.To<ushort>(dataBuffer.Slice(++offset));
+                offset += 2;
+            }
+            else if (payloadLength == 127)
+            {
+                if (length < 12)
+                {
+                    return false;
+                }
+                payloadLength = (int)TouchSocketBitConverter.BigEndian.To<ulong>(dataBuffer.Slice(++offset));
+                offset += 8;
+            }
+
+            this.m_payloadLength = payloadLength;
+
+            if (this.Mask)
+            {
+                if (length < (offset - index) + 4)
+                {
+                    return false;
+                }
+                var maskingKey = new byte[4];
+                maskingKey[0] = dataBuffer[offset++];
+                maskingKey[1] = dataBuffer[offset++];
+                maskingKey[2] = dataBuffer[offset++];
+                maskingKey[3] = dataBuffer[offset++];
+                this.MaskingKey = maskingKey;
+            }
+
+            this.m_headerLength = offset - index;
+            byteBlock.Position += this.m_headerLength;
+
+            if (payloadLength > 0)
+            {
+                this.PayloadData = new ByteBlock(payloadLength);
+            }
+
+            return true;
+
+            //var block = new ByteBlock(payloadLength);
+            //dataFrame.PayloadData = block;
+
+            //var surlen = length - (offset - index);
+            //if (payloadLength <= surlen)
+            //{
+            //    block.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
+            //    offset += payloadLength;
+            //}
+            //else
+            //{
+            //    block.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surlen));
+            //    offset += surlen;
+            //}
+        }
+
+        #endregion UnfixedHeader
     }
 }

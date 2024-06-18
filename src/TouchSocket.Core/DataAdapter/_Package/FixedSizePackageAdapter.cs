@@ -77,21 +77,21 @@ namespace TouchSocket.Core
             {
                 if (this.m_surPlusLength == r)
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandle(this.m_tempByteBlock).ConfigureFalseAwait();
                     this.m_tempByteBlock = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandle(this.m_tempByteBlock).ConfigureFalseAwait();
                     this.m_tempByteBlock = null;
                     await this.SplitPackage(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
                 }
                 else
                 {
-                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, r));
                     this.m_surPlusLength -= r;
                     if (this.UpdateCacheTimeWhenRev)
                     {
@@ -143,7 +143,7 @@ namespace TouchSocket.Core
 
             foreach (var item in transferBytes)
             {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
+                byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
             }
 
             byteBlock.SetLength(this.FixedSize);
@@ -188,7 +188,7 @@ namespace TouchSocket.Core
                 if (r - index >= this.FixedSize)
                 {
                     var byteBlock = new ByteBlock(this.FixedSize);
-                    byteBlock.Write(dataBuffer, index, this.FixedSize);
+                    byteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index, this.FixedSize));
                     await this.PreviewHandle(byteBlock).ConfigureFalseAwait();
                     this.m_surPlusLength = 0;
                 }
@@ -196,7 +196,7 @@ namespace TouchSocket.Core
                 {
                     this.m_tempByteBlock = new ByteBlock(this.FixedSize);
                     this.m_surPlusLength = this.FixedSize - (r - index);
-                    this.m_tempByteBlock.Write(dataBuffer, index, r - index);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index, r - index));
                     if (this.UpdateCacheTimeWhenRev)
                     {
                         this.LastCacheTime = DateTime.Now;

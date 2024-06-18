@@ -70,6 +70,7 @@ namespace TouchSocket.Core
             {
                 if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
                 {
+                    this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                     return FilterResult.Cache;
                 }
 
@@ -94,6 +95,7 @@ namespace TouchSocket.Core
                     if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
                     {
                         tempCapacity = request.BodyLength + request.HeaderLength;
+                        this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                         return FilterResult.Cache;
                     }
 
@@ -111,6 +113,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
+                    this.SurLength = int.MaxValue;
                     return FilterResult.Cache;
                 }
             }

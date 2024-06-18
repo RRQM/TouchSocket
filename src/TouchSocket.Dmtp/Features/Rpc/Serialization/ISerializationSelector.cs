@@ -10,22 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.Rpc
 {
-    internal class CanceledPackage : RouterPackage
+    /// <summary>
+    /// 序列化选择器
+    /// </summary>
+    public interface ISerializationSelector
     {
-        public long Sign { get; set; }
+        object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock;
 
-        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            byteBlock.Write(this.Sign);
-        }
-
-        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
-        {
-            this.Sign = byteBlock.ReadInt64();
-        }
+        void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock;
     }
 }

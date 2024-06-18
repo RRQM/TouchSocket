@@ -63,7 +63,7 @@ namespace TouchSocket.Http
         /// <remarks>
         /// 大于设定值的资源只会存储<see cref="FileInfo"/>，每次访问资源时都会从磁盘加载。
         /// </remarks>
-        public int MaxCacheSize { get; set; } = 1024 * 1024;
+        public int MaxCacheSize { get; set; } = 1024*1024;
         #endregion 属性
 
         public void Clear()
@@ -209,7 +209,7 @@ namespace TouchSocket.Http
                 key = FileUtility.PathFormat(key);
 
                 var fileInfo = new FileInfo(file);
-                if (fileInfo.Length < 0)
+                if (fileInfo.Length < MaxCacheSize)
                 {
                     var content = File.ReadAllBytes(file);
                     if (!this.AddEntry(key, content, millisecondsTimeout))

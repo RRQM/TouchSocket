@@ -111,7 +111,7 @@ namespace TouchSocket.Http
                     {
                         this.m_requestRoot.ResetHttp();
                         this.m_request = this.m_requestRoot;
-                        if (this.m_request.ParsingHeader(byteBlock, byteBlock.CanReadLength))
+                        if (this.m_request.ParsingHeader(ref byteBlock))
                         {
                             //byteBlock.Position++;
                             if (this.m_request.ContentLength > byteBlock.CanReadLength)
@@ -122,8 +122,7 @@ namespace TouchSocket.Http
                             }
                             else
                             {
-                                byteBlock.Read(out var buffer, (int)this.m_request.ContentLength);
-                                this.m_request.SetContent(buffer);
+                                this.m_request.SetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
                                 await this.GoReceivedAsync(null, this.m_request).ConfigureFalseAwait();
                                 await this.DestoryRequest().ConfigureFalseAwait();
                             }

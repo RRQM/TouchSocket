@@ -23,9 +23,9 @@ namespace TouchSocket.Dmtp.FileTransfer
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.Write(this.ResourceHandle);
+            byteBlock.WriteInt32(this.ResourceHandle);
             byteBlock.WritePackage(this.Metadata);
-            byteBlock.Write((byte)this.Code);
+            byteBlock.WriteByte((byte)this.Code);
         }
 
         public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)

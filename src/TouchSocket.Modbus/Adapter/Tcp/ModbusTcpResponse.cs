@@ -24,7 +24,7 @@ namespace TouchSocket.Modbus
 
         public ModbusErrorCode ErrorCode { get; private set; }
 
-        long IWaitHandle.Sign { get => this.TransactionId; set => this.TransactionId = (ushort)value; }
+        int IWaitHandle.Sign { get => this.TransactionId; set => this.TransactionId = (ushort)value; }
 
         bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
         {
@@ -75,7 +75,7 @@ namespace TouchSocket.Modbus
                 }
                 else
                 {
-                    code = code.SetBit(7, 0);
+                    code = code.SetBit(7, false);
                     this.FunctionCode = (FunctionCode)code;
                     this.m_isError = true;
                 }

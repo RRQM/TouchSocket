@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -20,20 +21,21 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http客户端数据处理适配器
     /// </summary>
-    public sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAdapter
+    internal sealed class HttpClientDataHandlingAdapter : SingleStreamDataHandlingAdapter
     {
-        private ByteBlock m_tempByteBlock;
+        private AsyncAutoResetEvent m_autoResetEvent = new AsyncAutoResetEvent(false);
         private HttpResponse m_httpResponse;
         private HttpResponse m_httpResponseRoot;
-
         private long m_surLen;
-
         private Task m_task;
+        private ByteBlock m_tempByteBlock;
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         public override bool CanSplicingSend => false;
+
+        public SingleStreamDataHandlingAdapter WarpAdapter { get; set; }
 
         /// <inheritdoc/>
         public override void OnLoaded(object owner)
@@ -46,6 +48,21 @@ namespace TouchSocket.Http
             base.OnLoaded(owner);
         }
 
+        public void SetComplateLock()
+        {
+            m_autoResetEvent.Set();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                m_autoResetEvent.Set();
+                m_autoResetEvent.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -55,7 +72,7 @@ namespace TouchSocket.Http
             if (this.m_tempByteBlock == null)
             {
                 byteBlock.Position = 0;
-                await this.Single(byteBlock, false).ConfigureFalseAwait();
+                await this.Single(byteBlock).ConfigureFalseAwait();
             }
             else
             {
@@ -63,7 +80,10 @@ namespace TouchSocket.Http
                 var block = this.m_tempByteBlock;
                 this.m_tempByteBlock = null;
                 block.Position = 0;
-                await this.Single(block, true).ConfigureFalseAwait();
+                using (block)
+                {
+                    await this.Single(block).ConfigureFalseAwait();
+                }
             }
         }
 
@@ -121,106 +141,108 @@ namespace TouchSocket.Http
             return Task.Run(() => this.GoReceivedAsync(null, response));
         }
 
-        private async Task Single(ByteBlock byteBlock, bool dis)
+        private async Task Single(ByteBlock byteBlock)
         {
-            try
+            while (byteBlock.CanReadLength > 0)
             {
-                while (byteBlock.CanReadLength > 0)
+                var adapter = WarpAdapter;
+                if (adapter != null)
                 {
-                    if (this.m_httpResponse == null)
+                    await adapter.ReceivedInputAsync(byteBlock).ConfigureFalseAwait();
+                    return;
+                }
+                if (this.m_httpResponse == null)
+                {
+                    this.m_httpResponseRoot.ResetHttp();
+                    this.m_httpResponse = this.m_httpResponseRoot;
+                    if (this.m_httpResponse.ParsingHeader(ref byteBlock))
                     {
-                        this.m_httpResponseRoot.ResetHttp();
-                        this.m_httpResponse = this.m_httpResponseRoot;
-                        if (this.m_httpResponse.ParsingHeader(byteBlock, byteBlock.CanReadLength))
+                        if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
                         {
-                            //byteBlock.Position++;
-                            if (this.m_httpResponse.IsChunk || this.m_httpResponse.ContentLength > byteBlock.CanReadLength)
-                            {
-                                this.m_surLen = this.m_httpResponse.ContentLength;
-                                this.m_task = this.RunGoReceived(this.m_httpResponse);
-                            }
-                            else
-                            {
-                                byteBlock.Read(out var buffer, (int)this.m_httpResponse.ContentLength);
-                                this.m_httpResponse.SetContent(buffer);
-                                await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureFalseAwait();
-                                this.m_httpResponse = null;
-                            }
+                            this.m_surLen = this.m_httpResponse.ContentLength;
+                            this.m_task = this.RunGoReceived(this.m_httpResponse);
                         }
                         else
                         {
-                            this.Cache(byteBlock);
+                            this.m_httpResponse.SetContent(byteBlock.ReadToSpan((int)this.m_httpResponse.ContentLength).ToArray());
+                            await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureFalseAwait();
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureFalseAwait();
                             this.m_httpResponse = null;
-
-                            if (this.m_task != null)
-                            {
-                                await this.m_task.ConfigureFalseAwait();
-                                this.m_task = null;
-                            }
-                            return;
                         }
                     }
                     else
                     {
-                        if (this.m_httpResponse.IsChunk)
+                        this.Cache(byteBlock);
+                        this.m_httpResponse = null;
+
+                        if (this.m_task != null)
                         {
-                            switch (await this.ReadChunk(byteBlock).ConfigureFalseAwait())
-                            {
-                                case FilterResult.Cache:
-                                    this.Cache(byteBlock);
-                                    return;
-
-                                case FilterResult.Success:
-                                    this.m_httpResponse = null;
-                                    if (this.m_task != null)
-                                    {
-                                        await this.m_task;
-                                        this.m_task = null;
-                                    }
-                                    break;
-
-                                case FilterResult.GoOn:
-                                default:
-                                    break;
-                            }
+                            await this.m_task.ConfigureFalseAwait();
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureFalseAwait();
+                            this.m_task = null;
                         }
-                        else if (this.m_surLen > 0)
+                        return;
+                    }
+                }
+                else
+                {
+                    if (this.m_httpResponse.IsChunk)
+                    {
+                        switch (await this.ReadChunk(byteBlock).ConfigureFalseAwait())
                         {
-                            if (byteBlock.CanRead)
-                            {
-                                var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                                await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureFalseAwait();
-                                this.m_surLen -= len;
-                                byteBlock.Position += len;
-                                if (this.m_surLen == 0)
+                            case FilterResult.Cache:
+                                this.Cache(byteBlock);
+                                return;
+
+                            case FilterResult.Success:
+                                this.m_httpResponse = null;
+                                if (this.m_task != null)
                                 {
-                                    await this.m_httpResponse.CompleteInput().ConfigureFalseAwait();
-                                    this.m_httpResponse = null;
-                                    if (this.m_task != null)
-                                    {
-                                        await this.m_task.ConfigureFalseAwait();
-                                        this.m_task = null;
-                                    }
+                                    await this.m_task.ConfigureFalseAwait();
+                                    this.m_task = null;
                                 }
-                            }
+
+                                await this.m_autoResetEvent.WaitOneAsync().ConfigureFalseAwait();
+                                break;
+
+                            case FilterResult.GoOn:
+                            default:
+                                break;
                         }
-                        else
+                    }
+                    else if (this.m_surLen > 0)
+                    {
+                        if (byteBlock.CanRead)
                         {
-                            this.m_httpResponse = null;
-                            if (this.m_task != null)
+                            var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
+                            await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureFalseAwait();
+                            this.m_surLen -= len;
+                            byteBlock.Position += len;
+                            if (this.m_surLen == 0)
                             {
-                                await this.m_task.ConfigureFalseAwait();
-                                this.m_task = null;
+                                await this.m_httpResponse.CompleteInput().ConfigureFalseAwait();
+                                this.m_httpResponse = null;
+                                if (this.m_task != null)
+                                {
+                                    await this.m_task.ConfigureFalseAwait();
+                                    this.m_task = null;
+                                }
+
+                                await this.m_autoResetEvent.WaitOneAsync().ConfigureFalseAwait();
                             }
                         }
                     }
-                }
-            }
-            finally
-            {
-                if (dis)
-                {
-                    byteBlock.Dispose();
+                    else
+                    {
+                        this.m_httpResponse = null;
+                        if (this.m_task != null)
+                        {
+                            await this.m_task.ConfigureFalseAwait();
+                            this.m_task = null;
+
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureFalseAwait();
+                        }
+                    }
                 }
             }
         }

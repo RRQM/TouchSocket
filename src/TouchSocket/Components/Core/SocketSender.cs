@@ -61,7 +61,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        public ValueTask<SocketOperationResult> SendAsync(Socket socket, ReadOnlyMemory<byte> memory)
+        public ValueTask<SocketOperationResult> SendAsync(Socket socket,in ReadOnlyMemory<byte> memory)
         {
 #if NET6_0_OR_GREATER
             this.SetBuffer(MemoryMarshal.AsMemory(memory));

@@ -494,7 +494,7 @@ namespace TouchSocket.SerialPorts
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Array, item.Offset, item.Count);
+                        byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {

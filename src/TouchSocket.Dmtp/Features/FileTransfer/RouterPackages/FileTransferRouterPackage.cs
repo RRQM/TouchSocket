@@ -56,10 +56,10 @@ namespace TouchSocket.Dmtp.FileTransfer
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            byteBlock.Write(this.ContinuationIndex);
-            byteBlock.Write(this.Path);
-            byteBlock.Write(this.ResourceHandle);
-            byteBlock.Write(this.FileSectionSize);
+            byteBlock.WriteInt32(this.ContinuationIndex);
+            byteBlock.WriteString(this.Path);
+            byteBlock.WriteInt32(this.ResourceHandle);
+            byteBlock.WriteInt32(this.FileSectionSize);
             byteBlock.WritePackage(this.FileInfo);
             byteBlock.WritePackage(this.Metadata);
         }

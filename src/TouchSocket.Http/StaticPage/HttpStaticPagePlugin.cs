@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -23,20 +24,20 @@ namespace TouchSocket.Http
     [PluginOption(Singleton = false)]
     public class HttpStaticPagePlugin : PluginBase
     {
-        private readonly StaticFilesPool m_fileCache;
+        private readonly StaticFilesPool m_filesPool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public HttpStaticPagePlugin()
         {
-            this.m_fileCache = new StaticFilesPool();
+            this.m_filesPool = new StaticFilesPool();
             this.SetNavigateAction(request =>
             {
                 var relativeURL = request.RelativeURL;
                 var url = relativeURL;
 
-                if (this.m_fileCache.ContainsEntry(url))
+                if (this.m_filesPool.ContainsEntry(url))
                 {
                     return url;
                 }
@@ -44,7 +45,7 @@ namespace TouchSocket.Http
                 if (relativeURL.EndsWith("/"))
                 {
                     url = relativeURL + "index.html";
-                    if (this.m_fileCache.ContainsEntry(url))
+                    if (this.m_filesPool.ContainsEntry(url))
                     {
                         return url;
                     }
@@ -52,7 +53,7 @@ namespace TouchSocket.Http
                 else if (relativeURL.EndsWith("index"))
                 {
                     url = relativeURL + ".html";
-                    if (this.m_fileCache.ContainsEntry(url))
+                    if (this.m_filesPool.ContainsEntry(url))
                     {
                         return url;
                     }
@@ -60,7 +61,7 @@ namespace TouchSocket.Http
                 else
                 {
                     url = relativeURL + "/index.html";
-                    if (this.m_fileCache.ContainsEntry(url))
+                    if (this.m_filesPool.ContainsEntry(url))
                     {
                         return url;
                     }
@@ -77,7 +78,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 静态文件池
         /// </summary>
-        public StaticFilesPool StaticFilesPool => this.m_fileCache;
+        public StaticFilesPool StaticFilesPool => this.m_filesPool;
 
         /// <summary>
         /// 重新导航
@@ -90,6 +91,17 @@ namespace TouchSocket.Http
         public Func<HttpContext, Task> ResponseAction { get; set; }
 
         /// <summary>
+        /// 配置静态文件池
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public HttpStaticPagePlugin ConfigureStaticFilesPool(Action<StaticFilesPool> action)
+        {
+            action?.Invoke(this.m_filesPool);
+            return this;
+        }
+
+        /// <summary>
         /// 添加静态文件目录
         /// </summary>
         /// <param name="path">Static content path</param>
@@ -98,7 +110,7 @@ namespace TouchSocket.Http
         /// <param name="timeout">Refresh cache millisecondsTimeout (default is 1 hour)</param>
         public void AddFolder(string path, string prefix = "/", string filter = "*.*", TimeSpan? timeout = default)
         {
-            this.m_fileCache.AddFolder(path, prefix, filter, timeout);
+            this.m_filesPool.AddFolder(path, prefix, filter, timeout);
         }
 
         /// <summary>
@@ -177,7 +189,7 @@ namespace TouchSocket.Http
         /// </summary>
         public void ClearFolder()
         {
-            this.m_fileCache.Clear();
+            this.m_filesPool.Clear();
         }
 
         /// <summary>
@@ -189,7 +201,7 @@ namespace TouchSocket.Http
             path = FileUtility.PathFormat(path);
             path = path.EndsWith("/") ? path : path + "/";
 
-            this.m_fileCache.RemoveFolder(path);
+            this.m_filesPool.RemoveFolder(path);
         }
 
         #endregion Remove
@@ -197,7 +209,7 @@ namespace TouchSocket.Http
         private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureFalseAwait();
-            if (this.m_fileCache.TryFindEntry(url, out var staticEntry))
+            if (this.m_filesPool.TryFindEntry(url, out var staticEntry))
             {
                 var request = e.Context.Request;
                 var response = e.Context.Response;
@@ -210,7 +222,26 @@ namespace TouchSocket.Http
 
                 if (staticEntry.IsCacheBytes)
                 {
-                    response.SetContent(staticEntry.Value);
+                    var data = staticEntry.Value;
+
+                    if (request.IsAcceptGzip())
+                    {
+                        using (var byteBlock = new ByteBlock(data.Length))
+                        {
+                            using (var zipStream = new GZipStream(byteBlock.AsStream(false), CompressionMode.Compress, true))
+                            {
+                                zipStream.Write(data, 0, data.Length);
+                                zipStream.Close();
+
+                                var resultData = byteBlock.ToArray();
+                                response.SetGzipContent(resultData);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        response.SetGzipContent(data);
+                    }
                 }
                 if (this.ResponseAction != null)
                 {
@@ -223,7 +254,7 @@ namespace TouchSocket.Http
                 }
                 else
                 {
-                    await response.FromFileAsync(staticEntry.FileInfo.FullName, request).ConfigureFalseAwait();
+                    await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureFalseAwait();
                 }
                 e.Handled = true;
             }

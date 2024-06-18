@@ -54,11 +54,11 @@ namespace TouchSocket.Core
         /// <param name="byteBlock"></param>
         public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock
         {
-            byteBlock.Write(this.Count);
+            byteBlock.WriteInt32(this.Count);
             foreach (var item in this)
             {
-                byteBlock.Write(item.Key);
-                byteBlock.Write(item.Value);
+                byteBlock.WriteString(item.Key, FixedHeaderType.Byte);
+                byteBlock.WriteString(item.Value, FixedHeaderType.Byte);
             }
         }
 
@@ -71,8 +71,8 @@ namespace TouchSocket.Core
             var count = byteBlock.ReadInt32();
             for (var i = 0; i < count; i++)
             {
-                var key = byteBlock.ReadString();
-                var value = byteBlock.ReadString();
+                var key = byteBlock.ReadString(FixedHeaderType.Byte);
+                var value = byteBlock.ReadString(FixedHeaderType.Byte);
                 this.Add(key, value);
             }
         }

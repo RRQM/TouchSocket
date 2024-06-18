@@ -34,6 +34,11 @@ namespace TouchSocket.Core
         private static readonly DefaultFastSerializerContext s_defaultFastSerializerContext = new DefaultFastSerializerContext();
 
         /// <summary>
+        /// 默认的<see cref="FastSerializerContext"/>
+        /// </summary>
+        public static FastSerializerContext DefaultFastSerializerContext => s_defaultFastSerializerContext;
+
+        /// <summary>
         /// 添加转换器。
         /// </summary>
         public static void AddFastBinaryConverter<[DynamicallyAccessedMembers(DynamicallyAccessed)] TType, [DynamicallyAccessedMembers(DynamicallyAccessed)] TConverter>() where TConverter : IFastBinaryConverter, new()
@@ -111,20 +116,18 @@ namespace TouchSocket.Core
         public static void Serialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, in T graph, FastSerializerContext serializerContext)
             where TByteBlock : IByteBlock
         {
-            if (serializerContext is null)
-            {
-                throw new ArgumentNullException(nameof(serializerContext));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIf(serializerContext);
 
-            byteBlock.Position = 1;
+            var startPosition = byteBlock.Position;
+
+            byteBlock.Position = startPosition+1;
             SerializeObject(ref byteBlock, graph, serializerContext);
 
-            var len = byteBlock.Position;
-            byteBlock.Position = 0;
-            byteBlock.Write((byte)1);
+            var pos = byteBlock.Position;
+            byteBlock.Position = startPosition;
+            byteBlock.WriteByte((byte)1);
 
-            byteBlock.Position = len;
-            byteBlock.SetLength(len);
+            byteBlock.Position = pos;
         }
 
         private static void SerializeIListOrArray<TByteBlock>(ref TByteBlock byteBlock, in IEnumerable param, FastSerializerContext serializerContext) where TByteBlock : IByteBlock
@@ -161,82 +164,82 @@ namespace TouchSocket.Core
             {
                 case byte value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteByte(value);
                         return;
                     }
                 case sbyte value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteInt16(value);
                         return;
                     }
                 case bool value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteBoolean(value);
                         return;
                     }
                 case short value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteInt16(value);
                         return;
                     }
                 case ushort value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteUInt16(value);
                         return;
                     }
                 case int value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteInt32(value);
                         return;
                     }
                 case uint value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteUInt32(value);
                         return;
                     }
                 case long value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteInt64(value);
                         return;
                     }
                 case ulong value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteUInt64(value);
                         return;
                     }
                 case float value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteFloat(value);
                         return;
                     }
                 case double value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteDouble(value);
                         return;
                     }
                 case char value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteChar(value);
                         return;
                     }
                 case decimal value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteDecimal(value);
                         return;
                     }
                 case DateTime value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteDateTime(value);
                         return;
                     }
                 case TimeSpan value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteTimeSpan(value);
                         return;
                     }
                 case string value:
                     {
-                        byteBlock.Write(value);
+                        byteBlock.WriteString(value);
                         return;
                     }
                 case Enum _:
@@ -331,7 +334,7 @@ namespace TouchSocket.Core
                                             var memberInfo = serializObject.MemberInfos[i];
                                             if (serializObject.EnableIndex)
                                             {
-                                                byteBlock.Write(memberInfo.Index);
+                                                byteBlock.WriteByte(memberInfo.Index);
                                             }
                                             else
                                             {
@@ -340,7 +343,7 @@ namespace TouchSocket.Core
                                                 {
                                                     throw new Exception($"属性名：{memberInfo.Name}超长");
                                                 }
-                                                byteBlock.Write((byte)propertyBytes.Length);
+                                                byteBlock.WriteByte((byte)propertyBytes.Length);
                                                 byteBlock.Write(propertyBytes);
                                             }
 
@@ -355,7 +358,7 @@ namespace TouchSocket.Core
                         var endPosition = byteBlock.Position;
                         byteBlock.Position = startPosition;
 
-                        byteBlock.Write(endPosition - startPosition - 4);
+                        byteBlock.WriteInt32(endPosition - startPosition - 4);
                         byteBlock.Position = endPosition;
                         break;
                     }

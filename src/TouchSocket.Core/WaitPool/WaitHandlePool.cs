@@ -22,22 +22,22 @@ namespace TouchSocket.Core
     /// <typeparam name="T"></typeparam>
     public class WaitHandlePool<T> : DisposableObject where T : IWaitHandle
     {
-        private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
-        private readonly ConcurrentDictionary<long, WaitDataAsync<T>> m_waitDicAsync;
+        private readonly ConcurrentDictionary<int, WaitData<T>> m_waitDic;
+        private readonly ConcurrentDictionary<int, WaitDataAsync<T>> m_waitDicAsync;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
         private readonly ConcurrentQueue<WaitDataAsync<T>> m_waitQueueAsync;
-        private long m_maxSign = long.MaxValue;
-        private long m_minSign = long.MinValue;
-        private long m_waitCount;
-        private long m_waitReverseCount;
+        private int m_maxSign = int.MaxValue;
+        private int m_minSign = int.MinValue;
+        private int m_waitCount;
+        private int m_waitReverseCount;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public WaitHandlePool()
         {
-            this.m_waitDic = new ConcurrentDictionary<long, WaitData<T>>();
-            this.m_waitDicAsync = new ConcurrentDictionary<long, WaitDataAsync<T>>();
+            this.m_waitDic = new ConcurrentDictionary<int, WaitData<T>>();
+            this.m_waitDicAsync = new ConcurrentDictionary<int, WaitDataAsync<T>>();
             this.m_waitQueue = new ConcurrentQueue<WaitData<T>>();
             this.m_waitQueueAsync = new ConcurrentQueue<WaitDataAsync<T>>();
         }
@@ -45,12 +45,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 最大Sign
         /// </summary>
-        public long MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
+        public int MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
 
         /// <summary>
         /// 最小Sign
         /// </summary>
-        public long MinSign { get => this.m_minSign; set => this.m_minSign = value; }
+        public int MinSign { get => this.m_minSign; set => this.m_minSign = value; }
 
         /// <summary>
         /// 取消全部
@@ -145,7 +145,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="sign"></param>
         /// <returns></returns>
-        public WaitData<T> GetReverseWaitData(out long sign)
+        public WaitData<T> GetReverseWaitData(out int sign)
         {
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
@@ -195,7 +195,7 @@ namespace TouchSocket.Core
         ///  获取一个Sign为负数的可等待对象
         /// </summary>
         /// <returns></returns>
-        public WaitDataAsync<T> GetReverseWaitDataAsync(out long sign)
+        public WaitDataAsync<T> GetReverseWaitDataAsync(out int sign)
         {
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
@@ -246,7 +246,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="sign"></param>
         /// <returns></returns>
-        public WaitData<T> GetWaitData(out long sign)
+        public WaitData<T> GetWaitData(out int sign)
         {
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
@@ -297,7 +297,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="sign"></param>
         /// <returns></returns>
-        public WaitDataAsync<T> GetWaitDataAsync(out long sign)
+        public WaitDataAsync<T> GetWaitDataAsync(out int sign)
         {
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
@@ -318,7 +318,7 @@ namespace TouchSocket.Core
         /// 让等待对象恢复运行
         /// </summary>
         /// <param name="sign"></param>
-        public bool SetRun(long sign)
+        public bool SetRun(int sign)
         {
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
@@ -340,7 +340,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="sign"></param>
         /// <param name="waitResult"></param>
-        public bool SetRun(long sign, T waitResult)
+        public bool SetRun(int sign, T waitResult)
         {
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
@@ -354,6 +354,16 @@ namespace TouchSocket.Core
             }
 
             return false;
+        }
+
+        public bool TryGetDataAsync(int sign,out WaitDataAsync<T> waitDataAsync )
+        {
+            return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
+        }
+
+        public bool TryGetData(int sign, out WaitData<T> waitData)
+        {
+            return this.m_waitDic.TryGetValue(sign, out waitData);
         }
 
         /// <summary>
@@ -402,7 +412,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long GetSign(bool reverse)
+        private int GetSign(bool reverse)
         {
             if (reverse)
             {

@@ -110,13 +110,13 @@ namespace TouchSocket.Sockets
                 using (var byteBlock = new ByteBlock(this.m_mtu))
                 {
                     //var data = new byte[this.m_mtu];
-                    byteBlock.Write(id);//8
-                    byteBlock.Write(sn++);//2
+                    byteBlock.WriteInt64(id);//8
+                    byteBlock.WriteUInt16(sn++);//2
                     //Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, data, 0, 8);
                     //Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
                     if (surLen > freeRoom)//有余
                     {
-                        byteBlock.Write((byte)0);
+                        byteBlock.WriteByte((byte)0);
                         byteBlock.Write(memory.Span.Slice(off, freeRoom));
                         //Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
                         off += freeRoom;
@@ -126,13 +126,13 @@ namespace TouchSocket.Sockets
                     else if (surLen + 2 <= freeRoom)//结束且能容纳Crc
                     {
 
-                        var flag = ((byte)0).SetBit(7, 1);//设置终结帧
-                        byteBlock.Write(flag);
+                        var flag = ((byte)0).SetBit(7, true);//设置终结帧
+                        byteBlock.WriteByte(flag);
 
                         byteBlock.Write(memory.Span.Slice(off, surLen));
                         //Buffer.BlockCopy(buffer, off, data, 11, surLen);
 
-                        byteBlock.Write(Crc.Crc16Value(memory.Span), EndianType.Big);
+                        byteBlock.WriteUInt16(Crc.Crc16Value(memory.Span), EndianType.Big);
 
                         //Buffer.BlockCopy(Crc.Crc16(buffer, offset, length), 0, data, 11 + surLen, 2);
 
@@ -146,7 +146,7 @@ namespace TouchSocket.Sockets
                     }
                     else//结束但不能容纳Crc
                     {
-                        byteBlock.Write((byte)0);
+                        byteBlock.WriteByte((byte)0);
                         byteBlock.Write(memory.Span.Slice(off,surLen));
                         //Buffer.BlockCopy(buffer, off, data, 11, surLen);
                         await this.GoSendAsync(endPoint, byteBlock.Memory);
@@ -158,10 +158,10 @@ namespace TouchSocket.Sockets
 
                         //var finData = new byte[13];
 
-                        byteBlock.Write(id);
-                        byteBlock.Write(sn++);
-                        byteBlock.Write(((byte)0).SetBit(7, 1));
-                        byteBlock.Write(Crc.Crc16Value(memory.Span), EndianType.Big);
+                        byteBlock.WriteInt64(id);
+                        byteBlock.WriteUInt16(sn++);
+                        byteBlock.WriteByte(((byte)0).SetBit(7, true));
+                        byteBlock.WriteUInt16(Crc.Crc16Value(memory.Span), EndianType.Big);
 
                         //Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(id), 0, finData, 0, 8);
                         //Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, finData, 8, 2);
@@ -265,7 +265,7 @@ namespace TouchSocket.Sockets
             {
                 foreach (var item in transferBytes)
                 {
-                    byteBlock.Write(item.Array, item.Offset, item.Count);
+                    byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                 }
                 await this.PreviewSendAsync(endPoint, byteBlock.Memory);
             }

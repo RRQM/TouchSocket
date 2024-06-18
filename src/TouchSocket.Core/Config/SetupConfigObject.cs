@@ -33,10 +33,18 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public override IResolver Resolver => this.m_resolver;
 
+        private void ClearConfig()
+        {
+            this.m_pluginManager.SafeDispose();
+            this.m_config.SafeDispose();
+        }
+
         /// <inheritdoc/>
         public async Task SetupAsync(TouchSocketConfig config)
         {
             this.ThrowIfDisposed();
+
+            this.ClearConfig();
 
             this.BuildConfig(config);
 
@@ -50,8 +58,7 @@ namespace TouchSocket.Core
         {
             if (disposing)
             {
-                this.Config.SafeDispose();
-                this.PluginManager.SafeDispose();
+                this.ClearConfig();
             }
             base.Dispose(disposing);
         }

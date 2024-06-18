@@ -20,6 +20,6 @@ namespace TouchSocket.Rpc
     /// </summary>
     public interface IRpcClient
     {
-        Task<RpcResponse> InvokeAsync(RpcRequest request);
+        Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption,params object[] parameters);
     }
 }

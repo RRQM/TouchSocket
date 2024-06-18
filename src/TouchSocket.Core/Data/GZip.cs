@@ -93,7 +93,7 @@ namespace TouchSocket.Core
                     int r;
                     while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
                     {
-                        byteBlock.Write(bytes, 0, r);
+                        byteBlock.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
                     }
                     gZipStream.Close();
                 }

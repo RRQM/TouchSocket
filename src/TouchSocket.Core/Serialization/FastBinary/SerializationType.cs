@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -26,11 +28,6 @@ namespace TouchSocket.Core
         /// Json
         /// </summary>
         Json,
-
-        /// <summary>
-        /// Xml
-        /// </summary>
-        Xml,
 
         /// <summary>
         /// 系统二进制。微软认为这是不安全的，所以谨慎使用。

@@ -120,7 +120,7 @@ namespace TouchSocket.Core
         public override int Read(byte[] buffer, int offset, int length)
         {
             this.ThrowIfDisposed();
-            return this.m_byteBlock.Read(buffer, offset, length);
+            return this.m_byteBlock.Read(new Span<byte>(buffer, offset, length));
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace TouchSocket.Core
         public override void Write(byte[] buffer, int offset, int count)
         {
             this.ThrowIfDisposed();
-            this.m_byteBlock.Write(buffer, offset, count);
+            this.m_byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, count));
         }
 
         /// <summary>

@@ -90,7 +90,7 @@ namespace TouchSocket.Core
             var cacheLength = byteBlock.Length;
             if (this.m_tempByteBlock != null)
             {
-                this.m_tempByteBlock.Write(buffer, 0, cacheLength);
+                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
                 buffer = this.m_tempByteBlock.Memory.GetArray().Array;
                 cacheLength = this.m_tempByteBlock.Position;
             }
@@ -105,7 +105,7 @@ namespace TouchSocket.Core
                 else if (this.m_tempByteBlock == null)
                 {
                     this.m_tempByteBlock = new ByteBlock(cacheLength * 2);
-                    this.m_tempByteBlock.Write(buffer, 0, cacheLength);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
                     if (this.UpdateCacheTimeWhenRev)
                     {
                         this.LastCacheTime = DateTime.Now;
@@ -119,7 +119,7 @@ namespace TouchSocket.Core
                 {
                     var length = this.ReserveTerminatorCode ? lastIndex - startIndex + 1 : lastIndex - startIndex - this.m_terminatorCode.Length + 1;
                     var packageByteBlock = new ByteBlock(length);
-                    packageByteBlock.Write(buffer, startIndex, length);
+                    packageByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, length));
 
                     //var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Position);
 
@@ -130,7 +130,7 @@ namespace TouchSocket.Core
                 if (startIndex < cacheLength)
                 {
                     this.m_tempByteBlock = new ByteBlock((cacheLength - startIndex) * 2);
-                    this.m_tempByteBlock.Write(buffer, startIndex, cacheLength - startIndex);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, cacheLength - startIndex));
                     if (this.UpdateCacheTimeWhenRev)
                     {
                         this.LastCacheTime = DateTime.Now;
@@ -138,67 +138,6 @@ namespace TouchSocket.Core
                 }
             }
         }
-
-        ///// <summary>
-        ///// 预处理
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        //protected override void PreviewSend(byte[] buffer, int offset, int length)
-        //{
-        //    if (length > this.MaxPackageSize)
-        //    {
-        //        throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(length), this.MaxPackageSize));
-        //    }
-        //    var dataLen = length - offset + this.m_terminatorCode.Length;
-        //    var byteBlock = new ByteBlock(dataLen);
-        //    byteBlock.Write(buffer, offset, length);
-        //    byteBlock.Write(this.m_terminatorCode);
-
-        //    try
-        //    {
-        //        this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-        //    }
-        //    finally
-        //    {
-        //        byteBlock.Dispose();
-        //    }
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    var length = 0;
-        //    foreach (var item in transferBytes)
-        //    {
-        //        length += item.Count;
-        //    }
-        //    if (length > this.MaxPackageSize)
-        //    {
-        //        throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(length), this.MaxPackageSize));
-        //    }
-        //    var dataLen = length + this.m_terminatorCode.Length;
-        //    var byteBlock = new ByteBlock(dataLen);
-        //    foreach (var item in transferBytes)
-        //    {
-        //        byteBlock.Write(item.Array, item.Offset, item.Count);
-        //    }
-
-        //    byteBlock.Write(this.m_terminatorCode);
-
-        //    try
-        //    {
-        //        this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-        //    }
-        //    finally
-        //    {
-        //        byteBlock.Dispose();
-        //    }
-        //}
 
         /// <inheritdoc/>
         protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
@@ -238,7 +177,7 @@ namespace TouchSocket.Core
             var byteBlock = new ByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
+                byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
             }
 
             byteBlock.Write(this.m_terminatorCode);

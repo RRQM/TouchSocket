@@ -39,7 +39,7 @@ namespace TouchSocket.Modbus
             }
             else
             {
-                code = code.SetBit(7, 0);
+                code = code.SetBit(7, false);
                 response.FunctionCode = (FunctionCode)code;
                 m_isError = true;
             }

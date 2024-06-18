@@ -47,11 +47,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <inheritdoc/>
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write((byte)this.Status);
-            byteBlock.Write(this.ResourceHandle);
-            byteBlock.Write(this.Offset);
-            byteBlock.Write(this.Length);
-            byteBlock.Write(this.Index);
+            byteBlock.WriteByte((byte)this.Status);
+            byteBlock.WriteInt32(this.ResourceHandle);
+            byteBlock.WriteInt64(this.Offset);
+            byteBlock.WriteInt32(this.Length);
+            byteBlock.WriteInt32(this.Index);
         }
 
         /// <inheritdoc/>
