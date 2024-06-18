@@ -33,7 +33,7 @@ namespace TouchSocket.Core
         protected void Cache(byte[] buffer, int offset, int length)
         {
             this.m_cacheByteBlock ??= new ByteBlock(length);
-            this.m_cacheByteBlock.Write(buffer, offset, length);
+            this.m_cacheByteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
             if (this.UpdateCacheTimeWhenRev)
             {
                 this.LastCacheTime = DateTime.Now;

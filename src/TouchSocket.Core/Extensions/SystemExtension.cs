@@ -102,85 +102,199 @@ namespace TouchSocket.Core
 
         #endregion Enum
 
-        #region Byte
+        #region SetBit
 
-        /// <summary>
-        /// 获取字节中的指定Bit的值
-        /// </summary>
-        /// <param name="this">字节</param>
-        /// <param name="index">Bit的索引值(0-7)</param>
-        /// <returns></returns>
-        public static int GetBit(this byte @this, int index)
+        public static ulong SetBit(this ulong b, int index, bool bitvalue)
         {
-            byte x;
-            switch (index)
+            if (index < 0 || index > 63)
             {
-                case 0: { x = 0x01; } break;
-                case 1: { x = 0x02; } break;
-                case 2: { x = 0x04; } break;
-                case 3: { x = 0x08; } break;
-                case 4: { x = 0x10; } break;
-                case 5: { x = 0x20; } break;
-                case 6: { x = 0x40; } break;
-                case 7: { x = 0x80; } break;
-                default:
-                    {
-                        ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-                        return default;
-                    }
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
             }
-            return (@this & x) == x ? 1 : 0;
-        }
 
-        /// <summary>
-        /// 设置字节中的指定Bit的值
-        /// </summary>
-        /// <param name="this">字节</param>
-        /// <param name="index">Bit的索引值(0-7)</param>
-        /// <param name="bitvalue">Bit值(0,1)</param>
-        /// <returns></returns>
-        public static byte SetBit(this byte @this, int index, int bitvalue)
-        {
-            var _byte = @this;
-            if (bitvalue == 0)
+            ulong baseNumber = 1;
+            if (bitvalue)
             {
-                switch (index)
-                {
-                    case 0: { return _byte &= 0xFE; }
-                    case 1: { return _byte &= 0xFD; }
-                    case 2: { return _byte &= 0xFB; }
-                    case 3: { return _byte &= 0xF7; }
-                    case 4: { return _byte &= 0xEF; }
-                    case 5: { return _byte &= 0xDF; }
-                    case 6: { return _byte &= 0xBF; }
-                    case 7: { return _byte &= 0x7F; }
-                    default:
-                        {
-                            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-                            return default;
-                        }
-                }
+                return b | baseNumber << index;
             }
             else
             {
-                switch (index)
-                {
-                    case 0: { return _byte |= 0x01; }
-                    case 1: { return _byte |= 0x02; }
-                    case 2: { return _byte |= 0x04; }
-                    case 3: { return _byte |= 0x08; }
-                    case 4: { return _byte |= 0x10; }
-                    case 5: { return _byte |= 0x20; }
-                    case 6: { return _byte |= 0x40; }
-                    case 7: { return _byte |= 0x80; }
-                    default:
-                        {
-                            ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-                            return default;
-                        }
-                }
+                return b & ~(baseNumber << index);
             }
         }
+
+        public static uint SetBit(this uint b, int index, bool bitvalue)
+        {
+            if (index < 0 || index > 31)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
+            }
+
+            uint baseNumber = 1;
+            if (bitvalue)
+            {
+                return b | baseNumber << index;
+            }
+            else
+            {
+                return b & ~(baseNumber << index);
+            }
+        }
+
+        public static ushort SetBit(this ushort b, int index, bool bitvalue)
+        {
+            if (index < 0 || index > 15)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
+            }
+
+            ushort baseNumber = 1;
+            if (bitvalue)
+            {
+                return (ushort)(b | baseNumber << index);
+            }
+            else
+            {
+                return (ushort)(b & ~(baseNumber << index));
+            }
+        }
+
+        public static byte SetBit(this byte b, int index, bool bitvalue)
+        {
+            if (index < 0 || index > 7)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
+            }
+
+            byte baseNumber = 1;
+            if (bitvalue)
+            {
+                return (byte)(b | baseNumber << index);
+            }
+            else
+            {
+                return (byte)(b & ~(baseNumber << index));
+            }
+        }
+
+        #endregion
+
+        #region GetBit
+        public static bool GetBit(this ulong b, int index)
+        {
+            if (index > 63 || index < 0)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
+            }
+            return (b & (ulong)1 << index) != 0;
+        }
+
+        public static bool GetBit(this uint b, int index)
+        {
+            if (index > 31 || index < 0)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
+            }
+            return (b & (uint)1 << index) != 0;
+        }
+
+        public static bool GetBit(this ushort b, int index)
+        {
+            if (index > 15 || index < 0)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
+            }
+            return (b & (ushort)1 << index) != 0;
+        }
+
+        public static bool GetBit(this byte b, int index)
+        {
+            if (index > 7 || index < 0)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
+            }
+            return (b & (byte)1 << index) != 0;
+        }
+        #endregion
+
+        #region Byte
+
+        ///// <summary>
+        ///// 获取字节中的指定Bit的值
+        ///// </summary>
+        ///// <param name="this">字节</param>
+        ///// <param name="index">Bit的索引值(0-7)</param>
+        ///// <returns></returns>
+        //public static int GetBit(this byte @this, int index)
+        //{
+        //    byte x;
+        //    switch (index)
+        //    {
+        //        case 0: { x = 0x01; } break;
+        //        case 1: { x = 0x02; } break;
+        //        case 2: { x = 0x04; } break;
+        //        case 3: { x = 0x08; } break;
+        //        case 4: { x = 0x10; } break;
+        //        case 5: { x = 0x20; } break;
+        //        case 6: { x = 0x40; } break;
+        //        case 7: { x = 0x80; } break;
+        //        default:
+        //            {
+        //                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
+        //                return default;
+        //            }
+        //    }
+        //    return (@this & x) == x ? 1 : 0;
+        //}
+
+        ///// <summary>
+        ///// 设置字节中的指定Bit的值
+        ///// </summary>
+        ///// <param name="this">字节</param>
+        ///// <param name="index">Bit的索引值(0-7)</param>
+        ///// <param name="bitvalue">Bit值(0,1)</param>
+        ///// <returns></returns>
+        //public static byte SetBit(this byte @this, int index, int bitvalue)
+        //{
+        //    var _byte = @this;
+        //    if (bitvalue == 0)
+        //    {
+        //        switch (index)
+        //        {
+        //            case 0: { return _byte &= 0xFE; }
+        //            case 1: { return _byte &= 0xFD; }
+        //            case 2: { return _byte &= 0xFB; }
+        //            case 3: { return _byte &= 0xF7; }
+        //            case 4: { return _byte &= 0xEF; }
+        //            case 5: { return _byte &= 0xDF; }
+        //            case 6: { return _byte &= 0xBF; }
+        //            case 7: { return _byte &= 0x7F; }
+        //            default:
+        //                {
+        //                    ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
+        //                    return default;
+        //                }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        switch (index)
+        //        {
+        //            case 0: { return _byte |= 0x01; }
+        //            case 1: { return _byte |= 0x02; }
+        //            case 2: { return _byte |= 0x04; }
+        //            case 3: { return _byte |= 0x08; }
+        //            case 4: { return _byte |= 0x10; }
+        //            case 5: { return _byte |= 0x20; }
+        //            case 6: { return _byte |= 0x40; }
+        //            case 7: { return _byte |= 0x80; }
+        //            default:
+        //                {
+        //                    ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
+        //                    return default;
+        //                }
+        //        }
+        //    }
+        //}
 
         #endregion Byte
 
@@ -211,7 +325,6 @@ namespace TouchSocket.Core
         {
             return ByBytesToHexString(buffer, 0, buffer.Length, splite);
         }
-
         /// <summary>
         /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
         /// <para>如果目标数组为null或长度为0，则直接返回offset的值</para>
@@ -222,6 +335,19 @@ namespace TouchSocket.Core
         /// <param name="subByteArray"></param>
         /// <returns></returns>
         public static int IndexOfFirst(this byte[] srcByteArray, int offset, int length, byte[] subByteArray)
+        {
+            return IndexOfFirst(new ReadOnlySpan<byte>(subByteArray), offset, length, subByteArray);
+        }
+        /// <summary>
+        /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
+        /// <para>如果目标数组为null或长度为0，则直接返回offset的值</para>
+        /// </summary>
+        /// <param name="srcByteArray"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="subByteArray"></param>
+        /// <returns></returns>
+        public static int IndexOfFirst(this ReadOnlySpan<byte> srcByteArray, int offset, int length, byte[] subByteArray)
         {
             if (length < subByteArray.Length)
             {
@@ -268,6 +394,22 @@ namespace TouchSocket.Core
         /// <param name="subByteArray"></param>
         /// <returns></returns>
         public static List<int> IndexOfInclude(this byte[] srcByteArray, int offset, int length, byte[] subByteArray)
+        {
+            return IndexOfInclude(new ReadOnlySpan<byte>(srcByteArray), offset, length, subByteArray);
+        }
+
+        /// <summary>
+        /// 索引包含数组。
+        /// <para>
+        /// 例如：在{0,1,2,3,1,2,3}中搜索{1,2}，则会返回list:[2,5]，均为最后索引的位置。
+        /// </para>
+        /// </summary>
+        /// <param name="srcByteArray"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <param name="subByteArray"></param>
+        /// <returns></returns>
+        public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, byte[] subByteArray)
         {
             var subByteArrayLen = subByteArray.Length;
             var indexes = new List<int>();

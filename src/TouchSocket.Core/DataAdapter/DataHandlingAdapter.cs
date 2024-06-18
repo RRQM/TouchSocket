@@ -84,7 +84,7 @@ namespace TouchSocket.Core
             }
             if (log)
             {
-                this.Logger?.Error(error);
+                this.Logger?.Exception(this,error,ex);
             }
         }
 

@@ -73,12 +73,12 @@ namespace TouchSocket.Http.WebSockets
 
             if (payloadLength > 125)
             {
-                byteBlock.Write(extLen, 0, extLen.Length);
+                byteBlock.Write(new ReadOnlySpan<byte>(extLen, 0, extLen.Length));
             }
 
             if (dataFrame.Mask)
             {
-                byteBlock.Write(dataFrame.MaskingKey, 0, 4);
+                byteBlock.Write(new ReadOnlySpan<byte>(dataFrame.MaskingKey, 0, 4));
             }
 
             if (payloadLength > 0)
@@ -89,7 +89,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         byteBlock.SetCapacity(byteBlock.Position + length, true);
                     }
-                    WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory, dataFrame.MaskingKey);
+                    WSTools.DoMask(byteBlock.TotalMemory.Span.Slice(byteBlock.Position), memory.Span, dataFrame.MaskingKey);
                     byteBlock.SetLength(byteBlock.Position + length);
                 }
                 else
@@ -138,11 +138,9 @@ namespace TouchSocket.Http.WebSockets
         //    }
         //}
 
-        public static void DoMask(Span<byte> span, ReadOnlyMemory<byte> memory, byte[] masks)
+        public static void DoMask(Span<byte> span, ReadOnlySpan<byte> memorySpan, byte[] masks)
         {
-            var memorySpan = memory.Span;
-
-            for (var i = 0; i < memory.Length; i++)
+            for (var i = 0; i < memorySpan.Length; i++)
             {
                 span[i] = (byte)(memorySpan[i] ^ masks[i % 4]);
             }

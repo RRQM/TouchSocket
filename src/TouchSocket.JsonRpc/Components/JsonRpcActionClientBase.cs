@@ -342,16 +342,16 @@ namespace TouchSocket.JsonRpc
             this.m_waitHandle.SetRun(waitResult);
         }
 
-        public async Task<RpcResponse> InvokeAsync(RpcRequest request)
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-            var invokeOption = request.InvokeOption ?? InvokeOption.WaitInvoke;
+            invokeOption ??= InvokeOption.WaitInvoke;
         
-           var parameters =request.Parameters?? new object[0];
+           parameters ??= new object[0];
             var jsonRpcRequest = new JsonRpcRequest
             {
-                Method = request.InvokeKey,
+                Method = invokeKey,
                 Params = parameters,
                 Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
             };
@@ -389,7 +389,7 @@ namespace TouchSocket.JsonRpc
                                         }
                                         else
                                         {
-                                            return new RpcResponse(JsonRpcUtility.ResultParseToType(resultContext.Result, request.ReturnType));
+                                            return JsonRpcUtility.ResultParseToType(resultContext.Result, returnType);
                                         }
                                     }
                                 case WaitDataStatus.Overtime:

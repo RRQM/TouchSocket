@@ -361,7 +361,7 @@ namespace TouchSocket.Sockets
             {
                 if (monitor.Option.NoDelay.HasValue)
                 {
-                    socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, monitor.Option.NoDelay.Value);
+                    socket.NoDelay = monitor.Option.NoDelay.Value;
                 }
 
                 socket.SendTimeout = monitor.Option.SendTimeout;

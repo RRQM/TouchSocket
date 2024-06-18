@@ -75,7 +75,7 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         private async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Text)
+            if (e.DataFrame.Opcode != WSDataType.Text)
             {
                 await e.InvokeNext().ConfigureFalseAwait();
                 return;
@@ -91,9 +91,16 @@ namespace TouchSocket.Http.WebSockets
             var index = 0;
             for (var i = 0; i < ps.Length; i++)
             {
-                if (ps[i].ParameterType.IsInterface && typeof(IHttpSession).IsAssignableFrom(ps[i].ParameterType))
+                if (ps[i].ParameterType.IsInterface)
                 {
-                    os[i] = webSocket.Client;
+                    if (typeof(IHttpSession).IsAssignableFrom(ps[i].ParameterType))
+                    {
+                        os[i] = webSocket.Client;
+                    }
+                    else if (typeof(IWebSocket).IsAssignableFrom(ps[i].ParameterType))
+                    {
+                        os[i] = webSocket;
+                    }
                 }
                 else
                 {

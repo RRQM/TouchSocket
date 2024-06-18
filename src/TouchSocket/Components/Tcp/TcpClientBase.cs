@@ -501,7 +501,7 @@ namespace TouchSocket.Sockets
             var noDelay = this.Config.GetValue(TouchSocketConfigExtension.NoDelayProperty);
             if (noDelay.HasValue)
             {
-                socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, noDelay.Value);
+                socket.NoDelay = noDelay.Value;
             }
 
             if (this.Config.GetValue(TouchSocketConfigExtension.BindIPHostProperty) != null)
@@ -722,7 +722,7 @@ namespace TouchSocket.Sockets
                 {
                     foreach (var item in transferBytes)
                     {
-                        byteBlock.Write(item.Array, item.Offset, item.Count);
+                        byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {

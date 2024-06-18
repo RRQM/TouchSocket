@@ -23,10 +23,10 @@ namespace TouchSocket.Core
 
         protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Version obj)
         {
-            byteBlock.Write(obj.Major);
-            byteBlock.Write(obj.Minor);
-            byteBlock.Write(obj.Build);
-            byteBlock.Write(obj.Revision);
+            byteBlock.WriteInt32(obj.Major);
+            byteBlock.WriteInt32(obj.Minor);
+            byteBlock.WriteInt32(obj.Build);
+            byteBlock.WriteInt32(obj.Revision);
         }
     }
 }

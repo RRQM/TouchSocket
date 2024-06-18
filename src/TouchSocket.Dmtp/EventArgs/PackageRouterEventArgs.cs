@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         /// <param name="routerType"></param>
         /// <param name="package"></param>
-        public PackageRouterEventArgs(RouteType routerType, RouterPackage package)
+        public PackageRouterEventArgs(RouteType routerType, IReadonlyRouterPackage package)
         {
             this.RouterType = routerType;
             this.Package = package;
@@ -38,6 +38,6 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 路由数据包。一般为不完全数据，仅包含基本的路由信息。
         /// </summary>
-        public RouterPackage Package { get; private set; }
+        public IReadonlyRouterPackage Package { get; private set; }
     }
 }

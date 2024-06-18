@@ -59,7 +59,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 序列化选择器
         /// </summary>
-        public SerializationSelector SerializationSelector { get; set; } = new DefaultSerializationSelector();
+        public ISerializationSelector SerializationSelector { get; set; } = new DefaultSerializationSelector();
 
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
@@ -94,7 +94,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public DmtpRpcFeature SetSerializationSelector(SerializationSelector selector)
+        public DmtpRpcFeature SetSerializationSelector(ISerializationSelector selector)
         {
             this.SerializationSelector = selector;
             return this;

@@ -28,18 +28,6 @@ namespace TouchSocket.Core
     {
         #region Write
 
-        /// <summary>
-        /// 写入
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <exception cref="ObjectDisposedException"></exception>
-        public void Write(byte[] buffer, int offset, int count)
-        {
-            this.Write(new ReadOnlySpan<byte>(buffer, offset, count));
-        }
-
         public unsafe void Write(ReadOnlySpan<byte> span)
         {
             this.ThrowIfDisposed();
@@ -89,12 +77,12 @@ namespace TouchSocket.Core
         {
             if (byteBlock is null)
             {
-                this.Write(-1);
+                this.WriteVarUInt32(0);
             }
             else
             {
-                this.Write(byteBlock.Length);
-                this.Write(byteBlock.Memory.Span);
+                this.WriteVarUInt32((uint)(byteBlock.Length + 1));
+                this.Write(byteBlock.Span);
             }
         }
 
@@ -156,7 +144,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void WriteNotNull()
         {
-            this.Write((byte)1);
+            this.WriteByte((byte)1);
         }
 
         /// <summary>
@@ -164,7 +152,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void WriteNull()
         {
-            this.Write((byte)0);
+            this.WriteByte((byte)0);
         }
 
         #endregion Null
@@ -181,15 +169,15 @@ namespace TouchSocket.Core
         {
             if (value == null)
             {
-                this.Write((int)-1);
+                this.WriteInt32((int)-1);
             }
             else if (length == 0)
             {
-                this.Write((int)0);
+                this.WriteInt32((int)0);
             }
             else
             {
-                this.Write(length);
+                this.WriteInt32(length);
                 this.Write(new Span<byte>(value, offset, length));
             }
         }
@@ -202,15 +190,15 @@ namespace TouchSocket.Core
         {
             if (value == null)
             {
-                this.Write((int)-1);
+                this.WriteInt32((int)-1);
             }
             else if (value.Length == 0)
             {
-                this.Write((int)0);
+                this.WriteInt32((int)0);
             }
             else
             {
-                this.Write(value.Length);
+                this.WriteInt32(value.Length);
                 this.Write(new Span<byte>(value, 0, value.Length));
             }
         }
@@ -230,21 +218,21 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="headerType"></param>
-        public void Write(string value, FixedHeaderType headerType = FixedHeaderType.Int)
+        public void WriteString(string value, FixedHeaderType headerType = FixedHeaderType.Int)
         {
             if (value == null)
             {
                 switch (headerType)
                 {
                     case FixedHeaderType.Byte:
-                        this.Write(byte.MaxValue);
+                        this.WriteByte(byte.MaxValue);
                         return;
                     case FixedHeaderType.Ushort:
-                        this.Write(ushort.MaxValue);
+                        this.WriteUInt16(ushort.MaxValue);
                         return;
                     case FixedHeaderType.Int:
                     default:
-                        this.Write(int.MaxValue);
+                        this.WriteInt32(int.MaxValue);
                         return;
                 }
 
@@ -254,14 +242,14 @@ namespace TouchSocket.Core
                 switch (headerType)
                 {
                     case FixedHeaderType.Byte:
-                        this.Write((byte)0);
+                        this.WriteByte((byte)0);
                         return;
                     case FixedHeaderType.Ushort:
-                        this.Write((ushort)0);
+                        this.WriteUInt16((ushort)0);
                         return;
                     case FixedHeaderType.Int:
                     default:
-                        this.Write((int)0);
+                        this.WriteInt32((int)0);
                         return;
                 }
             }
@@ -298,14 +286,14 @@ namespace TouchSocket.Core
                                         ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, byte.MaxValue);
                                     }
 
-                                    this.Write((byte)len);
+                                    this.WriteByte((byte)len);
                                     break;
                                 case FixedHeaderType.Ushort:
                                     if (len >= ushort.MaxValue)
                                     {
                                         ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, ushort.MaxValue);
                                     }
-                                    this.Write((ushort)len);
+                                    this.WriteUInt16((ushort)len);
                                     break;
                                 case FixedHeaderType.Int:
                                 default:
@@ -313,7 +301,7 @@ namespace TouchSocket.Core
                                     {
                                         ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, int.MaxValue);
                                     }
-                                    this.Write((int)len);
+                                    this.WriteInt32((int)len);
                                     break;
                             }
 
@@ -326,17 +314,6 @@ namespace TouchSocket.Core
                 }
             }
         }
-
-        /// <summary>
-        /// 写入<see cref="string"/>值。值必须为有效值。可通用解析。
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="encoding"></param>
-        public void WriteString(string value, Encoding encoding = null)
-        {
-            this.Write((encoding ?? Encoding.UTF8).GetBytes(value));
-        }
-
         #endregion String
 
         #region VarUInt32
@@ -367,7 +344,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="int"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(int value)
+        public void WriteInt32(int value)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -381,7 +358,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(int value, EndianType endianType)
+        public void WriteInt32(int value, EndianType endianType)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -398,7 +375,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="short"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(short value)
+        public void WriteInt16(short value)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -412,7 +389,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(short value, EndianType endianType)
+        public void WriteInt16(short value, EndianType endianType)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -429,7 +406,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="long"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(long value)
+        public void WriteInt64(long value)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -443,7 +420,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(long value, EndianType endianType)
+        public void WriteInt64(long value, EndianType endianType)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -460,7 +437,7 @@ namespace TouchSocket.Core
         /// 写入<see cref="bool"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(bool value)
+        public void WriteBoolean(bool value)
         {
             var size = 1;
             this.ExtendSize(size);
@@ -473,7 +450,7 @@ namespace TouchSocket.Core
         /// 写入bool数组。
         /// </summary>
         /// <param name="values"></param>
-        public void Write(bool[] values)
+        public void WriteBooleans(bool[] values)
         {
             int size;
             if (values.Length % 8 == 0)
@@ -500,7 +477,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public void Write(byte value)
+        public void WriteByte(byte value)
         {
             var size = 1;
             this.ExtendSize(size);
@@ -517,7 +494,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="char"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(char value)
+        public void WriteChar(char value)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -531,7 +508,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(char value, EndianType endianType)
+        public void WriteChar(char value, EndianType endianType)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -548,7 +525,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="double"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(double value)
+        public void WriteDouble(double value)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -562,7 +539,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(double value, EndianType endianType)
+        public void WriteDouble(double value, EndianType endianType)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -579,7 +556,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="float"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(float value)
+        public void WriteFloat(float value)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -593,7 +570,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(float value, EndianType endianType)
+        public void WriteFloat(float value, EndianType endianType)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -610,7 +587,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="ushort"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(ushort value)
+        public void WriteUInt16(ushort value)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -624,7 +601,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(ushort value, EndianType endianType)
+        public void WriteUInt16(ushort value, EndianType endianType)
         {
             var size = 2;
             this.ExtendSize(size);
@@ -641,7 +618,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="uint"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(uint value)
+        public void WriteUInt32(uint value)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -655,7 +632,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(uint value, EndianType endianType)
+        public void WriteUInt32(uint value, EndianType endianType)
         {
             var size = 4;
             this.ExtendSize(size);
@@ -672,7 +649,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="ulong"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(ulong value)
+        public void WriteUInt64(ulong value)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -686,7 +663,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(ulong value, EndianType endianType)
+        public void WriteUInt64(ulong value, EndianType endianType)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -703,7 +680,7 @@ namespace TouchSocket.Core
         /// 写入默认端序的<see cref="decimal"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(decimal value)
+        public void WriteDecimal(decimal value)
         {
             var size = 16;
             this.ExtendSize(size);
@@ -717,7 +694,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value"></param>
         /// <param name="endianType">指定端序</param>
-        public void Write(decimal value, EndianType endianType)
+        public void WriteDecimal(decimal value, EndianType endianType)
         {
             var size = 16;
             this.ExtendSize(size);
@@ -734,7 +711,7 @@ namespace TouchSocket.Core
         /// 写入<see cref="DateTime"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(DateTime value)
+        public void WriteDateTime(DateTime value)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -751,7 +728,7 @@ namespace TouchSocket.Core
         /// 写入<see cref="TimeSpan"/>值
         /// </summary>
         /// <param name="value"></param>
-        public void Write(TimeSpan value)
+        public void WriteTimeSpan(TimeSpan value)
         {
             var size = 8;
             this.ExtendSize(size);
@@ -764,7 +741,7 @@ namespace TouchSocket.Core
 
         #region GUID
 
-        public void Write(in Guid value)
+        public void WriteGuid(in Guid value)
         {
             var size = 16;
             this.ExtendSize(size);

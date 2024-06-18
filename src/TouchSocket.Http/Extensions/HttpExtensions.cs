@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http扩展辅助
     /// </summary>
-    public static class HttpExtensions
+    public static partial class HttpExtensions
     {
         #region HttpBase
 
@@ -107,9 +108,13 @@ namespace TouchSocket.Http
 
         public static async Task<string> GetBodyAsync(this HttpBase httpBase)
         {
-            var bytes = await httpBase.GetContentAsync(CancellationToken.None) ?? throw new Exception("获取数据体错误。");
+            var bytes = await httpBase.GetContentAsync(CancellationToken.None);
+            if (bytes.IsEmpty)
+            {
+                return null;
+            }
 
-            return Encoding.UTF8.GetString(bytes);
+            return bytes.Span.ToString(Encoding.UTF8);
         }
 
         /// <summary>
@@ -130,7 +135,7 @@ namespace TouchSocket.Http
                 strs = strs[1].Split('=');
                 if (strs.Length == 2)
                 {
-                    return strs[1].Replace("\"",string.Empty).Trim();
+                    return strs[1].Replace("\"", string.Empty).Trim();
                 }
             }
             return string.Empty;
@@ -172,16 +177,6 @@ namespace TouchSocket.Http
             httpBase.ContentType = type;
             return httpBase;
         }
-
-        ///// <summary>
-        ///// 写入
-        ///// </summary>
-        ///// <param name="httpBase"></param>
-        ///// <param name="buffer"></param>
-        //public static Task WriteAsync<T>(this T httpBase, byte[] buffer) where T : HttpBase
-        //{
-        //    return httpBase.WriteAsync(buffer, 0, buffer.Length);
-        //}
 
         #endregion HttpBase
 
@@ -387,6 +382,18 @@ namespace TouchSocket.Http
             return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade.GetDescription(), StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool IsAcceptGzip<TRequest>(this TRequest request) where TRequest : HttpRequest
+        {
+            var acceptEncoding = request.AcceptEncoding;
+
+            if (acceptEncoding.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            return acceptEncoding.Contains("gzip");
+        }
+
         #endregion 判断属性
 
         #endregion HttpRequest
@@ -454,6 +461,13 @@ namespace TouchSocket.Http
             return SetStatus(response, 200, "Success");
         }
 
+        public static TResponse SetGzipContent<TResponse>(this TResponse response, byte[] gzipContent) where TResponse : HttpResponse
+        {
+            response.SetContent(gzipContent);
+            response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
+            return response;
+        }
+
         /// <summary>
         /// 路径文件没找到
         /// </summary>
@@ -478,21 +492,29 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="response">响应</param>
         /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
-        /// <param name="filePath">文件路径</param>
+        /// <param name="fileInfo">文件信息</param>
         /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
         /// <param name="maxSpeed">最大速度。</param>
         /// <param name="bufferLen">读取长度。</param>
+        /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
         /// <exception cref="Exception"></exception>
         /// <exception cref="Exception"></exception>
         /// <returns></returns>
-        public static async Task FromFileAsync(this HttpResponse response, string filePath, HttpRequest request = default, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64)
+        public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
         {
-            using (var reader = FilePool.GetReader(filePath))
+            var filePath = fileInfo.FullName;
+            using (var streamReader = File.OpenRead(filePath))
             {
                 response.SetContentTypeByExtension(Path.GetExtension(filePath));
-                //var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                //response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+                if (fileName.HasValue())
+                {
+                    var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
+                    response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
+                }
+
                 response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
+
+                autoGzip = autoGzip && request.IsAcceptGzip();
 
                 if (response.CanWrite)
                 {
@@ -501,45 +523,95 @@ namespace TouchSocket.Http
                     if (string.IsNullOrEmpty(range))
                     {
                         response.SetStatus();
-                        response.ContentLength = reader.FileStorage.FileInfo.Length;
-                        httpRange = new HttpRange() { Start = 0, Length = reader.FileStorage.FileInfo.Length };
+                        if (!autoGzip)
+                        {
+                            response.ContentLength = fileInfo.Length;
+                        }
+                        httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
                     }
                     else
                     {
-                        httpRange = HttpRange.GetRange(range, reader.FileStorage.FileInfo.Length);
+                        httpRange = HttpRange.GetRange(range, fileInfo.Length);
                         if (httpRange == null)
                         {
-                            response.ContentLength = reader.FileStorage.FileInfo.Length;
-                            httpRange = new HttpRange() { Start = 0, Length = reader.FileStorage.FileInfo.Length };
+                            if (!autoGzip)
+                            {
+                                response.ContentLength = fileInfo.Length;
+                            }
+                            httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
                         }
                         else
                         {
-                            response.SetContentLength(httpRange.Length)
-                                .SetStatus(206, "Partial Content");
-                            response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, reader.FileStorage.FileInfo.Length));
+                            if (!autoGzip)
+                            {
+                                response.ContentLength = httpRange.Length;
+                            }
+                            response.SetStatus(206, "Partial Content");
+                            response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, fileInfo.Length));
                         }
                     }
-                    reader.Position = httpRange.Start;
-                    var surLen = httpRange.Length;
+
+
+                    streamReader.Position = httpRange.Start;
                     var flowGate = new FlowGate
                     {
                         Maximum = maxSpeed
                     };
 
+                    if (autoGzip)
+                    {
+                        response.IsChunk = true;
+                        response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
+                    }
+
                     var buffer = BytePool.Default.Rent(bufferLen);
                     try
                     {
-                        while (surLen > 0)
+                        if (autoGzip)
                         {
-                            var r = reader.Read(buffer, 0, (int)Math.Min(bufferLen, surLen));
-                            if (r == 0)
+                            using (var responseStream = response.CreateWriteStream())
                             {
-                                break;
+                                using (var gzip = new GZipStream(responseStream, CompressionMode.Compress, true))
+                                {
+                                    while (true)
+                                    {
+                                        var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureFalseAwait();
+                                        if (r == 0)
+                                        {
+                                            gzip.Close();
+                                            await response.CompleteChunkAsync().ConfigureFalseAwait();
+                                            break;
+                                        }
+
+                                        await flowGate.AddCheckWaitAsync(r).ConfigureFalseAwait();
+
+                                        await gzip.WriteAsync(buffer, 0, r,CancellationToken.None).ConfigureFalseAwait();
+                                    }
+                                }
                             }
 
-                            await flowGate.AddCheckWaitAsync(r);
-                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer,0,r));
-                            surLen -= r;
+                        }
+                        else
+                        {
+                            var surLen = httpRange.Length;
+                            while (surLen > 0)
+                            {
+                                var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureFalseAwait();
+                                if (r == 0)
+                                {
+                                    break;
+                                }
+
+                                await flowGate.AddCheckWaitAsync(r).ConfigureFalseAwait();
+
+                                await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureFalseAwait();
+                                surLen -= r;
+                            }
+
+                            if (response.IsChunk)
+                            {
+                                await response.CompleteChunkAsync().ConfigureFalseAwait();
+                            }
                         }
                     }
                     finally
@@ -549,26 +621,35 @@ namespace TouchSocket.Http
                 }
                 else
                 {
-                    if (reader.FileStorage.FileInfo.Length > 1024 * 1024)
+                    if (fileInfo.Length > 1024 * 1024)
                     {
                         throw new OverlengthException("当该对象不支持写入时，仅支持1Mb以内的文件。");
                     }
 
-                    using (var byteBlock = new ByteBlock((int)reader.FileStorage.FileInfo.Length))
+                    using (var byteBlock = new ByteBlock((int)fileInfo.Length))
                     {
                         var buffer = BytePool.Default.Rent(bufferLen);
                         try
                         {
                             while (true)
                             {
-                                var r = reader.Read(buffer, 0, bufferLen);
+                                var r = streamReader.Read(buffer, 0, bufferLen);
                                 if (r == 0)
                                 {
                                     break;
                                 }
-                                byteBlock.Write(buffer, 0, r);
+                                byteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, r));
                             }
-                            response.SetContent(byteBlock.ToArray());
+
+                            if (autoGzip)
+                            {
+                                response.SetGzipContent(GZip.Compress(byteBlock.ToArray()));
+                            }
+                            else
+                            {
+                                response.SetContent(byteBlock.ToArray());
+                            }
+
                         }
                         finally
                         {
@@ -585,16 +666,17 @@ namespace TouchSocket.Http
         /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
         /// </summary>
         /// <param name="context">上下文</param>
-        /// <param name="filePath">文件路径</param>
+        /// <param name="fileInfo">文件信息</param>
         /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
         /// <param name="maxSpeed">最大速度。</param>
         /// <param name="bufferLen">读取长度。</param>
+        /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
         /// <exception cref="Exception"></exception>
         /// <exception cref="Exception"></exception>
         /// <returns></returns>
-        public static async Task FromFileAsync(this HttpContext context, string filePath, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64)
+        public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
         {
-            await FromFileAsync(context.Response, filePath, context.Request, fileName, maxSpeed, bufferLen);
+            await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip);
         }
 
         #endregion FromFileAsync

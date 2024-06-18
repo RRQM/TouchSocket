@@ -20,6 +20,6 @@ namespace TouchSocket.Core
         /// <summary>
         /// 标记
         /// </summary>
-        long Sign { get; set; }
+        int Sign { get; set; }
     }
 }

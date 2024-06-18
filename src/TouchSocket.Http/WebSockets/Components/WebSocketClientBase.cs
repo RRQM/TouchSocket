@@ -167,7 +167,9 @@ namespace TouchSocket.Http.WebSockets
 
         private void InitWebSocket()
         {
-            this.SetAdapter(new WebSocketDataHandlingAdapter());
+            var adapter = new WebSocketDataHandlingAdapter();
+            base.SetWarpAdapter(adapter);
+            this.SetAdapter(adapter);
             this.Protocol = Protocol.WebSocket;
             this.m_webSocket.Online = true;
         }

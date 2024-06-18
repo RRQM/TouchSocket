@@ -57,6 +57,7 @@ namespace TouchSocket.Core
         public readonly ReadOnlySpan<byte> Span => this.m_span;
 
         #region Read
+
         /// <summary>
         /// 读取数据，然后递增Pos
         /// </summary>
@@ -119,7 +120,8 @@ namespace TouchSocket.Core
 
             return bytes;
         }
-        #endregion
+
+        #endregion Read
 
         #region ToArray
 
@@ -174,6 +176,26 @@ namespace TouchSocket.Core
 
         #endregion ToArray
 
+        #region VarUInt32
+        public uint ReadVarUInt32()
+        {
+            uint value = 0;
+            var bytelength = 0;
+            while (true)
+            {
+                var b = this.m_span[this.m_position++];
+                var temp = (b & 0x7F); //取每个字节的后7位
+                temp <<= (7 * bytelength); //向左移位，越是后面的字节，移位越多
+                value += (uint)temp; //把每个字节的值加起来就是最终的值了
+                bytelength++;
+                if (b <= 0x7F)
+                { //127=0x7F=0b01111111，小于等于说明msb=0，即最后一个字节
+                    break;
+                }
+            }
+            return value;
+        }
+        #endregion
 
         #region ByteBlock
 
@@ -185,7 +207,7 @@ namespace TouchSocket.Core
         /// </summary>
         public ByteBlock ReadByteBlock()
         {
-            var len = this.ReadInt32();
+            var len = (int)this.ReadVarUInt32() - 1;
 
             if (len < 0)
             {
@@ -193,10 +215,12 @@ namespace TouchSocket.Core
             }
 
             var byteBlock = new ByteBlock(len);
-            // byteBlock.Write(this.m);
+            byteBlock.Write(this.m_span.Slice(this.m_position, len));
+            byteBlock.SeekToStart();
             this.m_position += len;
             return byteBlock;
         }
+
         #endregion ByteBlock
 
         #region Seek
@@ -325,6 +349,7 @@ namespace TouchSocket.Core
                         return null;
                     }
                     break;
+
                 case FixedHeaderType.Ushort:
                     len = this.ReadUInt16();
                     if (len == ushort.MaxValue)
@@ -332,6 +357,7 @@ namespace TouchSocket.Core
                         return null;
                     }
                     break;
+
                 case FixedHeaderType.Int:
                 default:
                     len = this.ReadInt32();

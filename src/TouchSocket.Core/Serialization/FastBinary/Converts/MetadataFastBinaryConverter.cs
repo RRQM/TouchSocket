@@ -33,11 +33,11 @@ namespace TouchSocket.Core
 
         protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Metadata obj)
         {
-            byteBlock.Write(obj.Count);
+            byteBlock.WriteInt32(obj.Count);
             foreach (var item in obj)
             {
-                byteBlock.Write(item.Key);
-                byteBlock.Write(item.Value);
+                byteBlock.WriteString(item.Key);
+                byteBlock.WriteString(item.Value);
             }
         }
     }

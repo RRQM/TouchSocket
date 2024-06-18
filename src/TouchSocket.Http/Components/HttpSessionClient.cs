@@ -40,7 +40,7 @@ namespace TouchSocket.Http
         //    this.ProtectedDefaultSend(buffer, offset, count);
         //}
 
-        internal Task InternalSendAsync(ReadOnlyMemory<byte> memory)
+        internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedDefaultSendAsync(memory);
         }

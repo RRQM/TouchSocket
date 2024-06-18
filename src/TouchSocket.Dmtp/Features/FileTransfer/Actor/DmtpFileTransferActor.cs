@@ -864,7 +864,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 SourceId = this.DmtpActor.Id,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 ResourceHandle = fileResourceInfo.ResourceHandle,
                 Metadata = metadata,
                 Code = code
@@ -935,7 +934,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 Path = path,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 SourceId = this.DmtpActor.Id,
                 Metadata = metadata,
                 FileSectionSize = fileSectionSize
@@ -1006,7 +1004,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 SourceId = this.DmtpActor.Id,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 FileSection = fileSection
             };
 
@@ -1080,7 +1077,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 Path = savePath,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 SourceId = this.DmtpActor.Id,
                 FileInfo = fileResourceInfo.FileInfo,
                 Metadata = metadata,
@@ -1160,7 +1156,6 @@ namespace TouchSocket.Dmtp.FileTransfer
             {
                 SourceId = this.DmtpActor.Id,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 FileSection = fileSection,
                 Value = fileSectionResult.Value
             };
@@ -1669,7 +1664,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                 Path = path,
                 SourceId = this.DmtpActor.Id,
                 TargetId = targetId,
-                Route = targetId.HasValue(),
                 Metadata = metadata
             };
 
@@ -1749,7 +1743,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                 Path = savePath,
                 SourceId = this.DmtpActor.Id,
                 Metadata = metadata,
-                Route = targetId.HasValue(),
                 TargetId = targetId,
                 FileInfo = new RemoteFileInfo(fileInfo)
             };

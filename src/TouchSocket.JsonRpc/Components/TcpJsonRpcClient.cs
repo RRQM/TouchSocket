@@ -311,16 +311,17 @@ namespace TouchSocket.JsonRpc
         //    }
         //}
 
-        public async Task<RpcResponse> InvokeAsync(RpcRequest request)
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-            var invokeOption = request.InvokeOption ?? InvokeOption.WaitInvoke;
+            invokeOption  ??= InvokeOption.WaitInvoke;
 
-            var parameters = request.Parameters ?? new object[0];
+            parameters ??= new object[0];
+
             var jsonRpcRequest = new JsonRpcRequest
             {
-                Method = request.InvokeKey,
+                Method = invokeKey,
                 Params = parameters,
                 Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
             };
@@ -364,22 +365,20 @@ namespace TouchSocket.JsonRpc
                         }
                         else
                         {
-                            if (request.HasReturn)
+                            if (returnType!=null)
                             {
-                                var returnType = request.ReturnType;
-
                                 if (returnType.IsPrimitive || returnType == typeof(string))
                                 {
-                                    return new RpcResponse(resultContext.Result.ToString().ParseToType(returnType));
+                                    return resultContext.Result.ToString().ParseToType(returnType);
                                 }
                                 else
                                 {
-                                    return new RpcResponse(resultContext.Result.ToJsonString().FromJsonString(returnType));
+                                    return resultContext.Result.ToJsonString().FromJsonString(returnType);
                                 }
                             }
                             else
                             {
-                                return new RpcResponse();
+                                return default;
                             }
 
                         }

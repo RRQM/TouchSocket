@@ -131,18 +131,10 @@ namespace TouchSocket.Http.WebSockets
         /// 发送二进制消息
         /// </summary>
         /// <param name="buffer"></param>
-        /// <param name="endOfMessage"></param>
-        /// <returns></returns>
-        Task SendAsync(byte[] buffer, bool endOfMessage = true);
-
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <param name="endOfMessage"></param>
         /// <returns></returns>
-        Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true);
+        Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true);
     }
 }

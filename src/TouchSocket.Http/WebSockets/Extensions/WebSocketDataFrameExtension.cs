@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Text;
 using TouchSocket.Core;
 
@@ -28,10 +29,10 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static WSDataFrame AppendBinary(this WSDataFrame dataFrame, byte[] buffer, int offset, int length)
+        public static WSDataFrame AppendBinary(this WSDataFrame dataFrame, ReadOnlySpan<byte> span)
         {
-            dataFrame.PayloadData ??= new ByteBlock(length);
-            dataFrame.PayloadData.Write(buffer, offset, length);
+            dataFrame.PayloadData ??= new ByteBlock(span.Length);
+            dataFrame.PayloadData.Write(span);
             return dataFrame;
         }
 
@@ -56,14 +57,14 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         /// <param name="byteBlock"></param>
         /// <returns></returns>
-        public static bool BuildRequest(this WSDataFrame dataFrame, ByteBlock byteBlock)
+        public static void BuildRequest<TByteBlock>(this WSDataFrame dataFrame,ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
             dataFrame.Mask = true;
             if (dataFrame.MaskingKey == null)
             {
                 dataFrame.SetMaskString("RRQM");
             }
-            return dataFrame.Build(byteBlock);
+            dataFrame.Build(ref byteBlock);
         }
 
         /// <summary>
@@ -78,11 +79,16 @@ namespace TouchSocket.Http.WebSockets
             {
                 dataFrame.SetMaskString("RRQM");
             }
-            using (var byteBlock = new ByteBlock())
+            var byteBlock = new ValueByteBlock(dataFrame.MaxLength);
+            try
             {
-                dataFrame.Build(byteBlock);
+                dataFrame.Build(ref byteBlock);
                 var data = byteBlock.ToArray();
                 return data;
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 
@@ -92,9 +98,9 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         /// <param name="byteBlock"></param>
         /// <returns></returns>
-        public static bool BuildResponse(this WSDataFrame dataFrame, ByteBlock byteBlock)
+        public static void BuildResponse<TByteBlock>(this WSDataFrame dataFrame,ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
-            return dataFrame.Build(byteBlock);
+            dataFrame.Build(ref byteBlock);
         }
 
         /// <summary>
@@ -104,11 +110,16 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public static byte[] BuildResponseToBytes(this WSDataFrame dataFrame)
         {
-            using (var byteBlock = new ByteBlock())
+            var byteBlock = new ValueByteBlock(dataFrame.MaxLength);
+            try
             {
-                dataFrame.Build(byteBlock);
+                dataFrame.Build(ref byteBlock);
                 var data = byteBlock.ToArray();
                 return data;
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 

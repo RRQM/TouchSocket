@@ -8,20 +8,29 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
-    public interface IByteBlock : IDisposable
+    public interface IByteBlock : IDisposable, IBufferWriter<byte>
     {
+        #region 属性
+
         bool CanRead { get; }
         int CanReadLength { get; }
         int Capacity { get; }
         int FreeLength { get; }
         bool Holding { get; }
+        bool IsStruct { get; }
         int Length { get; }
+        ReadOnlyMemory<byte> Memory { get; }
         int Position { get; set; }
         ReadOnlySpan<byte> Span { get; }
         Memory<byte> TotalMemory { get; }
-        ReadOnlyMemory<byte> Memory { get; }
         bool Using { get; }
+        BytePool BytePool { get; }
+
         byte this[int index] { get; set; }
+
+        #endregion 属性
+
+        #region AsSegment
 
         ArraySegment<byte> AsSegment();
 
@@ -33,75 +42,183 @@ namespace TouchSocket.Core
 
         ArraySegment<byte> AsSegmentTake(int length);
 
+        #endregion AsSegment
+
         void Clear();
 
-        IEnumerator<byte> GetEnumerator();
+        #region Boolean
 
         bool ReadBoolean();
 
         bool[] ReadBooleans();
 
+        IEnumerable<bool> ToBoolensFromBit();
+
+        IEnumerable<bool> ToBoolensFromByte();
+
+        void WriteBoolean(bool value);
+
+        void WriteBooleans(bool[] values);
+
+        #endregion Boolean
+
+        #region Byte
+
         byte ReadByte();
+
+        void WriteByte(byte value);
+
+        #endregion Byte
+
+        #region Write
+
+        void Write(ReadOnlySpan<byte> span);
+
+        #endregion Write
+
+        #region Read
+
+        int Read(Span<byte> span);
+
+        #endregion Read
+
+        #region ByteBlock
 
         ByteBlock ReadByteBlock();
 
-        byte[] ReadBytesPackage();
+        void WriteByteBlock(ByteBlock byteBlock);
 
-        Memory<byte>? ReadBytesPackageMemory();
+        #endregion ByteBlock
+
+        #region Char
 
         char ReadChar();
 
         char ReadChar(EndianType endianType);
 
-        DateTime ReadDateTime();
+        IEnumerable<char> ToChars();
+
+        IEnumerable<char> ToChars(EndianType endianType);
+
+        void WriteChar(char value);
+
+        void WriteChar(char value, EndianType endianType);
+
+        #endregion Char
+
+        #region Decimal
 
         decimal ReadDecimal();
 
         decimal ReadDecimal(EndianType endianType);
 
-        double ReadDouble();
+        IEnumerable<decimal> ToDecimals();
 
-        double ReadDouble(EndianType endianType);
+        IEnumerable<decimal> ToDecimals(EndianType endianType);
+
+        void WriteDecimal(decimal value);
+
+        void WriteDecimal(decimal value, EndianType endianType);
+
+        #endregion Decimal
+
+        #region Float
 
         float ReadFloat();
 
         float ReadFloat(EndianType endianType);
 
-        short ReadInt16();
+        IEnumerable<float> ToFloats();
 
-        short ReadInt16(EndianType endianType);
+        IEnumerable<float> ToFloats(EndianType endianType);
 
-        int ReadInt32();
+        void WriteFloat(float value);
 
-        int ReadInt32(EndianType endianType);
+        void WriteFloat(float value, EndianType endianType);
+
+        #endregion Float
+
+        #region Int64
 
         long ReadInt64();
 
         long ReadInt64(EndianType endianType);
 
+        IEnumerable<long> ToInt64s();
+
+        IEnumerable<long> ToInt64s(EndianType endianType);
+
+        void WriteInt64(long value);
+
+        void WriteInt64(long value, EndianType endianType);
+
+        #endregion Int64
+
+        #region Null
+
         bool ReadIsNull();
 
-        //T ReadObject<T>(SerializationType serializationType = SerializationType.FastBinary);
+        void WriteIsNull<T>(T t) where T : class;
 
-        TPackage ReadPackage<TPackage>() where TPackage : class, IPackage, new();
+        void WriteIsNull<T>(T? t) where T : struct;
 
-        string ReadString(FixedHeaderType headerType = FixedHeaderType.Int);
+        void WriteNotNull();
+
+        void WriteNull();
+
+        #endregion Null
+
+        #region Guid
+
+        Guid ReadGuid();
+
+        void WriteGuid(in Guid value);
+
+        #endregion Guid
+
+        #region TimeSpan
 
         TimeSpan ReadTimeSpan();
 
-        ushort ReadUInt16();
+        IEnumerable<TimeSpan> ToTimeSpans();
 
-        ushort ReadUInt16(EndianType endianType);
+        void WriteTimeSpan(TimeSpan value);
+
+        #endregion TimeSpan
+
+        #region UInt32
 
         uint ReadUInt32();
 
         uint ReadUInt32(EndianType endianType);
 
+        IEnumerable<uint> ToUInt32s();
+
+        IEnumerable<uint> ToUInt32s(EndianType endianType);
+
+        void WriteUInt32(uint value);
+
+        void WriteUInt32(uint value, EndianType endianType);
+
+        #endregion UInt32
+
+        #region UInt64
+
         ulong ReadUInt64();
 
         ulong ReadUInt64(EndianType endianType);
 
-        void Reset();
+        IEnumerable<ulong> ToUInt64s();
+
+        IEnumerable<ulong> ToUInt64s(EndianType endianType);
+
+        void WriteUInt64(ulong value);
+
+        void WriteUInt64(ulong value, EndianType endianType);
+
+        #endregion UInt64
+
+        #region Seek
 
         void Seek(int position);
 
@@ -111,11 +228,19 @@ namespace TouchSocket.Core
 
         void SeekToStart();
 
+        #endregion Seek
+
+        ReadOnlySpan<byte> ReadToSpan(int length);
+
+        void Reset();
+
         void SetCapacity(int size, bool retainedData = false);
 
         void SetHolding(bool holding);
 
         void SetLength(int value);
+
+        #region ToArray
 
         byte[] ToArray();
 
@@ -127,39 +252,9 @@ namespace TouchSocket.Core
 
         byte[] ToArrayTake(int length);
 
-        IEnumerable<bool> ToBoolensFromBit();
+        #endregion ToArray
 
-        IEnumerable<bool> ToBoolensFromByte();
-
-        IEnumerable<char> ToChars();
-
-        IEnumerable<char> ToChars(EndianType endianType);
-
-        IEnumerable<DateTime> ToDateTimes();
-
-        IEnumerable<decimal> ToDecimals();
-
-        IEnumerable<decimal> ToDecimals(EndianType endianType);
-
-        IEnumerable<double> ToDoubles();
-
-        IEnumerable<double> ToDoubles(EndianType endianType);
-
-        IEnumerable<float> ToFloats();
-
-        IEnumerable<float> ToFloats(EndianType endianType);
-
-        IEnumerable<short> ToInt16s();
-
-        IEnumerable<short> ToInt16s(EndianType endianType);
-
-        IEnumerable<int> ToInt32s();
-
-        IEnumerable<int> ToInt32s(EndianType endianType);
-
-        IEnumerable<long> ToInt64s();
-
-        IEnumerable<long> ToInt64s(EndianType endianType);
+        #region ToMemory
 
         Memory<byte> ToMemory();
 
@@ -171,107 +266,126 @@ namespace TouchSocket.Core
 
         Memory<byte> ToMemoryTake(int length);
 
+        #endregion ToMemory
+
+        #region ToString
+
         string ToString();
 
         string ToString(int offset);
 
         string ToString(int offset, int length);
 
-        IEnumerable<TimeSpan> ToTimeSpans();
+        #endregion ToString
+
+        #region DateTime
+
+        DateTime ReadDateTime();
+
+        IEnumerable<DateTime> ToDateTimes();
+
+        void WriteDateTime(DateTime value);
+
+        #endregion DateTime
+
+        #region Double
+
+        double ReadDouble();
+
+        double ReadDouble(EndianType endianType);
+
+        IEnumerable<double> ToDoubles();
+
+        IEnumerable<double> ToDoubles(EndianType endianType);
+
+        void WriteDouble(double value);
+
+        void WriteDouble(double value, EndianType endianType);
+
+        #endregion Double
+
+        #region Int32
+
+        int ReadInt32();
+
+        int ReadInt32(EndianType endianType);
+
+        IEnumerable<int> ToInt32s();
+
+        IEnumerable<int> ToInt32s(EndianType endianType);
+
+        void WriteInt32(int value);
+
+        void WriteInt32(int value, EndianType endianType);
+
+        #endregion Int32
+
+        #region Int16
+
+        short ReadInt16();
+
+        short ReadInt16(EndianType endianType);
+
+        IEnumerable<short> ToInt16s();
+
+        IEnumerable<short> ToInt16s(EndianType endianType);
+
+        void WriteInt16(short value);
+
+        void WriteInt16(short value, EndianType endianType);
+
+        #endregion Int16
+
+        #region String
+
+        string ReadString(FixedHeaderType headerType = FixedHeaderType.Int);
+
+        void WriteString(string value, FixedHeaderType headerType = FixedHeaderType.Int);
+
+        #endregion String
+
+        #region UInt16
+
+        ushort ReadUInt16();
+
+        ushort ReadUInt16(EndianType endianType);
 
         IEnumerable<ushort> ToUInt16s();
 
         IEnumerable<ushort> ToUInt16s(EndianType endianType);
 
-        IEnumerable<uint> ToUInt32s();
+        void WriteUInt16(ushort value);
 
-        IEnumerable<uint> ToUInt32s(EndianType endianType);
+        void WriteUInt16(ushort value, EndianType endianType);
 
-        IEnumerable<ulong> ToUInt64s();
+        #endregion UInt16
 
-        IEnumerable<ulong> ToUInt64s(EndianType endianType);
+        #region BytesPackage
 
-        void Write(bool value);
+        byte[] ReadBytesPackage();
 
-        void Write(bool[] values);
-
-        void Write(byte value);
-
-        void Write(byte[] buffer, int offset, int count);
-
-        void Write(char value);
-
-        void Write(char value, EndianType endianType);
-
-        void Write(DateTime value);
-
-        void Write(decimal value);
-
-        void Write(decimal value, EndianType endianType);
-
-        void Write(double value);
-
-        void Write(double value, EndianType endianType);
-
-        void Write(float value);
-
-        void Write(float value, EndianType endianType);
-
-        void Write(int value);
-
-        void Write(int value, EndianType endianType);
-
-        void Write(long value);
-
-        void Write(long value, EndianType endianType);
-
-        void Write(short value);
-
-        void Write(short value, EndianType endianType);
-
-        void Write(ReadOnlySpan<byte> span);
-
-        void Write(string value, FixedHeaderType headerType = FixedHeaderType.Int);
-
-        void Write(TimeSpan value);
-
-        void Write(uint value);
-
-        void Write(uint value, EndianType endianType);
-
-        void Write(ulong value);
-
-        void Write(ulong value, EndianType endianType);
-
-        void Write(ushort value);
-
-        void Write(ushort value, EndianType endianType);
-
-        void WriteByteBlock(ByteBlock byteBlock);
+        Memory<byte>? ReadBytesPackageMemory();
 
         void WriteBytesPackage(byte[] value);
 
         void WriteBytesPackage(byte[] value, int offset, int length);
 
-        void WriteIsNull<T>(T t) where T : class;
+        #endregion BytesPackage
 
-        void WriteIsNull<T>(T? t) where T : struct;
+        #region Package
 
-        void WriteNotNull();
-
-        void WriteNull();
-
-        //void WriteObject(object value, SerializationType serializationType = SerializationType.FastBinary);
+        TPackage ReadPackage<TPackage>() where TPackage : class, IPackage, new();
 
         void WritePackage<TPackage>(TPackage package) where TPackage : class, IPackage;
 
-        void WriteString(string value, Encoding encoding = null);
-        int Read(byte[] buffer, int offset, int length);
-        int Read(byte[] buffer);
-        int Read(out byte[] buffer, int length);
-        byte[] ReadToArray(int length);
+        #endregion Package
+
+        #region VarUInt32
+
+        uint ReadVarUInt32();
+
         int WriteVarUInt32(uint value);
-        void Write(in Guid value);
-        Guid ReadGuid();
+
+        #endregion VarUInt32
     }
 }

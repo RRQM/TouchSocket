@@ -47,6 +47,9 @@ namespace TouchSocket.Core
         /// </summary>
         public override bool CanSplicingSend => false;
 
+        /// <summary>
+        /// 指示需要解析当前包的剩余长度。如果不能得知，请赋值<see cref="int.MaxValue"/>。
+        /// </summary>
         protected int SurLength { get; set; }
 
         public bool TryParseRequest<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
@@ -58,7 +61,7 @@ namespace TouchSocket.Core
 
             if (this.m_tempByteBlock.IsEmpty)
             {
-                return this.Single(ref byteBlock, out request);
+                return this.Single(ref byteBlock, out request)== FilterResult.Success;
             }
             else
             {
@@ -69,20 +72,49 @@ namespace TouchSocket.Core
 
                 var len = Math.Min(this.SurLength, byteBlock.CanReadLength);
 
-                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, len));
+                var block = this.m_tempByteBlock;
+
+                block.Write(byteBlock.Span.Slice(byteBlock.Position, len));
                 byteBlock.Position += len;
                 this.SurLength -= len;
-                var block = this.m_tempByteBlock;
+                
                 this.m_tempByteBlock = ValueByteBlock.Empty;
+
+                block.SeekToStart();
                 try
                 {
-                    block.SeekToStart();
-                    var success = this.Single(ref block, out request);
-                    if (!success&& (!this.m_tempByteBlock.IsEmpty))
+                    var filterResult = this.Single(ref block, out request);
+                    switch (filterResult)
                     {
-                        byteBlock.Position += this.m_tempByteBlock.Length;
+                        case FilterResult.Cache:
+                            {
+                                if (!this.m_tempByteBlock.IsEmpty)
+                                {
+                                    //接着缓存
+                                    byteBlock.Position += this.m_tempByteBlock.Length;
+                                }
+                                else
+                                { 
+                                
+                                }
+                                return false;
+                            }
+                        case FilterResult.Success:
+                            {
+                                if (block.CanReadLength>0)
+                                {
+                                    byteBlock.Position -= block.CanReadLength;
+                                }
+                                return true;
+                            }
+                        case FilterResult.GoOn:
+                        default:
+                            if (block.CanReadLength > 0)
+                            {
+                                byteBlock.Position -= block.CanReadLength;
+                            }
+                            return false;
                     }
-                    return success;
                 }
                 finally
                 {
@@ -136,14 +168,14 @@ namespace TouchSocket.Core
             }
             if (this.m_tempByteBlock.IsEmpty)
             {
-                await this.Single(byteBlock, false).ConfigureFalseAwait();
+                await this.SingleAsync(byteBlock, false).ConfigureFalseAwait();
             }
             else
             {
                 this.m_tempByteBlock.Write(byteBlock.Span);
                 var block = this.m_tempByteBlock;
                 this.m_tempByteBlock = ValueByteBlock.Empty;
-                await this.Single(block, true).ConfigureFalseAwait();
+                await this.SingleAsync(block, true).ConfigureFalseAwait();
             }
         }
 
@@ -168,12 +200,8 @@ namespace TouchSocket.Core
             return request != null;
         }
 
-        private bool Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
+        protected FilterResult Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
         {
-            if (this.m_tempRequest is null)
-            {
-
-            }
             var tempCapacity = 1024 * 64;
             var filterResult = this.Filter(ref byteBlock,  this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
             switch (filterResult)
@@ -182,7 +210,7 @@ namespace TouchSocket.Core
 
                     request = this.m_tempRequest;
                     this.m_tempRequest = default;
-                    return true;
+                    return filterResult;
 
                 case FilterResult.Cache:
                     if (byteBlock.CanReadLength > 0)
@@ -202,7 +230,7 @@ namespace TouchSocket.Core
                         this.LastCacheTime = DateTime.Now;
                     }
                     request = default;
-                    return false;
+                    return filterResult;
 
                 case FilterResult.GoOn:
                 default:
@@ -211,11 +239,11 @@ namespace TouchSocket.Core
                         this.LastCacheTime = DateTime.Now;
                     }
                     request = default;
-                    return false;
+                    return filterResult;
             }
         }
 
-        private async Task Single<TByteBlock>(TByteBlock byteBlock, bool temp)where TByteBlock:IByteBlock
+        private async Task SingleAsync<TByteBlock>(TByteBlock byteBlock, bool temp)where TByteBlock:IByteBlock
         {
             byteBlock.Position = 0;
             while (byteBlock.Position < byteBlock.Length)

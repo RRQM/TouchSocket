@@ -28,38 +28,17 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
-        public int Read(byte[] buffer, int offset, int length)
+        public int Read(Span<byte> span)
         {
+            var length = span.Length;
             if (length == 0)
             {
                 return 0;
             }
             var len = this.m_length - this.m_position > length ? length : this.CanReadLength;
-            Unsafe.CopyBlock(ref buffer[offset], ref this.m_buffer[m_position], (uint)len);
+            Unsafe.CopyBlock(ref span[0], ref this.m_buffer[m_position], (uint)len);
             this.m_position += len;
             return len;
-        }
-
-        /// <summary>
-        /// 读取数据，然后递增Pos
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public int Read(byte[] buffer)
-        {
-            return this.Read(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 读取数据，然后递增Pos
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int Read(out byte[] buffer, int length)
-        {
-            buffer = new byte[length];
-            return this.Read(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -68,16 +47,12 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public byte[] ReadToArray(int length)
+        public ReadOnlySpan<byte> ReadToSpan(int length)
         {
-            var bytes = new byte[length];
-            var r = this.Read(bytes, 0, bytes.Length);
-            if (r != bytes.Length)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            var span = new ReadOnlySpan<byte>(this.m_buffer,this.m_position,length);
 
-            return bytes;
+            this.m_position += length;
+            return span;
         }
         #endregion
 
@@ -91,7 +66,7 @@ namespace TouchSocket.Core
         /// </summary>
         public ByteBlock ReadByteBlock()
         {
-            var len = this.ReadInt32();
+            var len = (int)this.ReadVarUInt32() - 1;
 
             if (len < 0)
             {
@@ -99,7 +74,7 @@ namespace TouchSocket.Core
             }
 
             var byteBlock = new ByteBlock(len);
-            byteBlock.Write(this.m_buffer, this.m_position, len);
+            byteBlock.Write(new ReadOnlySpan<byte>(this.m_buffer, this.m_position, len));
             byteBlock.SeekToStart();
             this.m_position += len;
             return byteBlock;

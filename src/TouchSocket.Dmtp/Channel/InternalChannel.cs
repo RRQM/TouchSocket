@@ -129,8 +129,7 @@ namespace TouchSocket.Dmtp
                     DataType = ChannelDataType.CancelOrder,
                     Message = operationMes,
                     SourceId = this.m_actor.Id,
-                    TargetId = this.TargetId,
-                    Route = this.TargetId.HasValue()
+                    TargetId = this.TargetId
                 };
                 await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureFalseAwait();
                 this.m_lastOperationTime = DateTime.Now;
@@ -177,8 +176,7 @@ namespace TouchSocket.Dmtp
                 DataType = ChannelDataType.CompleteOrder,
                 Message = operationMes,
                 SourceId = this.m_actor.Id,
-                TargetId = this.TargetId,
-                Route = this.TargetId.HasValue()
+                TargetId = this.TargetId
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureFalseAwait();
             this.m_lastOperationTime = DateTime.Now;
@@ -217,8 +215,7 @@ namespace TouchSocket.Dmtp
                 DataType = ChannelDataType.HoldOnOrder,
                 Message = operationMes,
                 SourceId = this.m_actor.Id,
-                TargetId = this.TargetId,
-                Route = this.TargetId.HasValue()
+                TargetId = this.TargetId
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureFalseAwait();
             this.m_lastOperationTime = DateTime.Now;
@@ -242,8 +239,7 @@ namespace TouchSocket.Dmtp
                     RunNow = true,
                     DataType = ChannelDataType.HoldOnOrder,
                     SourceId = this.m_actor.Id,
-                    TargetId = this.TargetId,
-                    Route = this.TargetId.HasValue()
+                    TargetId = this.TargetId
                 };
                 this.m_actor.SendChannelPackageAsync(channelPackage).GetFalseAwaitResult();
                 this.m_lastOperationTime = DateTime.Now;
@@ -391,8 +387,7 @@ namespace TouchSocket.Dmtp
                 ChannelId = this.Id,
                 DataType = ChannelDataType.DataOrder,
                 SourceId = this.m_actor.Id,
-                TargetId = this.TargetId,
-                Route = this.TargetId.HasValue()
+                TargetId = this.TargetId
             };
 
             var byteBlock = new ByteBlock(memory.Length);

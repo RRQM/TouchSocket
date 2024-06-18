@@ -18,16 +18,16 @@ namespace TouchSocket.Http
     internal class InternalBlockResult : DisposableObject, IBlockResult<byte>
     {
         public static readonly IBlockResult<byte> Completed = new InternalBlockResult(true);
-        private readonly ArraySegment<byte> m_segment;
+        private readonly ReadOnlyMemory<byte> m_segment;
         private readonly bool m_isCompleted;
 
         public InternalBlockResult(bool isCompleted) : this(default, isCompleted)
         {
         }
 
-        public InternalBlockResult(ArraySegment<byte> byteBlock, bool isCompleted)
+        public InternalBlockResult(ReadOnlyMemory<byte> memory, bool isCompleted)
         {
-            this.m_segment = byteBlock;
+            this.m_segment = memory;
             this.m_isCompleted = isCompleted;
         }
 

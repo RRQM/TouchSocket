@@ -106,6 +106,7 @@ namespace TouchSocket.Dmtp
         {
             if (this.m_dmtpActor != null)
             {
+                await this.m_dmtpActor.SendCloseAsync(msg).ConfigureFalseAwait();
                 await this.m_dmtpActor.CloseAsync(msg).ConfigureFalseAwait();
             }
             await base.CloseAsync(msg).ConfigureFalseAwait();
@@ -136,6 +137,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
+            await this.m_dmtpActor.CloseAsync(e.Message).ConfigureFalseAwait();
             await this.OnDmtpClosed(e).ConfigureFalseAwait();
         }
 
@@ -177,7 +179,9 @@ namespace TouchSocket.Dmtp
         private void SwitchProtocolToDmtp()
         {
             this.Protocol = DmtpUtility.DmtpProtocol;
-            this.SetAdapter(new DmtpAdapter());
+            DmtpAdapter adapter = new DmtpAdapter();
+            base.SetWarpAdapter(adapter);
+            this.SetAdapter(adapter);
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
                 //OutputSend = this.DmtpActorSend,
@@ -194,11 +198,6 @@ namespace TouchSocket.Dmtp
         }
 
         #region 内部委托绑定
-
-        //private void DmtpActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-        //{
-        //    base.ProtectedSend(transferBytes);
-        //}
 
         private Task DmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {

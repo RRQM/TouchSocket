@@ -33,7 +33,7 @@ namespace TouchSocket.Http
                     ThrowHelper.ThrowException(response.StatusMessage);
                 }
 
-                return await response.GetContentAsync(token);
+                return (await response.GetContentAsync(token)).ToArray();
             }
         }
 

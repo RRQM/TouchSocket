@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     public class WaitRouterPackage : MsgRouterPackage, IWaitResult
     {
         /// <inheritdoc/>
-        public long Sign { get; set; }
+        public int Sign { get; set; }
 
         /// <inheritdoc/>
         public byte Status { get; set; }
@@ -34,8 +34,8 @@ namespace TouchSocket.Core
             base.PackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
-                byteBlock.Write(this.Sign);
-                byteBlock.Write(this.Status);
+                byteBlock.WriteInt32(this.Sign);
+                byteBlock.WriteByte(this.Status);
             }
         }
 
@@ -45,8 +45,8 @@ namespace TouchSocket.Core
             base.PackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
-                byteBlock.Write(this.Sign);
-                byteBlock.Write(this.Status);
+                byteBlock.WriteInt32(this.Sign);
+                byteBlock.WriteByte(this.Status);
             }
         }
 
@@ -56,7 +56,7 @@ namespace TouchSocket.Core
             base.UnpackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
-                this.Sign = byteBlock.ReadInt64();
+                this.Sign = byteBlock.ReadInt32();
                 this.Status = (byte)byteBlock.ReadByte();
             }
         }
@@ -67,7 +67,7 @@ namespace TouchSocket.Core
             base.UnpackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
-                this.Sign = byteBlock.ReadInt64();
+                this.Sign = byteBlock.ReadInt32();
                 this.Status = (byte)byteBlock.ReadByte();
             }
         }

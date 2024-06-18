@@ -137,7 +137,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <inheritdoc/>
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.ResourceHandle);
+            byteBlock.WriteInt32(this.ResourceHandle);
             byteBlock.WritePackage(this.FileInfo);
         }
 
@@ -189,10 +189,10 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="byteBlock"></param>
         public void Save<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
-            byteBlock.Write(this.FileSectionSize);
-            byteBlock.Write(this.ResourceHandle);
+            byteBlock.WriteInt32(this.FileSectionSize);
+            byteBlock.WriteInt32(this.ResourceHandle);
             byteBlock.WritePackage(this.FileInfo);
-            byteBlock.Write(this.m_fileSections.Length);
+            byteBlock.WriteInt32(this.m_fileSections.Length);
             foreach (var item in this.m_fileSections)
             {
                 byteBlock.WritePackage(item);

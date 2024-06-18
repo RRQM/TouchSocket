@@ -45,9 +45,9 @@ namespace TouchSocket.Http.WebSockets
             var index = offset;
             dataFrame = new WSDataFrame
             {
-                RSV1 = dataBuffer[offset].GetBit(6) == 1,
-                RSV2 = dataBuffer[offset].GetBit(5) == 1,
-                RSV3 = dataBuffer[offset].GetBit(4) == 1,
+                RSV1 = dataBuffer[offset].GetBit(6),
+                RSV2 = dataBuffer[offset].GetBit(5),
+                RSV3 = dataBuffer[offset].GetBit(4),
                 FIN = (dataBuffer[offset] >> 7) == 1,
                 Opcode = (WSDataType)(dataBuffer[offset] & 0xf),
                 Mask = (dataBuffer[++offset] >> 7) == 1
@@ -73,7 +73,7 @@ namespace TouchSocket.Http.WebSockets
                 if (length < 12)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -88,7 +88,7 @@ namespace TouchSocket.Http.WebSockets
                 if (length < (offset - index) + 4)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -105,12 +105,12 @@ namespace TouchSocket.Http.WebSockets
             var surlen = length - (offset - index);
             if (payloadLength <= surlen)
             {
-                byteBlock.Write(dataBuffer, offset, payloadLength);
+                byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
                 offset += payloadLength;
             }
             else
             {
-                byteBlock.Write(dataBuffer, offset, surlen);
+                byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surlen));
                 offset += surlen;
             }
 
@@ -128,7 +128,7 @@ namespace TouchSocket.Http.WebSockets
 
             if (this.m_tempByteBlock != null)
             {
-                this.m_tempByteBlock.Write(buffer, 0, r);
+                this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
                 buffer = this.m_tempByteBlock.ToArray();
                 r = this.m_tempByteBlock.Position;
                 this.m_tempByteBlock.Dispose();
@@ -137,27 +137,27 @@ namespace TouchSocket.Http.WebSockets
 
             if (this.m_dataFrameTemp == null)
             {
-                await this.SplitPackage(buffer, 0, r).ConfigureFalseAwait();
+                await this.SplitPackageAsync(buffer, 0, r).ConfigureFalseAwait();
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
                     this.m_dataFrameTemp = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
                     await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
                     this.m_dataFrameTemp = null;
-                    await this.SplitPackage(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
+                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
                 }
                 else
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, r);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
                     this.m_surPlusLength -= r;
                 }
             }
@@ -181,7 +181,7 @@ namespace TouchSocket.Http.WebSockets
             {
                 if (dataFrame.Mask)
                 {
-                    WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory, dataFrame.MaskingKey);
+                    WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory.Span, dataFrame.MaskingKey);
                 }
                 await this.GoReceivedAsync(null, dataFrame).ConfigureFalseAwait();
             }
@@ -197,14 +197,14 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataBuffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        private async Task SplitPackage(byte[] dataBuffer, int offset, int length)
+        private async Task SplitPackageAsync(byte[] dataBuffer, int offset, int length)
         {
             while (offset < length)
             {
                 if (length - offset < 2)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                     return;
                 }
 
@@ -213,7 +213,7 @@ namespace TouchSocket.Http.WebSockets
                     case FilterResult.Cache:
                         {
                             this.m_tempByteBlock ??= new ByteBlock();
-                            this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
+                            this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                             return;
                         }
                     case FilterResult.Success:

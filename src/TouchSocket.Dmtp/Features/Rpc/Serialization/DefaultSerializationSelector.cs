@@ -12,6 +12,8 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Buffers;
+using System.Runtime.Serialization;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -21,74 +23,88 @@ namespace TouchSocket.Dmtp.Rpc
     /// <summary>
     /// 默认序列化选择器
     /// </summary>
-    public class DefaultSerializationSelector : SerializationSelector
+    public sealed class DefaultSerializationSelector : ISerializationSelector
     {
-        /// <summary>
-        /// 反序列化
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameterBytes"></param>
-        /// <param name="parameterType"></param>
-        /// <returns></returns>
-        public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+        public DefaultSerializationSelector()
         {
-            if (parameterBytes == null)
-            {
-                return parameterType.GetDefault();
-            }
+            this.FastSerializerContext = FastBinaryFormatter.DefaultFastSerializerContext;
+        }
+
+        public FastSerializerContext FastSerializerContext { get; set; }
+        public SerializationBinder SerializationBinder { get; set; }
+
+        public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+        {
             switch (serializationType)
             {
                 case SerializationType.FastBinary:
                     {
-                        var block = new ValueByteBlock(parameterBytes);
-                        return FastBinaryFormatter.Deserialize(ref block, parameterType);
+                        return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType, this.FastSerializerContext);
                     }
                 case SerializationType.SystemBinary:
                     {
-                        return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                        if (byteBlock.ReadIsNull())
+                        {
+                            return parameterType.GetDefault();
+                        }
+
+                        using (var block = byteBlock.ReadByteBlock())
+                        {
+                            return SerializeConvert.BinaryDeserialize(block.AsStream(), SerializationBinder);
+                        }
                     }
                 case SerializationType.Json:
                     {
-                        return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(parameterBytes), parameterType);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                        if (byteBlock.ReadIsNull())
+                        {
+                            return parameterType.GetDefault();
+                        }
+
+                        return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType);
                     }
                 default:
                     throw new RpcException("未指定的反序列化方式");
             }
         }
 
-        /// <summary>
-        /// 序列化参数
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+        public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
         {
-            if (parameter == null)
-            {
-                return null;
-            }
             switch (serializationType)
             {
                 case SerializationType.FastBinary:
                     {
-                        return FastBinaryFormatter.SerializeToBytes(parameter);
+                        FastBinaryFormatter.Serialize(ref byteBlock, parameter);
+                        break;
                     }
                 case SerializationType.SystemBinary:
                     {
-                        return SerializeConvert.BinarySerialize(parameter);
+                        if (parameter is null)
+                        {
+                            byteBlock.WriteNull();
+                        }
+                        else
+                        {
+                            byteBlock.WriteNotNull();
+                            using (var block = new ByteBlock(1024 * 64))
+                            {
+                                SerializeConvert.BinarySerialize(block.AsStream(), parameter);
+                                byteBlock.WriteByteBlock(block);
+                            }
+                        }
+                        break;
                     }
                 case SerializationType.Json:
                     {
-                        return JsonConvert.SerializeObject(parameter).ToUTF8Bytes();
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlSerializeToBytes(parameter);
+                        if (parameter is null)
+                        {
+                            byteBlock.WriteNull();
+                        }
+                        else
+                        {
+                            byteBlock.WriteNotNull();
+                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter));
+                        }
+                        break;
                     }
                 default:
                     throw new RpcException("未指定的序列化方式");

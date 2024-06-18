@@ -34,7 +34,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public IDmtpActor DmtpActor => this.m_dmtpActor;
 
-        /// <inheritdoc cref="IDmtpActor.Id"/>
+        /// <inheritdoc cref="IIdClient.Id"/>
         public string Id => this.m_dmtpActor.Id;
 
         #region 字段
@@ -60,6 +60,7 @@ namespace TouchSocket.Dmtp
         {
             if (this.m_dmtpActor != null)
             {
+                await this.m_dmtpActor.SendCloseAsync(msg).ConfigureFalseAwait();
                 await this.m_dmtpActor.CloseAsync(msg).ConfigureFalseAwait();
             }
 
@@ -122,7 +123,6 @@ namespace TouchSocket.Dmtp
             }
             this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
             {
-                //OutputSend = this.DmtpActorSend,
                 OutputSendAsync = this.DmtpActorSendAsync,
                 Routing = this.OnDmtpActorRouting,
                 Handshaking = this.OnDmtpActorHandshaking,
@@ -278,6 +278,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
+            await this.m_dmtpActor.CloseAsync(e.Message).ConfigureFalseAwait();
             await this.OnDmtpClosed(e).ConfigureFalseAwait();
         }
 
@@ -295,6 +296,7 @@ namespace TouchSocket.Dmtp
             return base.OnTcpConnecting(e);
         }
 
+        /// <inheritdoc/>
         protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
         {
             while (byteBlock.CanRead)

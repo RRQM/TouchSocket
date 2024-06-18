@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -26,18 +27,13 @@ namespace TouchSocket.Http
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreForRequest = new SemaphoreSlim(1, 1);
-        private readonly WaitData<HttpResponse> m_waitData = new WaitData<HttpResponse>();
-        private readonly WaitDataAsync<HttpResponse> m_waitDataAsync = new WaitDataAsync<HttpResponse>();
+        //private readonly AsyncAutoResetEvent m_waitRelease = new AsyncAutoResetEvent();
+        private readonly WaitDataAsync<HttpResponse> m_waitResponseDataAsync = new WaitDataAsync<HttpResponse>();
         private bool m_getContent;
-
+        HttpClientDataHandlingAdapter m_dataHandlingAdapter;
         #endregion 字段
 
-        //internal void InternalSend(byte[] buffer, int offset, int count)
-        //{
-        //    this.ProtectedDefaultSend(buffer, offset, count);
-        //}
-
-        internal Task InternalSendAsync(ReadOnlyMemory<byte>  memory)
+        internal Task InternalSendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedDefaultSendAsync(memory);
         }
@@ -47,59 +43,26 @@ namespace TouchSocket.Http
         {
             if (disposing)
             {
-                this.m_waitData.SafeDispose();
-                this.m_waitDataAsync.SafeDispose();
+                this.m_semaphoreForRequest.Dispose();
+                //this.m_waitRelease.Dispose();
+                this.m_waitResponseDataAsync.Dispose();
             }
             base.Dispose(disposing);
         }
 
-        #region Request
+        protected void SetWarpAdapter(SingleStreamDataHandlingAdapter adapter)
+        {
+            this.m_dataHandlingAdapter.WarpAdapter = adapter;
+        }
 
-        //protected async Task<Stream> ProtectedGetStreamAsync()
-        //{
-        //}
+        #region Request
 
         private void ReleaseLock()
         {
             this.m_semaphoreForRequest.Release();
+            m_dataHandlingAdapter.SetComplateLock();
+            //this.m_waitRelease.Set();
         }
-
-        ///// <summary>
-        ///// 发送Http请求，并仅等待响应头
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="millisecondsTimeout"></param>
-        ///// <param name="token"></param>
-        ///// <returns></returns>
-        ///// <exception cref="TimeoutException"></exception>
-        ///// <exception cref="OperationCanceledException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected HttpResponseResult ProtectedRequest(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
-        //{
-        //    this.m_semaphoreForRequest.WaitTime(millisecondsTimeout, token);
-        //    try
-        //    {
-        //        this.m_getContent = false;
-        //        using (var byteBlock = new ByteBlock())
-        //        {
-        //            request.Build(byteBlock);
-
-        //            this.Reset(token);
-        //            this.ProtectedDefaultSend(byteBlock.Buffer, 0, byteBlock.Length);
-
-        //            var status = this.m_waitData.Wait(millisecondsTimeout);
-
-        //            status.ThrowIfNotRunning();
-
-        //            return new HttpResponseResult(this.m_waitData.WaitResult, this.ReleaseLock);
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        this.m_semaphoreForRequest.Release();
-        //        throw;
-        //    }
-        //}
 
         /// <summary>
         /// 异步发送Http请求，并仅等待响应头
@@ -122,13 +85,13 @@ namespace TouchSocket.Http
                     request.Build(byteBlock);
 
                     this.Reset(token);
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory);
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
 
-                    var status =await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
 
                     status.ThrowIfNotRunning();
 
-                    return new HttpResponseResult(this.m_waitData.WaitResult, this.ReleaseLock);
+                    return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
                 }
             }
             catch
@@ -137,44 +100,6 @@ namespace TouchSocket.Http
                 throw;
             }
         }
-
-        ///// <summary>
-        ///// 发送Http请求，并等待全部响应
-        ///// </summary>
-        ///// <param name="request"></param>
-        ///// <param name="millisecondsTimeout"></param>
-        ///// <param name="token"></param>
-        ///// <returns></returns>
-        ///// <exception cref="TimeoutException"></exception>
-        ///// <exception cref="OperationCanceledException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected HttpResponseResult ProtectedRequestContent(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
-        //{
-        //    this.m_semaphoreForRequest.WaitTime(millisecondsTimeout, token);
-        //    try
-        //    {
-        //        this.m_getContent = true;
-        //        using (var byteBlock = new ByteBlock())
-        //        {
-        //            request.Build(byteBlock);
-
-        //            this.Reset(token);
-
-        //            this.ProtectedDefaultSend(byteBlock.Buffer, 0, byteBlock.Length);
-
-        //            var status = this.m_waitData.Wait(millisecondsTimeout);
-
-        //            status.ThrowIfNotRunning();
-
-        //            return new HttpResponseResult(this.m_waitData.WaitResult, this.ReleaseLock);
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        this.m_semaphoreForRequest.Release();
-        //        throw;
-        //    }
-        //}
 
         /// <summary>
         /// 异步发送Http请求，并等待全部响应
@@ -198,13 +123,13 @@ namespace TouchSocket.Http
 
                     this.Reset(token);
 
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory);
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
 
-                    var status =await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
 
                     status.ThrowIfNotRunning();
 
-                    return new HttpResponseResult(this.m_waitData.WaitResult, this.ReleaseLock);
+                    return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
                 }
             }
             catch
@@ -222,15 +147,15 @@ namespace TouchSocket.Http
         protected override Task OnTcpConnecting(ConnectingEventArgs e)
         {
             this.Protocol = Protocol.Http;
-            this.SetAdapter(new HttpClientDataHandlingAdapter());
+            m_dataHandlingAdapter = new HttpClientDataHandlingAdapter();
+            this.SetAdapter(m_dataHandlingAdapter);
             return EasyTask.CompletedTask;
         }
 
         /// <inheritdoc/>
         protected override Task OnTcpClosed(ClosedEventArgs e)
         {
-            this.m_waitData?.Cancel();
-            this.m_waitDataAsync?.Cancel();
+            this.m_waitResponseDataAsync.Cancel();
             return EasyTask.CompletedTask;
         }
 
@@ -241,26 +166,27 @@ namespace TouchSocket.Http
             {
                 if (this.m_getContent)
                 {
-                    await response.GetContentAsync(CancellationToken.None);
+                    await response.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
                 }
-                this.Set(response);
+                this.m_waitResponseDataAsync.Set(response);
+                //await this.SetAsync(response).ConfigureFalseAwait();
             }
         }
 
         #endregion override
 
-        private void Reset(CancellationToken token)
+        private void Reset(in CancellationToken token)
         {
-            this.m_waitData.Reset();
-            this.m_waitDataAsync.Reset();
-            this.m_waitData.SetCancellationToken(token);
-            this.m_waitDataAsync.SetCancellationToken(token);
+            //this.m_waitRelease.Reset();
+            this.m_waitResponseDataAsync.Reset();
+            this.m_waitResponseDataAsync.SetCancellationToken(token);
         }
 
-        private void Set(HttpResponse response)
-        {
-            this.m_waitData.Set(response);
-            this.m_waitDataAsync.Set(response);
-        }
+        //private async Task SetAsync(HttpResponse response)
+        //{
+
+
+        //    await this.m_waitRelease.WaitOneAsync().ConfigureFalseAwait();
+        //}
     }
 }

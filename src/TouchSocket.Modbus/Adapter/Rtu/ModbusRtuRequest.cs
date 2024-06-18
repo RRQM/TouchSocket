@@ -28,43 +28,43 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        int IRequestInfoBuilder.MaxLength => 1024;
+        int IByteBlockBuilder.MaxLength => 1024;
 
         /// <inheritdoc/>
         public void Build<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
             if ((byte)this.FunctionCode <= 4)
             {
-                byteBlock.Write(this.SlaveId);
-                byteBlock.Write((byte)this.FunctionCode);
-                byteBlock.Write(this.StartingAddress, EndianType.Big);
-                byteBlock.Write(this.Quantity, EndianType.Big);
+                byteBlock.WriteByte(this.SlaveId);
+                byteBlock.WriteByte((byte)this.FunctionCode);
+                byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
+                byteBlock.WriteUInt16(this.Quantity, EndianType.Big);
             }
             else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
             {
-                byteBlock.Write(this.SlaveId);
-                byteBlock.Write((byte)this.FunctionCode);
-                byteBlock.Write(this.StartingAddress, EndianType.Big);
+                byteBlock.WriteByte(this.SlaveId);
+                byteBlock.WriteByte((byte)this.FunctionCode);
+                byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
                 byteBlock.Write(this.Data);
             }
             else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
             {
-                byteBlock.Write(this.SlaveId);
-                byteBlock.Write((byte)this.FunctionCode);
-                byteBlock.Write(this.StartingAddress, EndianType.Big);
-                byteBlock.Write(this.Quantity, EndianType.Big);
-                byteBlock.Write((byte)this.Data.Length);
+                byteBlock.WriteByte(this.SlaveId);
+                byteBlock.WriteByte((byte)this.FunctionCode);
+                byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
+                byteBlock.WriteUInt16(this.Quantity, EndianType.Big);
+                byteBlock.WriteByte((byte)this.Data.Length);
                 byteBlock.Write(this.Data);
             }
             else if (this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                byteBlock.Write(this.SlaveId);
-                byteBlock.Write((byte)this.FunctionCode);
-                byteBlock.Write(this.ReadStartAddress, EndianType.Big);
-                byteBlock.Write(this.ReadQuantity, EndianType.Big);
-                byteBlock.Write(this.StartingAddress, EndianType.Big);
-                byteBlock.Write(this.Quantity, EndianType.Big);
-                byteBlock.Write((byte)this.Data.Length);
+                byteBlock.WriteByte(this.SlaveId);
+                byteBlock.WriteByte((byte)this.FunctionCode);
+                byteBlock.WriteUInt16(this.ReadStartAddress, EndianType.Big);
+                byteBlock.WriteUInt16(this.ReadQuantity, EndianType.Big);
+                byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
+                byteBlock.WriteUInt16(this.Quantity, EndianType.Big);
+                byteBlock.WriteByte((byte)this.Data.Length);
                 byteBlock.Write(this.Data);
             }
             else

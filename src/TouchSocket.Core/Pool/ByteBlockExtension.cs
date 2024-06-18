@@ -12,5 +12,10 @@ namespace TouchSocket.Core
         {
             return new ByteBlockStream(byteBlock,releaseTogether);
         }
+
+        public static ByteBlock AsByteBlock(this in ValueByteBlock valueByteBlock)
+        {
+            return new ByteBlock(valueByteBlock);
+        }
     }
 }

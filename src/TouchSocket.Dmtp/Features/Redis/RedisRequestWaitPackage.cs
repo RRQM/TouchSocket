@@ -24,16 +24,16 @@ namespace TouchSocket.Dmtp.Redis
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.Package(ref byteBlock);
-            byteBlock.Write(this.key);
-            byteBlock.Write((byte)this.packageType);
+            byteBlock.WriteString(this.key);
+            byteBlock.WriteByte((byte)this.packageType);
             if (this.timeSpan.HasValue)
             {
-                byteBlock.Write((byte)1);
-                byteBlock.Write(this.timeSpan.Value);
+                byteBlock.WriteByte((byte)1);
+                byteBlock.WriteTimeSpan(this.timeSpan.Value);
             }
             else
             {
-                byteBlock.Write((byte)0);
+                byteBlock.WriteByte((byte)0);
             }
         }
 

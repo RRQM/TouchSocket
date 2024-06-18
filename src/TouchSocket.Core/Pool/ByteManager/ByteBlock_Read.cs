@@ -35,38 +35,17 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <returns></returns>
         /// <exception cref="ObjectDisposedException"></exception>
-        public int Read(byte[] buffer, int offset, int length)
+        public int Read(Span<byte> span)
         {
-            if (length==0)
+            var length = span.Length;
+            if (length == 0)
             {
                 return 0;
             }
             var len = this.m_length - this.m_position > length ? length : this.CanReadLength;
-            Unsafe.CopyBlock(ref buffer[offset], ref this.m_buffer[this.m_position], (uint)len);
+            Unsafe.CopyBlock(ref span[0], ref this.m_buffer[this.m_position], (uint)len);
             this.m_position += len;
             return len;
-        }
-
-        /// <summary>
-        /// 读取数据，然后递增Pos
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        public int Read(byte[] buffer)
-        {
-            return this.Read(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 读取数据，然后递增Pos
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int Read(out byte[] buffer, int length)
-        {
-            buffer = new byte[length];
-            return this.Read(buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -75,75 +54,14 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public byte[] ReadToArray(int length)
+        public ReadOnlySpan<byte> ReadToSpan(int length)
         {
-            var bytes = new byte[length];
-            var r = this.Read(bytes, 0, bytes.Length);
-            if (r != bytes.Length)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            var span = new ReadOnlySpan<byte>(this.m_buffer, this.m_position, length);
 
-            return bytes;
+            this.m_position += length;
+            return span;
         }
         #endregion
-
-        //#region Object
-
-        ///// <summary>
-        /////  从当前流位置读取一个泛型值
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="serializationType"></param>
-        ///// <returns></returns>
-        //public T ReadObject<T>(SerializationType serializationType = SerializationType.FastBinary)
-        //{
-        //    var length = this.ReadInt32();
-
-        //    if (length == 0)
-        //    {
-        //        return default;
-        //    }
-
-        //    T obj;
-        //    switch (serializationType)
-        //    {
-        //        case SerializationType.FastBinary:
-        //            {
-        //                var block = this;
-        //                obj = SerializeConvert.FastBinaryDeserialize<ByteBlock,T>(ref block);
-        //            }
-        //            break;
-
-        //        case SerializationType.Json:
-        //            {
-        //                var jsonString = Encoding.UTF8.GetString(this.m_buffer, this.m_position, length);
-        //                obj = SerializeConvert.JsonDeserializeFromString<T>(jsonString);
-        //            }
-        //            break;
-
-        //        case SerializationType.Xml:
-        //            {
-        //                var jsonString = Encoding.UTF8.GetString(this.m_buffer, this.m_position, length);
-        //                obj = SerializeConvert.XmlDeserializeFromString<T>(jsonString);
-        //            }
-        //            break;
-
-        //        case SerializationType.SystemBinary:
-        //            {
-        //                obj = SerializeConvert.BinaryDeserialize<T>(this.m_buffer, this.m_position, length);
-        //            }
-        //            break;
-
-        //        default:
-        //            throw new Exception("未定义的序列化类型");
-        //    }
-
-        //    this.m_position += length;
-        //    return obj;
-        //}
-
-        //#endregion Object
 
         #region ByteBlock
 
@@ -155,7 +73,7 @@ namespace TouchSocket.Core
         /// </summary>
         public ByteBlock ReadByteBlock()
         {
-            var len = this.ReadInt32();
+            var len = (int)this.ReadVarUInt32() - 1;
 
             if (len < 0)
             {
@@ -163,7 +81,7 @@ namespace TouchSocket.Core
             }
 
             var byteBlock = new ByteBlock(len);
-            byteBlock.Write(this.m_buffer, this.m_position, len);
+            byteBlock.Write(new ReadOnlySpan<byte>(this.m_buffer, this.m_position, len));
             byteBlock.SeekToStart();
             this.m_position += len;
             return byteBlock;
@@ -251,14 +169,14 @@ namespace TouchSocket.Core
         /// <summary>
         /// 从当前流位置读取一个<see cref="string"/>值
         /// </summary>
-        public string ReadString(FixedHeaderType headerType= FixedHeaderType.Int)
+        public string ReadString(FixedHeaderType headerType = FixedHeaderType.Int)
         {
             int len;
             switch (headerType)
             {
                 case FixedHeaderType.Byte:
                     len = this.ReadByte();
-                    if (len==byte.MaxValue)
+                    if (len == byte.MaxValue)
                     {
                         return null;
                     }
@@ -1240,8 +1158,8 @@ namespace TouchSocket.Core
             guid = new Guid(this.Span.Slice(this.m_position,16)) ;
 #else
 
-            var bytes = this.Span.Slice(this.m_position,16).ToArray() ;
-            guid= new Guid(bytes);
+            var bytes = this.Span.Slice(this.m_position, 16).ToArray();
+            guid = new Guid(bytes);
 #endif
             this.m_position += 16;
             return guid;

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -162,23 +163,11 @@ namespace TouchSocket.Http.WebSockets
             }
         }
 
-        public Task SendAsync(byte[] buffer, bool endOfMessage = true)
-        {
-            return this.SendAsync(buffer, 0, buffer.Length, endOfMessage);
-        }
-
-        public async Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
+        public async Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true)
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
             {
-                if (offset == 0)
-                {
-                    frame.PayloadData = new ByteBlock(buffer, length);
-                }
-                else
-                {
-                    frame.AppendBinary(buffer, offset, length);
-                }
+                frame.AppendBinary(memory.Span);
                 await this.SendAsync(frame, endOfMessage).ConfigureFalseAwait();
             }
         }
@@ -203,18 +192,24 @@ namespace TouchSocket.Http.WebSockets
                 }
             }
             dataFrame.Opcode = dataType;
-            using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
+
+            var byteBlock = new ByteBlock(dataFrame.MaxLength);
+            try
             {
                 if (this.m_isServer)
                 {
-                    dataFrame.BuildResponse(byteBlock);
+                    dataFrame.BuildResponse(ref byteBlock);
                     await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
                 }
                 else
                 {
-                    dataFrame.BuildRequest(byteBlock);
+                    dataFrame.BuildRequest(ref byteBlock);
                     await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
                 }
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 

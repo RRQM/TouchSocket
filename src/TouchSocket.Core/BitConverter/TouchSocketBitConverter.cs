@@ -454,7 +454,7 @@ namespace TouchSocket.Core
             {
                 if (values[index])
                 {
-                    numArray[index / 8] = numArray[index / 8].SetBit(index % 8, 1);
+                    numArray[index / 8] = numArray[index / 8].SetBit(index % 8, true);
                 }
             }
             return numArray;
@@ -492,7 +492,7 @@ namespace TouchSocket.Core
                 {
                     if (values[index])
                     {
-                        p[index / 8] = p[index / 8].SetBit(index % 8, 1);
+                        p[index / 8] = p[index / 8].SetBit(index % 8, true);
                     }
                 }
             }

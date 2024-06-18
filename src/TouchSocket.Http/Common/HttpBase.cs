@@ -166,11 +166,6 @@ namespace TouchSocket.Http
             set => this.m_headers.Add(HttpHeaders.Accept, value);
         }
 
-        ///// <summary>
-        ///// 传递标识
-        ///// </summary>
-        //public object Flag { get; set; }
-
         /// <summary>
         /// 请求头集合
         /// </summary>
@@ -191,9 +186,9 @@ namespace TouchSocket.Http
         /// </summary>
         public string RequestLine { get; private set; }
 
-        internal bool ParsingHeader(ByteBlock byteBlock, int length)
+        internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
         {
-            var index = byteBlock.Span.Slice(byteBlock.Position, length).IndexOf(s_rnrnCode);
+            var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(s_rnrnCode);
             if (index > 0)
             {
                 var headerLength = index - byteBlock.Position;
@@ -228,21 +223,21 @@ namespace TouchSocket.Http
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public abstract void SetContent(byte[] content);
+        public abstract void SetContent(in ReadOnlyMemory<byte> content);
 
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
         /// <returns></returns>
-        public abstract ValueTask<byte[]> GetContentAsync(CancellationToken cancellationToken = default);
+        public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
         /// <returns></returns>
-        public virtual byte[] GetContent(CancellationToken cancellationToken = default)
+        public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
         {
-            return Task.Run(async () => await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
+            return Task.Run(async () =>await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
         }
 
         #endregion Content
@@ -326,8 +321,6 @@ namespace TouchSocket.Http
         #region Write
 
         public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
-
-        //public abstract void Write(byte[] buffer, int offset, int count);
 
         #endregion Write
 
