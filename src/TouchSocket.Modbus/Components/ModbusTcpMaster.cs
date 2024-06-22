@@ -23,7 +23,7 @@ namespace TouchSocket.Modbus
     public class ModbusTcpMaster : TcpClientBase, IModbusTcpMaster
     {
         private readonly WaitHandlePool<ModbusTcpResponse> m_waitHandlePool;
-
+        private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(10);
         /// <summary>
         /// 基于Tcp协议的Modbus客户端
         /// </summary>
@@ -36,39 +36,26 @@ namespace TouchSocket.Modbus
             };
         }
 
-        ///// <inheritdoc/>
-        //public IModbusResponse 123SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
-        //{
-        //    var waitData = this.m_waitHandlePool.GetWaitData(out var sign);
-
-        //    try
-        //    {
-        //        var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
-
-        //        this.ProtectedSend(modbusTcpRequest);
-        //        waitData.SetCancellationToken(token);
-        //        var waitDataStatus = waitData.Wait(millisecondsTimeout);
-        //        waitDataStatus.ThrowIfNotRunning();
-
-        //        var response = waitData.WaitResult;
-        //        TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-        //        return response;
-        //    }
-        //    finally
-        //    {
-        //        this.m_waitHandlePool.Destroy(waitData);
-        //    }
-        //}
-
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
+            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout,token).ConfigureFalseAwait();
             var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
             try
             {
                 var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureFalseAwait();
+                ValueByteBlock valueByteBlock = new ValueByteBlock(modbusTcpRequest.MaxLength);
+                try
+                {
+                    modbusTcpRequest.Build(ref valueByteBlock);
+                    await this.ProtectedSendAsync(valueByteBlock.Memory).ConfigureFalseAwait();
+                }
+                finally
+                {
+                    valueByteBlock.Dispose();
+                }
+
                 waitData.SetCancellationToken(token);
                 var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
                 waitDataStatus.ThrowIfNotRunning();
@@ -80,6 +67,7 @@ namespace TouchSocket.Modbus
             finally
             {
                 this.m_waitHandlePool.Destroy(waitData);
+                this.m_semaphoreSlim.Release();
             }
         }
 

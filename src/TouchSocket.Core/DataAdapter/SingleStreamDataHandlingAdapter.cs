@@ -117,7 +117,7 @@ namespace TouchSocket.Core
 
             var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
 
-            var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength);
+            var byteBlock = new ValueByteBlock(requestInfoBuilder.MaxLength);
             try
             {
                 requestInfoBuilder.Build(ref byteBlock);

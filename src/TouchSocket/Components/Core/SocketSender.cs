@@ -66,7 +66,7 @@ namespace TouchSocket.Sockets
 #if NET6_0_OR_GREATER
             this.SetBuffer(MemoryMarshal.AsMemory(memory));
 #else
-            var segment = MemoryMarshal.AsMemory(memory).GetArray();
+            var segment = memory.GetArray();
 
             this.SetBuffer(segment.Array, segment.Offset, segment.Count);
 #endif

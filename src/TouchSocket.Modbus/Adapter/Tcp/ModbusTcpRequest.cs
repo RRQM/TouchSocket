@@ -38,10 +38,10 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        int IByteBlockBuilder.MaxLength => 1024;
+        public int MaxLength => 1024;
 
         /// <inheritdoc/>
-        public void Build<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock: IByteBlock
+        public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             byteBlock.WriteUInt16(this.TransactionId, EndianType.Big);
             byteBlock.WriteUInt16(this.ProtocolId, EndianType.Big);
