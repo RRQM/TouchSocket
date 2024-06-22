@@ -11,10 +11,11 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -39,6 +40,9 @@ namespace TouchSocket.Sockets
 
         #region 字段
 
+        private const int BatchSize = 100;
+        private const int MaxMemoryLength = 1024;
+        private readonly Task m_sendTask;
         private int m_receiveBufferSize = 1024 * 10;
         private ValueCounter m_receiveCounter;
         private int m_sendBufferSize = 1024 * 10;
@@ -49,6 +53,13 @@ namespace TouchSocket.Sockets
         private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
         private readonly SocketReceiver m_socketReceiver = new SocketReceiver();
         private readonly SocketSender m_socketSender = new SocketSender();
+        private readonly AsyncResetEvent m_asyncResetEventForTask = new AsyncResetEvent(false, true);
+        private readonly AsyncResetEvent m_asyncResetEventForSend = new AsyncResetEvent(true, false);
+        private readonly ConcurrentQueue<SendSegment> m_sendingBytes = new ConcurrentQueue<SendSegment>();
+        private readonly SemaphoreSlim m_semaphoreSlimForMax = new SemaphoreSlim(BatchSize);
+        //private readonly ConcurrentStack<SendSegment> m_stores = new ConcurrentStack<SendSegment>();
+        private ExceptionDispatchInfo m_exceptionDispatchInfo;
+        private short m_version;
         #endregion 字段
 
         /// <summary>
@@ -67,6 +78,9 @@ namespace TouchSocket.Sockets
                 Period = TimeSpan.FromSeconds(1),
                 OnPeriod = this.OnSendPeriod
             };
+
+            this.m_sendTask = Task.Run(this.TaskSend);
+            this.m_sendTask.FireAndForget();
         }
 
         /// <summary>
@@ -255,6 +269,8 @@ namespace TouchSocket.Sockets
         /// </summary>
         public void Reset()
         {
+            this.m_version++;
+            this.m_exceptionDispatchInfo = null;
             this.m_useSsl = false;
             this.m_socketSender.Reset();
             this.m_receiveCounter.Reset();
@@ -280,59 +296,150 @@ namespace TouchSocket.Sockets
         public async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             await this.m_semaphoreForSend.WaitAsync().ConfigureFalseAwait();
-
-            var length = memory.Length;
             try
             {
-#if NET6_0_OR_GREATER
-                if (this.UseSsl)
+                if (memory.Length < MaxMemoryLength)
                 {
-                    await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
-                }
-#else
+                    var dispatchInfo = this.m_exceptionDispatchInfo;
+                    dispatchInfo?.Throw();
 
-                if (this.m_useSsl)
-                {
-                    if (MemoryMarshal.TryGetArray(memory, out var segment))
-                    {
-                        await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureFalseAwait();
-                    }
-                    else
-                    {
-                        var array = memory.ToArray();
-                        await this.SslStream.WriteAsync(array, 0, array.Length, CancellationToken.None).ConfigureFalseAwait();
-                    }
-                }
-#endif
-                else
-                {
-                    var offset = 0;
-                    while (length > 0)
-                    {
-                        var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(false);
-                        if (result.HasError)
-                        {
-                            throw result.SocketError;
-                        }
-                        if (result.BytesTransferred == 0 && length > 0)
-                        {
-                            throw new Exception(TouchSocketResource.IncompleteDataTransmission);
-                        }
-                        offset += result.BytesTransferred;
-                        length -= result.BytesTransferred;
-                    }
+                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureFalseAwait();
 
-                    //this.m_socketSender.Reset();
+                    var sendSegment = BytePool.Default.Rent(memory.Length);
+                    //if (!this.m_stores.TryPop(out var sendSegment))
+                    //{
+                    //    sendSegment = new SendSegment()
+                    //    {
+                    //        Date = new byte[MaxMemoryLength]
+                    //    };
+                    //}
+
+                    var segment = memory.GetArray();
+
+                    Array.Copy(segment.Array, segment.Offset, sendSegment, 0, segment.Count);
+
+                    
+                    this.m_sendingBytes.Enqueue(new SendSegment(sendSegment,memory.Length,this.m_version));
+                    //var byteBlock = new ValueByteBlock(memory.Length);
+                    //byteBlock.Write(memory.Span);
+                    //this.m_ints.Enqueue(byteBlock);
+
+                    this.m_asyncResetEventForSend.Reset();
+
+                    this.m_asyncResetEventForTask.Set();
+                    return;
                 }
-                this.m_sentCounter.Increment(length);
+
+                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureFalseAwait();
+                await this.PrivateSendAsync(memory).ConfigureFalseAwait();
             }
             finally
             {
                 this.m_semaphoreForSend.Release();
             }
         }
-        #endregion
 
+        private async Task TaskSend()
+        {
+            var valuesToProcess = new SendSegment[BatchSize];
+
+            while (true)
+            {
+                // 重置计数器和数组内容
+                var count = 0;
+
+                // 尝试填充数组
+                while (count < BatchSize && this.m_sendingBytes.TryDequeue(out var value))
+                {
+                    if (value.version == this.m_version)
+                    {
+                        valuesToProcess[count++] = value;
+                    }
+                    this.m_semaphoreSlimForMax.Release();
+                }
+
+                // 如果有元素需要处理，并且没有异常
+                if (count > 0)
+                {
+                    Debug.WriteLine(count.ToString());
+                    if (this.m_exceptionDispatchInfo == null)
+                    {
+                        using (var byteBlock = new ValueByteBlock(count * MaxMemoryLength))
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var value = valuesToProcess[i];
+
+                                byteBlock.Write(new ReadOnlySpan<byte>(value.Date, 0, value.Length));
+
+                                BytePool.Default.Return(value.Date);
+                                //value.Dispose();
+                            }
+
+                            try
+                            {
+                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                            }
+                            catch (Exception ex)
+                            {
+                                this.m_exceptionDispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                                this.m_sendingBytes.Clear();
+
+                            }
+                        }
+                    }
+
+                    Array.Clear(valuesToProcess, 0, count);
+                }
+                else
+                {
+                    //Debug.WriteLine("Pause");
+                    // 队列为空，设置事件并等待
+                    this.m_asyncResetEventForSend.Set();
+                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureFalseAwait();
+                }
+            }
+        }
+
+        private async Task PrivateSendAsync(ReadOnlyMemory<byte> memory)
+        {
+            var length = memory.Length;
+#if NET6_0_OR_GREATER
+                if (this.UseSsl)
+                {
+                    await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+                }
+#else
+            if (this.m_useSsl)
+            {
+                var segment = memory.GetArray();
+                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureFalseAwait();
+            }
+#endif
+            else
+            {
+                var offset = 0;
+                while (length > 0)
+                {
+                    var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(false);
+                    if (result.HasError)
+                    {
+                        throw result.SocketError;
+                    }
+                    if (result.BytesTransferred == 0 && length > 0)
+                    {
+                        throw new Exception(TouchSocketResource.IncompleteDataTransmission);
+                    }
+                    offset += result.BytesTransferred;
+                    length -= result.BytesTransferred;
+                }
+
+                //this.m_socketSender.Reset();
+            }
+            this.m_sentCounter.Increment(length);
+        }
+
+        #endregion Send
 
         private void OnReceivePeriod(long value)
         {
@@ -342,6 +449,20 @@ namespace TouchSocket.Sockets
         private void OnSendPeriod(long value)
         {
             this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
+        }
+
+        struct SendSegment
+        {
+            public byte[] Date;
+            public int Length;
+            public short version;
+
+            public SendSegment(byte[] bytes, int length, short version)
+            {
+                this.Date = bytes;
+                this.Length = length;
+                this.version = version;
+            }
         }
     }
 }

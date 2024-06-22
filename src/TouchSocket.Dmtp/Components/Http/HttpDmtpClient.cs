@@ -28,7 +28,7 @@ namespace TouchSocket.Dmtp
 
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private bool m_allowRoute;
-        private DmtpActor m_dmtpActor;
+        private SealedDmtpActor m_dmtpActor;
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
 
         #endregion 字段
@@ -79,13 +79,14 @@ namespace TouchSocket.Dmtp
                     if (response.StatusCode == 101)
                     {
                         this.SwitchProtocolToDmtp();
-                        await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureFalseAwait();
                     }
                     else
                     {
                         throw new Exception(response.StatusMessage);
                     }
                 }
+
+                await this.m_dmtpActor.HandshakeAsync(this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Id, millisecondsTimeout, this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).Metadata, token).ConfigureFalseAwait();
             }
             finally
             {
