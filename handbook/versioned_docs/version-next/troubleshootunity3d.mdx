@@ -73,6 +73,24 @@ GlobalEnvironment.DynamicBuilderType = DynamicBuilderType.Reflect;
 
 而对于插件，则最好使用委托接收，详情请看 [插件系统](./pluginsmanager.mdx)
 
+例如：
+
+```csharp showLineNumbers
+class MyPluginClass : PluginBase
+{
+    protected override void Loaded(IPluginManager pluginManager)
+    {
+        pluginManager.Add<ITcpSession, ReceivedDataEventArgs>(typeof(ITcpReceivedPlugin), OnTcpReceived);
+        base.Loaded(pluginManager);
+    }
+
+    private async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        await e.InvokeNext();
+    }
+}
+```
+
 其次，Il2cpp会对程序进行裁剪，所以需要unity内link.xml设置(放置在Assets文件夹内)。 [unity官方文档 托管代码剥离](https://docs.unity3d.com/cn/current/Manual/ManagedCodeStripping.html#LinkXML)
 
 
