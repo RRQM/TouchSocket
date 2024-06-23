@@ -233,7 +233,53 @@ await foreach (var item in multifileCollection)
 
 ## 八、响应请求
 
-### 8.1 响应Get请求
+当收到`Http`请求，处理完成业务后，即可使用`e.Context.Response`直接参与本次响应。
+
+### 8.1 设置响应状态
+
+```csharp showLineNumbers
+e.Context.Response.SetStatus(200,"success");
+```
+
+### 8.2 设置响应Header
+
+```csharp showLineNumbers
+e.Context.Response.AddHeader("key","value");
+```
+
+或者
+
+```csharp showLineNumbers
+e.Context.Response.AddHeader(HttpHeaders.Origin, "*");
+```
+
+### 8.3 设置响应内容
+
+```csharp showLineNumbers
+e.Context.Response.SetContent("hello");
+```
+
+或者直接返回`Json`、`Xml`、`Text`等内容。使用此快捷方式，会同时添加对应的`ContentType`Header。
+
+```csharp showLineNumbers
+e.Context.Response.FromJson("{}");
+```
+
+### 8.4 开始响应内容
+
+当通过上述步骤，完成了响应体的构建后，即可使用`AnswerAsync`直接进行响应。
+
+例如：响应一个`hello`文本内容，代码大致如下
+
+```csharp showLineNumbers
+await e.Context.Response
+      .SetStatus(200, "success")
+      .AddHeader("key", "value")//如需要
+      .FromText("hello")
+      .AnswerAsync();
+```
+
+### 8.5 插件响应Get请求
 
 ```csharp showLineNumbers
 public class MyHttpPlug1 : PluginBase, IHttpPlugin
@@ -260,7 +306,7 @@ public class MyHttpPlug1 : PluginBase, IHttpPlugin
 }
 ```
 
-### 8.2 响应文件请求
+### 8.6 响应文件请求
 
 ```csharp showLineNumbers
 public class MyHttpPlug2 : PluginBase, IHttpPlugin
@@ -321,7 +367,7 @@ public class MyHttpPlug2 : PluginBase, IHttpPlugin
 :::  
 
 
-### 8.3 响应页面请求
+### 8.7 响应页面请求
 
 ```csharp showLineNumbers
 public class MyHttpPlug3 : PluginBase, IHttpPlugin
@@ -378,6 +424,51 @@ public class MyHttpPlug3 : PluginBase, IHttpPlugin
         await e.InvokeNext();
     }
 }
+```
+
+## 九、进阶响应操作
+
+### 9.1 响应有长度大数据
+
+当响应的数据，在响应时，已知数据长度的话，可以使用此方法。
+
+```csharp showLineNumbers
+var request = e.Context.Request;//http请求体
+var response = e.Context.Response;//http响应体
+
+//先设置需要响应的地方
+response.SetStatus(200, "success");
+//然后设置数据总长度
+response.ContentLength = 1024 * 1024;
+
+for (int i = 0; i < 1024; i++)
+{
+    //将数据持续写入
+    await response.WriteAsync(new byte[1024]);
+}
+```
+
+### 9.2 响应不知长度数据（Chunk模式）
+
+当响应的数据，在响应时，不知数据长度的话，可以使用此方法。
+
+```csharp showLineNumbers
+var request = e.Context.Request;//http请求体
+var response = e.Context.Response;//http响应体
+
+//先设置需要响应的地方
+response.SetStatus(200, "success");
+//设置使用Chunk模式
+response.IsChunk = true;
+
+for (int i = 0; i < 1024; i++)
+{
+    //将数据持续写入
+    await response.WriteAsync(new byte[1024]);
+}
+
+//在正式数据传输完成后，调用此方法，客户端才知道数据结束了
+await response.CompleteChunkAsync();
 ```
 
 
