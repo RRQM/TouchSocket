@@ -388,13 +388,8 @@
         },
         {
           "type": "doc",
-          "id": "httpfiletransfer",
-          "label": "12.4 Http文件传输"
-        },
-        {
-          "type": "doc",
           "id": "cors",
-          "label": "12.5 Cors跨域"
+          "label": "12.4 Cors跨域"
         }
       ]
     },
