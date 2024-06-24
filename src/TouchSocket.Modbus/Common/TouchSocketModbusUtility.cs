@@ -60,6 +60,39 @@ namespace TouchSocket.Modbus
             return CRC;
         }
 
+
+        /// <summary>
+        /// CRC16_Modbus效验
+        /// </summary>
+        /// <param name="sourceSpan"></param>
+        /// <returns></returns>
+        public static ushort ToModbusCrcValue(ReadOnlySpan<byte> sourceSpan)
+        {
+            Span<byte> crcSpan = stackalloc byte[2];
+            ushort wCrc = 0xFFFF;
+            for (var i = 0; i < sourceSpan.Length; i++)
+            {
+                wCrc ^= Convert.ToUInt16(sourceSpan[i]);
+                for (var j = 0; j < 8; j++)
+                {
+                    if ((wCrc & 0x0001) == 1)
+                    {
+                        wCrc >>= 1;
+                        wCrc ^= 0xA001;//异或多项式
+                    }
+                    else
+                    {
+                        wCrc >>= 1;
+                    }
+                }
+            }
+
+            crcSpan[1] = (byte)((wCrc & 0xFF00) >> 8);//高位在后
+            crcSpan[0] = (byte)(wCrc & 0x00FF);       //低位在前
+
+            return TouchSocketBitConverter.BigEndian.UnsafeTo<ushort>(ref crcSpan[0]);
+        }
+
         /// <summary>
         /// 将布尔值转为2字节数组
         /// </summary>
