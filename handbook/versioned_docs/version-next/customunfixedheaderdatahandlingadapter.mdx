@@ -128,11 +128,11 @@ service.Received = (client, e) =>
     return EasyTask.CompletedTask;
 };
 
-service.Setup(new TouchSocketConfig()//载入配置     
+await service.SetupAsync(new TouchSocketConfig()//载入配置     
     .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
     .SetTcpDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }));//配置适配器
 
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::tip 提示

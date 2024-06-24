@@ -85,7 +85,7 @@ client.Received = async (c, e) =>
     await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(e.ByteBlock,0,e.ByteBlock.Len));
 };
 
-client.Setup(new TouchSocket.Core.TouchSocketConfig()
+await client.SetupAsync(new TouchSocket.Core.TouchSocketConfig()
     .SetSerialPortOption(new SerialPortOption()
     {
         BaudRate = 9600,//波特率
@@ -95,7 +95,7 @@ client.Setup(new TouchSocket.Core.TouchSocketConfig()
         StopBits = System.IO.Ports.StopBits.One//停止位
     }));
 
-client.Connect();
+await client.ConnectAsync();
 Console.WriteLine("连接成功");
 ```
 
@@ -120,7 +120,7 @@ class MySerialClient : SerialPortClientBase
 
 ```csharp showLineNumbers
 var client = new MySerialClient();
-client.Setup(new TouchSocket.Core.TouchSocketConfig()
+await client.SetupAsync(new TouchSocket.Core.TouchSocketConfig()
     .SetSerialPortOption(new SerialPortOption()
     {
         BaudRate = 9600,//波特率
@@ -129,7 +129,7 @@ client.Setup(new TouchSocket.Core.TouchSocketConfig()
         PortName = "COM1",//COM
         StopBits = System.IO.Ports.StopBits.One//停止位
     }));
-client.Connect();//调用连接，当连接不成功时，会抛出异常。
+await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
 ```
 
 ## 七、接收数据
@@ -157,7 +157,7 @@ client.Received = (client, e) =>
 在使用串口时，可能更需要同步Read的情况。所以此处提供了异步读取方法。
 
 ```csharp showLineNumbers
-client.Connect();
+await client.ConnectAsync();
 
 using (var receiver = client.CreateReceiver())
 {
@@ -179,7 +179,7 @@ using (var receiver = client.CreateReceiver())
 带有接收超时的情况：
 
 ```csharp {6} showLineNumbers
-client.Connect();
+await client.ConnectAsync();
 using (var receiver = client.CreateReceiver())
 {
     while (true)
@@ -238,7 +238,7 @@ public class MyPlugin : PluginBase, ISerialReceivedPlugin<ISerialPortClient>
 
 ```csharp  {13} showLineNumbers
 var client = new SerialPortClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetSerialPortOption(new SerialPortOption()
     {
         BaudRate = 9600,//波特率
@@ -252,7 +252,7 @@ client.Setup(new TouchSocketConfig()
         a.Add<MyPlugin>();
     }));
 
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ## 八、发送数据
@@ -287,7 +287,7 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 WaitingClient是TouchSocket提供的一个等待客户端发送数据的客户端。例如：串口客户端发送一个Hello，等待对方回信Hi，此时即可使用WaitingClient。
 
 ```csharp showLineNumbers
-client.Connect();
+await client.ConnectAsync();
 
 //调用CreateWaitingClient获取到IWaitingClient的对象。
 var waitClient = client.CreateWaitingClient(new WaitingOptions()

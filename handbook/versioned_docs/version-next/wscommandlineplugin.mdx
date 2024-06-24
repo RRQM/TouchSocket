@@ -51,7 +51,7 @@ public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
 
 ```csharp {14}
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -66,7 +66,7 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.Add<MyWSCommandLinePlugin>();
     }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 ### 3.2 调用
@@ -77,7 +77,7 @@ service.Start();
 
 ```csharp {18} 
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -91,7 +91,7 @@ client.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.SendWithWS("Add 10 20");
 ```

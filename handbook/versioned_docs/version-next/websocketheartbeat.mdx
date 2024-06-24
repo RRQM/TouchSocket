@@ -20,7 +20,7 @@ Websocket拥有自己的心跳数据格式，和响应心跳格式，专业名�
 
 ```csharp {12}
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -33,7 +33,7 @@ service.Setup(new TouchSocketConfig()//加载配置
                .UseAutoPong();//当收到ping报文时自动回应pong
     }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 :::tip 提示
@@ -46,7 +46,7 @@ service.Start();
 
 ```csharp {10-11}
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
@@ -57,7 +57,7 @@ client.Setup(new TouchSocketConfig()
         a.UseWebSocketHeartbeat()//使用心跳插件
         .SetTick(TimeSpan.FromSeconds(1));//每5秒ping一次。
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ## 三、直接发送心跳
