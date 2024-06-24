@@ -20,6 +20,6 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 校验码
         /// </summary>
-        public byte[] Crc { get; set; }
+        public ushort Crc { get; set; }
     }
 }

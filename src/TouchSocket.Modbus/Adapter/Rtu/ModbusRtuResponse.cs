@@ -16,36 +16,31 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
-    internal class ModbusRtuResponse : ModbusRtuBase, IFixedHeaderRequestInfo, IModbusResponse
+    internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse, IUnfixedHeaderRequestInfo
     {
         private int m_bodyLength;
-
-        /// <summary>
-        /// 缓存区
-        /// </summary>
-        private ByteBlock m_byteBlock;
-
+        private int m_headerLength;
         private bool m_isError;
-        int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
-
+        int IUnfixedHeaderRequestInfo.BodyLength => m_bodyLength;
         public ModbusErrorCode ErrorCode { get; set; }
+        int IUnfixedHeaderRequestInfo.HeaderLength => m_headerLength;
 
-        bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
+        bool IUnfixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
         {
             if (this.m_isError)
             {
-                this.ErrorCode = (ModbusErrorCode)body[0];
                 return true;
             }
+
             if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                this.Data = body.Slice(0,body.Length - 2).ToArray();
+                this.Data = body.Slice(0, body.Length - 2).ToArray();
                 return true;
             }
             else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
             {
                 this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
-                this.Data = body.Slice(2,body.Length - 4).ToArray();
+                this.Data = body.Slice(2, body.Length - 4).ToArray();
                 return true;
             }
             else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
@@ -58,43 +53,144 @@ namespace TouchSocket.Modbus
             return false;
         }
 
-        bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+        bool IUnfixedHeaderRequestInfo.OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock)
         {
-            if (header.Length == 3)
+            if (byteBlock.CanReadLength < 3)
             {
-                this.SlaveId = header[0];
+                return false;
+            }
 
-                var code = header[1];
-                if ((code & 0x80) == 0)
-                {
-                    this.FunctionCode = (FunctionCode)code;
-                }
-                else
-                {
-                    code = code.SetBit(7, false);
-                    this.FunctionCode = (FunctionCode)code;
-                    this.m_isError = true;
-                }
+            var pos = byteBlock.Position;
 
+            this.SlaveId = byteBlock.ReadByte();
+
+            var code = byteBlock.ReadByte();
+            if ((code & 0x80) == 0)
+            {
+                this.FunctionCode = (FunctionCode)code;
+            }
+            else
+            {
+                code = code.SetBit(7, false);
+                this.FunctionCode = (FunctionCode)code;
+                this.m_isError = true;
+            }
+
+            if (this.m_isError)
+            {
+                this.ErrorCode = (ModbusErrorCode)byteBlock.ReadByte();
+
+                this.m_bodyLength = 2;
+                this.m_headerLength = byteBlock.Position - pos;
+                return true;
+            }
+            else
+            {
                 if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
                 {
-                    this.m_bodyLength = header[2] + 2;
+                    this.m_bodyLength = byteBlock.ReadByte() + 2;
+                    this.m_headerLength = byteBlock.Position - pos;
                     return true;
                 }
                 else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
                 {
-                    this.m_byteBlock.Position--;//回退一个游标
+                    //byteBlock.Position--;//回退一个游标
                     this.m_bodyLength = 6;
+                    this.m_headerLength = byteBlock.Position - pos;
+                    return true;
+                }
+                else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
+                {
+                    this.m_bodyLength = 6;
+                    this.m_headerLength = byteBlock.Position - pos;
                     return true;
                 }
             }
 
+
             return false;
         }
-
-        public void SetByteBlock(ByteBlock byteBlock)
-        {
-            this.m_byteBlock = byteBlock;
-        }
     }
+
+    //internal class ModbusRtuResponse : ModbusRtuBase, IFixedHeaderRequestInfo, IModbusResponse, IUnfixedHeaderRequestInfo
+    //{
+    //    private int m_bodyLength;
+
+    //    /// <summary>
+    //    /// 缓存区
+    //    /// </summary>
+    //    private ByteBlock m_byteBlock;
+
+    //    private bool m_isError;
+    //    int IFixedHeaderRequestInfo.BodyLength => this.m_bodyLength;
+
+    //    public ModbusErrorCode ErrorCode { get; set; }
+
+    //    bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
+    //    {
+    //        if (this.m_isError)
+    //        {
+    //            this.ErrorCode = (ModbusErrorCode)body[0];
+    //            return true;
+    //        }
+    //        if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
+    //        {
+    //            this.Data = body.Slice(0, body.Length - 2).ToArray();
+    //            return true;
+    //        }
+    //        else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
+    //        {
+    //            this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+    //            this.Data = body.Slice(2, body.Length - 4).ToArray();
+    //            return true;
+    //        }
+    //        else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
+    //        {
+    //            this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+    //            this.Quantity = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(2));
+    //            this.Data = new byte[0];
+    //            return true;
+    //        }
+    //        return false;
+    //    }
+
+    //    bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+    //    {
+    //        if (header.Length == 3)
+    //        {
+    //            this.SlaveId = header[0];
+
+    //            var code = header[1];
+    //            if ((code & 0x80) == 0)
+    //            {
+    //                this.FunctionCode = (FunctionCode)code;
+    //            }
+    //            else
+    //            {
+    //                code = code.SetBit(7, false);
+    //                this.FunctionCode = (FunctionCode)code;
+    //                this.m_isError = true;
+    //            }
+
+    //            if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
+    //            {
+    //                this.m_bodyLength = header[2] + 2;
+    //                return true;
+    //            }
+    //            else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
+    //            {
+    //                this.m_byteBlock.Position--;//回退一个游标
+    //                this.m_bodyLength = 6;
+    //                return true;
+    //            }
+    //        }
+
+    //        return false;
+    //    }
+
+    //    public void SetByteBlock(ByteBlock byteBlock)
+    //    {
+    //        this.m_byteBlock = byteBlock;
+    //    }
+    //}
 }

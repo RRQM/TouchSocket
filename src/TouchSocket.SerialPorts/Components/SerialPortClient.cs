@@ -150,8 +150,13 @@ namespace TouchSocket.SerialPorts
             if (this.Received != null)
             {
                 await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                if (e.Handled)
+                {
+                    return;
+                }
             }
-            await base.OnSerialReceived(e).ConfigureFalseAwait();
+
+            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this, e).ConfigureFalseAwait();
         }
 
         #endregion 事件

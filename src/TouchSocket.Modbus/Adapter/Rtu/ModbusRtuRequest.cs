@@ -28,10 +28,10 @@ namespace TouchSocket.Modbus
         }
 
         /// <inheritdoc/>
-        int IByteBlockBuilder.MaxLength => 1024;
+        public int MaxLength => 1024;
 
         /// <inheritdoc/>
-        public void Build<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             if ((byte)this.FunctionCode <= 4)
             {
@@ -72,9 +72,9 @@ namespace TouchSocket.Modbus
                 throw new System.InvalidOperationException("无法识别的功能码");
             }
 
-            this.Crc = TouchSocketModbusUtility.ToModbusCrc(byteBlock.ToMemory());
+            this.Crc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span);
 
-            byteBlock.Write(this.Crc);
+            byteBlock.WriteUInt16(this.Crc, EndianType.Big);
         }
     }
 }

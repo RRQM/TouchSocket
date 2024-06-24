@@ -88,13 +88,9 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         /// <param name="e"></param>
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
+        protected virtual Task OnSerialReceived(ReceivedDataEventArgs e)
         {
-            if (e.Handled)
-            {
-                return;
-            }
-            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this, e).ConfigureFalseAwait();
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
