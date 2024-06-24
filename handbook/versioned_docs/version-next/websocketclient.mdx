@@ -29,13 +29,13 @@ import Tag from "@site/src/components/Tag.js";
 
 ```csharp showLineNumbers
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     }));
-client.Connect();
+await client.ConnectAsync();
 client.Logger.Info("连接成功");
 ```
 
@@ -52,7 +52,7 @@ wss://127.0.0.1:7789/ws
 ```csharp showLineNumbers
 var client = new WebSessionClient();
 
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
     .SetClientSslOption(
     new ClientSslOption()
@@ -63,7 +63,7 @@ client.Setup(new TouchSocketConfig()
         CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
     }));
 
-client.Connect();
+await client.ConnectAsync();
 
 Console.WriteLine("连接成功");
 ```
@@ -84,13 +84,13 @@ WebSessionClient可以使用默认配置直接连接到服务器，同时也支�
 
 ```csharp showLineNumbers
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 ```
@@ -101,13 +101,13 @@ client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 
 ```csharp showLineNumbers
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/wsquery?token=123456"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功");
 
@@ -119,7 +119,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功")
 
 ```csharp showLineNumbers
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -133,7 +133,7 @@ client.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/wsheader"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
 ```
@@ -150,7 +150,7 @@ WebSocket默认情况下是基于GET方式连接的，但是在一些更特殊�
 
 ```csharp showLineNumbers
 using var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -164,7 +164,7 @@ client.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/postws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ```
@@ -306,7 +306,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
 ```csharp {10}
 var client = new WebSessionClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
@@ -316,7 +316,7 @@ client.Setup(new TouchSocketConfig()
     {
         a.Add<MyWebSocketPlugin>();
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ### 6.3 使用WebSocket显式ReadAsync

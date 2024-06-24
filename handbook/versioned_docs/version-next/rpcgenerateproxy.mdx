@@ -77,8 +77,8 @@ title: 生成、获取代理
                         VerifyToken = "Rpc"//连接验证口令。
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 ```
 
 :::tip
@@ -504,7 +504,7 @@ class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
     private static TcpDmtpClient GetTcpDmtpClient()
     {
         var client = new TcpDmtpClient();
-        client.Setup(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
@@ -518,7 +518,7 @@ class MyDmtpRpcDispatchProxy : DmtpRpcDispatchProxy
             {
                 VerifyToken = "Dmtp"//连接验证口令。
             }));
-        client.Connect();
+        await client.ConnectAsync();
         client.Logger.Info($"连接成功，Id={client.Id}");
         return client;
     }
@@ -610,7 +610,7 @@ class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
     private static TcpDmtpClient GetTcpDmtpClient()
     {
         var client = new TcpDmtpClient();
-        client.Setup(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
@@ -624,7 +624,7 @@ class MyDmtpRpcRealityProxy<T> : DmtpRpcRealityProxy<T>
         {
             VerifyToken = "Dmtp"
         }));
-        client.Connect();
+        await client.ConnectAsync();
         client.Logger.Info($"连接成功，Id={client.Id}");
         return client;
     }

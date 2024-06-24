@@ -86,10 +86,10 @@ config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(
       });
 
 //载入配置
-service.Setup(config);
+await service.SetupAsync(config);
 
 //启动
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器成功启动。");
 service.Logger.Info("使用：“Add 10 20”测试");

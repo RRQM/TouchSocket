@@ -35,7 +35,7 @@ title: 创建WebSocket服务器
 
 ```csharp showLineNumbers
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -48,7 +48,7 @@ service.Setup(new TouchSocketConfig()//加载配置
         .UseAutoPong();//当收到ping报文时自动回应pong
     }));
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -59,7 +59,7 @@ service.Logger.Info("服务器已启动");
 
 ```csharp showLineNumbers
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -72,7 +72,7 @@ service.Setup(new TouchSocketConfig()//加载配置
                .UseAutoPong();//当收到ping报文时自动回应pong
     }));
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -134,7 +134,7 @@ private static bool VerifyConnection(IHttpSessionClient client, HttpContext cont
 
 ```csharp showLineNumbers
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -149,7 +149,7 @@ service.Setup(new TouchSocketConfig()//加载配置
         });
     }));
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -284,7 +284,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
 ```csharp {12}
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -297,7 +297,7 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.Add<MyWebSocketPlugin>();//自定义插件。
     }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 :::tip 提示
@@ -361,7 +361,7 @@ class MyReadWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 private static HttpService CreateHttpService()
 {
     var service = new HttpService();
-    service.Setup(new TouchSocketConfig()//加载配置
+    await service.SetupAsync(new TouchSocketConfig()//加载配置
         .SetListenIPHosts(7789)
         .ConfigureContainer(a =>
         {
@@ -376,7 +376,7 @@ private static HttpService CreateHttpService()
             a.Add<MyReadWebSocketPlugin>();
         }));
     
-    service.Start();
+    await service.StartAsync();
 
     service.Logger.Info("服务器已启动");
     service.Logger.Info("直接连接地址=>ws://127.0.0.1:7789/ws");

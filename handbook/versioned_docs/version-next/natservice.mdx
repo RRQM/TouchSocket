@@ -28,8 +28,8 @@ static void Main(string[] args)
     var config = new TouchSocketConfig();
     config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
 
-    service.Setup(config);
-    service.Start();
+    await service.SetupAsync(config);
+    await service.StartAsync();
 
     Console.WriteLine("转发服务器已启动。已将7788端口转发到127.0.0.1:7789与127.0.0.1:7790地址");
 }

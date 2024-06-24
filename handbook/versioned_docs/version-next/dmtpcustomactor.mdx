@@ -464,8 +464,8 @@ private static TcpDmtpService GetTcpDmtpService()
                 VerifyToken = "Dmtp"//连接验证口令。
            });
 
-    service.Setup(config);
-    service.Start();
+    await service.SetupAsync(config);
+    await service.StartAsync();
     service.Logger.Info("服务器成功启动");
     return service;
 }

@@ -21,7 +21,7 @@ Swagger是一个用于生成、描述和调用RESTful接口的Web服务。通俗
 
 ```csharp {14-15}
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()
+await service.SetupAsync(new TouchSocketConfig()
    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
    .ConfigurePlugins(a =>
    {
@@ -40,7 +40,7 @@ service.Setup(new TouchSocketConfig()
        a.UseDefaultHttpServicePlugin();
    }));
    
-service.Start();
+await service.StartAsync();
 
 Console.WriteLine("测试swagger http://127.0.0.1:7789/swagger/index.html");
 ```

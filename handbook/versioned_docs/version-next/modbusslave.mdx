@@ -49,7 +49,7 @@ Modbus是主从通讯的。所以我们开发了Modbus服务器组件，方便�
 static ModbusTcpSlave CreateModbusTcpSlave()
 {
     var service = new ModbusTcpSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //监听端口
         .SetListenIPHosts(7808)
         .ConfigurePlugins(a =>
@@ -60,7 +60,7 @@ static ModbusTcpSlave CreateModbusTcpSlave()
             .SetModbusDataLocater(new ModbusDataLocater(10,10,10,10));//设置数据区
         })
         );
-    service.Start();
+    await service.StartAsync();
     Console.WriteLine("服务已启动");
     return service;
 }
@@ -72,7 +72,7 @@ static ModbusTcpSlave CreateModbusTcpSlave()
 static ModbusUdpSlave CreateModbusUdpSlave()
 {
     var service = new ModbusUdpSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //监听端口
         .SetBindIPHost(7809)
         .ConfigurePlugins(a =>
@@ -83,7 +83,7 @@ static ModbusUdpSlave CreateModbusUdpSlave()
             .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
         })
         );
-    service.Start();
+    await service.StartAsync();
     Console.WriteLine("服务已启动");
     return service;
 }
@@ -95,7 +95,7 @@ static ModbusUdpSlave CreateModbusUdpSlave()
 static ModbusRtuSlave CreateModbusRtuSlave()
 {
     var service = new ModbusRtuSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //设置串口
         .SetSerialPortOption(new SerialPortOption()
         {
@@ -125,7 +125,7 @@ static ModbusRtuSlave CreateModbusRtuSlave()
 static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
 {
     var service = new ModbusRtuOverTcpSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //监听端口
         .SetListenIPHosts(7810)
         .ConfigurePlugins(a =>
@@ -136,7 +136,7 @@ static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
             .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
         })
         );
-    service.Start();
+    await service.StartAsync();
     Console.WriteLine("服务已启动");
     return service;
 }
@@ -148,7 +148,7 @@ static ModbusRtuOverTcpSlave CreateModbusRtuOverTcpSlave()
 static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
 {
     var service = new ModbusRtuOverUdpSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //监听端口
         .SetBindIPHost(7811)
         .ConfigurePlugins(a =>
@@ -159,7 +159,7 @@ static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
             .SetModbusDataLocater(new ModbusDataLocater(10, 10, 10, 10));//设置数据区
         })
         );
-    service.Start();
+    await service.StartAsync();
     Console.WriteLine("服务已启动");
     return service;
 }
@@ -175,7 +175,7 @@ static ModbusRtuOverUdpSlave CreateModbusRtuOverUdpSlave()
 static ModbusTcpSlave CreateModbusTcpSlave()
 {
     var service = new ModbusTcpSlave();
-    service.Setup(new TouchSocketConfig()
+    await service.SetupAsync(new TouchSocketConfig()
         //监听端口
         .SetListenIPHosts(7808)
         .ConfigurePlugins(a =>
@@ -202,7 +202,7 @@ static ModbusTcpSlave CreateModbusTcpSlave()
             });
         })
         );
-    service.Start();
+    await service.StartAsync();
     Console.WriteLine("服务已启动");
     return service;
 }
