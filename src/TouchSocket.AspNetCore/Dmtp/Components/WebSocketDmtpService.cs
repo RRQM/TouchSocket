@@ -210,7 +210,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         internal bool TryRemove(string id, out WebSocketDmtpSessionClient socketClient)
         {
-            return this.m_clients.TryRemove(id, out socketClient);
+            return this.m_clients.TryRemoveClient(id, out socketClient);
         }
 
         #endregion internal

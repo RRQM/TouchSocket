@@ -68,7 +68,7 @@ namespace TouchSocket.Sockets
         /// <param name="id"></param>
         /// <param name="client"></param>
         /// <returns></returns>
-        public new bool TryRemove(string id, out TClient client)
+        public bool TryRemoveClient(string id, out TClient client)
         {
             if (string.IsNullOrEmpty(id))
             {

@@ -140,7 +140,7 @@ namespace TouchSocket.Dmtp.Rpc
             dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpRpcActor(dmtpRpcActor);
 
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureFalseAwait();
         }
 
         private async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)

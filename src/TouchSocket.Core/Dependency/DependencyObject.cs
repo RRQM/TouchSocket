@@ -12,69 +12,150 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 依赖项对象.
-    /// 非线程安全。
+    /// 依赖项对象. 线程安全。
     /// </summary>
     public class DependencyObject : DisposableObject, IDependencyObject
     {
         private readonly Dictionary<int, object> m_dp = new Dictionary<int, object>();
+        private SpinLock m_lock;
 
+        /// <summary>
+        /// 依赖项对象. 线程安全。
+        /// </summary>
+        public DependencyObject()
+        {
+            this.m_lock = new SpinLock(Debugger.IsAttached);
+        }
         /// <inheritdoc/>
         public TValue GetValue<TValue>(IDependencyProperty<TValue> dp)
         {
-            return this.m_dp.TryGetValue(dp.Id, out var value) ? (TValue)value : dp.DefauleValue;
+            var lockTaken = false;
+            try
+            {
+                this.m_lock.Enter(ref lockTaken);
+                return this.m_dp.TryGetValue(dp.Id, out var value) ? (TValue)value : dp.DefauleValue;
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         /// <inheritdoc/>
         public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
         {
-            return this.m_dp.ContainsKey(dp.Id);
+            var lockTaken = false;
+            try
+            {
+                this.m_lock.Enter(ref lockTaken);
+                return this.m_dp.ContainsKey(dp.Id);
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         /// <inheritdoc/>
         public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp)
         {
-            this.m_dp.Remove(dp.Id);
-            return this;
+            var lockTaken = false;
+            try
+            {
+                this.m_lock.Enter(ref lockTaken);
+                this.m_dp.Remove(dp.Id);
+                return this;
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         /// <inheritdoc/>
         public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
         {
-            this.m_dp.AddOrUpdate(dp.Id, value);
-            return this;
+            var lockTaken = false;
+            try
+            {
+                this.m_lock.Enter(ref lockTaken);
+                this.m_dp.AddOrUpdate(dp.Id, value);
+                return this;
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         /// <inheritdoc/>
         public bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
         {
-            if (this.m_dp.TryGetValue(dp.Id, out var value1))
+            var lockTaken = false;
+            try
             {
-                value = (TValue)value1;
-                return true;
+                this.m_lock.Enter(ref lockTaken);
+                if (this.m_dp.TryGetValue(dp.Id, out var value1))
+                {
+                    value = (TValue)value1;
+                    return true;
+                }
+                else
+                {
+                    value = default;
+                    return false;
+                }
             }
-            else
+            finally
             {
-                value = default;
-                return false;
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
             }
         }
 
         /// <inheritdoc/>
         public bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
         {
-            if (this.m_dp.TryGetValue(dp.Id, out var obj))
+            var lockTaken = false;
+            try
             {
-                value = (TValue)obj;
-                this.m_dp.Remove(dp.Id);
-                return true;
+                this.m_lock.Enter(ref lockTaken);
+                if (this.m_dp.TryGetValue(dp.Id, out var obj))
+                {
+                    value = (TValue)obj;
+                    this.m_dp.Remove(dp.Id);
+                    return true;
+                }
+                value = default;
+                return false;
             }
-            value = default;
-            return false;
+            finally
+            {
+                if (lockTaken)
+                {
+                    this.m_lock.Exit(false);
+                }
+            }
         }
 
         /// <summary>
@@ -85,7 +166,19 @@ namespace TouchSocket.Core
         {
             if (disposing)
             {
-                this.m_dp.Clear();
+                var lockTaken = false;
+                try
+                {
+                    this.m_lock.Enter(ref lockTaken);
+                    this.m_dp.Clear();
+                }
+                finally
+                {
+                    if (lockTaken)
+                    {
+                        this.m_lock.Exit(false);
+                    }
+                }
             }
             base.Dispose(disposing);
         }
@@ -99,31 +192,43 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         protected void CloneTo(DependencyObject dependencyObject, bool overwrite)
         {
-            if (dependencyObject is null)
+            var lockTaken = false;
+            try
             {
-                throw new ArgumentNullException(nameof(dependencyObject));
-            }
-
-            if (dependencyObject.DisposedValue)
-            {
-                throw new ObjectDisposedException(nameof(dependencyObject));
-            }
-
-            this.ThrowIfDisposed();
-
-            foreach (var item in this.m_dp)
-            {
-                if (dependencyObject.m_dp.ContainsKey(item.Key))
+                this.m_lock.Enter(ref lockTaken);
+                if (dependencyObject is null)
                 {
-                    if (overwrite)
+                    throw new ArgumentNullException(nameof(dependencyObject));
+                }
+
+                if (dependencyObject.DisposedValue)
+                {
+                    throw new ObjectDisposedException(nameof(dependencyObject));
+                }
+
+                this.ThrowIfDisposed();
+
+                foreach (var item in this.m_dp)
+                {
+                    if (dependencyObject.m_dp.ContainsKey(item.Key))
                     {
-                        dependencyObject.m_dp.Remove(item.Key);
+                        if (overwrite)
+                        {
+                            dependencyObject.m_dp.Remove(item.Key);
+                            dependencyObject.m_dp.Add(item.Key, item.Value);
+                        }
+                    }
+                    else
+                    {
                         dependencyObject.m_dp.Add(item.Key, item.Value);
                     }
                 }
-                else
+            }
+            finally
+            {
+                if (lockTaken)
                 {
-                    dependencyObject.m_dp.Add(item.Key, item.Value);
+                    this.m_lock.Exit(false);
                 }
             }
         }
