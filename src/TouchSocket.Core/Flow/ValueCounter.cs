@@ -58,12 +58,13 @@ namespace TouchSocket.Core
         public bool Increment(long value)
         {
             bool isPeriod;
-            if (DateTime.Now - this.LastIncrement > this.Period)
+            var dateTime= DateTime.Now;
+            if (dateTime - this.LastIncrement > this.Period)
             {
                 this.OnPeriod?.Invoke(this.m_count);
                 Interlocked.Exchange(ref this.m_count, 0);
                 isPeriod = false;
-                this.m_lastIncrement = DateTime.Now;
+                this.m_lastIncrement = dateTime;
             }
             else
             {

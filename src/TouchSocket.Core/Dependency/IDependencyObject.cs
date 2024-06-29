@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 依赖对象接口
     /// </summary>
-    public interface IDependencyObject : IDisposable
+    public interface IDependencyObject : IDisposableObject
     {
         /// <summary>
         /// 获取依赖注入的值，当没有注入时，会返回默认值。

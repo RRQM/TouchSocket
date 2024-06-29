@@ -249,35 +249,35 @@ namespace TouchSocket.Core
 
                         if (enumValType == typeof(byte))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToByte(graph), serializerContext);
+                            byteBlock.WriteByte(Convert.ToByte(graph));
                         }
                         else if (enumValType == typeof(sbyte))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToSByte(graph), serializerContext);
+                            byteBlock.WriteInt16(Convert.ToSByte(graph));
                         }
                         else if (enumValType == typeof(short))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToInt16(graph), serializerContext);
+                            byteBlock.WriteInt16(Convert.ToInt16(graph));
                         }
                         else if (enumValType == typeof(ushort))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToUInt16(graph), serializerContext);
+                            byteBlock.WriteUInt16(Convert.ToUInt16(graph));
                         }
                         else if (enumValType == typeof(int))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToInt32(graph), serializerContext);
+                            byteBlock.WriteInt32(Convert.ToInt32(graph));
                         }
                         else if (enumValType == typeof(uint))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToUInt32(graph), serializerContext);
+                            byteBlock.WriteUInt32(Convert.ToUInt32(graph));
                         }
                         else if (enumValType == typeof(ulong))
                         {
-                            SerializeObject(ref byteBlock, Convert.ToUInt64(graph), serializerContext);
+                            byteBlock.WriteUInt64(Convert.ToUInt64(graph));
                         }
                         else
                         {
-                            SerializeObject(ref byteBlock, Convert.ToInt64(graph), serializerContext);
+                            byteBlock.WriteInt64(Convert.ToInt64(graph));
                         }
                         return;
                     }
@@ -338,13 +338,7 @@ namespace TouchSocket.Core
                                             }
                                             else
                                             {
-                                                var propertyBytes = Encoding.UTF8.GetBytes(memberInfo.Name);
-                                                if (propertyBytes.Length > byte.MaxValue)
-                                                {
-                                                    throw new Exception($"属性名：{memberInfo.Name}超长");
-                                                }
-                                                byteBlock.WriteByte((byte)propertyBytes.Length);
-                                                byteBlock.Write(propertyBytes);
+                                                byteBlock.WriteString(memberInfo.Name, FixedHeaderType.Byte);
                                             }
 
                                             SerializeObject(ref byteBlock, serializObject.MemberAccessor.GetValue(graph, memberInfo.Name), serializerContext);
@@ -610,10 +604,7 @@ namespace TouchSocket.Core
                         {
                             while (byteBlock.Position < index)
                             {
-                                int len = byteBlock.ReadByte();
-
-                                var propertyName = byteBlock.Span.Slice(byteBlock.Position, len).ToString(Encoding.UTF8);
-                                byteBlock.Position += len;
+                                var propertyName = byteBlock.ReadString( FixedHeaderType.Byte);
 
                                 if (serializObject.IsStruct)
                                 {

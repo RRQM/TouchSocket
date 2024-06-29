@@ -26,23 +26,12 @@ namespace TouchSocket.Http
             return this.TcpConnectAsync(millisecondsTimeout, token);
         }
 
-        ///// <inheritdoc/>
-        //public HttpResponseResult Request(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-        //{
-        //    return this.ProtectedRequest(request, millisecondsTimeout, token);
-        //}
 
         /// <inheritdoc/>
         public Task<HttpResponseResult> RequestAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
         {
             return this.ProtectedRequestAsync(request, millisecondsTimeout, token);
         }
-
-        ///// <inheritdoc/>
-        //public HttpResponseResult RequestContent(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)
-        //{
-        //    return this.ProtectedRequestContent(request, millisecondsTimeout, token);
-        //}
 
         /// <inheritdoc/>
         public Task<HttpResponseResult> RequestContentAsync(HttpRequest request, int millisecondsTimeout = 10000, CancellationToken token = default)

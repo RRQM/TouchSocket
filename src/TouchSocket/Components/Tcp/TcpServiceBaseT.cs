@@ -461,7 +461,7 @@ namespace TouchSocket.Sockets
 
         private bool TryRemove(string id, out TcpSessionClientBase client)
         {
-            if (this.m_clients.TryRemove(id, out var newClient))
+            if (this.m_clients.TryRemoveClient(id, out var newClient))
             {
                 client = newClient;
                 return true;

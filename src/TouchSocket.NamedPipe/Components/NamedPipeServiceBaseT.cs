@@ -314,7 +314,7 @@ namespace TouchSocket.NamedPipe
 
         private bool TryRemove(string id, out NamedPipeSessionClientBase client)
         {
-            if (this.m_clients.TryRemove(id, out var newClient))
+            if (this.m_clients.TryRemoveClient(id, out var newClient))
             {
                 client = newClient;
                 return true;
