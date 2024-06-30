@@ -573,6 +573,17 @@
       "type": "doc",
       "label": "20、通用主机(Hosting)",
       "id": "generichost"
+    },
+    {
+      "type": "category",
+      "label": "21、SocketIO",
+      "items": [
+        {
+          "type": "doc",
+          "label": "21.1 SocketIo客户端",
+          "id": "socketioclient"
+        }
+      ]
     }
   ]
 }
