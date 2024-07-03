@@ -363,6 +363,154 @@ using (var client = GetClient())
 
 ::: 
 
+
+### 6.4 接收中继数据
+
+`WebSocket`协议本身是支持超大数据包的，但是这些包不会一次性接收，而是分多次接收的，同时会通过`Opcode`来表明其为中继数据。
+
+下面将演示接收文本数据。
+
+```csharp {22-49} showLineNumbers
+//当WebSocket想要使用ReadAsync时，需要设置此值为true
+client.AllowAsyncRead = true;
+
+//此处即表明websocket已连接
+
+MemoryStream stream = default;//中继包缓存
+var isText = false;//标识是否为文本
+while (true)
+{
+    using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+    {
+        if (receiveResult.IsCompleted)
+        {
+            break;
+        }
+
+        var dataFrame = receiveResult.DataFrame;
+        var data = receiveResult.DataFrame.PayloadData;
+
+        switch (dataFrame.Opcode)
+        {
+            case WSDataType.Cont:
+                {
+                    //收到的是中继包
+                    if (dataFrame.FIN)//判断是否为最终包
+                    {
+                        //是
+
+                        if (isText)//判断是否为文本
+                        {
+                            this.m_logger.Info($"WebSocket文本：{Encoding.UTF8.GetString(stream.ToArray())}");
+                        }
+                        else
+                        {
+                            this.m_logger.Info($"WebSocket二进制：{stream.Length}长度");
+                        }
+                    }
+                    else
+                    {
+                        //否，继续缓存
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Text:
+                {
+                    if (dataFrame.FIN)//判断是不是最后的包
+                    {
+                        //是，则直接输出
+                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                        this.m_logger.Info($"WebSocket文本：{dataFrame.ToText()}");
+                    }
+                    else
+                    {
+                        isText = true;
+
+                        //否，则说明数据太大了，分中继包了。
+                        //则，初始化缓存容器
+                        stream ??= new MemoryStream();
+
+                        //下面则是缓存逻辑
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Binary:
+                {
+                    if (dataFrame.FIN)//判断是不是最后的包
+                    {
+                        //是，则直接输出
+                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                        this.m_logger.Info($"WebSocket二进制：{data.Length}长度");
+                    }
+                    else
+                    {
+                        isText = false;
+
+                        //否，则说明数据太大了，分中继包了。
+                        //则，初始化缓存容器
+                        stream ??= new MemoryStream();
+
+                        //下面则是缓存逻辑
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Close:
+                break;
+            case WSDataType.Ping:
+                break;
+            case WSDataType.Pong:
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+或者可以使用内置的扩展方法来进行一次性接收。
+
+例如一次性接收文本：
+
+```csharp showLineNumbers
+ var str = await client.ReadStringAsync();
+```
+
+一次性接收二进制数据：
+
+```csharp showLineNumbers
+using (MemoryStream stream=new MemoryStream())
+{
+    var str = await client.ReadBinaryAsync(stream);
+}
+```
+
+:::caution 注意
+
+`ReadStringAsync`或者`ReadBinaryAsync`，都只接收对应的数据类型，如果收到非匹配数据则会抛出异常。
+
+:::  
+
 ## 七、其他操作
 
 ### 7.1 握手机制
