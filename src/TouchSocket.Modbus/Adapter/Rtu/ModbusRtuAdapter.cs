@@ -14,11 +14,168 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
-    internal class ModbusRtuAdapter : CustomUnfixedHeaderDataHandlingAdapter<ModbusRtuResponse>
+    internal class ModbusRtuAdapter : CustomDataHandlingAdapter<ModbusRtuResponse>
     {
-        protected override ModbusRtuResponse GetInstance()
+        protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref ModbusRtuResponse request, ref int tempCapacity)
         {
-            return new ModbusRtuResponse();
+            if (byteBlock.CanReadLength < 3)
+            {
+                return FilterResult.Cache;
+            }
+
+            var pos = byteBlock.Position;
+
+            var slaveId = byteBlock.ReadByte();
+            FunctionCode functionCode;
+            var isError = false;
+            var code = byteBlock.ReadByte();
+            if ((code & 0x80) == 0)
+            {
+                functionCode = (FunctionCode)code;
+            }
+            else
+            {
+                code = code.SetBit(7, false);
+                functionCode = (FunctionCode)code;
+                isError = true;
+            }
+
+            ModbusErrorCode errorCode;
+
+            var bodyLength = 0;
+            byte[] data;
+            ushort startingAddress;
+            if (isError)
+            {
+                errorCode = (ModbusErrorCode)byteBlock.ReadByte();
+                bodyLength = 2;
+
+                if (byteBlock.CanReadLength < bodyLength)
+                {
+                    byteBlock.Position = pos;
+                    return FilterResult.Cache;
+                }
+
+                var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                var crc = byteBlock.ReadUInt16(EndianType.Big);
+
+                if (crc == newCrc)
+                {
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        ErrorCode = errorCode,
+                        FunctionCode = functionCode,
+                    };
+
+                    return FilterResult.Success;
+                }
+                else
+                {
+                    throw new System.Exception("crc验证失败");
+                }
+            }
+            else
+            {
+                if ((byte)functionCode <= 4 || functionCode == FunctionCode.ReadWriteMultipleRegisters)
+                {
+                    bodyLength = byteBlock.ReadByte() + 2;
+
+                    if (byteBlock.CanReadLength < bodyLength)
+                    {
+                        byteBlock.Position = pos;
+                        return FilterResult.Cache;
+                    }
+
+                    data = byteBlock.ReadToSpan(bodyLength - 2).ToArray();
+
+                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                    var crc = byteBlock.ReadUInt16(EndianType.Big);
+
+                    if (crc == newCrc)
+                    {
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
+                    }
+                    else
+                    {
+                        throw new System.Exception("crc验证失败");
+                    }
+                }
+                else if (functionCode == FunctionCode.WriteSingleCoil || functionCode == FunctionCode.WriteSingleRegister)
+                {
+                    bodyLength = 6;
+                    if (byteBlock.CanReadLength < bodyLength)
+                    {
+                        byteBlock.Position = pos;
+                        return FilterResult.Cache;
+                    }
+                    startingAddress = byteBlock.ReadUInt16(EndianType.Big);
+                    data = byteBlock.ReadToSpan(bodyLength - 4).ToArray();
+                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                    var crc = byteBlock.ReadUInt16(EndianType.Big);
+
+                    if (crc == newCrc)
+                    {
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            StartingAddress = startingAddress,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
+                    }
+                    else
+                    {
+                        throw new System.Exception("crc验证失败");
+                    }
+
+                    //this.m_headerLength = byteBlock.Position - pos;
+                    //return true;
+                }
+                else if (functionCode == FunctionCode.WriteMultipleCoils || functionCode == FunctionCode.WriteMultipleRegisters)
+                {
+                    bodyLength = 6;
+                    if (byteBlock.CanReadLength < bodyLength)
+                    {
+                        byteBlock.Position = pos;
+                        return FilterResult.Cache;
+                    }
+                    startingAddress = byteBlock.ReadUInt16(EndianType.Big);
+                    var quantity = byteBlock.ReadUInt16(EndianType.Big);
+                    data = new byte[0];
+
+                    var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
+                    var crc = byteBlock.ReadUInt16(EndianType.Big);
+
+                    if (crc == newCrc)
+                    {
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            StartingAddress = startingAddress,
+                            Quantity = quantity,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
+                    }
+                    else
+                    {
+                        throw new System.Exception("crc验证失败");
+                    }
+                }
+                else
+                {
+                    throw new System.Exception("无法识别的功能码");
+                }
+            }
         }
     }
 }

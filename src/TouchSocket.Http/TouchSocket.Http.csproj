@@ -29,6 +29,7 @@
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="RefShared\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="RefShared\InternalVisible.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="RefShared\ThrowHelperSockets.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

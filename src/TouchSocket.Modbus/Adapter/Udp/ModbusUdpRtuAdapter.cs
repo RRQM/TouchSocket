@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -38,9 +37,9 @@ namespace TouchSocket.Modbus
             }
             else if (response.FunctionCode == FunctionCode.WriteSingleCoil || response.FunctionCode == FunctionCode.WriteSingleRegister)
             {
-                response.StartingAddress = byteBlock.ReadUInt16( EndianType.Big);
+                response.StartingAddress = byteBlock.ReadUInt16(EndianType.Big);
                 response.SetValue(byteBlock.ReadToSpan(2).ToArray());
-                response.Crc = byteBlock.ReadUInt16( EndianType.Big);
+                response.Crc = byteBlock.ReadUInt16(EndianType.Big);
                 crcLen = 6;
             }
             else if (response.FunctionCode == FunctionCode.WriteMultipleCoils || response.FunctionCode == FunctionCode.WriteMultipleRegisters)
@@ -52,7 +51,7 @@ namespace TouchSocket.Modbus
             }
 
             var crc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(0, crcLen));
-            if (crc==(response.Crc))
+            if (crc == (response.Crc))
             {
                 await base.GoReceived(remoteEndPoint, null, response).ConfigureFalseAwait();
             }

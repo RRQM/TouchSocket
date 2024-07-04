@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Linq;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -31,9 +30,9 @@ namespace TouchSocket.Modbus
         {
             var memoryArray = memory.GetArray();
 
-            byte[] byteData = memoryArray.Array;
-            int offset = memoryArray.Offset;
-            int length = memoryArray.Count;
+            var byteData = memoryArray.Array;
+            var offset = memoryArray.Offset;
+            var length = memoryArray.Count;
 
             var CRC = new byte[2];
 

@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
     [DebuggerDisplay("Count={Count}")]
-    internal sealed class InternalClientCollection<TClient> : ConcurrentDictionary<string, TClient>, IClientCollection<TClient> where TClient : IIdClient
+    internal class InternalClientCollection<TClient> : ConcurrentDictionary<string, TClient>, IClientCollection<TClient> where TClient : IIdClient
     {
         /// <inheritdoc/>
         public bool ClientExist(string id)

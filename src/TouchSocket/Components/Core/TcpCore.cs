@@ -361,7 +361,7 @@ namespace TouchSocket.Sockets
                 // 如果有元素需要处理，并且没有异常
                 if (count > 0)
                 {
-                    Debug.WriteLine(count.ToString());
+                    //Debug.WriteLine(count.ToString());
                     if (this.m_exceptionDispatchInfo == null)
                     {
                         using (var byteBlock = new ValueByteBlock(count * MaxMemoryLength))

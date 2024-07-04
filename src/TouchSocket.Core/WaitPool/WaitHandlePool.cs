@@ -26,10 +26,9 @@ namespace TouchSocket.Core
         private readonly ConcurrentDictionary<int, WaitDataAsync<T>> m_waitDicAsync;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
         private readonly ConcurrentQueue<WaitDataAsync<T>> m_waitQueueAsync;
+        private int m_currentSign;
         private int m_maxSign = int.MaxValue;
         private int m_minSign = int.MinValue;
-        private int m_waitCount;
-        private int m_waitReverseCount;
 
         /// <summary>
         /// 构造函数
@@ -112,107 +111,6 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
-        public WaitData<T> GetReverseWaitData(T result, bool autoSign = true)
-        {
-            if (this.m_waitQueue.TryDequeue(out var waitData))
-            {
-                if (autoSign)
-                {
-                    result.Sign = this.GetSign(true);
-                }
-                waitData.SetResult(result);
-                this.m_waitDic.TryAdd(result.Sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitData<T>();
-            if (autoSign)
-            {
-                result.Sign = this.GetSign(true);
-            }
-            waitData.SetResult(result);
-            this.m_waitDic.TryAdd(result.Sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        /// 获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
-        public WaitData<T> GetReverseWaitData(out int sign)
-        {
-            if (this.m_waitQueue.TryDequeue(out var waitData))
-            {
-                sign = this.GetSign(true);
-                waitData.SetResult(default);
-                this.m_waitDic.TryAdd(sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitData<T>();
-            sign = this.GetSign(true);
-            waitData.SetResult(default);
-            this.m_waitDic.TryAdd(sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
-        public WaitDataAsync<T> GetReverseWaitDataAsync(T result, bool autoSign = true)
-        {
-            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
-            {
-                if (autoSign)
-                {
-                    result.Sign = this.GetSign(true);
-                }
-                waitData.SetResult(result);
-                this.m_waitDicAsync.TryAdd(result.Sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitDataAsync<T>();
-            if (autoSign)
-            {
-                result.Sign = this.GetSign(true);
-            }
-            waitData.SetResult(result);
-            this.m_waitDicAsync.TryAdd(result.Sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <returns></returns>
-        public WaitDataAsync<T> GetReverseWaitDataAsync(out int sign)
-        {
-            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
-            {
-                sign = this.GetSign(true);
-                waitData.SetResult(default);
-                this.m_waitDicAsync.TryAdd(sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitDataAsync<T>();
-            sign = this.GetSign(true);
-            waitData.SetResult(default);
-            this.m_waitDicAsync.TryAdd(sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
         ///  获取一个可等待对象
         /// </summary>
         /// <param name="result"></param>
@@ -224,7 +122,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = this.GetSign(false);
+                    result.Sign = this.GetSign();
                 }
                 waitData.SetResult(result);
                 this.m_waitDic.TryAdd(result.Sign, waitData);
@@ -234,7 +132,7 @@ namespace TouchSocket.Core
             waitData = new WaitData<T>();
             if (autoSign)
             {
-                result.Sign = this.GetSign(false);
+                result.Sign = this.GetSign();
             }
             waitData.SetResult(result);
             this.m_waitDic.TryAdd(result.Sign, waitData);
@@ -250,14 +148,14 @@ namespace TouchSocket.Core
         {
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
-                sign = this.GetSign(false);
+                sign = this.GetSign();
                 waitData.SetResult(default);
                 this.m_waitDic.TryAdd(sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitData<T>();
-            sign = this.GetSign(false);
+            sign = this.GetSign();
             waitData.SetResult(default);
             this.m_waitDic.TryAdd(sign, waitData);
             return waitData;
@@ -275,7 +173,7 @@ namespace TouchSocket.Core
             {
                 if (autoSign)
                 {
-                    result.Sign = this.GetSign(false);
+                    result.Sign = this.GetSign();
                 }
                 waitData.SetResult(result);
                 this.m_waitDicAsync.TryAdd(result.Sign, waitData);
@@ -285,7 +183,7 @@ namespace TouchSocket.Core
             waitData = new WaitDataAsync<T>();
             if (autoSign)
             {
-                result.Sign = this.GetSign(false);
+                result.Sign = this.GetSign();
             }
             waitData.SetResult(result);
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
@@ -301,14 +199,14 @@ namespace TouchSocket.Core
         {
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
-                sign = this.GetSign(false);
+                sign = this.GetSign();
                 waitData.SetResult(default);
                 this.m_waitDicAsync.TryAdd(sign, waitData);
                 return waitData;
             }
 
             waitData = new WaitDataAsync<T>();
-            sign = this.GetSign(false);
+            sign = this.GetSign();
             waitData.SetResult(default);
             this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
@@ -356,16 +254,6 @@ namespace TouchSocket.Core
             return false;
         }
 
-        public bool TryGetDataAsync(int sign,out WaitDataAsync<T> waitDataAsync )
-        {
-            return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
-        }
-
-        public bool TryGetData(int sign, out WaitData<T> waitData)
-        {
-            return this.m_waitDic.TryGetValue(sign, out waitData);
-        }
-
         /// <summary>
         /// 让等待对象恢复运行
         /// </summary>
@@ -387,13 +275,23 @@ namespace TouchSocket.Core
             return false;
         }
 
+        public bool TryGetData(int sign, out WaitData<T> waitData)
+        {
+            return this.m_waitDic.TryGetValue(sign, out waitData);
+        }
+
+        public bool TryGetDataAsync(int sign, out WaitDataAsync<T> waitDataAsync)
+        {
+            return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
+        }
+
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing) 
+            if (disposing)
             {
                 foreach (var item in this.m_waitDic.Values)
                 {
@@ -407,23 +305,15 @@ namespace TouchSocket.Core
 
                 this.m_waitQueue.Clear();
             }
-            
+
             base.Dispose(disposing);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetSign(bool reverse)
+        private int GetSign()
         {
-            if (reverse)
-            {
-                Interlocked.CompareExchange(ref this.m_waitReverseCount, 0, this.m_minSign);
-                return Interlocked.Decrement(ref this.m_waitReverseCount);
-            }
-            else
-            {
-                Interlocked.CompareExchange(ref this.m_waitCount, 0, this.m_maxSign);
-                return Interlocked.Increment(ref this.m_waitCount);
-            }
+            Interlocked.CompareExchange(ref this.m_currentSign, 0, this.m_maxSign);
+            return Interlocked.Increment(ref this.m_currentSign);
         }
     }
 }

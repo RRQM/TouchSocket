@@ -47,7 +47,7 @@ namespace TouchSocket.Modbus
             byteBlock.WriteUInt16(this.ProtocolId, EndianType.Big);
             if ((byte)this.FunctionCode <= 4)
             {
-                byteBlock.WriteUInt16((ushort)6, EndianType.Big);
+                byteBlock.WriteUInt16(6, EndianType.Big);
                 byteBlock.WriteByte(this.SlaveId);
                 byteBlock.WriteByte((byte)this.FunctionCode);
                 byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
@@ -55,7 +55,7 @@ namespace TouchSocket.Modbus
             }
             else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
             {
-                byteBlock.WriteUInt16((ushort)6, EndianType.Big);
+                byteBlock.WriteUInt16(6, EndianType.Big);
                 byteBlock.WriteByte(this.SlaveId);
                 byteBlock.WriteByte((byte)this.FunctionCode);
                 byteBlock.WriteUInt16(this.StartingAddress, EndianType.Big);
