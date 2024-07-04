@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Linq;
 using TouchSocket.Core;
 
 namespace TouchSocket.Modbus

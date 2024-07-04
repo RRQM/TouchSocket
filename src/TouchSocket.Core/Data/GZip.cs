@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// Gzip操作类
     /// </summary>
-    public static class GZip
+    public static partial class GZip
     {
         /// <summary>
         /// 压缩数据

@@ -42,4 +42,9 @@
 		<DebugType>Embedded</DebugType>
 		<EmbedAllSources>True</EmbedAllSources>
 	</PropertyGroup>
+
+	<!--<ItemGroup>
+		<Using Include="TouchSocket.Core"/>
+		<Using Include="TouchSocket.Sockets"/>
+	</ItemGroup>-->
 </Project>

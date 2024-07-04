@@ -25,7 +25,7 @@ namespace TouchSocket.Modbus
         #region 同步
         public static IModbusResponse SendModbusRequest(this IModbusMaster master, ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            return master.SendModbusRequestAsync(request,millisecondsTimeout,token).GetFalseAwaitResult();
+            return master.SendModbusRequestAsync(request, millisecondsTimeout, token).GetFalseAwaitResult();
         }
         #endregion
 

@@ -49,7 +49,7 @@ namespace TouchSocket.Modbus
                 {
                     byteBlock.Dispose();
                 }
-                
+
                 this.m_waitDataAsync.SetCancellationToken(token);
                 var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
                 waitDataStatus.ThrowIfNotRunning();

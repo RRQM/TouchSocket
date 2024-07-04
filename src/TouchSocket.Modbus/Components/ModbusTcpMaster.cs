@@ -39,13 +39,13 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout,token).ConfigureFalseAwait();
+            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
             var waitData = this.m_waitHandlePool.GetWaitDataAsync(out var sign);
             try
             {
                 var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-                ValueByteBlock valueByteBlock = new ValueByteBlock(modbusTcpRequest.MaxLength);
+                var valueByteBlock = new ValueByteBlock(modbusTcpRequest.MaxLength);
                 try
                 {
                     modbusTcpRequest.Build(ref valueByteBlock);

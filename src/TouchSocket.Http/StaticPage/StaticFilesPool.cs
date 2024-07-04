@@ -209,7 +209,7 @@ namespace TouchSocket.Http
                 key = FileUtility.PathFormat(key);
 
                 var fileInfo = new FileInfo(file);
-                if (fileInfo.Length < MaxCacheSize)
+                if (fileInfo.Length < this.MaxCacheSize)
                 {
                     var content = File.ReadAllBytes(file);
                     if (!this.AddEntry(key, content, millisecondsTimeout))
