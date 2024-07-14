@@ -35,6 +35,6 @@
 	  </Reference>
 	</ItemGroup>-->
 	<ItemGroup>
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.1.0-alpha.17" />
+		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.1.0-rc.1" />
 	</ItemGroup>
 </Project>

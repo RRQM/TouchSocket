@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜æˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.RemoteAccess;
@@ -31,7 +43,7 @@ namespace RemoteAccessApp
 
         private static async Task<TcpDmtpService> GetTcpDmtpService()
         {
-            var service = await new TouchSocketConfig()//ÅäÖÃ
+            var service = await new TouchSocketConfig()//ï¿½ï¿½ï¿½ï¿½
                    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                    .ConfigureContainer(a =>
                    {
@@ -39,15 +51,15 @@ namespace RemoteAccessApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRemoteAccess();//±ØĞëÌí¼ÓÔ¶³Ì·ÃÎÊ²å¼ş
+                       a.UseDmtpRemoteAccess();//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½Ì·ï¿½ï¿½Ê²ï¿½ï¿½
                        a.Add<MyRemoteAccessPlugin>();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
-                       VerifyToken = "Dmtp"//Á¬½ÓÑéÖ¤¿ÚÁî¡£
+                       VerifyToken = "Dmtp"//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½î¡£
                    })
-                   .BuildServiceAsync<TcpDmtpService>();//´Ë´¦buildÏàµ±ÓÚnew TcpDmtpService£¬È»ºóSetupAsync£¬È»ºóStartAsync¡£
-            service.Logger.Info("·şÎñÆ÷³É¹¦Æô¶¯");
+                   .BuildServiceAsync<TcpDmtpService>();//ï¿½Ë´ï¿½buildï¿½àµ±ï¿½ï¿½new TcpDmtpServiceï¿½ï¿½È»ï¿½ï¿½SetupAsyncï¿½ï¿½È»ï¿½ï¿½StartAsyncï¿½ï¿½
+            service.Logger.Info("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½");
             return service;
         }
 
@@ -55,12 +67,12 @@ namespace RemoteAccessApp
         {
             public async Task OnRemoteAccessing(IDmtpActorObject client, RemoteAccessingEventArgs e)
             {
-                //Console.WriteLine($"ÓĞ¿Í»§¶ËÕıÔÚÇëÇóÔ¶³Ì²Ù×÷");
-                //Console.WriteLine($"ÀàĞÍ£º{e.AccessType}£¬Ä£Ê½£º{e.AccessMode}");
-                //Console.WriteLine($"ÇëÇóÂ·¾¶£º{e.Path}");
-                //Console.WriteLine($"Ä¿±êÂ·¾¶£º{e.TargetPath}");
+                //Console.WriteLine($"ï¿½Ğ¿Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½Ì²ï¿½ï¿½ï¿½");
+                //Console.WriteLine($"ï¿½ï¿½ï¿½Í£ï¿½{e.AccessType}ï¿½ï¿½Ä£Ê½ï¿½ï¿½{e.AccessMode}");
+                //Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½{e.Path}");
+                //Console.WriteLine($"Ä¿ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½{e.TargetPath}");
 
-                //Console.WriteLine("ÇëÊäÈëy/n¾ö¶¨ÊÇ·ñÔÊĞíÆä²Ù×÷?");
+                //Console.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½y/nï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?");
 
                 //var input = Console.ReadLine();
                 //if (input == "y")
@@ -69,7 +81,7 @@ namespace RemoteAccessApp
                 //    return;
                 //}
 
-                //Èç¹ûµ±Ç°²å¼şÎŞ·¨´¦Àí£¬×ªÖÁÏÂÒ»¸ö²å¼ş
+                //ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ş·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½
                 await e.InvokeNext();
             }
         }

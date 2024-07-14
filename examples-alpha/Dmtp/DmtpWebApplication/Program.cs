@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜Žæˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æŽˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 
@@ -9,7 +21,7 @@ namespace DmtpWebApplication
         {
             try
             {
-                //ÆóÒµ°æ²ÅÐèÒª
+                //ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½Òª
                 Enterprise.ForTest();
             }
             catch (Exception ex)
@@ -18,16 +30,16 @@ namespace DmtpWebApplication
             }
             var builder = WebApplication.CreateBuilder(args);
 
-            //ÔÚÕû¸öÍ¨ÓÃHostÖÐ£¬ËùÓÐ×é¼þ»á¹²ÓÃÒ»¸öÈÝÆ÷¡£
-            //ËùÒÔ½¨ÒéÊ¹ÓÃConfigureContainerÍ³Ò»ÉèÖÃ¡£
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Hostï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹²ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            //ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ConfigureContainerÍ³Ò»ï¿½ï¿½ï¿½Ã¡ï¿½
             builder.Services.ConfigureContainer(container =>
             {
                 container.AddConsoleLogger();
                 container.AddDmtpRouteService();
             });
 
-            //Ìí¼ÓWebSocketÐ­ÒéµÄDmtp
-            //¿Í»§¶ËÊ¹ÓÃWebSocketDmtpClient
+            //ï¿½ï¿½ï¿½ï¿½WebSocketÐ­ï¿½ï¿½ï¿½Dmtp
+            //ï¿½Í»ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½WebSocketDmtpClient
             builder.Services.AddWebSocketDmtpService(config =>
             {
                 config
@@ -37,14 +49,14 @@ namespace DmtpWebApplication
                     })
                     .ConfigurePlugins(a =>
                     {
-                        //Ìí¼Ó²å¼þ
+                        //ï¿½ï¿½ï¿½Ó²ï¿½ï¿½
                         a.Add<MyClassPlugin>();
                     });
             });
 
-            //ÆóÒµ°æ¹¦ÄÜ
-            //Ìí¼Ó»ùÓÚHttpÉý¼¶Ð­ÒéµÄDmtp¡£
-            //¿Í»§¶ËÊ¹ÓÃHttpDmtpClient
+            //ï¿½ï¿½Òµï¿½æ¹¦ï¿½ï¿½
+            //ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½Httpï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½ï¿½Dmtpï¿½ï¿½
+            //ï¿½Í»ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½HttpDmtpClient
             builder.Services.AddHttpMiddlewareDmtpService(config =>
             {
                 config.SetDmtpOption(new DmtpOption()
@@ -53,18 +65,18 @@ namespace DmtpWebApplication
                 })
                 .ConfigurePlugins(a =>
                 {
-                    //Ìí¼Ó²å¼þ
+                    //ï¿½ï¿½ï¿½Ó²ï¿½ï¿½
                     a.Add<MyClassPlugin>();
                 });
             });
 
             var app = builder.Build();
 
-            //WebSocketDmtp±ØÐëÔÚUseWebSocketsÖ®ºóÊ¹ÓÃ¡£
+            //WebSocketDmtpï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UseWebSocketsÖ®ï¿½ï¿½Ê¹ï¿½Ã¡ï¿½
             app.UseWebSockets();
             app.UseWebSocketDmtp("/WebSocketDmtp");
 
-            //HttpDmtp¿ÉÒÔµ¥¶ÀÖ±½ÓÊ¹ÓÃ¡£
+            //HttpDmtpï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½Ã¡ï¿½
             app.UseHttpDmtp();
 
             app.Run();

@@ -1,7 +1,21 @@
-﻿using Newtonsoft.Json.Linq;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -222,6 +236,8 @@ namespace WebSocketConsoleApp
                             //.UseAutoPong()//当收到ping报文时自动回应pong
                             ;
 
+                     a.Add<MyReadTextWebSocketPlugin>();
+
                      a.Add<MyWSCommandLinePlugin>();
                      a.Add<MyWebSocketPlugin>();
 
@@ -272,9 +288,9 @@ namespace WebSocketConsoleApp
                 }
                 else
                 {
-                   await context.Response
-                        .SetStatus(403, "token不正确")
-                        .AnswerAsync();
+                    await context.Response
+                         .SetStatus(403, "token不正确")
+                         .AnswerAsync();
                 }
             }
             else if (context.Request.UrlEquals("/wsheader"))//以此连接，则需要从header传入token才可以连接
@@ -285,12 +301,146 @@ namespace WebSocketConsoleApp
                 }
                 else
                 {
-                  await  context.Response
-                        .SetStatus(403, "token不正确")
-                        .AnswerAsync();
+                    await context.Response
+                          .SetStatus(403, "token不正确")
+                          .AnswerAsync();
                 }
             }
             return false;
+        }
+
+
+        internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
+        {
+            private readonly ILog m_logger;
+
+            public MyReadTextWebSocketPlugin(ILog logger)
+            {
+                this.m_logger = logger;
+            }
+
+            public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+            {
+                //当WebSocket想要使用ReadAsync时，需要设置此值为true
+                client.AllowAsyncRead = true;
+
+                //此处即表明websocket已连接
+
+                MemoryStream stream = default;//中继包缓存
+                var isText = false;//标识是否为文本
+                while (true)
+                {
+                    using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+                    {
+                        if (receiveResult.IsCompleted)
+                        {
+                            break;
+                        }
+
+                        var dataFrame = receiveResult.DataFrame;
+                        var data = receiveResult.DataFrame.PayloadData;
+
+                        switch (dataFrame.Opcode)
+                        {
+                            case WSDataType.Cont:
+                                {
+                                    //收到的是中继包
+                                    if (dataFrame.FIN)//判断是否为最终包
+                                    {
+                                        //是
+
+                                        if (isText)//判断是否为文本
+                                        {
+                                            this.m_logger.Info($"WebSocket文本：{Encoding.UTF8.GetString(stream.ToArray())}");
+                                        }
+                                        else
+                                        {
+                                            this.m_logger.Info($"WebSocket二进制：{stream.Length}长度");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //否，继续缓存
+
+                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                        //var segment = data.AsSegment();
+                                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                                        //如果是net6.0以上，直接写入span即可
+                                        stream.Write(data.Span);
+                                    }
+                                }
+                                break;
+                            case WSDataType.Text:
+                                {
+                                    if (dataFrame.FIN)//判断是不是最后的包
+                                    {
+                                        //是，则直接输出
+                                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                                        this.m_logger.Info($"WebSocket文本：{dataFrame.ToText()}");
+                                    }
+                                    else
+                                    {
+                                        isText = true;
+
+                                        //否，则说明数据太大了，分中继包了。
+                                        //则，初始化缓存容器
+                                        stream ??= new MemoryStream();
+
+                                        //下面则是缓存逻辑
+
+                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                        //var segment = data.AsSegment();
+                                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                                        //如果是net6.0以上，直接写入span即可
+                                        stream.Write(data.Span);
+                                    }
+                                }
+                                break;
+                            case WSDataType.Binary:
+                                {
+                                    if (dataFrame.FIN)//判断是不是最后的包
+                                    {
+                                        //是，则直接输出
+                                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                                        this.m_logger.Info($"WebSocket二进制：{data.Length}长度");
+                                    }
+                                    else
+                                    {
+                                        isText = false;
+
+                                        //否，则说明数据太大了，分中继包了。
+                                        //则，初始化缓存容器
+                                        stream ??= new MemoryStream();
+
+                                        //下面则是缓存逻辑
+
+                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                        //var segment = data.AsSegment();
+                                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                                        //如果是net6.0以上，直接写入span即可
+                                        stream.Write(data.Span);
+                                    }
+                                }
+                                break;
+                            case WSDataType.Close:
+                                break;
+                            case WSDataType.Ping:
+                                break;
+                            case WSDataType.Pong:
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+                //此处即表明websocket已断开连接
+                this.m_logger.Info("WebSocket断开连接");
+                await e.InvokeNext();
+            }
         }
 
         public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
@@ -357,7 +507,7 @@ namespace WebSocketConsoleApp
 
                             if (!client.Client.IsClient)
                             {
-                              await  client.SendAsync("我已收到");
+                                await client.SendAsync("我已收到");
                             }
                         }
                         else//一个包没有结束，还有后续包

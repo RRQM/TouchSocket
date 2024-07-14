@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜æˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.RemoteAccess;
@@ -35,7 +47,7 @@ namespace RemoteAccessApp
                 }));
             this.m_client.ConnectAsync();
 
-            this.m_client.Logger.Info("³É¹¦Á¬½Ó");
+            this.m_client.Logger.Info("ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
 
         private TcpDmtpClient m_client = new TcpDmtpClient();
@@ -46,7 +58,7 @@ namespace RemoteAccessApp
             {
                 if (this.textBox1.Text.IsNullOrEmpty())
                 {
-                    this.m_client.Logger.Warning("Â·¾¶²»¿ÉÎª¿Õ¡£");
+                    this.m_client.Logger.Warning("Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ¡ï¿½");
                     return;
                 }
                 var result = await this.m_client.GetRemoteAccessActor().CreateDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -64,7 +76,7 @@ namespace RemoteAccessApp
             {
                 if (this.textBox1.Text.IsNullOrEmpty())
                 {
-                    this.m_client.Logger.Warning("Â·¾¶²»¿ÉÎª¿Õ¡£");
+                    this.m_client.Logger.Warning("Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ¡ï¿½");
                     return;
                 }
                 var result = await this.m_client.GetRemoteAccessActor().DeleteDirectoryAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -82,11 +94,11 @@ namespace RemoteAccessApp
             {
                 if (this.textBox1.Text.IsNullOrEmpty())
                 {
-                    this.m_client.Logger.Warning("Â·¾¶²»¿ÉÎª¿Õ¡£");
+                    this.m_client.Logger.Warning("Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ¡ï¿½");
                     return;
                 }
                 var result = await this.m_client.GetRemoteAccessActor().GetDirectoryInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
-                this.m_client.Logger.Info($"½á¹û£º{result.ResultCode}£¬ĞÅÏ¢£º{result.Message}£¬¸ü¶àĞÅÏ¢Çëµ÷ÊÔ»ñµÃ¡£");
+                this.m_client.Logger.Info($"ï¿½ï¿½ï¿½ï¿½ï¿½{result.ResultCode}ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½{result.Message}ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ô»ï¿½Ã¡ï¿½");
             }
             catch (Exception ex)
             {
@@ -100,7 +112,7 @@ namespace RemoteAccessApp
             {
                 if (this.textBox1.Text.IsNullOrEmpty())
                 {
-                    this.m_client.Logger.Warning("Â·¾¶²»¿ÉÎª¿Õ¡£");
+                    this.m_client.Logger.Warning("Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ¡ï¿½");
                     return;
                 }
                 var result = await this.m_client.GetRemoteAccessActor().DeleteFileAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
@@ -118,11 +130,11 @@ namespace RemoteAccessApp
             {
                 if (this.textBox1.Text.IsNullOrEmpty())
                 {
-                    this.m_client.Logger.Warning("Â·¾¶²»¿ÉÎª¿Õ¡£");
+                    this.m_client.Logger.Warning("Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ¡ï¿½");
                     return;
                 }
                 var result = await this.m_client.GetRemoteAccessActor().GetFileInfoAsync(this.textBox1.Text, millisecondsTimeout: 30 * 1000);
-                this.m_client.Logger.Info($"½á¹û£º{result.ResultCode}£¬ĞÅÏ¢£º{result.Message}¸ü¶àĞÅÏ¢Çëµ÷ÊÔ»ñµÃ¡£");
+                this.m_client.Logger.Info($"ï¿½ï¿½ï¿½ï¿½ï¿½{result.ResultCode}ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½{result.Message}ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ô»ï¿½Ã¡ï¿½");
             }
             catch (Exception ex)
             {
