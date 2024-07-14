@@ -76,7 +76,7 @@ await service.StartAsync();
 以事务方法的**方法名**为第一个参数（不包含Command），后续参数直接写，多个参数用**空格**隔开。例如：`Add 10 20`
 
 ```csharp {18} 
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -84,7 +84,7 @@ await client.SetupAsync(new TouchSocketConfig()
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
+        a.Add(typeof(IWebSocketReceivedPlugin), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
         {
             client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
             await e.InvokeNext();

@@ -39,7 +39,7 @@ public partial class MyContainer : ManualContainer
 ```csharp showLineNumbers
 internal partial class MyServicePluginClass : PluginBase
 {
-    [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
+    [GeneratorPlugin(typeof(IServerStartedPlugin))]
     public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
     {
         if (sender is ITcpService service)
@@ -60,7 +60,7 @@ internal partial class MyServicePluginClass : PluginBase
         return e.InvokeNext();
     }
 
-    [GeneratorPlugin(nameof(IServerStopedPlugin.OnServerStoped))]
+    [GeneratorPlugin(typeof(IServerStopedPlugin))]
     public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
     {
         Console.WriteLine("服务已停止");
@@ -70,7 +70,7 @@ internal partial class MyServicePluginClass : PluginBase
 
 partial class TcpServiceReceivedPlugin : PluginBase
 {
-    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
@@ -111,7 +111,7 @@ partial class ClosePlugin : PluginBase
         this.m_logger = logger;
     }
 
-    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         try
