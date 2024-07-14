@@ -117,6 +117,38 @@ namespace WebApiServerApp
             return a + b;
         }
 
+        /// <summary>
+        /// 自定义响应。
+        /// 自定义响应时，返回值设为Task即可。响应体可通过<see cref="HttpResponse"/>直接完成
+        /// </summary>
+        /// <param name="webApiCallContext"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        [WebApi(HttpMethodType.GET)]
+        public async Task Say(IWebApiCallContext webApiCallContext, int a, int b)
+        {
+            var request = webApiCallContext.HttpContext.Request;
+            var response = webApiCallContext.HttpContext.Response;
+
+            string jsonString = new { result = a + b, msg = "success" }.ToJsonString();
+
+            if (request.IsAcceptGzip())//请求方可以接受gzip
+            {
+                response.ContentType = "application/json";
+                response.SetGzipContent(GZip.Compress(jsonString.ToUTF8Bytes()));
+            }
+            else
+            {
+                //这里不用设置ContentType，因为FromJson扩展方法会自动设置
+                response.FromJson(jsonString);
+            }
+
+            //响应
+            await response.SetStatus()
+                .AnswerAsync();
+        }
+
         [WebApi(HttpMethodType.GET)]
         public MyClass GetMyClass()
         {
