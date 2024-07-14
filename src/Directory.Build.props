@@ -1,7 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<Version>2.1.0-alpha.28</Version>
+		<Version>2.1.0-rc.1</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -17,6 +17,7 @@
 		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300</NoWarn>
 		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
+		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">

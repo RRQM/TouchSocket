@@ -121,23 +121,11 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public string Version => this.WebSocket.Version;
 
-        ///// <inheritdoc/>
-        //public void Ping()
-        //{
-        //    this.WebSocket.Ping();
-        //}
-
         /// <inheritdoc/>
         public Task PingAsync()
         {
             return this.WebSocket.PingAsync();
         }
-
-        ///// <inheritdoc/>
-        //public void Pong()
-        //{
-        //    this.WebSocket.Pong();
-        //}
 
         /// <inheritdoc/>
         public Task PongAsync()

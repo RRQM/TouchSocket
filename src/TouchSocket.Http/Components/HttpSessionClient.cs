@@ -35,11 +35,6 @@ namespace TouchSocket.Http
 
         #region Send
 
-        //internal void InternalSend(byte[] buffer, int offset, int count)
-        //{
-        //    this.ProtectedDefaultSend(buffer, offset, count);
-        //}
-
         internal Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedDefaultSendAsync(memory);
@@ -50,12 +45,16 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (this.DisposedValue)
             {
-                //this.m_httpContext?.Request?.SafeDispose();
-                //this.m_httpContext?.Response?.SafeDispose();
-                this.m_webSocket.SafeDispose();
+                return;
             }
+
+            if (disposing&&this.m_webSocket!=null)
+            {
+                this.m_webSocket.Dispose();
+            }
+
             base.Dispose(disposing);
         }
 
@@ -71,9 +70,9 @@ namespace TouchSocket.Http
         {
             if (this.m_webSocket != null)
             {
-                await this.PrivateWebSocketClosed(e);
+                await this.PrivateWebSocketClosed(e).ConfigureFalseAwait();
             }
-            await base.OnTcpClosed(e);
+            await base.OnTcpClosed(e).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -101,7 +100,7 @@ namespace TouchSocket.Http
             else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
             {
                 e.Handled = true;
-                await this.PrivateWebSocketReceived(dataFrame);
+                await this.PrivateWebSocketReceived(dataFrame).ConfigureFalseAwait();
                 return;
             }
         }

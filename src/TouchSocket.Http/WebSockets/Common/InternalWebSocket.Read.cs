@@ -20,17 +20,13 @@ namespace TouchSocket.Http.WebSockets
 {
     internal sealed partial class InternalWebSocket : ValueTaskSource<IWebSocketReceiveResult>, IWebSocket
     {
-        private WebSocketReceiveResult m_receiverResult;
+        private readonly WebSocketReceiveResult m_receiverResult;
         private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
 
         public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
         {
             this.ThrowIfNotAllowAsyncRead();
-            if (this.m_receiverResult.IsCompleted)
-            {
-                return Task.FromResult<IWebSocketReceiveResult>(m_receiverResult);
-            }
-            return this.WaitAsync(token);
+            return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
         }
 
         public ValueTask<IWebSocketReceiveResult> ValueReadAsync(CancellationToken token)
@@ -38,9 +34,12 @@ namespace TouchSocket.Http.WebSockets
             this.ThrowIfNotAllowAsyncRead();
             if (this.m_receiverResult.IsCompleted)
             {
-                return EasyValueTask.FromResult<IWebSocketReceiveResult>(m_receiverResult);
+                return EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult);
             }
-            return this.ValueWaitAsync(token);
+            else
+            {
+                return this.ValueWaitAsync(token);
+            }
         }
 
         private void ThrowIfNotAllowAsyncRead()

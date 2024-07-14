@@ -45,8 +45,8 @@ namespace TouchSocket.Http
             if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
             {
                 var msg = dataFrame.PayloadData?.ToString();
-                await this.PrivateWebSocketClosing(new MsgEventArgs(msg));
-                await this.m_webSocket.CloseAsync(msg);
+                await this.PrivateWebSocketClosing(new MsgEventArgs(msg)).ConfigureFalseAwait();
+                await this.m_webSocket.CloseAsync(msg).ConfigureFalseAwait();
                 return;
             }
             if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
@@ -57,11 +57,11 @@ namespace TouchSocket.Http
 
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.InputReceiveAsync(dataFrame);
+                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureFalseAwait();
                 return;
             }
 
-            await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame));
+            await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame)).ConfigureFalseAwait();
         }
 
         private Task PrivateWebSocketClosing(MsgEventArgs e)
@@ -69,14 +69,14 @@ namespace TouchSocket.Http
             return this.OnWebSocketClosing(this.m_webSocket, e);
         }
 
-        private Task PrivateWebSocketClosed(MsgEventArgs e)
+        private async Task PrivateWebSocketClosed(MsgEventArgs e)
         {
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
             {
-                return this.m_webSocket.Complete(e.Message);
+                await this.m_webSocket.Complete(e.Message).ConfigureFalseAwait();
             }
-            return this.OnWebSocketClosed(this.m_webSocket, e);
+            await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureFalseAwait();
         }
 
         protected virtual Task OnWebSocketHandshaking(IWebSocket webSocket, HttpContextEventArgs e)
@@ -124,8 +124,8 @@ namespace TouchSocket.Http
 
                     var webSocket = new InternalWebSocket(this);
 
-                    await this.PrivateWebSocketHandshaking(webSocket, e);
-
+                    await this.PrivateWebSocketHandshaking(webSocket, e).ConfigureFalseAwait();
+                    
                     if (this.m_httpContext.Response.Responsed)
                     {
                         return false;
@@ -135,7 +135,7 @@ namespace TouchSocket.Http
                     {
                         this.InitWebSocket(webSocket);
 
-                        await this.m_httpContext.Response.AnswerAsync();
+                        await this.m_httpContext.Response.AnswerAsync().ConfigureFalseAwait();
 
                         _ = this.PrivateWebSocketHandshaked(webSocket, new HttpContextEventArgs(httpContext));
                         return true;
@@ -144,12 +144,12 @@ namespace TouchSocket.Http
                     {
                         this.m_httpContext.Response.SetStatus(403, "Forbidden");
                         await this.m_httpContext.Response.AnswerAsync();
-                        await this.CloseAsync(TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message));
+                        await this.CloseAsync(TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message)).ConfigureFalseAwait();
                     }
                 }
                 else
                 {
-                    await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect);
+                    await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureFalseAwait();
                 }
             }
             return false;
@@ -160,6 +160,7 @@ namespace TouchSocket.Http
             this.SetAdapter(new WebSocketDataHandlingAdapter());
             this.Protocol = Protocol.WebSocket;
             this.m_webSocket = webSocket;
+            webSocket.Online = true;
         }
     }
 }

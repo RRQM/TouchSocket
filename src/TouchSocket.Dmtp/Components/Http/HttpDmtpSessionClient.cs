@@ -61,16 +61,21 @@ namespace TouchSocket.Dmtp
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_dmtpActor?.SafeDispose();
+            if (this.DisposedValue)
+            {
+                return;
+            }
             base.Dispose(disposing);
+            if (disposing&&this.m_dmtpActor!=null)
+            {
+                this.m_dmtpActor.Dispose();
+            }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="e"></param>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
+            await base.OnTcpClosed(e);
             await this.OnDmtpClosed(e).ConfigureFalseAwait();
         }
 

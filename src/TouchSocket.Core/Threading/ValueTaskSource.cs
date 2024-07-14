@@ -31,7 +31,7 @@ namespace TouchSocket.Core
 
         #endregion 字段
 
-        public ExceptionDispatchInfo ExceptionDispatchInfo { get => this.m_exceptionDispatchInfo; }
+        public ExceptionDispatchInfo ExceptionDispatchInfo => this.m_exceptionDispatchInfo;
 
         public abstract TResult GetResult();
 

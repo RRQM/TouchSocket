@@ -411,10 +411,16 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
+            if (DisposedValue)
+            {
+                return;
+            }
+
             if (disposing)
             {
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
+
             base.Dispose(disposing);
         }
 
