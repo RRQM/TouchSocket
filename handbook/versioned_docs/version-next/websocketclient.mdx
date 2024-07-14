@@ -28,7 +28,7 @@ import Tag from "@site/src/components/Tag.js";
 ### 3.1 创建常规客户端
 
 ```csharp showLineNumbers
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
@@ -50,7 +50,7 @@ wss://127.0.0.1:7789/ws
 **当连接自定义证书的Ssl：wss://127.0.0.1:7789/ws**
 
 ```csharp showLineNumbers
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 
 await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
@@ -83,7 +83,7 @@ WebSessionClient可以使用默认配置直接连接到服务器，同时也支�
 使用url直接建立连接，这一般是服务器也只是普通的ws服务器的情况下。
 
 ```csharp showLineNumbers
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -100,7 +100,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 带Query参数连接，实际上还是通过url直接连接。
 
 ```csharp showLineNumbers
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -118,7 +118,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功")
 一般的，当某些服务器安全级别较高时，可能会定制特定的header用于验证连接。
 
 ```csharp showLineNumbers
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -126,7 +126,7 @@ await client.SetupAsync(new TouchSocketConfig()
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
+        a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Headers.Add("token", "123456");
             await e.InvokeNext();
@@ -149,7 +149,7 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
 WebSocket默认情况下是基于GET方式连接的，但是在一些更特殊的情况下，需要以POST，甚至其他方式连接，那么可以使用以下方式实现。
 
 ```csharp showLineNumbers
-using var client = new WebSessionClient();
+using var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
@@ -157,7 +157,7 @@ await client.SetupAsync(new TouchSocketConfig()
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
+        a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
             await e.InvokeNext();
@@ -208,7 +208,7 @@ client.SendAsync(frame);
 ```
 :::info 备注
 
-此部分功能就需要你对Websocket有充分了解才可以操作。
+此部分功能就需要你对`WebSocket`有充分了解才可以操作。
 
 :::  
 
@@ -305,7 +305,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 【使用】
 
 ```csharp {10}
-var client = new WebSessionClient();
+var client = new WebSocketClient();
 await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
