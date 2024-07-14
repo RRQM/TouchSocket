@@ -45,11 +45,11 @@ const config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: '2.0.0',
+              label: '2.0',
               path: '/current',
             },
             next: {
-              label: '2.1.0-alpha',
+              label: '2.1-rc',
               path: '/next',
               banner: 'none'
             }
