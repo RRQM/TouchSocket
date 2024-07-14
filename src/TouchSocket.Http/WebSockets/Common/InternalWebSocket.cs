@@ -57,23 +57,12 @@ namespace TouchSocket.Http.WebSockets
 
             this.m_httpSocketClient.TryShutdown();
             await this.m_httpSocketClient.SafeCloseAsync(msg).ConfigureFalseAwait();
-            this.m_allowAsyncRead = false;
         }
-
-        //public void Ping()
-        //{
-        //    this.Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping });
-        //}
 
         public async Task PingAsync()
         {
             await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureFalseAwait();
         }
-
-        //public void Pong()
-        //{
-        //    this.Send(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong });
-        //}
 
         public async Task PongAsync()
         {
@@ -81,79 +70,6 @@ namespace TouchSocket.Http.WebSockets
         }
 
         #region 发送
-
-        //public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
-        //{
-        //    WSDataType dataType;
-        //    if (this.m_isCont)
-        //    {
-        //        dataType = WSDataType.Cont;
-        //        if (endOfMessage)
-        //        {
-        //            this.m_isCont = false;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        dataType = dataFrame.Opcode;
-        //        if (!endOfMessage)
-        //        {
-        //            this.m_isCont = true;
-        //        }
-        //    }
-        //    dataFrame.Opcode = dataType;
-        //    using (var byteBlock = new ByteBlock(dataFrame.GetTotalSize()))
-        //    {
-        //        if (this.m_isServer)
-        //        {
-        //            dataFrame.BuildResponse(byteBlock);
-        //            this.m_httpSocketClient.InternalSend(byteBlock.Buffer, 0, byteBlock.Len);
-        //        }
-        //        else
-        //        {
-        //            dataFrame.BuildRequest(byteBlock);
-        //            this.m_httpClientBase.InternalSend(byteBlock.Buffer, 0, byteBlock.Len);
-        //        }
-        //    }
-        //}
-
-        //public void Send(string text, bool endOfMessage = true)
-        //{
-        //    using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Text }.AppendText(text))
-        //    {
-        //        this.Send(frame, endOfMessage);
-        //    }
-        //}
-
-        //public void Send(byte[] buffer, int offset, int length, bool endOfMessage = true)
-        //{
-        //    using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
-        //    {
-        //        if (offset == 0)
-        //        {
-        //            frame.PayloadData = new ByteBlock(buffer, length);
-        //        }
-        //        else
-        //        {
-        //            frame.AppendBinary(buffer, offset, length);
-        //        }
-        //        this.Send(frame, endOfMessage);
-        //    }
-        //}
-
-        //public void Send(ByteBlock byteBlock, bool endOfMessage = true)
-        //{
-        //    using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
-        //    {
-        //        frame.PayloadData = byteBlock;
-        //        this.Send(frame, endOfMessage);
-        //    }
-        //}
-
-        //public void Send(byte[] buffer, bool endOfMessage = true)
-        //{
-        //    this.Send(buffer, 0, buffer.Length, endOfMessage);
-        //}
 
         public async Task SendAsync(string text, bool endOfMessage = true)
         {
@@ -217,9 +133,24 @@ namespace TouchSocket.Http.WebSockets
 
         protected override void Dispose(bool disposing)
         {
-            this.m_resetEventForComplateRead.Set();
-            this.m_resetEventForComplateRead.SafeDispose();
+            if (DisposedValue)
+            {
+                return;
+            }
+
             base.Dispose(disposing);
+
+            if (disposing)
+            {
+                if (this.m_isServer)
+                {
+                    this.m_httpSocketClient.Dispose();
+                }
+                else
+                {
+                    this.m_httpClientBase.Dispose();
+                }
+            }
         }
     }
 }

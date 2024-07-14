@@ -123,14 +123,14 @@ namespace TouchSocket.Http.WebSockets
             return this.OnWebSocketHandshaked((HttpContextEventArgs)obj);
         }
 
-        private Task PrivateWebSocketClosed(ClosedEventArgs e)
+        private async Task PrivateWebSocketClosed(ClosedEventArgs e)
         {
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
             {
-                return this.m_webSocket.Complete(e.Message);
+                await this.m_webSocket.Complete(e.Message).ConfigureFalseAwait();
             }
-            return this.OnWebSocketClosed(e);
+            await this.OnWebSocketClosed(e).ConfigureFalseAwait();
         }
 
         private Task PrivateWebSocketClosing(ClosedEventArgs e)

@@ -36,8 +36,6 @@ namespace TouchSocket.Http.WebSockets
         public static readonly DependencyProperty<bool> AutoPongProperty =
            DependencyProperty<bool>.Register("AutoPong", false);
 
-        private IPluginManager m_pluginManager;
-
         private string m_wSUrl = "/ws";
 
         /// <summary>
@@ -135,7 +133,6 @@ namespace TouchSocket.Http.WebSockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            this.m_pluginManager = pluginManager;
             pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
