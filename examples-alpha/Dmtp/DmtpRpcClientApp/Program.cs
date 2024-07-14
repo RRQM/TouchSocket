@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜æˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -30,13 +42,13 @@ namespace DmtpClientApp
         private static async Task<TcpDmtpService> CreateTcpDmtpService(int port)
         {
             var service = new TcpDmtpService();
-            var config = new TouchSocketConfig()//ÅäÖÃ
+            var config = new TouchSocketConfig()//ï¿½ï¿½ï¿½ï¿½
                    .SetListenIPHosts(port)
                    .ConfigureContainer(a =>
                    {
                        a.AddRpcStore(store =>
                        {
-                           store.RegisterServer<MyRpcServer>();//×¢²á·şÎñ
+                           store.RegisterServer<MyRpcServer>();//×¢ï¿½ï¿½ï¿½ï¿½ï¿½
 #if DEBUG
                            File.WriteAllText("../../../RpcProxy.cs", store.GetProxyCodes("RpcProxy", new Type[] { typeof(DmtpRpcAttribute) }));
 #endif
@@ -67,22 +79,22 @@ namespace DmtpClientApp
             await service.SetupAsync(config);
             await service.StartAsync();
 
-            service.Logger.Info($"{service.GetType().Name}ÒÑÆô¶¯£¬¼àÌı¶Ë¿Ú£º{port}");
+            service.Logger.Info($"{service.GetType().Name}ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿Ú£ï¿½{port}");
             return service;
         }
     }
 
     public partial class MyRpcServer : TransientRpcServer
     {
-        [Description("µÇÂ¼")]
-        [DmtpRpc(MethodInvoke = true)]//Ê¹ÓÃµ÷ÓÃÉÏ²ÅÎÄ
+        [Description("ï¿½ï¿½Â¼")]
+        [DmtpRpc(MethodInvoke = true)]//Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½
         [MyRpcActionFilter]
         public bool Login(ICallContext callContext, string account, string password)
         {
             if (callContext.Caller is TcpDmtpSessionClient socketClient)
             {
-                Console.WriteLine(socketClient.IP);//¿ÉÒÔ»ñÈ¡µ½IP
-                Console.WriteLine("Tcp RpcÇëÇó");
+                Console.WriteLine(socketClient.IP);//ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½IP
+                Console.WriteLine("Tcp Rpcï¿½ï¿½ï¿½ï¿½");
             }
             if (account == "123" && password == "abc")
             {
@@ -92,7 +104,7 @@ namespace DmtpClientApp
             return false;
         }
 
-        [Description("×¢²á")]
+        [Description("×¢ï¿½ï¿½")]
         [DmtpRpc(MethodInvoke = true)]
         [MyRpcActionFilter]
         public bool Register(RegisterModel register)
@@ -100,7 +112,7 @@ namespace DmtpClientApp
             return true;
         }
 
-        [Description("ĞÔÄÜ²âÊÔ")]
+        [Description("ï¿½ï¿½ï¿½Ü²ï¿½ï¿½ï¿½")]
         [DmtpRpc(MethodInvoke = true)]
         [MyRpcActionFilter]
         public int Performance(int a)
@@ -142,12 +154,12 @@ namespace DmtpClientApp
             //invokeResult = new InvokeResult()
             //{
             //    Status = InvokeStatus.UnEnable,
-            //    Message = "²»ÔÊĞíÖ´ĞĞ",
+            //    Message = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½",
             //    Result = default
             //};
             if (callContext.Caller is ISessionClient client)
             {
-                client.Logger.Info($"¼´½«Ö´ĞĞRpc-{callContext.RpcMethod.Name}");
+                client.Logger.Info($"ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Rpc-{callContext.RpcMethod.Name}");
             }
             return Task.FromResult(invokeResult);
         }
@@ -158,11 +170,11 @@ namespace DmtpClientApp
             {
                 if (exception == null)
                 {
-                    client.Logger.Info($"Ö´ĞĞRPC-{callContext.RpcMethod.Name}Íê³É£¬×´Ì¬={invokeResult.Status}");
+                    client.Logger.Info($"Ö´ï¿½ï¿½RPC-{callContext.RpcMethod.Name}ï¿½ï¿½É£ï¿½×´Ì¬={invokeResult.Status}");
                 }
                 else
                 {
-                    client.Logger.Info($"Ö´ĞĞRPC-{callContext.RpcMethod.Name}Òì³££¬ĞÅÏ¢={invokeResult.Message}");
+                    client.Logger.Info($"Ö´ï¿½ï¿½RPC-{callContext.RpcMethod.Name}ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ï¢={invokeResult.Message}");
                 }
 
             }

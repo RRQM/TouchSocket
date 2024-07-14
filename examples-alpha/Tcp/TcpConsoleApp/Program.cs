@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +27,11 @@ namespace ServiceConsoleApp
             consoleAction.Add("1", "以Received委托接收", RunClientForReceived);
             consoleAction.Add("2", "以ReadAsync异步阻塞接收", RunClientForReadAsync);
 
-            var service = CreateService();
+            var service =await CreateService();
 
             consoleAction.ShowAll();
             await consoleAction.RunCommandLineAsync();
+
         }
 
         private static async Task<TcpService> CreateService()
@@ -136,6 +149,20 @@ namespace ServiceConsoleApp
             Console.WriteLine($"已接收到信息：{mes}");
 
             return EasyTask.CompletedTask;
+        }
+    }
+
+    class MyPluginClass : PluginBase
+    {
+        protected override void Loaded(IPluginManager pluginManager)
+        {
+            pluginManager.Add<ITcpSession, ReceivedDataEventArgs>(typeof(ITcpReceivedPlugin), OnTcpReceived);
+            base.Loaded(pluginManager);
+        }
+
+        private async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+        {
+            await e.InvokeNext();
         }
     }
 

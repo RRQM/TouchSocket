@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜Žæˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æŽˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
@@ -11,14 +23,14 @@ namespace HostingWorkerService
 
             builder.ConfigureServices(services =>
             {
-                //Ìí¼ÓTcpService¡£
+                //ï¿½ï¿½ï¿½ï¿½TcpServiceï¿½ï¿½
                 services.AddTcpService(config =>
                 {
                     config.SetListenIPHosts(7789);
                 });
 
-                //Ìí¼ÓTcpClient
-                //×¢Òâ£¬ClientÀàµÄ·þÎñ£¬ÔÚÕû¸ö·þÎñStartAsyncÊ±£¬²»»áÖ´ÐÐConnectAsync¡£ËùÒÔÐèÒª×ÔÐÐÁ¬½Ó£¬»òÕßÅäÖÃÎÞÈËÖµÊØÁ¬½Ó
+                //ï¿½ï¿½ï¿½ï¿½TcpClient
+                //×¢ï¿½â£¬Clientï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½StartAsyncÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ConnectAsyncï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 services.AddSingletonTcpClient(config =>
                 {
                     config.SetRemoteIPHost("127.0.0.1:7789");
@@ -29,7 +41,7 @@ namespace HostingWorkerService
                     config.SetListenIPHosts(7790);
                 });
 
-                //Ìí¼ÓÃüÃû¹ÜµÀ·þÎñ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½
                 services.AddServiceHostedService<INamedPipeService, NamedPipeService>(config =>
                 {
                     config.SetPipeName("pipe7789");
