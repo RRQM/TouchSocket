@@ -549,7 +549,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.Logger.Exception(ex);
+                this.Logger?.Exception(ex);
             }
             return this.GetDefaultNewId();
         }
@@ -598,7 +598,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.Logger.Exception(ex);
+                this.Logger?.Exception(ex);
             }
             return new NormalDataHandlingAdapter();
         }
@@ -618,15 +618,18 @@ namespace TouchSocket.Sockets
             if (e.LastOperation == SocketAsyncOperation.Accept && e.SocketError == SocketError.Success && e.AcceptSocket != null)
             {
                 var socket = e.AcceptSocket;
-                if (this.SocketClients.Count < this.m_maxCount)
+                if (socket!=null)
                 {
-                    this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                    //Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
-                }
-                else
-                {
-                    socket.SafeDispose();
-                    this.Logger.Warning(this, "连接客户端数量已达到设定最大值");
+                    if (this.m_socketClients.Count < this.m_maxCount)
+                    {
+                        this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
+                        //Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                    }
+                    else
+                    {
+                        socket.SafeDispose();
+                        this.Logger?.Warning(this, "连接客户端数量已达到设定最大值");
+                    }
                 }
             }
 
@@ -645,16 +648,20 @@ namespace TouchSocket.Sockets
                 {
                     if (this.m_serverState == ServerState.Running)
                     {
-                        this.Logger.Exception(ex);
+                        this.Logger?.Exception(ex);
                     }
                     e.SafeDispose();
-                    return;
                 }
             }
         }
 
         private async Task OnClientSocketInit(object obj)
         {
+            if (obj==null)
+            {
+                return;
+            }
+
             var tuple = (Tuple<Socket, TcpNetworkMonitor>)obj;
             var socket = tuple.Item1;
             var monitor = tuple.Item2;
@@ -732,7 +739,7 @@ namespace TouchSocket.Sockets
             catch (Exception ex)
             {
                 socket.SafeDispose();
-                this.Logger.Log(LogLevel.Error, this, "接收新连接错误", ex);
+                this.Logger?.Log(LogLevel.Error, this, "接收新连接错误", ex);
             }
         }
     }

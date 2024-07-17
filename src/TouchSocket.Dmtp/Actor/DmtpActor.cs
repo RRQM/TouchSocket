@@ -489,7 +489,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                             _ = this.OnClosed(false, ex.Message);
                         }
                         return true;
@@ -507,7 +507,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
 
                         return true;
@@ -532,7 +532,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -544,7 +544,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -582,7 +582,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -606,7 +606,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -667,7 +667,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -693,7 +693,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -729,7 +729,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
