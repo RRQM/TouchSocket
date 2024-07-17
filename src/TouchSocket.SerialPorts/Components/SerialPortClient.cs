@@ -96,7 +96,7 @@ namespace TouchSocket.SerialPorts
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
         }
 
@@ -120,7 +120,7 @@ namespace TouchSocket.SerialPorts
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.OnConnecting)}中发生错误。", ex);
             }
         }
 
@@ -145,7 +145,7 @@ namespace TouchSocket.SerialPorts
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Disconnected)}中发生错误。", ex);
             }
         }
 
@@ -170,7 +170,7 @@ namespace TouchSocket.SerialPorts
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Disconnecting)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Disconnecting)}中发生错误。", ex);
             }
         }
 
@@ -470,14 +470,14 @@ namespace TouchSocket.SerialPorts
 
                 if (this.DataHandlingAdapter == null)
                 {
-                    this.Logger.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
+                    this.Logger?.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.DataHandlingAdapter.ReceivedInput(byteBlock);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
+                this.Logger?.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
             }
         }
 

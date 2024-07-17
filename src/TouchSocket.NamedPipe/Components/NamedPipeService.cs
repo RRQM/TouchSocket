@@ -447,7 +447,7 @@ namespace TouchSocket.NamedPipe
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.Exception(ex);
+                    this.Logger?.Exception(ex);
                 }
             }
         }

@@ -465,7 +465,7 @@ namespace TouchSocket.Sockets
                 catch (Exception ex)
                 {
                     byteBlock.Dispose();
-                    this.Logger.Log(LogLevel.Error, this, ex.Message, ex);
+                    this.Logger?.Log(LogLevel.Error, this, ex.Message, ex);
                     break;
                 }
             }
@@ -482,14 +482,14 @@ namespace TouchSocket.Sockets
                 }
                 if (this.DataHandlingAdapter == null)
                 {
-                    this.Logger.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
+                    this.Logger?.Error(this, TouchSocketResource.NullDataAdapter.GetDescription());
                     return;
                 }
                 this.DataHandlingAdapter.ReceivedInput(endPoint, byteBlock);
             }
             catch (Exception ex)
             {
-                this.Logger.Exception(this, "在处理数据时发生错误", ex);
+                this.Logger?.Exception(this, "在处理数据时发生错误", ex);
             }
             finally
             {
@@ -677,13 +677,13 @@ namespace TouchSocket.Sockets
                 }
                 catch (Exception ex)
                 {
-                    this.Logger.Log(LogLevel.Error, this, ex.Message, ex);
+                    this.Logger?.Log(LogLevel.Error, this, ex.Message, ex);
                     e.SafeDispose();
                 }
             }
             else
             {
-                this.Logger.Error(this, $"接收出现错误：{e.SocketError}，错误代码：{(int)e.SocketError}");
+                this.Logger?.Error(this, $"接收出现错误：{e.SocketError}，错误代码：{(int)e.SocketError}");
                 e.SafeDispose();
             }
         }
