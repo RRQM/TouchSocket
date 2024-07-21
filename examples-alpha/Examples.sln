@@ -281,7 +281,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".Solutions", ".Solutions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpServiceReadAsyncConsoleApp", "Tcp\TcpServiceReadAsyncConsoleApp\TcpServiceReadAsyncConsoleApp.csproj", "{03EE9539-60C6-4BB5-97D7-3F9B1A077234}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetweenAndConsoleApp", "Adapter\BetweenAndConsoleApp\BetweenAndConsoleApp.csproj", "{EDD521B4-DB92-4833-ADD0-AF31206DE695}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BetweenAndConsoleApp", "Adapter\BetweenAndConsoleApp\BetweenAndConsoleApp.csproj", "{EDD521B4-DB92-4833-ADD0-AF31206DE695}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
