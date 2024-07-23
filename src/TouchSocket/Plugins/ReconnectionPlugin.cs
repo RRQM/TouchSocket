@@ -144,7 +144,7 @@ namespace TouchSocket.Sockets
 
         private async Task OnLoadedConfig(object sender, ConfigEventArgs e)
         {
-            _ = Task.Run(async () =>
+            _ = Task.Factory.StartNew(async () =>
             {
                 if (!this.m_polling)
                 {
@@ -184,7 +184,7 @@ namespace TouchSocket.Sockets
                         }
                     }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
             await e.InvokeNext();
         }
