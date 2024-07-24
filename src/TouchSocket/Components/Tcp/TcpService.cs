@@ -622,8 +622,8 @@ namespace TouchSocket.Sockets
                 {
                     if (this.m_socketClients.Count < this.m_maxCount)
                     {
-                        this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                        //Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                        //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
+                        Task.Factory.StartNew(this.OnClientSocketInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                     }
                     else
                     {
