@@ -24,6 +24,8 @@ function Footer(): JSX.Element | null
         copyright={copyright && <FooterCopyright copyright={copyright} />}
       />
       <script defer src="https://umami.touchsocket.net:10086/script.js" data-website-id="9a4065f2-8c32-4727-9b5f-bc6a92843fa5"></script>
+      <script defer src="https://hm.baidu.com/hm.js?bd22a4135a396406a45d487ce53e0ecd"></script>
+      
     </span>
   );
 }
