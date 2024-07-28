@@ -55,7 +55,7 @@ client.Setup(new TouchSocketConfig()
     .ConfigurePlugins(a =>
     {
         a.UseWebSocketHeartbeat()//使用心跳插件
-        .SetTick(TimeSpan.FromSeconds(1));//每5秒ping一次。
+        .SetTick(TimeSpan.FromSeconds(1));//每1秒ping一次。
     }));
 client.Connect();
 ```
