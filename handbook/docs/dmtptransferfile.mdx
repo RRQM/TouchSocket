@@ -53,7 +53,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::caution 注意
 
-响应方必须在订阅的**OnFileTransfering**函数中，同意每一个传输（e.IsPermitOperation = true），不然会直接拒绝请求。当然如果是有意拒绝，则可以通过e.Message返回拒绝的信息。
+响应方必须在订阅的**OnDmtpFileTransfering**函数中，同意每一个传输（e.IsPermitOperation = true），不然会直接拒绝请求。当然如果是有意拒绝，则可以通过e.Message返回拒绝的信息。
 
 :::  
 
@@ -82,13 +82,13 @@ import Tag from "@site/src/components/Tag.js";
 
 :::tip 提示
 
-如果是下载行为，响应方可在在订阅的**OnFileTransfering**函数中，随意重定向请求的文件路径（e.ResourcePath）。
+如果是下载行为，响应方可在在订阅的**OnDmtpFileTransfering**函数中，随意重定向请求的文件路径（e.ResourcePath）。
 
 :::  
 
 :::danger 危险
 
-当以绝对路径访问时，对方可能会请求到服务器电脑的**所有文件**，所以最好在**OnFileTransfering**里面进行安全的判断后再放行（e.IsPermitOperation = true;）。
+当以绝对路径访问时，对方可能会请求到服务器电脑的**所有文件**，所以最好在**OnDmtpFileTransfering**里面进行安全的判断后再放行（e.IsPermitOperation = true;）。
 
 :::  
 
@@ -98,7 +98,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::tip 提示
 
-如果是上传行为，响应方可在在订阅的**OnFileTransfering**函数中，随意重定向文件的保存路径（e.SavePath）。
+如果是上传行为，响应方可在在订阅的**OnDmtpFileTransfering**函数中，随意重定向文件的保存路径（e.SavePath）。
 
 :::  
 
