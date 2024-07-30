@@ -47,7 +47,7 @@
 【企业版】
 | 名称|地址 |描述|
 |---|---|---|
-|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[文档](https://touchsocket.net/)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://touchsocket.net//docs/current/enterprise/)|
+|[![NuGet version (TouchSocketPro)](https://img.shields.io/nuget/v/TouchSocketPro.svg?label=TouchSocketPro)](https://www.nuget.org/packages/TouchSocketPro)|[文档](https://touchsocket.net/)| TouchSocketPro是TouchSocket的企业版，这在原有基础之上，<br>还有一些企业版功能，详情请看[企业版相关](https://touchsocket.net/docs/current/enterprise/)|
 |[![NuGet version (TouchSocketPro.Dmtp)](https://img.shields.io/nuget/v/TouchSocketPro.Dmtp.svg?label=TouchSocketPro.Dmtp)](https://www.nuget.org/packages/TouchSocketPro.Dmtp)|[文档](https://touchsocket.net/)|这是基于DMTP的企业版扩展。目前包含功能：<br>多线程文件传输、远程文件访问、远程流访问、<br>路由包传输等。|
 | [![NuGet version (TouchSocketPro.AspNetCore)](https://img.shields.io/nuget/v/TouchSocketPro.AspNetCore.svg?label=TouchSocketPro.AspNetCore)](https://www.nuget.org/packages/TouchSocketPro.AspNetCore)|[文档](https://touchsocket.net/)| TouchSocketPro.AspNetCore是适用于AspNetCore的专属版本。|
 
