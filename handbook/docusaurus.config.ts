@@ -189,7 +189,7 @@ const config = {
               },
               {
                 label: "统计",
-                href: "https://umami.touchsocket.net:10086/share/52srUBHSadfSOngf/touchsocket.net",
+                href: "https://touchsocket.net:10086/share/52srUBHSadfSOngf/touchsocket.net",
               },
             ],
           },
