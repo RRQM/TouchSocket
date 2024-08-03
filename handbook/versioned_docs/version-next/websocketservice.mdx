@@ -404,6 +404,10 @@ private static HttpService CreateHttpService()
 
 下面将演示接收文本数据。
 
+【方法1】
+
+使用`ReadAsync`，在`OnWebSocketHandshaked`组合消息。
+
 ```csharp {33-60} showLineNumbers
 internal class MyReadTextWebSocketPlugin : PluginBase, IWebSocketHandshakedPlugin
 {
@@ -559,6 +563,99 @@ using (MemoryStream stream=new MemoryStream())
 :::caution 注意
 
 `ReadStringAsync`或者`ReadBinaryAsync`，都只接收对应的数据类型，如果收到非匹配数据则会抛出异常。
+
+:::  
+
+【方法2】
+
+使用消息组合器。如果想在`OnWebSocketReceived`进行合并消息，则可以使用该方法。
+
+```csharp {30-74} showLineNumbers
+public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
+{
+    public MyWebSocketPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    private readonly ILog m_logger;
+
+    public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
+    {
+        switch (e.DataFrame.Opcode)
+        {
+            case WSDataType.Close:
+                {
+                    this.m_logger.Info("远程请求断开");
+                    await client.CloseAsync("断开");
+                }
+                return;
+
+            case WSDataType.Ping:
+                this.m_logger.Info("Ping");
+                await client.PongAsync();//收到ping时，一般需要响应pong
+                break;
+
+            case WSDataType.Pong:
+                this.m_logger.Info("Pong");
+                break;
+
+            default:
+                {
+
+                    //其他报文，需要考虑中继包的情况。所以需要手动合并 WSDataType.Cont类型的包。
+                    //或者使用消息合并器
+
+                    //获取消息组合器
+                    var messageCombinator = client.GetMessageCombinator();
+
+                    try
+                    {
+                        //尝试组合
+                        if (messageCombinator.TryCombine(e.DataFrame, out var webSocketMessage))
+                        {
+                            //组合成功，必须using释放模式
+                            using (webSocketMessage)
+                            {
+                                //合并后的消息
+                                var dataType = webSocketMessage.Opcode;
+
+                                //合并后的完整消息
+                                var data = webSocketMessage.PayloadData;
+
+                                if (dataType == WSDataType.Text)
+                                {
+                                    //按文本处理
+                                }
+                                else if (dataType == WSDataType.Binary)
+                                {
+                                    //按字节处理
+                                }
+                                else
+                                {
+                                    //可能是其他自定义协议
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.m_logger.Exception(ex);
+                        messageCombinator.Clear();//当组合发生异常时，应该清空组合器数据
+                    }
+                    
+                }
+                break;
+        }
+
+        await e.InvokeNext();
+    }
+}
+```
+
+:::caution 注意
+
+使用消息组合器，实际上是由框架缓存了数据，所以，整体数据不要太大，不然可能会有爆内存的风险。
 
 :::  
 
