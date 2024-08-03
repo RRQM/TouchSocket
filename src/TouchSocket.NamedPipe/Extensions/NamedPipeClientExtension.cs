@@ -38,14 +38,14 @@ namespace TouchSocket.NamedPipe
             {
                 config = new TouchSocketConfig();
                 config.SetPipeName(pipeName);
-                await client.SetupAsync(config).ConfigureFalseAwait();
+                await client.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureFalseAwait();
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(false);
             return client;
         }
 

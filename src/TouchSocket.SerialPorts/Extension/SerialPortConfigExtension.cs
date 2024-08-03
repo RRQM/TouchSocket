@@ -24,13 +24,13 @@ namespace TouchSocket.SerialPorts
         /// 设置串口适配器
         /// </summary>
         public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> SerialDataHandlingAdapterProperty =
-            DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("SerialDataHandlingAdapter", null);
+            new("SerialDataHandlingAdapter", null);
 
         /// <summary>
         /// 串口属性。
         /// </summary>
         public static readonly DependencyProperty<SerialPortOption> SerialPortOptionProperty =
-            DependencyProperty<SerialPortOption>.Register("SerialPortOption", new SerialPortOption());
+            new("SerialPortOption", new SerialPortOption());
 
         /// <summary>
         /// 设置(串口系)数据处理适配器。

@@ -66,27 +66,27 @@ namespace TouchSocket.Core
 
             if (this.m_agreementTempBytes != null)
             {
-                await this.SeamPackage(buffer, r).ConfigureFalseAwait();
+                await this.SeamPackage(buffer, r).ConfigureAwait(false);
             }
             else if (this.m_tempByteBlock == null)
             {
-                await this.SplitPackage(buffer, 0, r).ConfigureFalseAwait();
+                await this.SplitPackage(buffer, 0, r).ConfigureAwait(false);
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
                     this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_tempByteBlock).ConfigureFalseAwait();
+                    await this.PreviewHandle(this.m_tempByteBlock).ConfigureAwait(false);
                     this.m_tempByteBlock = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
                     this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_tempByteBlock).ConfigureFalseAwait();
+                    await this.PreviewHandle(this.m_tempByteBlock).ConfigureAwait(false);
                     this.m_tempByteBlock = null;
-                    await this.SplitPackage(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
+                    await this.SplitPackage(buffer, this.m_surPlusLength, r).ConfigureAwait(false);
                 }
                 else
                 {
@@ -108,7 +108,7 @@ namespace TouchSocket.Core
             }
         }
 
-        
+
         /// <inheritdoc/>
         protected override Task PreviewSendAsync(IRequestInfo requestInfo)
         {
@@ -153,7 +153,7 @@ namespace TouchSocket.Core
             {
                 byteBlock.Write(lenBytes);
                 byteBlock.Write(memory.Span);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
             }
             finally
             {
@@ -212,7 +212,7 @@ namespace TouchSocket.Core
                 {
                     byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                 }
-                await this.GoSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
             }
             finally
             {
@@ -237,7 +237,7 @@ namespace TouchSocket.Core
             try
             {
                 byteBlock.Position = 0;
-                await this.GoReceivedAsync(byteBlock, null).ConfigureFalseAwait();
+                await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(false);
             }
             finally
             {
@@ -260,7 +260,7 @@ namespace TouchSocket.Core
 
             var array = byteBlock.Memory.GetArray();
             var buffer2 = array.Array;
-            await this.SplitPackage(buffer2, 0, r).ConfigureFalseAwait();
+            await this.SplitPackage(buffer2, 0, r).ConfigureAwait(false);
             byteBlock.Dispose();
         }
 
@@ -308,7 +308,7 @@ namespace TouchSocket.Core
                 {
                     var byteBlock = new ByteBlock(length);
                     byteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + (byte)this.FixedHeaderType, length));
-                    await this.PreviewHandle(byteBlock).ConfigureFalseAwait();
+                    await this.PreviewHandle(byteBlock).ConfigureAwait(false);
                     this.m_surPlusLength = 0;
                 }
                 else//半包

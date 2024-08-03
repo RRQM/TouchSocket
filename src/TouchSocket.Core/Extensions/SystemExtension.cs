@@ -22,7 +22,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -112,14 +111,7 @@ namespace TouchSocket.Core
             }
 
             ulong baseNumber = 1;
-            if (bitvalue)
-            {
-                return b | baseNumber << index;
-            }
-            else
-            {
-                return b & ~(baseNumber << index);
-            }
+            return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
         }
 
         public static uint SetBit(this uint b, int index, bool bitvalue)
@@ -130,14 +122,7 @@ namespace TouchSocket.Core
             }
 
             uint baseNumber = 1;
-            if (bitvalue)
-            {
-                return b | baseNumber << index;
-            }
-            else
-            {
-                return b & ~(baseNumber << index);
-            }
+            return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
         }
 
         public static ushort SetBit(this ushort b, int index, bool bitvalue)
@@ -148,14 +133,7 @@ namespace TouchSocket.Core
             }
 
             ushort baseNumber = 1;
-            if (bitvalue)
-            {
-                return (ushort)(b | baseNumber << index);
-            }
-            else
-            {
-                return (ushort)(b & ~(baseNumber << index));
-            }
+            return bitvalue ? (ushort)(b | baseNumber << index) : (ushort)(b & ~(baseNumber << index));
         }
 
         public static byte SetBit(this byte b, int index, bool bitvalue)
@@ -166,14 +144,7 @@ namespace TouchSocket.Core
             }
 
             byte baseNumber = 1;
-            if (bitvalue)
-            {
-                return (byte)(b | baseNumber << index);
-            }
-            else
-            {
-                return (byte)(b & ~(baseNumber << index));
-            }
+            return bitvalue ? (byte)(b | baseNumber << index) : (byte)(b & ~(baseNumber << index));
         }
 
         #endregion
@@ -203,7 +174,7 @@ namespace TouchSocket.Core
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
             }
-            return (b & (ushort)1 << index) != 0;
+            return (b & 1 << index) != 0;
         }
 
         public static bool GetBit(this byte b, int index)
@@ -212,7 +183,7 @@ namespace TouchSocket.Core
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
             }
-            return (b & (byte)1 << index) != 0;
+            return (b & 1 << index) != 0;
         }
         #endregion
 
@@ -514,18 +485,14 @@ namespace TouchSocket.Core
         public static bool IsDecimal(this Type type)
         {
             // 如果是浮点类型则直接返回
-            if (type == typeof(decimal)
+            return type == typeof(decimal)
                 || type == typeof(double)
-                || type == typeof(float))
-            {
-                return true;
-            }
-
-            return Type.GetTypeCode(type) switch
-            {
-                TypeCode.Double or TypeCode.Decimal => true,
-                _ => false,
-            };
+                || type == typeof(float)
+|| Type.GetTypeCode(type) switch
+{
+    TypeCode.Double or TypeCode.Decimal => true,
+    _ => false,
+};
         }
 
         /// <summary>
@@ -654,11 +621,7 @@ namespace TouchSocket.Core
 
         public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
         {
-            if (MemoryMarshal.TryGetArray(memory, out var result))
-            {
-                return result;
-            }
-            return new ArraySegment<byte>(memory.ToArray());
+            return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
         }
 
         #endregion Memory
@@ -690,7 +653,7 @@ namespace TouchSocket.Core
         #endregion EndPoint
 
         #region Span<byte>
-        public unsafe static string ToString(this Span<byte> span, Encoding encoding)
+        public static unsafe string ToString(this Span<byte> span, Encoding encoding)
         {
 #if NET6_0_OR_GREATER
             return encoding.GetString(span);
@@ -704,7 +667,7 @@ namespace TouchSocket.Core
 #endif
         }
 
-        public unsafe static string ToString(this ReadOnlySpan<byte> span, Encoding encoding)
+        public static unsafe string ToString(this ReadOnlySpan<byte> span, Encoding encoding)
         {
 #if NET6_0_OR_GREATER
           return  encoding.GetString(span);
@@ -771,7 +734,7 @@ namespace TouchSocket.Core
             var buffer = BytePool.Default.Rent(len);
             try
             {
-                int r = stream.Read(buffer, 0, len);
+                var r = stream.Read(buffer, 0, len);
                 Unsafe.CopyBlock(ref span[0], ref buffer[0], (uint)r);
                 return r;
             }

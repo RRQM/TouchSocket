@@ -82,7 +82,7 @@ namespace TouchSocket.WebApi
                     break;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default)).ConfigureAwait(false);
 
             using (var tokenSource = new CancellationTokenSource(invokeOption.Timeout))
             {
@@ -90,9 +90,9 @@ namespace TouchSocket.WebApi
                 {
                     invokeOption.Token.Register(tokenSource.Cancel);
                 }
-                var response = await this.HttpClient.SendAsync(request, tokenSource.Token).ConfigureFalseAwait();
+                var response = await this.HttpClient.SendAsync(request, tokenSource.Token).ConfigureAwait(false);
 
-                await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response)).ConfigureAwait(false);
 
                 if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {
@@ -103,13 +103,13 @@ namespace TouchSocket.WebApi
                 {
                     if (returnType != null)
                     {
-                        return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureFalseAwait(), returnType);
+                        return this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(false), returnType);
                     }
                     return default;
                 }
                 else if ((int)response.StatusCode == 422)
                 {
-                    throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureFalseAwait(), typeof(ActionResult))).Message);
+                    throw new RpcException(((ActionResult)this.Converter.Deserialize(null, await response.Content.ReadAsStringAsync().ConfigureAwait(false), typeof(ActionResult))).Message);
                 }
                 else
                 {

@@ -69,13 +69,13 @@ namespace TouchSocket.Dmtp.Redis
         {
             if (client.DmtpActor.GetDmtpRedisActor() is DmtpRedisActor redisClient)
             {
-                if (await redisClient.InputReceivedData(e.DmtpMessage).ConfigureFalseAwait())
+                if (await redisClient.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
                 {
                     e.Handled = true;
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <summary>

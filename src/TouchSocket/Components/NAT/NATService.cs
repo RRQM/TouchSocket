@@ -52,10 +52,10 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected sealed override async Task OnTcpReceived(NATSessionClient socketClient, ReceivedDataEventArgs e)
         {
-            var data = await this.OnNATReceived(socketClient, e).ConfigureFalseAwait();
+            var data = await this.OnNATReceived(socketClient, e).ConfigureAwait(false);
             if (data != null)
             {
-                await socketClient.SendToTargetClientAsync(new System.Memory<byte>(data, 0, data.Length)).ConfigureFalseAwait();
+                await socketClient.SendToTargetClientAsync(new System.Memory<byte>(data, 0, data.Length)).ConfigureAwait(false);
             }
         }
 

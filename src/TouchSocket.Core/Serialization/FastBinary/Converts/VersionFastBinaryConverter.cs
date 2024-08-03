@@ -21,7 +21,7 @@ namespace TouchSocket.Core
             return new Version(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Version obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Version obj)
         {
             byteBlock.WriteInt32(obj.Major);
             byteBlock.WriteInt32(obj.Minor);

@@ -62,7 +62,7 @@ namespace TouchSocket.Http
             if (this.m_tempByteBlock == null)
             {
                 byteBlock.Position = 0;
-                await this.Single(byteBlock, false).ConfigureFalseAwait();
+                await this.Single(byteBlock, false).ConfigureAwait(false);
             }
             else
             {
@@ -70,7 +70,7 @@ namespace TouchSocket.Http
                 var block = this.m_tempByteBlock;
                 this.m_tempByteBlock = null;
                 block.Position = 0;
-                await this.Single(block, true).ConfigureFalseAwait();
+                await this.Single(block, true).ConfigureAwait(false);
             }
         }
 
@@ -92,7 +92,7 @@ namespace TouchSocket.Http
             this.m_request = null;
             if (this.m_task != null)
             {
-                await this.m_task.ConfigureFalseAwait();
+                await this.m_task.ConfigureAwait(false);
                 this.m_task = null;
             }
         }
@@ -123,8 +123,8 @@ namespace TouchSocket.Http
                             else
                             {
                                 this.m_request.SetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
-                                await this.GoReceivedAsync(null, this.m_request).ConfigureFalseAwait();
-                                await this.DestoryRequest().ConfigureFalseAwait();
+                                await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(false);
+                                await this.DestoryRequest().ConfigureAwait(false);
                             }
                         }
                         else
@@ -141,19 +141,19 @@ namespace TouchSocket.Http
                         {
                             var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
 
-                            await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureFalseAwait();
+                            await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(false);
                             this.m_surLen -= len;
                             byteBlock.Position += len;
                             if (this.m_surLen == 0)
                             {
-                                await this.m_request.CompleteInput().ConfigureFalseAwait();
-                                await this.DestoryRequest().ConfigureFalseAwait();
+                                await this.m_request.CompleteInput().ConfigureAwait(false);
+                                await this.DestoryRequest().ConfigureAwait(false);
                             }
                         }
                     }
                     else
                     {
-                        await this.DestoryRequest().ConfigureFalseAwait();
+                        await this.DestoryRequest().ConfigureAwait(false);
                     }
                 }
             }
@@ -168,8 +168,8 @@ namespace TouchSocket.Http
 
         private Task TaskRunGoReceived(HttpRequest request)
         {
-            var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureFalseAwait());
-            task.ConfigureFalseAwait();
+            var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureAwait(false));
+            task.ConfigureAwait(false);
             return task;
         }
     }

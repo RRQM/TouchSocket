@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +9,7 @@ namespace TouchSocket.Http.WebSockets
     public static class WebSocketExtension
     {
         #region string
+
         /// <summary>
         /// 异步读取完整字符串。
         /// <para>
@@ -57,6 +55,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         case WSDataType.Text:
                             {
                                 if (dataFrame.FIN)//判断是不是最后的包
@@ -70,6 +69,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         default:
                             ThrowHelper.ThrowInvalidEnumArgumentException(dataFrame.Opcode);
                             return;
@@ -97,10 +97,11 @@ namespace TouchSocket.Http.WebSockets
                 return byteBlock.Span.ToString(Encoding.UTF8);
             }
         }
-        #endregion
 
+        #endregion string
 
         #region Binary
+
         /// <summary>
         /// 异步读取完整二进制数据。
         /// <para>
@@ -146,6 +147,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         case WSDataType.Binary:
                             {
                                 if (dataFrame.FIN)//判断是不是最后的包
@@ -159,6 +161,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         default:
                             ThrowHelper.ThrowInvalidEnumArgumentException(dataFrame.Opcode);
                             return;
@@ -214,6 +217,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         case WSDataType.Binary:
                             {
                                 if (dataFrame.FIN)//判断是不是最后的包
@@ -229,6 +233,7 @@ namespace TouchSocket.Http.WebSockets
                                 }
                             }
                             break;
+
                         default:
                             ThrowHelper.ThrowInvalidEnumArgumentException(dataFrame.Opcode);
                             return;
@@ -236,6 +241,32 @@ namespace TouchSocket.Http.WebSockets
                 }
             }
         }
-        #endregion
+
+        #endregion Binary
+
+        #region WebSocketMessageCombinator
+
+        /// <summary>
+        /// WebSocketMessageCombinatorProperty
+        /// </summary>
+        public static DependencyProperty<WebSocketMessageCombinator> WebSocketMessageCombinatorProperty =
+                 new DependencyProperty<WebSocketMessageCombinator>("WebSocketMessageCombinator", (obj) =>
+                 {
+                     var combinator = new WebSocketMessageCombinator();
+                     obj.SetValue(WebSocketMessageCombinatorProperty, combinator);
+                     return combinator;
+                 }, false);
+
+        /// <summary>
+        /// 获取消息合并器。
+        /// </summary>
+        /// <param name="webSocket"></param>
+        /// <returns></returns>
+        public static WebSocketMessageCombinator GetMessageCombinator(this IWebSocket webSocket)
+        {
+            return webSocket.Client.GetValue(WebSocketMessageCombinatorProperty);
+        }
+
+        #endregion WebSocketMessageCombinator
     }
 }

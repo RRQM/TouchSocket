@@ -12,12 +12,8 @@
 
 using System;
 using System.Collections;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace TouchSocket.Core
 {
@@ -73,7 +69,7 @@ namespace TouchSocket.Core
             var byteBlock = new ValueByteBlock(1024 * 64);
             try
             {
-                Serialize(ref byteBlock,graph);
+                Serialize(ref byteBlock, graph);
                 return byteBlock.ToArray();
             }
             finally
@@ -87,7 +83,7 @@ namespace TouchSocket.Core
             var byteBlock = new ValueByteBlock(1024 * 64);
             try
             {
-                Serialize(ref byteBlock, graph,serializerContext);
+                Serialize(ref byteBlock, graph, serializerContext);
                 return byteBlock.ToArray();
             }
             finally
@@ -120,12 +116,12 @@ namespace TouchSocket.Core
 
             var startPosition = byteBlock.Position;
 
-            byteBlock.Position = startPosition+1;
+            byteBlock.Position = startPosition + 1;
             SerializeObject(ref byteBlock, graph, serializerContext);
 
             var pos = byteBlock.Position;
             byteBlock.Position = startPosition;
-            byteBlock.WriteByte((byte)1);
+            byteBlock.WriteByte(1);
 
             byteBlock.Position = pos;
         }
@@ -373,23 +369,21 @@ namespace TouchSocket.Core
         public static object Deserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type)
             where TByteBlock : IByteBlock
         {
-            if (byteBlock.ReadByte() != 1)
-            {
-                throw new Exception("Fast反序列化数据流解析错误。");
-            }
-            return Deserialize(type, ref byteBlock, s_defaultFastSerializerContext);
+            return byteBlock.ReadByte() != 1
+                ? throw new Exception("Fast反序列化数据流解析错误。")
+                : Deserialize(type, ref byteBlock, s_defaultFastSerializerContext);
         }
 
-        public static T Deserialize<TByteBlock,[DynamicallyAccessedMembers(DynamicallyAccessed)]T>(ref TByteBlock byteBlock)
+        public static T Deserialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock)
             where TByteBlock : IByteBlock
         {
-            return (T)Deserialize(ref byteBlock,typeof(T));
+            return (T)Deserialize(ref byteBlock, typeof(T));
         }
 
         public static T Deserialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, FastSerializerContext serializerContext)
             where TByteBlock : IByteBlock
         {
-            return (T)Deserialize(ref byteBlock, typeof(T),serializerContext);
+            return (T)Deserialize(ref byteBlock, typeof(T), serializerContext);
         }
 
         /// <summary>
@@ -402,17 +396,11 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object Deserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, FastSerializerContext serializerContext) where TByteBlock : IByteBlock
         {
-            if (byteBlock.ReadByte() != 1)
-            {
-                throw new Exception("Fast反序列化数据流解析错误。");
-            }
-
-            if (serializerContext is null)
-            {
-                throw new ArgumentNullException(nameof(serializerContext));
-            }
-
-            return Deserialize(type, ref byteBlock, serializerContext);
+            return byteBlock.ReadByte() != 1
+                ? throw new Exception("Fast反序列化数据流解析错误。")
+                : serializerContext is null
+                ? throw new ArgumentNullException(nameof(serializerContext))
+                : Deserialize(type, ref byteBlock, serializerContext);
         }
 
         private static object Deserialize<TByteBlock>(Type type, ref TByteBlock byteBlock, FastSerializerContext serializerContext)
@@ -428,14 +416,7 @@ namespace TouchSocket.Core
 
             if (byteBlock.ReadIsNull())
             {
-                if (nullable)
-                {
-                    return null;
-                }
-                else
-                {
-                    return type.GetDefault();
-                }
+                return nullable ? null : type.GetDefault();
             }
 
             #endregion Null
@@ -466,17 +447,11 @@ namespace TouchSocket.Core
                 {
                     return Enum.ToObject(type, byteBlock.ReadInt32());
                 }
-                else if (enumType == typeof(uint))
-                {
-                    return Enum.ToObject(type, byteBlock.ReadUInt32());
-                }
-                else if (enumType == typeof(ulong))
-                {
-                    return Enum.ToObject(type, byteBlock.ReadUInt64());
-                }
                 else
                 {
-                    return Enum.ToObject(type, byteBlock.ReadInt64());
+                    return enumType == typeof(uint)
+                        ? Enum.ToObject(type, byteBlock.ReadUInt32())
+                        : enumType == typeof(ulong) ? Enum.ToObject(type, byteBlock.ReadUInt64()) : Enum.ToObject(type, byteBlock.ReadInt64());
                 }
             }
 
@@ -539,14 +514,9 @@ namespace TouchSocket.Core
                         {
                             var len = byteBlock.ReadInt32();
                             var serializeObj = serializerContext.GetSerializObject(type);
-                            if (serializeObj.Converter != null)
-                            {
-                                return serializeObj.Converter.Read(ref byteBlock, type);
-                            }
-                            else
-                            {
-                                return DeserializeClass(type, ref byteBlock, len, serializerContext);
-                            }
+                            return serializeObj.Converter != null
+                                ? serializeObj.Converter.Read(ref byteBlock, type)
+                                : DeserializeClass(type, ref byteBlock, len, serializerContext);
                         }
                         else
                         {
@@ -604,7 +574,7 @@ namespace TouchSocket.Core
                         {
                             while (byteBlock.Position < index)
                             {
-                                var propertyName = byteBlock.ReadString( FixedHeaderType.Byte);
+                                var propertyName = byteBlock.ReadString(FixedHeaderType.Byte);
 
                                 if (serializObject.IsStruct)
                                 {

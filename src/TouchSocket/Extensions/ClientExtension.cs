@@ -125,7 +125,7 @@ namespace TouchSocket.Sockets
                 }
                 else
                 {
-                    await client.CloseAsync(msg).ConfigureFalseAwait();
+                    await client.CloseAsync(msg).ConfigureAwait(false);
                 }
             }
             catch
@@ -221,7 +221,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, CancellationToken)"/>
         public static async Task ConnectAsync(this IConnectableClient client, int millisecondsTimeout = 5000)
         {
-            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureFalseAwait();
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <inheritdoc cref="IConnectableClient.ConnectAsync(int, System.Threading.CancellationToken)"/>
@@ -232,14 +232,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetRemoteIPHost(ipHost);
-                await client.SetupAsync(config).ConfigureFalseAwait();
+                await client.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = client.Config;
                 config.SetRemoteIPHost(ipHost);
             }
-            await client.ConnectAsync(millisecondsTimeout).ConfigureFalseAwait();
+            await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await client.ConnectAsync(millisecondsTimeout).ConfigureFalseAwait();
+                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)
@@ -272,7 +272,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await client.ConnectAsync(millisecondsTimeout).ConfigureFalseAwait();
+                await client.ConnectAsync(millisecondsTimeout).ConfigureAwait(false);
                 return new Result(ResultCode.Success);
             }
             catch (Exception ex)

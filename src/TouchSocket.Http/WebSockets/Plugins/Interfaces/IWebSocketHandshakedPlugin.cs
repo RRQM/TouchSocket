@@ -18,7 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketHandshakedPlugin
     /// </summary>
-    public interface IWebSocketHandshakedPlugin: IPlugin
+    public interface IWebSocketHandshakedPlugin : IPlugin
     {
         /// <summary>
         /// 表示完成握手后。

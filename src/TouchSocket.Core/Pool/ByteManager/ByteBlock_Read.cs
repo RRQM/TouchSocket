@@ -11,16 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 namespace TouchSocket.Core
 {
@@ -120,13 +113,8 @@ namespace TouchSocket.Core
         /// </summary>
         public byte[] ReadBytesPackage()
         {
-            var memory = ReadBytesPackageMemory();
-            if (memory.HasValue)
-            {
-                return memory.Value.ToArray();
-            }
-
-            return null;
+            var memory = this.ReadBytesPackageMemory();
+            return memory.HasValue ? memory.Value.ToArray() : null;
         }
 
         public Memory<byte>? ReadBytesPackageMemory()

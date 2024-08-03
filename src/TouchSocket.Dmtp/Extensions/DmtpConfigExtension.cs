@@ -23,7 +23,7 @@ namespace TouchSocket.Dmtp
         /// 设置Dmtp相关配置。
         /// </summary>
         public static readonly DependencyProperty<DmtpOption> DmtpOptionProperty =
-            DependencyProperty<DmtpOption>.Register("DmtpOption", new DmtpOption());
+            new("DmtpOption", new DmtpOption());
 
         /// <summary>
         /// 设置Dmtp相关配置。

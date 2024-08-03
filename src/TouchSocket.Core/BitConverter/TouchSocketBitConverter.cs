@@ -273,7 +273,7 @@ namespace TouchSocket.Core
         public unsafe int UnsafeWriteBytes<T>(ref byte source, T value) where T : unmanaged
         {
             var size = sizeof(T);
-            
+
             Unsafe.As<byte, T>(ref source) = value;
             if (!this.IsSameOfSet())
             {

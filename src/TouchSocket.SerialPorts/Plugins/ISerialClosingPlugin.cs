@@ -27,6 +27,6 @@ namespace TouchSocket.SerialPorts
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnSerialClosing(ISerialPortClient client, ClosingEventArgs e);
+        Task OnSerialClosing(ISerialPortSession client, ClosingEventArgs e);
     }
 }

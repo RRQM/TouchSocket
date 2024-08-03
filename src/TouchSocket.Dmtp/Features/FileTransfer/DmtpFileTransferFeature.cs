@@ -74,14 +74,14 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             if (client.DmtpActor.GetDmtpFileTransferActor() is DmtpFileTransferActor dmtpFileTransferActor)
             {
-                if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureFalseAwait())
+                if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
                 {
                     e.Handled = true;
                     return;
                 }
             }
 
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
@@ -112,14 +112,14 @@ namespace TouchSocket.Dmtp.FileTransfer
             return this;
         }
 
-        private Task OnFileTransfered(IDmtpActor actor, FileTransferedEventArgs e)
+        private async Task OnFileTransfered(IDmtpActor actor, FileTransferedEventArgs e)
         {
-            return this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferedPlugin), actor.Client, e);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferedPlugin), actor.Client, e).ConfigureAwait(false);
         }
 
-        private Task OnFileTransfering(IDmtpActor actor, FileTransferingEventArgs e)
+        private async Task OnFileTransfering(IDmtpActor actor, FileTransferingEventArgs e)
         {
-            return this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferingPlugin), actor.Client, e);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferingPlugin), actor.Client, e).ConfigureAwait(false);
         }
     }
 }

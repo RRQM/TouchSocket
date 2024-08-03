@@ -48,7 +48,7 @@ namespace TouchSocket.Sockets
         /// WebSocket配置属性
         /// </summary>
         public static readonly DependencyProperty<WebSocketOption> WebSocketOptionProperty =
-            DependencyProperty<WebSocketOption>.Register("WebSocketOption", new WebSocketOption());
+           new("WebSocketOption", new WebSocketOption());
 
         /// <summary>
         /// 设置WebSocket的相关配置

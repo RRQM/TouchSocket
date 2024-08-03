@@ -42,7 +42,7 @@ namespace TouchSocket.Core
             this.m_asyncBytes = new IntelligentDataQueue<QueueDataBytes>(1024 * 1024 * 10);
             this.m_bufferLength = bufferLength;
             this.m_receivedCallBack = receivedCallBack;
-            adapter.SendAsyncCallBack = SendCallback;
+            adapter.SendAsyncCallBack = this.SendCallback;
             Task.Run(this.BeginSend);
         }
 
@@ -68,7 +68,7 @@ namespace TouchSocket.Core
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureFalseAwait();
+                    await this.m_adapter.SendInputAsync(new Memory<byte>(buffer, offset, length)).ConfigureAwait(false);
                 }
             });
 
@@ -113,9 +113,9 @@ namespace TouchSocket.Core
                                 }
                             }
                         }
-                        catch(Exception ex)
-                        { 
-                        
+                        catch (Exception ex)
+                        {
+
                         }
                         finally
                         {
@@ -125,7 +125,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    await Task.Delay(1).ConfigureFalseAwait();
+                    await Task.Delay(1).ConfigureAwait(false);
                 }
             }
         }

@@ -401,7 +401,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    return await client.SendThenReturnAsync(memory, tokenSource.Token).ConfigureFalseAwait();
+                    return await client.SendThenReturnAsync(memory, tokenSource.Token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

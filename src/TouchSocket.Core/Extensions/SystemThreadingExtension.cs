@@ -58,7 +58,7 @@ namespace TouchSocket.Core
 
         public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
         {
-            if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureFalseAwait())
+            if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(false))
             {
                 ThrowHelper.ThrowTimeoutException();
             }
@@ -125,11 +125,11 @@ namespace TouchSocket.Core
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
-                _ = delayTask.ConfigureFalseAwait();
-                if (await Task.WhenAny(task, delayTask).ConfigureFalseAwait() == task)
+                _ = delayTask.ConfigureAwait(false);
+                if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
                 {
                     timeoutCancellationTokenSource.Cancel();
-                    return await task.ConfigureFalseAwait();
+                    return await task.ConfigureAwait(false);
                 }
                 ThrowHelper.ThrowTimeoutException();
                 return default;
@@ -148,11 +148,11 @@ namespace TouchSocket.Core
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
-                _ = delayTask.ConfigureFalseAwait();
-                if (await Task.WhenAny(task, delayTask).ConfigureFalseAwait() == task)
+                _ = delayTask.ConfigureAwait(false);
+                if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
                 {
                     timeoutCancellationTokenSource.Cancel();
-                    await task.ConfigureFalseAwait();
+                    await task.ConfigureAwait(false);
                     return;
                 }
                 ThrowHelper.ThrowTimeoutException();

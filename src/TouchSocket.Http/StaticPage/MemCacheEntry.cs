@@ -11,14 +11,11 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Http
 {
-    class MemCacheEntry
+    internal class MemCacheEntry
     {
         public byte[] Value { get; }
         public TimeSpan Timespan { get; private set; }

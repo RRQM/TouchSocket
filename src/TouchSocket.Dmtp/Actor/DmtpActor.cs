@@ -149,7 +149,7 @@ namespace TouchSocket.Dmtp
                 Metadata = metadata
             };
 
-            await this.OnHandshaking(args).ConfigureFalseAwait();
+            await this.OnHandshaking(args).ConfigureAwait(false);
 
             var waitVerify = new WaitVerify()
             {
@@ -162,8 +162,8 @@ namespace TouchSocket.Dmtp
 
             try
             {
-                await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureFalseAwait();
-                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait())
+                await this.SendJsonObjectAsync(P1_Handshake_Request, waitVerify).ConfigureAwait(false);
+                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(false))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -224,7 +224,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.Closing.Invoke(this, msg).ConfigureFalseAwait();
+            await this.Closing.Invoke(this, msg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -376,7 +376,7 @@ namespace TouchSocket.Dmtp
             {
                 case P0_Close:
                     {
-                        await this.OnClosed(false, message.GetBodyString()).ConfigureFalseAwait();
+                        await this.OnClosed(false, message.GetBodyString()).ConfigureAwait(false);
                         return true;
                     }
                 case P1_Handshake_Request:
@@ -391,11 +391,11 @@ namespace TouchSocket.Dmtp
                                 Metadata = waitVerify.Metadata,
                                 Id = waitVerify.Id,
                             };
-                            await this.OnHandshaking(args).ConfigureFalseAwait();
+                            await this.OnHandshaking(args).ConfigureAwait(false);
 
                             if (args.Id.HasValue())
                             {
-                                await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureFalseAwait();
+                                await this.OnIdChanged(new IdChangedEventArgs(this.Id, args.Id)).ConfigureAwait(false);
                                 this.Id = args.Id;
                             }
 
@@ -403,7 +403,7 @@ namespace TouchSocket.Dmtp
                             {
                                 waitVerify.Id = this.Id;
                                 waitVerify.Status = 1;
-                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureFalseAwait();
+                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
                                 this.Online = true;
                                 args.Message = "Success";
                                 _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args);
@@ -412,14 +412,14 @@ namespace TouchSocket.Dmtp
                             {
                                 waitVerify.Status = 2;
                                 waitVerify.Message = args.Message;
-                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureFalseAwait();
-                                await this.OnClosed(false, args.Message).ConfigureFalseAwait();
+                                await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
+                                await this.OnClosed(false, args.Message).ConfigureAwait(false);
                             }
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
-                            await this.OnClosed(false, ex.Message).ConfigureFalseAwait();
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            await this.OnClosed(false, ex.Message).ConfigureAwait(false);
                         }
                         return true;
                     }
@@ -433,7 +433,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
 
                         return true;
@@ -445,7 +445,7 @@ namespace TouchSocket.Dmtp
                             var waitSetId = ResolveJsonObject<WaitSetId>(message.GetBodyString());
                             try
                             {
-                                await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureFalseAwait();
+                                await this.OnIdChanged(new IdChangedEventArgs(waitSetId.OldId, waitSetId.NewId)).ConfigureAwait(false);
                                 this.Id = waitSetId.NewId;
                                 waitSetId.Status = 1;
                             }
@@ -454,11 +454,11 @@ namespace TouchSocket.Dmtp
                                 waitSetId.Status = 2;
                                 waitSetId.Message = ex.Message;
                             }
-                            await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureFalseAwait();
+                            await this.SendJsonObjectAsync(P4_ResetId_Response, waitSetId).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -470,7 +470,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -482,11 +482,11 @@ namespace TouchSocket.Dmtp
 
                             if (this.AllowRoute && waitPing.Route)
                             {
-                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureFalseAwait())
+                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.Ping, waitPing)).ConfigureAwait(false))
                                 {
-                                    if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                                    if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(false) is DmtpActor actor)
                                     {
-                                        await actor.SendAsync(P5_Ping_Request, byteBlock.Memory).ConfigureFalseAwait();
+                                        await actor.SendAsync(P5_Ping_Request, byteBlock.Memory).ConfigureAwait(false);
                                         return true;
                                     }
                                     else
@@ -504,11 +504,11 @@ namespace TouchSocket.Dmtp
                                 waitPing.Status = TouchSocketDmtpStatus.Success.ToValue();
                             }
                             waitPing.SwitchId();
-                            await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureFalseAwait();
+                            await this.SendJsonObjectAsync(P6_Ping_Response, waitPing).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -520,9 +520,9 @@ namespace TouchSocket.Dmtp
 
                             if (this.AllowRoute && waitPing.Route)
                             {
-                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitPing.TargetId).ConfigureAwait(false) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P6_Ping_Response, byteBlock.Memory).ConfigureFalseAwait();
+                                    await actor.SendAsync(P6_Ping_Response, byteBlock.Memory).ConfigureAwait(false);
                                 }
                             }
                             else
@@ -532,7 +532,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -545,11 +545,11 @@ namespace TouchSocket.Dmtp
                             waitCreateChannel.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && waitCreateChannel.Route)
                             {
-                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureFalseAwait())
+                                if (await this.TryRouteAsync(new PackageRouterEventArgs(RouteType.CreateChannel, waitCreateChannel)).ConfigureAwait(false))
                                 {
-                                    if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                                    if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(false) is DmtpActor actor)
                                     {
-                                        await actor.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureFalseAwait();
+                                        await actor.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(false);
                                         return true;
                                     }
                                     else
@@ -592,11 +592,11 @@ namespace TouchSocket.Dmtp
                             
                             waitCreateChannel.Package(ref byteBlock);
                             
-                            await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureFalseAwait();
+                            await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -609,9 +609,9 @@ namespace TouchSocket.Dmtp
                             waitCreateChannel.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && waitCreateChannel.Route)
                             {
-                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(waitCreateChannel.TargetId).ConfigureAwait(false) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureFalseAwait();
+                                    await actor.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(false);
                                     return true;
                                 }
                             }
@@ -623,7 +623,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -636,9 +636,9 @@ namespace TouchSocket.Dmtp
                             channelPackage.UnpackageRouter(ref byteBlock);
                             if (this.AllowRoute && channelPackage.Route)
                             {
-                                if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                                if (await this.TryFindDmtpActor(channelPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
                                 {
-                                    await actor.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureFalseAwait();
+                                    await actor.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
                                 }
                                 else
                                 {
@@ -651,7 +651,7 @@ namespace TouchSocket.Dmtp
 
                                     channelPackage.Package(ref byteBlock);
                                     
-                                    await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureFalseAwait();
+                                    await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
                                 }
                             }
                             else
@@ -662,7 +662,7 @@ namespace TouchSocket.Dmtp
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                            this.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                         }
                         return true;
                     }
@@ -686,13 +686,13 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public virtual async Task<bool> PingAsync(string targetId, int millisecondsTimeout = 5000)
         {
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureFalseAwait() is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
             {
-                return await actor.PingAsync(millisecondsTimeout).ConfigureFalseAwait();
+                return await actor.PingAsync(millisecondsTimeout).ConfigureAwait(false);
             }
             else
             {
-                return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureFalseAwait();
+                return await this.PrivatePingAsync(targetId, millisecondsTimeout).ConfigureAwait(false);
             }
         }
 
@@ -703,15 +703,15 @@ namespace TouchSocket.Dmtp
 
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
-            await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureFalseAwait();
+            await this.SendJsonObjectAsync(P3_ResetId_Request, waitSetId).ConfigureAwait(false);
 
-            switch (await waitData.WaitAsync(5000).ConfigureFalseAwait())
+            switch (await waitData.WaitAsync(5000).ConfigureAwait(false))
             {
                 case WaitDataStatus.SetRunning:
                     {
                         if (waitData.WaitResult.Status == 1)
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, id)).ConfigureFalseAwait();
+                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, id)).ConfigureAwait(false);
                             this.Id = id;
                         }
                         else
@@ -760,7 +760,7 @@ namespace TouchSocket.Dmtp
                 var block = byteBlock;
                 package.Package(ref block);
 
-                await this.SendAsync(protocol, byteBlock.Memory).ConfigureFalseAwait();
+                await this.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(false);
             }
         }
 
@@ -780,7 +780,7 @@ namespace TouchSocket.Dmtp
             }
             if (this.FindDmtpActor != null)
             {
-                if (await this.FindDmtpActor.Invoke(targetId).ConfigureFalseAwait() is DmtpActor newActor)
+                if (await this.FindDmtpActor.Invoke(targetId).ConfigureAwait(false) is DmtpActor newActor)
                 {
                     return newActor;
                 }
@@ -796,7 +796,7 @@ namespace TouchSocket.Dmtp
             {
                 if (this.Routing != null)
                 {
-                    await this.Routing.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Routing.Invoke(this, e).ConfigureAwait(false);
                     return e.IsPermitOperation;
                 }
                 return false;
@@ -817,8 +817,8 @@ namespace TouchSocket.Dmtp
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitPing);
             try
             {
-                await this.SendJsonObjectAsync(P5_Ping_Request, waitPing).ConfigureFalseAwait();
-                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait())
+                await this.SendJsonObjectAsync(P5_Ping_Request, waitPing).ConfigureAwait(false);
+                switch (await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(false))
                 {
                     case WaitDataStatus.SetRunning:
                         {
@@ -883,7 +883,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public async Task CloseAsync(string msg)
         {
-            await this.OnClosed(true, msg).ConfigureFalseAwait();
+            await this.OnClosed(true, msg).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -895,7 +895,7 @@ namespace TouchSocket.Dmtp
             }
             try
             {
-                await this.SendStringAsync(0, msg).ConfigureFalseAwait();
+                await this.SendStringAsync(0, msg).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -918,7 +918,7 @@ namespace TouchSocket.Dmtp
                 byteBlock.WriteInt32(memory.Length, EndianType.Big);
                 byteBlock.Write(memory.Span);
 
-                await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureFalseAwait();
+                await this.OutputSendAsync.Invoke(this, byteBlock.Memory).ConfigureAwait(false);
             }
             //var transferBytes = new ArraySegment<byte>[]
             //{
@@ -1023,13 +1023,13 @@ namespace TouchSocket.Dmtp
             {
                 throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
             }
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureFalseAwait() is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
             {
-                return await actor.CreateChannelAsync(id, metadata).ConfigureFalseAwait();
+                return await actor.CreateChannelAsync(id, metadata).ConfigureAwait(false);
             }
             else
             {
-                return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureFalseAwait();
+                return await this.PrivateCreateChannelAsync(targetId, false, id, metadata).ConfigureAwait(false);
             }
         }
 
@@ -1041,13 +1041,13 @@ namespace TouchSocket.Dmtp
                 throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
             }
 
-            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureFalseAwait() is DmtpActor actor)
+            if (this.AllowRoute && await this.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor actor)
             {
-                return await actor.CreateChannelAsync(metadata).ConfigureFalseAwait();
+                return await actor.CreateChannelAsync(metadata).ConfigureAwait(false);
             }
             else
             {
-                return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureFalseAwait();
+                return await this.PrivateCreateChannelAsync(targetId, true, 0, metadata).ConfigureAwait(false);
             }
         }
 
@@ -1089,7 +1089,7 @@ namespace TouchSocket.Dmtp
             {
                 var block = byteBlock;
                 channelPackage.Package(ref block);
-                await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureFalseAwait();
+                await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
             }
         }
 
@@ -1205,8 +1205,8 @@ namespace TouchSocket.Dmtp
             {
                 waitCreateChannel.Package(ref byteBlock);
                 
-                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureFalseAwait();
-                switch (await waitData.WaitAsync(10 * 1000).ConfigureFalseAwait())
+                await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(false);
+                switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(false))
                 {
                     case WaitDataStatus.SetRunning:
                         {

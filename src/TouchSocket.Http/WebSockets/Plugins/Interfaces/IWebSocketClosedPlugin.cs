@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketClosedPlugin
     /// </summary>
-    public interface IWebSocketClosedPlugin: IPlugin
+    public interface IWebSocketClosedPlugin : IPlugin
     {
         /// <summary>
         /// 表示WebSocket已经断开连接。

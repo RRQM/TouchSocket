@@ -29,11 +29,7 @@ namespace TouchSocket.Core
         public static T GetAttributeValue<T>(this XElement xmlNode, XName name, T defaultValue) where T : unmanaged
         {
             var str = xmlNode.GetAttributeValue(name);
-            if (str.IsNullOrEmpty())
-            {
-                return defaultValue;
-            }
-            return (T)StringExtension.ParseToType(str, typeof(T));
+            return str.IsNullOrEmpty() ? defaultValue : (T)StringExtension.ParseToType(str, typeof(T));
         }
 
         public static T GetAttributeValue<T>(this XElement xmlNode, XName name) where T : unmanaged

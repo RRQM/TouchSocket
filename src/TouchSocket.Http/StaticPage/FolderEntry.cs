@@ -10,13 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
@@ -42,7 +38,7 @@ namespace TouchSocket.Http
             this.m_prefix = prefix;
             this.m_path = path;
             this.m_timespan = timespan;
-            this.m_watcher = new FileSystemWatcher(path,filter);
+            this.m_watcher = new FileSystemWatcher(path, filter);
 
             this.m_watcher.EnableRaisingEvents = true;
             this.m_watcher.Created += this.OnCreated;
@@ -60,25 +56,25 @@ namespace TouchSocket.Http
 
         private void OnCreated(object sender, FileSystemEventArgs e)
         {
-            m_changed = true;
+            this.m_changed = true;
             return;
         }
 
         private void OnDeleted(object sender, FileSystemEventArgs e)
         {
-            m_changed = true;
+            this.m_changed = true;
             return;
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            m_changed = true;
+            this.m_changed = true;
             return;
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
-            m_changed = true;
+            this.m_changed = true;
             return;
         }
     }

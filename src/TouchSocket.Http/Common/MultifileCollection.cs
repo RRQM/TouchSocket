@@ -48,7 +48,7 @@ namespace TouchSocket.Http
 
                 var boundary = $"--{this.m_request.GetBoundary()}".ToUTF8Bytes();
 
-               
+
                 var indexs = context.Span.IndexOfInclude(0, context.Length, boundary);
                 if (indexs.Count <= 0)
                 {
@@ -78,7 +78,7 @@ namespace TouchSocket.Http
                         //var data = new byte[length];
                         //Array.Copy(context, index + 1, data, 0, length);
                         //string ssss = Encoding.UTF8.GetString(data);
-                        internalFormFile.Data = context.Slice(index + 1,length);
+                        internalFormFile.Data = context.Slice(index + 1, length);
                         yield return internalFormFile;
                     }
                 }

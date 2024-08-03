@@ -45,9 +45,9 @@ namespace TouchSocket.Dmtp
             this.Client = this;
         }
 
-        private Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
+        private async Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            return this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
         }
 
         public async Task<bool> CreatedAsync(IPluginManager pluginManager)
@@ -58,7 +58,7 @@ namespace TouchSocket.Dmtp
                 Id = this.Id,
                 IsPermitOperation = true
             };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, args).ConfigureFalseAwait();
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, args).ConfigureAwait(false);
 
             if (args.IsPermitOperation == false)
             {
@@ -71,7 +71,7 @@ namespace TouchSocket.Dmtp
             {
                 Id = this.Id
             };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, args).ConfigureFalseAwait();
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, args).ConfigureAwait(false);
 
             return true;
         }

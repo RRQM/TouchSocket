@@ -27,23 +27,23 @@ namespace TouchSocket.NamedPipe
         /// 数据处理适配器，默认为获取<see cref="NormalDataHandlingAdapter"/>
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("NamedPipeDataHandlingAdapter", null
+        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> NamedPipeDataHandlingAdapterProperty = new("NamedPipeDataHandlingAdapter", null
             );
 
         /// <summary>
         /// 直接单个配置命名管道监听的地址组。所需类型<see cref="Action"/>
         /// </summary>
-        public static readonly DependencyProperty<Action<List<NamedPipeListenOption>>> NamedPipeListenOptionProperty = DependencyProperty<Action<List<NamedPipeListenOption>>>.Register("NamedPipeListenOption", null);
+        public static readonly DependencyProperty<Action<List<NamedPipeListenOption>>> NamedPipeListenOptionProperty = new("NamedPipeListenOption", null);
 
         /// <summary>
         /// 命名管道名称
         /// </summary>
-        public static readonly DependencyProperty<string> PipeNameProperty = DependencyProperty<string>.Register("PipeName", null);
+        public static readonly DependencyProperty<string> PipeNameProperty = new("PipeName", null);
 
         /// <summary>
         /// 命名管道的服务主机名称。
         /// </summary>
-        public static readonly DependencyProperty<string> PipeServerNameProperty = DependencyProperty<string>.Register("PipeServerName", ".");
+        public static readonly DependencyProperty<string> PipeServerNameProperty = new("PipeServerName", ".");
 
         /// <summary>
         /// 设置(命名管道系)数据处理适配器。

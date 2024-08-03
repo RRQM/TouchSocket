@@ -74,7 +74,7 @@ namespace TouchSocket.Core
         /// <param name="interfeceType"></param>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        /// <returns></returns>
-        Task<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e);
+        /// <returns>表示在执行的插件中，是否处理<see cref="TouchSocketEventArgs.Handled"/>为<see langword="true"/>。</returns>
+        ValueTask<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e);
     }
 }

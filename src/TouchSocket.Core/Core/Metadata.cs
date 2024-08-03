@@ -29,11 +29,7 @@ namespace TouchSocket.Core
         {
             get
             {
-                if (this.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-                return null;
+                return this.TryGetValue(key, out var value) ? value : null;
             }
         }
 
@@ -52,7 +48,7 @@ namespace TouchSocket.Core
         /// 打包
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock
+        public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             byteBlock.WriteInt32(this.Count);
             foreach (var item in this)

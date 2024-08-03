@@ -47,14 +47,14 @@ namespace TouchSocket.NamedPipe
             {
                 config = new TouchSocketConfig();
                 config.SetPipeName(pipeName);
-                await service.SetupAsync(config).ConfigureFalseAwait();
+                await service.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = service.Config;
                 config.SetPipeName(pipeName);
             }
-            await service.StartAsync().ConfigureFalseAwait();
+            await service.StartAsync().ConfigureAwait(false);
         }
     }
 }

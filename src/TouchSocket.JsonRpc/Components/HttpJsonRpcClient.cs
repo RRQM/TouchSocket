@@ -63,20 +63,20 @@ namespace TouchSocket.JsonRpc
                 {
                     case FeedbackType.OnlySend:
                         {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
                             this.m_waitHandle.Destroy(waitData);
                             return default;
                         }
                     case FeedbackType.WaitSend:
                         {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
                             this.m_waitHandle.Destroy(waitData);
                             return default;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureFalseAwait();
-                            await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait();
+                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                            await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
                             var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
                             this.m_waitHandle.Destroy(waitData);
 
@@ -127,7 +127,7 @@ namespace TouchSocket.JsonRpc
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                await base.OnTcpReceived(e).ConfigureFalseAwait();
+                await base.OnTcpReceived(e).ConfigureAwait(false);
                 return;
             }
 

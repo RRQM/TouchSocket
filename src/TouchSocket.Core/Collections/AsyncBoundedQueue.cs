@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,7 +14,7 @@ namespace TouchSocket.Core
         {
             if (capacity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be positive.");
-            m_writeLock = new SemaphoreSlim(capacity, capacity);
+            this.m_writeLock = new SemaphoreSlim(capacity, capacity);
         }
 
         public ValueTask<T> DequeueAsync(CancellationToken cancellationToken = default)
@@ -27,16 +24,16 @@ namespace TouchSocket.Core
 
         public async Task EnqueueAsync(T item, CancellationToken cancellationToken = default)
         {
-            await m_writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await this.m_writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            m_queue.Enqueue(item);
+            this.m_queue.Enqueue(item);
             base.Complete(false);
         }
 
-        public override T GetResult()
+        protected override T GetResult()
         {
-            m_writeLock.Release();
-            if (this.m_queue.TryDequeue(out T result))
+            this.m_writeLock.Release();
+            if (this.m_queue.TryDequeue(out var result))
             {
                 return result;
             }

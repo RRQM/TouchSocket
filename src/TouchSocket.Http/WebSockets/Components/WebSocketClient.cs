@@ -13,7 +13,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -50,26 +49,26 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closed.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureAwait(false);
         }
 
         protected override async Task OnWebSocketClosing(ClosedEventArgs e)
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -77,14 +76,14 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Handshaked != null)
             {
-                await this.Handshaked.Invoke(this, e).ConfigureFalseAwait();
+                await this.Handshaked.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -92,14 +91,14 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Handshaking != null)
             {
-                await this.Handshaking.Invoke(this, e).ConfigureFalseAwait();
+                await this.Handshaking.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -107,13 +106,13 @@ namespace TouchSocket.Http.WebSockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件

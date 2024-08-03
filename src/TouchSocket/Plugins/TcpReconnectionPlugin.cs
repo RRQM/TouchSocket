@@ -31,12 +31,18 @@ namespace TouchSocket.Sockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<TClient, ClosedEventArgs>(typeof(ITcpClosedPlugin), this.OnTcpDisconnected);
+            pluginManager.Add<ITcpSession, ClosedEventArgs>(typeof(ITcpClosedPlugin), this.OnTcpDisconnected);
         }
 
-        private async Task OnTcpDisconnected(TClient client, ClosedEventArgs e)
+        private async Task OnTcpDisconnected(ITcpSession client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
+
+            if (client is not TClient tClient)
+            {
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
                 if (e.Manual)
@@ -46,7 +52,7 @@ namespace TouchSocket.Sockets
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;
                     }

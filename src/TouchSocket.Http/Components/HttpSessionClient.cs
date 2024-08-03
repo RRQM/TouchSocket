@@ -12,7 +12,6 @@
 
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -50,29 +49,12 @@ namespace TouchSocket.Http
                 return;
             }
 
-            if (disposing&&this.m_webSocket!=null)
+            if (disposing && this.m_webSocket != null)
             {
                 this.m_webSocket.Dispose();
             }
 
             base.Dispose(disposing);
-        }
-
-        /// <inheritdoc/>
-        protected override Task OnTcpConnecting(ConnectingEventArgs e)
-        {
-            this.SetAdapter(new HttpServerDataHandlingAdapter());
-            return base.OnTcpConnecting(e);
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpClosed(ClosedEventArgs e)
-        {
-            if (this.m_webSocket != null)
-            {
-                await this.PrivateWebSocketClosed(e).ConfigureFalseAwait();
-            }
-            await base.OnTcpClosed(e).ConfigureFalseAwait();
         }
 
         /// <summary>
@@ -84,8 +66,25 @@ namespace TouchSocket.Http
             {
                 var e = new HttpContextEventArgs(httpContext);
 
-                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this, e).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this, e).ConfigureAwait(false);
             }
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosed(ClosedEventArgs e)
+        {
+            if (this.m_webSocket != null)
+            {
+                await this.PrivateWebSocketClosed(e).ConfigureAwait(false);
+            }
+            await base.OnTcpClosed(e).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override Task OnTcpConnecting(ConnectingEventArgs e)
+        {
+            this.SetAdapter(new HttpServerDataHandlingAdapter());
+            return base.OnTcpConnecting(e);
         }
 
         /// <inheritdoc/>
@@ -94,13 +93,13 @@ namespace TouchSocket.Http
             if (e.RequestInfo is HttpRequest request)
             {
                 this.m_httpContext ??= new HttpContext(request);
-                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureFalseAwait();
+                await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(false);
                 this.m_httpContext.Response.ResetHttp();
             }
             else if (this.m_webSocket != null && e.RequestInfo is WSDataFrame dataFrame)
             {
                 e.Handled = true;
-                await this.PrivateWebSocketReceived(dataFrame).ConfigureFalseAwait();
+                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(false);
                 return;
             }
         }

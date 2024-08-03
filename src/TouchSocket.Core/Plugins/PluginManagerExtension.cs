@@ -74,8 +74,8 @@ namespace TouchSocket.Core
         {
             async Task newFunc(object sender, PluginEventArgs e)
             {
-                await func().ConfigureFalseAwait();
-                await e.InvokeNext().ConfigureFalseAwait();
+                await func().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(false);
             }
             pluginManager.Add(interfeceType, newFunc);
         }
@@ -93,7 +93,7 @@ namespace TouchSocket.Core
                 async Task newFunc(object sender, PluginEventArgs e)
                 {
                     action(e as T);
-                    await e.InvokeNext().ConfigureFalseAwait();
+                    await e.InvokeNext().ConfigureAwait(false);
                 }
                 pluginManager.Add(interfeceType, newFunc);
             }
@@ -102,7 +102,7 @@ namespace TouchSocket.Core
                 async Task newFunc(object sender, PluginEventArgs e)
                 {
                     action((T)sender);
-                    await e.InvokeNext().ConfigureFalseAwait();
+                    await e.InvokeNext().ConfigureAwait(false);
                 }
                 pluginManager.Add(interfeceType, newFunc);
             }
@@ -119,7 +119,7 @@ namespace TouchSocket.Core
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 action();
-                await e.InvokeNext().ConfigureFalseAwait();
+                await e.InvokeNext().ConfigureAwait(false);
             }
             pluginManager.Add(interfeceType, newFunc);
         }

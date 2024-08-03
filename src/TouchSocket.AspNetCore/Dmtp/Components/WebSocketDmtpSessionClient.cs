@@ -127,8 +127,8 @@ namespace TouchSocket.Dmtp.AspNetCore
                 return;
             }
 
-            await this.DmtpActor.ResetIdAsync(targetId).ConfigureFalseAwait();
-            await this.ProtectedResetIdAsync(targetId).ConfigureFalseAwait();
+            await this.DmtpActor.ResetIdAsync(targetId).ConfigureAwait(false);
+            await this.ProtectedResetIdAsync(targetId).ConfigureAwait(false);
         }
 
         internal void InternalSetConfig(TouchSocketConfig config)
@@ -198,7 +198,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        await this.m_dmtpAdapter.ReceivedInputAsync(byteBlock).ConfigureFalseAwait();
+                        await this.m_dmtpAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
                     }
                 }
 
@@ -227,7 +227,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, targetId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureFalseAwait();
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
@@ -240,7 +240,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                     }
                     else
                     {
-                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureFalseAwait();
+                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
                     }
                 }
             }
@@ -320,7 +320,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 e.Message = "Token不受理";
             }
-            await this.OnHandshaking(e).ConfigureFalseAwait();
+            await this.OnHandshaking(e).ConfigureAwait(false);
         }
 
         private Task OnDmtpActorRouting(DmtpActor actor, PackageRouterEventArgs e)
@@ -356,7 +356,7 @@ namespace TouchSocket.Dmtp.AspNetCore
 
         private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
-            await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureFalseAwait();
+            await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
             this.m_sentCounter.Increment(memory.Length);
         }
 
@@ -375,7 +375,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 return;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -388,7 +388,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -401,7 +401,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -414,7 +414,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件
@@ -422,15 +422,15 @@ namespace TouchSocket.Dmtp.AspNetCore
         private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             var message = (DmtpMessage)requestInfo;
-            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
+            if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
             {
-                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
             }
         }
 
         private async Task ThisOnResetId(DmtpActor actor, IdChangedEventArgs e)
         {
-            await this.ProtectedResetIdAsync(e.NewId).ConfigureFalseAwait();
+            await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(false);
         }
     }
 }

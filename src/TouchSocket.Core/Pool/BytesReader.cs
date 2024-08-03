@@ -10,16 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 namespace TouchSocket.Core
 {
@@ -259,13 +254,8 @@ namespace TouchSocket.Core
         /// </summary>
         public byte[] ReadBytesPackage()
         {
-            var memory = ReadBytesPackageMemory();
-            if (memory == null)
-            {
-                return memory.ToArray();
-            }
-
-            return null;
+            var memory = this.ReadBytesPackageMemory();
+            return memory == null ? memory.ToArray() : null;
         }
 
         public ReadOnlySpan<byte> ReadBytesPackageMemory()

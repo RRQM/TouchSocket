@@ -160,7 +160,7 @@ namespace TouchSocket.XmlRpc
 
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                     }
 
                     var httpResponse = e.Context.Response;
@@ -178,7 +178,7 @@ namespace TouchSocket.XmlRpc
                     }
                     try
                     {
-                        await httpResponse.AnswerAsync().ConfigureFalseAwait();
+                        await httpResponse.AnswerAsync().ConfigureAwait(false);
                     }
                     finally
                     {
@@ -192,7 +192,7 @@ namespace TouchSocket.XmlRpc
                 }
             }
 
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <summary>

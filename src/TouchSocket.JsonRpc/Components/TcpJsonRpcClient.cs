@@ -331,22 +331,22 @@ namespace TouchSocket.JsonRpc
                 case FeedbackType.OnlySend:
                     {
                         var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
-                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureFalseAwait();
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
                         this.m_waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
                     {
                         var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
-                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureFalseAwait();
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
                         this.m_waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitInvoke:
                     {
                         var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
-                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureFalseAwait();
-                        await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait();
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
+                        await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
                         var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
                         this.m_waitHandle.Destroy(waitData);
 
@@ -476,7 +476,7 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var data = JsonRpcUtility.ToJsonRpcResponseString(response).ToUTF8Bytes();
-                await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureFalseAwait();
+                await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
             }
             catch
             {
@@ -512,7 +512,7 @@ namespace TouchSocket.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureFalseAwait();
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
             }
 
             if (!callContext.JsonRpcContext.Id.HasValue)
@@ -520,7 +520,7 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureFalseAwait();
+            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
         }
     }
 }

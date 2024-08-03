@@ -35,8 +35,8 @@ namespace TouchSocket.Hosting.Sockets.HostService
         {
             try
             {
-                await base.StartAsync(cancellationToken).ConfigureFalseAwait();
-                await this.ConfigObject.StartAsync().ConfigureFalseAwait();
+                await base.StartAsync(cancellationToken).ConfigureAwait(false);
+                await this.ConfigObject.StartAsync().ConfigureAwait(false);
 
                 this.m_logger.LogInformation(TouchSocketHostingResource.HostServerStarted);
             }

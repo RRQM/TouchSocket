@@ -24,7 +24,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 串口客户端基类
     /// </summary>
-    public class SerialPortClientBase : SetupConfigObject, IClient, IPluginObject, ISetupConfigObject, IOnlineClient, IConnectableClient, IClosableClient
+    public class SerialPortClientBase : SetupConfigObject, ISerialPortSession
     {
         /// <summary>
         /// 串口客户端基类
@@ -51,36 +51,36 @@ namespace TouchSocket.SerialPorts
         /// 断开连接。在客户端未设置连接状态时，不会触发
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnSerialClosed(ClosedEventArgs e)
+        protected virtual async Task OnSerialClosed(ClosedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnSerialClosing(ClosingEventArgs e)
+        protected virtual async Task OnSerialClosing(ClosingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 已经建立连接
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnSerialConnected(ConnectedEventArgs e)
+        protected virtual async Task OnSerialConnected(ConnectedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 准备连接的时候，此时并未建立连接
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnSerialConnecting(ConnectingEventArgs e)
+        protected virtual async Task OnSerialConnecting(ConnectingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -88,9 +88,9 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         /// <param name="e"></param>
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected virtual Task OnSerialReceived(ReceivedDataEventArgs e)
+        protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace TouchSocket.SerialPorts
 
         private async Task PrivateOnClosing(ClosingEventArgs e)
         {
-            await this.OnSerialClosing(e).ConfigureFalseAwait();
+            await this.OnSerialClosing(e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnSerialClosed(object obj)
@@ -126,19 +126,19 @@ namespace TouchSocket.SerialPorts
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.Complete(e.Message).ConfigureFalseAwait();
+                await receiver.Complete(e.Message).ConfigureAwait(false);
             }
-            await this.OnSerialClosed(e).ConfigureFalseAwait();
+            await this.OnSerialClosed(e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnSerialConnected(object o)
         {
-            await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureFalseAwait();
+            await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(false);
         }
 
         private async Task PrivateOnSerialConnecting(ConnectingEventArgs e)
         {
-            await this.OnSerialConnecting(e).ConfigureFalseAwait();
+            await this.OnSerialConnecting(e).ConfigureAwait(false);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(SerialPortConfigExtension.SerialDataHandlingAdapterProperty)?.Invoke();
@@ -183,7 +183,7 @@ namespace TouchSocket.SerialPorts
         {
             if (this.m_online)
             {
-                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureFalseAwait();
+                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
                 this.m_serialCore.TryClose();
                 this.Abort(true, msg);
             }
@@ -215,7 +215,7 @@ namespace TouchSocket.SerialPorts
         {
             this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
 
             try
             {
@@ -228,7 +228,7 @@ namespace TouchSocket.SerialPorts
                 this.m_serialCore.SafeDispose();
 
                 var serialCore = CreateSerial(serialPortOption);
-                await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureFalseAwait();
+                await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
 
                 serialCore.Open();
 
@@ -318,7 +318,7 @@ namespace TouchSocket.SerialPorts
                         if (result.BytesTransferred > 0)
                         {
                             byteBlock.SetLength(result.BytesTransferred);
-                            await this.HandleReceivingData(byteBlock).ConfigureFalseAwait();
+                            await this.HandleReceivingData(byteBlock).ConfigureAwait(false);
                         }
                     }
                 }
@@ -346,16 +346,16 @@ namespace TouchSocket.SerialPorts
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureFalseAwait();
+                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureFalseAwait();
+                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
+                this.Logger?.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
             }
         }
 
@@ -379,10 +379,10 @@ namespace TouchSocket.SerialPorts
         {
             if (this.m_receiver != null)
             {
-                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureFalseAwait();
+                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureAwait(false);
                 return;
             }
-            await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureFalseAwait();
+            await this.OnSerialReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
         }
 
         #region Throw
@@ -411,26 +411,13 @@ namespace TouchSocket.SerialPorts
 
         #region 发送
 
-        ///// <inheritdoc/>
-        //protected void ProtectedDefaultSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThrowIfDisposed();
-        //    this.ThrowIfClientNotConnected();
-        //    if (this.OnSerialSending(buffer, offset, length).GetFalseAwaitResult())
-        //    {
-        //        this.m_serialCore.Send(buffer, offset, length);
-        //    }
-        //}
-
         /// <inheritdoc/>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfDisposed();
             this.ThrowIfClientNotConnected();
-            if (await this.OnSerialSending(memory).ConfigureAwait(false))
-            {
-                await this.m_serialCore.SendAsync(memory).ConfigureFalseAwait();
-            }
+            await this.OnSerialSending(memory).ConfigureAwait(false);
+            await this.m_serialCore.SendAsync(memory).ConfigureAwait(false);
         }
 
         #endregion 发送
@@ -446,7 +433,7 @@ namespace TouchSocket.SerialPorts
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
+        protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
             if (this.m_dataHandlingAdapter == null)
             {
@@ -465,7 +452,7 @@ namespace TouchSocket.SerialPorts
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(IRequestInfo requestInfo)
+        protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
         {
             this.ThrowIfCannotSendRequestInfo();
             return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
@@ -494,17 +481,17 @@ namespace TouchSocket.SerialPorts
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureFalseAwait();
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }
 

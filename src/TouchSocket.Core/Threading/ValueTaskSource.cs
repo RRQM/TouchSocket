@@ -31,9 +31,9 @@ namespace TouchSocket.Core
 
         #endregion 字段
 
-        public ExceptionDispatchInfo ExceptionDispatchInfo => this.m_exceptionDispatchInfo;
+        protected ExceptionDispatchInfo ExceptionDispatchInfo => this.m_exceptionDispatchInfo;
 
-        public abstract TResult GetResult();
+        protected abstract TResult GetResult();
 
         protected void Cancel()
         {
@@ -134,7 +134,7 @@ namespace TouchSocket.Core
                 }
             }
 
-            await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
+            await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
             return this.GetResult();
         }
 

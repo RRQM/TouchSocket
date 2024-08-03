@@ -56,7 +56,7 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public async Task<IUdpDmtpClient> GetUdpDmtpClientAsync(EndPoint endPoint)
         {
-            return await this.PrivateGetUdpDmtpClient(endPoint).ConfigureFalseAwait();
+            return await this.PrivateGetUdpDmtpClient(endPoint).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -70,18 +70,18 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
-            var client =await this.PrivateGetUdpDmtpClient(e.EndPoint).ConfigureFalseAwait();
+            var client =await this.PrivateGetUdpDmtpClient(e.EndPoint).ConfigureAwait(false);
             if (client == null)
             {
                 return;
             }
 
             var message = DmtpMessage.CreateFrom(e.ByteBlock.Span);
-            if (!await client.InputReceivedData(message).ConfigureFalseAwait())
+            if (!await client.InputReceivedData(message).ConfigureAwait(false))
             {
                 if (this.PluginManager.Enable)
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), client, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), client, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
                 }
             }
         }
@@ -100,7 +100,7 @@ namespace TouchSocket.Dmtp
                 {
                     Client = this,
                 };
-                if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureFalseAwait())
+                if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureAwait(false))
                 {
                     this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
                 }

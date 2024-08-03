@@ -21,7 +21,7 @@ namespace TouchSocket.Core
             return byteBlock.ReadGuid();
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Guid obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Guid obj)
         {
             byteBlock.WriteGuid(obj);
         }

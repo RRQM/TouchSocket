@@ -13,7 +13,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace TouchSocket.Core
@@ -81,18 +80,13 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string ToFileLengthString(long length)
         {
-            if (length < 1024)
-            {
-                return $"{length}B";
-            }
-            else
-            {
-                return length < 1024 * 1024
+            return length < 1024
+                ? $"{length}B"
+                : length < 1024 * 1024
                     ? $"{(length / 1024.0).ToString("0.00")}Kb"
                     : length < 1024 * 1024 * 1024
                                     ? $"{(length / (1024.0 * 1024)).ToString("0.00")}Mb"
                                     : $"{(length / (1024.0 * 1024 * 1024)).ToString("0.00")}Gb";
-            }
         }
 
         /// <summary>

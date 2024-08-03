@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -30,7 +29,7 @@ namespace TouchSocket.Http
         //private readonly AsyncAutoResetEvent m_waitRelease = new AsyncAutoResetEvent();
         private readonly WaitDataAsync<HttpResponse> m_waitResponseDataAsync = new WaitDataAsync<HttpResponse>();
         private bool m_getContent;
-        HttpClientDataHandlingAdapter m_dataHandlingAdapter;
+        private HttpClientDataHandlingAdapter m_dataHandlingAdapter;
         #endregion 字段
 
         internal Task InternalSendAsync(ReadOnlyMemory<byte> memory)
@@ -60,7 +59,7 @@ namespace TouchSocket.Http
         private void ReleaseLock()
         {
             this.m_semaphoreForRequest.Release();
-            m_dataHandlingAdapter.SetComplateLock();
+            this.m_dataHandlingAdapter.SetComplateLock();
             //this.m_waitRelease.Set();
         }
 
@@ -85,9 +84,9 @@ namespace TouchSocket.Http
                     request.Build(byteBlock);
 
                     this.Reset(token);
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
 
-                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
                     status.ThrowIfNotRunning();
 
@@ -113,7 +112,7 @@ namespace TouchSocket.Http
         /// <exception cref="Exception"></exception>
         protected async Task<HttpResponseResult> ProtectedRequestContentAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
-            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
                 this.m_getContent = true;
@@ -123,9 +122,9 @@ namespace TouchSocket.Http
 
                     this.Reset(token);
 
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
 
-                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
                     status.ThrowIfNotRunning();
 
@@ -147,8 +146,8 @@ namespace TouchSocket.Http
         protected override Task OnTcpConnecting(ConnectingEventArgs e)
         {
             this.Protocol = Protocol.Http;
-            m_dataHandlingAdapter = new HttpClientDataHandlingAdapter();
-            this.SetAdapter(m_dataHandlingAdapter);
+            this.m_dataHandlingAdapter = new HttpClientDataHandlingAdapter();
+            this.SetAdapter(this.m_dataHandlingAdapter);
             return EasyTask.CompletedTask;
         }
 
@@ -169,7 +168,7 @@ namespace TouchSocket.Http
                     await response.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
                 }
                 this.m_waitResponseDataAsync.Set(response);
-                //await this.SetAsync(response).ConfigureFalseAwait();
+                //await this.SetAsync(response).ConfigureAwait(false);
             }
         }
 
@@ -186,7 +185,7 @@ namespace TouchSocket.Http
         //{
 
 
-        //    await this.m_waitRelease.WaitOneAsync().ConfigureFalseAwait();
+        //    await this.m_waitRelease.WaitOneAsync().ConfigureAwait(false);
         //}
     }
 }

@@ -25,7 +25,7 @@ namespace TouchSocket.Core
         /// 配置插件。
         /// </summary>
         public static readonly DependencyProperty<Action<IPluginManager>> ConfigurePluginsProperty =
-            DependencyProperty<Action<IPluginManager>>.Register("ConfigurePlugins", null);
+            new("ConfigurePlugins", null);
 
         /// <summary>
         /// 配置插件。
@@ -55,19 +55,19 @@ namespace TouchSocket.Core
         /// 配置容器注入。
         /// </summary>
         public static readonly DependencyProperty<Action<IRegistrator>> ConfigureContainerProperty =
-            DependencyProperty<Action<IRegistrator>>.Register("ConfigureContainer", null);
+            new("ConfigureContainer", null);
 
         /// <summary>
         /// 容器注册
         /// </summary>
         public static readonly DependencyProperty<IRegistrator> RegistratorProperty =
-            DependencyProperty<IRegistrator>.Register("Registrator", null);
+            new("Registrator", default);
 
         /// <summary>
         /// 容器提供者
         /// </summary>
         public static readonly DependencyProperty<IResolver> ResolverProperty =
-            DependencyProperty<IResolver>.Register("Resolver", null);
+            new("Resolver", null);
 
         /// <summary>
         /// 配置容器注入。

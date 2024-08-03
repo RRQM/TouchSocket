@@ -53,7 +53,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                await this.PreviewReceived(remoteEndPoint, byteBlock).ConfigureFalseAwait();
+                await this.PreviewReceived(remoteEndPoint, byteBlock).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -176,7 +176,7 @@ namespace TouchSocket.Sockets
         /// <param name="byteBlock"></param>
         protected virtual async Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
         {
-            await this.GoReceived(remoteEndPoint, byteBlock, default).ConfigureFalseAwait();
+            await this.GoReceived(remoteEndPoint, byteBlock, default).ConfigureAwait(false);
         }
 
         ///// <summary>
@@ -234,7 +234,7 @@ namespace TouchSocket.Sockets
             try
             {
                 requestInfoBuilder.Build(ref byteBlock);
-                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
+                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
             }
             finally
             {

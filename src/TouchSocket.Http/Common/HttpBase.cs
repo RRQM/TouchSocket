@@ -10,12 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Serialization;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -69,15 +66,7 @@ namespace TouchSocket.Http
             get
             {
                 var contentLength = this.m_headers.Get(HttpHeaders.ContentLength);
-                if (contentLength.IsNullOrEmpty())
-                {
-                    return 0;
-                }
-                if (long.TryParse(contentLength, out var value))
-                {
-                    return value;
-                }
-                return 0;
+                return contentLength.IsNullOrEmpty() ? 0 : long.TryParse(contentLength, out var value) ? value : 0;
             }
             set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
         }
@@ -93,28 +82,9 @@ namespace TouchSocket.Http
             get
             {
                 var keepalive = this.Headers.Get(HttpHeaders.Connection);
-                if (this.ProtocolVersion == "1.0")
-                {
-                    if (keepalive.IsNullOrEmpty())
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
-                else
-                {
-                    if (keepalive.IsNullOrEmpty())
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
+                return this.ProtocolVersion == "1.0"
+                    ? !keepalive.IsNullOrEmpty() && keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
+                    : keepalive.IsNullOrEmpty() || keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
             }
             set
             {
@@ -186,7 +156,7 @@ namespace TouchSocket.Http
         /// </summary>
         public string RequestLine { get; private set; }
 
-        internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(s_rnrnCode);
             if (index > 0)
@@ -237,7 +207,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
         {
-            return Task.Run(async () =>await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
+            return Task.Run(async () => await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
         }
 
         #endregion Content
@@ -282,7 +252,7 @@ namespace TouchSocket.Http
             this.ContentComplated = null;
             this.RequestLine = default;
 
-            m_httpBlockSegment.InternalReset();
+            this.m_httpBlockSegment.InternalReset();
         }
 
         #region Read

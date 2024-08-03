@@ -13,7 +13,6 @@
 using System;
 using System.Linq;
 using System.Text;
-using TouchSocket.Core;
 
 namespace TouchSocket.SocketIo
 {

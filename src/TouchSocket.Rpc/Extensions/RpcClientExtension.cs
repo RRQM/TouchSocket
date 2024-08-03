@@ -37,7 +37,7 @@ namespace TouchSocket.Rpc
         /// <inheritdoc cref="IRpcClient.InvokeAsync(RpcRequest)"/>
         public static async Task<T> InvokeTAsync<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
-            return (T)(await client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).ConfigureFalseAwait());
+            return (T)(await client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).ConfigureAwait(false));
         }
 
         #endregion RpcClient

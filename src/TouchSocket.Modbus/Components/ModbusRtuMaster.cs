@@ -21,7 +21,7 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// 基于串口的Modbus主站接口
     /// </summary>
-    public class ModbusRtuMaster : SerialPortClient, IModbusRtuMaster
+    public class ModbusRtuMaster : SerialPortClientBase, IModbusRtuMaster
     {
         /// <summary>
         /// 基于串口的Modbus主站接口
@@ -34,7 +34,7 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
 
             try
             {
@@ -43,7 +43,7 @@ namespace TouchSocket.Modbus
                 try
                 {
                     modbusRequest.Build(ref byteBlock);
-                    await this.SendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -51,7 +51,7 @@ namespace TouchSocket.Modbus
                 }
 
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
@@ -68,7 +68,7 @@ namespace TouchSocket.Modbus
         protected override async Task OnSerialConnecting(ConnectingEventArgs e)
         {
             this.SetAdapter(new ModbusRtuAdapter());
-            await base.OnSerialConnecting(e).ConfigureFalseAwait();
+            await base.OnSerialConnecting(e).ConfigureAwait(false);
         }
 
         #region 字段
@@ -86,7 +86,7 @@ namespace TouchSocket.Modbus
             {
                 this.SetRun(response);
             }
-            await base.OnSerialReceived(e).ConfigureFalseAwait();
+            await base.OnSerialReceived(e).ConfigureAwait(false);
         }
 
         private void SetRun(ModbusRtuResponse response)

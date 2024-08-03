@@ -268,7 +268,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureFalseAwait();
+                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureAwait(false);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -284,7 +284,7 @@ namespace TouchSocket.JsonRpc
                                 waitData.SetCancellationToken(invokeOption.Token);
                             }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
@@ -357,7 +357,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureFalseAwait();
+                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureAwait(false);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -373,7 +373,7 @@ namespace TouchSocket.JsonRpc
                                 waitData.SetCancellationToken(invokeOption.Token);
                             }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
                             {
                                 case WaitDataStatus.SetRunning:
                                     {

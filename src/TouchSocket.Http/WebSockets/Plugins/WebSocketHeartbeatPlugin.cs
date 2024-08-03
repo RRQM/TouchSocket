@@ -36,7 +36,7 @@ namespace TouchSocket.Http.WebSockets
                 var failedCount = 0;
                 while (true)
                 {
-                    await Task.Delay(this.Tick).ConfigureFalseAwait();
+                    await Task.Delay(this.Tick).ConfigureAwait(false);
                     if (!client.Online)
                     {
                         return;
@@ -44,7 +44,7 @@ namespace TouchSocket.Http.WebSockets
 
                     try
                     {
-                        await client.PingAsync().ConfigureFalseAwait();
+                        await client.PingAsync().ConfigureAwait(false);
                         failedCount = 0;
                     }
                     catch
@@ -53,7 +53,7 @@ namespace TouchSocket.Http.WebSockets
                     }
                     if (failedCount > this.MaxFailCount)
                     {
-                        await client.CloseAsync("自动心跳失败次数达到最大，已断开连接。").ConfigureFalseAwait();
+                        await client.CloseAsync("自动心跳失败次数达到最大，已断开连接。").ConfigureAwait(false);
                     }
                 }
             });

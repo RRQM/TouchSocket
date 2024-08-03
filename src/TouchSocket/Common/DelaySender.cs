@@ -61,7 +61,7 @@
 //                    }
 //                    else
 //                    {
-//                        await this.m_resetEvent.WaitOneAsync().ConfigureFalseAwait();
+//                        await this.m_resetEvent.WaitOneAsync().ConfigureAwait(false);
 //                    }
 //                }
 //                catch

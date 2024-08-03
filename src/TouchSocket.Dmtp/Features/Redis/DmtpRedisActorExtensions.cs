@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.Redis
         /// 获取或设置RedisActor的注入键。
         /// </summary>
         public static readonly DependencyProperty<IDmtpRedisActor> DmtpRedisActorProperty =
-            DependencyProperty<IDmtpRedisActor>.Register("DmtpRedisActor", null);
+            new("DmtpRedisActor", null);
 
         /// <summary>
         /// 获取<see cref="IDmtpRedisActor"/>

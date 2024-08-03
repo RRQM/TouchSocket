@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp
         public async IAsyncEnumerator<IByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             ByteBlock byteBlock = null;
-            while (await this.MoveNextAsync().ConfigureFalseAwait())
+            while (await this.MoveNextAsync().ConfigureAwait(false))
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
     public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : IClient, IClosableClient
     {
         private static readonly DependencyProperty<bool> s_checkClearProperty =
-            DependencyProperty<bool>.Register("CheckClear", false);
+            new("CheckClear", false);
 
         private readonly ILog m_logger;
 
@@ -125,12 +125,12 @@ namespace TouchSocket.Sockets
                 {
                     if (first)
                     {
-                        await Task.Delay(this.Tick).ConfigureFalseAwait();
+                        await Task.Delay(this.Tick).ConfigureAwait(false);
                         first = false;
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
                     }
 
                     if (client is IOnlineClient onlineClient && !onlineClient.Online)
@@ -179,7 +179,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureFalseAwait();
+                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
                     if (sender is IConnectableService connectableService)
                     {
                         foreach (var client in connectableService.GetClients())

@@ -5,7 +5,7 @@
 		<PackageTags>Hosting;Socket;JsonRpc;NamedPipe;XmlRpc;Dmtp;TouchSocket</PackageTags>
 		<Description>这是TouchSocket基于通用主机的扩展。目前包括Tcp、Udp、NamedPipe、Dmtp、SerialPort等服务。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Hosting</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Hosting</PackageOutputPath>
 	</PropertyGroup>
@@ -22,8 +22,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">

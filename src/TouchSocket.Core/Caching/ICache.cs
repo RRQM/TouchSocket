@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {

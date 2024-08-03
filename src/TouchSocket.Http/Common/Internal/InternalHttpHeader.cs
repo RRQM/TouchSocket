@@ -26,15 +26,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                if (key == null)
-                {
-                    return null;
-                }
-                if (this.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-                return null;
+                return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
             }
 
             set
@@ -52,11 +44,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                if (this.TryGetValue(headers.GetDescription(), out var value))
-                {
-                    return value;
-                }
-                return null;
+                return this.TryGetValue(headers.GetDescription(), out var value) ? value : null;
             }
 
             set
@@ -81,24 +69,12 @@ namespace TouchSocket.Http
 
         public string Get(string key)
         {
-            if (key == null)
-            {
-                return null;
-            }
-            if (this.TryGetValue(key, out var value))
-            {
-                return value;
-            }
-            return null;
+            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
         }
 
         public string Get(HttpHeaders key)
         {
-            if (this.TryGetValue(key.GetDescription(), out var value))
-            {
-                return value;
-            }
-            return null;
+            return this.TryGetValue(key.GetDescription(), out var value) ? value : null;
         }
     }
 }

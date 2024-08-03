@@ -11,16 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 namespace TouchSocket.Core
 {
@@ -144,7 +136,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void WriteNotNull()
         {
-            this.WriteByte((byte)1);
+            this.WriteByte(1);
         }
 
         /// <summary>
@@ -152,7 +144,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void WriteNull()
         {
-            this.WriteByte((byte)0);
+            this.WriteByte(0);
         }
 
         #endregion Null
@@ -169,11 +161,11 @@ namespace TouchSocket.Core
         {
             if (value == null)
             {
-                this.WriteInt32((int)-1);
+                this.WriteInt32(-1);
             }
             else if (length == 0)
             {
-                this.WriteInt32((int)0);
+                this.WriteInt32(0);
             }
             else
             {
@@ -190,11 +182,11 @@ namespace TouchSocket.Core
         {
             if (value == null)
             {
-                this.WriteInt32((int)-1);
+                this.WriteInt32(-1);
             }
             else if (value.Length == 0)
             {
-                this.WriteInt32((int)0);
+                this.WriteInt32(0);
             }
             else
             {
@@ -242,14 +234,14 @@ namespace TouchSocket.Core
                 switch (headerType)
                 {
                     case FixedHeaderType.Byte:
-                        this.WriteByte((byte)0);
+                        this.WriteByte(0);
                         return;
                     case FixedHeaderType.Ushort:
-                        this.WriteUInt16((ushort)0);
+                        this.WriteUInt16(0);
                         return;
                     case FixedHeaderType.Int:
                     default:
-                        this.WriteInt32((int)0);
+                        this.WriteInt32(0);
                         return;
                 }
             }
@@ -301,7 +293,7 @@ namespace TouchSocket.Core
                                     {
                                         ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(value), len, int.MaxValue);
                                     }
-                                    this.WriteInt32((int)len);
+                                    this.WriteInt32(len);
                                     break;
                             }
 
@@ -452,16 +444,7 @@ namespace TouchSocket.Core
         /// <param name="values"></param>
         public void WriteBooleans(bool[] values)
         {
-            int size;
-            if (values.Length % 8 == 0)
-            {
-                size = values.Length / 8;
-            }
-            else
-            {
-                size = values.Length / 8 + 1;
-            }
-
+            var size = values.Length % 8 == 0 ? values.Length / 8 : values.Length / 8 + 1;
             this.ExtendSize(size);
             TouchSocketBitConverter.Default.GetBytes(ref this.m_buffer[this.m_position], values);
             this.m_position += size;

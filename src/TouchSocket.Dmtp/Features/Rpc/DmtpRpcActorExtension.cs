@@ -32,7 +32,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// DmtpRpcActor
         /// </summary>
         public static readonly DependencyProperty<IDmtpRpcActor> DmtpRpcActorProperty =
-            DependencyProperty<IDmtpRpcActor>.Register("DmtpRpcActor", default);
+            new("DmtpRpcActor", default);
 
         #endregion DependencyProperty
 

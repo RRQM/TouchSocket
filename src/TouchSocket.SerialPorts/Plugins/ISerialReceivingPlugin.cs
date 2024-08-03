@@ -21,6 +21,6 @@ namespace TouchSocket.SerialPorts
     /// </summary>
     public interface ISerialReceivingPlugin : IPlugin
     {
-        Task OnSerialReceiving(ISerialPortClient client, ByteBlockEventArgs e);
+        Task OnSerialReceiving(ISerialPortSession client, ByteBlockEventArgs e);
     }
 }

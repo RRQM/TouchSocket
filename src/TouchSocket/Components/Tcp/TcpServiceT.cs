@@ -64,7 +64,7 @@ namespace TouchSocket.Sockets
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(socketClient, e).ConfigureFalseAwait();
+                await this.Closed.Invoke(socketClient, e).ConfigureAwait(false);
             }
         }
 
@@ -77,7 +77,7 @@ namespace TouchSocket.Sockets
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(socketClient, e).ConfigureFalseAwait();
+                await this.Closing.Invoke(socketClient, e).ConfigureAwait(false);
             }
         }
 
@@ -90,7 +90,7 @@ namespace TouchSocket.Sockets
         {
             if (this.Connected != null)
             {
-                await this.Connected.Invoke(socketClient, e).ConfigureFalseAwait();
+                await this.Connected.Invoke(socketClient, e).ConfigureAwait(false);
             }
         }
 
@@ -103,7 +103,7 @@ namespace TouchSocket.Sockets
         {
             if (this.Connecting != null)
             {
-                await this.Connecting.Invoke(socketClient, e).ConfigureFalseAwait();
+                await this.Connecting.Invoke(socketClient, e).ConfigureAwait(false);
             }
         }
 
@@ -112,7 +112,7 @@ namespace TouchSocket.Sockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(socketClient, e).ConfigureFalseAwait();
+                await this.Received.Invoke(socketClient, e).ConfigureAwait(false);
             }
         }
 

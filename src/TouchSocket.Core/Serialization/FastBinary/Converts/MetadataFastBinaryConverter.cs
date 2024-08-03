@@ -31,7 +31,7 @@ namespace TouchSocket.Core
             return metadata;
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in Metadata obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Metadata obj)
         {
             byteBlock.WriteInt32(obj.Count);
             foreach (var item in obj)

@@ -39,22 +39,22 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreSlim.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
 
             try
             {
                 if (!base.Online)
                 {
-                    await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+                    await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureAwait(false);
                 }
 
                 var option = this.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
 
                 var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
-                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request))).ConfigureFalseAwait();
+                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request))).ConfigureAwait(false);
 
-                using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureFalseAwait())
+                using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
                 {
                     var response = responseResult.Response;
                     if (response.StatusCode != 101)
@@ -128,9 +128,9 @@ namespace TouchSocket.Http.WebSockets
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.Complete(e.Message).ConfigureFalseAwait();
+                await this.m_webSocket.Complete(e.Message).ConfigureAwait(false);
             }
-            await this.OnWebSocketClosed(e).ConfigureFalseAwait();
+            await this.OnWebSocketClosed(e).ConfigureAwait(false);
         }
 
         private Task PrivateWebSocketClosing(ClosedEventArgs e)
@@ -143,17 +143,17 @@ namespace TouchSocket.Http.WebSockets
             if (dataFrame.IsClose)
             {
                 var msg = dataFrame.PayloadData?.ToString();
-                await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureFalseAwait();
-                await this.m_webSocket.CloseAsync(msg).ConfigureFalseAwait();
+                await this.PrivateWebSocketClosing(new ClosedEventArgs(false, msg)).ConfigureAwait(false);
+                await this.m_webSocket.CloseAsync(msg).ConfigureAwait(false);
                 return;
             }
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureFalseAwait();
+                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(false);
                 return;
             }
 
-            await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureFalseAwait();
+            await this.OnWebSocketReceived(new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(false);
         }
 
         #endregion 事件
@@ -188,8 +188,8 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
-            await this.PrivateWebSocketClosed(e).ConfigureFalseAwait();
-            await base.OnTcpClosed(e).ConfigureFalseAwait();
+            await this.PrivateWebSocketClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -199,16 +199,16 @@ namespace TouchSocket.Http.WebSockets
             {
                 var dataFrame = (WSDataFrame)e.RequestInfo;
 
-                await this.PrivateWebSocketReceived(dataFrame).ConfigureFalseAwait();
+                await this.PrivateWebSocketReceived(dataFrame).ConfigureAwait(false);
             }
             else
             {
                 if (e.RequestInfo is HttpResponse)
                 {
-                    await base.OnTcpReceived(e).ConfigureFalseAwait();
+                    await base.OnTcpReceived(e).ConfigureAwait(false);
                 }
             }
-            await base.OnTcpReceived(e).ConfigureFalseAwait();
+            await base.OnTcpReceived(e).ConfigureAwait(false);
         }
 
         #endregion Override

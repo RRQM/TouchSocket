@@ -100,7 +100,7 @@ namespace TouchSocket.WebApi.Swagger
                     this.m_swagger.Add(key, bytes);
                 }
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
 
             if (this.LaunchBrowser)
             {
@@ -676,10 +676,10 @@ namespace TouchSocket.WebApi.Swagger
                     .SetStatus()
                     .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
                     .SetContent(bytes);
-                await context.Response.AnswerAsync().ConfigureFalseAwait();
+                await context.Response.AnswerAsync().ConfigureAwait(false);
                 return;
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private OpenApiDataTypes ParseDataTypes(Type type)

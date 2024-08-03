@@ -18,7 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 发送事件
     /// </summary>
-    public class SendingEventArgs : MsgPermitEventArgs
+    public class SendingEventArgs : PluginEventArgs
     {
         /// <summary>
         /// 构造函数
@@ -26,9 +26,8 @@ namespace TouchSocket.Sockets
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        public SendingEventArgs(ReadOnlyMemory<byte> memory)
+        public SendingEventArgs(in ReadOnlyMemory<byte> memory)
         {
-            this.IsPermitOperation = true;
             this.Memory = memory;
         }
 

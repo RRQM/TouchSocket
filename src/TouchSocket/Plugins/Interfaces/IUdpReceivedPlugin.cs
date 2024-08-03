@@ -26,6 +26,6 @@ namespace TouchSocket.Sockets
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnUdpReceived(IUdpSession client, UdpReceivedDataEventArgs e);
+        Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e);
     }
 }

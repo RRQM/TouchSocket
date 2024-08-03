@@ -87,7 +87,7 @@ namespace TouchSocket.JsonRpc
 
                 var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
                 httpResponse.FromJson(str);
-                await httpResponse.AnswerAsync().ConfigureFalseAwait();
+                await httpResponse.AnswerAsync().ConfigureAwait(false);
             }
             catch
             {
@@ -101,11 +101,11 @@ namespace TouchSocket.JsonRpc
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context)).ConfigureFalseAwait();
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context)).ConfigureAwait(false);
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
     }
 }

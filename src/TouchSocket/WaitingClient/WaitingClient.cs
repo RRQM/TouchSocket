@@ -106,7 +106,7 @@ namespace TouchSocket.Sockets
 
         public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
-            await this.m_semaphoreSlim.WaitAsync(token).ConfigureFalseAwait();
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
 
             try
             {
@@ -114,7 +114,7 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureFalseAwait();
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
 
                         while (true)
                         {
@@ -141,10 +141,10 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        await this.Client.SendAsync(memory).ConfigureFalseAwait();
+                        await this.Client.SendAsync(memory).ConfigureAwait(false);
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureFalseAwait())
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
                                 if (receiverResult.IsCompleted)
                                 {
@@ -176,7 +176,7 @@ namespace TouchSocket.Sockets
 
         public async Task<byte[]> SendThenReturnAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
         {
-            return (await this.SendThenResponseAsync(memory, token).ConfigureFalseAwait()).Data;
+            return (await this.SendThenResponseAsync(memory, token).ConfigureAwait(false)).Data;
         }
 
         #endregion 发送

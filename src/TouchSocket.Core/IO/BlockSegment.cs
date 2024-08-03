@@ -53,7 +53,7 @@ namespace TouchSocket.Core
             ThreadPool.UnsafeQueueUserWorkItem(Run, state);
         }
 
-        public override IBlockResult<T> GetResult()
+        protected override IBlockResult<T> GetResult()
         {
             return this.m_result;
         }
@@ -62,7 +62,7 @@ namespace TouchSocket.Core
         {
             this.m_result.Memory = memory;
             this.Complete(false);
-            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureFalseAwait();
+            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(false);
         }
 
         protected async Task Complete(string msg)
@@ -71,7 +71,7 @@ namespace TouchSocket.Core
             {
                 this.m_result.IsCompleted = true;
                 this.m_result.Message = msg;
-                await this.InputAsync(default).ConfigureFalseAwait();
+                await this.InputAsync(default).ConfigureAwait(false);
             }
             catch
             {

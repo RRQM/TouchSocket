@@ -137,23 +137,23 @@ namespace TouchSocket.Http.WebSockets
 
             if (this.m_dataFrameTemp == null)
             {
-                await this.SplitPackageAsync(buffer, 0, r).ConfigureFalseAwait();
+                await this.SplitPackageAsync(buffer, 0, r).ConfigureAwait(false);
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
                     this.m_dataFrameTemp = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureFalseAwait();
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
                     this.m_dataFrameTemp = null;
-                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureFalseAwait();
+                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureAwait(false);
                 }
                 else
                 {
@@ -183,7 +183,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory.Span, dataFrame.MaskingKey);
                 }
-                await this.GoReceivedAsync(null, dataFrame).ConfigureFalseAwait();
+                await this.GoReceivedAsync(null, dataFrame).ConfigureAwait(false);
             }
             finally
             {
@@ -220,7 +220,7 @@ namespace TouchSocket.Http.WebSockets
                         {
                             if (dataFrame.PayloadLength == dataFrame.PayloadData.Length)
                             {
-                                await this.PreviewHandle(dataFrame).ConfigureFalseAwait();
+                                await this.PreviewHandle(dataFrame).ConfigureAwait(false);
                             }
                             else
                             {

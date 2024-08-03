@@ -107,7 +107,7 @@ namespace TouchSocket.Sockets
             this.m_receiverResult.EndPoint = remoteEndPoint;
 
             this.Complete(false);
-            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureFalseAwait();
+            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(false);
         }
 
         public async Task Complete(string msg)
@@ -116,7 +116,7 @@ namespace TouchSocket.Sockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceive(default, default, default).ConfigureFalseAwait();
+                await this.InputReceive(default, default, default).ConfigureAwait(false);
             }
             catch
             {
@@ -164,7 +164,7 @@ namespace TouchSocket.Sockets
             ThreadPool.UnsafeQueueUserWorkItem(Run, state);
         }
 
-        public override IUdpReceiverResult GetResult()
+        protected override IUdpReceiverResult GetResult()
         {
             if (this.m_cacheMode)
             {

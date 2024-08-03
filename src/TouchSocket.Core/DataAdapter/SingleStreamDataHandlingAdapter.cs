@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -70,7 +69,7 @@ namespace TouchSocket.Core
         {
             try
             {
-                await this.PreviewReceivedAsync(byteBlock).ConfigureFalseAwait();
+                await this.PreviewReceivedAsync(byteBlock).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -113,7 +112,7 @@ namespace TouchSocket.Core
         /// <param name="requestInfo"></param>
         protected virtual async Task PreviewSendAsync(IRequestInfo requestInfo)
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo,nameof(requestInfo));
+            ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
 
             var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
 
@@ -121,7 +120,7 @@ namespace TouchSocket.Core
             try
             {
                 requestInfoBuilder.Build(ref byteBlock);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
             }
             finally
             {
@@ -165,11 +164,7 @@ namespace TouchSocket.Core
         /// <param name="requestInfo">以解析实例传递</param>
         protected virtual Task GoReceivedAsync(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.ReceivedAsyncCallBack == null)
-            {
-                return EasyTask.CompletedTask;
-            }
-            return this.ReceivedAsyncCallBack.Invoke(byteBlock, requestInfo);
+            return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(byteBlock, requestInfo);
         }
 
         /// <summary>
@@ -179,11 +174,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         protected virtual Task GoSendAsync(ReadOnlyMemory<byte> memory)
         {
-            if (this.SendAsyncCallBack == null)
-            {
-                return EasyTask.CompletedTask;
-            }
-            return this.SendAsyncCallBack.Invoke(memory);
+            return this.SendAsyncCallBack == null ? EasyTask.CompletedTask : this.SendAsyncCallBack.Invoke(memory);
         }
 
         /// <summary>

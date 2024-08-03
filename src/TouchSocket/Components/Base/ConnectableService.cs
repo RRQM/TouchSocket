@@ -74,7 +74,7 @@ namespace TouchSocket.Sockets
             }
             catch (Exception ex)
             {
-                this.Logger.Exception(ex);
+                this.Logger?.Exception(ex);
             }
             return this.GetDefaultNewId();
         }

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Reflection;
 using System.Text;
 using TouchSocket.Core;
 
@@ -85,11 +84,7 @@ namespace TouchSocket.Http.WebSockets
         {
             get
             {
-                if (this.m_payloadLength != 0)
-                {
-                    return this.m_payloadLength;
-                }
-                return this.PayloadData != null ? this.PayloadData.Length : 0;
+                return this.m_payloadLength != 0 ? this.m_payloadLength : this.PayloadData != null ? this.PayloadData.Length : 0;
             }
 
             set => this.m_payloadLength = value;
@@ -112,16 +107,7 @@ namespace TouchSocket.Http.WebSockets
 
         public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
-            ReadOnlyMemory<byte> memory;
-            if (this.PayloadData == null)
-            {
-                memory = ReadOnlyMemory<byte>.Empty;
-            }
-            else
-            {
-                memory = this.PayloadData.Memory;
-            }
-
+            var memory = this.PayloadData == null ? ReadOnlyMemory<byte>.Empty : this.PayloadData.Memory;
             int payloadLength;
 
             Span<byte> extLen = stackalloc byte[8];
@@ -214,8 +200,8 @@ namespace TouchSocket.Http.WebSockets
 
         #region UnfixedHeader
 
-        long IBigUnfixedHeaderRequestInfo.BodyLength => m_payloadLength;
-        int IBigUnfixedHeaderRequestInfo.HeaderLength => m_headerLength;
+        long IBigUnfixedHeaderRequestInfo.BodyLength => this.m_payloadLength;
+        int IBigUnfixedHeaderRequestInfo.HeaderLength => this.m_headerLength;
 
         void IBigUnfixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
         {

@@ -21,6 +21,6 @@ namespace TouchSocket.SerialPorts
     /// </summary>
     public interface ISerialSendingPlugin : IPlugin
     {
-        Task OnSerialSending(ISerialPortClient client, SendingEventArgs e);
+        Task OnSerialSending(ISerialPortSession client, SendingEventArgs e);
     }
 }

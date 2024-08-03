@@ -22,7 +22,7 @@ namespace TouchSocket.Core
             return new MemoryStream(byteBlock.ReadBytesPackage());
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in MemoryStream obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in MemoryStream obj)
         {
 #if !NET45
             if (obj.TryGetBuffer(out var array))

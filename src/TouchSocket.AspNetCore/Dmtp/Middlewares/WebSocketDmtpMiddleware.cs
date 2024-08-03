@@ -57,11 +57,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             if (context.Request.Path.Equals(this.Url, StringComparison.OrdinalIgnoreCase))
             {
-                await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureFalseAwait();
+                await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureAwait(false);
             }
             else
             {
-                await this.m_next(context).ConfigureFalseAwait();
+                await this.m_next(context).ConfigureAwait(false);
             }
         }
     }

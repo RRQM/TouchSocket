@@ -21,6 +21,6 @@ namespace TouchSocket.SerialPorts
     /// </summary>
     public interface ISerialConnectedPlugin : IPlugin
     {
-        Task OnSerialConnected(ISerialPortClient client, ConnectedEventArgs e);
+        Task OnSerialConnected(ISerialPortSession client, ConnectedEventArgs e);
     }
 }

@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -208,7 +207,7 @@ namespace TouchSocket.Http
 
         private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
-            var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureFalseAwait();
+            var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureAwait(false);
             if (this.m_filesPool.TryFindEntry(url, out var staticEntry))
             {
                 var request = e.Context.Request;
@@ -245,22 +244,22 @@ namespace TouchSocket.Http
                 }
                 if (this.ResponseAction != null)
                 {
-                    await this.ResponseAction.Invoke(e.Context).ConfigureFalseAwait();
+                    await this.ResponseAction.Invoke(e.Context).ConfigureAwait(false);
                 }
 
                 if (staticEntry.IsCacheBytes)
                 {
-                    await response.AnswerAsync().ConfigureFalseAwait();
+                    await response.AnswerAsync().ConfigureAwait(false);
                 }
                 else
                 {
-                    await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureFalseAwait();
+                    await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureAwait(false);
                 }
                 e.Handled = true;
             }
             else
             {
-                await e.InvokeNext().ConfigureFalseAwait();
+                await e.InvokeNext().ConfigureAwait(false);
             }
         }
     }

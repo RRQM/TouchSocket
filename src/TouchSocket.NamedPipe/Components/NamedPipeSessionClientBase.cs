@@ -114,12 +114,12 @@ namespace TouchSocket.NamedPipe
             this.m_receiveTask =Task.Factory.StartNew(this.BeginReceive, TaskCreationOptions.LongRunning).Unwrap();
             this.m_receiveTask.FireAndForget();
 
-            await this.OnNamedPipeConnected(e).ConfigureFalseAwait();
+            await this.OnNamedPipeConnected(e).ConfigureAwait(false);
         }
 
         internal async Task InternalNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.OnNamedPipeConnecting(e).ConfigureFalseAwait();
+            await this.OnNamedPipeConnecting(e).ConfigureAwait(false);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
@@ -175,7 +175,7 @@ namespace TouchSocket.NamedPipe
         {
             if (this.m_online)
             {
-                await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureFalseAwait();
+                await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
                 this.m_pipeStream.Close();
                 this.Abort(true, msg);
             }
@@ -222,9 +222,9 @@ namespace TouchSocket.NamedPipe
         /// 处理已接收到的数据。
         /// <para>根据不同的数据处理适配器，会传递不同的数据</para>
         /// </summary>
-        protected virtual Task OnNamedPipeReceived(ReceivedDataEventArgs e)
+        protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -234,7 +234,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
         {
-            return EasyValueTask.FromResult(false);
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>返回值表示是否允许发送</returns>
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
-            return EasyValueTask.FromResult(true);
+          return  this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace TouchSocket.NamedPipe
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, newId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureFalseAwait();
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
@@ -286,7 +286,7 @@ namespace TouchSocket.NamedPipe
                     }
                     else
                     {
-                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureFalseAwait();
+                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
                     }
                 }
             }
@@ -347,7 +347,7 @@ namespace TouchSocket.NamedPipe
                         }
 
                         byteBlock.SetLength(r);
-                        await this.HandleReceivingData(byteBlock).ConfigureFalseAwait();
+                        await this.HandleReceivingData(byteBlock).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -372,35 +372,35 @@ namespace TouchSocket.NamedPipe
         /// 客户端已断开连接。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeClosed(ClosedEventArgs e)
+        protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeClosing(ClosingEventArgs e)
+        protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 当客户端完整建立Tcp连接。
+        /// 当客户端完整建立连接。
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeConnected(ConnectedEventArgs e)
+        protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 客户端正在连接。
         /// </summary>
-        protected virtual Task OnNamedPipeConnecting(ConnectingEventArgs e)
+        protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureAwait(false);
         }
 
         private int GetReceiveBufferSize()
@@ -416,9 +416,9 @@ namespace TouchSocket.NamedPipe
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.Complete(e.Message).ConfigureFalseAwait();
+                await receiver.Complete(e.Message).ConfigureAwait(false);
             }
-            await this.OnNamedPipeClosed(e).ConfigureFalseAwait();
+            await this.OnNamedPipeClosed(e).ConfigureAwait(false);
         }
 
         private Task PrivateOnNamedPipeClosing(ClosingEventArgs e)
@@ -462,16 +462,16 @@ namespace TouchSocket.NamedPipe
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureFalseAwait();
+                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureFalseAwait();
+                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
+                this.Logger?.Log(LogLevel.Error, this, "在处理数据时发生错误", ex);
             }
         }
 
@@ -484,10 +484,10 @@ namespace TouchSocket.NamedPipe
         {
             if (this.m_receiver != null)
             {
-                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureFalseAwait();
+                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureAwait(false);
                 return;
             }
-            await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureFalseAwait();
+            await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
         }
 
         #region Throw
@@ -516,126 +516,30 @@ namespace TouchSocket.NamedPipe
 
         #region 直接发送
 
-        ///// <inheritdoc/>
-        //protected void ProtectedDefaultSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThrowIfDisposed();
-        //    this.ThrowIfClientNotConnected();
-        //    if (this.OnNamedPipeSending(buffer, offset, length).GetFalseAwaitResult())
-        //    {
-        //        try
-        //        {
-        //            this.m_semaphoreSlimForSend.Wait();
-        //            this.m_pipeStream.Write(buffer, offset, length);
-        //            this.LastSendTime = DateTime.Now;
-        //        }
-        //        finally
-        //        {
-        //            this.m_semaphoreSlimForSend.Release();
-        //        }
-        //    }
-        //}
-
         /// <inheritdoc/>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfDisposed();
             this.ThrowIfClientNotConnected();
-            if (await this.OnNamedPipeSending(memory).ConfigureAwait(false))
+            await this.OnNamedPipeSending(memory).ConfigureAwait(false);
+            try
             {
-                try
-                {
-                    await this.m_semaphoreSlimForSend.WaitAsync();
+                await this.m_semaphoreSlimForSend.WaitAsync();
 #if NET6_0_OR_GREATER
                     await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
 #else
-                    var segment = memory.GetArray();
-                    await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureFalseAwait();
+                var segment = memory.GetArray();
+                await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
 #endif
-                    this.LastSentTime = DateTime.Now;
-                }
-                finally
-                {
-                    this.m_semaphoreSlimForSend.Release();
-                }
+                this.LastSentTime = DateTime.Now;
+            }
+            finally
+            {
+                this.m_semaphoreSlimForSend.Release();
             }
         }
 
         #endregion 直接发送
-
-        //#region 同步发送
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected void ProtectedSend(IRequestInfo requestInfo)
-        //{
-        //    this.ThrowIfCannotSendRequestInfo();
-        //    this.m_dataHandlingAdapter.SendInput(requestInfo);
-        //}
-
-        ///// <summary>
-        ///// 发送字节流
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected void ProtectedSend(byte[] buffer, int offset, int length)
-        //{
-        //    if (this.m_dataHandlingAdapter == null)
-        //    {
-        //        this.ProtectedDefaultSend(buffer, offset, length);
-        //    }
-        //    else
-        //    {
-        //        this.m_dataHandlingAdapter.SendInput(buffer, offset, length);
-        //    }
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //protected void ProtectedSend(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
-        //    {
-        //        var length = 0;
-        //        foreach (var item in transferBytes)
-        //        {
-        //            length += item.Count;
-        //        }
-        //        using (var byteBlock = new ByteBlock(length))
-        //        {
-        //            foreach (var item in transferBytes)
-        //            {
-        //                byteBlock.Write(item.Array, item.Offset, item.Count);
-        //            }
-
-        //            if (this.m_dataHandlingAdapter == null)
-        //            {
-        //                this.ProtectedDefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
-        //            }
-        //            else
-        //            {
-        //                this.m_dataHandlingAdapter.SendInput(byteBlock.Buffer, 0, byteBlock.Len);
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        this.m_dataHandlingAdapter.SendInput(transferBytes);
-        //    }
-        //}
-
-        //#endregion 同步发送
 
         #region 异步发送
 
@@ -648,7 +552,7 @@ namespace TouchSocket.NamedPipe
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
+        protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
             if (this.m_dataHandlingAdapter == null)
             {
@@ -667,7 +571,7 @@ namespace TouchSocket.NamedPipe
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(IRequestInfo requestInfo)
+        protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
         {
             this.ThrowIfCannotSendRequestInfo();
             return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
@@ -696,17 +600,17 @@ namespace TouchSocket.NamedPipe
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureFalseAwait();
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }
 

@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await c.ConnectAsync().ConfigureFalseAwait();
+                    await c.ConnectAsync().ConfigureAwait(false);
                     return true;
                 }
                 catch
@@ -80,7 +80,7 @@ namespace TouchSocket.Sockets
         {
             this.ActionForCheck = async (c, i) =>
             {
-                await EasyTask.CompletedTask.ConfigureFalseAwait();
+                await EasyTask.CompletedTask.ConfigureAwait(false);
                 return actionForCheck.Invoke(c, i);
             };
             return this;
@@ -121,8 +121,8 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            await Task.Delay(1000).ConfigureFalseAwait();
-                            await client.ConnectAsync().ConfigureFalseAwait();
+                            await Task.Delay(1000).ConfigureAwait(false);
+                            await client.ConnectAsync().ConfigureAwait(false);
                         }
 
                         successCallback?.Invoke(client);
@@ -130,7 +130,7 @@ namespace TouchSocket.Sockets
                     }
                     catch (Exception ex)
                     {
-                        await Task.Delay(sleepTime).ConfigureFalseAwait();
+                        await Task.Delay(sleepTime).ConfigureAwait(false);
                         if (failCallback?.Invoke(client, ++tryT, ex) != true)
                         {
                             return true;
@@ -164,8 +164,8 @@ namespace TouchSocket.Sockets
                         }
                         else
                         {
-                            await Task.Delay(1000).ConfigureFalseAwait();
-                            await client.ConnectAsync().ConfigureFalseAwait();
+                            await Task.Delay(1000).ConfigureAwait(false);
+                            await client.ConnectAsync().ConfigureAwait(false);
                         }
                         successCallback?.Invoke(client);
                         return true;
@@ -174,9 +174,9 @@ namespace TouchSocket.Sockets
                     {
                         if (printLog)
                         {
-                            client.Logger.Exception(ex);
+                            client.Logger?.Exception(ex);
                         }
-                        await Task.Delay(sleepTime).ConfigureFalseAwait();
+                        await Task.Delay(sleepTime).ConfigureAwait(false);
                     }
                 }
                 return true;
@@ -212,15 +212,19 @@ namespace TouchSocket.Sockets
             pluginManager.Add<IConfigObject, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
         }
 
-        private async Task BeginReconnect(TClient client)
+        private async Task BeginReconnect(object sender)
         {
             if (!this.m_polling)
             {
                 return;
             }
-            var failCount = 0;
 
-            await Task.Yield();
+            if (sender is not TClient client)
+            {
+                return;
+            }
+
+            var failCount = 0;
 
             while (true)
             {
@@ -228,17 +232,17 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-                await Task.Delay(this.Tick).ConfigureFalseAwait();
+                await Task.Delay(this.Tick).ConfigureAwait(false);
                 try
                 {
-                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureFalseAwait();
+                    var b = await this.ActionForCheck.Invoke(client, failCount).ConfigureAwait(false);
                     if (b == null)
                     {
                         continue;
                     }
                     else if (b == false)
                     {
-                        if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
+                        if (await this.ActionForConnect.Invoke(client).ConfigureAwait(false))
                         {
                             failCount = 0;
                         }
@@ -256,7 +260,7 @@ namespace TouchSocket.Sockets
 
         private async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
-            this.m_beginReconnectTask= Task.Run(()=>this.BeginReconnect((TClient)sender));
+            this.m_beginReconnectTask= Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
 
             await e.InvokeNext();
         }
@@ -267,7 +271,7 @@ namespace TouchSocket.Sockets
         {
             if (disposing)
             {
-                this.m_beginReconnectTask.GetFalseAwaitResult();
+                this.m_beginReconnectTask.Dispose();
             }
             base.Dispose(disposing);
         }

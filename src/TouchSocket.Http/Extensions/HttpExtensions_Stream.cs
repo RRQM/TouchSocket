@@ -11,10 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -25,7 +22,7 @@ namespace TouchSocket.Http
     {
         public static Stream CreateWriteStream<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
-           return new InternalWriteStream(response);
+            return new InternalWriteStream(response);
         }
 
         #region Class
@@ -42,7 +39,7 @@ namespace TouchSocket.Http
 
             public override bool CanSeek => false;
 
-            public override bool CanWrite => m_httpResponse.CanWrite;
+            public override bool CanWrite => this.m_httpResponse.CanWrite;
 
             public override long Length => throw new NotImplementedException();
 
@@ -75,7 +72,7 @@ namespace TouchSocket.Http
 
             public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count)).ConfigureFalseAwait();
+                await this.m_httpResponse.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count)).ConfigureAwait(false);
             }
         }
 

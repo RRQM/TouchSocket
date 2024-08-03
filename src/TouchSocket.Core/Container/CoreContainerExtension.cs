@@ -663,11 +663,7 @@ namespace TouchSocket.Core
                     }
                 }
             }
-            if (ps == null || ps.Length == 0)
-            {
-                return Activator.CreateInstance(fromType);
-            }
-            return Activator.CreateInstance(fromType, ps);
+            return ps == null || ps.Length == 0 ? Activator.CreateInstance(fromType) : Activator.CreateInstance(fromType, ps);
         }
 
         /// <summary>
@@ -689,11 +685,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
         {
-            if (resolver.IsRegistered(fromType))
-            {
-                return resolver.Resolve(fromType);
-            }
-            return default;
+            return resolver.IsRegistered(fromType) ? resolver.Resolve(fromType) : default;
         }
 
         /// <summary>
@@ -705,11 +697,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
         {
-            if (resolver.IsRegistered(fromType))
-            {
-                return resolver.Resolve(fromType, key);
-            }
-            return default;
+            return resolver.IsRegistered(fromType) ? resolver.Resolve(fromType, key) : default;
         }
 
         /// <summary>

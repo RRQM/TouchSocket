@@ -11,16 +11,13 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
-    internal sealed class WebSocketReconnectionPlugin<TClient>:ReconnectionPlugin<TClient> where TClient :IWebSocketClient
+    internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> where TClient : IWebSocketClient
     {
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -35,12 +32,18 @@ namespace TouchSocket.Http.WebSockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<TClient, ClosedEventArgs>(typeof(IWebSocketClosedPlugin), this.OnClosed);
+            pluginManager.Add<IWebSocket, ClosedEventArgs>(typeof(IWebSocketClosedPlugin), this.OnClosed);
         }
 
-        private async Task OnClosed(TClient client, ClosedEventArgs e)
+        private async Task OnClosed(IWebSocket client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
+
+            if (client is not TClient tClient)
+            {
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
                 if (e.Manual)
@@ -50,7 +53,7 @@ namespace TouchSocket.Http.WebSockets
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;
                     }

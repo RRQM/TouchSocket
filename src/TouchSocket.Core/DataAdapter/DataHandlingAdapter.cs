@@ -44,7 +44,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfMoreThanMaxPackageSize(int length)
         {
-            if (length>this.MaxPackageSize)
+            if (length > this.MaxPackageSize)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(length), length, this.MaxPackageSize);
             }
@@ -84,7 +84,7 @@ namespace TouchSocket.Core
             }
             if (log)
             {
-                this.Logger?.Exception(this,error,ex);
+                this.Logger?.Exception(this, error, ex);
             }
         }
 
