@@ -27,7 +27,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP基类服务器。
     /// </summary>
-    public abstract class UdpSessionBase : ServiceBase, IClient
+    public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         #region 字段
         private ServerState m_serverState;
@@ -175,12 +175,12 @@ namespace TouchSocket.Sockets
 
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
                 throw;
             }
         }
@@ -191,14 +191,14 @@ namespace TouchSocket.Sockets
             this.m_monitor?.Socket.Dispose();
             this.m_monitor = null;
             this.m_serverState = ServerState.Stopped;
-            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureFalseAwait();
+            await Task.WhenAll(this.m_receiveTasks.ToArray()).ConfigureAwait(false);
             this.m_receiveTasks.Clear();
 
             if (this.m_receiver != null)
             {
-                await this.m_receiver.Complete(default).ConfigureFalseAwait();
+                await this.m_receiver.Complete(default).ConfigureAwait(false);
             }
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -220,20 +220,20 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 处理已接收到的数据。
         /// </summary>
-        protected virtual Task OnUdpReceived(UdpReceivedDataEventArgs e)
+        protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
         /// </summary>
         /// <param name="endPoint"></param>
-        /// <param name="memory">数据缓存区</param>
-        /// <returns>返回值表示是否允许发送</returns>
+        /// <param name="memory"></param>
+        /// <returns></returns>
         protected virtual ValueTask<bool> OnUdpSending(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            return EasyValueTask.FromResult(true);
+            return this.PluginManager.RaiseAsync(typeof(IUdpSendingPlugin), this, new UdpSendingEventArgs(memory, endPoint));
         }
 
         /// <summary>
@@ -389,22 +389,22 @@ namespace TouchSocket.Sockets
                             if (result.BytesTransferred > 0)
                             {
                                 byteBlock.SetLength(result.BytesTransferred);
-                                await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureFalseAwait();
+                                await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(false);
                             }
                             else if (result.HasError)
                             {
-                                this.Logger.Error(this, result.SocketError.Message);
+                                this.Logger?.Error(this, result.SocketError.Message);
                                 return;
                             }
                             else
                             {
-                                this.Logger.Error(this, TouchSocketCoreResource.UnknownError);
+                                this.Logger?.Error(this, TouchSocketCoreResource.UnknownError);
                                 return;
                             }
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Exception(ex);
+                            this.Logger?.Exception(ex);
                             return;
                         }
                     }
@@ -430,16 +430,16 @@ namespace TouchSocket.Sockets
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureFalseAwait();
+                    await this.PrivateHandleReceivedData(remoteEndPoint, byteBlock, default).ConfigureAwait(false);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureFalseAwait();
+                    await this.m_dataHandlingAdapter.ReceivedInput(remoteEndPoint, byteBlock).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                this.Logger.Exception(ex);
+                this.Logger?.Exception(ex);
             }
         }
 
@@ -457,10 +457,10 @@ namespace TouchSocket.Sockets
         {
             if (this.m_receiver != null)
             {
-                await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureFalseAwait();
+                await this.m_semaphoreSlimForReceiver.WaitAsync().ConfigureAwait(false);
                 try
                 {
-                    await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureFalseAwait();
+                    await this.m_receiver.InputReceive(remoteEndPoint, byteBlock, requestInfo).ConfigureAwait(false);
                     return;
                 }
                 finally
@@ -468,7 +468,7 @@ namespace TouchSocket.Sockets
                     this.m_semaphoreSlimForReceiver.Release();
                 }
             }
-            await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureFalseAwait();
+            await this.OnUdpReceived(new UdpReceivedDataEventArgs(remoteEndPoint, byteBlock, requestInfo)).ConfigureAwait(false);
         }
 
         #region Throw
@@ -476,7 +476,7 @@ namespace TouchSocket.Sockets
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThorwIfRemoteIPHostNull()
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost,nameof(this.RemoteIPHost));
+            ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -599,7 +599,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected virtual Task ProtectedSendAsync(EndPoint endPoint,ReadOnlyMemory<byte> memory)
+        protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             return this.m_dataHandlingAdapter == null
                 ? this.ProtectedDefaultSendAsync(endPoint, memory)
@@ -615,35 +615,6 @@ namespace TouchSocket.Sockets
 
         #endregion 向设置的远程异步发送
 
-        //#region DefaultSend
-
-        ///// <inheritdoc/>
-        //protected void ProtectedDefaultSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThorwIfCannotSend();
-        //    this.ThorwIfRemoteIPHostNull();
-        //    this.ProtectedDefaultSend(this.RemoteIPHost.EndPoint, buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        //protected void ProtectedDefaultSend(EndPoint endPoint, byte[] buffer, int offset, int length)
-        //{
-        //    this.ThorwIfCannotSend();
-        //    this.ThrowIfDisposed();
-        //    if (this.SendingData(endPoint, buffer, offset, length).GetFalseAwaitResult())
-        //    {
-        //        this.m_monitor.Socket.SendTo(buffer, offset, length, SocketFlags.None, endPoint);
-        //        this.m_lastSendTime = DateTime.Now;
-        //    }
-        //}
-
-        //#endregion DefaultSend
 
         #region DefaultSendAsync
 
@@ -657,7 +628,7 @@ namespace TouchSocket.Sockets
         {
             this.ThorwIfCannotSend();
             this.ThorwIfRemoteIPHostNull();
-            await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureFalseAwait();
+            await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -669,12 +640,10 @@ namespace TouchSocket.Sockets
         protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfDisposed();
-            ThorwIfCannotSend();
-            if (await this.OnUdpSending(endPoint, memory).ConfigureAwait(false))
-            {
-                await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
-                this.m_lastSendTime = DateTime.Now;
-            }
+            this.ThorwIfCannotSend();
+            await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
+            await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
+            this.m_lastSendTime = DateTime.Now;
         }
 #else
 
@@ -683,22 +652,19 @@ namespace TouchSocket.Sockets
             this.ThorwIfCannotSend();
             this.ThrowIfDisposed();
 
-            if (await this.OnUdpSending(endPoint, memory).ConfigureAwait(false))
+            await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
+            if (MemoryMarshal.TryGetArray(memory, out var segment))
             {
-                if (MemoryMarshal.TryGetArray(memory, out var segment))
-                {
-                    this.Monitor.Socket.SendTo(segment.Array, segment.Offset, segment.Count, SocketFlags.None, endPoint);
-                }
-                else
-                {
-                    var array = memory.ToArray();
+                this.Monitor.Socket.SendTo(segment.Array, segment.Offset, segment.Count, SocketFlags.None, endPoint);
+            }
+            else
+            {
+                var array = memory.ToArray();
 
-                    this.Monitor.Socket.SendTo(array, 0, array.Length, SocketFlags.None, endPoint);
-                }
+                this.Monitor.Socket.SendTo(array, 0, array.Length, SocketFlags.None, endPoint);
             }
-                
-                this.m_lastSendTime = DateTime.Now;
-            }
+            this.m_lastSendTime = DateTime.Now;
+        }
 
 #endif
 
@@ -786,17 +752,17 @@ namespace TouchSocket.Sockets
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
+                        await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
+                        await this.m_dataHandlingAdapter.SendInputAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureFalseAwait();
+                await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureAwait(false);
             }
         }
 

@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
-    internal class PluginModel: List<Func<object, PluginEventArgs, Task>>
+    internal class PluginModel : List<Func<object, PluginEventArgs, Task>>
     {
     }
 }

@@ -191,7 +191,7 @@ namespace TouchSocket.Core
                 if (this.Cache)
                 {
                     var r = (int)Math.Min(this.m_fileData.Length - stratPos, span.Length);
-                    Unsafe.CopyBlock(ref span[0],ref this.m_fileData[stratPos], (uint)r);
+                    Unsafe.CopyBlock(ref span[0], ref this.m_fileData[stratPos], (uint)r);
                     return r;
                 }
                 else

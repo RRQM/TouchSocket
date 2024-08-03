@@ -22,7 +22,7 @@ namespace TouchSocket.Core
         /// <para>重写的话，约定基类方法必须先执行</para>
         /// </summary>
         /// <param name="byteBlock"></param>
-        void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock:IByteBlock;
+        void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 
         /// <summary>
         /// 解包。

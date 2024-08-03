@@ -32,14 +32,9 @@ namespace TouchSocket.Http.WebSockets
         public ValueTask<IWebSocketReceiveResult> ValueReadAsync(CancellationToken token)
         {
             this.ThrowIfNotAllowAsyncRead();
-            if (this.m_receiverResult.IsCompleted)
-            {
-                return EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult);
-            }
-            else
-            {
-                return this.ValueWaitAsync(token);
-            }
+            return this.m_receiverResult.IsCompleted
+                ? EasyValueTask.FromResult<IWebSocketReceiveResult>(this.m_receiverResult)
+                : this.ValueWaitAsync(token);
         }
 
         private void ThrowIfNotAllowAsyncRead()
@@ -59,7 +54,7 @@ namespace TouchSocket.Http.WebSockets
             ThreadPool.UnsafeQueueUserWorkItem(Run, state);
         }
 
-        public override IWebSocketReceiveResult GetResult()
+        protected override IWebSocketReceiveResult GetResult()
         {
             return this.m_receiverResult;
         }
@@ -77,7 +72,7 @@ namespace TouchSocket.Http.WebSockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceiveAsync(default).ConfigureFalseAwait();
+                await this.InputReceiveAsync(default).ConfigureAwait(false);
             }
             catch
             {

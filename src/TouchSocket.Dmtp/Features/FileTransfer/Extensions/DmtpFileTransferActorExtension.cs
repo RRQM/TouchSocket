@@ -43,7 +43,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// DmtpFileTransferActor
         /// </summary>
         public static readonly DependencyProperty<IDmtpFileTransferActor> DmtpFileTransferActorProperty =
-            DependencyProperty<IDmtpFileTransferActor>.Register("DmtpFileTransferActor", default);
+            new("DmtpFileTransferActor", default);
 
         #endregion DependencyProperty
 
@@ -108,7 +108,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
             try
             {
-                var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureFalseAwait();
+                var resourceInfoResult = await actor.PullFileResourceInfoAsync(targetId, fileOperator.ResourcePath, fileOperator.Metadata, fileOperator.FileSectionSize, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
                 if (resourceInfoResult.NotSuccess())
                 {
                     return fileOperator.SetResult(new Result(resourceInfoResult));
@@ -159,7 +159,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                          }
                          try
                          {
-                             using (var result = await actor.PullFileSectionAsync(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureFalseAwait())
+                             using (var result = await actor.PullFileSectionAsync(targetId, fileSection, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false))
                              {
                                  if (result.IsSuccess())
                                  {
@@ -168,7 +168,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                          var res = locator.WriteFileSection(result);
                                          if (res.IsSuccess())
                                          {
-                                             await fileOperator.AddFlowAsync(fileSection.Length).ConfigureFalseAwait();
+                                             await fileOperator.AddFlowAsync(fileSection.Length).ConfigureAwait(false);
                                              failed = 0;
                                              break;
                                          }
@@ -183,7 +183,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                                      }
                                      failed++;
                                      sections.Push(fileSection);
-                                     await Task.Delay(500).ConfigureFalseAwait();
+                                     await Task.Delay(500).ConfigureAwait(false);
                                  }
                              }
                          }
@@ -191,22 +191,22 @@ namespace TouchSocket.Dmtp.FileTransfer
                          {
                              failed++;
                              failResult = new Result(ex);
-                             await Task.Delay(500).ConfigureFalseAwait();
+                             await Task.Delay(500).ConfigureAwait(false);
                          }
                      }
-                 }).ConfigureFalseAwait();
+                 }).ConfigureAwait(false);
                 if (fileOperator.Token.IsCancellationRequested)
                 {
                     if (actor.DmtpActor.Online)
                     {
-                        await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureFalseAwait();
+                        await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Canceled, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
                     }
                     return fileOperator.SetResult(Result.Canceled);
                 }
                 var result1 = locator.TryFinished();
                 if (actor.DmtpActor.Online)
                 {
-                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureFalseAwait();
+                    await actor.FinishedFileResourceInfoAsync(targetId, resourceInfo, ResultCode.Success, fileOperator.Metadata, (int)fileOperator.Timeout.TotalMilliseconds, fileOperator.Token).ConfigureAwait(false);
                 }
 
                 return result1.IsSuccess() ? fileOperator.SetResult(Result.Success) : fileOperator.SetResult(failResult);

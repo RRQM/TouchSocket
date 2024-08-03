@@ -36,9 +36,9 @@ namespace TouchSocket.Sockets
             var tcpClient = new TcpClient();
             tcpClient.Closed += this.TcpClient_Disconnected;
             tcpClient.Received += this.TcpClient_Received;
-            await tcpClient.SetupAsync(config).ConfigureFalseAwait();
+            await tcpClient.SetupAsync(config).ConfigureAwait(false);
             setupAction?.Invoke(tcpClient);
-            await tcpClient.ConnectAsync().ConfigureFalseAwait();
+            await tcpClient.ConnectAsync().ConfigureAwait(false);
 
             this.m_targetClients.Add(tcpClient);
             return tcpClient;
@@ -65,7 +65,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    await socket.SendAsync(memory).ConfigureFalseAwait();
+                    await socket.SendAsync(memory).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -84,7 +84,7 @@ namespace TouchSocket.Sockets
                 client.TryShutdown();
                 client.SafeDispose();
             }
-            await base.OnTcpClosed(e).ConfigureFalseAwait();
+            await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
         private async Task TcpClient_Disconnected(ITcpSession client, ClosedEventArgs e)
@@ -93,13 +93,13 @@ namespace TouchSocket.Sockets
             {
                 if (typeof(ReconnectionPlugin<>) == item.GetType().GetGenericTypeDefinition())
                 {
-                    await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureFalseAwait();
+                    await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureAwait(false);
                     return;
                 }
             }
             client.Dispose();
             this.m_targetClients.Remove((ITcpClient)client);
-            await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureFalseAwait();
+            await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureAwait(false);
         }
 
         private async Task TcpClient_Received(ITcpClient client, ReceivedDataEventArgs e)
@@ -111,12 +111,12 @@ namespace TouchSocket.Sockets
 
             try
             {
-                var data = await this.m_internalTargetClientRev.Invoke(this, client, e).ConfigureFalseAwait();
+                var data = await this.m_internalTargetClientRev.Invoke(this, client, e).ConfigureAwait(false);
                 if (data != null)
                 {
                     if (this.Online)
                     {
-                        await this.SendAsync(data).ConfigureFalseAwait();
+                        await this.SendAsync(data).ConfigureAwait(false);
                     }
                 }
             }

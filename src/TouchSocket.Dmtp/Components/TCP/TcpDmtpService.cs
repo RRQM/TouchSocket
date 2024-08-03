@@ -87,7 +87,7 @@ namespace TouchSocket.Dmtp
             {
                 if (this.m_findDmtpActor != null)
                 {
-                    return await this.m_findDmtpActor.Invoke(id).ConfigureFalseAwait();
+                    return await this.m_findDmtpActor.Invoke(id).ConfigureAwait(false);
                 }
                 return this.TryGetClient(id, out var client) ? client.DmtpActor : null;
             }

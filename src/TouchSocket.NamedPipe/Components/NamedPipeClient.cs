@@ -53,18 +53,17 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Closed != null)
                 {
-                    await this.Closed.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Closed.Invoke(this, e).ConfigureAwait(false);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-
-                await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureFalseAwait();
+                await base.OnNamedPipeClosed(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
             }
         }
 
@@ -76,13 +75,13 @@ namespace TouchSocket.NamedPipe
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureFalseAwait();
+            await base.OnNamedPipeClosing(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -95,18 +94,17 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Connected != null)
                 {
-                    await this.Connected.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Connected.Invoke(this, e).ConfigureAwait(false);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-
-                await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureFalseAwait();
+                await base.OnNamedPipeConnected(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
         }
 
@@ -120,18 +118,18 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Connecting != null)
                 {
-                    await this.Connecting.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Connecting.Invoke(this, e).ConfigureAwait(false);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
 
-                await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureFalseAwait();
+                await base.OnNamedPipeConnecting(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.OnNamedPipeConnecting)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.OnNamedPipeConnecting)}中发生错误。", ex);
             }
         }
 
@@ -140,13 +138,13 @@ namespace TouchSocket.NamedPipe
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureFalseAwait();
+            await base.OnNamedPipeReceived(e).ConfigureAwait(false);
         }
 
         #endregion 事件
@@ -183,61 +181,6 @@ namespace TouchSocket.NamedPipe
         }
 
         #endregion Receiver
-
-        /// <summary>
-        /// 当收到原始数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected override async ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
-        {
-            if (this.PluginManager.GetPluginCount(typeof(INamedPipeReceivingPlugin)) > 0)
-            {
-                return await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock)).ConfigureFalseAwait();
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
-        protected override async ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
-        {
-            if (this.PluginManager.GetPluginCount(typeof(INamedPipeSendingPlugin)) == 0)
-            {
-                return true;
-            }
-            var args = new SendingEventArgs(memory);
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, args)
-                 .ConfigureFalseAwait();
-            return args.IsPermitOperation;
-        }
-
-        //#region 同步发送
-
-        ///// <inheritdoc/>
-        //public virtual void 123Send(IRequestInfo requestInfo)
-        //{
-        //    this.ProtectedSend(requestInfo);
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual void 123Send(byte[] buffer, int offset, int length)
-        //{
-        //    this.ProtectedSend(buffer, offset, length);
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual void 123Send(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ProtectedSend(transferBytes);
-        //}
-
-        //#endregion 同步发送
 
         #region 异步发送
 

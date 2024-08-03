@@ -126,7 +126,7 @@ namespace TouchSocket.Http
             using (var byteBlock = new ByteBlock())
             {
                 this.Build(byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 this.Responsed = true;
             }
         }
@@ -176,7 +176,7 @@ namespace TouchSocket.Http
                 {
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{0:X}\r\n"));
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    await this.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     this.Responsed = true;
                 }
             }
@@ -238,13 +238,9 @@ namespace TouchSocket.Http
                     this.m_canRead = false;
                 }
             }
-            else if (this.ContentComplated == true)
-            {
-                return this.m_content;
-            }
             else
             {
-                return default;
+                return this.ContentComplated == true ? this.m_content : default;
             }
         }
 
@@ -307,7 +303,7 @@ namespace TouchSocket.Http
                 using (var byteBlock = new ByteBlock())
                 {
                     this.BuildHeader(byteBlock);
-                    await this.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
                 this.m_sentHeader = true;
             }
@@ -321,7 +317,7 @@ namespace TouchSocket.Http
                     byteBlock.Write(Encoding.UTF8.GetBytes($"{count:X}\r\n"));
                     byteBlock.Write(memory.Span);
                     byteBlock.Write(Encoding.UTF8.GetBytes("\r\n"));
-                    await this.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     this.m_sentLength += count;
                 }
             }
@@ -403,7 +399,7 @@ namespace TouchSocket.Http
             }
         }
 
-       
+
         private void BuildHeader(ByteBlock byteBlock)
         {
             var stringBuilder = new StringBuilder();
@@ -425,14 +421,7 @@ namespace TouchSocket.Http
 
         private Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
         {
-            if (this.m_isServer)
-            {
-                return this.m_httpSessionClient.InternalSendAsync(memory);
-            }
-            else
-            {
-                return this.m_httpClientBase.InternalSendAsync(memory);
-            }
+            return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory) : this.m_httpClientBase.InternalSendAsync(memory);
         }
 
         private void ThrowIfResponsed()

@@ -22,7 +22,7 @@ namespace TouchSocket.Core
             return SerializeConvert.BinaryDeserialize<DataSet>(byteBlock.ReadBytesPackage());
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in DataSet obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in DataSet obj)
         {
             var bytes = SerializeConvert.BinarySerialize(obj);
             byteBlock.WriteBytesPackage(bytes);

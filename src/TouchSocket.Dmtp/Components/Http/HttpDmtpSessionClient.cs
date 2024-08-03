@@ -49,10 +49,10 @@ namespace TouchSocket.Dmtp
         {
             if (this.m_dmtpActor != null)
             {
-                await this.m_dmtpActor.CloseAsync(msg).ConfigureFalseAwait();
+                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
             }
 
-            await base.CloseAsync(msg).ConfigureFalseAwait();
+            await base.CloseAsync(msg).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace TouchSocket.Dmtp
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
             await base.OnTcpClosed(e);
-            await this.OnDmtpClosed(e).ConfigureFalseAwait();
+            await this.OnDmtpClosed(e).ConfigureAwait(false);
         }
 
         #endregion 断开
@@ -88,17 +88,17 @@ namespace TouchSocket.Dmtp
         {
             if (this.m_dmtpActor == null)
             {
-                await base.ResetIdAsync(targetId).ConfigureFalseAwait();
+                await base.ResetIdAsync(targetId).ConfigureAwait(false);
                 return;
             }
-            await this.m_dmtpActor.ResetIdAsync(targetId).ConfigureFalseAwait();
+            await this.m_dmtpActor.ResetIdAsync(targetId).ConfigureAwait(false);
         }
 
         #endregion ResetId
 
         private async Task OnDmtpIdChanged(DmtpActor actor, IdChangedEventArgs e)
         {
-            await this.ProtectedResetId(e.NewId).ConfigureFalseAwait();
+            await this.ProtectedResetId(e.NewId).ConfigureAwait(false);
         }
 
         private void SetRpcActor(DmtpActor actor)
@@ -133,9 +133,9 @@ namespace TouchSocket.Dmtp
         #region Override
 
         /// <inheritdoc/>
-        protected override Task OnTcpClosing(ClosingEventArgs e)
+        protected override async Task OnTcpClosing(ClosingEventArgs e)
         {
-            return this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -149,10 +149,10 @@ namespace TouchSocket.Dmtp
             {
                 this.SetRpcActor(this.m_internalOnRpcActorInit.Invoke());
 
-                await response.SetStatus(101, "Switching Protocols").AnswerAsync().ConfigureFalseAwait();
+                await response.SetStatus(101, "Switching Protocols").AnswerAsync().ConfigureAwait(false);
                 return;
             }
-            await base.OnReceivedHttpRequest(httpContext).ConfigureFalseAwait();
+            await base.OnReceivedHttpRequest(httpContext).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -160,12 +160,12 @@ namespace TouchSocket.Dmtp
         {
             if (this.Protocol == DmtpUtility.DmtpProtocol && e.RequestInfo is DmtpMessage message)
             {
-                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureFalseAwait())
+                if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureFalseAwait();
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
                 }
             }
-            await base.OnTcpReceived(e).ConfigureFalseAwait();
+            await base.OnTcpReceived(e).ConfigureAwait(false);
         }
 
         #endregion Override
@@ -222,7 +222,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace TouchSocket.Dmtp
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件

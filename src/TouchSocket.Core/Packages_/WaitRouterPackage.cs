@@ -57,7 +57,7 @@ namespace TouchSocket.Core
             if (!this.IncludedRouter)
             {
                 this.Sign = byteBlock.ReadInt32();
-                this.Status = (byte)byteBlock.ReadByte();
+                this.Status = byteBlock.ReadByte();
             }
         }
 
@@ -68,7 +68,7 @@ namespace TouchSocket.Core
             if (this.IncludedRouter)
             {
                 this.Sign = byteBlock.ReadInt32();
-                this.Status = (byte)byteBlock.ReadByte();
+                this.Status = byteBlock.ReadByte();
             }
         }
     }

@@ -41,40 +41,34 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public ReceivedEventHandler<ITcpClient> Received { get; set; }
 
-        /// <summary>
-        /// 断开连接。在客户端未设置连接状态时，不会触发
-        /// </summary>
-        /// <param name="e"></param>
+        /// <inheritdoc/>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closed.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this, e).ConfigureFalseAwait();
+            await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
-        /// </summary>
-        /// <param name="e"></param>
+        /// <inheritdoc/>
         protected override async Task OnTcpClosing(ClosingEventArgs e)
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this, e).ConfigureFalseAwait();
+            await base.OnTcpClosing(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -82,13 +76,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Connected != null)
             {
-                await this.Connected.Invoke(this, e).ConfigureFalseAwait();
+                await this.Connected.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpConnected(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -99,13 +94,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Connecting != null)
             {
-                await this.Connecting.Invoke(this, e).ConfigureFalseAwait();
+                await this.Connecting.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpConnecting(e).ConfigureAwait(false);
         }
 
         #endregion 事件
@@ -113,9 +109,9 @@ namespace TouchSocket.Sockets
         #region Connect
 
         /// <inheritdoc/>
-        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.TcpConnectAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            return this.TcpConnectAsync(millisecondsTimeout, token);
         }
 
         #endregion Connect
@@ -144,36 +140,14 @@ namespace TouchSocket.Sockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this, e).ConfigureFalseAwait();
-        }
 
-        /// <summary>
-        /// 当收到原始数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
-        {
-            return this.PluginManager.GetPluginCount(typeof(ITcpReceivingPlugin)) > 0
-&& await this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this, new ByteBlockEventArgs(byteBlock)).ConfigureFalseAwait();
-        }
-
-       
-        protected override async ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
-        {
-            if (this.PluginManager.GetPluginCount(typeof(ITcpSendingPlugin)) > 0)
-            {
-                var args = new SendingEventArgs(memory);
-                await this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this, args).ConfigureFalseAwait();
-                return args.IsPermitOperation;
-            }
-            return true;
+            await base.OnTcpReceived(e).ConfigureAwait(false);
         }
 
         #region 异步发送

@@ -67,9 +67,9 @@ namespace TouchSocket.Modbus
             {
                 var modbusTcpRequest = new ModbusTcpRequest((ushort)sign, request);
 
-                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureFalseAwait();
+                await this.ProtectedSendAsync(modbusTcpRequest).ConfigureAwait(false);
                 waitData.SetCancellationToken(token);
-                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                var waitDataStatus = await waitData.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = waitData.WaitResult;
@@ -96,7 +96,7 @@ namespace TouchSocket.Modbus
             {
                 this.m_waitHandlePool.SetRun(response);
             }
-            await base.OnUdpReceived(e).ConfigureFalseAwait();
+            await base.OnUdpReceived(e).ConfigureAwait(false);
         }
     }
 }

@@ -11,14 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -43,8 +37,8 @@ namespace TouchSocket.Core
         {
             this.m_buffer = valueByteBlock.TotalMemory.GetArray().Array;
             this.m_bytePool = valueByteBlock.BytePool;
-            this.m_position=valueByteBlock.Position;
-            this.m_length=valueByteBlock.Length;
+            this.m_position = valueByteBlock.Position;
+            this.m_length = valueByteBlock.Length;
             this.m_dis = 1;
         }
 
@@ -201,6 +195,11 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+
             if (disposing)
             {
                 if (this.m_holding)

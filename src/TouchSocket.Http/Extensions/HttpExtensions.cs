@@ -109,12 +109,7 @@ namespace TouchSocket.Http
         public static async Task<string> GetBodyAsync(this HttpBase httpBase)
         {
             var bytes = await httpBase.GetContentAsync(CancellationToken.None);
-            if (bytes.IsEmpty)
-            {
-                return null;
-            }
-
-            return bytes.Span.ToString(Encoding.UTF8);
+            return bytes.IsEmpty ? null : bytes.Span.ToString(Encoding.UTF8);
         }
 
         /// <summary>
@@ -245,14 +240,8 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static bool UrlEquals<TRequest>(this TRequest request, string url) where TRequest : HttpRequest
         {
-            if (string.IsNullOrEmpty(request.RelativeURL) || string.IsNullOrEmpty(url))
-            {
-                return false;
-            }
-            else
-            {
-                return request.RelativeURL.Equals(url, StringComparison.CurrentCultureIgnoreCase);
-            }
+            return !string.IsNullOrEmpty(request.RelativeURL) && !string.IsNullOrEmpty(url)
+&& request.RelativeURL.Equals(url, StringComparison.CurrentCultureIgnoreCase);
         }
 
         #region 设置函数
@@ -386,12 +375,7 @@ namespace TouchSocket.Http
         {
             var acceptEncoding = request.AcceptEncoding;
 
-            if (acceptEncoding.IsNullOrEmpty())
-            {
-                return false;
-            }
-
-            return acceptEncoding.Contains("gzip");
+            return !acceptEncoding.IsNullOrEmpty() && acceptEncoding.Contains("gzip");
         }
 
         #endregion 判断属性
@@ -411,14 +395,9 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static bool IsSuccess<TResponse>(this TResponse response, int? status = default) where TResponse : HttpResponse
         {
-            if (status.HasValue)
-            {
-                return response.StatusCode == status && response.StatusCode >= 200 && response.StatusCode < 300;
-            }
-            else
-            {
-                return response.StatusCode >= 200 && response.StatusCode < 300;
-            }
+            return status.HasValue
+                ? response.StatusCode == status && response.StatusCode >= 200 && response.StatusCode < 300
+                : response.StatusCode >= 200 && response.StatusCode < 300;
         }
 
         /// <summary>
@@ -575,17 +554,17 @@ namespace TouchSocket.Http
                                 {
                                     while (true)
                                     {
-                                        var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureFalseAwait();
+                                        var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(false);
                                         if (r == 0)
                                         {
                                             gzip.Close();
-                                            await response.CompleteChunkAsync().ConfigureFalseAwait();
+                                            await response.CompleteChunkAsync().ConfigureAwait(false);
                                             break;
                                         }
 
-                                        await flowGate.AddCheckWaitAsync(r).ConfigureFalseAwait();
+                                        await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
 
-                                        await gzip.WriteAsync(buffer, 0, r,CancellationToken.None).ConfigureFalseAwait();
+                                        await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(false);
                                     }
                                 }
                             }
@@ -596,21 +575,21 @@ namespace TouchSocket.Http
                             var surLen = httpRange.Length;
                             while (surLen > 0)
                             {
-                                var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureFalseAwait();
+                                var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(false);
                                 if (r == 0)
                                 {
                                     break;
                                 }
 
-                                await flowGate.AddCheckWaitAsync(r).ConfigureFalseAwait();
+                                await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
 
-                                await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureFalseAwait();
+                                await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(false);
                                 surLen -= r;
                             }
 
                             if (response.IsChunk)
                             {
-                                await response.CompleteChunkAsync().ConfigureFalseAwait();
+                                await response.CompleteChunkAsync().ConfigureAwait(false);
                             }
                         }
                     }

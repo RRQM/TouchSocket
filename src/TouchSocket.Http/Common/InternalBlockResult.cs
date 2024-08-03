@@ -31,9 +31,9 @@ namespace TouchSocket.Http
             this.m_isCompleted = isCompleted;
         }
 
-        public ReadOnlyMemory<byte> Memory => m_segment;
+        public ReadOnlyMemory<byte> Memory => this.m_segment;
 
-        public bool IsCompleted => m_isCompleted;
+        public bool IsCompleted => this.m_isCompleted;
 
         public string Message => null;
     }

@@ -63,11 +63,11 @@ namespace TouchSocket.SerialPorts
                     }
                 }
 
-                await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this, e).ConfigureAwait(false);
+                await base.OnSerialClosed(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Closed)}中发生错误。", ex);
             }
         }
 
@@ -88,11 +88,11 @@ namespace TouchSocket.SerialPorts
                     }
                 }
 
-                await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this, e).ConfigureAwait(false);
+                await base.OnSerialClosing(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Closing)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Closing)}中发生错误。", ex);
             }
         }
 
@@ -106,17 +106,17 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Connected != null)
                 {
-                    await this.Connected.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Connected.Invoke(this, e).ConfigureAwait(false);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-                await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this, e).ConfigureFalseAwait();
+                await base.OnSerialConnected(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.Connected)}中发生错误。", ex);
             }
         }
 
@@ -130,17 +130,18 @@ namespace TouchSocket.SerialPorts
             {
                 if (this.Connecting != null)
                 {
-                    await this.Connecting.Invoke(this, e).ConfigureFalseAwait();
+                    await this.Connecting.Invoke(this, e).ConfigureAwait(false);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-                await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this, e).ConfigureFalseAwait();
+
+                await base.OnSerialConnecting(e).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                this.Logger.Log(LogLevel.Error, this, $"在事件{nameof(this.OnSerialConnecting)}中发生错误。", ex);
+                this.Logger?.Log(LogLevel.Error, this, $"在事件{nameof(this.OnSerialConnecting)}中发生错误。", ex);
             }
         }
 
@@ -149,14 +150,14 @@ namespace TouchSocket.SerialPorts
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this, e).ConfigureFalseAwait();
+            await base.OnSerialReceived(e).ConfigureAwait(false);
         }
 
         #endregion 事件

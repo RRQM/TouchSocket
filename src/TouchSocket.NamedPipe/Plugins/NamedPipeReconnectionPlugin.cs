@@ -36,12 +36,18 @@ namespace TouchSocket.NamedPipe
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<TClient, ClosedEventArgs>(typeof(INamedPipeClosedPlugin), this.OnClosed);
+            pluginManager.Add<INamedPipeSession, ClosedEventArgs>(typeof(INamedPipeClosedPlugin), this.OnClosed);
         }
 
-        private async Task OnClosed(TClient client, ClosedEventArgs e)
+        private async Task OnClosed(INamedPipeSession client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
+
+            if (client is not TClient tClient)
+            {
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
                 if (e.Manual)
@@ -51,7 +57,7 @@ namespace TouchSocket.NamedPipe
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;
                     }

@@ -73,7 +73,7 @@ namespace TouchSocket.Core
      Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}
      Gitee      :   https://gitee.com/rrqm_home
      Github     :   https://github.com/rrqm
-     API        :   http://rrqm_home.gitee.io/touchsocket/
+     API        :   https://touchsocket.net//
  -------------------------------------------------------------------
 ";
             Console.WriteLine(title);
@@ -131,7 +131,7 @@ namespace TouchSocket.Core
             {
                 try
                 {
-                    await vAction.Action.Invoke().ConfigureFalseAwait();
+                    await vAction.Action.Invoke().ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -153,7 +153,7 @@ namespace TouchSocket.Core
             while (true)
             {
                 var str = Console.ReadLine();
-                if (!await this.RunAsync(str).ConfigureFalseAwait())
+                if (!await this.RunAsync(str).ConfigureAwait(false))
                 {
                     Console.WriteLine($"没有这个指令。");
                 }

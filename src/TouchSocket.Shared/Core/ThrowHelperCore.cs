@@ -46,13 +46,13 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowArgumentOutOfRangeException_LessThan(string name, long actualValue, long min)
         {
-            throw new ArgumentOutOfRangeException(name,TouchSocketCoreResource.ValueLessThan.Format(name, actualValue, min));
+            throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueLessThan.Format(name, actualValue, min));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowArgumentOutOfRangeException_MoreThan(string name, long actualValue, long max)
         {
-            throw new ArgumentOutOfRangeException(name,TouchSocketCoreResource.ValueMoreThan.Format(name, actualValue, max));
+            throw new ArgumentOutOfRangeException(name, TouchSocketCoreResource.ValueMoreThan.Format(name, actualValue, max));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -80,9 +80,9 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowArgumentNullException(string name,string msg)
+        public static void ThrowArgumentNullException(string name, string msg)
         {
-            throw new ArgumentNullException(name,msg);
+            throw new ArgumentNullException(name, msg);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -95,7 +95,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static T ThrowArgumentNullExceptionIf<T>(T obj,[CallerMemberName] string objectName=default) where T : class
+        public static T ThrowArgumentNullExceptionIf<T>(T obj, [CallerMemberName] string objectName = default) where T : class
         {
             return obj ?? throw new ArgumentNullException(TouchSocketCoreResource.ArgumentIsNull.Format(objectName));
         }
@@ -115,7 +115,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidEnumArgumentException(Enum @enum)
         {
-            throw new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(),@enum));
+            throw new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

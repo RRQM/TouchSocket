@@ -93,7 +93,7 @@ namespace TouchSocket.Sockets
                 {
                     byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                 }
-                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureFalseAwait();
+                await this.GoSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
             }
         }
     }

@@ -43,7 +43,7 @@ namespace TouchSocket.XmlRpc
             {
                 var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
 
-                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureFalseAwait())
+                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
                 {
                     var response = responseResult.Response;
 

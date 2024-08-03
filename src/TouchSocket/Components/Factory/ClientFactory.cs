@@ -193,7 +193,7 @@ namespace TouchSocket.Sockets
                 }
             }
 
-            var clientRes = await this.CreateClient().ConfigureFalseAwait();
+            var clientRes = await this.CreateClient().ConfigureAwait(false);
             this.m_createdClients.Add(clientRes);
             return clientRes;
         }

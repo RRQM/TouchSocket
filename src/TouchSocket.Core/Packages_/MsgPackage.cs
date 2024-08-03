@@ -25,7 +25,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.WriteString(this.Message,FixedHeaderType.Ushort);
+            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
         }
 
         /// <inheritdoc/>

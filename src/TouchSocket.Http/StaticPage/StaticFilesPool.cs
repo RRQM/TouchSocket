@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,7 +34,7 @@ namespace TouchSocket.Http
         {
             this.m_timer = new SingleTimer(1000, () =>
             {
-                var FolderEntry = m_foldersByKey.Values.Where(a => a.Changed);
+                var FolderEntry = this.m_foldersByKey.Values.Where(a => a.Changed);
 
                 foreach (var item in FolderEntry)
                 {
@@ -63,7 +62,7 @@ namespace TouchSocket.Http
         /// <remarks>
         /// 大于设定值的资源只会存储<see cref="FileInfo"/>，每次访问资源时都会从磁盘加载。
         /// </remarks>
-        public int MaxCacheSize { get; set; } = 1024*1024;
+        public int MaxCacheSize { get; set; } = 1024 * 1024;
         #endregion 属性
 
         public void Clear()
@@ -159,8 +158,8 @@ namespace TouchSocket.Http
                 this.m_foldersByKey.Add(path, folderEntry);
             }
 
-            var count = 0 ;
-            this.PrivateAddFolder(folderEntry,ref count, path, path, prefix, timeout.Value);
+            var count = 0;
+            this.PrivateAddFolder(folderEntry, ref count, path, path, prefix, timeout.Value);
             return count;
         }
 
@@ -259,7 +258,7 @@ namespace TouchSocket.Http
             base.Dispose(disposing);
         }
 
-        private void PrivateAddFolder(FolderEntry folderEntry,ref int count, string root, string path, string prefix, TimeSpan timeout)
+        private void PrivateAddFolder(FolderEntry folderEntry, ref int count, string root, string path, string prefix, TimeSpan timeout)
         {
             try
             {

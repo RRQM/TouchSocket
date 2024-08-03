@@ -34,7 +34,7 @@ namespace TouchSocket.Modbus
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreSlimForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
 
             try
             {
@@ -45,7 +45,7 @@ namespace TouchSocket.Modbus
                 {
                     modbusRequest.Build(ref byteBlock);
 
-                    await this.ProtectedSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -53,7 +53,7 @@ namespace TouchSocket.Modbus
                 }
                
                 this.m_waitDataAsync.SetCancellationToken(token);
-                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureFalseAwait();
+                var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;

@@ -48,9 +48,9 @@ namespace TouchSocket.Core
 
             this.BuildConfig(config);
 
-            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this, new ConfigEventArgs(config)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
             this.LoadConfig(config);
-            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this, new ConfigEventArgs(config)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>

@@ -30,31 +30,31 @@ namespace TouchSocket.Sockets
         /// 所需类型<see cref="int"/>
         /// </summary>
         public static readonly DependencyProperty<int> SendTimeoutProperty =
-            DependencyProperty<int>.Register("SendTimeout", 0);
+            new("SendTimeout", 0);
 
         /// <summary>
         /// 数据处理适配器
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("TcpDataHandlingAdapter", null);
+        public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> TcpDataHandlingAdapterProperty = new("TcpDataHandlingAdapter", null);
 
         /// <summary>
         /// 数据处理适配器
         /// 所需类型<see cref="Func{TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = DependencyProperty<Func<UdpDataHandlingAdapter>>.Register("UdpDataHandlingAdapter", null);
+        public static readonly DependencyProperty<Func<UdpDataHandlingAdapter>> UdpDataHandlingAdapterProperty = new("UdpDataHandlingAdapter", null);
 
         /// <summary>
         /// 最小缓存池尺寸
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int?> MinBufferSizeProperty = DependencyProperty<int?>.Register("MinBufferSize", default);
+        public static readonly DependencyProperty<int?> MinBufferSizeProperty = new("MinBufferSize", default);
 
         /// <summary>
         /// 最大缓存池尺寸
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int?> MaxBufferSizeProperty = DependencyProperty<int?>.Register("MaxBufferSize", default);
+        public static readonly DependencyProperty<int?> MaxBufferSizeProperty = new("MaxBufferSize", default);
 
         /// <summary>
         /// 最小缓存容量，默认缺省。
@@ -136,14 +136,14 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 服务名称，用于标识，无实际意义，所需类型<see cref="string"/>
         /// </summary>
-        public static readonly DependencyProperty<string> ServerNameProperty = DependencyProperty<string>.Register("ServerName", "TouchSocketServer");
+        public static readonly DependencyProperty<string> ServerNameProperty = new("ServerName", "TouchSocketServer");
 
         /// <summary>
         /// 多线程数量。默认-1缺省。
         /// <para>UDP模式中，该值为重叠IO并发数</para>
         /// 所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int> ThreadCountProperty = DependencyProperty<int>.Register("ThreadCount", -1);
+        public static readonly DependencyProperty<int> ThreadCountProperty = new("ThreadCount", -1);
 
         /// <summary>
         /// 服务名称，用于标识，无实际意义
@@ -178,30 +178,30 @@ namespace TouchSocket.Sockets
         /// Tcp固定端口绑定，
         /// 所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty<IPHost> BindIPHostProperty = DependencyProperty<IPHost>.Register("BindIPHost", null);
+        public static readonly DependencyProperty<IPHost> BindIPHostProperty = new("BindIPHost", null);
 
         /// <summary>
         /// 在Socket配置KeepAlive属性，这个是操作tcp底层的，如果你对底层不了解，建议不要动。
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = DependencyProperty<KeepAliveValue>.Register("KeepAliveValue", default);
+        public static readonly DependencyProperty<KeepAliveValue> KeepAliveValueProperty = new("KeepAliveValue", default);
 
         /// <summary>
         /// 设置Socket不使用Delay算法，
         /// 所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty<bool?> NoDelayProperty = DependencyProperty<bool?>.Register("NoDelay", null);
+        public static readonly DependencyProperty<bool?> NoDelayProperty = new("NoDelay", null);
 
         /// <summary>
         /// 远程目标地址，所需类型<see cref="IPHost"/>
         /// </summary>
-        public static readonly DependencyProperty<IPHost> RemoteIPHostProperty = DependencyProperty<IPHost>.Register("RemoteIPHost", null);
+        public static readonly DependencyProperty<IPHost> RemoteIPHostProperty = new("RemoteIPHost", null);
 
         /// <summary>
         /// Ssl配置，为Null时则不启用
         /// 所需类型<see cref="TouchSocket.Sockets.SslOption"/>
         /// </summary>
-        public static readonly DependencyProperty<SslOption> SslOptionProperty = DependencyProperty<SslOption>.Register("SslOption", null);
+        public static readonly DependencyProperty<SslOption> SslOptionProperty = new("SslOption", null);
 
         /// <summary>
         /// 固定端口绑定。
@@ -292,32 +292,32 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 挂起连接队列的最大长度，所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int?> BacklogProperty = DependencyProperty<int?>.Register("Backlog", null);
+        public static readonly DependencyProperty<int?> BacklogProperty = new("Backlog", null);
 
         /// <summary>
         /// 设置默认Id的获取方式，所需类型<see cref="Func{T, TResult}"/>
         /// </summary>
-        public static readonly DependencyProperty<Func<string>> GetDefaultNewIdProperty = DependencyProperty<Func<string>>.Register("GetDefaultNewId", null);
+        public static readonly DependencyProperty<Func<string>> GetDefaultNewIdProperty = new("GetDefaultNewId", null);
 
         /// <summary>
         /// 服务器负责监听的地址组。所需类型<see cref="IPHost"/>数组
         /// </summary>
-        public static readonly DependencyProperty<IPHost[]> ListenIPHostsProperty = DependencyProperty<IPHost[]>.Register("ListenIPHosts", null);
+        public static readonly DependencyProperty<IPHost[]> ListenIPHostsProperty = new("ListenIPHosts", null);
 
         /// <summary>
         /// 直接单个配置服务器监听的地址组。所需类型<see cref="Action"/>
         /// </summary>
-        public static readonly DependencyProperty<Action<List<TcpListenOption>>> ListenOptionsProperty = DependencyProperty<Action<List<TcpListenOption>>>.Register("ListenOptions", null);
+        public static readonly DependencyProperty<Action<List<TcpListenOption>>> ListenOptionsProperty = new("ListenOptions", null);
 
         /// <summary>
         /// 最大可连接数，默认为10000，所需类型<see cref="int"/>
         /// </summary>
-        public static readonly DependencyProperty<int> MaxCountProperty = DependencyProperty<int>.Register("MaxCount", 10000);
+        public static readonly DependencyProperty<int> MaxCountProperty = new("MaxCount", 10000);
 
         /// <summary>
         /// 端口复用，默认为false，所需类型<see cref="bool"/>
         /// </summary>
-        public static readonly DependencyProperty<bool> ReuseAddressProperty = DependencyProperty<bool>.Register("ReuseAddress", false);
+        public static readonly DependencyProperty<bool> ReuseAddressProperty = new("ReuseAddress", false);
 
         /// <summary>
         /// 挂起连接队列的最大长度，默认不设置值。
@@ -410,7 +410,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
         /// </summary>
-        public static readonly DependencyProperty<bool> EnableBroadcastProperty = DependencyProperty<bool>.Register("EnableBroadcast", false);
+        public static readonly DependencyProperty<bool> EnableBroadcastProperty = new("EnableBroadcast", false);
 
         /// <summary>
         /// 该值指定 System.Net.Sockets.Socket可以发送或接收广播数据包。
@@ -439,7 +439,7 @@ namespace TouchSocket.Sockets
 #if NET6_0_OR_GREATER
         [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-        public static readonly DependencyProperty<bool> UdpConnResetProperty = DependencyProperty<bool>.Register("UdpConnReset", false);
+        public static readonly DependencyProperty<bool> UdpConnResetProperty = new("UdpConnReset", false);
 
         /// <summary>
         /// 解决Windows下UDP连接被重置错误10054。
@@ -469,8 +469,8 @@ namespace TouchSocket.Sockets
         public static async Task<TClient> BuildClientAsync<TClient>(this TouchSocketConfig config) where TClient : ISetupConfigObject, IConnectableClient, new()
         {
             var client = new TClient();
-            await client.SetupAsync(config).ConfigureFalseAwait();
-            await client.ConnectAsync().ConfigureFalseAwait();
+            await client.SetupAsync(config).ConfigureAwait(false);
+            await client.ConnectAsync().ConfigureAwait(false);
             return client;
         }
 
@@ -483,8 +483,8 @@ namespace TouchSocket.Sockets
         public static async Task<TService> BuildServiceAsync<TService>(this TouchSocketConfig config) where TService : IServiceBase, new()
         {
             var service = new TService();
-            await service.SetupAsync(config).ConfigureFalseAwait();
-            await service.StartAsync().ConfigureFalseAwait();
+            await service.SetupAsync(config).ConfigureAwait(false);
+            await service.StartAsync().ConfigureAwait(false);
             return service;
         }
         #endregion 创建

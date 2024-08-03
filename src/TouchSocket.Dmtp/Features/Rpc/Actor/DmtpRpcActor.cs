@@ -80,11 +80,11 @@ namespace TouchSocket.Dmtp.Rpc
                     rpcPackage.UnpackageRouter(ref byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureFalseAwait())
+                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(RouteType.Rpc, rpcPackage)).ConfigureAwait(false))
                         {
-                            if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                            if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
                             {
-                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
+                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
                                 return true;
                             }
                             else
@@ -103,7 +103,7 @@ namespace TouchSocket.Dmtp.Rpc
                         var block = byteBlock;
                         rpcPackage.Package(ref block);
 
-                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
@@ -124,13 +124,13 @@ namespace TouchSocket.Dmtp.Rpc
                             rpcPackage.UnpackageBody(ref byteBlock);
                         }
 
-                        //await this.InvokeThis(rpcPackage).ConfigureFalseAwait();
+                        //await this.InvokeThis(rpcPackage).ConfigureAwait(false);
                          _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
                 catch (Exception ex)
                 {
-                    this.DmtpActor.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                    this.DmtpActor.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                 }
                 return true;
             }
@@ -143,9 +143,9 @@ namespace TouchSocket.Dmtp.Rpc
                     rpcPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
+                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
                         }
                     }
                     else
@@ -162,7 +162,7 @@ namespace TouchSocket.Dmtp.Rpc
                 }
                 catch (Exception ex)
                 {
-                    this.DmtpActor.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                    this.DmtpActor.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                 }
                 return true;
             }
@@ -175,9 +175,9 @@ namespace TouchSocket.Dmtp.Rpc
                     canceledPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && canceledPackage.Route)
                     {
-                        if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureFalseAwait() is DmtpActor actor)
+                        if (await this.DmtpActor.TryFindDmtpActor(canceledPackage.TargetId).ConfigureAwait(false) is DmtpActor actor)
                         {
-                            await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureFalseAwait();
+                            await actor.SendAsync(this.m_cancelInvoke, byteBlock.Memory).ConfigureAwait(false);
                         }
                     }
                     else
@@ -191,7 +191,7 @@ namespace TouchSocket.Dmtp.Rpc
                 }
                 catch (Exception ex)
                 {
-                    this.DmtpActor.Logger.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
+                    this.DmtpActor.Logger?.Error(this, $"在protocol={message.ProtocolFlags}中发生错误。信息:{ex.Message}");
                 }
                 return true;
             }
@@ -264,7 +264,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                         rpcResponsePackage.Package(ref returnByteBlock);
 
-                        await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureFalseAwait();
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, returnByteBlock.Memory).ConfigureAwait(false);
                     }
                     finally
                     {
@@ -294,7 +294,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, parameters).ConfigureFalseAwait();
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, parameters).ConfigureAwait(false);
                 }
 
                 if (rpcRequestPackage.Feedback != FeedbackType.WaitInvoke)
@@ -346,7 +346,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcResponsePackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureFalseAwait();
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -364,7 +364,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 return this;
             }
-            if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureFalseAwait() is DmtpActor dmtpActor)
+            if (await this.DmtpActor.TryFindDmtpActor(targetId).ConfigureAwait(false) is DmtpActor dmtpActor)
             {
                 if (dmtpActor.GetDmtpRpcActor() is DmtpRpcActor newActor)
                 {
@@ -399,7 +399,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcPackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -414,12 +414,12 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
                             var resultRpcPackage = (DmtpRpcResponsePackage)waitData.WaitResult;
                             resultRpcPackage.ThrowStatus();
                             return resultRpcPackage.ReturnParameter;
@@ -474,7 +474,7 @@ namespace TouchSocket.Dmtp.Rpc
                 {
                     rpcPackage.Package(ref byteBlock);
 
-                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureFalseAwait();
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -489,12 +489,12 @@ namespace TouchSocket.Dmtp.Rpc
                         }
                     case FeedbackType.WaitSend:
                         {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
                             return returnType.GetDefault();
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait());
+                            CheckWaitDataStatus(await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false));
                             var resultRpcPackage = (DmtpRpcResponsePackage)waitData.WaitResult;
                             resultRpcPackage.ThrowStatus();
 

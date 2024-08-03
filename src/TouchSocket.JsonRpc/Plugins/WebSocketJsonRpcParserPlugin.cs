@@ -96,7 +96,7 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                await ((IHttpSessionClient)callContext.Caller).WebSocket.SendAsync(str).ConfigureFalseAwait();
+                await ((IHttpSessionClient)callContext.Caller).WebSocket.SendAsync(str).ConfigureAwait(false);
             }
             catch
             {
@@ -107,13 +107,13 @@ namespace TouchSocket.JsonRpc
         {
             if (this.AllowJsonRpc != null)
             {
-                if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureFalseAwait())
+                if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(false))
                 {
                     client.Client.SetIsJsonRpc();
                 }
             }
 
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
@@ -123,7 +123,7 @@ namespace TouchSocket.JsonRpc
                 var jsonRpcStr = e.DataFrame.ToText();
                 if (jsonRpcStr.IsNullOrEmpty())
                 {
-                    await e.InvokeNext().ConfigureFalseAwait();
+                    await e.InvokeNext().ConfigureAwait(false);
                     return;
                 }
 
@@ -141,7 +141,7 @@ namespace TouchSocket.JsonRpc
             }
             else
             {
-                await e.InvokeNext().ConfigureFalseAwait();
+                await e.InvokeNext().ConfigureAwait(false);
             }
         }
     }

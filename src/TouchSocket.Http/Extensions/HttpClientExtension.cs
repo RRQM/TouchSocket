@@ -25,7 +25,7 @@ namespace TouchSocket.Http
             request.Method = HttpMethod.Get;
             request.SetUrl(url);
 
-            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureFalseAwait())
+            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
             {
                 var response = responseResult.Response;
                 if (!response.IsSuccess())

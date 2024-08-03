@@ -35,12 +35,18 @@ namespace TouchSocket.Dmtp
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<TClient, ClosedEventArgs>(typeof(IDmtpClosedPlugin), this.OnClosed);
+            pluginManager.Add<IDmtpActorObject, ClosedEventArgs>(typeof(IDmtpClosedPlugin), this.OnClosed);
         }
 
-        private async Task OnClosed(TClient client, ClosedEventArgs e)
+        private async Task OnClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
+
+            if (client is not TClient tClient)
+            {
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
                 if (e.Manual)
@@ -50,7 +56,7 @@ namespace TouchSocket.Dmtp
 
                 while (true)
                 {
-                    if (await this.ActionForConnect.Invoke(client).ConfigureFalseAwait())
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;
                     }

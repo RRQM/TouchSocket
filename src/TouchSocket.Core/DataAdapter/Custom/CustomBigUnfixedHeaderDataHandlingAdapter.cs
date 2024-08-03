@@ -35,7 +35,7 @@ namespace TouchSocket.Core
         {
             if (beCached)
             {
-                while (this.m_surLen > 0 && byteBlock.CanReadLength>0)
+                while (this.m_surLen > 0 && byteBlock.CanReadLength > 0)
                 {
                     var r = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
                     var bytes = byteBlock.Span.Slice(byteBlock.Position, r);

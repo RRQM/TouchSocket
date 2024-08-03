@@ -54,7 +54,7 @@ namespace TouchSocket.Rpc
                 for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutingAsync(callContext, ps, invokeResult)
-                        .ConfigureFalseAwait();
+                        .ConfigureAwait(false);
                 }
 
                 if (invokeResult.Status != InvokeStatus.Ready)
@@ -69,14 +69,14 @@ namespace TouchSocket.Rpc
                 {
                     case TaskReturnType.Task:
                         {
-                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureFalseAwait();
+                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(false);
                         }
                         break;
 
                     case TaskReturnType.TaskObject:
                         {
                             invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
-                                .ConfigureFalseAwait();
+                                .ConfigureAwait(false);
                         }
                         break;
 
@@ -99,7 +99,7 @@ namespace TouchSocket.Rpc
                 for (var i = 0; i < filters.Count; i++)
                 {
                     invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult,default)
-                        .ConfigureFalseAwait();
+                        .ConfigureAwait(false);
                 }
             }
             catch (TargetInvocationException ex)
@@ -108,7 +108,7 @@ namespace TouchSocket.Rpc
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
+                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -117,7 +117,7 @@ namespace TouchSocket.Rpc
                 invokeResult.Message = ex.Message;
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureFalseAwait();
+                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false);
                 }
             }
 

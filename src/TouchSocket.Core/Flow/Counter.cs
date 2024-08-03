@@ -58,7 +58,7 @@ namespace TouchSocket.Core
         public bool Increment(long value)
         {
             bool isPeriod;
-            var dateTime= DateTime.Now;
+            var dateTime = DateTime.Now;
             if (dateTime - this.LastIncrement > this.Period)
             {
                 this.OnPeriod?.Invoke(this.m_count);

@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if !(NET481_OR_GREATER||NET6_0_OR_GREATER||NETSTANDARD2_1_OR_GREATER)
+#if !(NET481_OR_GREATER || NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER)
 
 using System;
 using System.Diagnostics;

@@ -205,13 +205,9 @@ namespace TouchSocket.Http
                     this.m_canRead = false;
                 }
             }
-            else if (this.ContentComplated == true)
-            {
-                return this.m_content;
-            }
             else
             {
-                return default;
+                return this.ContentComplated == true ? this.m_content : default;
             }
         }
 
@@ -295,13 +291,13 @@ namespace TouchSocket.Http
                 using (var byteBlock = new ByteBlock())
                 {
                     this.BuildHeader(byteBlock);
-                    await this.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
                 this.m_sentHeader = true;
             }
             if (this.m_sentLength + memory.Length <= this.ContentLength)
             {
-                await this.InternalSendAsync(memory).ConfigureFalseAwait();
+                await this.InternalSendAsync(memory).ConfigureAwait(false);
                 this.m_sentLength += memory.Length;
             }
         }
@@ -446,14 +442,7 @@ namespace TouchSocket.Http
 
         private Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
         {
-            if (this.m_isServer)
-            {
-                return this.m_httpSessionClient.InternalSendAsync(memory);
-            }
-            else
-            {
-                return this.m_httpClientBase.InternalSendAsync(memory);
-            }
+            return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory) : this.m_httpClientBase.InternalSendAsync(memory);
         }
 
         private void ParseUrl()

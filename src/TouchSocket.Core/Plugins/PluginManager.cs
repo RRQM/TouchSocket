@@ -42,7 +42,7 @@ namespace TouchSocket.Core
         public bool Enable { get; set; }
 
         /// <inheritdoc/>
-        public IEnumerable<IPlugin> Plugins=> this.m_plugins;
+        public IEnumerable<IPlugin> Plugins => this.m_plugins;
 
         IResolver IResolverObject.Resolver => this.m_resolver;
 
@@ -76,14 +76,14 @@ namespace TouchSocket.Core
                 {
                     var pluginModel = this.GetPluginModel(item);
 
-                    var methodInfo = item.GetMethods(BindingFlags.Instance | BindingFlags.Public| BindingFlags.DeclaredOnly)
-                        .Where(a => 
+                    var methodInfo = item.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                        .Where(a =>
                         {
                             return a.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(a.GetParameters()[1].ParameterType) && a.ReturnType == typeof(Task);
                         })
                         .FirstOrDefault();
 
-                    if (methodInfo!=null)
+                    if (methodInfo != null)
                     {
                         var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
                         pluginModel.Add(pluginEntity.Run);
@@ -133,16 +133,9 @@ namespace TouchSocket.Core
                     }
                 }
             }
-            IPlugin plugin;
-            if (this.m_resolver.IsRegistered(pluginType))
-            {
-                plugin = (IPlugin)this.m_resolver.Resolve(pluginType);
-            }
-            else
-            {
-                plugin = (IPlugin)this.m_resolver.ResolveWithoutRoot(pluginType);
-            }
-
+            var plugin = this.m_resolver.IsRegistered(pluginType)
+                ? (IPlugin)this.m_resolver.Resolve(pluginType)
+                : (IPlugin)this.m_resolver.ResolveWithoutRoot(pluginType);
             ((IPluginManager)this).Add(plugin);
             return plugin;
         }
@@ -172,30 +165,27 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public int GetPluginCount(Type interfeceType)
         {
-            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
-            {
-                return pluginModel.Count;
-            }
-            return 0;
+            return this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel) ? pluginModel.Count : 0;
         }
 
-        async Task<bool> IPluginManager.RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
+        ValueTask<bool> IPluginManager.RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
-                return false;
+                return new ValueTask<bool>(false);
             }
-            if (e.Handled)
-            {
-                return true;
-            }
-            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
-            {
-                e.LoadModel(pluginModel, sender);
-                await e.InvokeNext().ConfigureFalseAwait();
-                return e.Handled;
-            }
-            return false;
+            return e.Handled
+                ? new ValueTask<bool>(true)
+                : !this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel)
+                ? new ValueTask<bool>(false)
+                : new ValueTask<bool>(RaisePluginAsync(pluginModel, sender, e));
+        }
+
+        private static async Task<bool> RaisePluginAsync(PluginModel pluginModel, object sender, PluginEventArgs e)
+        {
+            e.LoadModel(pluginModel, sender);
+            await e.InvokeNext().ConfigureAwait(false);
+            return e.Handled;
         }
 
         /// <inheritdoc/>
@@ -211,16 +201,6 @@ namespace TouchSocket.Core
                 this.m_plugins.Clear();
             }
             base.Dispose(disposing);
-        }
-
-        private PluginModel GetPluginModel(Type interfeceType)
-        {
-            if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
-            {
-                pluginModel = new PluginModel();
-                this.m_pluginMethods.Add(interfeceType, pluginModel);
-            }
-            return pluginModel;
         }
 
         private static List<Type> SearchPluginMethod(IPlugin plugin)
@@ -253,6 +233,16 @@ namespace TouchSocket.Core
             //    }
             //}
             //return pluginMethodNames;
+        }
+
+        private PluginModel GetPluginModel(Type interfeceType)
+        {
+            if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+            {
+                pluginModel = new PluginModel();
+                this.m_pluginMethods.Add(interfeceType, pluginModel);
+            }
+            return pluginModel;
         }
     }
 }

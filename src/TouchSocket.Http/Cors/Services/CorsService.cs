@@ -25,12 +25,7 @@ namespace TouchSocket.Http
 
         public CorsPolicy GetPolicy(string name)
         {
-            if (this.m_corsPolicys.TryGetValue(name, out var corsPolicy))
-            {
-                return corsPolicy;
-            }
-
-            return null;
+            return this.m_corsPolicys.TryGetValue(name, out var corsPolicy) ? corsPolicy : null;
         }
     }
 }

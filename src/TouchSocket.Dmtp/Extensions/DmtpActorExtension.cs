@@ -129,7 +129,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await client.DmtpActor.SendAsync(protocol, memory).ConfigureFalseAwait();
+                await client.DmtpActor.SendAsync(protocol, memory).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -148,7 +148,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureFalseAwait();
+                await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -202,7 +202,7 @@ namespace TouchSocket.Dmtp
             {
                 var block = byteBlock;
                 package.Package(ref block);
-                await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureFalseAwait();
+                await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(false);
             }
         }
 
@@ -271,7 +271,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await SendAsync(client, protocol, package, maxSize).ConfigureFalseAwait();
+                await SendAsync(client, protocol, package, maxSize).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -290,7 +290,7 @@ namespace TouchSocket.Dmtp
         {
             try
             {
-                await SendAsync(client, protocol, package, 1024 * 64).ConfigureFalseAwait();
+                await SendAsync(client, protocol, package, 1024 * 64).ConfigureAwait(false);
                 return true;
             }
             catch

@@ -34,7 +34,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">存储内存块</param>
         /// <param name="obj">需要序列化的对象</param>
         /// <returns>返回该对象实际占用的字节长度。</returns>
-        void Write<TByteBlock>(ref TByteBlock byteBlock,in object obj) where TByteBlock : IByteBlock;
+        void Write<TByteBlock>(ref TByteBlock byteBlock, in object obj) where TByteBlock : IByteBlock;
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ namespace TouchSocket.Core
             return this.Read(ref byteBlock, type);
         }
 
-        void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock,in object obj)
+        void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock, in object obj)
         {
             this.Write(ref byteBlock, (T)obj);
         }
@@ -57,6 +57,6 @@ namespace TouchSocket.Core
         protected abstract T Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
 
         /// <inheritdoc cref="IFastBinaryConverter.Write{TByteBlock}(ref TByteBlock,in object)"/>
-        protected abstract void Write<TByteBlock>(ref TByteBlock byteBlock,in T obj) where TByteBlock : IByteBlock;
+        protected abstract void Write<TByteBlock>(ref TByteBlock byteBlock, in T obj) where TByteBlock : IByteBlock;
     }
 }

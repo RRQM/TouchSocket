@@ -23,7 +23,7 @@ namespace TouchSocket.Core
             return ipackage;
         }
 
-        public void Write<TByteBlock>(ref TByteBlock byteBlock,in object obj) where TByteBlock : IByteBlock
+        public void Write<TByteBlock>(ref TByteBlock byteBlock, in object obj) where TByteBlock : IByteBlock
         {
             var ipackage = (IPackage)obj;
 

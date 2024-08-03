@@ -26,11 +26,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public static string GetContentTypeFromExtension(string extension)
         {
-            if (s_provider.TryGetContentType(extension, out var result))
-            {
-                return result;
-            }
-            return "application/octet-stream";
+            return s_provider.TryGetContentType(extension, out var result) ? result : "application/octet-stream";
         }
     }
 }

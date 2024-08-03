@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -29,14 +30,14 @@ namespace TouchSocket.Http.WebSockets
         {
             this.m_isServer = false;
             this.m_httpClientBase = httpClientBase;
-            m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
+            this.m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
         }
 
         public InternalWebSocket(HttpSessionClient httpSocketClient)
         {
             this.m_isServer = true;
             this.m_httpSocketClient = httpSocketClient;
-            m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
+            this.m_receiverResult = new WebSocketReceiveResult(this.ComplateRead);
         }
 
         public bool AllowAsyncRead { get => this.m_allowAsyncRead; set => this.m_allowAsyncRead = value; }
@@ -50,32 +51,32 @@ namespace TouchSocket.Http.WebSockets
         {
             using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
             {
-                await this.SendAsync(frame).ConfigureFalseAwait();
+                await this.SendAsync(frame).ConfigureAwait(false);
             }
             this.m_httpClientBase.TryShutdown();
-            await this.m_httpClientBase.SafeCloseAsync(msg).ConfigureFalseAwait();
+            await this.m_httpClientBase.SafeCloseAsync(msg).ConfigureAwait(false);
 
             this.m_httpSocketClient.TryShutdown();
-            await this.m_httpSocketClient.SafeCloseAsync(msg).ConfigureFalseAwait();
+            await this.m_httpSocketClient.SafeCloseAsync(msg).ConfigureAwait(false);
         }
 
         public async Task PingAsync()
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureFalseAwait();
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureAwait(false);
         }
 
         public async Task PongAsync()
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureFalseAwait();
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureAwait(false);
         }
 
         #region 发送
 
         public async Task SendAsync(string text, bool endOfMessage = true)
         {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Text }.AppendText(text))
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Text }.AppendText(text))
             {
-                await this.SendAsync(frame, endOfMessage).ConfigureFalseAwait();
+                await this.SendAsync(frame, endOfMessage).ConfigureAwait(false);
             }
         }
 
@@ -84,7 +85,7 @@ namespace TouchSocket.Http.WebSockets
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
             {
                 frame.AppendBinary(memory.Span);
-                await this.SendAsync(frame, endOfMessage).ConfigureFalseAwait();
+                await this.SendAsync(frame, endOfMessage).ConfigureAwait(false);
             }
         }
 
@@ -115,12 +116,12 @@ namespace TouchSocket.Http.WebSockets
                 if (this.m_isServer)
                 {
                     dataFrame.BuildResponse(ref byteBlock);
-                    await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
                 else
                 {
                     dataFrame.BuildRequest(ref byteBlock);
-                    await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                    await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }
             }
             finally
@@ -133,7 +134,7 @@ namespace TouchSocket.Http.WebSockets
 
         protected override void Dispose(bool disposing)
         {
-            if (DisposedValue)
+            if (this.DisposedValue)
             {
                 return;
             }

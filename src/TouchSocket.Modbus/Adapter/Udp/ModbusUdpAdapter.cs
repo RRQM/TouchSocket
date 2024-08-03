@@ -29,7 +29,7 @@ namespace TouchSocket.Modbus
             {
                 if (((IFixedHeaderRequestInfo)response).OnParsingBody(byteBlock.ToArray(8)))
                 {
-                    await this.GoReceived(remoteEndPoint, default, response).ConfigureFalseAwait();
+                    await this.GoReceived(remoteEndPoint, default, response).ConfigureAwait(false);
                 }
             }
         }

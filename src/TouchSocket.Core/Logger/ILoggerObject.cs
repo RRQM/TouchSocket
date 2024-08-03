@@ -20,6 +20,6 @@ namespace TouchSocket.Core
         /// <summary>
         /// 日志记录器
         /// </summary>
-        ILog Logger { get;}
+        ILog Logger { get; }
     }
 }

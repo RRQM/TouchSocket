@@ -59,7 +59,7 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
                 if (this.m_isHandshaked)
@@ -71,7 +71,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     this.m_client.SafeDispose();
                     this.m_client = new ClientWebSocket();
-                    await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureFalseAwait();
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(false);
                     _ = this.BeginReceive();
                 }
 
@@ -180,7 +180,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
-                        var result = await this.m_client.ReceiveAsync(byteBlock.AsSegment(0,byteBlock.Capacity), default).ConfigureFalseAwait();
+                        var result = await this.m_client.ReceiveAsync(byteBlock.AsSegment(0, byteBlock.Capacity), default).ConfigureAwait(false);
                         if (result.Count == 0)
                         {
                             break;
@@ -188,7 +188,7 @@ namespace TouchSocket.Http.WebSockets
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        await this.OnReceived(result, byteBlock).ConfigureFalseAwait();
+                        await this.OnReceived(result, byteBlock).ConfigureAwait(false);
                     }
                 }
 

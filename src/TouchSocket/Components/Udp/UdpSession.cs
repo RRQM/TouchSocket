@@ -34,40 +34,16 @@ namespace TouchSocket.Sockets
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureFalseAwait();
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnUdpReceived(e).ConfigureAwait(false);
         }
 
-        #region 向默认远程同步发送
-
-        ///// <summary>
-        ///// 向默认终结点发送
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        //public virtual void 123Send(byte[] buffer, int offset, int length)
-        //{
-        //    this.ProtectedSend(buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// 向默认终结点发送
-        ///// </summary>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public virtual void 123Send(IRequestInfo requestInfo)
-        //{
-        //    this.ProtectedSend(requestInfo);
-        //}
-
-        #endregion 向默认远程同步发送
 
         #region 向默认远程异步发送
 
@@ -89,37 +65,6 @@ namespace TouchSocket.Sockets
         }
 
         #endregion 向默认远程异步发送
-
-        #region 向设置的远程同步发送
-
-        ///// <summary>
-        ///// 向设置的远程同步发送
-        ///// </summary>
-        ///// <param name="remoteEP"></param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
-        //{
-        //    this.ProtectedSend(remoteEP, buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// 向设置终结点发送
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public virtual void Send(EndPoint endPoint, IRequestInfo requestInfo)
-        //{
-        //    this.ProtectedSend(endPoint, requestInfo);
-        //}
-
-        #endregion 向设置的远程同步发送
 
         #region 向设置的远程异步发送
 
@@ -147,25 +92,6 @@ namespace TouchSocket.Sockets
         #endregion 向设置的远程异步发送
 
         #region 组合发送
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //public void 123Send(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ProtectedSend(transferBytes);
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="transferBytes"></param>
-        //public void Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ProtectedSend(endPoint, transferBytes);
-        //}
 
         /// <summary>
         /// <inheritdoc/>

@@ -779,11 +779,11 @@ namespace TouchSocket.Core
             return ret;
         }
 
-        public static void WriteCrc16(Span<byte> storeSpan,ReadOnlySpan<byte> span)
+        public static void WriteCrc16(Span<byte> storeSpan, ReadOnlySpan<byte> span)
         {
-            if (storeSpan.Length<2)
+            if (storeSpan.Length < 2)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(storeSpan.Length),storeSpan.Length,2);
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(storeSpan.Length), storeSpan.Length, 2);
             }
 
             if (span.IsEmpty)
@@ -811,7 +811,7 @@ namespace TouchSocket.Core
                 }
             }
 
-            TouchSocketBitConverter.BigEndian.WriteBytes(storeSpan,crc);
+            TouchSocketBitConverter.BigEndian.WriteBytes(storeSpan, crc);
         }
 
         /// **********************************************************************
@@ -855,7 +855,7 @@ namespace TouchSocket.Core
                     }
                 }
             }
-           return crc;
+            return crc;
         }
 
         /// **********************************************************************

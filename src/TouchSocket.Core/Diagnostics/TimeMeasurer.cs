@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -59,7 +58,7 @@ namespace TouchSocket.Core
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            await func.Invoke().ConfigureFalseAwait();
+            await func.Invoke().ConfigureAwait(false);
             stopwatch.Stop();
             return stopwatch.Elapsed;
         }

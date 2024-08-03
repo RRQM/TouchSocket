@@ -211,11 +211,11 @@ namespace TouchSocket.Sockets
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
             if (sslOption.ClientCertificates == null)
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureFalseAwait();
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureAwait(false);
             }
             else
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureFalseAwait();
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(false);
             }
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
@@ -232,7 +232,7 @@ namespace TouchSocket.Sockets
 
 #else
                 var bytes = memory.GetArray();
-                var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureFalseAwait();
+                var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureAwait(false);
 #endif
                 result = new SocketOperationResult(r);
             }
@@ -295,7 +295,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception"></exception>
         public async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
-            await this.m_semaphoreForSend.WaitAsync().ConfigureFalseAwait();
+            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);
             try
             {
                 if (memory.Length < MaxMemoryLength)
@@ -303,7 +303,7 @@ namespace TouchSocket.Sockets
                     var dispatchInfo = this.m_exceptionDispatchInfo;
                     dispatchInfo?.Throw();
 
-                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureFalseAwait();
+                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureAwait(false);
 
                     var sendSegment = BytePool.Default.Rent(memory.Length);
                     //if (!this.m_stores.TryPop(out var sendSegment))
@@ -330,8 +330,8 @@ namespace TouchSocket.Sockets
                     return;
                 }
 
-                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureFalseAwait();
-                await this.PrivateSendAsync(memory).ConfigureFalseAwait();
+                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(false);
+                await this.PrivateSendAsync(memory).ConfigureAwait(false);
             }
             finally
             {
@@ -378,7 +378,7 @@ namespace TouchSocket.Sockets
 
                             try
                             {
-                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
@@ -396,7 +396,7 @@ namespace TouchSocket.Sockets
                     //Debug.WriteLine("Pause");
                     // 队列为空，设置事件并等待
                     this.m_asyncResetEventForSend.Set();
-                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureFalseAwait();
+                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -413,7 +413,7 @@ namespace TouchSocket.Sockets
             if (this.m_useSsl)
             {
                 var segment = memory.GetArray();
-                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureFalseAwait();
+                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureAwait(false);
             }
 #endif
             else

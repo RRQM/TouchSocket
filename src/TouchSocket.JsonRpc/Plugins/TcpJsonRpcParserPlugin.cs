@@ -81,7 +81,7 @@ namespace TouchSocket.JsonRpc
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
                 if (callContext.Caller is ISender sender)
                 {
-                    await sender.SendAsync(str.ToUTF8Bytes()).ConfigureFalseAwait();
+                    await sender.SendAsync(str.ToUTF8Bytes()).ConfigureAwait(false);
                 }
             }
             catch

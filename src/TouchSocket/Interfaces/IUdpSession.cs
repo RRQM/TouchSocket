@@ -15,7 +15,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// UDP会话
     /// </summary>
-    public interface IUdpSession : IServiceBase, IClient, IClientSender, IUdpClientSender, IReceiverClient<IUdpReceiverResult>
+    public interface IUdpSession :IUdpSessionBase, IClientSender, IUdpClientSender, IReceiverClient<IUdpReceiverResult>
     {
         /// <summary>
         /// 数据处理适配器

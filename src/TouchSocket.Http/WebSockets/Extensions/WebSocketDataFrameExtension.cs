@@ -57,7 +57,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         /// <param name="byteBlock"></param>
         /// <returns></returns>
-        public static void BuildRequest<TByteBlock>(this WSDataFrame dataFrame,ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        public static void BuildRequest<TByteBlock>(this WSDataFrame dataFrame, ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             dataFrame.Mask = true;
             if (dataFrame.MaskingKey == null)
@@ -98,7 +98,7 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataFrame"></param>
         /// <param name="byteBlock"></param>
         /// <returns></returns>
-        public static void BuildResponse<TByteBlock>(this WSDataFrame dataFrame,ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        public static void BuildResponse<TByteBlock>(this WSDataFrame dataFrame, ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             dataFrame.Build(ref byteBlock);
         }

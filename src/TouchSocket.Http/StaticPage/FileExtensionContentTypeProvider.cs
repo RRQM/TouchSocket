@@ -443,12 +443,7 @@ namespace TouchSocket.Http
             }
 
             var index = path.LastIndexOf('.');
-            if (index < 0)
-            {
-                return null;
-            }
-
-            return path.Substring(index);
+            return index < 0 ? null : path.Substring(index);
         }
     }
 }

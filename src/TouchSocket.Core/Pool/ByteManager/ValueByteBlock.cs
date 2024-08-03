@@ -11,14 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -198,6 +193,12 @@ namespace TouchSocket.Core
         /// </summary>
         public void Dispose()
         {
+            var dis = this.m_dis;
+            if (dis != 0)
+            {
+                return;
+            }
+
             if (this.m_holding)
             {
                 return;
@@ -568,7 +569,7 @@ namespace TouchSocket.Core
 
         #endregion ToString
 
-        public bool Equals(ValueByteBlock other)
+        public readonly bool Equals(ValueByteBlock other)
         {
             return this.m_buffer == other.m_buffer;
         }

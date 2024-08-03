@@ -45,7 +45,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public virtual object GetNewInstance(Type type)
         {
-            return InstanceCreater.Create(type,null);
+            return InstanceCreater.Create(type, null);
         }
 
         /// <summary>
@@ -55,12 +55,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public virtual SerializObject GetSerializObject(Type type)
         {
-            if (this.m_instanceCache.TryGetValue(type, out var serializObject))
-            {
-                return serializObject;
-            }
-
-            return null;
+            return this.m_instanceCache.TryGetValue(type, out var serializObject) ? serializObject : null;
         }
 
         /// <summary>

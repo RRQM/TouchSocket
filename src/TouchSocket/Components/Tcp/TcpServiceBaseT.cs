@@ -90,7 +90,7 @@ namespace TouchSocket.Sockets
             {
                 if (this.TryGetClient(id, out var client))
                 {
-                    await client.CloseAsync().ConfigureFalseAwait();
+                    await client.CloseAsync().ConfigureAwait(false);
                     client.SafeDispose();
                 }
             }
@@ -211,14 +211,14 @@ namespace TouchSocket.Sockets
                 }
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
                 return;
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
                 throw;
             }
         }
@@ -227,11 +227,11 @@ namespace TouchSocket.Sockets
         public override async Task StopAsync()
         {
             this.m_serverState = ServerState.Stopped;
-            await this.ReleaseAll().ConfigureFalseAwait();
+            await this.ReleaseAll().ConfigureAwait(false);
 
             if (this.m_serverState == ServerState.Running)
             {
-                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureFalseAwait();
+                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
         }
 
@@ -260,7 +260,7 @@ namespace TouchSocket.Sockets
         /// <param name="ex"></param>
         protected virtual void OnAuthenticatingError(Exception ex)
         {
-            this.Logger.Exception(ex);
+            this.Logger?.Exception(ex);
         }
 
         /// <inheritdoc/>
@@ -324,7 +324,7 @@ namespace TouchSocket.Sockets
                 else
                 {
                     socket.SafeDispose();
-                    this.Logger.Warning(this, TouchSocketResource.ConnectedMaximum.Format(this.MaxCount));
+                    this.Logger?.Warning(this, TouchSocketResource.ConnectedMaximum.Format(this.MaxCount));
                 }
             }
 
@@ -343,7 +343,7 @@ namespace TouchSocket.Sockets
                 {
                     if (this.m_serverState == ServerState.Running)
                     {
-                        this.Logger.Exception(ex);
+                        this.Logger?.Exception(ex);
                     }
                     e.SafeDispose();
                     return;
@@ -353,6 +353,10 @@ namespace TouchSocket.Sockets
 
         private async Task OnClientInit(object obj)
         {
+            if (obj==null)
+            {
+                return;
+            }
             var tuple = (Tuple<Socket, TcpNetworkMonitor>)obj;
             var socket = tuple.Item1;
             var monitor = tuple.Item2;
@@ -382,13 +386,13 @@ namespace TouchSocket.Sockets
 
                 this.ClientInitialized(client);
 
-                await client.InternalInitialized().ConfigureFalseAwait();
+                await client.InternalInitialized().ConfigureAwait(false);
 
                 var args = new ConnectingEventArgs()
                 {
                     Id = this.GetNextNewId()
                 };
-                await client.InternalConnecting(args).ConfigureFalseAwait();//Connecting
+                await client.InternalConnecting(args).ConfigureAwait(false);//Connecting
                 if (args.IsPermitOperation)
                 {
                     client.InternalSetId(args.Id);
@@ -403,7 +407,7 @@ namespace TouchSocket.Sockets
                         {
                             try
                             {
-                                await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureFalseAwait();
+                                await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
@@ -411,7 +415,7 @@ namespace TouchSocket.Sockets
                                 return;
                             }
                         }
-                        await client.InternalConnected(new ConnectedEventArgs()).ConfigureFalseAwait();
+                        await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(false);
                     }
                     else
                     {
@@ -426,7 +430,7 @@ namespace TouchSocket.Sockets
             catch (Exception ex)
             {
                 socket.SafeDispose();
-                this.Logger.Exception(ex);
+                this.Logger?.Exception(ex);
             }
         }
 
@@ -440,7 +444,7 @@ namespace TouchSocket.Sockets
 
             this.m_monitors.Clear();
 
-            await this.ClearAsync().ConfigureFalseAwait();
+            await this.ClearAsync().ConfigureAwait(false);
         }
 
         private bool TryAdd(TcpSessionClientBase client)

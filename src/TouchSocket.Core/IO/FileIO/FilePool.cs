@@ -258,7 +258,7 @@ namespace TouchSocket.Core
         {
             Task.Run(async () =>
             {
-                await Task.Delay(time).ConfigureFalseAwait();
+                await Task.Delay(time).ConfigureAwait(false);
                 if (GetReferenceCount(path) == 0)
                 {
                     if (m_pathStorage.TryRemove(path, out var fileStorage))

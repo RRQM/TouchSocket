@@ -17,6 +17,6 @@ namespace TouchSocket.Core
     /// </summary>
     public interface IRequestInfoBuilder : IRequestInfo, IByteBlockBuilder
     {
-        
+
     }
 }

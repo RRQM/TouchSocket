@@ -138,7 +138,7 @@ namespace TouchSocket.Core
         {
             this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
-            await this.RunAsync().ConfigureFalseAwait();
+            await this.RunAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -147,12 +147,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public Task RunAsync()
         {
-            if (this.RunStatus != RunStatus.None)
-            {
-                return EasyTask.CompletedTask;
-            }
-
-            return Task.Run(async () =>
+            return this.RunStatus != RunStatus.None
+                ? EasyTask.CompletedTask
+                : Task.Run(async () =>
              {
                  this.RunStatus = RunStatus.Running;
                  if (this.LoopCount >= 0)
@@ -163,13 +160,13 @@ namespace TouchSocket.Core
                          {
                              return;
                          }
-                         await this.m_executeAction.Invoke(this).ConfigureFalseAwait();
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
                          this.ExecutedCount++;
                          if (this.RunStatus == RunStatus.Paused)
                          {
-                             await this.m_waitHandle.WaitOneAsync().ConfigureFalseAwait();
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
                          }
-                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureFalseAwait();
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
                      }
                  }
                  else
@@ -180,13 +177,13 @@ namespace TouchSocket.Core
                          {
                              return;
                          }
-                         await this.m_executeAction.Invoke(this).ConfigureFalseAwait();
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
                          this.ExecutedCount++;
                          if (this.RunStatus == RunStatus.Paused)
                          {
-                             await this.m_waitHandle.WaitOneAsync().ConfigureFalseAwait();
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
                          }
-                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureFalseAwait();
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
                      }
                  }
                  this.RunStatus = RunStatus.Completed;

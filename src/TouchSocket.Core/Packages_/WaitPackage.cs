@@ -31,14 +31,14 @@ namespace TouchSocket.Core
         {
             byteBlock.WriteInt32(this.Sign);
             byteBlock.WriteByte(this.Status);
-            byteBlock.WriteString(this.Message,FixedHeaderType.Ushort);
+            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
         }
 
         /// <inheritdoc/>
         public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.Sign = byteBlock.ReadInt32();
-            this.Status = (byte)byteBlock.ReadByte();
+            this.Status = byteBlock.ReadByte();
             this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
         }
     }

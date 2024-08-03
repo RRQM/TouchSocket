@@ -76,7 +76,7 @@ namespace TouchSocket.Core
 
                 //byteBlock.Position = pos;
                 request.OnParsingBody(byteBlock.Span.Slice(pos, len));
-                byteBlock.Position = len+pos;
+                byteBlock.Position = len + pos;
 
                 if (request.OnParsingEndCode(byteBlock.Span.Slice(byteBlock.Position, this.EndCode.Length)))
                 {

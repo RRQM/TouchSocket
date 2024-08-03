@@ -53,11 +53,7 @@ namespace TouchSocket.Core
         public static string GetName(this MethodInfo methodInfo)
         {
             var r = methodInfo.Name.LastIndexOf('.');
-            if (r < 0)
-            {
-                return methodInfo.Name;
-            }
-            return methodInfo.Name.Substring(r + 1, methodInfo.Name.Length - r - 1);
+            return r < 0 ? methodInfo.Name : methodInfo.Name.Substring(r + 1, methodInfo.Name.Length - r - 1);
         }
 
         #endregion MethodInfo

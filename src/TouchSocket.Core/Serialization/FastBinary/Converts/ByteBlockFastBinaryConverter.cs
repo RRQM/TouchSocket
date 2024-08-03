@@ -21,7 +21,7 @@ namespace TouchSocket.Core
             return byteBlock.ReadByteBlock();
         }
 
-        protected override void Write<TByteBlock>(ref TByteBlock byteBlock,in ByteBlock obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in ByteBlock obj)
         {
             byteBlock.WriteByteBlock(obj);
         }

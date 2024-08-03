@@ -23,35 +23,20 @@ namespace TouchSocket.Core
     public class DependencyObject : DisposableObject, IDependencyObject
     {
         private readonly Dictionary<int, object> m_dp = new Dictionary<int, object>();
-        private SpinLock m_lock;
+        private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
 
-        /// <summary>
-        /// 依赖项对象. 线程安全。
-        /// </summary>
-        public DependencyObject()
-        {
-            this.m_lock = new SpinLock(Debugger.IsAttached);
-        }
         /// <inheritdoc/>
-        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp)
+        public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
         {
-            var lockTaken = false;
-            try
+            if (this.TryGetValue(dp, out TValue value))
             {
-                this.m_lock.Enter(ref lockTaken);
-                return this.m_dp.TryGetValue(dp.Id, out var value) ? (TValue)value : dp.DefauleValue;
+                return value;
             }
-            finally
-            {
-                if (lockTaken)
-                {
-                    this.m_lock.Exit(false);
-                }
-            }
+            return dp.OnFailedToGetTheValue.Invoke(this);
         }
 
         /// <inheritdoc/>
-        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
+        public bool HasValue<TValue>(DependencyProperty<TValue> dp)
         {
             var lockTaken = false;
             try
@@ -69,14 +54,13 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp)
+        public void RemoveValue<TValue>(DependencyProperty<TValue> dp)
         {
             var lockTaken = false;
             try
             {
                 this.m_lock.Enter(ref lockTaken);
                 this.m_dp.Remove(dp.Id);
-                return this;
             }
             finally
             {
@@ -88,14 +72,13 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
+        public void SetValue<TValue>(DependencyProperty<TValue> dp, TValue value)
         {
             var lockTaken = false;
             try
             {
                 this.m_lock.Enter(ref lockTaken);
                 this.m_dp.AddOrUpdate(dp.Id, value);
-                return this;
             }
             finally
             {
@@ -107,7 +90,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
+        public bool TryGetValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
         {
             var lockTaken = false;
             try
@@ -134,7 +117,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
+        public bool TryRemoveValue<TValue>(DependencyProperty<TValue> dp, out TValue value)
         {
             var lockTaken = false;
             try
@@ -143,8 +126,7 @@ namespace TouchSocket.Core
                 if (this.m_dp.TryGetValue(dp.Id, out var obj))
                 {
                     value = (TValue)obj;
-                    this.m_dp.Remove(dp.Id);
-                    return true;
+                    return this.m_dp.Remove(dp.Id);
                 }
                 value = default;
                 return false;
@@ -159,31 +141,6 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                var lockTaken = false;
-                try
-                {
-                    this.m_lock.Enter(ref lockTaken);
-                    this.m_dp.Clear();
-                }
-                finally
-                {
-                    if (lockTaken)
-                    {
-                        this.m_lock.Exit(false);
-                    }
-                }
-            }
-            base.Dispose(disposing);
-        }
-
-        /// <summary>
         /// 将当前对象的依赖项克隆到目标对象中
         /// </summary>
         /// <param name="dependencyObject">目标对象</param>
@@ -192,10 +149,12 @@ namespace TouchSocket.Core
         /// <exception cref="ObjectDisposedException"></exception>
         protected void CloneTo(DependencyObject dependencyObject, bool overwrite)
         {
-            var lockTaken = false;
+            var lockTakenFotThis = false;
+            var lockTakenFotOther = false;
             try
             {
-                this.m_lock.Enter(ref lockTaken);
+                this.m_lock.Enter(ref lockTakenFotThis);
+                dependencyObject.m_lock.Enter(ref lockTakenFotOther);
                 if (dependencyObject is null)
                 {
                     throw new ArgumentNullException(nameof(dependencyObject));
@@ -226,11 +185,41 @@ namespace TouchSocket.Core
             }
             finally
             {
-                if (lockTaken)
+                if (lockTakenFotThis)
                 {
                     this.m_lock.Exit(false);
                 }
+
+                if (lockTakenFotOther)
+                {
+                    dependencyObject.m_lock.Exit(false);
+                }
             }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                var lockTaken = false;
+                try
+                {
+                    this.m_lock.Enter(ref lockTaken);
+                    this.m_dp.Clear();
+                }
+                finally
+                {
+                    if (lockTaken)
+                    {
+                        this.m_lock.Exit(false);
+                    }
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 }

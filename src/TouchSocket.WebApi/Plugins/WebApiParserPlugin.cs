@@ -150,7 +150,7 @@ namespace TouchSocket.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -158,10 +158,10 @@ namespace TouchSocket.WebApi
                     return;
                 }
 
-                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureFalseAwait();
+                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
                 return;
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task OnHttpPost(IHttpSessionClient client, HttpContextEventArgs e)
@@ -221,7 +221,7 @@ namespace TouchSocket.WebApi
 
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureFalseAwait();
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                     }
 
                     if (e.Context.Response.Responsed)
@@ -234,9 +234,9 @@ namespace TouchSocket.WebApi
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }
 
-                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureFalseAwait();
+                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private Task OnHttpRequest(object sender, PluginEventArgs args)
@@ -336,7 +336,7 @@ namespace TouchSocket.WebApi
                     }
             }
 
-            await httpResponse.AnswerAsync().ConfigureFalseAwait();
+            await httpResponse.AnswerAsync().ConfigureAwait(false);
 
             if (!httpContext.Request.KeepAlive)
             {

@@ -28,13 +28,13 @@ namespace TouchSocket.Http.WebSockets
         /// 自动响应Close报文
         /// </summary>
         public static readonly DependencyProperty<bool> AutoCloseProperty =
-           DependencyProperty<bool>.Register("AutoClose", true);
+           new("AutoClose", true);
 
         /// <summary>
         /// 自动响应Ping报文
         /// </summary>
         public static readonly DependencyProperty<bool> AutoPongProperty =
-           DependencyProperty<bool>.Register("AutoPong", false);
+           new("AutoPong", false);
 
         private string m_wSUrl = "/ws";
 
@@ -90,7 +90,7 @@ namespace TouchSocket.Http.WebSockets
         {
             this.VerifyConnection = async (client, context) =>
             {
-                await EasyTask.CompletedTask.ConfigureFalseAwait();
+                await EasyTask.CompletedTask.ConfigureAwait(false);
                 return func.Invoke(client, context);
             };
             return this;
@@ -140,10 +140,10 @@ namespace TouchSocket.Http.WebSockets
         {
             if (client.Protocol == Protocol.Http)
             {
-                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureFalseAwait())
+                if (await this.VerifyConnection.Invoke(client, e.Context).ConfigureAwait(false))
                 {
                     e.Handled = true;
-                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureFalseAwait();
+                    await client.SwitchProtocolToWebSocketAsync(e.Context).ConfigureAwait(false);
                     if (!this.AutoClose)
                     {
                         client.SetValue(AutoCloseProperty, false);
@@ -155,12 +155,12 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task<bool> ThisVerifyConnection(IHttpSessionClient client, HttpContext context)
         {
-            await EasyTask.CompletedTask.ConfigureFalseAwait();
+            await EasyTask.CompletedTask.ConfigureAwait(false);
             if (context.Request.Method == HttpMethod.Get)
             {
                 if (this.WSUrl == "/" || context.Request.UrlEquals(this.WSUrl))

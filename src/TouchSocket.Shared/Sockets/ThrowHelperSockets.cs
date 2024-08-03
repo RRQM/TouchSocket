@@ -10,10 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -26,7 +23,7 @@ namespace TouchSocket.Core
         {
             throw new ClientNotConnectedException(TouchSocketResource.ClientNotConnected);
         }
-        
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowClientNotFindException(string id)
         {

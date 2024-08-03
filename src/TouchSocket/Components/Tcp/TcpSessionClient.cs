@@ -57,12 +57,13 @@ namespace TouchSocket.Sockets
         /// <param name="e"></param>
         protected override async Task OnTcpConnected(ConnectedEventArgs e)
         {
-            await this.m_onClientConnected(this, e).ConfigureFalseAwait();
+            await this.m_onClientConnected(this, e).ConfigureAwait(false);
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpConnected(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -70,12 +71,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected override async Task OnTcpConnecting(ConnectingEventArgs e)
         {
-            await this.m_onClientConnecting(this, e).ConfigureFalseAwait();
+            await this.m_onClientConnecting(this, e).ConfigureAwait(false);
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpConnecting(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -86,19 +88,20 @@ namespace TouchSocket.Sockets
         {
             if (this.Closed != null)
             {
-                await this.Closed.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closed.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.m_onClientDisconnected(this, e).ConfigureFalseAwait();
+            await this.m_onClientDisconnected(this, e).ConfigureAwait(false);
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -109,16 +112,19 @@ namespace TouchSocket.Sockets
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureFalseAwait();
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
-            await this.m_onClientDisconnecting(this, e).ConfigureFalseAwait();
-
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this, e).ConfigureFalseAwait();
+            await this.m_onClientDisconnecting(this, e).ConfigureAwait(false);
+            if (e.Handled)
+            {
+                return;
+            }
+            await base.OnTcpClosing(e).ConfigureAwait(false);
         }
 
         #endregion 事件&委托
@@ -129,80 +135,14 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
-            await this.m_onClientReceivedData(this, e).ConfigureFalseAwait();
+            await this.m_onClientReceivedData(this, e).ConfigureAwait(false);
             if (e.Handled)
             {
                 return;
             }
-            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this, e).ConfigureFalseAwait();
+
+            await base.OnTcpReceived(e).ConfigureAwait(false);
         }
-
-        /// <summary>
-        /// 当收到原始数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
-        protected override async ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
-        {
-            return this.PluginManager.GetPluginCount(typeof(ITcpReceivingPlugin)) > 0 && await this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this, new ByteBlockEventArgs(byteBlock)).ConfigureFalseAwait();
-        }
-
-        /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
-        /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
-        protected override async ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
-        {
-            if (this.PluginManager.GetPluginCount(typeof(ITcpSendingPlugin)) > 0)
-            {
-                var args = new SendingEventArgs(memory);
-                await this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this, args).ConfigureFalseAwait();
-                return args.IsPermitOperation;
-            }
-            return true;
-        }
-
-        //#region 同步发送
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public virtual void 123Send(IRequestInfo requestInfo)
-        //{
-        //    this.ProtectedSend(requestInfo);
-        //}
-
-        ///// <summary>
-        ///// 发送字节流
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public virtual void 123Send(byte[] buffer, int offset, int length)
-        //{
-        //    this.ProtectedSend(buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //public virtual void 123Send(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ProtectedSend(transferBytes);
-        //}
-
-        //#endregion 同步发送
 
         #region 异步发送
 
@@ -215,7 +155,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        public virtual Task SendAsync(ReadOnlyMemory<byte>  memory)
+        public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedSendAsync(memory);
         }

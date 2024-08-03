@@ -105,7 +105,7 @@ namespace TouchSocket.WebApi
                 {
                     if (returnType != null)
                     {
-                        return this.Converter.Deserialize(null, await response.GetBodyAsync().ConfigureFalseAwait(), returnType);
+                        return this.Converter.Deserialize(null, await response.GetBodyAsync().ConfigureAwait(false), returnType);
                     }
                     else
                     {

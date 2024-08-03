@@ -28,7 +28,7 @@ namespace TouchSocket.Http
 
         public void Dispose()
         {
-            m_action.Invoke();
+            this.m_action.Invoke();
         }
     }
 }

@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http
@@ -52,7 +50,7 @@ namespace TouchSocket.Http
         }
     }
 
-    class UnfixedHeaderHttpResponse : HttpResponse, IUnfixedHeaderRequestInfo
+    internal class UnfixedHeaderHttpResponse : HttpResponse, IUnfixedHeaderRequestInfo
     {
         private int m_headerLength;
 
@@ -62,7 +60,7 @@ namespace TouchSocket.Http
 
         public int BodyLength => (int)this.ContentLength;
 
-        public int HeaderLength => m_headerLength;
+        public int HeaderLength => this.m_headerLength;
 
         public bool OnParsingBody(ReadOnlySpan<byte> body)
         {
@@ -76,7 +74,7 @@ namespace TouchSocket.Http
 
             if (this.ParsingHeader(ref byteBlock))
             {
-                this.m_headerLength = byteBlock.Position-startPos;
+                this.m_headerLength = byteBlock.Position - startPos;
                 return true;
             }
 

@@ -162,7 +162,7 @@ namespace TouchSocket.Sockets
             ThreadPool.UnsafeQueueUserWorkItem(Run, state);
         }
 
-        public override IReceiverResult GetResult()
+        protected override IReceiverResult GetResult()
         {
             if (this.m_cacheMode)
             {
@@ -223,7 +223,7 @@ namespace TouchSocket.Sockets
     //    {
     //        return await this.ValueReadAsync(token).ConfigureAwait(false);
     //        //this.ThrowIfDisposed();
-    //        //await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
+    //        //await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
     //        //if (this.m_cacheMode)
     //        //{
     //        //    this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
@@ -428,7 +428,7 @@ namespace TouchSocket.Sockets
     //    public async Task<IReceiverResult> ReadAsync(CancellationToken token)
     //    {
     //        this.ThrowIfDisposed();
-    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
+    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
     //        if (this.m_cacheMode)
     //        {
     //            this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
@@ -446,7 +446,7 @@ namespace TouchSocket.Sockets
     //    public async ValueTask<IReceiverResult> ValueReadAsync(CancellationToken token)
     //    {
     //        this.ThrowIfDisposed();
-    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureFalseAwait();
+    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
 
     //        if (this.m_cacheMode)
     //        {

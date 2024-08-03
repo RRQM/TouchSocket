@@ -57,21 +57,24 @@ namespace TouchSocket.Sockets
             this.m_beginReceiveTask = Task.Run(this.BeginReceive);
 
             this.m_beginReceiveTask.FireAndForget();
-            await this.OnTcpConnected((ConnectedEventArgs)o).ConfigureFalseAwait();
+            await this.OnTcpConnected((ConnectedEventArgs)o).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 已经建立Tcp连接
+        /// 建立Tcp连接时触发。
+        /// <para>
+        /// 覆盖父类方法，将不会触发<see cref="ITcpConnectedPlugin"/>插件。
+        /// </para>
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnTcpConnected(ConnectedEventArgs e)
+        protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnTcpConnecting(ConnectingEventArgs e)
         {
-            await this.OnTcpConnecting(e).ConfigureFalseAwait();
+            await this.OnTcpConnecting(e).ConfigureAwait(false);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(TouchSocketConfigExtension.TcpDataHandlingAdapterProperty)?.Invoke();
@@ -83,35 +86,41 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
+        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接。
+        /// <para>
+        /// 覆盖父类方法，将不会触发<see cref="ITcpConnectingPlugin"/>插件。
+        /// </para>
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnTcpConnecting(ConnectingEventArgs e)
+        protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnTcpClosed(object obj)
         {
-            await this.m_beginReceiveTask.ConfigureFalseAwait();
+            await this.m_beginReceiveTask.ConfigureAwait(false);
 
             var e = (ClosedEventArgs)obj;
 
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.Complete(e.Message).ConfigureFalseAwait();
+                await receiver.Complete(e.Message).ConfigureAwait(false);
             }
-            await this.OnTcpClosed(e).ConfigureFalseAwait();
+            await this.OnTcpClosed(e).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 断开连接。在客户端未设置连接状态时，不会触发
+        /// 连接断开时触发。
+        /// <para>
+        /// 覆盖父类方法将不触发<see cref="ITcpClosedPlugin"/>插件。
+        /// </para>
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnTcpClosed(ClosedEventArgs e)
+        protected virtual async Task OnTcpClosed(ClosedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this, e).ConfigureAwait(false);
         }
 
         private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -121,11 +130,14 @@ namespace TouchSocket.Sockets
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
+        /// <para>
+        /// 覆盖父类方法，将不会触发<see cref="ITcpClosingPlugin"/>插件。
+        /// </para>
         /// </summary>
         /// <param name="e"></param>
-        protected virtual Task OnTcpClosing(ClosingEventArgs e)
+        protected virtual async Task OnTcpClosing(ClosingEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件
@@ -174,7 +186,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_online)
             {
-                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureFalseAwait();
+                await this.PrivateOnTcpClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
                 this.MainSocket.TryClose();
                 this.Abort(true, msg);
             }
@@ -201,7 +213,7 @@ namespace TouchSocket.Sockets
 
         private async Task BeginReceive()
         {
-            var byteBlock= new ByteBlock(this.m_tcpCore.ReceiveBufferSize);
+            var byteBlock = new ByteBlock(this.m_tcpCore.ReceiveBufferSize);
             while (true)
             {
                 try
@@ -226,16 +238,16 @@ namespace TouchSocket.Sockets
 
                             if (this.m_dataHandlingAdapter == null)
                             {
-                                await this.PrivateHandleReceivedData(byteBlock, default).ConfigureFalseAwait();
+                                await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
                             }
                             else
                             {
-                                await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureFalseAwait();
+                                await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
                             }
                         }
                         catch (Exception ex)
                         {
-                            this.Logger.Exception(ex);
+                            this.Logger?.Exception(ex);
                         }
                         finally
                         {
@@ -247,7 +259,7 @@ namespace TouchSocket.Sockets
                             else
                             {
                                 byteBlock.Reset();
-                                if (this.m_tcpCore.ReceiveBufferSize>byteBlock.Capacity)
+                                if (this.m_tcpCore.ReceiveBufferSize > byteBlock.Capacity)
                                 {
                                     byteBlock.SetCapacity(this.m_tcpCore.ReceiveBufferSize);
                                 }
@@ -299,7 +311,7 @@ namespace TouchSocket.Sockets
         {
             this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
                 if (this.m_online)
@@ -311,7 +323,7 @@ namespace TouchSocket.Sockets
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
                 var args = new ConnectingEventArgs();
-                await this.PrivateOnTcpConnecting(args).ConfigureFalseAwait();
+                await this.PrivateOnTcpConnecting(args).ConfigureAwait(false);
                 if (token.CanBeCanceled)
                 {
                     await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(false);
@@ -352,7 +364,7 @@ namespace TouchSocket.Sockets
         {
             this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureFalseAwait();
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
 
             try
             {
@@ -360,12 +372,12 @@ namespace TouchSocket.Sockets
                 {
                     return;
                 }
-                var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost,nameof(this.RemoteIPHost));
+                var iPHost = ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
                 this.MainSocket.SafeDispose();
                 var socket = this.CreateSocket(iPHost);
-                await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureFalseAwait();
+                await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
                 var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
-                await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout)).ConfigureFalseAwait();
+                await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout)).ConfigureAwait(false);
                 this.m_online = true;
                 this.SetSocket(socket);
                 this.Authenticate();
@@ -420,7 +432,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_receiver != null)
             {
-                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureFalseAwait();
+                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureAwait(false);
                 return;
             }
             await this.OnTcpReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
@@ -430,16 +442,19 @@ namespace TouchSocket.Sockets
         /// 当收到适配器处理的数据时。
         /// </summary>
         /// <param name="e"></param>
-        protected abstract Task OnTcpReceived(ReceivedDataEventArgs e);
+        protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
+        {
+            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this, e).ConfigureAwait(false);
+        }
 
         /// <summary>
         /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
         /// </summary>
         /// <param name="memory"></param>
-        /// <returns>返回值表示是否允许发送</returns>
+        /// <returns>返回值意义</returns>
         protected virtual ValueTask<bool> OnTcpSending(ReadOnlyMemory<byte> memory)
         {
-            return EasyValueTask.FromResult(true);
+            return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -548,7 +563,7 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
         {
-            return EasyValueTask.FromResult(false);
+            return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
         #region Throw
@@ -577,26 +592,13 @@ namespace TouchSocket.Sockets
 
         #region 直接发送
 
-        ///// <inheritdoc/>
-        //protected void ProtectedDefaultSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThrowIfDisposed();
-        //    this.ThrowIfClientNotConnected();
-        //    if (this.OnTcpSending(buffer, offset, length).GetFalseAwaitResult())
-        //    {
-        //        this.m_tcpCore.Send(buffer, offset, length);
-        //    }
-        //}
-
         /// <inheritdoc/>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfDisposed();
             this.ThrowIfClientNotConnected();
-            if (await this.OnTcpSending(memory).ConfigureAwait(false))
-            {
-                await this.m_tcpCore.SendAsync(memory).ConfigureFalseAwait();
-            }
+            await this.OnTcpSending(memory).ConfigureAwait(false);
+            await this.m_tcpCore.SendAsync(memory).ConfigureAwait(false);
         }
 
         #endregion 直接发送
@@ -609,11 +611,16 @@ namespace TouchSocket.Sockets
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
+        protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
-            return this.m_dataHandlingAdapter == null
-                ? this.ProtectedDefaultSendAsync(memory)
-                : this.m_dataHandlingAdapter.SendInputAsync(memory);
+            if (this.m_dataHandlingAdapter == null)
+            {
+                return this.ProtectedDefaultSendAsync(memory);
+            }
+            else
+            {
+                return this.m_dataHandlingAdapter.SendInputAsync(memory);
+            }
         }
 
         /// <summary>
@@ -623,7 +630,7 @@ namespace TouchSocket.Sockets
         /// <exception cref="ClientNotConnectedException"></exception>
         /// <exception cref="OverlengthException"></exception>
         /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(IRequestInfo requestInfo)
+        protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
         {
             this.ThrowIfCannotSendRequestInfo();
             return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
@@ -652,17 +659,17 @@ namespace TouchSocket.Sockets
                     }
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureFalseAwait();
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureFalseAwait();
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }
 

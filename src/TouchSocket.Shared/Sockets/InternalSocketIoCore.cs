@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.SocketIo
 {
@@ -22,7 +21,11 @@ namespace TouchSocket.SocketIo
     {
         #region 字段
 
-        private readonly WaitHandlePool<ISocketIoMessage> m_waitHandlePoolForEmit = new WaitHandlePool<ISocketIoMessage>();
+        private readonly WaitHandlePool<ISocketIoMessage> m_waitHandlePoolForEmit = new WaitHandlePool<ISocketIoMessage>()
+        {
+            MaxSign = 99,
+            MinSign = 0
+        };
         private IEngineIo m_engineIO;
 
         #endregion 字段
@@ -52,13 +55,13 @@ namespace TouchSocket.SocketIo
         }
 
         public string Namespace { get; set; }
-       
+
         public ISocketIoSerializer Serializer { get; set; } = new NewtonsoftJsonSerializer();
 
         public string Sid { get; set; }
 
         public EngineIoTransportType TransportType { get; set; }
-        public Func<List<DataItem>,Task> SendAsyncAction { get; set; }
+        public Func<List<DataItem>, Task> SendAsyncAction { get; set; }
 
         public EngineIoMessage Decode(string value)
         {

@@ -36,7 +36,7 @@ namespace TouchSocket.Core
                 return 0;
             }
             var len = this.m_length - this.m_position > length ? length : this.CanReadLength;
-            Unsafe.CopyBlock(ref span[0], ref this.m_buffer[m_position], (uint)len);
+            Unsafe.CopyBlock(ref span[0], ref this.m_buffer[this.m_position], (uint)len);
             this.m_position += len;
             return len;
         }
@@ -49,7 +49,7 @@ namespace TouchSocket.Core
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public ReadOnlySpan<byte> ReadToSpan(int length)
         {
-            var span = new ReadOnlySpan<byte>(this.m_buffer,this.m_position,length);
+            var span = new ReadOnlySpan<byte>(this.m_buffer, this.m_position, length);
 
             this.m_position += length;
             return span;
@@ -113,13 +113,8 @@ namespace TouchSocket.Core
         /// </summary>
         public byte[] ReadBytesPackage()
         {
-            var memory = ReadBytesPackageMemory();
-            if (memory.HasValue)
-            {
-                return memory.Value.ToArray();
-            }
-
-            return null;
+            var memory = this.ReadBytesPackageMemory();
+            return memory.HasValue ? memory.Value.ToArray() : null;
         }
 
         public Memory<byte>? ReadBytesPackageMemory()
@@ -1151,8 +1146,8 @@ namespace TouchSocket.Core
             guid = new Guid(this.Span.Slice(this.m_position, 16));
 #else
 
-            var bytes = this.Span.Slice(this.m_position,16).ToArray() ;
-            guid= new Guid(bytes);
+            var bytes = this.Span.Slice(this.m_position, 16).ToArray();
+            guid = new Guid(bytes);
 #endif
             this.m_position += 16;
             return guid;

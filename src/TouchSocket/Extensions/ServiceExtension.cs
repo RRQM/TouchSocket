@@ -44,14 +44,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetListenIPHosts(iPHosts);
-                await service.SetupAsync(config).ConfigureFalseAwait();
+                await service.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = service.Config;
                 config.SetListenIPHosts(iPHosts);
             }
-            await service.StartAsync().ConfigureFalseAwait();
+            await service.StartAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc cref="IServiceBase.StartAsync"/>
@@ -72,14 +72,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetBindIPHost(iPHost);
-                await service.SetupAsync(config).ConfigureFalseAwait();
+                await service.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = service.Config;
                 config.SetBindIPHost(iPHost);
             }
-            await service.StartAsync().ConfigureFalseAwait();
+            await service.StartAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc cref="IServiceBase.StartAsync"/>

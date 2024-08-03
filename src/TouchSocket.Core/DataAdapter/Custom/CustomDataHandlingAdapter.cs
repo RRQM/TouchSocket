@@ -11,9 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -22,9 +19,9 @@ namespace TouchSocket.Core
     /// 用户自定义数据处理适配器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，
     /// 同时<see cref="IRequestInfo"/>将实现为TRequest，发送数据直接发送。
     /// </summary>
-    public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest :IRequestInfo
+    public abstract class CustomDataHandlingAdapter<TRequest> : SingleStreamDataHandlingAdapter where TRequest : IRequestInfo
     {
-       
+
         private ValueByteBlock m_tempByteBlock;
 
         private readonly Type m_requestType;
@@ -61,7 +58,7 @@ namespace TouchSocket.Core
 
             if (this.m_tempByteBlock.IsEmpty)
             {
-                return this.Single(ref byteBlock, out request)== FilterResult.Success;
+                return this.Single(ref byteBlock, out request) == FilterResult.Success;
             }
             else
             {
@@ -77,7 +74,7 @@ namespace TouchSocket.Core
                 block.Write(byteBlock.Span.Slice(byteBlock.Position, len));
                 byteBlock.Position += len;
                 this.SurLength -= len;
-                
+
                 this.m_tempByteBlock = ValueByteBlock.Empty;
 
                 block.SeekToStart();
@@ -94,14 +91,14 @@ namespace TouchSocket.Core
                                     byteBlock.Position += this.m_tempByteBlock.Length;
                                 }
                                 else
-                                { 
-                                
+                                {
+
                                 }
                                 return false;
                             }
                         case FilterResult.Success:
                             {
-                                if (block.CanReadLength>0)
+                                if (block.CanReadLength > 0)
                                 {
                                     byteBlock.Position -= block.CanReadLength;
                                 }
@@ -168,14 +165,14 @@ namespace TouchSocket.Core
             }
             if (this.m_tempByteBlock.IsEmpty)
             {
-                await this.SingleAsync(byteBlock, false).ConfigureFalseAwait();
+                await this.SingleAsync(byteBlock, false).ConfigureAwait(false);
             }
             else
             {
                 this.m_tempByteBlock.Write(byteBlock.Span);
                 var block = this.m_tempByteBlock;
                 this.m_tempByteBlock = ValueByteBlock.Empty;
-                await this.SingleAsync(block, true).ConfigureFalseAwait();
+                await this.SingleAsync(block, true).ConfigureAwait(false);
             }
         }
 
@@ -193,17 +190,13 @@ namespace TouchSocket.Core
 
         protected virtual bool IsBeCached(in TRequest request)
         {
-            if (this.m_requestType.IsValueType)
-            {
-                return request.GetHashCode()!=default(TRequest).GetHashCode();
-            }
-            return request != null;
+            return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
         }
 
         protected FilterResult Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
         {
             var tempCapacity = 1024 * 64;
-            var filterResult = this.Filter(ref byteBlock,  this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
+            var filterResult = this.Filter(ref byteBlock, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
             switch (filterResult)
             {
                 case FilterResult.Success:
@@ -243,7 +236,7 @@ namespace TouchSocket.Core
             }
         }
 
-        private async Task SingleAsync<TByteBlock>(TByteBlock byteBlock, bool temp)where TByteBlock:IByteBlock
+        private async Task SingleAsync<TByteBlock>(TByteBlock byteBlock, bool temp) where TByteBlock : IByteBlock
         {
             byteBlock.Position = 0;
             while (byteBlock.Position < byteBlock.Length)
@@ -260,7 +253,7 @@ namespace TouchSocket.Core
                     case FilterResult.Success:
                         if (this.OnReceivingSuccess(this.m_tempRequest))
                         {
-                            await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureFalseAwait();
+                            await this.GoReceivedAsync(null, this.m_tempRequest).ConfigureAwait(false);
                             this.OnReceivedSuccess(this.m_tempRequest);
                         }
                         this.m_tempRequest = default;

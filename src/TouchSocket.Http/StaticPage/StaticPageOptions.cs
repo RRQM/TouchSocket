@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http
@@ -60,7 +60,7 @@ namespace TouchSocket.Http
                 return relativeURL;
             });
         }
-        private readonly StaticFilesPool m_filesPool=new StaticFilesPool();
+        private readonly StaticFilesPool m_filesPool = new StaticFilesPool();
         /// <summary>
         /// 提供文件扩展名和MIME类型之间的映射。
         /// </summary>

@@ -25,13 +25,13 @@ namespace TouchSocket.JsonRpc
         /// 标识是否为JsonRpc
         /// </summary>
         public static readonly DependencyProperty<bool> IsJsonRpcProperty =
-            DependencyProperty<bool>.Register("IsJsonRpc", false);
+            new("IsJsonRpc", false);
 
         /// <summary>
         /// IJsonRpcActionClient
         /// </summary>
         public static readonly DependencyProperty<IJsonRpcActionClient> JsonRpcActionClientProperty =
-            DependencyProperty<IJsonRpcActionClient>.Register("JsonRpcActionClient", default);
+            new("JsonRpcActionClient", default);
 
         /// <summary>
         /// 获取<see cref="IsJsonRpcProperty"/>

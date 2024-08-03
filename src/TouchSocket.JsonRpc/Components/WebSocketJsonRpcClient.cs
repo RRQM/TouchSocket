@@ -94,7 +94,7 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                await this.Client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(str)), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureFalseAwait();
+                await this.Client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(str)), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureAwait(false);
             }
             catch
             {
@@ -130,7 +130,7 @@ namespace TouchSocket.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureFalseAwait();
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
             }
 
             if (!callContext.JsonRpcContext.Id.HasValue)
@@ -138,7 +138,7 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureFalseAwait();
+            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -193,7 +193,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureFalseAwait();
+                await this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureAwait(false);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -209,7 +209,7 @@ namespace TouchSocket.JsonRpc
                                 waitData.SetCancellationToken(invokeOption.Token);
                             }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureFalseAwait())
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
