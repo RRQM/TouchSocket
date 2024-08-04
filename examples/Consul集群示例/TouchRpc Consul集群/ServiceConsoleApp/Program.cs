@@ -1,4 +1,16 @@
-﻿using Consul;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using Consul;
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -16,14 +28,14 @@ namespace ServiceConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.WriteLine("输入本地监听端口");
             var port = int.Parse(Console.ReadLine());
 
             //此处直接建立HttpDmtpService。
             //此组件包含Http所有功能，可以承载JsonRpc、XmlRpc、WebSocket、Dmtp等等。
-            var service = new TouchSocketConfig()
+            var service =await new TouchSocketConfig()
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .ConfigureContainer(a =>
                 {
@@ -44,7 +56,7 @@ namespace ServiceConsoleApp
                     a.Add<MyWebSocketPlug>();//添加WebSocket业务数据接收插件
                     a.Add<MyWebSocketCommand>();//添加WebSocket快捷实现，常规WS客户端发送文本“Add 10 20”即可得到30。
                 })
-                .BuildWithHttpDmtpService();
+                .BuildServiceAsync<HttpDmtpService>();
 
             service.Logger.Info("Http服务器已启动");
             service.Logger.Info($"WS插件已加载，使用 ws://127.0.0.1:{port}/ws 连接");
@@ -137,11 +149,11 @@ namespace ServiceConsoleApp
     /// <summary>
     /// WS收到数据等业务。
     /// </summary>
-    internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin<IWebSocket>, IWebSocketReceivedPlugin<IWebSocket>
+    internal class MyWebSocketPlug : PluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
     {
         public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
-            if (client.Client is IHttpSocketClient socketClient)
+            if (client.Client is IHttpSessionClient socketClient)
             {
                 socketClient.Logger.Info($"WS客户端连接，ID={socketClient.Id}，IPHost={socketClient.IP}:{socketClient.Port}");
             }
@@ -151,7 +163,7 @@ namespace ServiceConsoleApp
 
         public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
-            if (client.Client is IHttpSocketClient socketClient)
+            if (client.Client is IHttpSessionClient socketClient)
             {
                 if (e.DataFrame.Opcode == WSDataType.Text)
                 {

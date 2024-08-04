@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Text;
 using TouchSocket.Core;
 
@@ -11,7 +23,6 @@ namespace BytePoolConsoleApp
             NewBytePool();
             BaseWriteRead();
             PrimitiveWriteRead();
-            ObjectWriteRead();
             BytesPackageWriteRead();
             IPackageWriteRead();
             IPackageWriteRead();
@@ -45,24 +56,8 @@ namespace BytePoolConsoleApp
                 byteBlock.SeekToStart();
 
                 //使用下列方式即可高效完成读取
-                if (byteBlock.TryReadBytesPackageInfo(out var pos, out var len))
-                {
-                    var str = Encoding.UTF8.GetString(byteBlock.Buffer, pos, len);
-                }
-            }
-        }
+                var memory=byteBlock.ReadBytesPackageMemory();
 
-        private static void ObjectWriteRead()
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                //将实例写入，实际上是序列化
-                byteBlock.WriteObject(new MyClass(), SerializationType.FastBinary);
-
-                byteBlock.SeekToStart();
-
-                //读取实例，实际上是反序列化
-                var myClass = byteBlock.ReadObject<MyClass>();
             }
         }
 
@@ -70,10 +65,10 @@ namespace BytePoolConsoleApp
         {
             using (var byteBlock = new ByteBlock())
             {
-                byteBlock.Write(byte.MaxValue);//写入byte类型
-                byteBlock.Write(int.MaxValue);//写入int类型
-                byteBlock.Write(long.MaxValue);//写入long类型
-                byteBlock.Write("RRQM");//写入字符串类型
+                byteBlock.WriteByte(byte.MaxValue);//写入byte类型
+                byteBlock.WriteInt32(int.MaxValue);//写入int类型
+                byteBlock.WriteInt64(long.MaxValue);//写入long类型
+                byteBlock.WriteString("RRQM");//写入字符串类型
 
                 byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
@@ -92,7 +87,7 @@ namespace BytePoolConsoleApp
 
                 byteBlock.SeekToStart();//将游标重置
 
-                var buffer = new byte[byteBlock.Len];//定义一个数组容器
+                var buffer = new byte[byteBlock.Length];//定义一个数组容器
                 var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
             }
         }
@@ -137,15 +132,27 @@ namespace BytePoolConsoleApp
     {
         public int Property { get; set; }
 
-        public override void Package(in ByteBlock byteBlock)
+        /*新写法*/
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.Property);
+            byteBlock.WriteInt32(Property);
         }
 
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.Property = byteBlock.ReadInt32();
         }
+
+        /*旧写法*/
+        //public override void Package(in ByteBlock byteBlock)
+        //{
+        //    byteBlock.Write(this.Property);
+        //}
+        //public override void Unpackage(in ByteBlock byteBlock)
+        //{
+        //    this.Property = byteBlock.ReadInt32();
+        //}
+     
     }
 
     internal class MyClass

@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -6,7 +18,7 @@ namespace PluginConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             IPluginManager pluginManager = new PluginManager(new Container())
             {
@@ -20,12 +32,12 @@ namespace PluginConsoleApp
             pluginManager.Add<LastSayPlugin>();
 
             //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
-            pluginManager.Add(nameof(ISayPlugin.Say), () =>
+            pluginManager.Add(typeof(ISayPlugin), () =>
             {
                 Console.WriteLine("在Action1中获得");
             });
 
-            pluginManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
+            pluginManager.Add(typeof(ISayPlugin), async (MyPluginEventArgs e) =>
             {
                 Console.WriteLine("在Action2中获得");
                 await e.InvokeNext();
@@ -34,7 +46,7 @@ namespace PluginConsoleApp
             while (true)
             {
                 Console.WriteLine("请输入hello、helloaction、hellogenerator、hi或者其他");
-                pluginManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+                await pluginManager.RaiseAsync(typeof(ISayPlugin), new object(), new MyPluginEventArgs()
                 {
                     Words = Console.ReadLine()
                 });
@@ -120,7 +132,7 @@ namespace PluginConsoleApp
             base.Loaded(pluginManager);
 
             //注册本地方法为委托
-            pluginManager.Add<object, MyPluginEventArgs>(nameof(ISayPlugin.Say), this.Say);
+            pluginManager.Add<object, MyPluginEventArgs>(typeof(ISayPlugin), this.Say);
         }
 
         public async Task Say(object sender, MyPluginEventArgs e)
@@ -157,7 +169,7 @@ namespace PluginConsoleApp
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        [GeneratorPlugin(nameof(ISayPlugin.Say))]
+        [GeneratorPlugin(typeof(ISayPlugin))]
         public async Task Say(object sender, MyPluginEventArgs e)
         {
             Console.WriteLine($"{this.GetType().Name}------Enter");

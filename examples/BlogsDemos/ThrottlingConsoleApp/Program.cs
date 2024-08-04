@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -19,12 +31,12 @@ namespace ThrottlingConsoleApp
             service.Received = (client, e) =>
             {
                 //从客户端收到信息
-                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
                 client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
                 return EasyTask.CompletedTask;
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置
+            service.SetupAsync(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
                 .ConfigureContainer(a =>
                 {
@@ -34,7 +46,7 @@ namespace ThrottlingConsoleApp
                 {
                     a.Add<MyThrottlingPlugin>();
                 }));
-            service.Start();//启动
+            service.StartAsync();//启动
             service.Logger.Info("服务器已启动");
             Console.ReadLine();
         }
@@ -46,7 +58,7 @@ namespace ThrottlingConsoleApp
     internal static class DependencyExtensions
     {
         public static readonly DependencyProperty<FlowGate> FlowGateProperty =
-            DependencyProperty<FlowGate>.Register("FlowGate", null);
+            new("FlowGate", null);
 
         public static void InitFlowGate(this IDependencyObject dependencyObject, int max)
         {
@@ -69,15 +81,15 @@ namespace ThrottlingConsoleApp
             this.m_max = max;
         }
 
-        public Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+        public Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
         {
             client.InitFlowGate(this.m_max);//初始化流量计数器。
             return e.InvokeNext();
         }
 
-        public async Task OnTcpReceiving(ITcpClientBase client, ByteBlockEventArgs e)
+        public async Task OnTcpReceiving(ITcpSession client, ByteBlockEventArgs e)
         {
-            await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Len);
+            await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Length);
             await e.InvokeNext();
         }
     }

@@ -1,9 +1,22 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -22,16 +35,16 @@ namespace ScreenUdpSender
             this.InitializeComponent();
         }
 
-        private Thread m_thread;
+        private Task m_thread;
 
-        private void Tick()
+        private async Task Tick()
         {
             while (true)
             {
                 var byteArray = this.ImageToByte(this.getScreen());
                 using var bb = new ByteBlock(byteArray);
-                this.udpSession.Send(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb);
-                Thread.Sleep((int)(1000.0 / (int)this.numericUpDown1.Value));
+                await this.udpSession.SendAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7790), bb.Memory);
+                await Task.Delay((int)(1000.0 / (int)this.numericUpDown1.Value));
             }
         }
 
@@ -120,14 +133,14 @@ namespace ScreenUdpSender
             {
                 this.udpSession = new UdpSession();
 
-                this.udpSession.Setup(
+                this.udpSession.SetupAsync(
                 new TouchSocketConfig()
                 .SetBindIPHost(new IPHost(7789))
                 .SetUdpDataHandlingAdapter(() => { return new UdpPackageAdapter() { MaxPackageSize = 1024 * 1024, MTU = 1024 * 10 }; }));
-                this.udpSession.Start();
-                this.m_thread = new Thread(this.Tick);
-                this.m_thread.IsBackground = true;
-                this.m_thread.Start();
+                this.udpSession.StartAsync();
+
+
+                this.m_thread = Task.Factory.StartNew(this.Tick);
             }
             catch (Exception ex)
             {

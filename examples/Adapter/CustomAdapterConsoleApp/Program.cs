@@ -1,4 +1,16 @@
-﻿using System.Text;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -6,10 +18,10 @@ namespace CustomAdapterConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = CreateService();
-            var client = CreateClient();
+            var service = await CreateService();
+            var client = await CreateClient();
 
             ConsoleLogger.Default.Info("按任意键发送10次");
             while (true)
@@ -27,34 +39,34 @@ namespace CustomAdapterConsoleApp
                     //构建发送数据
                     using (var byteBlock = new ByteBlock(1024))
                     {
-                        byteBlock.Write((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                        byteBlock.Write((byte)myRequestInfo.DataType);//然后数据类型
-                        byteBlock.Write((byte)myRequestInfo.OrderType);//然后指令类型
+                        byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                        byteBlock.WriteByte((byte)myRequestInfo.DataType);//然后数据类型
+                        byteBlock.WriteByte((byte)myRequestInfo.OrderType);//然后指令类型
                         byteBlock.Write(myRequestInfo.Body);//再写数据
-                        client.Send(byteBlock);
+                        await client.SendAsync(byteBlock.Memory);
                     }
                 }
             }
         }
 
-        private static TcpClient CreateClient()
+        private static async Task<TcpClient> CreateClient()
         {
             var client = new TcpClient();
             //载入配置
-            client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }));
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个日志注入
+                 }));
 
-            client.Connect();//调用连接，当连接不成功时，会抛出异常。
+            await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
             client.Logger.Info("客户端成功连接");
             return client;
         }
 
-        private static TcpService CreateService()
+        private static async Task<TcpService> CreateService()
         {
             var service = new TcpService();
             service.Received = (client, e) =>
@@ -68,18 +80,18 @@ namespace CustomAdapterConsoleApp
                 return Task.CompletedTask;
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                })
-                .ConfigurePlugins(a =>
-                {
-                    //a.Add();//此处可以添加插件
-                }));
-            service.Start();//启动
+            await service.SetupAsync(new TouchSocketConfig()//载入配置
+                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                 .SetTcpDataHandlingAdapter(() => new MyCustomDataHandlingAdapter())
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     //a.Add();//此处可以添加插件
+                 }));
+            await service.StartAsync();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }
@@ -98,32 +110,32 @@ namespace CustomAdapterConsoleApp
         /// <param name="request">对象。</param>
         /// <param name="tempCapacity">缓存容量指导，指示当需要缓存时，应该申请多大的内存。</param>
         /// <returns></returns>
-        protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
+        protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref MyRequestInfo request, ref int tempCapacity)
         {
             //以下解析思路为一次性解析，不考虑缓存的临时对象。
 
-            if (byteBlock.CanReadLen < 3)
+            if (byteBlock.CanReadLength < 3)
             {
                 return FilterResult.Cache;//当头部都无法解析时，直接缓存
             }
 
-            var pos = byteBlock.Pos;//记录初始游标位置，防止本次无法解析时，回退游标。
+            var pos = byteBlock.Position;//记录初始游标位置，防止本次无法解析时，回退游标。
 
             var myRequestInfo = new MyRequestInfo();
 
             //此操作实际上有两个作用，
             //1.填充header
             //2.将byteBlock.Pos递增3的长度。
-            byteBlock.Read(out var header, 3);//填充header
+            var header = byteBlock.ReadToSpan(3);//填充header
 
             //因为第一个字节表示所有长度，而DataType、OrderType已经包含在了header里面。
             //所有只需呀再读取header[0]-2个长度即可。
             var bodyLength = (byte)(header[0] - 2);
 
-            if (bodyLength > byteBlock.CanReadLen)
+            if (bodyLength > byteBlock.CanReadLength)
             {
                 //body数据不足。
-                byteBlock.Pos = pos;//回退游标
+                byteBlock.Position = pos;//回退游标
                 return FilterResult.Cache;
             }
             else
@@ -131,11 +143,11 @@ namespace CustomAdapterConsoleApp
                 //此操作实际上有两个作用，
                 //1.填充body
                 //2.将byteBlock.Pos递增bodyLength的长度。
-                byteBlock.Read(out var body, bodyLength);
+                var body = byteBlock.ReadToSpan(bodyLength);
 
                 myRequestInfo.DataType = header[1];
                 myRequestInfo.OrderType = header[2];
-                myRequestInfo.Body = body;
+                myRequestInfo.Body = body.ToArray();
                 request = myRequestInfo;//赋值ref
                 return FilterResult.Success;//返回成功
             }

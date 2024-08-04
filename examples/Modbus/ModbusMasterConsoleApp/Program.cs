@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Modbus;
 using TouchSocket.SerialPorts;
 using TouchSocket.Sockets;
@@ -7,42 +19,39 @@ namespace ModbusClientConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var client = GetModbusTcpMaster();
+            var master = await GetModbusTcpMasterAsync();
 
-            ReadWriteHoldingRegisters(client);
+            await ReadWriteHoldingRegisters(master);
             Console.ReadKey();
         }
 
         /// <summary>
         /// 要测试，请打开Modbus Slave软件，设置HoldingRegisters。至少30个长度。
         /// </summary>
-        public static void ReadWriteHoldingRegisters(IModbusMaster client)
+        public static async Task ReadWriteHoldingRegisters(IModbusMaster master)
         {
             //写入单个寄存器
-            client.WriteSingleRegister(1, 0, 1);//默认short ABCD端序
-            client.WriteSingleRegister(1, 1, 1000);//默认short ABCD端序
+            await master.WriteSingleRegisterAsync(1, 0, 1);//默认short ABCD端序
+            await master.WriteSingleRegisterAsync(1, 1, 1000);//默认short ABCD端序
 
             using (var valueByteBlock = new ValueByteBlock(1024))
             {
-                valueByteBlock.Write((ushort)2, EndianType.Big);//ABCD端序
-                valueByteBlock.Write((ushort)2000, EndianType.Little);//DCBA端序
-                valueByteBlock.Write(int.MaxValue, EndianType.BigSwap);//BADC端序
-                valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+                valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
+                valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
+                valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
+                valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
                 //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-                valueByteBlock.Write("Hello");
-
-                //写入任意类型，使用Json序列化
-                valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
+                valueByteBlock.WriteString("Hello");
 
                 //写入到寄存器
-                client.WriteMultipleRegisters(1, 2, valueByteBlock.ToArray());
+                await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
             }
 
             //读取寄存器
-            var response = client.ReadHoldingRegisters(1, 0, 30);
+            var response = await master.ReadHoldingRegistersAsync(1, 0, 30);
 
             //创建一个读取器
             var reader = response.CreateReader();
@@ -54,24 +63,23 @@ namespace ModbusClientConsoleApp
             Console.WriteLine(reader.ReadInt32(EndianType.BigSwap));
             Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
             Console.WriteLine(reader.ReadString());
-            Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonString());
         }
 
         /// <summary>
         /// 读写线圈，在测试时，请选择对应的Modbus Slave类型，且调到线圈操作，至少5个长度
         /// </summary>
-        /// <param name="client"></param>
-        public static void ReadWriteCoilsShouldBeOk(IModbusMaster client)
+        /// <param name="master"></param>
+        public static async Task ReadWriteCoilsShouldBeOk(IModbusMaster master)
         {
             //写单个线圈
-            client.WriteSingleCoil(1, 0, true);
-            client.WriteSingleCoil(1, 1, false);
+            await master.WriteSingleCoilAsync(1, 0, true);
+            await master.WriteSingleCoilAsync(1, 1, false);
 
             //写多个线圈
-            client.WriteMultipleCoils(1, 2, new bool[] { true, false, true });
+            await master.WriteMultipleCoilsAsync(1, 2, new bool[] { true, false, true });
 
             //读取线圈
-            var values = client.ReadCoils(1, 0, 5);
+            var values = await master.ReadCoilsAsync(1, 0, 5);
             foreach (var value in values)
             {
                 Console.WriteLine(value);
@@ -82,11 +90,11 @@ namespace ModbusClientConsoleApp
         /// Tcp协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusTcpMaster GetModbusTcpMaster()
+        public static async Task<IModbusMaster> GetModbusTcpMasterAsync()
         {
             var client = new ModbusTcpMaster();
 
-            client.Connect("127.0.0.1:502");
+            await client.ConnectAsync("127.0.0.1:502");
             return client;
         }
 
@@ -94,13 +102,13 @@ namespace ModbusClientConsoleApp
         /// Udp协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusMaster GetModbusUdpMaster()
+        public static async Task<IModbusMaster> GetModbusUdpMaster()
         {
             var client = new ModbusUdpMaster();
-            client.Setup(new TouchSocketConfig()
-                .UseUdpReceive()
-                .SetRemoteIPHost("127.0.0.1:502"));
-            client.Start();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .UseUdpReceive()
+                 .SetRemoteIPHost("127.0.0.1:502"));
+            await client.StartAsync();
             return client;
         }
 
@@ -108,19 +116,19 @@ namespace ModbusClientConsoleApp
         /// 串口协议的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusMaster GetModbusRtuMaster()
+        public static async Task<IModbusMaster> GetModbusRtuMaster()
         {
             var client = new ModbusRtuMaster();
-            client.Setup(new TouchSocketConfig()
-                .SetSerialPortOption(new SerialPortOption()
-                {
-                    BaudRate = 9600,
-                    DataBits = 8,
-                    Parity = System.IO.Ports.Parity.Even,
-                    PortName = "COM2",
-                    StopBits = System.IO.Ports.StopBits.One
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetSerialPortOption(new SerialPortOption()
+                 {
+                     BaudRate = 9600,
+                     DataBits = 8,
+                     Parity = System.IO.Ports.Parity.Even,
+                     PortName = "COM2",
+                     StopBits = System.IO.Ports.StopBits.One
+                 }));
+            await client.ConnectAsync();
             return client;
         }
 
@@ -128,10 +136,10 @@ namespace ModbusClientConsoleApp
         /// 基于Tcp协议，但使用Rtu的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusMaster GetModbusRtuOverTcpMaster()
+        public static async Task<IModbusMaster> GetModbusRtuOverTcpMaster()
         {
             var client = new ModbusRtuOverTcpMaster();
-            client.Connect("127.0.0.1:502");
+            await client.ConnectAsync("127.0.0.1:502");
             return client;
         }
 
@@ -139,13 +147,13 @@ namespace ModbusClientConsoleApp
         /// 基于Udp协议，但使用Rtu的主站
         /// </summary>
         /// <returns></returns>
-        public static IModbusMaster GetModbusRtuOverUdpMaster()
+        public static async Task<IModbusMaster> GetModbusRtuOverUdpMaster()
         {
             var client = new ModbusRtuOverUdpMaster();
-            client.Setup(new TouchSocketConfig()
-                .UseUdpReceive()
-                .SetRemoteIPHost("127.0.0.1:502"));
-            client.Start();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .UseUdpReceive()
+                 .SetRemoteIPHost("127.0.0.1:502"));
+            await client.StartAsync();
             return client;
         }
     }
