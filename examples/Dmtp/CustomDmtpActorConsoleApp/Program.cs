@@ -1,4 +1,16 @@
-﻿using CustomDmtpActorConsoleApp.SimpleDmtpRpc;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using CustomDmtpActorConsoleApp.SimpleDmtpRpc;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Sockets;
@@ -10,10 +22,10 @@ namespace CustomDmtpActorConsoleApp
     /// </summary>
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = GetTcpDmtpService();
-            var client = GetTcpDmtpClient();
+            var service = await GetTcpDmtpService();
+            var client = await GetTcpDmtpClient();
 
             while (true)
             {
@@ -32,9 +44,9 @@ namespace CustomDmtpActorConsoleApp
             }
         }
 
-        private static TcpDmtpClient GetTcpDmtpClient()
+        private static async Task<TcpDmtpClient> GetTcpDmtpClient()
         {
-            var client = new TouchSocketConfig()
+            var client = await new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -52,13 +64,13 @@ namespace CustomDmtpActorConsoleApp
                        .SetTick(TimeSpan.FromSeconds(3))
                        .SetMaxFailCount(3);
                    })
-                   .BuildWithTcpDmtpClient();
+                   .BuildClientAsync<TcpDmtpClient>();
 
             client.Logger.Info("连接成功");
             return client;
         }
 
-        private static TcpDmtpService GetTcpDmtpService()
+        private static async Task<TcpDmtpService> GetTcpDmtpService()
         {
             var service = new TcpDmtpService();
 
@@ -80,8 +92,8 @@ namespace CustomDmtpActorConsoleApp
                        VerifyToken = "File"//连接验证口令。
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
             service.Logger.Info("服务器成功启动");
             return service;
         }

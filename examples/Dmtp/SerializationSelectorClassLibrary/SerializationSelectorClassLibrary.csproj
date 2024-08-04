@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MemoryPack" Version="1.21.1" />
-    <PackageReference Include="TouchSocket.JsonRpc" Version="2.0.9" />
-    <PackageReference Include="TouchSocket.Rpc" Version="2.0.9" />
-    <PackageReference Include="TouchSocket.WebApi" Version="2.0.9" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="2.0.9" />
-    <PackageReference Include="TouchSocketPro" Version="2.0.9" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.9" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="2.1.0-rc.7" />
+    <PackageReference Include="TouchSocket.Rpc" Version="2.1.0-rc.7" />
+    <PackageReference Include="TouchSocket.WebApi" Version="2.1.0-rc.7" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="2.1.0-rc.7" />
+    <PackageReference Include="TouchSocketPro" Version="2.1.0-rc.7" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="2.1.0-rc.7" />
   </ItemGroup>
 
 </Project>

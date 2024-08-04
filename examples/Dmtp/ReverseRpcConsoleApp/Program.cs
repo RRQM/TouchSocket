@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -17,7 +29,7 @@ namespace ReverseRpcConsoleApp
             //创建逻辑客户端
             var client = CreateTcpDmtpClient();
 
-            foreach (var item in tcpDmtpService.GetClients())
+            foreach (var item in tcpDmtpService.Clients)
             {
                 client.Logger.Info(item.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三"));
                 client.Logger.Info("调用完成");
@@ -44,8 +56,8 @@ namespace ReverseRpcConsoleApp
                        VerifyToken = "Dmtp"
                    });
 
-            service.Setup(config);
-            service.Start();
+            service.SetupAsync(config);
+            service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
             return service;
@@ -54,7 +66,7 @@ namespace ReverseRpcConsoleApp
         private static TcpDmtpClient CreateTcpDmtpClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
+            client.SetupAsync(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigureContainer(a =>
                 {
@@ -72,7 +84,7 @@ namespace ReverseRpcConsoleApp
                 {
                     VerifyToken = "Dmtp"
                 }));
-            client.Connect();
+            client.ConnectAsync();
 
             return client;
         }

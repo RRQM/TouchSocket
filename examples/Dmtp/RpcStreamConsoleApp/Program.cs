@@ -1,4 +1,16 @@
-﻿using System.ComponentModel;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System.ComponentModel;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -22,7 +34,7 @@ namespace RpcStreamConsoleApp
         private static TcpDmtpClient CreateClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
+            client.SetupAsync(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigurePlugins(a =>
                 {
@@ -32,7 +44,7 @@ namespace RpcStreamConsoleApp
                 {
                     VerifyToken = "Dmtp"
                 }));
-            client.Connect();
+            client.ConnectAsync();
             return client;
         }
 
@@ -58,8 +70,8 @@ namespace RpcStreamConsoleApp
                        VerifyToken = "Rpc"
                    });
 
-            service.Setup(config);
-            service.Start();
+            service.SetupAsync(config);
+            service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }
@@ -79,7 +91,7 @@ namespace RpcStreamConsoleApp
                 {
                     foreach (var byteBlock in channel)
                     {
-                        size += byteBlock.Len;
+                        size += byteBlock.Length;
                     }
                 }
             });
@@ -100,14 +112,14 @@ namespace RpcStreamConsoleApp
             var size = 0;
             var package = 1024 * 1024;
             var channel = client.CreateChannel();//创建通道
-            var task = Task.Run(() =>//这里必须用异步
+            var task = Task.Run(async () =>//这里必须用异步
             {
                 for (var i = 0; i < Program.Count; i++)
                 {
                     size += package;
-                    channel.Write(new byte[package]);
+                    await channel.WriteAsync(new byte[package]);
                 }
-                channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+                await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
             });
 
             //此处是直接调用，真正使用时，可以生成代理调用。
@@ -127,20 +139,20 @@ namespace RpcStreamConsoleApp
             /// <param name="channelID"></param>
             [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
             [DmtpRpc(true)]//此处设置直接使用方法名调用
-            public int RpcPullChannel(ICallContext callContext, int channelID)
+            public async Task<int> RpcPullChannel(ICallContext callContext, int channelID)
             {
                 var size = 0;
                 var package = 1024 * 1024;
-                if (callContext.Caller is ITcpDmtpSocketClient socketClient)
+                if (callContext.Caller is ITcpDmtpSessionClient socketClient)
                 {
                     if (socketClient.TrySubscribeChannel(channelID, out var channel))
                     {
                         for (var i = 0; i < Program.Count; i++)
                         {
                             size += package;
-                            channel.Write(new byte[package]);
+                            await channel.WriteAsync(new byte[package]);
                         }
-                        channel.Complete();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
+                        await channel.CompleteAsync();//必须调用指令函数，如HoldOn，Complete，Cancel，Dispose
                     }
                 }
                 return size;
@@ -157,13 +169,13 @@ namespace RpcStreamConsoleApp
             {
                 var size = 0;
 
-                if (callContext.Caller is TcpDmtpSocketClient socketClient)
+                if (callContext.Caller is TcpDmtpSessionClient socketClient)
                 {
                     if (socketClient.TrySubscribeChannel(channelID, out var channel))
                     {
                         foreach (var byteBlock in channel)
                         {
-                            size += byteBlock.Len;
+                            size += byteBlock.Length;
                         }
                         Console.WriteLine($"服务器接收结束，状态：{channel.Status}，长度：{size}");
                     }

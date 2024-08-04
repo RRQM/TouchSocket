@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.JsonRpc;
@@ -20,7 +32,7 @@ namespace ReverseJsonRpcConsoleApp
         private static WebSocketJsonRpcClient GetClient()
         {
             var jsonRpcClient = new WebSocketJsonRpcClient();
-            jsonRpcClient.Setup(new TouchSocketConfig()
+            jsonRpcClient.SetupAsync(new TouchSocketConfig()
                 .ConfigureContainer(a =>
                 {
                     a.AddRpcStore(store =>
@@ -29,7 +41,7 @@ namespace ReverseJsonRpcConsoleApp
                     });
                 })
                 .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
-            jsonRpcClient.Connect();
+            jsonRpcClient.ConnectAsync();
 
             return jsonRpcClient;
         }
@@ -38,7 +50,7 @@ namespace ReverseJsonRpcConsoleApp
         {
             var service = new HttpService();
 
-            service.Setup(new TouchSocketConfig()
+            service.SetupAsync(new TouchSocketConfig()
                  .SetListenIPHosts(7707)
                  .ConfigurePlugins(a =>
                  {
@@ -55,19 +67,19 @@ namespace ReverseJsonRpcConsoleApp
 
                      a.Add<MyPluginClass>();
                  }));
-            service.Start();
+            service.StartAsync();
             return service;
         }
     }
 
-    internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IWebSocket>
+    internal class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin
     {
         public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             try
             {
                 //获取JsonRpcActionClient，用于执行反向Rpc
-                var jsonRpcClient = ((IHttpSocketClient)client.Client).GetJsonRpcActionClient();
+                var jsonRpcClient = ((IHttpSessionClient)client.Client).GetJsonRpcActionClient();
 
                 var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
                 Console.WriteLine(result);
