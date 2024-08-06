@@ -15,9 +15,9 @@ title: 内存池
 
 ## 二、功能
 
-内存池（BytePool）是解决创建大量字节数组消耗的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
+内存池（`BytePool`）是解决创建、销毁大字节数组的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
 
-内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。`ByteBlock`是继承自`Stream`的类，拥有和`MemoryStream`一样的功能和内存回收管理的增强功能。所以如果有`MemoryStream`的使用需求的话，就可以完全让`ByteBlock`替代。而`ValueByteBlock`是`ByteBlock`的值类型（ref struct），其功能除了不继承Stream以外，和`ByteBlock`一模一样。且为值类型，创建开销更小。
+内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了IBufferWriter<byte>接口，可以更好的使用GetMemory、GetSpan与Advance。
 
 ## 三、使用
 
