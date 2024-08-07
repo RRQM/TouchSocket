@@ -21,7 +21,8 @@ import Tag from "@site/src/components/Tag.js";
 | IWebSocketHandshakingPlugin | 当收到握手请求之前，可以进行连接验证等 |
 | IWebSocketHandshakedPlugin | 当成功握手响应之后 |
 | IWebSocketReceivedPlugin | 当收到Websocket的数据报文 |
-| IWebSocketClosingPlugin | 当收到关闭请求时，如果对方直接断开连接，此方法则不会触发，届时可以考虑使用ITcpDisconnectedPlugin |
+| IWebSocketClosingPlugin | 当收到关闭请求时，如果对方直接断开连接，此方法则不会触发。 |
+| IWebSocketClosedPlugin | 当WebSocket连接断开时触发，无论是否正常断开。但如果是断网等操作，可能不会立即执行，需要结合心跳操作和CheckClear插件来进行清理。 |
 
 ## 三、创建客户端
 
