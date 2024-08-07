@@ -17,13 +17,24 @@ title: 内存池
 
 内存池（`BytePool`）是解决创建、销毁大字节数组的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
 
-内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了IBufferWriter<byte>接口，可以更好的使用GetMemory、GetSpan与Advance。
+内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了`IBufferWriter<byte>`接口，可以更好的使用`GetMemory`、`GetSpan`与`Advance`等功能。
 
 ## 三、使用
 
-### 3.1 创建、回收
+### 3.1 内存池
 
-`BytePool`在默认情况提供了一个`Default`的默认实例，当然您可以新建只属于自己的`BytePool`。
+`BytePool`在默认情况提供了一个`BytePool.Default`的默认静态实例。这是整个进程可以共享使用的。
+
+当然您可以创建只属于自己的`BytePool`。
+
+```csharp showLineNumbers
+BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
+{
+    AutoZero = false,//在回收内存时，是否清空内存
+    MaxBucketsToTry = 5//最大梯度跨度
+};
+```
+
 
 其中：
 
@@ -32,15 +43,6 @@ title: 内存池
 - AutoZero属性，在回收内存时，是否清空内存。
 - MaxBucketsToTry是最大梯度跨度。例如：当梯度为16、32、64、128、512、1024时，MaxBucketsToTry为2，则当请求的长度是16时，且16的内存块均已派出，则会请求32，最大会请求到64，如果均已派出，则直接新建。
 
-```csharp showLineNumbers
-BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
-{
-    AutoZero = false,//在回收内存时，是否清空内存
-    MaxBucketsToTry = 5//最大梯度跨度
-};
-
-BytePool defaultBytePool = BytePool.Default;//使用默认的
-```
 
 在内存池创建以后，可以直观的查看它的各个属性。包括：
 
@@ -49,7 +51,11 @@ Console.WriteLine($"内存池容量={bytePool.Capacity}");
 Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
 ```
 
-使用内存块
+### 3.2 创建内存块
+
+内存块就是可以使用的字节数组。框架提供了`ByteBlock`和`ValueByteBlock`两种内存块。后者是值类型的Handle，所以在创建时不能使用`new ValueByteBlock()`。而是要指定长度。
+
+
 
 `ByteBlock`可通过BytePool实例创建，也可以直接new对象，后者使用的是默认内存池实例提供支持。
 
