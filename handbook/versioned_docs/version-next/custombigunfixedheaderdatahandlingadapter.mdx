@@ -1,6 +1,6 @@
 --- 
-id: bigfixedheadercustomdatahandlingadapter
-title: 模板解析“大数据固定包头”数据适配器
+id: custombigunfixedheaderdatahandlingadapter
+title: 模板解析“大数据不固定包头”数据适配器
 ---
 
 ### 定义
@@ -10,7 +10,7 @@ title: 模板解析“大数据固定包头”数据适配器
 
 ## 一、说明
 
-大数据固定包头，是对固定的包头模板的补充，一般来是，固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据固定包头实现。
+大数据不固定包头，是对不固定的包头模板的补充，一般来是，不固定包头适配器，不能工作于超过2G的数据，但是在少数情况下，会有大量的数据传输需求。所以这部分的业务，可以用大数据不固定包头实现。
 
 
 ## 二、特点
@@ -26,17 +26,21 @@ title: 模板解析“大数据固定包头”数据适配器
 
 步骤
 
-1. 声明新建类，实现`IBigFixedHeaderRequestInfo`接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
-2. 声明新建类，继承`CustomBigFixedHeaderDataHandlingAdapter`，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+1. 声明新建类，实现`IBigUnfixedHeaderRequestInfo`接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承`CustomBigUnfixedHeaderDataHandlingAdapter`，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
 3. `TouchSocketConfig`配置中设置。
 4. 通过`Received`（事件、方法、插件）中的`RequestInfo`对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
 
-【MyBigFixedHeaderRequestInfo】
-首先，新建`MyBigFixedHeaderRequestInfo`类，然后实现`IBigFixedHeaderRequestInfo`用户自定义固定包头接口。
-然后在`OnParsingHeader`函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为`Body` 。
+【MyBigUnfixedHeaderRequestInfo】
+
+首先，新建`MyBigUnfixedHeaderRequestInfo`类，然后实现`IBigUnfixedHeaderRequestInfo`用户自定义不固定包头接口。
+
+然后在`OnParsingHeader`函数执行结束时，对实现的`BodyLength`和`HeaderLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为`Body` 。
+
+同时最重要的是把ByteBlock.Position属性，设置为适当位置，表示已经消费了多少数据。
 
 ```csharp showLineNumbers
-class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
+class MyBigUnfixedHeaderRequestInfo : IBigUnfixedHeaderRequestInfo
 {
     /// <summary>
     /// 自定义属性，标识数据类型
@@ -53,20 +57,24 @@ class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
     /// </summary>
     public byte[] Body { get; set; }
 
+
+    List<byte> m_bytes = new List<byte>();
+
+    private int m_headerLength;
     private long m_bodyLength;
 
-    List<byte> m_bytes=new List<byte>();
-
     #region 接口成员
-    long IBigFixedHeaderRequestInfo.BodyLength => m_bodyLength;
+    int IBigUnfixedHeaderRequestInfo.HeaderLength => m_headerLength;
 
-    void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
+    long IBigUnfixedHeaderRequestInfo.BodyLength => m_bodyLength;
+
+    void IBigUnfixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
     {
         //每次追加数据
         m_bytes.AddRange(buffer.ToArray());
     }
 
-    bool IBigFixedHeaderRequestInfo.OnFinished()
+    bool IBigUnfixedHeaderRequestInfo.OnFinished()
     {
         if (m_bytes.Count == this.m_bodyLength)
         {
@@ -76,28 +84,40 @@ class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
         return false;
     }
 
-    bool IBigFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+    bool IBigUnfixedHeaderRequestInfo.OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock)
     {
+        if (byteBlock.CanReadLength<3)//判断可读数据是否满足一定长度
+        {
+            return false;
+        }
+
+        var pos= byteBlock.Position;//可以先记录游标位置，当解析不能进行时回退游标
+
         //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
-        this.m_bodyLength = header[0] - 2;
-        this.DataType = header[1];
-        this.OrderType = header[2];
+        this.m_bodyLength = byteBlock.ReadByte() - 2;
+        this.DataType = byteBlock.ReadByte();
+        this.OrderType = byteBlock.ReadByte();
+
+
+        //当执行到这里时，byteBlock.Position已经递增了3个长度。
+        //所以无需再其他操作，如果是其他，则需要手动移动byteBlock.Position到指定位置。
+
+        this.m_headerLength = 3;//表示Header消耗了3个字节，实际上可以省略这一行，但是为了性能，最好加上
+
         return true;
     }
     #endregion
 }
 ```
 
-新建`MyCustomBigFixedHeaderDataHandlingAdapter`继承`CustomBigFixedHeaderDataHandlingAdapter`，然后对`HeaderLength`作出赋值，以此表明**固定包头**的长度是多少。
+新建`MyCustomBigUnfixedHeaderDataHandlingAdapter`继承`CustomBigUnfixedHeaderDataHandlingAdapter`。
 
 ```csharp showLineNumbers
-class MyCustomBigFixedHeaderDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
+class MyCustomBigUnfixedHeaderDataHandlingAdapter : CustomBigUnfixedHeaderDataHandlingAdapter<MyBigUnfixedHeaderRequestInfo>
 {
-    public override int HeaderLength => 3;
-
-    protected override MyBigFixedHeaderRequestInfo GetInstance()
+    protected override MyBigUnfixedHeaderRequestInfo GetInstance()
     {
-        return new MyBigFixedHeaderRequestInfo();
+        return new MyBigUnfixedHeaderRequestInfo();
     }
 }
 ```
@@ -111,7 +131,7 @@ private static async Task<TcpClient> CreateClient()
     //载入配置
     await client.SetupAsync(new TouchSocketConfig()
          .SetRemoteIPHost("127.0.0.1:7789")
-         .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+         .SetTcpDataHandlingAdapter(() => new MyCustomBigUnfixedHeaderDataHandlingAdapter())
          .ConfigureContainer(a =>
          {
              a.AddConsoleLogger();//添加一个日志注入
@@ -129,7 +149,7 @@ private static async Task<TcpService> CreateService()
     {
         //从客户端收到信息
 
-        if (e.RequestInfo is MyBigFixedHeaderRequestInfo myRequest)
+        if (e.RequestInfo is MyBigUnfixedHeaderRequestInfo myRequest)
         {
             client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
         }
@@ -138,7 +158,7 @@ private static async Task<TcpService> CreateService()
 
     await service.SetupAsync(new TouchSocketConfig()//载入配置
          .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-         .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+         .SetTcpDataHandlingAdapter(() => new MyCustomBigUnfixedHeaderDataHandlingAdapter())
          .ConfigureContainer(a =>
          {
              a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
