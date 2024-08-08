@@ -264,7 +264,7 @@
         },
         {
           "type": "category",
-          "label": "11.2 Tcp适配器",
+          "label": "11.2 单线程流式适配器",
           "items": [
             {
               "type": "doc",
@@ -288,13 +288,18 @@
             },
             {
               "type": "doc",
+              "id": "bigfixedheadercustomdatahandlingadapter",
+              "label": "f.模板解析大数据固定包头适配器"
+            },
+            {
+              "type": "doc",
               "id": "customunfixedheaderdatahandlingadapter",
               "label": "e.模板解析非固定包头适配器"
             },
             {
               "type": "doc",
-              "id": "bigfixedheadercustomdatahandlingadapter",
-              "label": "f.模板解析大数据固定包头适配器"
+              "id": "custombigunfixedheaderdatahandlingadapter",
+              "label": "f.模板解析大数据非固定包头适配器"
             },
             {
               "type": "doc",
@@ -315,7 +320,7 @@
         },
         {
           "type": "category",
-          "label": "11.3 Udp适配器",
+          "label": "11.3 多线程非流式适配器",
           "items": [
             {
               "type": "doc",
