@@ -5,7 +5,7 @@
 		<PackageTags>Tcp;Udp;Ssl;Socket;Saea;AspNetCore;TouchSocket</PackageTags>
 		<Description>TouchSocket.AspNetCore是适用于AspNetCore的专属版本。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket</Description>
+说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.AspNetCore</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.AspNetCore</PackageOutputPath>
 	</PropertyGroup>

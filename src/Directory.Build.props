@@ -3,13 +3,13 @@
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.14</Version>
+		<Version>2.0.15</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2024 若汝棋茗</Copyright>
-		<PackageProjectUrl>https://gitee.com/rrqm_home/touchsocket</PackageProjectUrl>
+		<PackageProjectUrl>https://touchsocket.net/</PackageProjectUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -19,7 +19,7 @@
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
-		<RepositoryUrl>https://gitee.com/rrqm_home/touchsocket</RepositoryUrl>
+		<RepositoryUrl>https://touchsocket.net/</RepositoryUrl>
 		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
 	</PropertyGroup>
 
