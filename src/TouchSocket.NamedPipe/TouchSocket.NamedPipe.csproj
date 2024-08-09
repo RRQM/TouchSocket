@@ -4,7 +4,7 @@
 		<PackageTags>Pipeline;NamedPipe;Ipc;TouchSocket</PackageTags>
 		<Description>这是一个基于命名管道的组件库。它模仿Tcp封装了命名管道的服务器和客户端，以及连接、断开连接等消息。功能上实现了多管道名称监听、流式数据解析，以极致接近Tcp的体验使用命名管道。
 
-说明文档：http://rrqm_home.gitee.io/touchsocket	</Description>
+说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.NamedPipe</PackageOutputPath>
 	</PropertyGroup>

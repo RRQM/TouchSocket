@@ -72,7 +72,7 @@ namespace TouchSocket.Core
      Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}
      Gitee      :   https://gitee.com/rrqm_home
      Github     :   https://github.com/rrqm
-     API        :   http://rrqm_home.gitee.io/touchsocket/
+     API        :   https://touchsocket.net//
  -------------------------------------------------------------------
 ";
             Console.WriteLine(title);
