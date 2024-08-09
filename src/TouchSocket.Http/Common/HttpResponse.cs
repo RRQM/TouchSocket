@@ -377,7 +377,6 @@ namespace TouchSocket.Http
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.m_client = null;
             base.Dispose(disposing);
         }
 
