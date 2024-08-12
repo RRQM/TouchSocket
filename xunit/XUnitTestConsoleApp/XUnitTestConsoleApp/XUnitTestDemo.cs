@@ -5,17 +5,16 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RpcArgsClassLib;
 using TouchSocket.Core;
-using TouchSocket.Core.AspNetCore;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Dmtp;
@@ -29,6 +28,7 @@ using TouchSocket.Sockets;
 using TouchSocket.NamedPipe;
 using XUnitTestConsoleApp.Server;
 using TouchSocket.Http.WebSockets;
+using System.Net.WebSockets;
 
 namespace XUnitTestConsoleApp
 {
@@ -36,11 +36,28 @@ namespace XUnitTestConsoleApp
     {
         private static HttpDmtpService m_httpService;
 
-        private static IContainer GetContainer()
+        private static IRegistrator GetContainer()
         {
-            var container = new AspNetCoreContainer(new ServiceCollection());
-            container.AddConsoleLogger();
+            var container = new Container();
+            container.AddLogger(loggerGroup =>
+            {
+                loggerGroup.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+            });
             return container;
+
+            //var container = new AspNetCoreContainer(new ServiceCollection());
+            //container.AddLogger(loggerGroup =>
+            //{
+            //    loggerGroup.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+            //});
+            //return container;
+
+            //var container = new AutofacContainer(new ContainerBuilder());
+            //container.AddLogger(loggerGroup =>
+            //{
+            //    loggerGroup.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+            //});
+            //return container;
         }
 
         public static void Start()
@@ -59,6 +76,8 @@ namespace XUnitTestConsoleApp
 
             CreateTLVTcpService(7805);
 
+            CreatePeriodTcpService(7807);
+
 
             CodeGenerator.AddProxyType<ProxyClass1>();
             CodeGenerator.AddProxyType<ProxyClass2>(deepSearch: true);
@@ -71,66 +90,69 @@ namespace XUnitTestConsoleApp
             {
                 var builder = WebApplication.CreateBuilder();
 
-                builder.Services.AddWebSocketDmtpService(() =>
+                builder.Services.AddTcpService<ITcpService, TcpService>(config =>
                 {
-                    return new TouchSocketConfig()
-                        .SetDmtpOption(new DmtpOption()
-                        {
-                            VerifyToken = "123RPC"
-                        })
-                        .UseAspNetCoreContainer(builder.Services)
-                        .ConfigureContainer(a =>
-                        {
-                            a.AddDmtpRouteService();
-                        })
-                        .ConfigurePlugins(a =>
-                        {
-                            a.UseDmtpRpc()
-                            .ConfigureRpcStore(store =>
-                            {
-                                store.RegisterServer<XUnitTestController>();
-                                store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
+                    config.ConfigureContainer(container =>
+                    {
 
-                                string core = store.GetProxyCodes("ProxyCore", new Type[] { typeof(DmtpRpcAttribute) });
-                            });
-                            a.UseDmtpFileTransfer();
-                            a.UseDmtpRemoteStream();
-                            a.UseDmtpRedis();
-                            a.UseDmtpRemoteAccess();
-                            a.UseDmtpRouterPackage();
+                    });
 
-                            a.Add<MyDmtpPlugin>();
-                        });
+                    config.ConfigurePlugins(a =>
+                    {
+                        a.UseCheckClear();
+                    });
                 });
 
-                builder.Services.AddHttpMiddlewareDmtpService(() =>
+                builder.Services.AddWebSocketDmtpService(config =>
                 {
-                    return new TouchSocketConfig()
-                            .SetDmtpOption(new DmtpOption()
-                            {
-                                VerifyToken = "123RPC"
-                            })
-                            .UseAspNetCoreContainer(builder.Services)
-                            .ConfigureContainer(a =>
-                            {
-                                a.AddDmtpRouteService();
-                            })
-                            .ConfigurePlugins(a =>
-                            {
-                                a.UseDmtpRpc()
-                                .ConfigureRpcStore(a =>
-                                {
-                                    a.RegisterServer<XUnitTestController>();
-                                    a.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                                });
-                                a.UseDmtpFileTransfer();
-                                a.UseDmtpRemoteStream();
-                                a.UseDmtpRedis();
-                                a.UseDmtpRemoteAccess();
-                                a.UseDmtpRouterPackage();
+                    config.SetDmtpOption(new DmtpOption()
+                    {
+                        VerifyToken = "123RPC"
+                    })
+                         .UseAspNetCoreContainer(builder.Services)
+                         .ConfigureContainer(a =>
+                         {
+                             a.AddConsoleLogger();
+                             a.AddDmtpRouteService();
+                             a.AddRpcStore(store =>
+                             {
+                                 store.RegisterServer<XUnitTestController>();
+                                 store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
 
-                                a.Add<MyDmtpPlugin>();
-                            });
+                                 string core = store.GetProxyCodes("ProxyCore", new Type[] { typeof(DmtpRpcAttribute) });
+                             });
+                         })
+                         .ConfigurePlugins(a =>
+                         {
+                             a.UseDmtpRpc();
+                             a.UseDmtpFileTransfer();
+                             a.UseDmtpRemoteStream();
+                             a.UseDmtpRedis();
+                             a.UseDmtpRemoteAccess();
+                             a.UseDmtpRouterPackage();
+
+                             a.Add<MyDmtpPlugin>();
+                         });
+                });
+
+                builder.Services.AddHttpMiddlewareDmtpService(config =>
+                {
+                    config
+                    .SetDmtpOption(new DmtpOption()
+                    {
+                        VerifyToken = "123RPC"
+                    })
+                    .ConfigurePlugins(a =>
+                    {
+                        a.UseDmtpRpc();
+                        a.UseDmtpFileTransfer();
+                        a.UseDmtpRemoteStream();
+                        a.UseDmtpRedis();
+                        a.UseDmtpRemoteAccess();
+                        a.UseDmtpRouterPackage();
+
+                        a.Add<MyDmtpPlugin>();
+                    });
                 });
 
                 var app = builder.Build();
@@ -177,16 +199,21 @@ namespace XUnitTestConsoleApp
         {
             m_httpService = new HttpDmtpService();
             m_httpService.Setup(new TouchSocketConfig()
-                 .SetContainer(GetContainer())
-                .SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "123RPC"
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddDmtpRouteService();
-                })
+                 .SetRegistrator(GetContainer())
+                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "123RPC"
+                 })
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddDmtpRouteService();
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<XUnitTestController>();
+                         store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
+                     });
+                 })
                 .ConfigurePlugins(a =>
                 {
                     a.UseWebSocket()
@@ -209,12 +236,10 @@ namespace XUnitTestConsoleApp
                     });
                     a.Add<MyWebSocketPlugin>();
 
-                    a.UseWebApi()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<XUnitTestController>();
-                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    });
+                    a.UseWebApi();
+
+                    //a.UseSwagger()
+                    //.UseLaunchBrowser();
 
                     a.UseWebSocketJsonRpc()
                     .SetAllowJsonRpc((client, context) =>
@@ -224,35 +249,15 @@ namespace XUnitTestConsoleApp
                             return Task.FromResult(true);
                         }
                         return Task.FromResult(false);
-                    })
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<XUnitTestController>();
-                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
                     });
 
                     a.UseHttpJsonRpc()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<XUnitTestController>();
-                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    })
                     .SetJsonRpcUrl("/jsonRpc");
 
                     a.UseXmlRpc()
-                    .ConfigureRpcStore(store =>
-                    {
-                        store.RegisterServer<XUnitTestController>();
-                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    })
                     .SetXmlRpcUrl("/xmlrpc");
 
-                    a.UseDmtpRpc()
-                     .ConfigureRpcStore(store =>
-                     {
-                         store.RegisterServer<XUnitTestController>();
-                         store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                     });
+                    a.UseDmtpRpc();
                     a.UseDmtpFileTransfer();
                     a.UseDmtpRemoteStream();
                     a.UseDmtpRedis();
@@ -270,17 +275,20 @@ namespace XUnitTestConsoleApp
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()
-                 .SetContainer(GetContainer())
+                 .SetRegistrator(GetContainer())
                  .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetListenIPHosts(port)
-                .ConfigurePlugins(a =>
+                .ConfigureContainer(a =>
                 {
-                    a.UseTcpJsonRpc()
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<XUnitTestController>();
                         store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
                     });
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseTcpJsonRpc();
                 }));
 
             service.Start();
@@ -291,7 +299,7 @@ namespace XUnitTestConsoleApp
             var service = new NamedPipeService();
             var config = new TouchSocketConfig();
             config.SetPipeName(name)
-                .SetContainer(GetContainer())
+                .SetRegistrator(GetContainer())
                 .ConfigurePlugins(a =>
                 {
                     a.Add<MyNamedPipePlugin>();
@@ -318,7 +326,7 @@ namespace XUnitTestConsoleApp
 
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(port)
-                .SetContainer(GetContainer())
+                .SetRegistrator(GetContainer())
                 .ConfigurePlugins(a =>
                 {
                     a.UseCheckClear();
@@ -338,7 +346,7 @@ namespace XUnitTestConsoleApp
             var tcpDmtpService = new TcpDmtpService();
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(port)
-                .SetContainer(GetContainer())
+                .SetRegistrator(GetContainer())
                 .SetDmtpOption(new DmtpOption()
                 {
                     VerifyToken = "123RPC"
@@ -346,15 +354,15 @@ namespace XUnitTestConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddDmtpRouteService();
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<XUnitTestController>();
+                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
+                    });
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseDmtpRpc()
-                    .ConfigureRpcStore(a =>
-                    {
-                        a.RegisterServer<XUnitTestController>();
-                        a.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    });
+                    a.UseDmtpRpc();
                     a.UseDmtpFileTransfer();
                     a.UseDmtpRemoteStream();
                     a.UseDmtpRedis();
@@ -378,7 +386,7 @@ namespace XUnitTestConsoleApp
             var service = new NamedPipeDmtpService();
             var config = new TouchSocketConfig();
             config.SetPipeName(name)
-                .SetContainer(GetContainer())
+                .SetRegistrator(GetContainer())
                 .SetDmtpOption(new DmtpOption()
                 {
                     VerifyToken = "123RPC"
@@ -386,17 +394,17 @@ namespace XUnitTestConsoleApp
                 .ConfigureContainer(a =>
                 {
                     a.AddDmtpRouteService();
+                    a.AddRpcStore(store =>
+                    {
+                        store.RegisterServer<XUnitTestController>();
+                        store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
+                    });
                 })
                 .ConfigurePlugins(a =>
                 {
                     //a.UseAutoBufferLength();
 
-                    a.UseDmtpRpc()
-                    .ConfigureRpcStore(a =>
-                    {
-                        a.RegisterServer<XUnitTestController>();
-                        a.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    });
+                    a.UseDmtpRpc();
                     a.UseDmtpFileTransfer();
                     a.UseDmtpRemoteStream();
                     a.UseDmtpRedis();
@@ -432,7 +440,7 @@ namespace XUnitTestConsoleApp
 
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(port) })
-                 .SetContainer(GetContainer())
+                 .SetRegistrator(GetContainer())
                 .ConfigurePlugins(a =>
                 {
                     a.Add<TLVPlugin>();
@@ -446,25 +454,52 @@ namespace XUnitTestConsoleApp
             Console.WriteLine($"TLVTcpService已启动,端口：{port}");
         }
 
+        private static void CreatePeriodTcpService(int port)
+        {
+            var tcpService = new TcpService();
+
+            //订阅收到消息事件
+            tcpService.Received = (client, e) =>
+            {
+                Console.WriteLine(e.ByteBlock.ToString());
+                return Task.CompletedTask;
+            };
+
+            var config = new TouchSocketConfig();
+            config.SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                 .SetRegistrator(GetContainer())
+                 .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter())
+                .ConfigurePlugins(a =>
+                {
+
+                });
+
+            //载入配置
+            tcpService.Setup(config);
+
+            //启动
+            tcpService.Start();
+            Console.WriteLine($"PeriodTcpService已启动,端口：{port}");
+        }
+
         private static void CreateUdpRpcParser(int port)
         {
             var udpDmtp = new UdpDmtp();
 
             var config = new TouchSocketConfig();
             config.SetBindIPHost(new IPHost(port))
-                 .SetContainer(GetContainer())
+                 .SetRegistrator(GetContainer())
                  .ConfigureContainer(a =>
                  {
-                     a.AddConsoleLogger();
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<XUnitTestController>();
+                         store.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
+                     });
                  })
                  .ConfigurePlugins(a =>
                  {
-                     a.UseDmtpRpc()
-                    .ConfigureRpcStore(a =>
-                    {
-                        a.RegisterServer<XUnitTestController>();
-                        a.RegisterServer<IOtherAssemblyServer, OtherAssemblyServer>();
-                    });
+                     a.UseDmtpRpc();
                      a.UseDmtpFileTransfer();
                      a.UseDmtpRemoteStream();
                      a.UseDmtpRedis();
@@ -480,27 +515,6 @@ namespace XUnitTestConsoleApp
 
             Console.WriteLine($"UDPDmtp，端口号：{port}");
         }
-
-        //private static void CreateUdpService(int bindPort, int targetPort)
-        //{
-        //    UdpSession udpSession = new UdpSession();
-        //    udpSession.Received += (endpoint, byteBlock, requestInfo) =>
-        //    {
-        //        lock (udpSession)
-        //        {
-        //            udpSession.Send(endpoint, byteBlock);//将接收到的数据发送至默认终端
-        //        }
-        //    };
-
-        //    TouchSocketConfig config = new TouchSocketConfig();
-        //    config.SetBindIPHost(new IPHost($"127.0.0.1:{bindPort}"))
-        //        .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
-        //        .SetBufferLength(1024 * 1024);
-
-        //    udpSession.Setup(config);//加载配置
-        //    udpSession.Start();//启动
-        //    Console.WriteLine($"UdpService已启动，监听端口：{bindPort}，目标端口：{targetPort}");
-        //}
     }
 
     class MyTcpPlugin : PluginBase, ITcpConnectedPlugin, ITcpDisconnectedPlugin
@@ -526,32 +540,30 @@ namespace XUnitTestConsoleApp
 
     internal class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin, IWebSocketHandshakedPlugin
     {
-        public async Task OnWebSocketHandshaked(IHttpClientBase client, HttpContextEventArgs e)
+        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             if (e.Context.Request.UrlEquals("/wsread"))
             {
-                using (var webSocket = client.GetWebSocket())
+                client.AllowAsyncRead = true;
+                while (true)
                 {
-                    while (true)
+                    using (var receiveResult = await client.ReadAsync(CancellationToken.None))
                     {
-                        using (var receiveResult = await webSocket.ReadAsync(CancellationToken.None))
+                        if (receiveResult.DataFrame == null)
                         {
-                            if (receiveResult.DataFrame == null)
-                            {
-                                break;
-                            }
-                            await Console.Out.WriteLineAsync($"WebSocket同步Read：{receiveResult.DataFrame.ToText()}");
-                            webSocket.Send(receiveResult.DataFrame.ToText());
+                            break;
                         }
+                        await Console.Out.WriteLineAsync($"WebSocket同步Read：{receiveResult.DataFrame.ToText()}");
+                        client.Send(receiveResult.DataFrame.ToText());
                     }
-                    client.Logger.Info("Websocket断开");
                 }
+                client.Client.Logger.Info("Websocket断开");
                 return;
             }
             await e.InvokeNext();
         }
 
-        public async Task OnWebSocketReceived(IHttpClientBase client, WSDataFrameEventArgs e)
+        public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
             await e.InvokeNext();
         }
@@ -632,27 +644,38 @@ namespace XUnitTestConsoleApp
                     //        Console.WriteLine(byteBlock.Len);
                     //    }
                     //}
-                    foreach (var byteBlock in channel)
-                    {
-                        Console.WriteLine(byteBlock.Len);
-                        //using (byteBlock)
-                        //{
-                        //    Console.WriteLine(byteBlock.Len);
-                        //}
-                    }
-                    Console.WriteLine($"通道接收结束，状态{channel.Status}");
-                    if (channel.Status == ChannelStatus.Completed)
-                    {
-                        client.Send(10000);
-                    }
-                    //GC.Collect();
-                    var size = BytePool.Default.GetPoolSize();
-                    Console.WriteLine(size);
 
-                    //BytePool.Default.Clear();
-                    //GC.Collect();
-                    //size = BytePool.Default.GetPoolSize();
-                    //Console.WriteLine(size);
+                    using (channel)
+                    {
+                        int i = 0;
+                        var size = 0;
+                        foreach (var byteBlock in channel)
+                        {
+                            byteBlock.SeekToStart();
+                            var num = byteBlock.ReadInt32(EndianType.Big);
+                            if (num != i)
+                            {
+                                Console.WriteLine("顺序不对");
+                                return;
+                            }
+                            //Console.WriteLine(i);
+                            size += byteBlock.Len;
+                            i++;
+                        }
+                        Console.WriteLine($"通道接收结束，状态{channel.Status}，长度={size}");
+                        if (channel.Status == ChannelStatus.Completed)
+                        {
+                            client.Send(10000);
+                        }
+                        //GC.Collect();
+                        //var size = BytePool.Default.GetPoolSize();
+                        //Console.WriteLine(size);
+
+                        //BytePool.Default.Clear();
+                        //GC.Collect();
+                        //size = BytePool.Default.GetPoolSize();
+                        //Console.WriteLine(size);
+                    }
                 }
             }
 
@@ -695,7 +718,7 @@ namespace XUnitTestConsoleApp
         {
             var protocol = e.DmtpMessage.ProtocolFlags;
             ByteBlock byteBlock = e.DmtpMessage.BodyByteBlock;
-            Console.WriteLine($"TcpDmtpService收到数据，协议为：{protocol}，数据长度为：{byteBlock.Len}");
+            Console.WriteLine($"DmtpService收到数据，协议为：{protocol}，数据长度为：{byteBlock.Len}");
             switch (protocol)
             {
                 case 10000:

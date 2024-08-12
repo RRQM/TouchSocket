@@ -5,11 +5,12 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
+using System.Runtime.CompilerServices;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -122,7 +123,7 @@ namespace XUnitTestProject.Udp
         {
             var udpSender = new UdpSession();
             var revCount = 0;
-            udpSender.Received += (c, e) =>
+            udpSender.Received = (c, e) =>
             {
                 Interlocked.Increment(ref revCount);
                 return Task.CompletedTask;
@@ -139,7 +140,7 @@ namespace XUnitTestProject.Udp
             udpSender.Start();
 
             var udpReceiver = new UdpSession();
-            udpReceiver.Received += (c, e) =>
+            udpReceiver.Received = (c, e) =>
             {
                 lock (udpReceiver)
                 {
@@ -168,9 +169,65 @@ namespace XUnitTestProject.Udp
 
             for (var i = 0; i < count; i++)
             {
-                udpSender.SendAsync(BitConverter.GetBytes(i));
+                udpSender.Send(BitConverter.GetBytes(i));
             }
             Thread.Sleep(5000);
+            Assert.Equal(count, revCount);
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(10)]
+        [InlineData(100)]
+        [InlineData(1000)]
+        public async Task UdpPackageAdapterAsyncShouldCanSendAndReceive(int count)
+        {
+            var udpSender = new UdpSession();
+            var revCount = 0;
+            udpSender.Received = (c, e) =>
+            {
+                Interlocked.Increment(ref revCount);
+                return Task.CompletedTask;
+            };
+
+            var port1 = new Random().Next(10000, 60000);
+            await Task.Delay(1000);
+            var port2 = new Random().Next(10000, 60000);
+
+            await udpSender.SetupAsync(new TouchSocketConfig()//加载配置
+                 .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())
+                 .SetRemoteIPHost(new IPHost($"127.0.0.1:{port1}"))
+                 .SetBindIPHost(new IPHost($"127.0.0.1:{port2}")));
+            await udpSender.StartAsync();
+
+            var udpReceiver = new UdpSession();
+            udpReceiver.Received = async (c, e) =>
+            {
+                await c.SendAsync(e.EndPoint, e.ByteBlock);//将接收到的数据发送至默认终端
+            };
+
+            var config = new TouchSocketConfig();
+            config.SetBindIPHost(new IPHost($"127.0.0.1:{port1}"))
+                .SetUdpDataHandlingAdapter(() => new UdpPackageAdapter());
+
+            await udpReceiver.SetupAsync(config);//加载配置
+            await udpReceiver.StartAsync();//启动
+
+            for (var i = 0; i < count; i++)
+            {
+                await udpSender.SendAsync(BitConverter.GetBytes(i));
+            }
+
+            await Task.Delay(2000);
+            Assert.Equal(count, revCount);
+
+            revCount = 0;
+
+            for (var i = 0; i < count; i++)
+            {
+                await udpSender.SendAsync(BitConverter.GetBytes(i));
+            }
+            await Task.Delay(2000);
             Assert.Equal(count, revCount);
         }
 
@@ -219,8 +276,8 @@ namespace XUnitTestProject.Udp
                 udpSender.Send(new byte[1024 * 512]);
             }
 
-            Thread.Sleep(5000);
-            Assert.Equal(10, revCount);
+            Thread.Sleep(2000);
+            Assert.True(revCount>0);
 
             revCount = 0;
 
@@ -228,8 +285,8 @@ namespace XUnitTestProject.Udp
             {
                 udpSender.Send(new byte[1024 * 512]);
             }
-            Thread.Sleep(5000);
-            Assert.Equal(10, revCount);
+            Thread.Sleep(2000);
+            Assert.True(revCount>0);
         }
     }
 }

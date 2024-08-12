@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.FileTransfer;
@@ -72,7 +72,7 @@ namespace XUnitTestProject.Dmtp
             var data = new byte[0];
             ushort protocol = 0;
 
-            client.PluginsManager.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), (DmtpMessageEventArgs e) =>
+            client.PluginManager.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), (DmtpMessageEventArgs e) =>
             {
                 data = e.DmtpMessage.BodyByteBlock.ToArray();
                 protocol = e.DmtpMessage.ProtocolFlags;
@@ -87,6 +87,7 @@ namespace XUnitTestProject.Dmtp
                 var buffer = new byte[1024];
                 for (var i = 0; i < 1000; i++)
                 {
+                    TouchSocketBitConverter.BigEndian.GetBytes(ref buffer[0], i);
                     channel.Write(buffer);
                 }
                 channel.Complete();
@@ -367,7 +368,7 @@ namespace XUnitTestProject.Dmtp
             }
 
             var client = this.GetClient(this.GetConfig());
-            var result = client.GetDmtpFileTransferActor().PushSmallFile(Path.GetFullPath(savePath), new FileInfo(path), default, timeout: 10000);
+            var result = client.GetDmtpFileTransferActor().PushSmallFile(Path.GetFullPath(savePath), new FileInfo(path), default, millisecondsTimeout: 10000);
             Assert.True(result.IsSuccess());
 
             using (var pathReader = FilePool.GetReader(path))
@@ -576,14 +577,14 @@ namespace XUnitTestProject.Dmtp
                 })
                 .ConfigureContainer(a =>
                 {
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc()
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<CallbackServer>();
                     });
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
                     a.UseDmtpFileTransfer();
                     a.UseDmtpRedis();
                     a.UseDmtpRemoteAccess();

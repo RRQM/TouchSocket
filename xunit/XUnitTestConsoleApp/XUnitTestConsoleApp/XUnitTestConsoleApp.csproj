@@ -11,34 +11,38 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+		<PackageReference Include="Autofac" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="TouchSocket" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.AspNetCore" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.CodeAnalyzer" Version="2.0.0-beta.226">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="TouchSocket.Core" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.Http" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.NamedPipe" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.Rpc" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocket.XmlRpc" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocketPro" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.0-beta.226" />
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.0-beta.226" />
+		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
+		<PackageReference Include="System.Threading.RateLimiting" Version="8.0.0" />
+		<PackageReference Include="TouchSocket" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.AspNetCore" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Core" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Core.Autofac" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Hosting" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Http" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.JsonRpc" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Modbus" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.NamedPipe" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Rpc" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.Rpc.RateLimiting" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.SerialPorts" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.WebApi" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.WebApi.Swagger" Version="2.0.15" />
+		<PackageReference Include="TouchSocket.XmlRpc" Version="2.0.15" />
+		<PackageReference Include="TouchSocketPro" Version="2.0.15" />
+		<PackageReference Include="TouchSocketPro.AspNetCore" Version="2.0.15" />
+		<PackageReference Include="TouchSocketPro.Dmtp" Version="2.0.15" />
+		<PackageReference Include="TouchSocketPro.Hosting" Version="2.0.15" />
+		<PackageReference Include="TouchSocketPro.Modbus" Version="2.0.15" />
 	</ItemGroup>
 	
 	<ItemGroup>
 	  <ProjectReference Include="..\RpcArgsClassLib\RpcArgsClassLib.csproj" />
 	</ItemGroup>
-	
-  
 </Project>

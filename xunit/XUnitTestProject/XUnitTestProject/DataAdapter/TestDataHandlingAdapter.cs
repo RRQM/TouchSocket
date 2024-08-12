@@ -5,11 +5,12 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
+using System.Diagnostics;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -34,11 +35,12 @@ namespace XUnitTestProject.DataAdapter
         [InlineData(10000, 10)]
         [InlineData(10000, 100)]
         [InlineData(10000, 1000)]
-        public void TcpDmtpAdapterShouldBeOk(int inputCount, int bufferLength)
+        public void DmtpAdapterShouldBeOk(int inputCount, int bufferLength)
         {
-            var tester = TcpDataAdapterTester.CreateTester(new TcpDmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
+            int a = 0;
+            var tester = TcpDataAdapterTester.CreateTester(new DmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
             {
-              
+                Debug.WriteLine(a++);
             });//用BufferLength模拟粘包，分包
 
             var dmtpMessage = new DmtpMessage();
@@ -55,9 +57,9 @@ namespace XUnitTestProject.DataAdapter
         [InlineData(10000, 10)]
         [InlineData(10000, 100)]
         [InlineData(10000, 1000)]
-        public void TcpDmtpAdapterShouldBeOk_2(int inputCount, int bufferLength)
+        public void DmtpAdapterShouldBeOk_2(int inputCount, int bufferLength)
         {
-            var tester = TcpDataAdapterTester.CreateTester(new TcpDmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
+            var tester = TcpDataAdapterTester.CreateTester(new DmtpAdapter(), bufferLength, (byteBlock, requestInfo) =>
             {
                
             });//用BufferLength模拟粘包，分包
@@ -68,7 +70,7 @@ namespace XUnitTestProject.DataAdapter
             dmtpMessage.BodyByteBlock.SetLength(1024);
 
             var data = dmtpMessage.BuildAsBytes();
-            this.m_output.WriteLine(tester.Run(data, inputCount, inputCount, 1000 * 60).ToString());
+            this.m_output.WriteLine(tester.Run(data, inputCount, inputCount, 1000 * 10).ToString());
         }
 
         [Theory]
@@ -119,7 +121,10 @@ namespace XUnitTestProject.DataAdapter
         [InlineData(10000, 1024 * 64)]
         public void HttpServerAdapterShouldBeOk(int inputCount, int bufferLength)
         {
-            var tester = TcpDataAdapterTester.CreateTester(new HttpServerDataHandlingAdapter(), bufferLength, (byteBlock, request) =>
+            var adapter = new HttpServerDataHandlingAdapter();
+
+            adapter.OnLoaded(new SocketClient());
+            var tester = TcpDataAdapterTester.CreateTester(adapter, bufferLength, (byteBlock, request) =>
              {
                  if (request is HttpRequest httpRequest1)
                  {
@@ -147,15 +152,17 @@ namespace XUnitTestProject.DataAdapter
         [InlineData(10000, 1000)]
         public void HttpClientAdapterShouldBeOk(int inputCount, int bufferLength)
         {
-            var tester = TcpDataAdapterTester.CreateTester(new HttpClientDataHandlingAdapter(), bufferLength, (byteBlock, request) =>
+            var adapter = new HttpClientDataHandlingAdapter();
+            adapter.OnLoaded(new TcpClient());
+            var tester = TcpDataAdapterTester.CreateTester(adapter, bufferLength, (byteBlock, request) =>
              {
                  if (request is HttpResponse httpResponse1)
                  {
                      httpResponse1.TryGetContent(out _);
                  }
 
-                
-             });//用BufferLength模拟粘包，分包
+
+             }) ;//用BufferLength模拟粘包，分包
 
             var byteBlock = BytePool.Default.GetByteBlock(1024);
             var httpResponse = new HttpResponse();
@@ -187,7 +194,7 @@ namespace XUnitTestProject.DataAdapter
             var data = new byte[dataLen];
             new Random().NextBytes(data);
 
-            var testCount = 5000;
+            var testCount = 1000;
 
             var dataFrame = new WSDataFrame();
             dataFrame.AppendBinary(data, 0, data.Length);

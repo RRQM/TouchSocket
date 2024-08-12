@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
@@ -78,7 +78,7 @@ namespace XUnitTestProject.Http
 
             for (var i = 0; i < 100000; i++)
             {
-                var httpRequest = new HttpRequest();
+                using var httpRequest = new HttpRequest();
                 httpRequest
                     .InitHeaders()
                     .SetUrl("/xunit")
@@ -97,7 +97,7 @@ namespace XUnitTestProject.Http
 
             for (var i = 0; i < 100000; i++)
             {
-                var httpRequest = new HttpRequest();
+                using var httpRequest = new HttpRequest();
                 httpRequest
                     .InitHeaders()
                     .SetUrl("/xunit")
@@ -114,10 +114,10 @@ namespace XUnitTestProject.Http
             var httpRequest = new HttpRequest();
             httpRequest.InitHeaders();
 
-            Assert.True(httpRequest.Headers.Count == 5);
+            Assert.True(httpRequest.Headers.Count == 3);
 
             httpRequest.Headers["header"] = "header";
-            Assert.True(httpRequest.Headers.Count == 6);
+            Assert.True(httpRequest.Headers.Count == 4);
 
             Assert.True(httpRequest.Headers["header"] == "header");
             Assert.True(httpRequest.Headers["Header"] == "header");
