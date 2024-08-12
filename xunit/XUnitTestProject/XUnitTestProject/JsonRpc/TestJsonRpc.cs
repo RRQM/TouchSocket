@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
@@ -46,6 +46,7 @@ namespace XUnitTestProject.JsonRpc
             remoteTest.Test17(null);
             remoteTest.Test18(null);
             remoteTest.Test22(null);
+            remoteTest.Test45_46_47();
         }
 
         [Fact]
@@ -106,13 +107,15 @@ namespace XUnitTestProject.JsonRpc
         public void WebSocketReseverShouldBeOk()
         {
             var client = new TouchSocketConfig()
+                .ConfigureContainer(a => 
+                { 
+                    a.AddRpcStore(store => 
+                    { 
+                        store.RegisterServer<CallbackServer>(); 
+                    }); 
+                })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseGlobalRpcStore()
-                        .ConfigureRpcStore(store =>
-                        {
-                            store.RegisterServer<CallbackServer>();
-                        });
                 })
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                  .SetRemoteIPHost("127.0.0.1:7803")
@@ -128,13 +131,15 @@ namespace XUnitTestProject.JsonRpc
         public void TcpReseverShouldBeOk()
         {
             var client = new TouchSocketConfig()
+                .ConfigureContainer(a => 
+                { 
+                    a.AddRpcStore(store => 
+                    { 
+                        store.RegisterServer<CallbackServer>(); 
+                    }); 
+                })
                 .ConfigurePlugins(a =>
                 {
-                    a.UseGlobalRpcStore()
-                        .ConfigureRpcStore(store =>
-                        {
-                            store.RegisterServer<CallbackServer>();
-                        });
                 })
                  .SetRemoteIPHost("ws://127.0.0.1:7801/wsjsonrpc")
                  .BuildWithWebSocketJsonRpcClient();

@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
@@ -22,7 +22,7 @@ namespace XUnitTestProject.Core
         {
             var method = this.GetMethod("Method1");
             Assert.True(method.HasReturn);
-            Assert.True(!method.IsByRef);
+            Assert.True(!method.HasByRef);
             Assert.True(method.ReturnType == TouchSocketCoreUtility.intType);
             Assert.True(method.TaskType == TaskReturnType.None);
             Assert.True((int)method.Invoke(new MyMethod(), 10) == 10);
@@ -33,7 +33,7 @@ namespace XUnitTestProject.Core
         {
             var method = this.GetMethod("Method2");
             Assert.True(method.HasReturn);
-            Assert.True(method.IsByRef);
+            Assert.True(method.HasByRef);
             Assert.True(method.ReturnType == TouchSocketCoreUtility.intType);
             Assert.True(method.TaskType == TaskReturnType.None);
 
@@ -47,7 +47,7 @@ namespace XUnitTestProject.Core
         {
             var method = this.GetMethod("Method3");
             Assert.True(!method.HasReturn);
-            Assert.True(!method.IsByRef);
+            Assert.True(!method.HasByRef);
             Assert.True(method.ReturnType == null);
             Assert.True(method.TaskType == TaskReturnType.Task);
             await method.InvokeAsync(new MyMethod());
@@ -58,7 +58,7 @@ namespace XUnitTestProject.Core
         {
             var method = this.GetMethod("Method4");
             Assert.True(method.HasReturn);
-            Assert.True(method.IsByRef);
+            Assert.True(method.HasByRef);
             Assert.True(method.ReturnType == typeof(int));
             Assert.True(method.TaskType == TaskReturnType.TaskObject);
 
@@ -75,7 +75,7 @@ namespace XUnitTestProject.Core
         {
             var method = this.GetMethod("Method5");
             Assert.True(method.HasReturn);
-            Assert.True(!method.IsByRef);
+            Assert.True(!method.HasByRef);
             Assert.True(method.ReturnType == typeof(int));
             Assert.True(method.TaskType == TaskReturnType.TaskObject);
 

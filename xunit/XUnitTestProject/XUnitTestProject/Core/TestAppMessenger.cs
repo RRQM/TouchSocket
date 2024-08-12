@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
@@ -18,20 +18,37 @@ namespace XUnitTestProject.Core
     public class TestAppMessenger
     {
         [Fact]
-        public async Task AppMessengerBeOk()
+        public async Task MessageObjectShouldBeOk()
         {
             var appMessenger = new AppMessenger();
-            appMessenger.RegisterStatic<MessageObject>();
-            var staticAdd =await appMessenger.SendAsync<int>("StaticAdd", 20, 10);
-            Assert.Equal(30, staticAdd);
-
-            appMessenger.Register(new MessageObject());
+            var messageObject = new MessageObject();
+            appMessenger.Register(messageObject);
             var add = await appMessenger.SendAsync<int>("Add", 20, 10);
             Assert.Equal(30, add);
 
             var sub = await appMessenger.SendAsync<int>("Sub", 20, 10);
             Assert.Equal(10, sub);
         }
+
+        [Fact]
+        public async Task StaticShouldBeOk()
+        {
+            var appMessenger = new AppMessenger();
+            appMessenger.RegisterStatic<MessageObject>();
+            var staticAdd = await appMessenger.SendAsync<int>("StaticAdd", 20, 10);
+            Assert.Equal(30, staticAdd);
+        }
+
+        //[Fact]
+        //public async Task ActionShouldBeOk()
+        //{
+        //    var appMessenger = new AppMessenger();
+
+        //    appMessenger.Register((int a,int b)=>Task.FromResult(a+b),"Add");
+
+        //    var staticAdd = await appMessenger.SendAsync<int>("Add", 20, 10);
+        //    Assert.Equal(30, staticAdd);
+        //}
     }
 
     public class MessageObject : IMessageObject
