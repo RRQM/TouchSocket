@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using Newtonsoft.Json.Linq;
 using RpcArgsClassLib;
 using System.ComponentModel;
@@ -23,11 +23,11 @@ using TouchSocket.Dmtp.Rpc;
 using TouchSocket.WebApi;
 using TouchSocket.Http;
 using TouchSocket.Sockets;
+using TouchSocket.Rpc.RateLimiting;
+using System.Diagnostics;
 
 namespace XUnitTestConsoleApp.Server
 {
-
-    [GeneratorRpcServer]
     public partial class XUnitTestController : TransientRpcServer
     {
         public static bool isStart;
@@ -65,6 +65,7 @@ namespace XUnitTestConsoleApp.Server
             this.a++;
         }
 
+        [XunitWebApi(HttpMethodType.POST)]
         [XunitXmlRpc]
         [XunitJsonRpc]
         [XunitDmtpRpc]
@@ -287,14 +288,14 @@ namespace XUnitTestConsoleApp.Server
         public int Test26_TestCancellationToken()
         {
             var i = 0;
-            this.CallContext.TokenSource.Token.Register(() =>
+            this.CallContext.Token.Register(() =>
             {
                 this.ShowMsg($"任务已取消，i={i}");
             });
 
             for (; i < 500; i++)
             {
-                if (this.CallContext.TokenSource.Token.IsCancellationRequested)
+                if (this.CallContext.Token.IsCancellationRequested)
                 {
                     return 10;
                 }
@@ -441,6 +442,140 @@ namespace XUnitTestConsoleApp.Server
         {
             return callContext.Metadata;
         }
+
+        [EnableRateLimiting("FixedWindow")]
+        [XunitDmtpRpc]
+        public int Test41_RateLimiting()
+        {
+            return 0;
+        }
+
+        [XunitDmtpRpc]
+        public Task<List<int>> Test42_TaskList()
+        {
+            return Task.FromResult(new List<int>() { 1 });
+        }
+
+        [XunitDmtpRpc]
+        public Task<(int a, string b)> Test43_TaskValueTuple()
+        {
+
+            return Task.FromResult((10, "RRQM"));
+        }
+
+        /// <summary>
+        /// 使用调用上下文，上传多个小文件。
+        /// </summary>
+        /// <param name="callContext"></param>
+        [WebApi(HttpMethodType.POST)]
+        public Task<string> Test44_UploadMultiFile(IWebApiCallContext callContext, string id)
+        {
+            if (id == "rrqm")
+            {
+                var formFiles = callContext.HttpContext.Request.GetMultifileCollection();
+                if (formFiles != null)
+                {
+                    foreach (var item in formFiles)
+                    {
+                        Console.WriteLine($"fileName={item.FileName},name={item.Name}");
+
+                        //写入实际数据
+                        File.WriteAllBytes(item.FileName, item.Data);
+                    }
+                }
+                return Task.FromResult("ok");
+            }
+            return Task.FromResult("id不正确。");
+        }
+
+        /// <summary>
+        /// 使用调用上下文，上传大文件。
+        /// </summary>
+        /// <param name="callContext"></param>
+        [WebApi(HttpMethodType.POST)]
+        public Task<string> Test44_UploadBigFile(IWebApiCallContext callContext, string id)
+        {
+            if (id == "rrqm")
+            {
+                using (FileStream stream = File.Create("text.file"))
+                {
+                    byte[] buffer = new byte[1024 * 64];
+                    while (true)
+                    {
+                        int r = callContext.HttpContext.Request.Read(buffer, 0, buffer.Length);
+
+                        if (r == 0)
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine(r);
+
+                        stream.Write(buffer, 0, r);
+                    }
+                }
+                Console.WriteLine("ok");
+                return Task.FromResult("ok");
+            }
+            return Task.FromResult("id不正确。");
+        }
+
+        [XunitWebApi(HttpMethodType.GET)]
+        [XunitXmlRpc]
+        [XunitJsonRpc]
+        [XunitDmtpRpc]
+        public void Test45(ICallContext callContext, [FromServices] IRpcServerProvider rpcServerProvider, string id)
+        {
+            Debug.Assert(callContext != null);
+            Debug.Assert(rpcServerProvider != null);
+            Debug.Assert(id != null);
+        }
+
+        [XunitWebApi(HttpMethodType.GET)]
+        [XunitXmlRpc]
+        [XunitJsonRpc]
+        [XunitDmtpRpc]
+        public void Test46(ICallContext callContext, string id, [FromServices] IRpcServerProvider rpcServerProvider)
+        {
+            Debug.Assert(callContext != null);
+            Debug.Assert(rpcServerProvider != null);
+            Debug.Assert(id != null);
+        }
+
+        [XunitWebApi(HttpMethodType.GET)]
+        [XunitXmlRpc]
+        [XunitJsonRpc]
+        [XunitDmtpRpc]
+        public void Test47(string id, ICallContext callContext, [FromServices] IRpcServerProvider rpcServerProvider)
+        {
+            Debug.Assert(callContext != null);
+            Debug.Assert(rpcServerProvider != null);
+            Debug.Assert(id != null);
+        }
+
+        //[XunitWebApi(HttpMethodType.GET)]
+        //public void Test48_Get(ICallContext callContext, [FromServices] IRpcServerProvider rpcServerProvider, string id)
+        //{
+        //    Debug.Assert(callContext != null);
+        //    Debug.Assert(rpcServerProvider != null);
+        //    Debug.Assert(id != null);
+        //}
+
+        //[XunitWebApi(HttpMethodType.GET)]
+        //public void Test49_Get(ICallContext callContext, string id, [FromServices] IRpcServerProvider rpcServerProvider)
+        //{
+        //    Debug.Assert(callContext != null);
+        //    Debug.Assert(rpcServerProvider != null);
+        //    Debug.Assert(id != null);
+        //}
+
+        //[XunitWebApi( HttpMethodType.GET)]
+        //public void Test50_Get(string id, ICallContext callContext, [FromServices] IRpcServerProvider rpcServerProvider)
+        //{
+        //    Debug.Assert(callContext != null);
+        //    Debug.Assert(rpcServerProvider != null);
+        //    Debug.Assert(id != null);
+        //}
 
         private void ShowMsg(string msg)
         {

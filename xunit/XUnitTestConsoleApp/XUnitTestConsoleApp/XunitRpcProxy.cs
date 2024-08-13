@@ -50,14 +50,14 @@ Task Test01_PerformanceAsync(IInvokeOption invokeOption = default);
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-String Test02_TaskString(System.String msg,IInvokeOption invokeOption = default);
+System.String Test02_TaskString(System.String msg,IInvokeOption invokeOption = default);
 ///<summary>
 ///测试异步字符串
 ///</summary>
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-Task<String> Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default);
+Task<System.String> Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default);
 
 ///<summary>
 ///无注释信息
@@ -560,6 +560,96 @@ Task<TouchSocket.Core.Metadata> Test40_CallContextMetadataAsync(IInvokeOption in
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+System.Int32 Test41_RateLimiting(IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.Int32> Test41_RateLimitingAsync(IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.Collections.Generic.List<System.Int32> Test42_TaskList(IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.Collections.Generic.List<System.Int32>> Test42_TaskListAsync(IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+(System.Int32 a,System.String b) Test43_TaskValueTuple(IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<(System.Int32 a,System.String b)> Test43_TaskValueTupleAsync(IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void Test45(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task Test45Async(System.String id,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void Test46(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task Test46Async(System.String id,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void Test47(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task Test47Async(System.String id,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 ProxyClass1 Test03_GetProxyClass(IInvokeOption invokeOption = default);
 ///<summary>
 ///无注释信息
@@ -613,6 +703,21 @@ void GET_Test01_Performance(IInvokeOption invokeOption = default);
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
 Task GET_Test01_PerformanceAsync(IInvokeOption invokeOption = default);
+
+///<summary>
+///测试异步字符串
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.String POST_Test02_TaskString(System.String msg,IInvokeOption invokeOption = default);
+///<summary>
+///测试异步字符串
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.String> POST_Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default);
 
 ///<summary>
 ///无注释信息
@@ -719,6 +824,51 @@ void POST_Test39_Task(IInvokeOption invokeOption = default);
 /// <exception cref="System.Exception">其他异常</exception>
 Task POST_Test39_TaskAsync(IInvokeOption invokeOption = default);
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void GET_Test45(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task GET_Test45Async(System.String id,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void GET_Test46(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task GET_Test46Async(System.String id,IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+void GET_Test47(System.String id,IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task GET_Test47Async(System.String id,IInvokeOption invokeOption = default);
+
 }
 public class XUnitTestController :IXUnitTestController
 {
@@ -788,27 +938,27 @@ return Client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test01
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-public String Test02_TaskString(System.String msg,IInvokeOption invokeOption = default)
+public System.String Test02_TaskString(System.String msg,IInvokeOption invokeOption = default)
 {
 if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{msg};
-String returnData=(String)Client.Invoke(typeof(String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
+System.String returnData=(System.String)Client.Invoke(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///测试异步字符串
 ///</summary>
-public async Task<String> Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default)
+public async Task<System.String> Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default)
 {
 if(Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{msg};
-return (String) await Client.InvokeAsync(typeof(String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
+return (System.String) await Client.InvokeAsync(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
 }
 
 ///<summary>
@@ -1824,6 +1974,171 @@ return (TouchSocket.Core.Metadata) await Client.InvokeAsync(typeof(TouchSocket.C
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+public System.Int32 Test41_RateLimiting(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+System.Int32 returnData=(System.Int32)Client.Invoke(typeof(System.Int32),"xunittestconsoleapp.server.xunittestcontroller.test41_ratelimiting",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<System.Int32> Test41_RateLimitingAsync(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"xunittestconsoleapp.server.xunittestcontroller.test41_ratelimiting",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.Collections.Generic.List<System.Int32> Test42_TaskList(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+System.Collections.Generic.List<System.Int32> returnData=(System.Collections.Generic.List<System.Int32>)Client.Invoke(typeof(System.Collections.Generic.List<System.Int32>),"xunittestconsoleapp.server.xunittestcontroller.test42_tasklist",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<System.Collections.Generic.List<System.Int32>> Test42_TaskListAsync(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+return (System.Collections.Generic.List<System.Int32>) await Client.InvokeAsync(typeof(System.Collections.Generic.List<System.Int32>),"xunittestconsoleapp.server.xunittestcontroller.test42_tasklist",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public (System.Int32 a,System.String b) Test43_TaskValueTuple(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"xunittestconsoleapp.server.xunittestcontroller.test43_taskvaluetuple",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<(System.Int32 a,System.String b)> Test43_TaskValueTupleAsync(IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+return ((System.Int32 a,System.String b)) await Client.InvokeAsync(typeof((System.Int32 a,System.String b)),"xunittestconsoleapp.server.xunittestcontroller.test43_taskvaluetuple",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void Test45(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test45",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task Test45Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test45",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void Test46(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test46",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task Test46Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test46",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void Test47(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test47",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task Test47Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test47",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 public ProxyClass1 Test03_GetProxyClass(IInvokeOption invokeOption = default)
 {
 if(Client==null)
@@ -1927,6 +2242,35 @@ if(Client==null)
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 return Client.InvokeAsync("GET:/xunittestcontroller/test01_performance",invokeOption, null);
+}
+
+///<summary>
+///测试异步字符串
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.String POST_Test02_TaskString(System.String msg,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{msg};
+System.String returnData=(System.String)Client.Invoke(typeof(System.String),"POST:/xunittestcontroller/test02_taskstring?msg={0}",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///测试异步字符串
+///</summary>
+public async Task<System.String> POST_Test02_TaskStringAsync(System.String msg,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{msg};
+return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/xunittestcontroller/test02_taskstring?msg={0}",invokeOption, parameters);
 }
 
 ///<summary>
@@ -2054,7 +2398,7 @@ if(Client==null)
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{tuple};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames",invokeOption, parameters);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames?",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
@@ -2067,7 +2411,7 @@ if(Client==null)
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{tuple};
-return ((System.Int32 a,System.String b)) await Client.InvokeAsync(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames",invokeOption, parameters);
+return ((System.Int32 a,System.String b)) await Client.InvokeAsync(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames?",invokeOption, parameters);
 }
 
 ///<summary>
@@ -2084,7 +2428,7 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{tuple};
 Type[] types = new Type[]{typeof((System.Int32 a,System.String b))};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames",invokeOption,ref parameters,types);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames?",invokeOption,ref parameters,types);
 if(parameters!=null)
 {
 tuple=((System.Int32 a,System.String b))parameters[0];
@@ -2102,7 +2446,7 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{tuple};
 Type[] types = new Type[]{typeof((System.Int32 a,System.String b))};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames",invokeOption,ref parameters,types);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))Client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames?",invokeOption,ref parameters,types);
 if(parameters!=null)
 {
 tuple=((System.Int32 a,System.String b))parameters[0];
@@ -2134,6 +2478,90 @@ if(Client==null)
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 return Client.InvokeAsync("POST:/xunittestcontroller/test39_task",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void GET_Test45(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("GET:/xunittestcontroller/test45?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task GET_Test45Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("GET:/xunittestcontroller/test45?id={0}",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void GET_Test46(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("GET:/xunittestcontroller/test46?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task GET_Test46Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("GET:/xunittestcontroller/test46?id={0}",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public void GET_Test47(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+Client.Invoke("GET:/xunittestcontroller/test47?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public Task GET_Test47Async(System.String id,IInvokeOption invokeOption = default)
+{
+if(Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+object[] parameters = new object[]{id};
+return Client.InvokeAsync("GET:/xunittestcontroller/test47?id={0}",invokeOption, parameters);
 }
 
 }
@@ -2184,19 +2612,19 @@ return client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test01
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
-public static String Test02_TaskString<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
+public static System.String Test02_TaskString<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
 object[] parameters = new object[]{msg};
-String returnData=(String)client.Invoke(typeof(String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
+System.String returnData=(System.String)client.Invoke(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
 ///测试异步字符串
 ///</summary>
-public static async Task<String> Test02_TaskStringAsync<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
+public static async Task<System.String> Test02_TaskStringAsync<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.Rpc.IRpcClient{
 object[] parameters = new object[]{msg};
-return (String) await client.InvokeAsync(typeof(String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
+return (System.String) await client.InvokeAsync(typeof(System.String),"xunittestconsoleapp.server.xunittestcontroller.test02_taskstring",invokeOption, parameters);
 }
 
 ///<summary>
@@ -2948,6 +3376,123 @@ return (TouchSocket.Core.Metadata) await client.InvokeAsync(typeof(TouchSocket.C
 /// <exception cref="System.TimeoutException">调用超时</exception>
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
+public static System.Int32 Test41_RateLimiting<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+System.Int32 returnData=(System.Int32)client.Invoke(typeof(System.Int32),"xunittestconsoleapp.server.xunittestcontroller.test41_ratelimiting",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<System.Int32> Test41_RateLimitingAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"xunittestconsoleapp.server.xunittestcontroller.test41_ratelimiting",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.Collections.Generic.List<System.Int32> Test42_TaskList<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+System.Collections.Generic.List<System.Int32> returnData=(System.Collections.Generic.List<System.Int32>)client.Invoke(typeof(System.Collections.Generic.List<System.Int32>),"xunittestconsoleapp.server.xunittestcontroller.test42_tasklist",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<System.Collections.Generic.List<System.Int32>> Test42_TaskListAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+return (System.Collections.Generic.List<System.Int32>) await client.InvokeAsync(typeof(System.Collections.Generic.List<System.Int32>),"xunittestconsoleapp.server.xunittestcontroller.test42_tasklist",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static (System.Int32 a,System.String b) Test43_TaskValueTuple<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"xunittestconsoleapp.server.xunittestcontroller.test43_taskvaluetuple",invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<(System.Int32 a,System.String b)> Test43_TaskValueTupleAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+return ((System.Int32 a,System.String b)) await client.InvokeAsync(typeof((System.Int32 a,System.String b)),"xunittestconsoleapp.server.xunittestcontroller.test43_taskvaluetuple",invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void Test45<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test45",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task Test45Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test45",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void Test46<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test46",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task Test46Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test46",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void Test47<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+client.Invoke("xunittestconsoleapp.server.xunittestcontroller.test47",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task Test47Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.Rpc.IRpcClient{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("xunittestconsoleapp.server.xunittestcontroller.test47",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
 public static ProxyClass1 Test03_GetProxyClass<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.JsonRpc.IJsonRpcClient{
 ProxyClass1 returnData=(ProxyClass1)client.Invoke(typeof(ProxyClass1),"xunittestconsoleapp.server.xunittestcontroller.test03_getproxyclass",invokeOption, null);
@@ -3019,6 +3564,27 @@ client.Invoke("GET:/xunittestcontroller/test01_performance",invokeOption, null);
 public static Task GET_Test01_PerformanceAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 return client.InvokeAsync("GET:/xunittestcontroller/test01_performance",invokeOption, null);
+}
+
+///<summary>
+///测试异步字符串
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.String POST_Test02_TaskString<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{msg};
+System.String returnData=(System.String)client.Invoke(typeof(System.String),"POST:/xunittestcontroller/test02_taskstring?msg={0}",invokeOption, parameters);
+return returnData;
+}
+///<summary>
+///测试异步字符串
+///</summary>
+public static async Task<System.String> POST_Test02_TaskStringAsync<TClient>(this TClient client,System.String msg,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{msg};
+return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/xunittestcontroller/test02_taskstring?msg={0}",invokeOption, parameters);
 }
 
 ///<summary>
@@ -3110,7 +3676,7 @@ return (MyClass) await client.InvokeAsync(typeof(MyClass),"POST:/xunittestcontro
 public static (System.Int32 a,System.String b) POST_Test33_TupleElementNames<TClient>(this TClient client,(System.Int32 a,System.String b) tuple,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{tuple};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames",invokeOption, parameters);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames?",invokeOption, parameters);
 return returnData;
 }
 ///<summary>
@@ -3119,7 +3685,7 @@ return returnData;
 public static async Task<(System.Int32 a,System.String b)> POST_Test33_TupleElementNamesAsync<TClient>(this TClient client,(System.Int32 a,System.String b) tuple,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{tuple};
-return ((System.Int32 a,System.String b)) await client.InvokeAsync(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames",invokeOption, parameters);
+return ((System.Int32 a,System.String b)) await client.InvokeAsync(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test33_tupleelementnames?",invokeOption, parameters);
 }
 
 ///<summary>
@@ -3132,7 +3698,7 @@ public static (System.Int32 a,System.String b) POST_Test34_RefTupleElementNames<
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{tuple};
 Type[] types = new Type[]{typeof((System.Int32 a,System.String b))};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames",invokeOption,ref parameters,types);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames?",invokeOption,ref parameters,types);
 if(parameters!=null)
 {
 tuple=((System.Int32 a,System.String b))parameters[0];
@@ -3146,7 +3712,7 @@ public static Task<(System.Int32 a,System.String b)> POST_Test34_RefTupleElement
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{tuple};
 Type[] types = new Type[]{typeof((System.Int32 a,System.String b))};
-(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames",invokeOption,ref parameters,types);
+(System.Int32 a,System.String b) returnData=((System.Int32 a,System.String b))client.Invoke(typeof((System.Int32 a,System.String b)),"POST:/xunittestcontroller/test34_reftupleelementnames?",invokeOption,ref parameters,types);
 if(parameters!=null)
 {
 tuple=((System.Int32 a,System.String b))parameters[0];
@@ -3172,65 +3738,142 @@ TouchSocket.WebApi.IWebApiClientBase{
 return client.InvokeAsync("POST:/xunittestcontroller/test39_task",invokeOption, null);
 }
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void GET_Test45<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+client.Invoke("GET:/xunittestcontroller/test45?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task GET_Test45Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("GET:/xunittestcontroller/test45?id={0}",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void GET_Test46<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+client.Invoke("GET:/xunittestcontroller/test46?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task GET_Test46Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("GET:/xunittestcontroller/test46?id={0}",invokeOption, parameters);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static void GET_Test47<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+client.Invoke("GET:/xunittestcontroller/test47?id={0}",invokeOption, parameters);
+}
+///<summary>
+///无注释信息
+///</summary>
+public static Task GET_Test47Async<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+object[] parameters = new object[]{id};
+return client.InvokeAsync("GET:/xunittestcontroller/test47?id={0}",invokeOption, parameters);
+}
+
+}
+public class ProxyClass1
+{
+public System.Int32 P1 { get; set; }
+public ProxyClass2 P2 { get; set; }
+public ProxyClass1 P3 { get; set; }
 }
 
 public class Args
 {
-public System.Int32 P1{get;set;}
-public System.Double P2{get;set;}
-public System.String P3{get;set;}
+public System.Int32 P1 { get; set; }
+public System.Double P2 { get; set; }
+public System.String P3 { get; set; }
 }
-
 
 public class Class04
 {
-public System.Int32 P1{get;set;}
-public System.String P2{get;set;}
-public System.Int32 P3{get;set;}
+public System.Int32 P1 { get; set; }
+public System.String P2 { get; set; }
+public System.Int32 P3 { get; set; }
 }
 
-
-public class ProxyClass1
+public struct StructArgs
 {
-public System.Int32 P1{get;set;}
-public ProxyClass2 P2{get;set;}
+public System.Int32 P1 { get; set; }
 }
 
+public class ProxyClass2
+{
+public System.Int32 P1 { get; set; }
+public ProxyClass3 P2 { get; set; }
+}
+
+public enum ProxyType2:System.Int32
+{
+A=0,
+B=1,
+C=2,
+}
+
+public class ProxyClass3
+{
+public System.Int32 P1 { get; set; }
+public ProxyType1 P2 { get; set; }
+public ProxyType2 P3 { get; set; }
+public ProxyType3 P4 { get; set; }
+}
 
 public class Class01
 {
-public System.Int32 Age{get;set;}
-public System.String Name{get;set;}
-public System.Int32? P1{get;set;}
-public System.String? P2{get;set;}
-public (System.String a,System.Int32 b)? P3{get;set;}
+public System.Int32 Age { get; set; }
+public System.String Name { get; set; }
+public System.Int32? P1 { get; set; }
+public System.String? P2 { get; set; }
+public (System.String a,System.Int32 b)? P3 { get; set; }
 public System.Int32? P4;
 public (System.String a,System.Int32 b)? P5;
 }
 
-
-public struct StructArgs
+public enum ProxyType3:System.Int64
 {
-public System.Int32 P1{get;set;}
+A=0,
+B=1,
+C=2,
 }
 
-
-public class ProxyClass2
+public enum ProxyType1:System.SByte
 {
-public System.Int32 P1{get;set;}
-public ProxyClass3 P2{get;set;}
+A=0,
+B=1,
+C=2,
 }
-
-
-public class ProxyClass3
-{
-public System.Int32 P1{get;set;}
-}
-
 
 public class MyClass
 {
-public System.Int32 P1{get;set;}
+public System.Int32 P1 { get; set; }
 }
 
 }

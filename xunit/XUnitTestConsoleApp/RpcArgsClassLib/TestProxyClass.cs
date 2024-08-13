@@ -5,10 +5,9 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
-//------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
 namespace RpcArgsClassLib
@@ -17,6 +16,7 @@ namespace RpcArgsClassLib
     {
         public int P1 { get; set; }
         public ProxyClass2 P2 { get; set; }
+        public ProxyClass1 P3 { get; set; }
     }
 
     public class ProxyClass2
@@ -28,5 +28,29 @@ namespace RpcArgsClassLib
     public class ProxyClass3
     {
         public int P1 { get; set; }
+        public ProxyType1 P2 { get; set; }
+        public ProxyType2 P3 { get; set; }
+        public ProxyType3 P4 { get; set; }
+    }
+
+    public enum ProxyType1 : sbyte
+    {
+        A,
+        B,
+        C
+    }
+
+    public enum ProxyType2 : int
+    {
+        A,
+        B,
+        C
+    }
+
+    public enum ProxyType3 : long
+    {
+        A,
+        B,
+        C
     }
 }

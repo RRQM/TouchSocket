@@ -5,17 +5,17 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：http://rrqm_home.gitee.io/touchsocket/
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using RpcArgsClassLib;
 using TouchSocket.Rpc;
 
 namespace XUnitTestConsoleApp.Server
 {
-    public class OtherAssemblyServer : RpcServer, IOtherAssemblyServer
+    public partial class OtherAssemblyServer : RpcServer, IOtherAssemblyServer
     {
         public ClassOne GetClassOne()
         {

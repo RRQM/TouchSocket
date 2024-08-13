@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Data;
 using TouchSocket.Core;
 
@@ -91,6 +91,17 @@ namespace XUnitTestProject.Core
             Assert.True(processInfo.Name == sobj.Name);
             Assert.True(processInfo.PID == sobj.PID);
             Assert.Null(sobj.WinName);
+            Assert.Null(sobj.Location);
+        }
+
+        [Fact]
+        public void ShouldSerializeShortPerObjBeOk()
+        {
+            var processInfo = new ReadonlyProcessInfo("name", 10, "winName", "location");
+            var data = SerializeConvert.FastBinarySerialize(processInfo);
+
+            var sobj = SerializeConvert.FastBinaryDeserialize<ProcessInfoShort>(data, 0);
+            Assert.True(processInfo.Name == sobj.Name);
             Assert.Null(sobj.Location);
         }
 
@@ -225,7 +236,7 @@ namespace XUnitTestProject.Core
                 SerializeConvert.FastBinarySerialize(byteBlock, metadata);
                 newMetadata = SerializeConvert.FastBinaryDeserialize<Metadata>(byteBlock.Buffer, 0);
                 Assert.NotNull(newMetadata);
-                Assert.True(newMetadata.Count==0);
+                Assert.True(newMetadata.Count == 0);
 
                 byteBlock.Reset();
                 metadata = new Metadata
@@ -246,7 +257,7 @@ namespace XUnitTestProject.Core
                     Assert.Equal(metadata[item], newMetadata[item]);
                 }
             }
-            
+
         }
 
         [Fact]
@@ -492,6 +503,7 @@ namespace XUnitTestProject.Core
         }
     }
 
+    #region Class
     public class TestNullable
     {
         public int? P1 { get; set; }
@@ -568,4 +580,5 @@ namespace XUnitTestProject.Core
         public Dictionary<string, string> Dic3 { get; set; }
         public Dictionary<int, Arg> Dic4 { get; set; }
     }
+    #endregion
 }
