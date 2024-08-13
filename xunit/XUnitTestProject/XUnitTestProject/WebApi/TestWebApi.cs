@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using RpcProxy;
 using TouchSocket.Sockets;
 using TouchSocket.WebApi;
@@ -24,7 +24,7 @@ namespace XUnitTestProject.WebApi
             var client = new WebApiClient();
             client.Connect("127.0.0.1:7801");
 
-            IXUnitTestController controller = new XUnitTestController(client);
+            XUnitTestController controller = new XUnitTestController(client);
 
             controller.GET_Test01_Performance();
 
@@ -46,6 +46,10 @@ namespace XUnitTestProject.WebApi
             Assert.Equal(30, m.P1);
 
             Assert.Equal(30, controller.GET_Sum(10, 20));
+
+            controller.GET_Test45("id");
+            controller.GET_Test46("id");
+            controller.GET_Test47("id");
         }
 
         [Fact]

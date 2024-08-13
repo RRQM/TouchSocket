@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.FileTransfer;
@@ -95,7 +95,7 @@ namespace XUnitTestProject.Dmtp
                           return Task.CompletedTask;
                       };
 
-                      client.PluginsManager.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), () =>
+                      client.PluginManager.Add(nameof(IDmtpHandshakedPlugin.OnDmtpHandshaked), () =>
                       {
                           handshaked += 1;
                       });
@@ -135,7 +135,7 @@ namespace XUnitTestProject.Dmtp
         {
             var client1 = this.GetClient(this.GetConfig());
             var client2 = this.GetClient(this.GetConfig());
-            client2.PluginsManager.Add(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), (CreateChannelEventArgs e) =>
+            client2.PluginManager.Add(nameof(IDmtpCreateChannelPlugin.OnCreateChannel), (CreateChannelEventArgs e) =>
             {
             });
             var id = 0;
@@ -159,7 +159,7 @@ namespace XUnitTestProject.Dmtp
                 {
                 }
             });
-            Thread.Sleep(1000);
+            Thread.Sleep(5000);
 
             long len = 0;
             if (client2.TrySubscribeChannel(id, out var channel))
@@ -257,7 +257,7 @@ namespace XUnitTestProject.Dmtp
             var data = new byte[0];
             ushort protocol = 0;
 
-            client.PluginsManager.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), (DmtpMessageEventArgs e) =>
+            client.PluginManager.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), (DmtpMessageEventArgs e) =>
             {
                 data = e.DmtpMessage.BodyByteBlock.ToArray();
                 protocol = e.DmtpMessage.ProtocolFlags;
@@ -272,6 +272,7 @@ namespace XUnitTestProject.Dmtp
                 var buffer = new byte[1024 * 1024];
                 for (var i = 0; i < 1000; i++)
                 {
+                    TouchSocketBitConverter.BigEndian.GetBytes(ref buffer[0], i);
                     channel.Write(buffer);
                 }
                 channel.Complete();
@@ -845,7 +846,7 @@ namespace XUnitTestProject.Dmtp
 
             var client1 = this.GetClient(this.GetConfig());
             var client2 = this.GetClient(this.GetConfig());
-            var result = client1.GetDmtpFileTransferActor().PushSmallFile(client2.Id, Path.GetFullPath(savePath), new FileInfo(path), default, timeout: 10000);
+            var result = client1.GetDmtpFileTransferActor().PushSmallFile(client2.Id, Path.GetFullPath(savePath), new FileInfo(path), default, millisecondsTimeout: 10000);
             Assert.True(result.IsSuccess());
 
             using (var pathReader = FilePool.GetReader(path))
@@ -896,7 +897,7 @@ namespace XUnitTestProject.Dmtp
             }
 
             var client = this.GetClient(this.GetConfig());
-            var result = client.GetDmtpFileTransferActor().PushSmallFile(Path.GetFullPath(savePath), new FileInfo(path), default, timeout: 1000000);
+            var result = client.GetDmtpFileTransferActor().PushSmallFile(Path.GetFullPath(savePath), new FileInfo(path), default, millisecondsTimeout: 1000000);
             Assert.True(result.IsSuccess());
 
             using (var pathReader = FilePool.GetReader(path))
@@ -1043,7 +1044,7 @@ namespace XUnitTestProject.Dmtp
             var client2 = this.GetClient(this.GetConfig());
 
             var memoryStream = new MemoryStream();
-            client2.PluginsManager.Add(nameof(IDmtpRemoteStreamPlugin.OnLoadingStream), async (LoadingStreamEventArgs e) =>
+            client2.PluginManager.Add(nameof(IDmtpRemoteStreamPlugin.OnLoadingStream), async (LoadingStreamEventArgs e) =>
             {
                 e.IsPermitOperation = true;
                 await e.WaitingLoadStreamAsync(memoryStream, TimeSpan.FromSeconds(10));
@@ -1338,7 +1339,7 @@ namespace XUnitTestProject.Dmtp
 
             var client1 = this.GetClient(this.GetConfig());
             var client2 = this.GetClient(this.GetConfig());
-            var result = client1.GetDmtpFileTransferActor().PushFileResourceInfo(client2.Id, savePath, fileResourceLocator, timeout: 1000000);
+            var result = client1.GetDmtpFileTransferActor().PushFileResourceInfo(client2.Id, savePath, fileResourceLocator, millisecondsTimeout: 1000000);
 
             Assert.True(result.IsSuccess());
             var t1 = Task.Run(() =>
@@ -1431,7 +1432,7 @@ namespace XUnitTestProject.Dmtp
             var fileResourceLocator = new FileResourceLocator(new FileResourceInfo(new FileInfo(path), 1024 * 512));
 
             var client = this.GetClient(this.GetConfig());
-            var result = client.GetDmtpFileTransferActor().PushFileResourceInfo(savePath, fileResourceLocator, timeout: 1000000);
+            var result = client.GetDmtpFileTransferActor().PushFileResourceInfo(savePath, fileResourceLocator, millisecondsTimeout: 1000000);
 
             Assert.True(result.IsSuccess());
             var t1 = Task.Run(() =>
@@ -1675,14 +1676,14 @@ namespace XUnitTestProject.Dmtp
                 })
                 .ConfigureContainer(a =>
                 {
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc()
-                    .ConfigureRpcStore(store =>
+                    a.AddRpcStore(store =>
                     {
                         store.RegisterServer<CallbackServer>();
                     });
+                })
+                .ConfigurePlugins(a =>
+                {
+                    a.UseDmtpRpc();
                     a.UseDmtpFileTransfer();
                     a.UseDmtpRedis();
                     a.UseDmtpRemoteAccess();
@@ -1706,9 +1707,16 @@ namespace XUnitTestProject.Dmtp
                     {
                         VerifyToken = "123RPC"
                     })
+                    .ConfigureContainer(a => 
+                    {
+                        a.AddRpcStore(store =>
+                        {
+                            store.RegisterServer<CallbackServer>();
+                        });
+                    })
                     .ConfigurePlugins(a =>
                     {
-                        a.UseDmtpRpc().ConfigureRpcStore(store => { store.RegisterServer<CallbackServer>(); });
+                        a.UseDmtpRpc();
                         a.UseDmtpFileTransfer();
                         a.UseDmtpRedis();
                         a.UseDmtpRemoteAccess();

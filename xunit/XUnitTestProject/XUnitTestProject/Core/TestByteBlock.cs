@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using TouchSocket.Core;
 
 namespace XUnitTestProject.Core
@@ -114,6 +114,29 @@ namespace XUnitTestProject.Core
         }
 
         [Fact]
+        public void ReadWriteStringShouldBeOk()
+        {
+            using (var byteBlock = BytePool.Default.GetByteBlock(1024 * 1024))
+            {
+                byteBlock.Write("1");
+                byteBlock.Write("2");
+                byteBlock.Write("3");
+                byteBlock.Write("4");
+                byteBlock.Write("5");
+                byteBlock.Write("6");
+
+                byteBlock.SeekToStart();
+
+                Assert.Equal("1",byteBlock.ReadString());
+                Assert.Equal("2",byteBlock.ReadString());
+                Assert.Equal("3",byteBlock.ReadString());
+                Assert.Equal("4",byteBlock.ReadString());
+                Assert.Equal("5",byteBlock.ReadString());
+                Assert.Equal("6",byteBlock.ReadString());
+            }
+        }
+
+        [Fact]
         public void ShouldCanWriteAndRead()
         {
             var byteBlock = BytePool.Default.GetByteBlock(1024 * 1024);
@@ -212,11 +235,13 @@ namespace XUnitTestProject.Core
             byteBlock.Write(new byte[10]);
             Assert.Equal(20, byteBlock.Pos);
             Assert.Equal(20, byteBlock.Len);
+            Assert.Equal(20, byteBlock.Count());
 
             byteBlock.Pos = 0;
             byteBlock.Write(new byte[10]);
             Assert.Equal(10, byteBlock.Pos);
             Assert.Equal(20, byteBlock.Len);
+            Assert.Equal(20, byteBlock.Count());
         }
 
         [Serializable]

@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using RpcProxy;
 using TouchSocket.Core;
 using TouchSocket.Dmtp.Rpc;
@@ -272,6 +272,32 @@ namespace XUnitTestProject.Rpc
             Assert.True(result["a"]=="a");
             Assert.True(result["b"]=="b");
             Assert.True(result["c"]=="c");
+        }
+
+        public void Test41()
+        {
+            for (var i = 0; i < 10; i++)
+            {
+                if (i >= 2)
+                {
+                    Assert.ThrowsAny<Exception>(() => 
+                    {
+                        this.server.Test41_RateLimiting();
+                    });
+                }
+                else
+                {
+                    this.server.Test41_RateLimiting();
+                }
+            }
+        }
+
+        public void Test45_46_47()
+        {
+            var id = "id";
+            this.server.Test45(id);
+            this.server.Test46(id);
+            this.server.Test47(id);
         }
     }
 }

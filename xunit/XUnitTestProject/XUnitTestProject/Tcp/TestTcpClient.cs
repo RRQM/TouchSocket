@@ -5,11 +5,11 @@
 //  哔哩哔哩视频：https://space.bilibili.com/94253567
 //  Gitee源代码仓库：https://gitee.com/RRQM_Home
 //  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://www.yuque.com/rrqm/touchsocket/index
+//  API首页：https://touchsocket.net/
 //  交流QQ群：234762506
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
+
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -19,28 +19,29 @@ namespace XUnitTestProject.Tcp
     public class TestTcpClient : UnitBase
     {
         [Fact]
-        public void TLVShouldCanConnectAndReceive()
+        public async Task TLVShouldCanConnectAndReceive()
         {
             var sleep = 1000;
             var client = new TcpClient();
 
             TLVDataFrame requestInfo = null;
-            client.Received += (c, e) =>
+            client.Received = async (c, e) =>
             {
                 requestInfo = (TLVDataFrame)e.RequestInfo;
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
 
             client.Setup(new TouchSocketConfig()
+                .SetNoDelay(true)
                 .ConfigurePlugins(a =>
                 {
                     a.Add<TLVPlugin>();
                 })
-                .SetRemoteIPHost(new IPHost("127.0.0.1:7805")));
+                .SetRemoteIPHost("127.0.0.1:7805"));
             client.Connect();
 
             client.Send(new TLVDataFrame(10, Encoding.UTF8.GetBytes("rrqm")));
-            Thread.Sleep(sleep);
+            await Task.Delay(sleep);
             Assert.NotNull(requestInfo);
             Assert.True(requestInfo.Tag == 10 && requestInfo.GetValueString() == "rrqm");
 
@@ -52,42 +53,43 @@ namespace XUnitTestProject.Tcp
             }
 
             client.Send(new TLVDataFrame(10, Encoding.UTF8.GetBytes("rrqm")));
-            Thread.Sleep(sleep);
+            await Task.Delay(sleep);
             Assert.NotNull(requestInfo);
             Assert.True(requestInfo.Tag == 10 && requestInfo.GetValueString() == "rrqm");
         }
 
         [Fact]
-        public void ShouldCanConnectAndReceive()
+        public async Task ShouldCanConnectAndReceive()
         {
             var waitTime = 100;
             var client = new TcpClient();
 
             var connected = false;
             var disconnectCount = 0;
-            client.Connected += (client, e) =>
+            client.Connected = async (client, e) =>
             {
                 connected = true;
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
-            client.Disconnected += (client, e) =>
+            client.Disconnected = async (client, e) =>
             {
                 disconnectCount++;
                 connected = false;
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
 
             var receivedCount = 0;
-            client.Received += (tcpClient, e) =>
+            client.Received = async (tcpClient, e) =>
             {
                 receivedCount++;
-                return Task.CompletedTask;
+                await Task.CompletedTask;
             };
 
             client.Setup(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789"));//载入配置
-            client.Connect();//连接
-            Thread.Sleep(waitTime);
+            await client.ConnectAsync();//连接
+
+            await Task.Delay(waitTime);
 
             Assert.True(client.Online);
             Assert.Equal("127.0.0.1", client.IP);
@@ -95,36 +97,36 @@ namespace XUnitTestProject.Tcp
             Assert.True(connected);
 
             client.Send(BitConverter.GetBytes(1));
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.Equal(1, receivedCount);
 
             client.Send(BitConverter.GetBytes(2));
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.Equal(2, receivedCount);
 
             client.Close();
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.True(!client.Online);
             Assert.True(!connected);
             Assert.Equal(1, disconnectCount);
 
             client.Connect();
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.True(client.Online);
             Assert.Equal("127.0.0.1", client.IP);
             Assert.Equal(7789, client.Port);
             Assert.True(connected);
 
             client.Send(BitConverter.GetBytes(3));
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.Equal(3, receivedCount);
 
             client.Send(BitConverter.GetBytes(4));
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.Equal(4, receivedCount);
 
             client.Dispose();
-            Thread.Sleep(waitTime);
+            await Task.Delay(waitTime);
             Assert.True(!client.Online);
             Assert.True(!connected);
             Assert.Equal(2, disconnectCount);
@@ -134,7 +136,7 @@ namespace XUnitTestProject.Tcp
                 client.Connect();
             });
 
-            Thread.Sleep(1000);
+            await Task.Delay(waitTime);
             Assert.Equal(2, disconnectCount);
         }
 
@@ -146,12 +148,12 @@ namespace XUnitTestProject.Tcp
 
             var connected = false;
             var disconnectCount = 0;
-            client.Connected += (client, e) =>
+            client.Connected = (client, e) =>
             {
                 connected = true;
                 return Task.CompletedTask;
             };
-            client.Disconnected += (client, e) =>
+            client.Disconnected = (client, e) =>
             {
                 disconnectCount++;
                 connected = false;
@@ -159,7 +161,7 @@ namespace XUnitTestProject.Tcp
             };
 
             var receivedCount = 0;
-            client.Received += (tcpClient,e) =>
+            client.Received = (tcpClient, e) =>
             {
                 receivedCount++;
                 return Task.CompletedTask;
@@ -408,6 +410,15 @@ namespace XUnitTestProject.Tcp
             Assert.Equal(2, disconnectedCount);
 
             await Task.Delay(waitTime);
+            Assert.True(client.Online);
+        }
+
+        [Fact]
+        public void ConnectIpv6ShouldBeOk()
+        {
+            var client = new TcpClient();
+
+            client.Connect("[2409:8a38:836:6711:c868:de10:445:4]:7812");
             Assert.True(client.Online);
         }
     }
