@@ -23,3 +23,27 @@
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
 }
+
+
+.like-button {
+  background-color: #f1f1f1;
+  border: none;
+  color: #333;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 20px; /* 设置左右两侧的半径为20px，这通常等于按钮的内边距 */
+  transition: background-color 0.3s ease;
+}
+
+.like-button:hover {
+  background-color: #ddd;
+}
+
+.like-button:active {
+  background-color: #bbb;
+}
