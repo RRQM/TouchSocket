@@ -47,3 +47,9 @@
 .like-button:active {
   background-color: #bbb;
 }
+
+.like-button:disabled { /* 当按钮被禁用时 */
+  background-color: #ccc; /* 变为灰色背景 */
+  color: #999; /* 文字颜色也变为较浅的灰色 */
+  cursor: not-allowed; /* 改变鼠标样式为禁止样式 */
+}
