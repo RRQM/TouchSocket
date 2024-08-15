@@ -133,7 +133,6 @@ public partial class MyRpcServer : RpcServer
 }
 ```
 
-
 ## 三、算法
 
 TouchSocket的限流算法，是完全引用`System.Threading.RateLimiting.dll`。所以算是比较通用的限流算法。
@@ -142,6 +141,78 @@ TouchSocket的限流算法，是完全引用`System.Threading.RateLimiting.dll`�
 
 所以，具体算法可以参考[ASP.NET Core 中的速率限制](https://learn.microsoft.com/zh-cn/aspnet/core/performance/rate-limit)
 
+
+## 四、自定义限流分区键
+
+上述限流器的默认工作分区键都是基于函数的。例如，对于`MyRpcServer`的`Login`函数，分区键为`Login`函数本身，这也就意味着，限流是对`Login`函数限制的。即使调用方来自不同用户，不同地区，只要他们都需要调用`Login`函数，都会被限流器影响。
+
+但是有时候，我们希望能自定义实现分区键。
+
+例如：实现IP限流，那么分区键就是`IP`地址。那么我们可以按下列防止做。
+
+首先新建一个类`RpcFixedWindowLimiter`，继承`RateLimiterPolicy`，并指定泛型为`string`，因为我们是基于`IP`限流。
+
+```csharp showLineNumbers
+// 内部类 RpcFixedWindowLimiter 继承自 RateLimiterPolicy<string>，
+// 用于实现基于固定窗口的限流策略，特别适用于远程过程调用 (RPC) 场景。
+internal class RpcFixedWindowLimiter : RateLimiterPolicy<string>
+{
+    // 私有成员变量，存储了创建限流器时使用的配置选项。
+    private readonly FixedWindowRateLimiterOptions m_options;
+
+    // 构造函数接受一个 FixedWindowRateLimiterOptions 类型的参数，并将其赋值给 m_options 成员变量。
+    public RpcFixedWindowLimiter(FixedWindowRateLimiterOptions options)
+    {
+        this.m_options = options;
+    }
+
+    // 重写基类的方法以返回一个字符串类型的分区键。
+    // 根据传入的 ICallContext 对象，尝试从其中获取调用者的 TCP 会话信息。
+    // 如果 callContext.Caller 是 ITcpSession 类型，则返回该会话的 IP 地址作为分区键。
+    // 如果不是基于 TCP 协议的调用，则返回字符串 "any" 作为分区键。
+    protected override string GetPartitionKey(ICallContext callContext)
+    {
+        if (callContext.Caller is ITcpSession tcpSession)
+        {
+            return tcpSession.IP;
+        }
+
+        // 如果是基于 tcp 协议的调用，理论上不会执行到这里。
+        return "any";
+    }
+
+    // 重写基类的方法以返回一个新的 RateLimiter 实例。
+    // 使用 m_options 创建一个 FixedWindowRateLimiter 实例，并返回它。
+    protected override RateLimiter NewRateLimiter(string partitionKey)
+    {
+        return new FixedWindowRateLimiter(this.m_options);
+    }
+}
+```
+
+然后使用`AddPolicy`，直接添加自定义限流器。
+
+```csharp showLineNumbers
+a.AddRateLimiter(p =>
+{
+    p.AddPolicy("FixedWindow", new RpcFixedWindowLimiter(new System.Threading.RateLimiting.FixedWindowRateLimiterOptions()
+    {
+        PermitLimit = 10,
+        Window = TimeSpan.FromSeconds(10)
+    }));
+
+});
+```
+
+最后依然使用`EnableRateLimiting`特性即可。
+
+```csharp {3} showLineNumbers
+public partial class MyRpcServer : RpcServer
+{
+    [EnableRateLimiting("FixedWindow")]
+    ...
+}
+```
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Rpc/RpcRateLimitingConsoleApp)
 
