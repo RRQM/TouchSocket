@@ -6,31 +6,40 @@ const MyApp = () =>
 {
   const location = useLocation();
   const [likeCount, setLikeCount] = useState(0);
-  const [canLike, setCanLike] = useState(false); // 新增的状态用于控制是否可以点赞
+  const [canLike, setCanLike] = useState(true); // 新增的状态用于控制是否可以点赞
 
+  function getLastRouteName() {
+    // 获取pathname并分割为数组
+    const pathArray = location.pathname.split('/');
+  
+    // 获取最后一个非空的路径片段
+    let lastRouteName = pathArray[pathArray.length - 1];
+  
+    // 如果最后一个路径片段为空，则返回"any"
+    if (lastRouteName === '') {
+      lastRouteName = 'any';
+    }
+  
+    return lastRouteName;
+  }
+  
   useEffect(() =>
   {
-    let timer;
+    //let timer;
     if (location.pathname)
     {
-      timer = setTimeout(() =>
-      {
-        setCanLike(true); // 10秒后允许点赞
-      }, 10000); // 10000毫秒 = 10秒
+      // timer = setTimeout(() =>
+      // {
+      //   setCanLike(true); // 10秒后允许点赞
+      // }, 10000); // 10000毫秒 = 10秒
     }
 
-    // 清理函数
-    return () => clearTimeout(timer);
+    // // 清理函数
+    // return () => clearTimeout(timer);
   }, [location.pathname]);
 
   const handleLikeClick = async () =>
   {
-    if (!canLike)
-    {
-      alert('Please read for at least 10 seconds before liking.');
-      return;
-    }
-
     try
     {
       const response = await fetch('https://touchsocket.net/likebuttonserver/linkclick', {
@@ -39,7 +48,7 @@ const MyApp = () =>
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "link": location.pathname,
+          "link": getLastRouteName(),
         }),
       });
 
@@ -56,7 +65,7 @@ const MyApp = () =>
       }
       else
       {
-        alert('aaa，太快了，歇歇啊！');
+        alert('哎呀，你这是要上天啊！歇会儿，让火箭模式冷却一下吧！');
       }
     } catch (error)
     {
@@ -74,7 +83,7 @@ const MyApp = () =>
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "link": location.pathname,
+          "link":  getLastRouteName(),
         }),
       });
 
