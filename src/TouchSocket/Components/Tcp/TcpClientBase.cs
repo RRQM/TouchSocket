@@ -326,7 +326,7 @@ namespace TouchSocket.Sockets
             if (this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) is ClientSslOption sslOption)
             {
                 this.GetTcpCore().Authenticate(sslOption);
-                _ = this.GetTcpCore().BeginSslReceive();
+                Task.Factory.StartNew(this.GetTcpCore().BeginSslReceive);
             }
             else
             {

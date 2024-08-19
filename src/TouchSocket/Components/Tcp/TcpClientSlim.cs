@@ -358,7 +358,7 @@ namespace TouchSocket.Sockets
             if (this.ClientSslOption is ClientSslOption sslOption)
             {
                 this.GetTcpCore().Authenticate(sslOption);
-                _ = this.GetTcpCore().BeginSslReceive();
+                Task.Factory.StartNew(this.GetTcpCore().BeginSslReceive);
             }
             else
             {
