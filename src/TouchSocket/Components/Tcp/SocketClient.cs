@@ -125,9 +125,9 @@ namespace TouchSocket.Sockets
             }
         }
 
-        internal Task BeginReceiveSsl()
+        internal void BeginReceiveSsl()
         {
-            return this.m_tcpCore.BeginSslReceive();
+            Task.Factory.StartNew(this.m_tcpCore.BeginSslReceive);
         }
 
         internal Task InternalConnected(ConnectedEventArgs e)
