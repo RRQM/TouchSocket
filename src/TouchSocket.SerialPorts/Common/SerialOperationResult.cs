@@ -14,11 +14,27 @@ using System.IO.Ports;
 
 namespace TouchSocket.SerialPorts
 {
-    public struct SerialOperationResult
+    /// <summary>
+    /// 串行操作结果的结构体。
+    /// 用于封装一次串行操作（如读取）的结果，包括传输的字节数和操作类型。
+    /// </summary>
+    public readonly struct SerialOperationResult
     {
+        /// <summary>
+        /// 已传输的字节数。
+        /// </summary>
         public readonly int BytesTransferred { get; }
+
+        /// <summary>
+        /// 串行数据事件类型。
+        /// </summary>
         public SerialData EventType { get; }
 
+        /// <summary>
+        /// 初始化<see cref="SerialOperationResult"/>结构体的实例。
+        /// </summary>
+        /// <param name="bytesToRead">要读取的字节数。</param>
+        /// <param name="eventType">串行数据事件类型。</param>
         public SerialOperationResult(int bytesToRead, SerialData eventType)
         {
             this.BytesTransferred = bytesToRead;

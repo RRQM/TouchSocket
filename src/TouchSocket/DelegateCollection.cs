@@ -17,54 +17,57 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 客户端已断开连接
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
-    /// <returns></returns>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="client">断开连接的客户端</param>
+    /// <param name="e">断开连接事件参数</param>
+    /// <returns>任务</returns>
     public delegate Task ClosedEventHandler<TClient>(TClient client, ClosedEventArgs e);
 
     /// <summary>
     /// 客户端即将断开连接
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="client">即将断开连接的客户端</param>
+    /// <param name="e">断开连接事件参数</param>
     public delegate Task ClosingEventHandler<TClient>(TClient client, ClosingEventArgs e);
 
     /// <summary>
-    /// Connected
+    /// 客户端已连接
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="client">已连接的客户端</param>
+    /// <param name="e">连接事件参数</param>
     public delegate Task ConnectedEventHandler<TClient>(TClient client, ConnectedEventArgs e);
 
     /// <summary>
-    /// Connecting
+    /// 客户端正在连接
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="client">正在连接的客户端</param>
+    /// <param name="e">连接事件参数</param>
     public delegate Task ConnectingEventHandler<TClient>(TClient client, ConnectingEventArgs e);
 
     /// <summary>
-    /// 接收数据
+    /// 接收数据事件
     /// </summary>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <param name="client">接收数据的客户端</param>
+    /// <param name="e">接收数据事件参数</param>
     public delegate Task ReceivedEventHandler<TClient>(TClient client, ReceivedDataEventArgs e);
 
     /// <summary>
-    /// 尝试out委托
+    /// 尝试获取客户端实例
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <param name="id"></param>
-    /// <param name="client"></param>
-    /// <returns></returns>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="id">客户端标识</param>
+    /// <param name="client">客户端实例</param>
+    /// <returns>是否成功获取客户端实例</returns>
     public delegate bool TryOutEventHandler<TClient>(string id, out TClient client);
 
     /// <summary>
-    /// Udp接收
+    /// UDP数据接收事件
     /// </summary>
+    /// <typeparam name="TClient">客户端类型</typeparam>
+    /// <param name="client">接收数据的客户端</param>
+    /// <param name="e">UDP接收数据事件参数</param>
     public delegate Task UdpReceivedEventHandler<TClient>(TClient client, UdpReceivedDataEventArgs e);
 }

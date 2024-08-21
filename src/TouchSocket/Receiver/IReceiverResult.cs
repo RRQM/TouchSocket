@@ -15,19 +15,29 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+    /// <summary>
+    /// 接收结果接口，定义了接收操作完成后所需满足的方法和属性
+    /// </summary>
     public interface IReceiverResult : IDisposable
     {
         /// <summary>
-        /// 字节块
+        /// 获取接收到的数据字节块
         /// </summary>
         ByteBlock ByteBlock { get; }
 
         /// <summary>
-        /// 数据对象
+        /// 获取与接收数据相关的请求信息
         /// </summary>
         IRequestInfo RequestInfo { get; }
 
+        /// <summary>
+        /// 获取接收操作是否已完成的标志
+        /// </summary>
         bool IsCompleted { get; }
+
+        /// <summary>
+        /// 获取接收操作相关的消息字符串，例如错误信息或完成状态描述
+        /// </summary>
         string Message { get; }
     }
 }

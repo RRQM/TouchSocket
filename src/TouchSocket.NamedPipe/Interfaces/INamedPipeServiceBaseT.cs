@@ -14,6 +14,10 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {
+    /// <summary>
+    /// 定义了命名管道服务的基本接口，专门用于处理基于特定类型客户端的连接和服务逻辑。
+    /// </summary>
+    /// <typeparam name="TClient">表示客户端类型，必须实现IClient, IIdClient, 和INamedPipeStreamClient接口。</typeparam>
     public interface INamedPipeServiceBase<TClient> : IConnectableService<TClient>, INamedPipeServiceBase where TClient : IClient, IIdClient, INamedPipeStreamClient
     {
     }

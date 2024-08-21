@@ -113,7 +113,7 @@ namespace TouchSocket.Core
                                 }
                             }
                         }
-                        catch (Exception ex)
+                        catch
                         {
 
                         }

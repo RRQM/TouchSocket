@@ -14,9 +14,19 @@ using System;
 
 namespace TouchSocket.Http.WebSockets
 {
+    /// <summary>
+    /// 定义WebSocket接收结果的接口，继承自IDisposable接口
+    /// </summary>
     public interface IWebSocketReceiveResult : IDisposable
     {
+        /// <summary>
+        /// 获取接收操作是否已完成的标志
+        /// </summary>
         bool IsCompleted { get; }
+
+        /// <summary>
+        /// 获取接收到的消息内容
+        /// </summary>
         string Message { get; }
 
         /// <summary>

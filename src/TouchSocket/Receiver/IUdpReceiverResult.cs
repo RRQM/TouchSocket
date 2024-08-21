@@ -14,8 +14,15 @@ using System.Net;
 
 namespace TouchSocket.Sockets
 {
+    /// <summary>
+    /// 表示UDP接收结果的接口，继承自通用的接收结果接口。
+    /// 该接口提供了特定于UDP接收操作的功能。
+    /// </summary>
     public interface IUdpReceiverResult : IReceiverResult
     {
+        /// <summary>
+        /// 获取UDP端点信息，该属性标识了数据报接收的远端点。
+        /// </summary>
         EndPoint EndPoint { get; }
     }
 }

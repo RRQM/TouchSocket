@@ -779,38 +779,55 @@ namespace TouchSocket.Core
             return ret;
         }
 
+        /// <summary>
+        /// 计算并写入CRC16校验和
+        /// </summary>
+        /// <param name="storeSpan">用于存储CRC16校验和的目标字节序列</param>
+        /// <param name="span">用于计算CRC16校验和的源字节序列</param>
         public static void WriteCrc16(Span<byte> storeSpan, ReadOnlySpan<byte> span)
         {
+            // 确保有足够的空间来存储CRC16校验和（2字节）
             if (storeSpan.Length < 2)
             {
+                // 如果空间不足，抛出异常
                 ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(storeSpan.Length), storeSpan.Length, 2);
             }
 
+            // 如果源字节序列为空，则无需计算CRC16校验和
             if (span.IsEmpty)
             {
                 return;
             }
 
+            // 初始化CRC16校验和的计算
             var length = span.Length;
             var start = 0;
 
-            ushort crc = 0;// Initial value
+            // 初始值为0，CRC16校验和的计算起点
+            ushort crc = 0;
+            // 遍历源字节序列以计算CRC16校验和
             for (var i = start; i < length; i++)
             {
+                // 异或操作更新CRC值
                 crc ^= span[i];
+                // 对当前CRC值进行8次位移操作，完成一个字节的处理
                 for (var j = 0; j < 8; j++)
                 {
+                    // 如果CRC值的最低位为1，则进行位移并异或操作，否则仅进行位移操作
                     if ((crc & 1) > 0)
                     {
-                        crc = (ushort)((crc >> 1) ^ 0xA001);// 0xA001 = reverse 0x8005
+                        // 位移并异或操作，使用0xA001（逆0x8005）进行校验和计算
+                        crc = (ushort)((crc >> 1) ^ 0xA001);
                     }
                     else
                     {
+                        // 仅进行位移操作
                         crc = (ushort)(crc >> 1);
                     }
                 }
             }
 
+            // 将计算得到的CRC16校验和按大端字节序写入目标字节序列
             TouchSocketBitConverter.BigEndian.WriteBytes(storeSpan, crc);
         }
 
@@ -829,35 +846,52 @@ namespace TouchSocket.Core
             return ret;
         }
 
+               /// <summary>
+        /// 计算给定字节序列的CRC-16校验值。
+        /// </summary>
+        /// <param name="span">要计算CRC-16校验值的字节序列。</param>
+        /// <returns>计算得到的CRC-16校验值。</returns>
+        /// <exception cref="ArgumentNullException">如果提供的字节序列为空，则抛出ArgumentNullException。</exception>
         public static ushort Crc16Value(ReadOnlySpan<byte> span)
         {
+            // 检查输入的字节序列是否为空
             if (span.IsEmpty)
             {
+                // 如果为空，则抛出ArgumentNullException
                 ThrowHelper.ThrowArgumentNullException(nameof(span));
             }
 
+            // 获取字节序列的长度
             var length = span.Length;
+            // 初始化起始位置为0
             var start = 0;
 
-            ushort crc = 0;// Initial value
+            // 初始化CRC校验值为0
+            ushort crc = 0;
+            // 遍历字节序列
             for (var i = start; i < length; i++)
             {
+                // 对每个字节与当前CRC校验值进行异或操作
                 crc ^= span[i];
+                // 对每个字节的8位进行处理
                 for (var j = 0; j < 8; j++)
                 {
+                    // 如果CRC校验值的最低位为1
                     if ((crc & 1) > 0)
                     {
-                        crc = (ushort)((crc >> 1) ^ 0xA001);// 0xA001 = reverse 0x8005
+                        // 右移一位并异或0xA001（0xA001是0x8005的反转）
+                        crc = (ushort)((crc >> 1) ^ 0xA001);
                     }
                     else
                     {
+                        // 如果最低位为0，直接右移一位
                         crc = (ushort)(crc >> 1);
                     }
                 }
             }
+            // 返回计算得到的CRC校验值
             return crc;
         }
-
         /// **********************************************************************
         /// Name: CRC-16/MAXIM    x16+x15+x2+1
         /// Poly: 0x8005

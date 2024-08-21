@@ -18,7 +18,8 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// TcpDmtpService
+    /// TCP分布式消息传输服务类，继承自TcpDmtpService并实现ITcpDmtpService接口。
+    /// 该类提供了基于TCP协议的分布式消息传输服务功能。
     /// </summary>
     public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpService
     {
@@ -34,9 +35,11 @@ namespace TouchSocket.Dmtp
     }
 
     /// <summary>
-    /// TcpDmtpService泛型类型
+    /// 抽象类<see cref="TcpDmtpService{TClient}"/>;为基于TCP协议的Dmtp服务提供基础实现。
+    /// 它扩展了<see cref="TcpServiceBase{TClient}"/>;，并实现了<see cref="ITcpDmtpService{TClient}"/>接口。
+    /// TClient必须是<see cref="TcpDmtpSessionClient"/>的派生类。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TClient">客户端会话类型，必须继承自<see cref="TcpDmtpSessionClient"/>。</typeparam>
     public abstract class TcpDmtpService<TClient> : TcpServiceBase<TClient>, ITcpDmtpService<TClient> where TClient : TcpDmtpSessionClient
     {
         #region 字段
@@ -71,16 +74,6 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private Task PrivateConnecting(TcpDmtpSessionClient socketClient, ConnectingEventArgs e)
-        {
-            socketClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
-            {
-                Id = e.Id,
-                FindDmtpActor = this.FindDmtpActor
-            });
-            return EasyTask.CompletedTask;
-        }
-
         private async Task<IDmtpActor> FindDmtpActor(string id)
         {
             if (this.m_allowRoute)
@@ -95,6 +88,16 @@ namespace TouchSocket.Dmtp
             {
                 return null;
             }
+        }
+
+        private Task PrivateConnecting(TcpDmtpSessionClient socketClient, ConnectingEventArgs e)
+        {
+            socketClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
+            {
+                Id = e.Id,
+                FindDmtpActor = this.FindDmtpActor
+            });
+            return EasyTask.CompletedTask;
         }
     }
 }

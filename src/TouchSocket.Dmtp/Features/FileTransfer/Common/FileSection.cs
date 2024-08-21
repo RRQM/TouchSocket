@@ -67,16 +67,19 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 判断基本信息是否一致。
         /// </summary>
-        /// <param name="fileSection"></param>
-        /// <returns></returns>
+        /// <param name="fileSection">待比较的文件段对象。</param>
+        /// <returns>如果待比较的文件段对象的基本信息与当前对象一致，则返回true；否则返回false。</returns>
         public bool Equals(FileSection fileSection)
         {
+            // 检查待比较的文件段对象是否为null
             if (fileSection == null)
             {
+                // 如果是null，直接返回false，因为无法比较
                 return false;
             }
             else
             {
+                // 比较两个文件段对象的基本信息（索引、偏移量、长度、资源句柄）是否完全一致
                 return this.Index == fileSection.Index &&
                 this.Offset == fileSection.Offset &&
                 this.Length == fileSection.Length &&

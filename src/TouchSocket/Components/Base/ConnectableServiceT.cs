@@ -15,29 +15,41 @@ using System.Linq;
 
 namespace TouchSocket.Sockets
 {
+    /// <summary>
+    /// ConnectableService 类为实现与客户端的连接提供了一个框架。
+    /// 这个抽象类以泛型的形式定义，允许继承该类的服务处理特定类型的客户端。
+    /// </summary>
+    /// <typeparam name="TClient">客户端类型，必须实现 IClient 和 IIdClient 接口。</typeparam>
     public abstract class ConnectableService<TClient> : ConnectableService, IConnectableService<TClient> where TClient : IClient, IIdClient
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// 客户端集合属性，返回一个客户端集合对象，该对象管理所有连接的客户端。
+        /// </summary>
+        /// <value>一个 IClientCollection 泛型接口，用于管理客户端实例。</value>
         public abstract IClientCollection<TClient> Clients { get; }
 
         /// <summary>
         /// 客户端实例初始化完成。
         /// </summary>
-        /// <returns></returns>
+        /// <param name="client">初始化完成的客户端实例。</param>
         protected virtual void ClientInitialized(TClient client)
         {
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 获取所有客户端实例的集合。
+        /// </summary>
+        /// <returns>一个 IClient 接口的集合，包含所有客户端实例。</returns>
         protected sealed override IEnumerable<IClient> GetClients()
         {
+            // 将 Clients 集合转换为 IClient 接口的集合并返回。
             return this.Clients.ToList().Cast<IClient>();
         }
 
         /// <summary>
-        /// 创建客户端实例。
+        /// 创建一个新的客户端实例。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>一个 TClient 类型的新的客户端实例。</returns>
         protected abstract TClient NewClient();
     }
 }

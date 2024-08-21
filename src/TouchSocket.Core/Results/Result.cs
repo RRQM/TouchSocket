@@ -48,8 +48,8 @@ namespace TouchSocket.Core
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
+        /// <param name="resultCode">结果代码，表示操作的结果</param>
+        /// <param name="message">消息，提供操作结果的详细描述</param>
         public Result(ResultCode resultCode, string message)
         {
             this.ResultCode = resultCode;
@@ -59,48 +59,47 @@ namespace TouchSocket.Core
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="result">传入的结果对象，用于初始化当前结果对象的属性</param>
         public Result(IResult result)
         {
-            this.ResultCode = result.ResultCode;
-            this.Message = result.Message;
+            this.ResultCode = result.ResultCode; // 初始化结果代码
+            this.Message = result.Message; // 初始化结果消息
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="exception"></param>
+        /// <param name="exception">异常对象，用于提取错误信息</param>
         public Result(Exception exception)
         {
-            this.ResultCode = ResultCode.Exception;
-            this.Message = exception.Message;
+            this.ResultCode = ResultCode.Exception; // 设置结果代码为异常
+            this.Message = exception.Message; // 设置结果消息为异常的详细信息
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="resultCode"></param>
+        /// <param name="resultCode">结果代码，用于指定结果的状态</param>
         public Result(ResultCode resultCode)
         {
-            this.ResultCode = resultCode;
-            this.Message = resultCode.GetDescription();
+            this.ResultCode = resultCode; // 设置结果代码
+            this.Message = resultCode.GetDescription(); // 根据结果代码设置相应的描述信息
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public ResultCode ResultCode { get; private set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public string Message { get; private set; }
+
+        /// <inheritdoc/>
+        public readonly bool IsSuccess => this.ResultCode == ResultCode.Success;
 
         /// <summary>
         /// 创建来自<see cref="ResultCode.Canceled"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromCanceled(string msg)
         {
             return new Result(ResultCode.Canceled, msg);
@@ -109,8 +108,8 @@ namespace TouchSocket.Core
         /// <summary>
         /// 创建来自<see cref="ResultCode.Error"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromError(string msg)
         {
             return new Result(ResultCode.Error, msg);
@@ -119,18 +118,18 @@ namespace TouchSocket.Core
         /// <summary>
         /// 创建来自<see cref="ResultCode.Exception"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromException(string msg)
         {
             return new Result(ResultCode.Exception, msg);
         }
 
         /// <summary>
-        /// 创建来自<see cref="ResultCode.Overtime"/>的<see cref="Result"/>
+        /// 创建来自<see cref="ResultCode.Fail"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromFail(string msg)
         {
             return new Result(ResultCode.Fail, msg);
@@ -139,8 +138,8 @@ namespace TouchSocket.Core
         /// <summary>
         /// 创建来自<see cref="ResultCode.Overtime"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromOvertime(string msg)
         {
             return new Result(ResultCode.Overtime, msg);
@@ -149,119 +148,18 @@ namespace TouchSocket.Core
         /// <summary>
         /// 创建来自<see cref="ResultCode.Success"/>的<see cref="Result"/>
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关联的消息</param>
+        /// <returns>创建的Result对象</returns>
         public static Result FromSuccess(string msg)
         {
             return new Result(ResultCode.Success, msg);
         }
 
-        /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override readonly string ToString()
         {
             return TouchSocketCoreResource.ResultToString.Format(this.ResultCode, this.Message);
         }
     }
 
-    /// <summary>
-    /// 结果返回
-    /// </summary>
-    public class ResultBase : IResult
-    {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
-        public ResultBase(ResultCode resultCode, string message)
-        {
-            this.ResultCode = resultCode;
-            this.Message = message;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="resultCode"></param>
-        public ResultBase(ResultCode resultCode)
-        {
-            this.ResultCode = resultCode;
-            this.Message = resultCode.GetDescription();
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="result"></param>
-        public ResultBase(Result result)
-        {
-            this.ResultCode = result.ResultCode;
-            this.Message = result.Message;
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public ResultBase()
-        {
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public ResultCode ResultCode { get; protected set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string Message { get; protected set; }
-
-        /// <summary>
-        /// ToString
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return TouchSocketCoreResource.ResultToString.Format(this.ResultCode, this.Message);
-        }
-    }
-
-    /// <summary>
-    /// ResultExtensions
-    /// </summary>
-    public static class ResultExtensions
-    {
-        /// <summary>
-        /// 是否成功。
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool IsSuccess(this IResult result)
-        {
-            return result.ResultCode == ResultCode.Success;
-        }
-
-        /// <summary>
-        /// 是否没有成功。
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool NotSuccess(this IResult result)
-        {
-            return result.ResultCode != ResultCode.Success;
-        }
-
-        /// <summary>
-        /// 转换为<see cref="Result"/>
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static Result ToResult(this IResult result)
-        {
-            return new Result(result);
-        }
-    }
 }

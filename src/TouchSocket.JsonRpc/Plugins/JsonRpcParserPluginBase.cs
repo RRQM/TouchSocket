@@ -99,7 +99,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }

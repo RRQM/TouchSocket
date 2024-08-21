@@ -20,6 +20,10 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {
+    /// <summary>
+    /// 命名管道服务基类
+    /// </summary>
+    /// <typeparam name="TClient">客户端类型，必须继承自NamedPipeSessionClientBase</typeparam>
     public abstract class NamedPipeServiceBase<TClient> : ConnectableService<TClient>, INamedPipeServiceBase<TClient> where TClient : NamedPipeSessionClientBase
     {
         #region 字段
@@ -239,6 +243,7 @@ namespace TouchSocket.NamedPipe
 
             client.InternalSetConfig(this.Config);
             client.InternalSetContainer(this.Resolver);
+            client.InternalSetListenOption(monitor.Option);
             client.InternalSetService(this);
             client.InternalSetNamedPipe(namedPipe);
             client.InternalSetPluginManager(this.PluginManager);

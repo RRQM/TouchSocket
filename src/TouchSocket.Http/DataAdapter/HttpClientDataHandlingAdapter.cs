@@ -28,6 +28,7 @@ namespace TouchSocket.Http
         private long m_surLen;
         private Task m_task;
         private ByteBlock m_tempByteBlock;
+        private string s;
 
         /// <summary>
         /// <inheritdoc/>
@@ -47,7 +48,7 @@ namespace TouchSocket.Http
             base.OnLoaded(owner);
         }
 
-        public void SetComplateLock()
+        public void SetCompleteLock()
         {
             this.m_autoResetEvent.Set();
         }
@@ -68,6 +69,8 @@ namespace TouchSocket.Http
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
+            this.s = byteBlock.ToString();
+
             if (this.m_tempByteBlock == null)
             {
                 byteBlock.Position = 0;
@@ -105,12 +108,15 @@ namespace TouchSocket.Http
             var index = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(TouchSocketHttpUtility.CRLF);
             if (index > 0)
             {
-                var headerLength = index - byteBlock.Position;
-                var hex = byteBlock.Span.Slice(byteBlock.Position, headerLength - 1).ToString(Encoding.UTF8);
+                //var headerLength = index - byteBlock.Position;
+                var headerLength = index;
+                var hex = byteBlock.Span.Slice(byteBlock.Position, headerLength).ToString(Encoding.UTF8);
                 var count = hex.ByHexStringToInt32();
-                byteBlock.Position += headerLength + 1;
+                //byteBlock.Position += headerLength + 1;
+                byteBlock.Position += headerLength;
+                byteBlock.Position += 2;
 
-                if (count >= 0)
+                if (count > 0)
                 {
                     if (count > byteBlock.CanReadLength)
                     {
@@ -194,6 +200,9 @@ namespace TouchSocket.Http
                                 return;
 
                             case FilterResult.Success:
+
+                                await this.m_httpResponse.CompleteInput().ConfigureAwait(false);
+
                                 this.m_httpResponse = null;
                                 if (this.m_task != null)
                                 {

@@ -12,8 +12,11 @@
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// Tcp系列服务器接口
+    /// 定义了ITcpService接口，该接口继承自泛型版本的ITcpService接口，其中泛型参数为TcpSessionClient。
+    /// 这个接口的存在是为了提供一种约束或模板，用于指导实现者如何构建TCP服务。
+    /// 它规定了TCP服务的基本功能和行为，但不关心这些功能的具体实现细节。
     /// </summary>
     public interface ITcpService : ITcpService<TcpSessionClient>
     {

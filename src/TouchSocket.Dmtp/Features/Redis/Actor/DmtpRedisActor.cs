@@ -10,24 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Dmtp.FileTransfer;
 using TouchSocket.Resources;
 
 namespace TouchSocket.Dmtp.Redis
 {
     /// <summary>
-    /// DmtpRedisActor
+    /// DmtpRedisActor 类，实现了 IDmtpRedisActor 接口。
+    /// 该类通过 Redis 操作，为分布式消息传输协议（Dmtp）提供演员（Actor）模型的实现。
     /// </summary>
     public class DmtpRedisActor : IDmtpRedisActor
     {
         /// <summary>
-        /// DmtpRedisActor
+        /// 初始化DmtpRedisActor类的新实例。
         /// </summary>
-        /// <param name="dmtpActor"></param>
+        /// <param name="dmtpActor">一个IDmtpActor接口的实现，用于处理actor的具体逻辑。</param>
         public DmtpRedisActor(IDmtpActor dmtpActor)
         {
             this.DmtpActor = dmtpActor;
@@ -227,8 +226,8 @@ namespace TouchSocket.Dmtp.Redis
         /// <summary>
         /// 处理收到的消息
         /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="message">接收到的消息对象</param>
+        /// <returns>返回一个异步任务，指示处理是否成功</returns>
         public async Task<bool> InputReceivedData(DmtpMessage message)
         {
             if (message.ProtocolFlags == this.m_redis_Request)

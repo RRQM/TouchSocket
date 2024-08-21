@@ -16,14 +16,10 @@ using System.Diagnostics;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
-    /// ClientCollection
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+   
     [DebuggerDisplay("Count={Count}")]
     internal class InternalClientCollection<TClient> : ConcurrentDictionary<string, TClient>, IClientCollection<TClient> where TClient : IIdClient
     {
-        /// <inheritdoc/>
         public bool ClientExist(string id)
         {
             return !string.IsNullOrEmpty(id) && this.ContainsKey(id);

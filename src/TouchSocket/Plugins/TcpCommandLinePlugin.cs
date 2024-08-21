@@ -28,15 +28,24 @@ namespace TouchSocket.Sockets
         private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, TouchSocket.Core.Method>();
 
         /// <summary>
-        /// Tcp命令行插件。
+        /// Tcp命令行插件构造函数。
+        /// 该插件初始化时，会扫描自身类定义的所有命令方法，并将它们注册到插件内部的映射中。
+        /// 这允许插件在接收到命令时，能够根据命令名称找到并执行相应的处理方法。
         /// </summary>
-        /// <param name="logger"></param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="logger">用于日志记录的接口。确保外部提供的logger不为null，否则将抛出ArgumentNullException异常。</param>
+        /// <exception cref="ArgumentNullException">如果logger参数为null，则抛出此异常。</exception>
         protected TcpCommandLinePlugin(ILog logger)
         {
+            // 初始化成员变量m_logger，用于后续的日志记录。
             this.m_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // 初始化数据转换器，用于处理命令的序列化和反序列化。
             this.Converter = new StringSerializerConverter(new StringToPrimitiveSerializerFormatter<object>(), new JsonStringToClassSerializerFormatter<object>());
+
+            // 扫描当前类中所有公开实例方法，筛选出名称以"Command"结尾的方法。
             var ms = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(a => a.Name.EndsWith("Command"));
+
+            // 将筛选出的命令方法注册到m_pairs字典中，以便后续通过命令名称调用相应的方法。
             foreach (var item in ms)
             {
                 this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
@@ -54,12 +63,14 @@ namespace TouchSocket.Sockets
         public bool ReturnException { get; set; } = true;
 
         /// <summary>
-        /// 当有执行异常时，不返回异常。
+        /// 设置异常返回策略，当有执行异常时不返回异常。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回当前的TcpCommandLinePlugin实例，以支持链式调用。</returns>
         public TcpCommandLinePlugin NoReturnException()
         {
+            // 设置是否在执行异常时返回异常的标志为false
             this.ReturnException = false;
+            // 返回当前实例，以支持链式调用
             return this;
         }
 

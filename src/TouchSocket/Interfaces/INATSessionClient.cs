@@ -17,38 +17,33 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// INATSessionClient
+    /// 定义了<see cref="INatSessionClient"/>接口，它扩展了ITcpSessionClient接口。
+    /// 该接口专门用于处理需要网络地址转换（NAT）支持的TCP会话客户端操作。
     /// </summary>
-    public interface INATSessionClient : ITcpSessionClient
+    public interface INatSessionClient : ITcpSessionClient
     {
         /// <summary>
-        /// 添加转发客户端。
+        /// 添加一个转发客户端。
         /// </summary>
-        /// <param name="config">配置文件</param>
-        /// <param name="setupAction">当完成配置，但是还未连接时回调。</param>
-        /// <returns></returns>
-        ITcpClient AddTargetClient(TouchSocketConfig config, Action<ITcpClient> setupAction = null);
+        /// <param name="config">配置文件，用于设置TcpClient的连接参数。</param>
+        /// <param name="setupAction">当完成配置，但是还未连接时的回调操作。</param>
+        /// <returns>返回创建的ITcpClient对象。</returns>
+        Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = default);
 
         /// <summary>
-        /// 添加转发客户端。
+        /// 获取所有目标客户端。
         /// </summary>
-        /// <param name="config">配置文件</param>
-        /// <param name="setupAction">当完成配置，但是还未连接时回调。</param>
-        /// <returns></returns>
-        Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = null);
-
-        /// <summary>
-        /// 获取所有目标客户端
-        /// </summary>
-        /// <returns></returns>
+        /// <returns>返回一个包含所有目标客户端的数组。</returns>
         ITcpClient[] GetTargetClients();
-
         /// <summary>
-        /// 发送数据到全部转发端。
+        /// 异步发送数据到目标客户端。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        void SendToTargetClient(byte[] buffer, int offset, int length);
+        /// <param name="memory">要发送的数据，以只读内存的形式传入。</param>
+        /// <remarks>
+        /// 本方法旨在提供一种高效的数据传输方式，通过直接传递内存地址和长度，
+        /// 避免了不必要的数据拷贝，从而提高性能。使用<see cref="ReadOnlyMemory{T}"/>可以确保
+        /// 传递给本方法的数据在发送过程中不会被修改。
+        /// </remarks>
+        Task SendToTargetClientAsync(ReadOnlyMemory<byte> memory);
     }
 }

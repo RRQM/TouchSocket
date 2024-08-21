@@ -20,8 +20,9 @@ using TouchSocket.Resources;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// Tcp服务器基类
+    /// 提供基于TCP的服务基类，用于管理和操作TCP客户端会话。
     /// </summary>
+    /// <typeparam name="TClient">TCP客户端会话的类型，必须继承自TcpSessionClientBase，并实现IIdClient和IClient接口。</typeparam>
     public abstract class TcpServiceBase<TClient> : ConnectableService<TClient>, ITcpServiceBase<TClient> where TClient : TcpSessionClientBase, IIdClient, IClient
     {
         #region 变量
@@ -50,8 +51,6 @@ namespace TouchSocket.Sockets
         #endregion 属性
 
         /// <inheritdoc/>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ObjectDisposedException"></exception>
         public void AddListen(TcpListenOption option)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(option, nameof(option));
@@ -96,11 +95,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override bool ClientExists(string id)
         {
             return this.m_clients.ClientExist(id);
@@ -113,8 +108,6 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public bool RemoveListen(TcpNetworkMonitor monitor)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(monitor, nameof(monitor));
@@ -128,13 +121,7 @@ namespace TouchSocket.Sockets
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="sourceId"></param>
-        /// <param name="targetId"></param>
-        /// <exception cref="ClientNotFindException"></exception>
-        /// <exception cref="Exception"></exception>
         public override async Task ResetIdAsync(string sourceId, string targetId)
         {
             ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
@@ -147,7 +134,7 @@ namespace TouchSocket.Sockets
 
             if (this.m_clients.TryGetClient(sourceId, out var client))
             {
-               await client.ResetIdAsync(targetId).ConfigureAwait(false);
+                await client.ResetIdAsync(targetId).ConfigureAwait(false);
             }
             else
             {
@@ -158,6 +145,7 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override async Task StartAsync()
         {
+            this.ThrowIfDisposed();
             this.ThrowIfConfigIsNull();
             try
             {
@@ -226,6 +214,8 @@ namespace TouchSocket.Sockets
         /// <inheritdoc/>
         public override async Task StopAsync()
         {
+            this.ThrowIfDisposed();
+
             this.m_serverState = ServerState.Stopped;
             await this.ReleaseAll().ConfigureAwait(false);
 
@@ -235,10 +225,7 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (this.DisposedValue)
@@ -255,21 +242,26 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 在验证Ssl发送错误时。
+        /// 在身份验证过程中发生错误时触发。
+        /// 此方法用于记录身份验证过程中的异常错误。
         /// </summary>
-        /// <param name="ex"></param>
+        /// <param name="ex">发生的异常对象。</param>
         protected virtual void OnAuthenticatingError(Exception ex)
         {
+            // 尝试记录异常信息，如果Logger为空则不会记录
             this.Logger?.Exception(ex);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 预览绑定 TCP 网络监视器。
+        /// 此方法允许派生类在绑定监视器之前执行自定义的预览绑定逻辑。
+        /// </summary>
+        /// <param name="monitor">要绑定的 TCP 网络监视器实例。</param>
         protected virtual void PreviewBind(TcpNetworkMonitor monitor)
         {
         }
 
         #region TcpCore
-
 
         private TcpCore RentTcpCore()
         {
@@ -353,7 +345,7 @@ namespace TouchSocket.Sockets
 
         private async Task OnClientInit(object obj)
         {
-            if (obj==null)
+            if (obj == null)
             {
                 return;
             }

@@ -12,23 +12,29 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// 适用于Tcp客户端的连接工厂。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
     public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// 判断给定的Tcp客户端是否处于活动状态。
+        /// </summary>
+        /// <param name="client">要判断状态的Tcp客户端。</param>
+        /// <returns>如果客户端在线则返回true，否则返回false。</returns>
         public override bool IsAlive(TClient client)
         {
             return client.Online;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 处理Tcp客户端的释放操作。
+        /// </summary>
+        /// <param name="client">要释放的Tcp客户端。</param>
         public override void DisposeClient(TClient client)
         {
             client.TryShutdown();
@@ -37,11 +43,14 @@ namespace TouchSocket.Sockets
     }
 
     /// <summary>
-    ///  适用于基于<see cref="TcpClient"/>的连接工厂。
+    /// 适用于基于<see cref="TcpClient"/>的连接工厂。
     /// </summary>
     public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// 创建并初始化一个新的TcpClient实例。
+        /// </summary>
+        /// <returns>配置并连接好的TcpClient实例。</returns>
         protected override async Task<TcpClient> CreateClient()
         {
             var client = new TcpClient();

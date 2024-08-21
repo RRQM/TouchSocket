@@ -21,19 +21,8 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 具有Udp终结点的发送
     /// </summary>
-    public interface IUdpClientSender : ISender, IUdpRequsetInfoSender
+    public interface IUdpClientSender : ISender, IUdpRequestInfoSender
     {
-        ///// <summary>
-        ///// 同步组合发送数据。
-        ///// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
-        ///// </summary>
-        ///// <param name="endPoint">远程终结点</param>
-        ///// <param name="transferBytes">组合数据</param>
-        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
-        ///// <exception cref="OverlengthException">发送数据超长</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //void 123Send(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
-
         /// <summary>
         /// 异步组合发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
@@ -45,28 +34,15 @@ namespace TouchSocket.Sockets
         /// <exception cref="Exception">其他异常</exception>
         Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes);
 
-        ///// <summary>
-        ///// 同步组合发送数据。
-        ///// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
-        ///// </summary>
-        ///// <param name="endPoint">远程终结点</param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="OverlengthException">发送数据超长</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //void 123Send(EndPoint endPoint, byte[] buffer, int offset, int length);
-
         /// <summary>
         /// 异步组合发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
         /// <param name="endPoint">远程终结点</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory">只读内存块，包含待发送的数据</param>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
+        /// <returns>一个表示异步操作的Task对象</returns>
         Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory);
     }
 }

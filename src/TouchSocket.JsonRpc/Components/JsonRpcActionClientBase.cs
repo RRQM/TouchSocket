@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -342,13 +341,14 @@ namespace TouchSocket.JsonRpc
             this.m_waitHandle.SetRun(waitResult);
         }
 
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
             invokeOption ??= InvokeOption.WaitInvoke;
-        
-           parameters ??= new object[0];
+
+            parameters ??= new object[0];
             var jsonRpcRequest = new JsonRpcRequest
             {
                 Method = invokeKey,

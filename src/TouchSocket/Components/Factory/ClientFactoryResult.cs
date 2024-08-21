@@ -14,17 +14,20 @@ using System;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
-    /// ClientFactoryResult
+        /// <summary>
+    /// 客户端工厂结果
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TClient">客户端类型，必须实现IClient接口</typeparam>
     public readonly struct ClientFactoryResult<TClient> : IDisposable where TClient : IClient
     {
+        // 私有字段，存储对客户端执行的操作
         private readonly Action<TClient> m_action;
 
         /// <summary>
-        /// ClientFactoryResult
+        /// 初始化客户端工厂结果
         /// </summary>
+        /// <param name="client">客户端实例</param>
+        /// <param name="action">对客户端执行的操作</param>
         public ClientFactoryResult(TClient client, Action<TClient> action)
         {
             this.Client = client;
@@ -37,7 +40,7 @@ namespace TouchSocket.Sockets
         public TClient Client { get; }
 
         /// <summary>
-        /// 释放
+        /// 释放资源，执行对客户端的操作
         /// </summary>
         public void Dispose()
         {

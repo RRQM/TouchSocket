@@ -42,7 +42,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public IEnumerator<IFormFile> GetEnumerator()
         {
-            if (this.m_request.ContentComplated == null || this.m_request.ContentComplated == true)
+            if (this.m_request.ContentCompleted == null || this.m_request.ContentCompleted == true)
             {
                 var context = this.m_request.GetContent(CancellationToken.None);
 
@@ -103,7 +103,7 @@ namespace TouchSocket.Http
     {
         public async IAsyncEnumerator<IFormFile> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            if (this.m_request.ContentComplated == null || this.m_request.ContentComplated == true)
+            if (this.m_request.ContentCompleted == null || this.m_request.ContentCompleted == true)
             {
                 var context =await this.m_request.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
 

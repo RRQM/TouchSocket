@@ -17,7 +17,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Dmtp.FileTransfer;
 using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
@@ -117,19 +116,19 @@ namespace TouchSocket.Dmtp
         {
             this.WaitHandlePool = new WaitHandlePool<IWaitResult>();
             this.AllowRoute = allowRoute;
-            this.LastActiveTime = DateTime.Now;
+            this.LastActiveTime = DateTime.UtcNow;
             this.IsReliable = isReliable;
         }
 
         /// <summary>
         /// 创建一个可靠协议的Dmtp协议的最基础功能件
         /// </summary>
-        /// <param name="allowRoute"></param>
+        /// <param name="allowRoute">指示是否允许路由</param>
         public DmtpActor(bool allowRoute) : this(allowRoute, true)
         {
         }
 
-       
+
         /// <summary>
         /// 建立对点
         /// </summary>
@@ -370,7 +369,7 @@ namespace TouchSocket.Dmtp
         /// <returns></returns>
         public virtual async Task<bool> InputReceivedData(DmtpMessage message)
         {
-            this.LastActiveTime = DateTime.Now;
+            this.LastActiveTime = DateTime.UtcNow;
             var byteBlock = message.BodyByteBlock;
             switch (message.ProtocolFlags)
             {
@@ -589,9 +588,9 @@ namespace TouchSocket.Dmtp
                             }
                             waitCreateChannel.SwitchId();
                             byteBlock.Reset();
-                            
+
                             waitCreateChannel.Package(ref byteBlock);
-                            
+
                             await this.SendAsync(P8_CreateChannel_Response, byteBlock.Memory).ConfigureAwait(false);
                         }
                         catch (Exception ex)
@@ -650,7 +649,7 @@ namespace TouchSocket.Dmtp
                                     byteBlock.Reset();
 
                                     channelPackage.Package(ref byteBlock);
-                                    
+
                                     await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
                                 }
                             }
@@ -697,9 +696,9 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        public virtual async Task ResetIdAsync(string id)
+        public virtual async Task ResetIdAsync(string newId)
         {
-            var waitSetId = new WaitSetId(this.Id, id);
+            var waitSetId = new WaitSetId(this.Id, newId);
 
             var waitData = this.WaitHandlePool.GetWaitDataAsync(waitSetId);
 
@@ -711,8 +710,8 @@ namespace TouchSocket.Dmtp
                     {
                         if (waitData.WaitResult.Status == 1)
                         {
-                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, id)).ConfigureAwait(false);
-                            this.Id = id;
+                            await this.OnIdChanged(new IdChangedEventArgs(this.Id, newId)).ConfigureAwait(false);
+                            this.Id = newId;
                         }
                         else
                         {
@@ -911,7 +910,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public virtual async Task SendAsync(ushort protocol, ReadOnlyMemory<byte> memory)
         {
-            using (var byteBlock=new ValueByteBlock(memory.Length+8)) 
+            using (var byteBlock = new ValueByteBlock(memory.Length + 8))
             {
                 byteBlock.Write(DmtpMessage.Head);
                 byteBlock.WriteUInt16(protocol, EndianType.Big);
@@ -927,7 +926,7 @@ namespace TouchSocket.Dmtp
             //    new ArraySegment<byte>(TouchSocketBitConverter.BigEndian.GetBytes(length)),
             //    new ArraySegment<byte>(buffer,offset,length)
             //};
-            this.LastActiveTime = DateTime.Now;
+            this.LastActiveTime = DateTime.UtcNow;
         }
 
         ///// <inheritdoc/>
@@ -1204,7 +1203,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 waitCreateChannel.Package(ref byteBlock);
-                
+
                 await this.SendAsync(P7_CreateChannel_Request, byteBlock.Memory).ConfigureAwait(false);
                 switch (await waitData.WaitAsync(10 * 1000).ConfigureAwait(false))
                 {

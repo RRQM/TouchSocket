@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;

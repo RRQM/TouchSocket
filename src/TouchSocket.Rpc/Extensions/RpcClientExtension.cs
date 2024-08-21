@@ -17,24 +17,25 @@ using TouchSocket.Core;
 namespace TouchSocket.Rpc
 {
     /// <summary>
-    /// RpcClientExtension
+    /// RPC 客户端扩展类
     /// </summary>
     public static class RpcClientExtension
     {
         #region RpcClient
 
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
         public static object Invoke(this IRpcClient client, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             return client.InvokeAsync(invokeKey, returnType, invokeOption, parameters).GetFalseAwaitResult();
         }
 
-        /// <inheritdoc cref="IRpcClient.InvokeAsync(RpcRequest)"/>
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
         public static T InvokeT<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
             return (T)(client.Invoke(invokeKey, typeof(T), invokeOption, parameters));
         }
 
-        /// <inheritdoc cref="IRpcClient.InvokeAsync(RpcRequest)"/>
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
         public static async Task<T> InvokeTAsync<T>(this IRpcClient client, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
         {
             return (T)(await client.InvokeAsync(invokeKey, typeof(T), invokeOption, parameters).ConfigureAwait(false));
@@ -44,6 +45,7 @@ namespace TouchSocket.Rpc
 
         #region ITargetRpcClient
 
+        /// <inheritdoc cref="IRpcClient.InvokeAsync(string, Type, IInvokeOption, object[])"/>
         public static object Invoke(this ITargetRpcClient client, string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             return client.InvokeAsync(targetId, invokeKey, returnType, invokeOption, parameters).GetFalseAwaitResult();

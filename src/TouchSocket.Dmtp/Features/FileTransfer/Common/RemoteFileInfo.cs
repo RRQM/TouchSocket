@@ -11,12 +11,13 @@
 //------------------------------------------------------------------------------
 
 using System.IO;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
 {
+
     /// <summary>
-    /// RemoteFileInfo
+    /// 表示远程文件系统中文件的信息。
+    /// 继承自RemoteFileSystemInfo类，提供了关于远程文件或文件夹的详细信息。
     /// </summary>
     public class RemoteFileInfo : RemoteFileSystemInfo
     {
@@ -30,16 +31,16 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 从FileInfo初始化一个RemoteFileInfo
         /// </summary>
-        /// <param name="fileInfo"></param>
+        /// <param name="fileInfo">用于初始化RemoteFileInfo的FileInfo对象</param>
         public RemoteFileInfo(FileInfo fileInfo)
         {
-            this.FullName = fileInfo.FullName;
-            this.Name = fileInfo.Name;
-            this.Length = fileInfo.Length;
-            this.Attributes = fileInfo.Attributes;
-            this.CreationTime = fileInfo.CreationTime;
-            this.LastWriteTime = fileInfo.LastWriteTime;
-            this.LastAccessTime = fileInfo.LastAccessTime;
+            this.FullName = fileInfo.FullName; // 设置完整路径
+            this.Name = fileInfo.Name; // 设置文件名
+            this.Length = fileInfo.Length; // 设置文件长度
+            this.Attributes = fileInfo.Attributes; // 设置文件属性
+            this.CreationTime = fileInfo.CreationTime; // 设置文件创建时间
+            this.LastWriteTime = fileInfo.LastWriteTime; // 设置文件最后写入时间
+            this.LastAccessTime = fileInfo.LastAccessTime; // 设置文件最后访问时间
         }
 
         /// <summary>

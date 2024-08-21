@@ -21,15 +21,12 @@ namespace TouchSocket.Dmtp
 
     internal partial class InternalChannel
     {
-        public async IAsyncEnumerator<IByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<ByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             ByteBlock byteBlock = null;
             while (await this.MoveNextAsync().ConfigureAwait(false))
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    throw new OperationCanceledException();
-                }
+                cancellationToken.ThrowIfCancellationRequested();
                 byteBlock.SafeDispose();
                 byteBlock = this.GetCurrent();
                 yield return byteBlock;

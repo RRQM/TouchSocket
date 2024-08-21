@@ -21,10 +21,10 @@ namespace TouchSocket.Sockets
     public class ServiceStateEventArgs : MsgPermitEventArgs
     {
         /// <summary>
-        /// 服务器状态事件参数
+        /// 初始化服务器状态事件参数类
         /// </summary>
-        /// <param name="serverState"></param>
-        /// <param name="exception"></param>
+        /// <param name="serverState">服务器的状态信息</param>
+        /// <param name="exception">与状态变化相关的异常（如果有的话）</param>
         public ServiceStateEventArgs(ServerState serverState, Exception exception)
         {
             this.ServerState = serverState;
@@ -32,12 +32,12 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 服务器状态
+        /// 获取服务器状态
         /// </summary>
         public ServerState ServerState { get; }
 
         /// <summary>
-        /// 异常类
+        /// 获取与状态变化相关的异常信息
         /// </summary>
         public Exception Exception { get; }
     }

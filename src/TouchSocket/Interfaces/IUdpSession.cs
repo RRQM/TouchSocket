@@ -13,15 +13,23 @@
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// UDP会话
+    /// 定义一个UDP会话接口，该接口继承自多个与UDP通信相关的接口。
+    /// 整合了UDP会话的基础功能、客户端发送功能、UDP客户端发送特性和接收客户端特性。
     /// </summary>
-    public interface IUdpSession :IUdpSessionBase, IClientSender, IUdpClientSender, IReceiverClient<IUdpReceiverResult>
+    public interface IUdpSession : IUdpSessionBase, IClientSender, IUdpClientSender, IReceiverClient<IUdpReceiverResult>
     {
         /// <summary>
         /// 数据处理适配器
         /// </summary>
         UdpDataHandlingAdapter DataHandlingAdapter { get; }
 
+        /// <summary>
+        /// 收到UDP数据包时触发的事件处理程序
+        /// </summary>
+        /// <remarks>
+        /// 该属性用于处理接收到的UDP数据包。当有数据包到达时，会调用此事件处理程序。
+        /// 实现 <see cref="IUdpSession"/> 接口的实例将提供处理收到的数据包的方法。
+        /// </remarks>
         UdpReceivedEventHandler<IUdpSession> Received { get; set; }
     }
 }

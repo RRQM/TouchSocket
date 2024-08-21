@@ -11,13 +11,11 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
@@ -26,7 +24,7 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
-        private readonly WaitHandlePool<IWaitResult> m_waitHandle = new WaitHandlePool<IWaitResult>();
+        private int m_idCount;
 
         /// <inheritdoc/>
         public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
@@ -34,59 +32,47 @@ namespace TouchSocket.JsonRpc
             return this.TcpConnectAsync(millisecondsTimeout, token);
         }
 
-       
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-             invokeOption ??= InvokeOption.WaitInvoke;
+            invokeOption ??= InvokeOption.WaitInvoke;
             parameters ??= new object[0];
-            using (var byteBlock = new ByteBlock())
-            {
-                if (invokeOption == default)
-                {
-                    invokeOption = InvokeOption.WaitInvoke;
-                }
 
-                var jsonRpcRequest = new JsonRpcRequest
-                {
-                    Method = invokeKey,
-                    Params = parameters,
-                    Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-                };
-                var request = new HttpRequest(this);
-                request.Method = HttpMethod.Post;
-                request.SetUrl(this.RemoteIPHost.PathAndQuery);
-                request.FromJson(jsonRpcRequest.ToJsonString());
-                request.Build(byteBlock);
+            var id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? Interlocked.Increment(ref this.m_idCount) : 0;
+
+            var jsonRpcRequest = new JsonRpcRequest
+            {
+                Method = invokeKey,
+                Params = parameters,
+                Id = id
+            };
+            var request = new HttpRequest(this);
+            request.Method = HttpMethod.Post;
+            request.SetUrl(this.RemoteIPHost.PathAndQuery);
+            request.FromJson(jsonRpcRequest.ToJsonString());
+
+            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(false))
+            {
+                var response = responseResult.Response;
+
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
-                        {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
-                            this.m_waitHandle.Destroy(waitData);
-                            return default;
-                        }
                     case FeedbackType.WaitSend:
                         {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
-                            this.m_waitHandle.Destroy(waitData);
                             return default;
                         }
                     case FeedbackType.WaitInvoke:
                         {
-                            await this.ProtectedSendAsync(byteBlock.Memory).ConfigureAwait(false);
-                            await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
-                            var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
-                            this.m_waitHandle.Destroy(waitData);
+                            var responseJsonString = await response.GetBodyAsync().ConfigureAwait(false);
 
-                            if (resultContext.Status == 0)
-                            {
-                                throw new TimeoutException("等待结果超时");
-                            }
+                            ThrowHelper.ThrowArgumentNullExceptionIf(responseJsonString);
+
+                            var resultContext = JsonRpcUtility.ToJsonRpcWaitResult(responseJsonString);
+
                             if (resultContext.Error != null)
                             {
-                                throw new RpcException(resultContext.Error.Message);
+                                ThrowHelper.ThrowRpcException(resultContext.Error.Message);
                             }
 
                             if (resultContext.Result == null)
@@ -95,7 +81,7 @@ namespace TouchSocket.JsonRpc
                             }
                             else
                             {
-                                if (returnType!=null)
+                                if (returnType != null)
                                 {
                                     if (returnType.IsPrimitive || returnType == typeof(string))
                                     {
@@ -110,38 +96,11 @@ namespace TouchSocket.JsonRpc
                                 {
                                     return default;
                                 }
-
                             }
                         }
                     default:
                         return default;
                 }
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
-        {
-            var httpResponse = (HttpResponse)e.RequestInfo;
-            var jsonString = httpResponse.GetBody();
-
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                await base.OnTcpReceived(e).ConfigureAwait(false);
-                return;
-            }
-
-            try
-            {
-                var waitResult = JsonRpcUtility.ToJsonRpcWaitResult(jsonString);
-                if (waitResult != null)
-                {
-                    waitResult.Status = 1;
-                    this.m_waitHandle.SetRun(waitResult);
-                }
-            }
-            catch
-            {
             }
         }
     }

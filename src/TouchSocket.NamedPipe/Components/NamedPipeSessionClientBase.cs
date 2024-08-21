@@ -47,6 +47,7 @@ namespace TouchSocket.NamedPipe
         private Func<NamedPipeSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryGet;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryRemoveAction;
+        private NamedPipeListenOption m_listenOption;
 
         #endregion 字段
 
@@ -71,6 +72,9 @@ namespace TouchSocket.NamedPipe
 
         /// <inheritdoc/>
         public bool IsClient => false;
+
+        /// <inheritdoc/>
+        public NamedPipeListenOption ListenOption => this.m_listenOption;
 
         /// <inheritdoc/>
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
@@ -103,7 +107,7 @@ namespace TouchSocket.NamedPipe
 
         internal Task InternalInitialized()
         {
-            this.LastSentTime = DateTime.Now;
+            this.LastSentTime = DateTime.UtcNow;
             return this.OnInitialized();
         }
 
@@ -111,7 +115,7 @@ namespace TouchSocket.NamedPipe
         {
             this.m_online = true;
 
-            this.m_receiveTask =Task.Factory.StartNew(this.BeginReceive, TaskCreationOptions.LongRunning).Unwrap();
+            this.m_receiveTask = Task.Factory.StartNew(this.BeginReceive, TaskCreationOptions.LongRunning).Unwrap();
             this.m_receiveTask.FireAndForget();
 
             await this.OnNamedPipeConnected(e).ConfigureAwait(false);
@@ -122,7 +126,7 @@ namespace TouchSocket.NamedPipe
             await this.OnNamedPipeConnecting(e).ConfigureAwait(false);
             if (this.m_dataHandlingAdapter == null)
             {
-                var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
+                var adapter = this.m_listenOption.Adapter?.Invoke();
                 if (adapter != null)
                 {
                     this.SetAdapter(adapter);
@@ -168,6 +172,10 @@ namespace TouchSocket.NamedPipe
             this.m_service = serviceBase;
         }
 
+        internal void InternalSetListenOption(NamedPipeListenOption option)
+        {
+            this.m_listenOption = option;
+        }
         #endregion Internal
 
         /// <inheritdoc/>
@@ -184,7 +192,7 @@ namespace TouchSocket.NamedPipe
         /// <inheritdoc/>
         public virtual Task ResetIdAsync(string newId)
         {
-           return this.ProtectedResetId(newId);
+            return this.ProtectedResetId(newId);
         }
 
         /// <summary>
@@ -237,39 +245,49 @@ namespace TouchSocket.NamedPipe
             return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
+
         /// <summary>
-        /// 当即将发送时。
+        /// 触发命名管道发送事件的异步方法。
         /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
+        /// <param name="memory">待发送的字节内存。</param>
+        /// <returns>一个等待任务，结果指示发送操作是否成功。</returns>
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
-          return  this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
+            // 将发送事件委托给插件管理器处理，异步调用相关插件的发送逻辑
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
         }
 
         /// <summary>
         /// 直接重置内部Id。
         /// </summary>
-        /// <param name="newId"></param>
+        /// <param name="newId">新的Id值。</param>
         protected async Task ProtectedResetId(string newId)
         {
+            // 检查新Id是否为空或null
             if (string.IsNullOrEmpty(newId))
             {
                 throw new ArgumentException($"“{nameof(newId)}”不能为 null 或空。", nameof(newId));
             }
 
+            // 如果新旧Id相同，则无需进行更改
             if (this.Id == newId)
             {
                 return;
             }
+
+            // 保存当前Id
             var sourceId = this.Id;
+
+            // 尝试从内部集合中移除当前Id
             if (this.m_tryRemoveAction(this.Id, out var socketClient))
             {
+                // 更新Socket客户端的Id
                 socketClient.Id = newId;
+
+                // 尝试将更新后的Socket客户端添加回集合
                 if (this.m_tryAddAction(socketClient))
                 {
+                    // 如果插件管理器已启用，通知相关插件Id已更改
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, newId);
@@ -279,19 +297,24 @@ namespace TouchSocket.NamedPipe
                 }
                 else
                 {
+                    // 如果添加失败，恢复原来的Id
                     socketClient.Id = sourceId;
+
+                    // 再次尝试添加，如果失败，则抛出异常
                     if (this.m_tryAddAction(socketClient))
                     {
                         throw new Exception("Id重复");
                     }
                     else
                     {
+                        // 如果恢复旧Id也失败，则关闭Socket客户端
                         await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
                     }
                 }
             }
             else
             {
+                // 如果无法找到对应的Socket客户端，则抛出异常
                 throw new ClientNotFindException(TouchSocketResource.ClientNotFind.Format(sourceId));
             }
         }
@@ -299,38 +322,47 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 尝试通过Id获得对应的客户端
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="socketClient"></param>
-        /// <returns></returns>
+        /// <param name="id">客户端的唯一标识符</param>
+        /// <param name="socketClient">输出参数，用于返回找到的客户端实例</param>
+        /// <returns>如果找到对应的客户端，则返回true；否则返回false</returns>
         protected bool ProtectedTryGetClient(string id, out NamedPipeSessionClientBase socketClient)
         {
+            // 调用内部方法尝试获取客户端
             return this.m_tryGet(id, out socketClient);
         }
 
         /// <summary>
         /// 设置适配器
         /// </summary>
-        /// <param name="adapter"></param>
+        /// <param name="adapter">要设置的适配器实例</param>
         protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
         {
+            // 检查传入的适配器实例是否为null
             if (adapter is null)
             {
+                // 如果为null，则抛出ArgumentNullException异常
                 throw new ArgumentNullException(nameof(adapter));
             }
 
+            // 检查当前实例是否已有配置
             if (this.Config != null)
             {
+                // 如果有配置，则将其应用到适配器上
                 adapter.Config(this.Config);
             }
 
+            // 将当前实例的日志记录器设置到适配器上
             adapter.Logger = this.Logger;
+            // 调用适配器的OnLoaded方法，通知适配器已被加载
             adapter.OnLoaded(this);
+            // 设置适配器接收数据时的回调方法
             adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
+            // 设置适配器发送数据时的回调方法
             //adapter.SendCallBack = this.ProtectedDefaultSend;
             adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
+            // 将适配器实例设置为当前实例的数据处理适配器
             this.m_dataHandlingAdapter = adapter;
         }
-
         private async Task BeginReceive()
         {
             while (true)
@@ -526,12 +558,12 @@ namespace TouchSocket.NamedPipe
             {
                 await this.m_semaphoreSlimForSend.WaitAsync();
 #if NET6_0_OR_GREATER
-                    await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+                await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
 #else
                 var segment = memory.GetArray();
                 await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
 #endif
-                this.LastSentTime = DateTime.Now;
+                this.LastSentTime = DateTime.UtcNow;
             }
             finally
             {
@@ -543,73 +575,86 @@ namespace TouchSocket.NamedPipe
 
         #region 异步发送
 
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据，通过适配器模式灵活处理数据发送。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="memory">待发送的只读字节内存块。</param>
+        /// <returns>一个异步任务，表示发送操作。</returns>
         protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
+            // 如果数据处理适配器未设置，则使用默认发送方式。
             if (this.m_dataHandlingAdapter == null)
             {
                 return this.ProtectedDefaultSendAsync(memory);
             }
             else
             {
+                // 否则，使用适配器的发送方法进行数据发送。
                 return this.m_dataHandlingAdapter.SendInputAsync(memory);
             }
         }
 
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步安全发送请求信息。
         /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="requestInfo">请求信息，用于发送。</param>
+        /// <returns>返回一个任务，该任务表示发送操作的异步结果。</returns>
+        /// <remarks>
+        /// 此方法用于在执行实际的数据处理之前，确保当前状态允许发送请求信息。
+        /// 它使用了数据处理适配器来异步发送输入请求。
+        /// </remarks>
         protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
         {
+            // 检查当前状态是否允许发送请求信息，如果不允许则抛出异常。
             this.ThrowIfCannotSendRequestInfo();
+            // 使用数据处理适配器异步发送请求信息。
             return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据。
+        /// 如果数据处理适配器不存在或无法拼接发送，则将所有传输字节合并到一个连续的内存块中发送。
+        /// 如果数据处理适配器存在且支持拼接发送，则直接发送传输字节列表。
         /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="transferBytes">要发送的字节数据列表，每个项代表一个字节片段。</param>
+        /// <returns>发送任务。</returns>
         protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
         {
+            // 检查数据处理适配器是否存在且支持拼接发送
             if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
             {
+                // 如果不支持拼接发送，则计算所有字节片段的总长度
                 var length = 0;
                 foreach (var item in transferBytes)
                 {
                     length += item.Count;
                 }
+                // 使用计算出的总长度创建一个连续的内存块
                 using (var byteBlock = new ByteBlock(length))
                 {
+                    // 将每个字节片段写入连续的内存块
                     foreach (var item in transferBytes)
                     {
                         byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
+                    // 根据数据处理适配器的存在与否，选择不同的发送方式
                     if (this.m_dataHandlingAdapter == null)
                     {
+                        // 如果没有数据处理适配器，则使用默认方式发送
                         await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
+                        // 如果有数据处理适配器，则通过适配器发送
                         await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
+                // 如果数据处理适配器支持拼接发送，则直接发送字节列表
                 await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }

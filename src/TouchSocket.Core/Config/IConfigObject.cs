@@ -12,13 +12,13 @@
 
 namespace TouchSocket.Core
 {
-    /// <summary>
+        /// <summary>
     /// 具有配置的对象接口
     /// </summary>
     public interface IConfigObject : IDependencyObject, ILoggerObject
     {
         /// <summary>
-        /// 设置项
+        /// 配置项
         /// </summary>
         TouchSocketConfig Config { get; }
     }

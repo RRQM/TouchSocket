@@ -33,7 +33,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 周期内的累计计数值。
         /// </summary>
-        public long Count => this.m_count;
+        public readonly long Count => this.m_count;
 
         /// <summary>
         /// 最后一次递增时间
@@ -58,7 +58,7 @@ namespace TouchSocket.Core
         public bool Increment(long value)
         {
             bool isPeriod;
-            var dateTime = DateTime.Now;
+            var dateTime = DateTime.UtcNow;
             if (dateTime - this.LastIncrement > this.Period)
             {
                 this.OnPeriod?.Invoke(this.m_count);

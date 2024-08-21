@@ -18,7 +18,7 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+       /// <summary>
     /// IP解析映射
     /// </summary>
     public class IPHost : Uri
@@ -129,12 +129,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 解析一个组的地址。
         /// </summary>
-        /// <param name="strs"></param>
+        /// <param name="ipHostStrings"></param>
         /// <returns></returns>
-        public static IPHost[] ParseIPHosts(string[] strs)
+        public static IPHost[] ParseIPHosts(string[] ipHostStrings)
         {
             var iPs = new List<IPHost>();
-            foreach (var item in strs)
+            foreach (var item in ipHostStrings)
             {
                 iPs.Add(new IPHost(item));
             }

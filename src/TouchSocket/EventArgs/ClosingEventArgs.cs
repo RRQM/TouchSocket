@@ -15,10 +15,18 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 断开连接事件参数
+    /// 即将断开连接事件参数
     /// </summary>
+    /// <remarks>
+    /// 当发生断开连接事件时，使用该类来传递断开连接的消息。
+    /// 继承自MsgEventArgs，用于提供断开连接时的详细信息。
+    /// </remarks>
     public class ClosingEventArgs : MsgEventArgs
     {
+        /// <summary>
+        /// 初始化即将断开连接事件参数对象
+        /// </summary>
+        /// <param name="msg">断开连接的消息</param>
         public ClosingEventArgs(string msg) : base(msg)
         {
         }

@@ -41,6 +41,14 @@ namespace TouchSocket.Core
         /// </summary>
         public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
 
+        /// <summary>
+        /// 如果指定的长度超过最大包大小，则抛出异常。
+        /// </summary>
+        /// <param name="length">待检查的长度值。</param>
+        /// <remarks>
+        /// 此方法用于确保传入的数据长度不会超过预设的最大包大小限制，
+        /// 以避免处理过大的数据包导致的性能问题或内存溢出等问题。
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfMoreThanMaxPackageSize(int length)
         {

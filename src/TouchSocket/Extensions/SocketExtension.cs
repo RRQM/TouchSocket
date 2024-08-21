@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Net.Sockets;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -18,34 +17,41 @@ using TouchSocket.Resources;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// SocketExtension
+    /// Socket的扩展方法类
     /// </summary>
     public static class SocketExtension
     {
         /// <summary>
-        /// 会使用同步锁，保证所有数据上缓存区。
+        /// 绝对发送数据。
+        /// 该方法使用指定的Socket对象，将数据从缓冲区发送到远程主机。
+        /// 它确保所有数据都被发送，即使需要多次调用Socket的Send方法。
         /// </summary>
-        /// <param name="socket"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="socket">用于发送数据的Socket对象。</param>
+        /// <param name="buffer">包含要发送的数据的字节数组。</param>
+        /// <param name="offset">字节数组中开始发送数据的索引。</param>
+        /// <param name="length">要发送的数据长度。</param>
+        /// <exception cref="System.Net.Sockets.SocketException">当数据发送失败时抛出异常。</exception>
         public static void AbsoluteSend(this Socket socket, byte[] buffer, int offset, int length)
         {
+            // 对Socket对象加锁，以确保线程安全。
             lock (socket)
             {
+                // 循环直到所有数据被发送。
                 while (length > 0)
                 {
+                    // 尝试发送数据，返回实际发送的字节数。
                     var r = socket.Send(buffer, offset, length, SocketFlags.None);
+                    // 如果发送失败（发送字节数为0）且仍有数据待发送，则抛出异常。
                     if (r == 0 && length > 0)
                     {
                         ThrowHelper.ThrowException(TouchSocketResource.IncompleteDataTransmission);
                     }
+                    // 更新缓冲区索引和剩余待发送长度。
                     offset += r;
                     length -= r;
                 }
             }
         }
-
         /// <summary>
         /// 尝试关闭<see cref="Socket"/>。不会抛出异常。
         /// </summary>

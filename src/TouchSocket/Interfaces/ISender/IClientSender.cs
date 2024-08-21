@@ -17,10 +17,10 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+        /// <summary>
     /// 客户端发送接口
     /// </summary>
-    public interface IClientSender : ISender, IRequsetInfoSender
+    public interface IClientSender : ISender, IRequestInfoSender
     {
        
         /// <summary>

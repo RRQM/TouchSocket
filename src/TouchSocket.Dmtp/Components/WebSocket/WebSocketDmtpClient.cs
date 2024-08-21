@@ -20,24 +20,27 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// WebSocketDmtpClient
+    /// WebSocketDmtpClient 类，继承自 SetupConfigObject 并实现了 IWebSocketDmtpClient 接口。
+    /// 该类负责 WebSocket 客户端的配置和管理，提供与 Dmtp 协议相关的功能。
     /// </summary>
     public class WebSocketDmtpClient : SetupConfigObject, IWebSocketDmtpClient
     {
         /// <summary>
-        /// WebSocketDmtpClient
+        /// 初始化WebSocketDmtpClient类的新实例。
         /// </summary>
         public WebSocketDmtpClient()
         {
+            // 初始化接收消息计数器，用于统计每秒接收的消息数量。
             this.m_receiveCounter = new ValueCounter
             {
-                Period = TimeSpan.FromSeconds(1),
-                OnPeriod = this.OnReceivePeriod
+                Period = TimeSpan.FromSeconds(1), // 设置统计周期为1秒。
+                OnPeriod = this.OnReceivePeriod // 每隔一个周期调用OnReceivePeriod方法处理接收统计逻辑。
             };
+            // 初始化发送消息计数器，用于统计每秒发送的消息数量。
             this.m_sentCounter = new ValueCounter
             {
-                Period = TimeSpan.FromSeconds(1),
-                OnPeriod = this.OnSendPeriod
+                Period = TimeSpan.FromSeconds(1), // 设置统计周期为1秒。
+                OnPeriod = this.OnSendPeriod // 每隔一个周期调用OnSendPeriod方法处理发送统计逻辑。
             };
         }
 
@@ -137,14 +140,16 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 发送<see cref="IDmtpActor"/>关闭消息。
         /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
+        /// <param name="msg">关闭消息的内容</param>
+        /// <returns>异步操作的任务</returns>
         public async Task CloseAsync(string msg)
         {
+            // 如果当前的IDmtpActor实例不为空，则发送关闭消息
             if (this.m_dmtpActor != null)
             {
                 await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
             }
+            // 如果当前状态为在线，则触发关闭事件并执行中止操作
             if (this.m_online)
             {
                 await this.OnDmtpClosing(new ClosingEventArgs(msg));
@@ -210,9 +215,9 @@ namespace TouchSocket.Dmtp
 #if NET6_0_OR_GREATER
                         var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(false);
 #else
-                        var segmen = byteBlock.TotalMemory.GetArray();
+                        var segment = byteBlock.TotalMemory.GetArray();
 
-                        var result = await this.m_client.ReceiveAsync(segmen, default).ConfigureAwait(false);
+                        var result = await this.m_client.ReceiveAsync(segment, default).ConfigureAwait(false);
 #endif
 
                         if (result.Count == 0)
@@ -309,32 +314,6 @@ namespace TouchSocket.Dmtp
             return this.OnRouting(e);
         }
 
-        //private void OnDmtpActorSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-        //{
-        //    try
-        //    {
-        //        this.m_semaphoreForSend.Wait();
-        //        for (var i = 0; i < transferBytes.Length; i++)
-        //        {
-        //            Task task;
-        //            if (i == transferBytes.Length - 1)
-        //            {
-        //                task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, true, CancellationToken.None);
-        //            }
-        //            else
-        //            {
-        //                task = this.m_client.SendAsync(transferBytes[i], WebSocketMessageType.Binary, false, CancellationToken.None);
-        //            }
-        //            task.GetFalseAwaitResult();
-        //            this.m_sendCounter.Increment(transferBytes[i].Count);
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        this.m_semaphoreForSend.Release();
-        //    }
-        //}
-
         private async Task OnDmtpActorSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
             await this.m_client.SendAsync(memory.GetArray(), WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
@@ -357,16 +336,17 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 已断开连接。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含断开连接信息的事件参数</param>
         protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
         {
+            // 如果事件已经被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
+            // 异步触发插件管理器中的 IDmtpClosedPlugin 接口的事件，并传递相关参数
             await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureAwait(false);
         }
-
         /// <summary>
         /// 当Dmtp即将被关闭时触发。
         /// <para>
@@ -377,41 +357,47 @@ namespace TouchSocket.Dmtp
         /// </list>
         /// </para>
         /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="e">提供了关闭事件的相关信息。</param>
+        /// <returns>返回一个Task对象，表示异步操作的完成。</returns>
         protected virtual async Task OnDmtpClosing(ClosingEventArgs e)
         {
+            // 如果关闭事件已经被处理，则直接返回，不再执行后续操作。
             if (e.Handled)
             {
                 return;
             }
+            // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
             await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 当创建通道
+        /// 当创建通道时触发的事件处理程序
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含通道创建信息的事件参数</param>
         protected virtual async Task OnCreateChannel(CreateChannelEventArgs e)
         {
+            // 如果事件已经被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
 
+            // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件处理通道创建事件
             await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 在完成握手连接时
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含握手信息的事件参数</param>
         protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
         {
+            // 如果握手已经被处理，则不再执行后续操作
             if (e.Handled)
             {
                 return;
             }
+            // 触发插件管理器中的握手完成插件事件
             await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
@@ -421,26 +407,28 @@ namespace TouchSocket.Dmtp
         /// <param name="e">参数</param>
         protected virtual async Task OnHandshaking(DmtpVerifyEventArgs e)
         {
+            // 如果握手已经被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
+            // 触发握手过程的插件事件
             await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureAwait(false);
         }
-
         /// <summary>
         /// 当需要转发路由包时
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含路由包相关信息的事件参数</param>
         protected virtual async Task OnRouting(PackageRouterEventArgs e)
         {
+            // 如果事件已经被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
+            // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包
             await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureAwait(false);
         }
-
         #endregion 事件触发
     }
 }

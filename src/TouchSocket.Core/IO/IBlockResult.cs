@@ -14,10 +14,25 @@ using System;
 
 namespace TouchSocket.Core
 {
+    /// <summary>
+    /// 定义了一个泛型接口，用于表示一块不可变内存的处理结果。
+    /// </summary>
+    /// <typeparam name="T">内存中元素的类型。</typeparam>
     public interface IBlockResult<T> : IDisposable
     {
+        /// <summary>
+        /// 获取只读内存块。
+        /// </summary>
         ReadOnlyMemory<T> Memory { get; }
+
+        /// <summary>
+        /// 获取表示内存处理是否完成的布尔值。
+        /// </summary>
         bool IsCompleted { get; }
+
+        /// <summary>
+        /// 获取处理结果的消息。
+        /// </summary>
         string Message { get; }
     }
 }

@@ -17,7 +17,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+        /// <summary>
     /// 发送等待接口
     /// </summary>
     public interface IWaitSender
@@ -25,9 +25,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 异步发送
         /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
+        /// <param name="memory">要发送的内存数据</param>
         /// <param name="token">取消令箭</param>
         /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>

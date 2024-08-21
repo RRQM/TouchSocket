@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp.Rpc
         ///  适用于DmtpRpc的标记.
         ///  <para>是否仅以函数名调用，当为True是，调用时仅需要传入方法名即可。</para>
         /// </summary>
-        /// <param name="methodInvoke"></param>
+        /// <param name="methodInvoke">指示是否仅通过方法名进行调用的布尔值。</param>
         public DmtpRpcAttribute(bool methodInvoke)
         {
             this.MethodInvoke = methodInvoke;
@@ -41,10 +41,10 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 适用于DmtpRpc的标记.
         /// </summary>
-        /// <param name="invokenKey"></param>
-        public DmtpRpcAttribute(string invokenKey)
+        /// <param name="invokeKey">用于指定DmtpRpc调用的关键字</param>
+        public DmtpRpcAttribute(string invokeKey)
         {
-            this.InvokeKey = invokenKey;
+            this.InvokeKey = invokeKey;
         }
     }
 }

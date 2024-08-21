@@ -11,10 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -23,16 +20,18 @@ using TouchSocket.Rpc;
 namespace TouchSocket.Dmtp.Rpc
 {
     /// <summary>
-    /// DmtpRpcActor
+    /// DmtpRpcActor 类，继承自 ConcurrentDictionary，并实现 IDmtpRpcActor 接口。
+    /// 该类用于管理远程过程调用(RPC)的上下文，通过关联任务和超时逻辑来实现。
     /// </summary>
     public class DmtpRpcActor : ConcurrentDictionary<long, DmtpRpcCallContext>, IDmtpRpcActor
     {
+
         /// <summary>
-        /// 创建一个DmtpRpcActor
+        /// 初始化DmtpRpcActor类的实例。
         /// </summary>
-        /// <param name="dmtpActor"></param>
-        /// <param name="rpcServerProvider"></param>
-        /// <param name="m_resolver"></param>
+        /// <param name="dmtpActor">IDmtpActor接口的实现，提供Dmtp通信能力。</param>
+        /// <param name="rpcServerProvider">IRpcServerProvider接口的实现，用于提供RPC服务。</param>
+        /// <param name="m_resolver">IResolver接口的实现，用于解析服务提供者。</param>
         public DmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IResolver m_resolver)
         {
             this.DmtpActor = dmtpActor;
@@ -65,8 +64,8 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 处理收到的消息
         /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
+        /// <param name="message">接收到的消息对象</param>
+        /// <returns>返回一个异步任务，指示处理是否成功</returns>
         public async Task<bool> InputReceivedData(DmtpMessage message)
         {
             var byteBlock = message.BodyByteBlock;
@@ -125,7 +124,7 @@ namespace TouchSocket.Dmtp.Rpc
                         }
 
                         //await this.InvokeThis(rpcPackage).ConfigureAwait(false);
-                         _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
+                        _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
                 catch (Exception ex)
@@ -202,11 +201,16 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 设置处理协议标识的起始标识。
         /// </summary>
-        /// <param name="start"></param>
+        /// <param name="start">起始标识值，将以此值为基准递增分配协议标识。</param>
         public void SetProtocolFlags(ushort start)
         {
+            // 设置请求调用协议标识，基于起始值递增
             this.m_invoke_Request = start++;
+
+            // 设置响应调用协议标识，基于上一个标识值递增
             this.m_invoke_Response = start++;
+
+            // 设置取消调用协议标识，使用上一个递增后的值
             this.m_cancelInvoke = start;
         }
 
@@ -376,6 +380,7 @@ namespace TouchSocket.Dmtp.Rpc
 
         #region Rpc
 
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             invokeOption ??= InvokeOption.WaitInvoke;
@@ -434,6 +439,7 @@ namespace TouchSocket.Dmtp.Rpc
             }
         }
 
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string targetId, string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             if (string.IsNullOrEmpty(targetId))

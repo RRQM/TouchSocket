@@ -23,57 +23,58 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 获取全路径
         /// </summary>
-        /// <param name="root"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="root">根目录路径</param>
+        /// <param name="path">相对路径或部分路径</param>
+        /// <returns>组合后的全路径</returns>
         string GetFullPath(string root, string path);
 
         /// <summary>
         /// 加载读取的文件资源定位器。
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileSectionSize"></param>
-        /// <returns></returns>
+        /// <param name="path">文件路径。</param>
+        /// <param name="fileSectionSize">文件分区大小。</param>
+        /// <returns>返回加载的文件资源定位器。</returns>
         FileResourceLocator LoadFileResourceLocatorForRead(string path, int fileSectionSize);
 
         /// <summary>
         /// 加载写入的文件资源定位器。
         /// </summary>
-        /// <param name="savePath"></param>
-        /// <param name="fileResourceInfo"></param>
-        /// <returns></returns>
+        /// <param name="savePath">保存路径，指示文件将被写入的位置。</param>
+        /// <param name="fileResourceInfo">文件资源信息，包含文件的元数据和属性。</param>
+        /// <returns>返回一个 <see cref="FileResourceLocator"/> 对象，该对象用于定位和访问文件资源。</returns>
         FileResourceLocator LoadFileResourceLocatorForWrite(string savePath, FileResourceInfo fileResourceInfo);
 
         /// <summary>
         /// 释放文件资源定位器
         /// </summary>
-        /// <param name="resourceHandle"></param>
-        /// <param name="locator"></param>
-        public bool TryRelaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator);
+        /// <param name="resourceHandle">资源句柄，标识需要释放的文件资源定位器</param>
+        /// <param name="locator">输出参数，返回被释放的文件资源定位器</param>
+        /// <returns>如果成功释放文件资源定位器，则返回true；否则返回false</returns>
+        public bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator);
 
         /// <summary>
         /// 通过文件句柄，获取资源定位器。
         /// </summary>
-        /// <param name="resourceHandle"></param>
-        /// <param name="fileResourceLocator"></param>
-        /// <returns></returns>
+        /// <param name="resourceHandle">文件句柄，用于标识特定的文件资源。</param>
+        /// <param name="fileResourceLocator">输出参数，返回文件的资源定位器。</param>
+        /// <returns>如果成功获取资源定位器，返回true；否则返回false。</returns>
         bool TryGetFileResourceLocator(int resourceHandle, out FileResourceLocator fileResourceLocator);
 
         /// <summary>
         /// 读取文件的所有数据
         /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
+        /// <param name="fileInfo">要读取的文件信息</param>
+        /// <param name="buffer">用于存储文件内容的字节数组</param>
+        /// <returns>读取到的字节数</returns>
         int ReadAllBytes(FileInfo fileInfo, byte[] buffer);
 
         /// <summary>
         /// 写入数据到文件
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="path">文件路径</param>
+        /// <param name="buffer">包含要写入的数据的字节数组</param>
+        /// <param name="offset">字节数组中要开始写入数据的索引</param>
+        /// <param name="length">要写入的字节数</param>
         void WriteAllBytes(string path, byte[] buffer, int offset, int length);
     }
 }

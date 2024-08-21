@@ -90,31 +90,46 @@ namespace TouchSocket.Http.WebSockets
 
         #region 事件
 
+                        /// <summary>
+        /// 当 WebSocket 连接关闭时触发的事件处理程序。
+        /// </summary>
+        /// <param name="e">包含关闭原因和状态代码的事件参数。</param>
+        /// <returns>一个 <see cref="Task"/> 对象，表示异步操作的完成。</returns>
         protected virtual Task OnWebSocketClosed(ClosedEventArgs e)
         {
             return EasyTask.CompletedTask;
         }
 
+                /// <summary>
+        /// 在WebSocket关闭时触发的事件处理程序。
+        /// </summary>
+        /// <param name="e">包含关闭原因和状态码的事件参数。</param>
+        /// <returns>A <see cref="Task"/> 表示事件处理的异步操作。</returns>
         protected virtual Task OnWebSocketClosing(ClosedEventArgs e)
         {
+            // 返回一个已完成的任务，表示没有额外的异步操作需要执行。
             return EasyTask.CompletedTask;
         }
 
-        /// <summary>
+                /// <summary>
         /// 表示完成握手后。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含HTTP上下文信息的参数对象。</param>
+        /// <returns>一个表示任务已完成的Task对象。</returns>
         protected virtual Task OnWebSocketHandshaked(HttpContextEventArgs e)
         {
+            // 在握手完成后执行一些操作，当前实现直接返回一个已完成的任务，实际使用时可根据需要进行扩展。
             return EasyTask.CompletedTask;
         }
 
-        /// <summary>
+                /// <summary>
         /// 表示在即将握手连接时。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含HTTP上下文信息的参数对象</param>
+        /// <returns>一个表示异步操作完成的任务</returns>
         protected virtual Task OnWebSocketHandshaking(HttpContextEventArgs e)
         {
+            // 在WebSocket握手过程中无需执行任何额外操作，直接返回已完成的任务
             return EasyTask.CompletedTask;
         }
 
@@ -158,11 +173,11 @@ namespace TouchSocket.Http.WebSockets
 
         #endregion 事件
 
-        /// <summary>
+                /// <summary>
         /// 当收到WS数据时。
         /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="e">包含接收数据的事件参数</param>
+        /// <returns>一个Task对象，表示异步操作</returns>
         protected abstract Task OnWebSocketReceived(WSDataFrameEventArgs e);
 
         private void InitWebSocket()

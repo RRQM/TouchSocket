@@ -12,10 +12,14 @@
 
 namespace TouchSocket.Sockets
 {
+    
     /// <summary>
-    /// Tcp服务器接口
+    /// 定义了ITcpServiceBase接口，它是连接服务的基接口，专门处理TCP服务。
+    /// 该接口继承自<see cref="IConnectableService{TClient}"/>和ITcpServiceBase，约束TClient必须实现ITcpListenableClient, IClient, IIdClient接口。
     /// </summary>
+    /// <typeparam name="TClient">客户端类型参数，必须实现ITcpListenableClient, IClient, IIdClient接口。</typeparam>
     public interface ITcpServiceBase<TClient> : IConnectableService<TClient>, ITcpServiceBase where TClient : ITcpListenableClient, IClient, IIdClient
     {
     }
+
 }

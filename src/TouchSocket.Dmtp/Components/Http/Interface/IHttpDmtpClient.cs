@@ -15,8 +15,9 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
+
     /// <summary>
-    /// IHttpDmtpClient
+    /// 定义了一个HTTP DMTP客户端接口，该接口继承了DMTP客户端、HTTP会话和TCP连接客户端的基本行为。
     /// </summary>
     public interface IHttpDmtpClient : IDmtpClient, IHttpSession, ITcpConnectableClient
     {

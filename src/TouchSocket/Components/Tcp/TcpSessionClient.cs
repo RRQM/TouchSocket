@@ -19,7 +19,13 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// SessionClient
+    /// 定义了一个抽象类TcpSessionClient，用于处理TCP会话客户端的连接和数据传输。
+    /// 它继承自TcpSessionClientBase类，并实现了ITcpSessionClient接口。
+    ///
+    /// 该类提供了基础的TCP会话管理功能，包括客户端的标识(Id)、IP地址(IP)和端口号(Port)。
+    /// 使用DebuggerDisplay属性，可以在调试工具中更清晰地展示每个实例的Id、IP地址和端口号。
+    ///
+    /// 继承此类的子类通常需要实现或重写一些方法和属性，以适应特定的业务逻辑和数据处理需求。
     /// </summary>
     [DebuggerDisplay("Id={Id},IPAdress={IP}:{Port}")]
     public abstract class TcpSessionClient : TcpSessionClientBase, ITcpSessionClient
@@ -52,79 +58,100 @@ namespace TouchSocket.Sockets
         public ClosingEventHandler<ITcpSessionClient> Closing { get; set; }
 
         /// <summary>
-        /// 当客户端完整建立Tcp连接。
-        /// </summary>
-        /// <param name="e"></param>
-        protected override async Task OnTcpConnected(ConnectedEventArgs e)
-        {
-            await this.m_onClientConnected(this, e).ConfigureAwait(false);
-            if (e.Handled)
-            {
-                return;
-            }
-
-            await base.OnTcpConnected(e).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// 客户端正在连接。
-        /// </summary>
-        protected override async Task OnTcpConnecting(ConnectingEventArgs e)
-        {
-            await this.m_onClientConnecting(this, e).ConfigureAwait(false);
-            if (e.Handled)
-            {
-                return;
-            }
-
-            await base.OnTcpConnecting(e).ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// 客户端已断开连接。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">有关断开连接事件的信息。</param>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
+            // 如果已注册Closed事件处理程序，则调用该处理程序
             if (this.Closed != null)
             {
+                // 异步调用Closed事件处理程序，并等待它完成
                 await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
+            // 调用自定义的客户端断开连接处理逻辑
             await this.m_onClientDisconnected(this, e).ConfigureAwait(false);
+            // 如果事件已被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
 
+            // 调用基类的OnTcpClosed方法，传递事件参数
             await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">有关断开连接的事件参数</param>
         protected override async Task OnTcpClosing(ClosingEventArgs e)
         {
+            // 如果已注册断开连接事件处理程序
             if (this.Closing != null)
             {
+                // 调用注册的事件处理程序
                 await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回
                 if (e.Handled)
                 {
                     return;
                 }
             }
 
+            // 调用内部的客户端断开连接处理方法
             await this.m_onClientDisconnecting(this, e).ConfigureAwait(false);
+            // 再次检查事件是否已被处理
             if (e.Handled)
             {
                 return;
             }
+            // 调用基类的即将断开连接方法
             await base.OnTcpClosing(e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 当客户端完整建立Tcp连接。
+        /// </summary>
+        /// <param name="e">包含连接建立信息的事件参数。</param>
+        protected override async Task OnTcpConnected(ConnectedEventArgs e)
+        {
+            // 触发客户端连接事件，允许派生类处理连接逻辑。
+            await this.m_onClientConnected(this, e).ConfigureAwait(false);
+
+            // 如果事件已经被处理，则直接返回不继续执行默认的连接逻辑。
+            if (e.Handled)
+            {
+                return;
+            }
+
+            // 执行基类的OnTcpConnected方法，继续默认的连接处理流程。
+            await base.OnTcpConnected(e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 客户端正在连接。
+        /// </summary>
+        /// <param name="e">包含连接信息的事件参数。</param>
+        /// <returns>一个等待的任务，该任务在连接完成后会被完成。</returns>
+        protected override async Task OnTcpConnecting(ConnectingEventArgs e)
+        {
+            // 触发客户端连接事件，允许派生类处理连接逻辑
+            await this.m_onClientConnecting(this, e).ConfigureAwait(false);
+            // 如果事件已经被处理，则不再继续父类的连接逻辑
+            if (e.Handled)
+            {
+                return;
+            }
+
+            // 调用基类的连接逻辑继续处理连接
+            await base.OnTcpConnecting(e).ConfigureAwait(false);
         }
 
         #endregion 事件&委托
@@ -135,49 +162,33 @@ namespace TouchSocket.Sockets
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
+            // 调用注册的事件处理程序来处理接收到的数据
             await this.m_onClientReceivedData(this, e).ConfigureAwait(false);
+            // 如果数据已经被处理，则不再向下传递
             if (e.Handled)
             {
                 return;
             }
 
+            // 调用基类的相应方法继续处理数据
             await base.OnTcpReceived(e).ConfigureAwait(false);
         }
 
         #region 异步发送
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(IRequestInfo requestInfo)
         {
             return this.ProtectedSendAsync(requestInfo);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             return this.ProtectedSendAsync(transferBytes);
@@ -187,53 +198,13 @@ namespace TouchSocket.Sockets
 
         #region Id发送
 
-        ///// <summary>
-        ///// 发送字节流
-        ///// </summary>
-        ///// <param name="id">用于检索TcpSessionClient</param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="KeyNotFoundException"></exception>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //public void 123Send(string id, byte[] buffer, int offset, int length)
-        //{
-        //    this.GetClientOrThrow(id).ProtectedSend(buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="id"></param>
-        ///// <param name="requestInfo"></param>
-        //public void 123Send(string id, IRequestInfo requestInfo)
-        //{
-        //    this.GetClientOrThrow(id).ProtectedSend(requestInfo);
-        //}
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="id">用于检索TcpSessionClient</param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="KeyNotFoundException"></exception>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <inheritdoc/>
         public Task SendAsync(string id, ReadOnlyMemory<byte> memory)
         {
             return this.GetClientOrThrow(id).ProtectedSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="requestInfo"></param>
         public Task SendAsync(string id, IRequestInfo requestInfo)
         {
             return this.GetClientOrThrow(id).ProtectedSendAsync(requestInfo);

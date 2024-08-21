@@ -17,16 +17,16 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// 即将断开连接(仅主动断开时有效)。
+    /// 定义即将断开连接时的插件行为（仅主动断开时有效）。
     /// </summary>
-    public interface IDmtpClosingPlugin: IPlugin
+    public interface IDmtpClosingPlugin : IPlugin
     {
         /// <summary>
-        /// 即将断开连接(仅主动断开时有效)。
+        /// 在即将断开连接时执行（仅主动断开时有效）。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">正在断开连接的客户端对象。</param>
+        /// <param name="e">断开连接事件的相关参数。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。</returns>
         Task OnDmtpClosing(IDmtpActorObject client, ClosingEventArgs e);
     }
 }

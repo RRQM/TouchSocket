@@ -20,11 +20,11 @@ namespace TouchSocket.Dmtp.FileTransfer
     public struct RemoteFileInfoResult : IResult
     {
         /// <summary>
-        /// 远程访问结果
+        /// 构造函数：初始化远程访问结果对象
         /// </summary>
-        /// <param name="fileInfo"></param>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
+        /// <param name="fileInfo">远程文件信息</param>
+        /// <param name="resultCode">操作结果代码</param>
+        /// <param name="message">结果描述信息</param>
         public RemoteFileInfoResult(RemoteFileInfo fileInfo, ResultCode resultCode, string message)
         {
             this.FileInfo = fileInfo;
@@ -37,14 +37,13 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// </summary>
         public RemoteFileInfo FileInfo { get; private set; }
 
-        /// <summary>
-        /// 结果
-        /// </summary>
+        /// <inheritdoc/>
         public ResultCode ResultCode { get; private set; }
 
-        /// <summary>
-        /// 消息
-        /// </summary>
+        /// <inheritdoc/>
         public string Message { get; private set; }
+
+        /// <inheritdoc/>
+        public bool IsSuccess => this.ResultCode== ResultCode.Success;
     }
 }

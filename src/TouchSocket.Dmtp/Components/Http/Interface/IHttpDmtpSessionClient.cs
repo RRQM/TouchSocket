@@ -14,8 +14,10 @@ using TouchSocket.Http;
 
 namespace TouchSocket.Dmtp
 {
+
     /// <summary>
-    /// IHttpDmtpSessionClient
+    /// 定义了一个接口，用于通过HTTP协议进行会话管理，并支持DMTP（动态消息传输协议）会话操作。
+    /// 这个接口扩展了现有的HTTP会话客户端和会话接口，增加了对DMTP协议的支持，使得会话管理更加灵活和高效。
     /// </summary>
     public interface IHttpDmtpSessionClient : IHttpSessionClient, IHttpSession, IDmtpActorObject
     {

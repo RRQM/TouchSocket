@@ -12,6 +12,9 @@
 
 namespace TouchSocket.Core
 {
+    /// <summary>
+    /// 定义了字节块构建器的接口，用于从内存池中构建和管理字节块。
+    /// </summary>
     public interface IByteBlockBuilder
     {
         /// <summary>
@@ -25,7 +28,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 构建对象到<see cref="ByteBlock"/>
         /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <param name="byteBlock">要构建的字节块对象引用。</param>
         void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
     }
 }

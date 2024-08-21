@@ -59,7 +59,7 @@ namespace TouchSocket.Core
             var buffer = array.Array;
             var r = byteBlock.Length;
 
-            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
             }
@@ -94,7 +94,7 @@ namespace TouchSocket.Core
                     this.m_surPlusLength -= r;
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
             }
@@ -280,7 +280,7 @@ namespace TouchSocket.Core
                     Array.Copy(dataBuffer, index, this.m_agreementTempBytes, 0, this.m_agreementTempBytes.Length);
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                     return;
                 }
@@ -318,7 +318,7 @@ namespace TouchSocket.Core
                     this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(dataBuffer, index + (byte)this.FixedHeaderType, recedSurPlusLength));
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
                 index += (length + (byte)this.FixedHeaderType);

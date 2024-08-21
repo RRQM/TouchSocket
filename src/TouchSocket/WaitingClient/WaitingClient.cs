@@ -34,76 +34,7 @@ namespace TouchSocket.Sockets
 
         #region 发送
 
-        //public ResponsedData 123SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
-        //{
-        //    this.m_semaphoreSlim.Wait(token);
-
-        //    try
-        //    {
-        //        if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
-        //        {
-        //            using (var receiver = session.CreateReceiver())
-        //            {
-        //                session.123Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
-
-        //                while (true)
-        //                {
-        //                    using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
-        //                    {
-        //                        var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
-
-        //                        if (this.WaitingOptions.FilterFunc == null)
-        //                        {
-        //                            return response;
-        //                        }
-        //                        else
-        //                        {
-        //                            if (this.WaitingOptions.FilterFunc.Invoke(response))
-        //                            {
-        //                                return response;
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            using (var receiver = this.Client.CreateReceiver())
-        //            {
-        //                this.Client.123Send(buffer, offset, length);
-        //                while (true)
-        //                {
-        //                    using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
-        //                    {
-        //                        if (receiverResult.IsCompleted)
-        //                        {
-        //                            ThrowHelper.ThrowClientNotConnectedException();
-        //                        }
-        //                        var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
-
-        //                        if (this.WaitingOptions.FilterFunc == null)
-        //                        {
-        //                            return response;
-        //                        }
-        //                        else
-        //                        {
-        //                            if (this.WaitingOptions.FilterFunc.Invoke(response))
-        //                            {
-        //                                return response;
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        this.m_semaphoreSlim.Release();
-        //    }
-        //}
-
+        
         public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
             await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
@@ -118,7 +49,7 @@ namespace TouchSocket.Sockets
 
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ValueReadAsync(token).ConfigureAwait(false))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -183,8 +114,6 @@ namespace TouchSocket.Sockets
 
         protected override void Dispose(bool disposing)
         {
-            //this.Cancel();
-            this.Client = default;
             base.Dispose(disposing);
         }
     }

@@ -17,7 +17,6 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// 传输类型
     /// </summary>
-    [Flags]
     public enum TransferType
     {
         /// <summary>

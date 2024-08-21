@@ -105,6 +105,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public bool RSV3 { get; set; }
 
+        /// <inheritdoc/>
         public void Build<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             var memory = this.PayloadData == null ? ReadOnlyMemory<byte>.Empty : this.PayloadData.Memory;

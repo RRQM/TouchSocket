@@ -53,7 +53,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public virtual SerializObject GetSerializObject(Type type)
+        public virtual SerializObject GetSerializeObject(Type type)
         {
             return this.m_instanceCache.TryGetValue(type, out var serializObject) ? serializObject : null;
         }

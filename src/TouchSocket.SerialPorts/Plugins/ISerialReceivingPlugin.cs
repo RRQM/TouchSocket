@@ -16,11 +16,19 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
+
     /// <summary>
-    /// ISerialReceivingPlugin
+    /// 定义了串行接收插件的接口。
+    /// 继承自通用插件接口IPlugin，专门用于处理串行端口接收操作。
     /// </summary>
     public interface ISerialReceivingPlugin : IPlugin
     {
+        /// <summary>
+        /// 当串行端口接收到数据时触发的异步事件处理方法。
+        /// </summary>
+        /// <param name="client">触发事件的串行端口会话对象。</param>
+        /// <param name="e">包含接收数据的事件参数对象。</param>
+        /// <returns>一个Task对象，代表异步操作的结果。</returns>
         Task OnSerialReceiving(ISerialPortSession client, ByteBlockEventArgs e);
     }
 }

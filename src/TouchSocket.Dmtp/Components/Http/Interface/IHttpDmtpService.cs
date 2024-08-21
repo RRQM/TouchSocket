@@ -14,15 +14,17 @@ using TouchSocket.Http;
 
 namespace TouchSocket.Dmtp
 {
+
     /// <summary>
-    /// IHttpDmtpService
+    /// 定义了一个泛型的HTTP DMTP服务接口，用于支持不同类型的HTTP DMTP客户端操作。
     /// </summary>
+    /// <typeparam name="TClient">HTTP DMTP会话客户端类型，必须实现<see cref="IHttpDmtpSessionClient"/>接口。</typeparam>
     public interface IHttpDmtpService<TClient> : IHttpDmtpServiceBase, IHttpService<TClient> where TClient : IHttpDmtpSessionClient
     {
     }
 
     /// <summary>
-    /// IHttpDmtpService
+    /// 定义了一个非泛型的HTTP DMTP服务接口，使用默认的HTTP DMTP会话客户端类型。
     /// </summary>
     public interface IHttpDmtpService : IHttpDmtpService<HttpDmtpSessionClient>
     {

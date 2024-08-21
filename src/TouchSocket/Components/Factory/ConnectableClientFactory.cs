@@ -15,10 +15,10 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+       /// <summary>
     /// 适用于可连接客户端的连接工厂。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TClient">客户端类型，必须实现IClient和IConnectableClient接口。</typeparam>
     public abstract class ConnectableClientFactory<TClient> : ClientFactory<TClient> where TClient : class, IClient, IConnectableClient
     {
         /// <summary>
@@ -34,7 +34,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 获取配置。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回TouchSocketConfig对象，用于传输客户端配置。</returns>
         protected virtual TouchSocketConfig OnGetConfig()
         {
             return this.GetConfig?.Invoke();

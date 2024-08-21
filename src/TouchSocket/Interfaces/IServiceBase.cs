@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
     public interface IServiceBase : ISetupConfigObject
     {
         /// <summary>
-        /// 名称
+        /// 服务器名称
         /// </summary>
         string ServerName { get; }
 

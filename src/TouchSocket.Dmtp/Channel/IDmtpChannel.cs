@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 提供一个基于Dmtp协议的，可以独立读写的通道。
     /// </summary>
-    public partial interface IDmtpChannel : IDisposable, IEnumerable<IByteBlock>
+    public partial interface IDmtpChannel : IDisposable, IEnumerable<ByteBlock>
     {
         /// <summary>
         /// 通道传输速度限制
@@ -77,18 +77,23 @@ namespace TouchSocket.Dmtp
         /// </summary>
         bool Using { get; }
 
+        /// <summary>
+        /// 获取上次操作的时间。
+        /// </summary>
         DateTime LastOperationTime { get; }
 
         /// <summary>
-        /// 异步取消
+        /// 异步取消操作
         /// </summary>
-        /// <returns></returns>
+        /// <param name="operationMes">可选参数，用于提供取消操作的详细信息</param>
+        /// <returns>返回一个Task对象，表示异步取消操作的完成</returns>
         Task CancelAsync(string operationMes = null);
 
         /// <summary>
         /// 异步完成操作
         /// </summary>
-        /// <returns></returns>
+        /// <param name="operationMes">操作信息，可选参数，默认为null</param>
+        /// <returns>返回一个Task对象，表示异步操作的完成</returns>
         Task CompleteAsync(string operationMes = null);
 
         /// <summary>
@@ -117,11 +122,10 @@ namespace TouchSocket.Dmtp
         Task<bool> MoveNextAsync();
 
         /// <summary>
-        /// 写入通道
+        /// 异步写入通道
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory">待写入的字节内存块</param>
+        /// <returns>一个代表写入操作的Task对象</returns>
         Task WriteAsync(ReadOnlyMemory<byte> memory);
     }
 }

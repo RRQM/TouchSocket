@@ -14,6 +14,9 @@ using System.IO.Pipes;
 
 namespace TouchSocket.NamedPipe
 {
+    /// <summary>
+    /// 定义了一个接口，用于通过命名管道进行流式通信。
+    /// </summary>
     public interface INamedPipeStreamClient
     {
         /// <summary>

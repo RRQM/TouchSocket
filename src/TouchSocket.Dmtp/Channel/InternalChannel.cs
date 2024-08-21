@@ -22,7 +22,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     [DebuggerDisplay("Id={Id},Status={Status}")]
-    internal partial class InternalChannel : DisposableObject, IDmtpChannel
+    internal sealed partial class InternalChannel : DisposableObject, IDmtpChannel
     {
         private readonly DmtpActor m_actor;
         private readonly ConcurrentQueue<ChannelPackage> m_dataQueue;
@@ -34,7 +34,7 @@ namespace TouchSocket.Dmtp
         public InternalChannel(DmtpActor client, string targetId, Metadata metadata)
         {
             this.m_actor = client;
-            this.m_lastOperationTime = DateTime.Now;
+            this.m_lastOperationTime = DateTime.UtcNow;
             this.TargetId = targetId;
             this.Status = ChannelStatus.Default;
             this.m_dataQueue = new ConcurrentQueue<ChannelPackage>();
@@ -43,9 +43,6 @@ namespace TouchSocket.Dmtp
             this.Metadata = metadata;
         }
 
-        /// <summary>
-        /// 析构函数
-        /// </summary>
         ~InternalChannel()
         {
             this.Dispose(false);
@@ -53,14 +50,8 @@ namespace TouchSocket.Dmtp
 
         public int Available => this.m_dataQueue.Count;
 
-        /// <summary>
-        /// 缓存容量
-        /// </summary>
         public int CacheCapacity { get; set; }
 
-        /// <summary>
-        /// 判断当前通道能否调用<see cref="MoveNext()"/>
-        /// </summary>
         public bool CanMoveNext
         {
             get
@@ -69,19 +60,10 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <summary>
-        /// 能否写入
-        /// </summary>
         public bool CanWrite => (byte)this.Status <= 3;
 
-        /// <summary>
-        /// Id
-        /// </summary>
         public int Id { get; private set; }
 
-        /// <summary>
-        /// 最后一次操作时显示消息
-        /// </summary>
         public string LastOperationMes { get; private set; }
 
         public DateTime LastOperationTime { get => this.m_lastOperationTime; }
@@ -112,7 +94,6 @@ namespace TouchSocket.Dmtp
 
         #region 操作
 
-
         public async Task CancelAsync(string operationMes = null)
         {
             if ((byte)this.Status > 3)
@@ -132,34 +113,12 @@ namespace TouchSocket.Dmtp
                     TargetId = this.TargetId
                 };
                 await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
-                this.m_lastOperationTime = DateTime.Now;
+                this.m_lastOperationTime = DateTime.UtcNow;
             }
             catch
             {
             }
         }
-
-        //public void Complete(string operationMes = null)
-        //{
-        //    if ((byte)this.Status > 3)
-        //    {
-        //        return;
-        //    }
-
-        //    this.RequestComplete(true);
-        //    var channelPackage = new ChannelPackage()
-        //    {
-        //        ChannelId = this.Id,
-        //        RunNow = true,
-        //        DataType = ChannelDataType.CompleteOrder,
-        //        Message = operationMes,
-        //        SourceId = this.m_actor.Id,
-        //        TargetId = this.TargetId,
-        //        Route = this.TargetId.HasValue()
-        //    };
-        //    this.m_actor.SendChannelPackage(channelPackage);
-        //    this.m_lastOperationTime = DateTime.Now;
-        //}
 
         public async Task CompleteAsync(string operationMes = null)
         {
@@ -179,28 +138,8 @@ namespace TouchSocket.Dmtp
                 TargetId = this.TargetId
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
-            this.m_lastOperationTime = DateTime.Now;
+            this.m_lastOperationTime = DateTime.UtcNow;
         }
-
-        //public void HoldOn(string operationMes = null)
-        //{
-        //    if ((byte)this.Status > 3)
-        //    {
-        //        return;
-        //    }
-        //    var channelPackage = new ChannelPackage()
-        //    {
-        //        ChannelId = this.Id,
-        //        RunNow = true,
-        //        DataType = ChannelDataType.HoldOnOrder,
-        //        Message = operationMes,
-        //        SourceId = this.m_actor.Id,
-        //        TargetId = this.TargetId,
-        //        Route = this.TargetId.HasValue()
-        //    };
-        //    this.m_actor.SendChannelPackage(channelPackage);
-        //    this.m_lastOperationTime = DateTime.Now;
-        //}
 
         public async Task HoldOnAsync(string operationMes = null)
         {
@@ -218,7 +157,7 @@ namespace TouchSocket.Dmtp
                 TargetId = this.TargetId
             };
             await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
-            this.m_lastOperationTime = DateTime.Now;
+            this.m_lastOperationTime = DateTime.UtcNow;
         }
 
         protected override void Dispose(bool disposing)
@@ -242,7 +181,7 @@ namespace TouchSocket.Dmtp
                     TargetId = this.TargetId
                 };
                 this.m_actor.SendChannelPackageAsync(channelPackage).GetFalseAwaitResult();
-                this.m_lastOperationTime = DateTime.Now;
+                this.m_lastOperationTime = DateTime.UtcNow;
             }
             catch
             {
@@ -257,10 +196,6 @@ namespace TouchSocket.Dmtp
             return this.m_currentData;
         }
 
-        /// <summary>
-        /// 转向下个元素
-        /// </summary>
-        /// <returns></returns>
         public bool MoveNext()
         {
             if (!this.CanMoveNext)
@@ -373,7 +308,6 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        
         public async Task WriteAsync(ReadOnlyMemory<byte> memory)
         {
             if ((byte)this.Status > 3)
@@ -397,13 +331,13 @@ namespace TouchSocket.Dmtp
             using (channelPackage.Data)
             {
                 await this.m_actor.SendChannelPackageAsync(channelPackage).ConfigureAwait(false);
-                this.m_lastOperationTime = DateTime.Now;
+                this.m_lastOperationTime = DateTime.UtcNow;
             }
         }
 
         internal void ReceivedData(ChannelPackage channelPackage)
         {
-            this.m_lastOperationTime = DateTime.Now;
+            this.m_lastOperationTime = DateTime.UtcNow;
             if (channelPackage.RunNow)
             {
                 switch (channelPackage.DataType)
@@ -501,14 +435,14 @@ namespace TouchSocket.Dmtp
         private bool Wait()
         {
             var spinWait = new SpinWait();
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             while (true)
             {
                 if (this.m_dataQueue.Count > 0)
                 {
                     return true;
                 }
-                if (DateTime.Now - now > this.Timeout)
+                if (DateTime.UtcNow - now > this.Timeout)
                 {
                     return false;
                 }
@@ -518,14 +452,14 @@ namespace TouchSocket.Dmtp
 
         private async Task<bool> WaitAsync()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             while (true)
             {
                 if (this.m_dataQueue.Count > 0)
                 {
                     return true;
                 }
-                if (DateTime.Now - now > this.Timeout)
+                if (DateTime.UtcNow - now > this.Timeout)
                 {
                     return false;
                 }
@@ -535,7 +469,7 @@ namespace TouchSocket.Dmtp
 
         #region 迭代器
 
-        public IEnumerator<IByteBlock> GetEnumerator()
+        public IEnumerator<ByteBlock> GetEnumerator()
         {
             ByteBlock byteBlock = null;
             while (this.MoveNext())

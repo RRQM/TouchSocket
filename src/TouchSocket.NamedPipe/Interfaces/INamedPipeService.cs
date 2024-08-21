@@ -18,7 +18,7 @@ namespace TouchSocket.NamedPipe
     /// INamedPipeService
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    public interface INamedPipeService<TClient> : INamedPipeServiceBase<TClient>, IIdSender, IIdRequsetInfoSender where TClient : INamedPipeSessionClient
+    public interface INamedPipeService<TClient> : INamedPipeServiceBase<TClient>, IIdSender, IIdRequestInfoSender where TClient : INamedPipeSessionClient
     {
         /// <summary>
         /// 用户连接完成

@@ -22,15 +22,16 @@ namespace TouchSocket.Sockets
     public class ClientNotConnectedException : Exception
     {
         /// <summary>
-        /// 构造函数
+        /// 初始化未连接异常
         /// </summary>
         public ClientNotConnectedException() : this(TouchSocketResource.ClientNotConnected)
         { }
 
         /// <summary>
-        /// 构造函数
+        /// 初始化未连接异常
         /// </summary>
-        /// <param name="message"></param>
-        public ClientNotConnectedException(string message) : base(message) { }
+        /// <param name="message">异常信息</param>
+        public ClientNotConnectedException(string message) : base(message)
+        { }
     }
 }

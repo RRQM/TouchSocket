@@ -49,14 +49,14 @@ namespace TouchSocket.Sockets
             this.m_receiverResult = new UdpReceiverResult(this.ComplateRead);
         }
 
-        /// <inheritdoc/>
-        public Task<IUdpReceiverResult> ReadAsync(CancellationToken token)
-        {
-            return this.m_receiverResult.IsCompleted ? Task.FromResult<IUdpReceiverResult>(this.m_receiverResult) : base.WaitAsync(token);
-        }
+        ///// <inheritdoc/>
+        //public Task<IUdpReceiverResult> ReadAsync(CancellationToken token)
+        //{
+        //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IUdpReceiverResult>(this.m_receiverResult) : base.WaitAsync(token);
+        //}
 
         /// <inheritdoc/>
-        public ValueTask<IUdpReceiverResult> ValueReadAsync(CancellationToken token)
+        public ValueTask<IUdpReceiverResult> ReadAsync(CancellationToken token)
         {
             return this.m_receiverResult.IsCompleted
                 ? EasyValueTask.FromResult<IUdpReceiverResult>(this.m_receiverResult)

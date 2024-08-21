@@ -26,16 +26,21 @@ namespace TouchSocket.Core
         private readonly ByteBlock m_byteBlock;
         private readonly bool m_releaseTogether;
 
+
         /// <summary>
-        ///  字节块流
+        /// 初始化 ByteBlockStream 类的新实例。
         /// </summary>
-        /// <param name="byteSize"></param>
+        /// <param name="byteBlock">一个 ByteBlock 对象，表示字节块。</param>
+        /// <param name="releaseTogether">一个布尔值，指示是否在释放流时同时释放字节块。</param>
         public ByteBlockStream(ByteBlock byteBlock, bool releaseTogether)
         {
             this.m_byteBlock = byteBlock;
             this.m_releaseTogether = releaseTogether;
         }
 
+        /// <summary>
+        /// 获取此实例关联的 ByteBlock 对象。
+        /// </summary>
         public ByteBlock ByteBlock => this.m_byteBlock;
 
         /// <summary>

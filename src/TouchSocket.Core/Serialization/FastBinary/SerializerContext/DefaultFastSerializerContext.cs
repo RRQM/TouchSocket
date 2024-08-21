@@ -30,9 +30,9 @@ namespace TouchSocket.Core
             base.AddConverter(type, converter);
         }
 
-        public override SerializObject GetSerializObject(Type type)
+        public override SerializObject GetSerializeObject(Type type)
         {
-            var serializObject = base.GetSerializObject(type);
+            var serializObject = base.GetSerializeObject(type);
             if (serializObject != null)
             {
                 return serializObject;

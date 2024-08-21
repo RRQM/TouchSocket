@@ -116,7 +116,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 if (rpcMethod.GetAttribute<DmtpRpcAttribute>() is DmtpRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }

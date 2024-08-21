@@ -38,18 +38,35 @@ namespace TouchSocket.Http
         private bool m_sentHeader;
         private int m_sentLength;
 
+        /// <summary>
+        /// HttpRequest类的构造函数。
+        /// </summary>
+        /// <remarks>
+        /// 初始化HttpRequest对象的基本属性。
+        /// </remarks>
         public HttpRequest()
         {
+            // 初始化时，设置m_isServer为false，表示当前请求不是由服务器发起的。
             this.m_isServer = false;
+            // 初始化时，设置m_canRead为false，表示当前请求不能读取数据。
             this.m_canRead = false;
+            // 初始化时，设置CanWrite为false，表示当前请求不能写入数据。
             this.CanWrite = false;
         }
 
+        /// <summary>
+        /// 初始化 HttpRequest 实例。
+        /// </summary>
+        /// <param name="httpClientBase">提供底层 HTTP 通信功能的 HttpClientBase 实例。</param>
         public HttpRequest(HttpClientBase httpClientBase)
         {
+            // 初始化标志，表示当前请求不是服务器端请求
             this.m_isServer = false;
+            // 初始化标志，表示当前请求默认不允许读取
             this.m_canRead = false;
+            // 设置标志，表示当前请求允许写入
             this.CanWrite = true;
+            // 保存传入的 HttpClientBase 实例，用于后续的 HTTP 请求操作
             this.m_httpClientBase = httpClientBase;
         }
 
@@ -66,19 +83,13 @@ namespace TouchSocket.Http
             this.m_httpSessionClient = httpSessionClient;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanRead => this.m_canRead;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanWrite { get; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
 
         /// <summary>
@@ -138,7 +149,7 @@ namespace TouchSocket.Http
 
         /// <summary>
         ///  构建响应数据。
-        /// <para>当数据较大时，不建议这样操作，可直接<see cref="Write(byte[], int, int)"/></para>
+        /// <para>当数据较大时，不建议这样操作，可直接<see cref="WriteAsync(ReadOnlyMemory{byte})"/></para>
         /// </summary>
         /// <param name="byteBlock"></param>
         public void Build(ByteBlock byteBlock)
@@ -158,14 +169,15 @@ namespace TouchSocket.Http
             return byteBlock.ToArray();
         }
 
+        /// <inheritdoc/>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
         {
-            if (!this.ContentComplated.HasValue)
+            if (!this.ContentCompleted.HasValue)
             {
                 if (this.ContentLength == 0)
                 {
                     this.m_content = ReadOnlyMemory<byte>.Empty;
-                    this.ContentComplated = true;
+                    this.ContentCompleted = true;
                     return this.m_content;
                 }
 
@@ -190,14 +202,14 @@ namespace TouchSocket.Http
                                 memoryStream.Write(segment.Array, segment.Offset, segment.Count);
                             }
                         }
-                        this.ContentComplated = true;
+                        this.ContentCompleted = true;
                         this.m_content = memoryStream.ToArray();
                         return this.m_content;
                     }
                 }
                 catch
                 {
-                    this.ContentComplated = false;
+                    this.ContentCompleted = false;
                     return default;
                 }
                 finally
@@ -207,17 +219,18 @@ namespace TouchSocket.Http
             }
             else
             {
-                return this.ContentComplated == true ? this.m_content : default;
+                return this.ContentCompleted == true ? this.m_content : default;
             }
         }
 
+        /// <inheritdoc/>
         public override async ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken = default)
         {
             if (this.ContentLength == 0)
             {
                 return InternalBlockResult.Completed;
             }
-            if (this.ContentComplated.HasValue && this.ContentComplated.Value)
+            if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
             {
                 return new InternalBlockResult(this.m_content, true);
             }
@@ -225,49 +238,49 @@ namespace TouchSocket.Http
             var blockResult = await base.ReadAsync(cancellationToken);
             if (blockResult.IsCompleted)
             {
-                this.ContentComplated = true;
+                this.ContentCompleted = true;
             }
 
             return blockResult;
         }
 
-        /// <summary>
-        /// 设置内容
-        /// </summary>
-        /// <param name="content"></param>
+        /// <inheritdoc/>
         public override void SetContent(in ReadOnlyMemory<byte> content)
         {
             this.m_content = content;
             this.ContentLength = content.Length;
-            this.ContentComplated = true;
+            this.ContentCompleted = true;
         }
 
         /// <summary>
         /// 设置代理Host
         /// </summary>
-        /// <param name="host"></param>
-        /// <returns></returns>
+        /// <param name="host">代理服务器的地址</param>
+        /// <returns>返回当前HttpRequest实例，以支持链式调用</returns>
         public HttpRequest SetProxyHost(string host)
         {
+            // 将URL属性设置为指定的代理服务器地址
             this.URL = host;
+            // 返回当前实例，以支持链式调用
             return this;
         }
 
         /// <summary>
         /// 设置Url，可带参数
         /// </summary>
-        /// <param name="url"></param>
-        /// <returns></returns>
+        /// <param name="url">要设置的URL地址</param>
+        /// <returns>返回当前HttpRequest实例，支持链式调用</returns>
         public HttpRequest SetUrl(string url)
         {
+            // 确保URL以斜杠开始，如果不是，则添加斜杠
             this.URL = url.StartsWith("/") ? url : $"/{url}";
+            // 解析设置后的URL，以进行进一步的操作
             this.ParseUrl();
+            // 返回当前实例，支持链式调用
             return this;
         }
 
-        /// <summary>
-        /// 输出
-        /// </summary>
+        /// <inheritdoc/>
         public override string ToString()
         {
             using (var byteBlock = new ByteBlock())
@@ -319,10 +332,8 @@ namespace TouchSocket.Http
             this.m_forms?.Clear();
         }
 
-        /// <summary>
-        /// 从内存中读取
-        /// </summary>
-        protected override void LoadHeaderProterties()
+        /// <inheritdoc/>
+        protected override void LoadHeaderProperties()
         {
             var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0)
@@ -418,27 +429,15 @@ namespace TouchSocket.Http
                 stringBuilder.Append($"{this.Method} {url} HTTP/{this.ProtocolVersion}\r\n");
             }
 
-            foreach (var headerkey in this.Headers.Keys)
+            foreach (var headerKey in this.Headers.Keys)
             {
-                stringBuilder.Append($"{headerkey}: ");
-                stringBuilder.Append(this.Headers[headerkey] + "\r\n");
+                stringBuilder.Append($"{headerKey}: ");
+                stringBuilder.Append(this.Headers[headerKey] + "\r\n");
             }
 
             stringBuilder.Append("\r\n");
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
-
-        //private void InternalSend(byte[] buffer, int offset, int count)
-        //{
-        //    if (this.m_isServer)
-        //    {
-        //        this.m_httpSessionClient.InternalSend(buffer, offset, count);
-        //    }
-        //    else
-        //    {
-        //        this.m_httpClientBase.InternalSend(buffer, offset, count);
-        //    }
-        //}
 
         private Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
         {

@@ -16,16 +16,14 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 发送事件
+    /// SendingEventArgs 类，继承自 PluginEventArgs，用于封装待发送数据的内存块。
     /// </summary>
     public class SendingEventArgs : PluginEventArgs
     {
         /// <summary>
-        /// 构造函数
+        /// 初始化 SendingEventArgs 类的新实例。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory">待发送数据的只读内存块。</param>
         public SendingEventArgs(in ReadOnlyMemory<byte> memory)
         {
             this.Memory = memory;

@@ -38,7 +38,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 var ints = new List<int>();
                 foreach (var item in this.FileResourceStore)
                 {
-                    if (DateTime.Now - item.Value.LastActiveTime > this.Timeout)
+                    if (DateTime.UtcNow - item.Value.LastActiveTime > this.Timeout)
                     {
                         ints.Add(item.Key);
                     }
@@ -119,7 +119,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public virtual bool TryRelaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
+        public virtual bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
         {
             this.ThrowIfDisposed();
             if (this.FileResourceStore.TryRemove(resourceHandle, out locator))

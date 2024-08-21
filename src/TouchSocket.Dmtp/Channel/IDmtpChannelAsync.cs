@@ -17,7 +17,7 @@ namespace TouchSocket.Dmtp
 {
 #if AsyncEnumerable
 
-    public partial interface IDmtpChannel : IAsyncEnumerable<IByteBlock>
+    public partial interface IDmtpChannel : IAsyncEnumerable<ByteBlock>
     {
     }
 

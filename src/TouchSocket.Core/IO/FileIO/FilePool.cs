@@ -315,7 +315,7 @@ namespace TouchSocket.Core
             var keys = new List<string>();
             foreach (var item in m_pathStorage)
             {
-                if (DateTime.Now - item.Value.AccessTime > item.Value.AccessTimeout)
+                if (DateTime.UtcNow - item.Value.AccessTime > item.Value.AccessTimeout)
                 {
                     keys.Add(item.Key);
                 }

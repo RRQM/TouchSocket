@@ -113,7 +113,7 @@ namespace TouchSocket.Rpc
             }
 
             this.OnAfter(targetMethod, invokeKey, ref args, ref result);
-            
+
             return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
         }
 
@@ -121,7 +121,7 @@ namespace TouchSocket.Rpc
         {
             var attribute = info.GetCustomAttribute<TAttribute>(true) ?? throw new Exception($"在方法{info.Name}中没有找到{typeof(TAttribute)}的特性。");
             var rpcMethod = new RpcMethod(info);
-            var invokeKey = attribute.GetInvokenKey(rpcMethod);
+            var invokeKey = attribute.GetInvokeKey(rpcMethod);
             var invokeOption = false;
             if (info.GetParameters().Length > 0 && typeof(IInvokeOption).IsAssignableFrom(info.GetParameters().Last().ParameterType))
             {

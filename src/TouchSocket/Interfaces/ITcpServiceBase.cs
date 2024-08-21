@@ -15,7 +15,7 @@ using System.Collections.Generic;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// Tcp服务器接口
+    /// 定义了基于TCP协议的服务基础接口。
     /// </summary>
     public interface ITcpServiceBase : IConnectableService
     {
@@ -27,14 +27,14 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 添加一个地址监听。支持在服务器运行过程中动态添加。
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="options">监听选项，包含地址和端口等信息。</param>
         void AddListen(TcpListenOption options);
 
         /// <summary>
         /// 移除一个地址监听。支持在服务器运行过程中动态移除。
         /// </summary>
-        /// <param name="monitor">监听器</param>
-        /// <returns>返回是否已成功移除</returns>
+        /// <param name="monitor">要移除的监听器。</param>
+        /// <returns>返回是否已成功移除。</returns>
         bool RemoveListen(TcpNetworkMonitor monitor);
     }
 }

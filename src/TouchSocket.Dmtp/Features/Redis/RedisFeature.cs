@@ -59,7 +59,7 @@ namespace TouchSocket.Dmtp.Redis
             };
 
             dmtpRedisActor.SetProtocolFlags(this.StartProtocol);
-            client.DmtpActor.SetStmpRedisActor(dmtpRedisActor);
+            client.DmtpActor.SetDmtpRedisActor(dmtpRedisActor);
 
             return e.InvokeNext();
         }

@@ -15,15 +15,19 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// PackageRouterEventArgs
+    /// 包路由事件参数类，继承自MsgPermitEventArgs
     /// </summary>
+    /// <remarks>
+    /// 该类用于封装路由类型和路由数据包，以便进行路由操作
+    /// </remarks>
     public class PackageRouterEventArgs : MsgPermitEventArgs
     {
+
         /// <summary>
-        /// PackageRouterEventArgs
+        /// 构造函数，初始化路由类型和路由数据包
         /// </summary>
-        /// <param name="routerType"></param>
-        /// <param name="package"></param>
+        /// <param name="routerType">路由类型</param>
+        /// <param name="package">路由数据包</param>
         public PackageRouterEventArgs(RouteType routerType, IReadonlyRouterPackage package)
         {
             this.RouterType = routerType;

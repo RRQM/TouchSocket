@@ -18,8 +18,10 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// Tcp客户端
+    /// 表示一个TCP客户端，继承自TcpClientBase并实现了ITcpClient接口。
+    /// 该类提供了与远程服务器建立TCP连接的功能。
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
     public class TcpClient : TcpClientBase, ITcpClient
@@ -152,38 +154,19 @@ namespace TouchSocket.Sockets
 
         #region 异步发送
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(IRequestInfo requestInfo)
         {
             return this.ProtectedSendAsync(requestInfo);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             return this.ProtectedSendAsync(transferBytes);

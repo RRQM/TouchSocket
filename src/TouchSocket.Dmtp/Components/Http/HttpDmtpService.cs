@@ -19,7 +19,8 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// HttpDmtpService
+    /// HttpDmtpService 类，继承自<see cref="HttpDmtpService{TClient}"/>，实现<see cref="IHttpDmtpService"/>接口。
+    /// 该类提供基于HTTP协议的Dmtp服务，用于处理特定类型的会话客户端。
     /// </summary>
     public class HttpDmtpService : HttpDmtpService<HttpDmtpSessionClient>, IHttpDmtpService
     {
@@ -37,7 +38,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// HttpDmtpService泛型类型
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
+    /// <typeparam name="TClient">泛型参数，限定为<see cref="HttpDmtpSessionClient"/>的派生类型</typeparam>
     public abstract partial class HttpDmtpService<TClient> : HttpService<TClient>, IHttpDmtpService<TClient> where TClient : HttpDmtpSessionClient
     {
         /// <summary>
@@ -86,7 +87,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private DmtpActor PrivateOnRpcActorInit()
+        private SealedDmtpActor PrivateOnRpcActorInit()
         {
             return new SealedDmtpActor(this.m_allowRoute)
             {

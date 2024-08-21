@@ -23,13 +23,13 @@ namespace TouchSocket.Http.WebSockets
         private readonly WebSocketReceiveResult m_receiverResult;
         private readonly AsyncAutoResetEvent m_resetEventForComplateRead = new AsyncAutoResetEvent(false);
 
-        public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
-        {
-            this.ThrowIfNotAllowAsyncRead();
-            return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
-        }
+        //public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+        //{
+        //    this.ThrowIfNotAllowAsyncRead();
+        //    return this.m_receiverResult.IsCompleted ? Task.FromResult<IWebSocketReceiveResult>(this.m_receiverResult) : this.WaitAsync(token);
+        //}
 
-        public ValueTask<IWebSocketReceiveResult> ValueReadAsync(CancellationToken token)
+        public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
         {
             this.ThrowIfNotAllowAsyncRead();
             return this.m_receiverResult.IsCompleted

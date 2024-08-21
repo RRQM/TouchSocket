@@ -12,8 +12,9 @@
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// ITcpListenableClient
+    /// 定义一个接口，用于支持TCP监听的客户端操作。
     /// </summary>
     public interface ITcpListenableClient
     {

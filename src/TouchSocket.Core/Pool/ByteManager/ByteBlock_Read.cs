@@ -20,33 +20,28 @@ namespace TouchSocket.Core
     public sealed partial class ByteBlock
     {
         #region Read
-        /// <summary>
-        /// 读取数据，然后递增Pos
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
+
+        /// <inheritdoc/>
         public int Read(Span<byte> span)
         {
+            // 获取目标数组的长度
             var length = span.Length;
+            // 如果目标数组长度为0，则无需读取，直接返回0
             if (length == 0)
             {
                 return 0;
             }
+            // 计算本次可以读取的长度，不超过当前流中剩余的未读取长度，也不超过目标数组的长度
             var len = this.m_length - this.m_position > length ? length : this.CanReadLength;
+            // 使用不安全方式复制数据块
+            // 从流的当前位置开始复制len长度的字节数据到目标数组中
             Unsafe.CopyBlock(ref span[0], ref this.m_buffer[this.m_position], (uint)len);
+            // 更新流的当前位置，移动到已读取的位置之后
             this.m_position += len;
+            // 返回实际读取到的字节数
             return len;
         }
-
-        /// <summary>
-        /// 从当前位置读取指定长度的数组。并递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <inheritdoc/>
         public ReadOnlySpan<byte> ReadToSpan(int length)
         {
             var span = new ReadOnlySpan<byte>(this.m_buffer, this.m_position, length);
@@ -58,12 +53,7 @@ namespace TouchSocket.Core
 
         #region ByteBlock
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="ByteBlock"/>值。
-        /// <para>
-        /// 注意，使用该方式读取到的内存块，会脱离释放周期，所以最好在使用完成后自行释放。
-        /// </para>
-        /// </summary>
+        /// <inheritdoc/>
         public ByteBlock ReadByteBlock()
         {
             var len = (int)this.ReadVarUInt32() - 1;
@@ -84,11 +74,7 @@ namespace TouchSocket.Core
 
         #region Package
 
-        /// <summary>
-        /// 读取一个指定类型的包
-        /// </summary>
-        /// <typeparam name="TPackage"></typeparam>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public TPackage ReadPackage<TPackage>() where TPackage : class, IPackage, new()
         {
             if (this.ReadIsNull())
@@ -108,16 +94,15 @@ namespace TouchSocket.Core
 
         #region BytesPackage
 
-        /// <summary>
-        /// 从当前流位置读取一个独立的<see cref="byte"/>数组包
-        /// </summary>
+        /// <inheritdoc/>
         public byte[] ReadBytesPackage()
         {
             var memory = this.ReadBytesPackageMemory();
             return memory.HasValue ? memory.Value.ToArray() : null;
         }
 
-        public Memory<byte>? ReadBytesPackageMemory()
+        /// <inheritdoc/>
+        public ReadOnlyMemory<byte>? ReadBytesPackageMemory()
         {
             var length = this.ReadInt32();
             if (length < 0)
@@ -125,7 +110,7 @@ namespace TouchSocket.Core
                 return null;
             }
 
-            var memory = new Memory<byte>(this.m_buffer, this.m_position, length);
+            var memory = new ReadOnlyMemory<byte>(this.m_buffer, this.m_position, length);
             this.m_position += length;
             return memory;
         }
@@ -134,9 +119,7 @@ namespace TouchSocket.Core
 
         #region Byte
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="byte"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public byte ReadByte()
         {
             var size = 1;
@@ -154,9 +137,7 @@ namespace TouchSocket.Core
 
         #region String
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="string"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public string ReadString(FixedHeaderType headerType = FixedHeaderType.Int)
         {
             int len;
@@ -194,6 +175,8 @@ namespace TouchSocket.Core
         #endregion String
 
         #region VarUInt32
+
+        /// <inheritdoc/>
         public uint ReadVarUInt32()
         {
             uint value = 0;
@@ -216,6 +199,7 @@ namespace TouchSocket.Core
 
         #region Int32
 
+        /// <inheritdoc/>
         public int ReadInt32()
         {
             var size = 4;
@@ -228,10 +212,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个指定端序的<see cref="int"/>值
-        /// </summary>
-        /// <param name="endianType"></param>
+        /// <inheritdoc/>
         public int ReadInt32(EndianType endianType)
         {
             var size = 4;
@@ -244,10 +225,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="int"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<int> ToInt32s()
         {
             this.m_position = 0;
@@ -264,11 +242,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="int"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<int> ToInt32s(EndianType endianType)
         {
             this.m_position = 0;
@@ -289,9 +263,7 @@ namespace TouchSocket.Core
 
         #region Int16
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="short"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public short ReadInt16()
         {
             var size = 2;
@@ -304,10 +276,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="short"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public short ReadInt16(EndianType endianType)
         {
             var size = 2;
@@ -320,10 +289,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="short"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<short> ToInt16s()
         {
             this.m_position = 0;
@@ -340,11 +306,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="short"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<short> ToInt16s(EndianType endianType)
         {
             this.m_position = 0;
@@ -365,9 +327,7 @@ namespace TouchSocket.Core
 
         #region Int64
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="long"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public long ReadInt64()
         {
             var size = 8;
@@ -380,10 +340,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="long"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public long ReadInt64(EndianType endianType)
         {
             var size = 8;
@@ -396,10 +353,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="long"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<long> ToInt64s()
         {
             this.m_position = 0;
@@ -416,11 +370,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="long"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<long> ToInt64s(EndianType endianType)
         {
             this.m_position = 0;
@@ -441,9 +391,7 @@ namespace TouchSocket.Core
 
         #region Boolean
 
-        /// <summary>
-        /// 从当前流位置读取1个<see cref="bool"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public bool ReadBoolean()
         {
             var size = 1;
@@ -456,10 +404,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取1个字节，按位解析为bool值数组。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public bool[] ReadBooleans()
         {
             var size = 1;
@@ -472,10 +417,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存按位转为<see cref="bool"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<bool> ToBoolensFromBit()
         {
             this.m_position = 0;
@@ -492,10 +434,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存按字节转为<see cref="bool"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<bool> ToBoolensFromByte()
         {
             this.m_position = 0;
@@ -516,9 +455,7 @@ namespace TouchSocket.Core
 
         #region Char
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="char"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public char ReadChar()
         {
             var size = 2;
@@ -531,10 +468,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="char"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public char ReadChar(EndianType endianType)
         {
             var size = 1;
@@ -547,10 +481,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="char"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<char> ToChars()
         {
             this.m_position = 0;
@@ -567,11 +498,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="char"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<char> ToChars(EndianType endianType)
         {
             this.m_position = 0;
@@ -592,9 +519,7 @@ namespace TouchSocket.Core
 
         #region Double
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="double"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public double ReadDouble()
         {
             var size = 8;
@@ -607,10 +532,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="double"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public double ReadDouble(EndianType endianType)
         {
             var size = 8;
@@ -623,10 +545,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="double"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<double> ToDoubles()
         {
             this.m_position = 0;
@@ -643,11 +562,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="double"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<double> ToDoubles(EndianType endianType)
         {
             this.m_position = 0;
@@ -668,9 +583,7 @@ namespace TouchSocket.Core
 
         #region Float
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="float"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public float ReadFloat()
         {
             var size = 4;
@@ -683,10 +596,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="float"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public float ReadFloat(EndianType endianType)
         {
             var size = 4;
@@ -699,10 +609,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="float"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<float> ToFloats()
         {
             this.m_position = 0;
@@ -719,11 +626,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="float"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<float> ToFloats(EndianType endianType)
         {
             this.m_position = 0;
@@ -744,9 +647,7 @@ namespace TouchSocket.Core
 
         #region UInt16
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="ushort"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public ushort ReadUInt16()
         {
             var size = 2;
@@ -759,10 +660,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="ushort"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public ushort ReadUInt16(EndianType endianType)
         {
             var size = 2;
@@ -775,10 +673,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="ushort"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<ushort> ToUInt16s()
         {
             this.m_position = 0;
@@ -795,11 +690,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="ushort"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<ushort> ToUInt16s(EndianType endianType)
         {
             this.m_position = 0;
@@ -820,9 +711,7 @@ namespace TouchSocket.Core
 
         #region UInt32
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="uint"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public uint ReadUInt32()
         {
             var size = 4;
@@ -835,10 +724,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="uint"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public uint ReadUInt32(EndianType endianType)
         {
             var size = 4;
@@ -851,10 +737,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="uint"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<uint> ToUInt32s()
         {
             this.m_position = 0;
@@ -871,11 +754,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="uint"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<uint> ToUInt32s(EndianType endianType)
         {
             this.m_position = 0;
@@ -896,9 +775,7 @@ namespace TouchSocket.Core
 
         #region UInt64
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="ulong"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public ulong ReadUInt64()
         {
             var size = 8;
@@ -911,10 +788,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="ulong"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public ulong ReadUInt64(EndianType endianType)
         {
             var size = 8;
@@ -927,10 +801,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="ulong"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<ulong> ToUInt64s()
         {
             this.m_position = 0;
@@ -947,11 +818,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="ulong"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<ulong> ToUInt64s(EndianType endianType)
         {
             this.m_position = 0;
@@ -972,9 +839,7 @@ namespace TouchSocket.Core
 
         #region Decimal
 
-        /// <summary>
-        /// 从当前流位置读取一个默认端序的<see cref="decimal"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public decimal ReadDecimal()
         {
             var size = 16;
@@ -987,10 +852,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="decimal"/>值
-        /// </summary>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public decimal ReadDecimal(EndianType endianType)
         {
             var size = 16;
@@ -1003,10 +865,7 @@ namespace TouchSocket.Core
             return value;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为默认端序的<see cref="decimal"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<decimal> ToDecimals()
         {
             this.m_position = 0;
@@ -1023,11 +882,7 @@ namespace TouchSocket.Core
             return list;
         }
 
-        /// <summary>
-        /// 将当前有效内存转为指定端序的<see cref="decimal"/>集合。
-        /// </summary>
-        /// <param name="endianType"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<decimal> ToDecimals(EndianType endianType)
         {
             this.m_position = 0;
@@ -1048,9 +903,7 @@ namespace TouchSocket.Core
 
         #region Null
 
-        /// <summary>
-        /// 从当前流位置读取一个标识值，判断是否为null。
-        /// </summary>
+        /// <inheritdoc/>
         public bool ReadIsNull()
         {
             var status = this.ReadByte();
@@ -1061,9 +914,7 @@ namespace TouchSocket.Core
 
         #region DateTime
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="DateTime"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public DateTime ReadDateTime()
         {
             var size = 8;
@@ -1076,10 +927,7 @@ namespace TouchSocket.Core
             return DateTime.FromBinary(value);
         }
 
-        /// <summary>
-        /// 将当前有效内存转为<see cref="DateTime"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<DateTime> ToDateTimes()
         {
             this.m_position = 0;
@@ -1100,9 +948,7 @@ namespace TouchSocket.Core
 
         #region TimeSpan
 
-        /// <summary>
-        /// 从当前流位置读取一个<see cref="TimeSpan"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public TimeSpan ReadTimeSpan()
         {
             var size = 8;
@@ -1115,10 +961,7 @@ namespace TouchSocket.Core
             return TimeSpan.FromTicks(value);
         }
 
-        /// <summary>
-        /// 将当前有效内存转为<see cref="TimeSpan"/>集合。
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<TimeSpan> ToTimeSpans()
         {
             this.m_position = 0;
@@ -1138,7 +981,7 @@ namespace TouchSocket.Core
         #endregion TimeSpan
 
         #region GUID
-
+        /// <inheritdoc/>
         public Guid ReadGuid()
         {
             Guid guid;

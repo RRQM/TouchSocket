@@ -180,38 +180,19 @@ namespace TouchSocket.SerialPorts
 
         #region 异步发送
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(IRequestInfo requestInfo)
         {
             return this.ProtectedSendAsync(requestInfo);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             return this.ProtectedSendAsync(transferBytes);

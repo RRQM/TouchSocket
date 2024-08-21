@@ -12,8 +12,9 @@
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// 会话客户端
+    /// 定义会话客户端接口，继承自IClient, IIdClient, IClosableClient接口
     /// </summary>
     public interface ISessionClient : IClient, IIdClient, IClosableClient
     {

@@ -24,20 +24,27 @@ namespace TouchSocket.Core
     [DebuggerDisplay("Len={Length},Pos={Position},Capacity={Capacity}")]
     public ref struct BytesReader
     {
-        private readonly int m_length;
         private readonly ReadOnlySpan<byte> m_span;
         private int m_position;
 
-        public BytesReader(ReadOnlySpan<byte> span)
-        {
-            this.m_span = span;
-        }
+       /// <summary>
+/// 初始化 BytesReader 类的新实例。
+/// </summary>
+/// <param name="span">一个只读字节跨度，用于初始化 BytesReader。</param>
+public BytesReader(ReadOnlySpan<byte> span)
+{
+    this.m_span = span;
+}
 
         /// <summary>
-        /// 还能读取的长度，计算为<see cref="Len"/>与<see cref="Pos"/>的差值。
+        /// 还能读取的长度，计算为<see cref="Length"/>与<see cref="Position"/>的差值。
         /// </summary>
         public readonly int CanReadLength => this.m_span.Length - this.Position;
 
+               /// <summary>
+        /// 获取当前实例的长度。
+        /// </summary>
+        /// <value>实例的长度。</value>
         public readonly int Length => this.m_span.Length;
 
         /// <summary>
@@ -49,27 +56,41 @@ namespace TouchSocket.Core
             set => this.m_position = value;
         }
 
+               /// <summary>
+        /// 获取当前实例的只读字节序列视图。
+        /// </summary>
+        /// <remarks>
+        /// 此属性提供了一个只读的字节序列视图，它允许对内部存储的字节数据进行只读访问，
+        /// 而不需要修改或拥有这些数据。这对于读取数据而不更改其原始值时非常有用。
+        /// </remarks>
+        /// <value>
+        /// 当前实例的只读字节序列视图。
+        /// </value>
         public readonly ReadOnlySpan<byte> Span => this.m_span;
 
         #region Read
 
-        /// <summary>
-        /// 读取数据，然后递增Pos
+        
+                /// <summary>
+        /// 从当前流中读取数据到指定的字节 span 中。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <param name="span">要写入数据的字节 span。</param>
+        /// <returns>实际读取到的字节数。</returns>
         public int Read(Span<byte> span)
         {
+            // 获取 span 的长度
             var length = span.Length;
+            // 如果 span 的长度为 0，则无需读取数据，直接返回 0
             if (length == 0)
             {
                 return 0;
             }
-            var len = this.m_length - this.m_position > length ? length : this.CanReadLength;
+            // 确定本次可以读取的长度：取剩余长度和请求读取长度的较小值
+            var len = this.Length - this.m_position > length ? length : this.CanReadLength;
+            // 从流中读取数据到内部 buffer
+            // 将从流中读取到的数据复制到指定的 span 中
             this.ReadToSpan(len).CopyTo(span);
+            // 返回实际读取到的字节数
             return len;
         }
 
@@ -137,28 +158,43 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public readonly byte[] ToArrayTake()
         {
-            return this.ToArray(this.m_position, this.m_length - this.m_position);
+            return this.ToArray(this.m_position, this.Length - this.m_position);
         }
 
         #endregion ToArray
 
         #region VarUInt32
+                /// <summary>
+        /// 从当前的字节序列位置开始读取一个使用可变长度编码的无符号32位整数。
+        /// </summary>
+        /// <returns>解码后的无符号32位整数。</returns>
         public uint ReadVarUInt32()
         {
+            // 初始化值变量，用于存储解码后的结果
             uint value = 0;
+            // 初始化变量以记录已读取的字节数
             var bytelength = 0;
+            // 循环读取字节，直到遇到终止字节
             while (true)
             {
+                // 获取当前位置的字节，并移动到下一个字节
                 var b = this.m_span[this.m_position++];
-                var temp = (b & 0x7F); //取每个字节的后7位
-                temp <<= (7 * bytelength); //向左移位，越是后面的字节，移位越多
-                value += (uint)temp; //把每个字节的值加起来就是最终的值了
+                // 提取当前字节的低7位，并将其存储在temp变量中
+                var temp = (b & 0x7F); // 取每个字节的后7位
+                // 根据字节在序列中的位置，将temp向左移位，以正确地将其插入到累加的值中
+                temp <<= (7 * bytelength); // 向左移位，越是后面的字节，移位越多
+                // 将当前字节的值加到最终结果中
+                value += (uint)temp; // 把每个字节的值加起来就是最终的值了
+                // 增加已读取字节数的计数
                 bytelength++;
+                // 检查是否达到了终止字节，即字节的最高位为0
                 if (b <= 0x7F)
-                { //127=0x7F=0b01111111，小于等于说明msb=0，即最后一个字节
+                { // 127=0x7F=0b01111111，小于等于说明msb=0，即最后一个字节
+                    // 如果是终止字节，则退出循环
                     break;
                 }
             }
+            // 返回解码后的无符号32位整数
             return value;
         }
         #endregion
@@ -211,7 +247,7 @@ namespace TouchSocket.Core
                     break;
 
                 case SeekOrigin.End:
-                    this.m_position = this.m_length + offset;
+                    this.m_position = this.Length + offset;
                     break;
             }
             return this.m_position;
@@ -233,7 +269,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public void SeekToEnd()
         {
-            this.Position = this.m_length;
+            this.Position = this.Length;
         }
 
         /// <summary>
@@ -258,19 +294,27 @@ namespace TouchSocket.Core
             return memory == null ? memory.ToArray() : null;
         }
 
+                /// <summary>
+        /// 从当前的字节流中读取一个长度确定的字节包。
+        /// </summary>
+        /// <returns>一个只读的字节跨度，表示读取的字节包，如果读取失败则返回null。</returns>
         public ReadOnlySpan<byte> ReadBytesPackageMemory()
         {
+            // 读取下一个32位整数，该整数表示后续字节包的长度。
             var length = this.ReadInt32();
+            // 如果长度小于0，则认为读取失败，返回null。
             if (length < 0)
             {
                 return null;
             }
 
+            // 根据读取的长度，从当前位置开始，截取一个长度为length的内存块。
             var memory = this.m_span.Slice(this.m_position, length);
+            // 更新当前位置，跳过已读取的字节包。
             this.m_position += length;
+            // 返回截取的内存块作为只读跨度。
             return memory;
         }
-
         #endregion BytesPackage
 
         #region Byte
@@ -338,15 +382,26 @@ namespace TouchSocket.Core
 
         #region Int32
 
+               /// <summary>
+        /// 从当前的输入流中读取一个32位整数。
+        /// </summary>
+        /// <returns>读取到的32位整数。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当可读取长度小于4字节时抛出。</exception>
         public int ReadInt32()
         {
+            // 定义Int32的大小，为4字节
             var size = 4;
+            // 检查当前可读取长度是否小于Int32的大小
             if (this.CanReadLength < size)
             {
+                // 如果是，抛出ArgumentOutOfRangeException异常，提示可读取长度不足
                 ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), this.CanReadLength, size);
             }
+            // 使用TouchSocketBitConverter将字节序列转换为Int32
             var value = TouchSocketBitConverter.Default.To<int>(this.m_span.Slice(this.m_position));
+            // 更新读取位置，跳过刚读取的4字节
             this.m_position += size;
+            // 返回转换后的Int32值
             return value;
         }
 
@@ -377,7 +432,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -398,7 +453,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -453,7 +508,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -474,7 +529,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -529,7 +584,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -550,7 +605,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -605,7 +660,7 @@ namespace TouchSocket.Core
             var size = 1;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -625,7 +680,7 @@ namespace TouchSocket.Core
             var size = 1;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -680,7 +735,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -701,7 +756,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -756,7 +811,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -777,7 +832,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -832,7 +887,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -853,7 +908,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -908,7 +963,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -929,7 +984,7 @@ namespace TouchSocket.Core
             var size = 2;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -984,7 +1039,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1005,7 +1060,7 @@ namespace TouchSocket.Core
             var size = 4;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1060,7 +1115,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1081,7 +1136,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1136,7 +1191,7 @@ namespace TouchSocket.Core
             var size = 16;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1157,7 +1212,7 @@ namespace TouchSocket.Core
             var size = 16;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1209,7 +1264,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }
@@ -1248,7 +1303,7 @@ namespace TouchSocket.Core
             var size = 8;
             while (true)
             {
-                if (this.m_position + size > this.m_length)
+                if (this.m_position + size > this.Length)
                 {
                     break;
                 }

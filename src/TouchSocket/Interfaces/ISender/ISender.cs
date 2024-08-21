@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
         /// 异步发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="memory"></param>
+        /// <param name="memory">要发送的数据，以字节的只读内存形式提供。</param>
         /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>

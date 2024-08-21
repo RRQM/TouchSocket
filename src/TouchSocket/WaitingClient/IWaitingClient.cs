@@ -18,8 +18,10 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 等待型客户端。
+    /// 定义了等待客户端的接口，该客户端既支持发送操作，又能在异步操作中等待结果。
     /// </summary>
+    /// <typeparam name="TClient">客户端类型参数，该客户端既是一个接收者，也是一个发送者。</typeparam>
+    /// <typeparam name="TResult">结果类型参数，表示接收者客户端处理操作后返回的结果。</typeparam>
     public interface IWaitingClient<TClient, TResult> : IWaitSender, IDisposableObject where TClient : IReceiverClient<TResult>, ISender
         where TResult : IReceiverResult
     {
@@ -36,12 +38,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 异步发送
         /// </summary>
-        /// <param name="memory"></param>
-        /// <param name="token">取消令箭</param>
+        /// <param name="memory">要发送的数据，使用内存表示</param>
+        /// <param name="token">取消令箭，用于取消操作</param>
         /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
+        /// <returns>返回的数据，类型为ResponsedData</returns>
         Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token);
     }
 }

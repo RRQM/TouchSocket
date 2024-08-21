@@ -11,37 +11,25 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
-    /// IUdpRequsetInfoSender
-    /// </summary>
-    public interface IUdpRequsetInfoSender
-    {
-        ///// <summary>
-        ///// 同步发送数据。
-        ///// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="requestInfo">解析对象</param>
-        ///// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
-        ///// <exception cref="OverlengthException">发送数据超长</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //void 123Send(EndPoint endPoint, IRequestInfo requestInfo);
 
+    /// <summary>
+    /// 定义异步请求信息发送器的接口。
+    /// </summary>
+    public interface IRequestInfoSender
+    {
         /// <summary>
         /// 异步发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="endPoint"></param>
         /// <param name="requestInfo">解析对象</param>
         /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo);
+        Task SendAsync(IRequestInfo requestInfo);
     }
 }

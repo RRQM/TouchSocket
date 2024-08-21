@@ -10,22 +10,26 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Core;
-
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Core
 {
     /// <summary>
-    /// IDmtpFileTransferedPlugin
+    /// 表示结果的接口
     /// </summary>
-    public interface IDmtpFileTransferedPlugin: IPlugin
+    public interface IResult
     {
         /// <summary>
-        /// 当文件传输结束之后。并不意味着完成传输，请通过<see cref="FileTransferedEventArgs.Result"/>属性值进行判断。
+        /// 结果代码
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e);
+        ResultCode ResultCode { get; }
+
+        /// <summary>
+        /// 结果附加消息
+        /// </summary>
+        string Message { get; }
+
+        /// <summary>
+        /// 是否成功。一般的当<see cref="ResultCode"/>为<see cref="ResultCode.Success"/>时会返回<see langword="true"/>。其余情况返回<see langword="false"/>
+        /// </summary>
+        bool IsSuccess { get; }
     }
 }

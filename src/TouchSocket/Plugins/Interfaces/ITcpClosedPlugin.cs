@@ -15,17 +15,19 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// 具有断开连接的插件接口
+    /// 定义了一个ITcpClosedPlugin接口，该接口继承自IPlugin接口。
+    /// 这个接口的目的是为插件提供一种标识，表明该插件支持处理TCP连接关闭时的操作。
     /// </summary>
-    public interface ITcpClosedPlugin: IPlugin
+    public interface ITcpClosedPlugin : IPlugin
     {
         /// <summary>
-        /// 会话断开后触发
+        /// 在会话断开后触发。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">断开连接的TCP会话客户端。</param>
+        /// <param name="e">会话断开事件的参数。</param>
+        /// <returns>一个等待完成的任务。</returns>
         Task OnTcpClosed(ITcpSession client, ClosedEventArgs e);
     }
 }

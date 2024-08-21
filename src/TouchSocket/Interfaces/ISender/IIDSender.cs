@@ -12,57 +12,22 @@
 
 using System;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 通过Id发送
+    /// 定义了一个接口，用于向特定客户端发送数据
     /// </summary>
     public interface IIdSender
     {
-        ///// <summary>
-        ///// 向对应Id的客户端发送
-        ///// </summary>
-        ///// <param name="id">目标Id</param>
-        ///// <param name="buffer">数据</param>
-        ///// <param name="offset">偏移</param>
-        ///// <param name="length">长度</param>
-        ///// <exception cref="ClientNotConnectedException">未连接异常</exception>
-        ///// <exception cref="ClientNotFindException">未找到Id对应的客户端</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //void 123Send(string id, byte[] buffer, int offset, int length);
-
         /// <summary>
-        /// 向对应Id的客户端发送
+        /// 异步向对应Id的客户端发送数据
         /// </summary>
-        /// <param name="id">目标Id</param>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <exception cref="ClientNotConnectedException">未连接异常</exception>
-        /// <exception cref="ClientNotFindException">未找到Id对应的客户端</exception>
-        /// <exception cref="Exception">其他异常</exception>
+        /// <param name="id">目标客户端的唯一标识符</param>
+        /// <param name="memory">要发送的数据，以字节形式存储在内存中</param>
+        /// <exception cref="ClientNotConnectedException">如果目标客户端未连接，则抛出此异常</exception>
+        /// <exception cref="ClientNotFindException">如果无法根据Id找到对应的客户端，则抛出此异常</exception>
+        /// <exception cref="Exception">如果发生其他异常情况</exception>
         Task SendAsync(string id, ReadOnlyMemory<byte> memory);
-
-        ///// <summary>
-        ///// 向对应Id的客户端发送
-        ///// </summary>
-        ///// <param name="id">目标Id</param>
-        ///// <param name="requestInfo">数据对象</param>
-        ///// <exception cref="ClientNotConnectedException">未连接异常</exception>
-        ///// <exception cref="ClientNotFindException">未找到Id对应的客户端</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //void 123Send(string id, IRequestInfo requestInfo);
-
-        ///// <summary>
-        ///// 向对应Id的客户端发送
-        ///// </summary>
-        ///// <param name="id">目标Id</param>
-        ///// <param name="requestInfo">数据对象</param>
-        ///// <exception cref="ClientNotConnectedException">未连接异常</exception>
-        ///// <exception cref="ClientNotFindException">未找到Id对应的客户端</exception>
-        ///// <exception cref="Exception">其他异常</exception>
-        //Task SendAsync(string id, IRequestInfo requestInfo);
     }
 }
