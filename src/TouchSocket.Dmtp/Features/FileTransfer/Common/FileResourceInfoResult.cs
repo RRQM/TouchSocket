@@ -15,14 +15,14 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp.FileTransfer
 {
     /// <summary>
-    /// FileResourceInfoResult
+    /// 文件资源信息结果类，继承自 ResultBase
     /// </summary>
     public class FileResourceInfoResult : ResultBase
     {
         /// <summary>
         /// 创建成功的资源结果
         /// </summary>
-        /// <param name="fileResourceInfo"></param>
+        /// <param name="fileResourceInfo">文件资源信息</param>
         public FileResourceInfoResult(FileResourceInfo fileResourceInfo) : base(Result.Success)
         {
             this.FileResourceInfo = fileResourceInfo;
@@ -31,7 +31,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 创建失败的资源结果
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="result">结果状态</param>
         public FileResourceInfoResult(Result result) : base(result)
         {
         }
@@ -39,8 +39,8 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 创建失败的资源结果
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="code"></param>
+        /// <param name="message">错误消息</param>
+        /// <param name="code">结果代码</param>
         public FileResourceInfoResult(string message, ResultCode code = ResultCode.Error) : base(code, message)
         {
         }

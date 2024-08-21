@@ -12,7 +12,7 @@
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+        /// <summary>
     /// 断开连接事件参数
     /// </summary>
     public class ClosedEventArgs : ClosingEventArgs
@@ -20,8 +20,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="manual"></param>
-        /// <param name="mes"></param>
+        /// <param name="manual">断开连接是否为手动操作</param>
+        /// <param name="mes">断开连接的消息</param>
         public ClosedEventArgs(bool manual, string mes) : base(mes)
         {
             this.Manual = manual;

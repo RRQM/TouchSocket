@@ -180,7 +180,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
-                        var result = await this.m_client.ReceiveAsync(byteBlock.AsSegment(0, byteBlock.Capacity), default).ConfigureAwait(false);
+                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory.GetArray(), default).ConfigureAwait(false);
                         if (result.Count == 0)
                         {
                             break;

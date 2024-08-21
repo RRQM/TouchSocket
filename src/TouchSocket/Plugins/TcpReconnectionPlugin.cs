@@ -43,13 +43,13 @@ namespace TouchSocket.Sockets
                 return;
             }
 
+            if (e.Manual)
+            {
+                return;
+            }
+
             _ = Task.Run(async () =>
             {
-                if (e.Manual)
-                {
-                    return;
-                }
-
                 while (true)
                 {
                     if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))

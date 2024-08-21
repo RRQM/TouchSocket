@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -69,11 +68,13 @@ namespace TouchSocket.Sockets
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
         /// <summary>
-        /// 清理统计类型。默认为：<see cref="CheckClearType.All"/>。当设置为<see cref="CheckClearType.OnlySend"/>时，
-        /// 则只检验发送方向是否有数据流动。没有的话则会断开连接。
+        /// 设置清理统计类型。此方法允许指定在何种情况下应清理统计信息。
+        /// 默认情况下，清理类型设置为<see cref="CheckClearType.All"/>，表示所有情况都进行清理。
+        /// 如果设置为<see cref="CheckClearType.OnlySend"/>，则仅检验发送方向是否有数据流动，
+        /// 若没有数据流动，则断开连接。
         /// </summary>
-        /// <param name="clearType"></param>
-        /// <returns></returns>
+        /// <param name="clearType">要设置的清理统计类型。</param>
+        /// <returns>返回当前<see cref="CheckClearPlugin{TClient}"/>实例，以支持链式调用。</returns>
         public CheckClearPlugin<TClient> SetCheckClearType(CheckClearType clearType)
         {
             this.CheckClearType = clearType;
@@ -81,10 +82,10 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 当因为超出时间限定而关闭。
+        /// 设置在超出时间限定而关闭时的回调操作。
         /// </summary>
-        /// <param name="action"></param>
-        /// <returns></returns>
+        /// <param name="action">一个Action委托，包含客户端对象和检查清除类型作为参数，在关闭操作执行时会被调用。</param>
+        /// <returns>返回当前的CheckClearPlugin实例，以支持链式调用。</returns>
         public CheckClearPlugin<TClient> SetOnClose(Action<TClient, CheckClearType> action)
         {
             this.OnClose = action;
@@ -94,8 +95,8 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 设置清理无数据交互的Client，默认60秒。
         /// </summary>
-        /// <param name="timeSpan"></param>
-        /// <returns></returns>
+        /// <param name="timeSpan">清理无数据交互的Client的时间间隔</param>
+        /// <returns>返回配置后的实例，支持链式调用</returns>
         public CheckClearPlugin<TClient> SetTick(TimeSpan timeSpan)
         {
             this.Tick = timeSpan;
@@ -144,21 +145,21 @@ namespace TouchSocket.Sockets
 
                     if (this.CheckClearType == CheckClearType.OnlyReceive)
                     {
-                        if (DateTime.Now - client.LastReceivedTime > this.Tick)
+                        if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
                         {
                             this.OnClose?.Invoke(client, this.CheckClearType);
                         }
                     }
                     else if (this.CheckClearType == CheckClearType.OnlySend)
                     {
-                        if (DateTime.Now - client.LastSentTime > this.Tick)
+                        if (DateTime.UtcNow - client.LastSentTime > this.Tick)
                         {
                             this.OnClose?.Invoke(client, this.CheckClearType);
                         }
                     }
                     else
                     {
-                        if (DateTime.Now - client.GetLastActiveTime() > this.Tick)
+                        if (DateTime.UtcNow - client.GetLastActiveTime() > this.Tick)
                         {
                             this.OnClose?.Invoke(client, this.CheckClearType);
                         }
@@ -169,7 +170,7 @@ namespace TouchSocket.Sockets
 
         private Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
-            Task.Factory.StartNew(this.Polling,sender);
+            Task.Factory.StartNew(this.Polling, sender);
             return EasyTask.CompletedTask;
         }
 

@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Dmtp
 {
-    /// <summary>
+        /// <summary>
     /// Token验证异常
     /// </summary>
     [Serializable]
@@ -29,23 +29,14 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">异常信息</param>
         public TokenVerifyException(string message) : base(message) { }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="inner"></param>
+        /// <param name="message">异常信息</param>
+        /// <param name="inner">内部异常</param>
         public TokenVerifyException(string message, System.Exception inner) : base(message, inner) { }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="info"></param>
-        /// <param name="context"></param>
-        protected TokenVerifyException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

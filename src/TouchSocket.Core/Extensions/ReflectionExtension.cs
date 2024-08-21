@@ -18,6 +18,9 @@ using System.Text;
 
 namespace TouchSocket.Core
 {
+       /// <summary>
+    /// 反射工具类
+    /// </summary>
     public static class ReflectionExtension
     {
         #region MethodInfo

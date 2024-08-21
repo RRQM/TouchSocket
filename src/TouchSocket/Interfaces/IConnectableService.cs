@@ -38,7 +38,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 获取已连接的所有客户端Id集合
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回客户端Id的集合</returns>
         IEnumerable<string> GetIds();
 
         /// <summary>
@@ -51,14 +51,14 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 根据Id判断对应的客户端是否存在
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <param name="id">客户端的Id</param>
+        /// <returns>返回是否存在</returns>
         bool ClientExists(string id);
 
         /// <summary>
         /// 获取已连接的所有客户端。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回IClient的集合</returns>
         IEnumerable<IClient> GetClients();
     }
 }

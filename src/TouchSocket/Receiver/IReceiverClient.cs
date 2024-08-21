@@ -12,15 +12,17 @@
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// IReceiverClient
+    /// 定义了一个泛型接口，用于创建和管理同步数据接收器客户端
     /// </summary>
+    /// <typeparam name="TResult">接收结果的类型，必须继承自<see cref="IReceiverResult"/>接口</typeparam>
     public interface IReceiverClient<TResult> where TResult : IReceiverResult
     {
         /// <summary>
         /// 获取一个同步数据接收器
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回一个IReceiver接口实例，用于接收类型为TResult的数据</returns>
         IReceiver<TResult> CreateReceiver();
 
         /// <summary>

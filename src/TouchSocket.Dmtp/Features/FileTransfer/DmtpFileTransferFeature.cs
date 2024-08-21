@@ -59,8 +59,8 @@ namespace TouchSocket.Dmtp.FileTransfer
             var dmtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor)
             {
                 FileController = this.m_fileResourceController,
-                OnFileTransfering = this.OnFileTransfering,
-                OnFileTransfered = this.OnFileTransfered,
+                OnFileTransferring = this.OnFileTransfering,
+                OnFileTransferred = this.OnFileTransfered,
                 RootPath = this.RootPath,
                 MaxSmallFileLength = this.MaxSmallFileLength
             };
@@ -112,14 +112,14 @@ namespace TouchSocket.Dmtp.FileTransfer
             return this;
         }
 
-        private async Task OnFileTransfered(IDmtpActor actor, FileTransferedEventArgs e)
+        private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferedPlugin), actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client, e).ConfigureAwait(false);
         }
 
-        private async Task OnFileTransfering(IDmtpActor actor, FileTransferingEventArgs e)
+        private async Task OnFileTransfering(IDmtpActor actor, FileTransferringEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferingPlugin), actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client, e).ConfigureAwait(false);
         }
     }
 }

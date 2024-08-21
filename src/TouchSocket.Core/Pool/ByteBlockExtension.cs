@@ -12,13 +12,27 @@
 
 namespace TouchSocket.Core
 {
+    /// <summary>
+    /// 提供字节块扩展方法的静态类。
+    /// </summary>
     public static class ByteBlockExtension
     {
+        /// <summary>
+        /// 将字节块转换为字节块流。
+        /// </summary>
+        /// <param name="byteBlock">要转换的字节块。</param>
+        /// <param name="releaseTogether">是否在释放字节块时一起释放关联的资源，默认为true。</param>
+        /// <returns>一个新的字节块流对象。</returns>
         public static ByteBlockStream AsStream(this ByteBlock byteBlock, bool releaseTogether = true)
         {
             return new ByteBlockStream(byteBlock, releaseTogether);
         }
 
+        /// <summary>
+        /// 将值类型的字节块转换为普通的字节块。
+        /// </summary>
+        /// <param name="valueByteBlock">要转换的值类型字节块。</param>
+        /// <returns>一个新的字节块对象。</returns>
         public static ByteBlock AsByteBlock(this in ValueByteBlock valueByteBlock)
         {
             return new ByteBlock(valueByteBlock);

@@ -59,7 +59,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         /// <param name="rpcMethod"></param>
         /// <returns></returns>
-        public override string GetInvokenKey(RpcMethod rpcMethod)
+        public override string GetInvokeKey(RpcMethod rpcMethod)
         {
             var parameters = rpcMethod.GetNormalParameters().ToList();
             if (this.Method == HttpMethodType.GET)
@@ -119,7 +119,7 @@ namespace TouchSocket.WebApi
             }
             else
             {
-                return base.GetInvokenKey(rpcMethod);
+                return base.GetInvokeKey(rpcMethod);
             }
         }
 

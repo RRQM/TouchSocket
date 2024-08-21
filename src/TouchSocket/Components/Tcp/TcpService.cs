@@ -12,19 +12,32 @@
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// Tcp服务器
+    /// Tcp服务类，继承自<see cref="TcpService{TClient}"/>，实现<see cref="ITcpService"/>接口。
+    /// 该类用于提供基于TCP协议的服务。
     /// </summary>
     public class TcpService : TcpService<TcpSessionClient>, ITcpService
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// 创建新的客户端会话。
+        /// </summary>
+        /// <returns>返回一个新的PrivateTcpSessionClient对象。</returns>
+        /// <remarks>
+        /// 此方法覆盖了基类中的同名方法，用于生成自定义的TcpSessionClient实例。
+        /// </remarks>
         protected sealed override TcpSessionClient NewClient()
         {
             return new PrivateTcpSessionClient();
         }
 
+        /// <summary>
+        /// 私有TcpSessionClient类，继承自TcpSessionClient。
+        /// 该类用于提供自定义的TcpSessionClient实现。
+        /// </summary>
         private sealed class PrivateTcpSessionClient : TcpSessionClient
         {
+            
         }
     }
 }

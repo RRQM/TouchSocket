@@ -18,9 +18,6 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp
 {
-    /// <summary>
-    /// UdpDmtp终端客户端
-    /// </summary>
     internal sealed class UdpDmtpClient : DmtpActor, IUdpDmtpClient
     {
         private readonly EndPoint m_endPoint;

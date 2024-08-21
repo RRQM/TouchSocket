@@ -49,8 +49,13 @@ namespace TouchSocket.Http
             base.Dispose(disposing);
         }
 
+        /// <summary>
+        /// 设置用于处理单流数据的转换适配器
+        /// </summary>
+        /// <param name="adapter">要设置的SingleStreamDataHandlingAdapter实例</param>
         protected void SetWarpAdapter(SingleStreamDataHandlingAdapter adapter)
         {
+            // 将提供的适配器设置为当前数据处理适配器的WarpAdapter
             this.m_dataHandlingAdapter.WarpAdapter = adapter;
         }
 
@@ -59,42 +64,54 @@ namespace TouchSocket.Http
         private void ReleaseLock()
         {
             this.m_semaphoreForRequest.Release();
-            this.m_dataHandlingAdapter.SetComplateLock();
+            this.m_dataHandlingAdapter.SetCompleteLock();
             //this.m_waitRelease.Set();
         }
 
         /// <summary>
         /// 异步发送Http请求，并仅等待响应头
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="OperationCanceledException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="request">要发送的HttpRequest对象</param>
+        /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为10秒</param>
+        /// <param name="token">用于取消操作的CancellationToken</param>
+        /// <returns>返回HttpResponseResult对象，包含响应结果和释放锁的方法</returns>
+        /// <exception cref="TimeoutException">当操作超时时抛出</exception>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="Exception">当发生其他异常时抛出</exception>
         protected async Task<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
+            // 等待信号量，以控制并发请求的数量，超时和取消策略
             await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token);
             try
             {
+                // 标记不获取响应内容
                 this.m_getContent = false;
+
+                // 使用ByteBlock来构建请求数据
                 using (var byteBlock = new ByteBlock())
                 {
+                    // 构建请求数据
                     request.Build(byteBlock);
 
+                    // 重置等待状态，并使用取消令牌
                     this.Reset(token);
+
+                    // 异步发送请求
                     await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
 
+                    // 等待响应状态，超时设定
                     var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
+                    // 如果响应状态不是运行中，抛出异常
                     status.ThrowIfNotRunning();
 
+                    // 返回响应结果对象
                     return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
                 }
             }
             catch
             {
+                // 发生异常时，释放信号量
                 this.m_semaphoreForRequest.Release();
                 throw;
             }
@@ -103,36 +120,46 @@ namespace TouchSocket.Http
         /// <summary>
         /// 异步发送Http请求，并等待全部响应
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        /// <exception cref="TimeoutException"></exception>
-        /// <exception cref="OperationCanceledException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="request">Http请求对象</param>
+        /// <param name="millisecondsTimeout">超时时间，单位为毫秒，默认为10秒</param>
+        /// <param name="token">取消令牌</param>
+        /// <returns>返回Http响应结果</returns>
+        /// <exception cref="TimeoutException">当操作超时时抛出</exception>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="Exception">当发生其他异常时抛出</exception>
         protected async Task<HttpResponseResult> ProtectedRequestContentAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
+            // 使用信号量控制并发，确保系统稳定性
             await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
+                // 标记为获取内容状态
                 this.m_getContent = true;
+                // 使用ByteBlock来构建请求数据
                 using (var byteBlock = new ByteBlock())
                 {
+                    // 构建请求数据
                     request.Build(byteBlock);
 
+                    // 重置状态，为发送请求做准备
                     this.Reset(token);
 
+                    // 异步发送请求数据
                     await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
 
+                    // 等待响应数据，超时时间为millisecondsTimeout
                     var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
+                    // 如果状态不是运行中，则抛出异常
                     status.ThrowIfNotRunning();
 
+                    // 返回响应结果
                     return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
                 }
             }
             catch
             {
+                // 发生异常时，释放信号量
                 this.m_semaphoreForRequest.Release();
                 throw;
             }
@@ -180,12 +207,5 @@ namespace TouchSocket.Http
             this.m_waitResponseDataAsync.Reset();
             this.m_waitResponseDataAsync.SetCancellationToken(token);
         }
-
-        //private async Task SetAsync(HttpResponse response)
-        //{
-
-
-        //    await this.m_waitRelease.WaitOneAsync().ConfigureAwait(false);
-        //}
     }
 }

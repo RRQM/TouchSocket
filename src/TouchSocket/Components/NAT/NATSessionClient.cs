@@ -17,50 +17,50 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 端口转发辅助
+    /// 端口转发辅助类，继承自TcpSessionClient。
     /// </summary>
-    public class NATSessionClient : TcpSessionClient
+    public class NatSessionClient : TcpSessionClient, INatSessionClient
     {
-        internal Func<NATSessionClient, ITcpClient, ClosedEventArgs, Task> m_internalDis;
-        internal Func<NATSessionClient, ITcpClient, ReceivedDataEventArgs, Task<byte[]>> m_internalTargetClientRev;
+        // 定义一个处理断开连接事件的委托方法。
+        internal Func<NatSessionClient, ITcpClient, ClosedEventArgs, Task> m_internalDis;
+
+        // 定义一个处理接收数据事件的委托方法。
+        internal Func<NatSessionClient, ITcpClient, ReceivedDataEventArgs, Task<byte[]>> m_internalTargetClientRev;
+
+        // 保存所有目标客户端的列表。
         private readonly ConcurrentList<ITcpClient> m_targetClients = new ConcurrentList<ITcpClient>();
 
-        /// <summary>
-        /// 添加转发客户端。
-        /// </summary>
-        /// <param name="config">配置文件</param>
-        /// <param name="setupAction">当完成配置，但是还未连接时回调。</param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public async Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
         {
+            // 创建一个新的TcpClient实例。
             var tcpClient = new TcpClient();
+            // 注册断开连接事件处理程序。
             tcpClient.Closed += this.TcpClient_Disconnected;
+            // 注册接收数据事件处理程序。
             tcpClient.Received += this.TcpClient_Received;
+            // 异步设置TcpClient的配置。
             await tcpClient.SetupAsync(config).ConfigureAwait(false);
+            // 执行回调操作，如果提供了的话。
             setupAction?.Invoke(tcpClient);
+            // 异步连接TcpClient。
             await tcpClient.ConnectAsync().ConfigureAwait(false);
 
+            // 将新的TcpClient添加到目标客户端列表中。
             this.m_targetClients.Add(tcpClient);
             return tcpClient;
         }
 
-        /// <summary>
-        /// 获取所有目标客户端
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public ITcpClient[] GetTargetClients()
         {
             return this.m_targetClients.ToArray();
         }
 
-        /// <summary>
-        /// 发送数据到全部转发端。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public async Task SendToTargetClientAsync(Memory<byte> memory)
+        /// <inheritdoc/>
+        public async Task SendToTargetClientAsync(ReadOnlyMemory<byte> memory)
         {
+            // 遍历目标客户端列表，尝试发送数据。
             foreach (var socket in this.m_targetClients)
             {
                 try
@@ -69,26 +69,35 @@ namespace TouchSocket.Sockets
                 }
                 catch
                 {
+                    // 如果发送失败，捕获异常但不进行处理。
                 }
             }
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 当Tcp连接关闭时的事件处理程序。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含关闭信息的事件参数。</param>
         protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
+            // 遍历目标客户端列表，关闭并释放资源。
             foreach (var client in this.m_targetClients)
             {
                 client.TryShutdown();
                 client.SafeDispose();
             }
+            // 调用基类的事件处理程序。
             await base.OnTcpClosed(e).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// 处理TcpClient断开连接事件。
+        /// </summary>
+        /// <param name="client">断开连接的客户端。</param>
+        /// <param name="e">包含断开连接信息的事件参数。</param>
         private async Task TcpClient_Disconnected(ITcpSession client, ClosedEventArgs e)
         {
+            // 遍历客户端的插件，尝试调用断开连接的委托方法。
             foreach (var item in client.PluginManager.Plugins)
             {
                 if (typeof(ReconnectionPlugin<>) == item.GetType().GetGenericTypeDefinition())
@@ -97,13 +106,20 @@ namespace TouchSocket.Sockets
                     return;
                 }
             }
+            // 如果没有找到相应的插件，释放资源并从目标列表中移除客户端。
             client.Dispose();
             this.m_targetClients.Remove((ITcpClient)client);
             await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// 处理接收数据事件。
+        /// </summary>
+        /// <param name="client">接收到数据的客户端。</param>
+        /// <param name="e">包含接收数据信息的事件参数。</param>
         private async Task TcpClient_Received(ITcpClient client, ReceivedDataEventArgs e)
         {
+            // 如果当前对象已被释放，则不处理接收到的数据。
             if (this.DisposedValue)
             {
                 return;
@@ -111,9 +127,11 @@ namespace TouchSocket.Sockets
 
             try
             {
+                // 调用接收数据的委托方法处理数据。
                 var data = await this.m_internalTargetClientRev.Invoke(this, client, e).ConfigureAwait(false);
                 if (data != null)
                 {
+                    // 如果当前对象在线，则发送数据。
                     if (this.Online)
                     {
                         await this.SendAsync(data).ConfigureAwait(false);
@@ -122,6 +140,7 @@ namespace TouchSocket.Sockets
             }
             catch
             {
+                // 如果处理数据时发生异常，捕获异常但不进行处理。
             }
         }
     }

@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.IO.Pipes;
-
 namespace TouchSocket.NamedPipe
 {
     /// <summary>
@@ -19,9 +17,10 @@ namespace TouchSocket.NamedPipe
     /// </summary>
     public class NamedPipeService : NamedPipeService<NamedPipeSessionClient>, INamedPipeService
     {
+        /// <inheritdoc/>
         protected override NamedPipeSessionClient NewClient()
         {
-            return new PrivateNamedPipeSessionClient(); 
+            return new PrivateNamedPipeSessionClient();
         }
 
         private sealed class PrivateNamedPipeSessionClient : NamedPipeSessionClient

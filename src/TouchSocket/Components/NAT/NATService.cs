@@ -18,29 +18,31 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp端口转发服务器
     /// </summary>
-    public class NATService : TcpService<NATSessionClient>
+    public class NatService : TcpService<NatSessionClient>
     {
         /// <inheritdoc/>
-        protected override void ClientInitialized(NATSessionClient client)
+        protected override void ClientInitialized(NatSessionClient client)
         {
             base.ClientInitialized(client);
+            // 设置当目标客户端断开时的处理方法
             client.m_internalDis = this.OnTargetClientClosed;
+            // 设置当目标客户端接收到数据时的处理方法
             client.m_internalTargetClientRev = this.OnTargetClientReceived;
         }
 
         /// <inheritdoc/>
-        protected override NATSessionClient NewClient()
+        protected override NatSessionClient NewClient()
         {
-            return new NATSessionClient();
+            return new NatSessionClient();
         }
 
         /// <summary>
         /// 在NAT服务器收到数据时。
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
+        /// <param name="socketClient">NAT会话客户端</param>
+        /// <param name="e">接收到的数据事件参数</param>
         /// <returns>需要转发的数据。</returns>
-        protected virtual Task<byte[]> OnNATReceived(NATSessionClient socketClient, ReceivedDataEventArgs e)
+        protected virtual Task<byte[]> OnNatReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
         {
             return Task.FromResult(e.ByteBlock?.ToArray());
         }
@@ -48,24 +50,29 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected sealed override async Task OnTcpReceived(NATSessionClient socketClient, ReceivedDataEventArgs e)
+        /// <param name="socketClient">Nat会话客户端</param>
+        /// <param name="e">接收到的数据事件参数</param>
+        protected sealed override async Task OnTcpReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
         {
-            var data = await this.OnNATReceived(socketClient, e).ConfigureAwait(false);
+            // 从NAT服务器接收到数据后的处理
+            var data = await this.OnNatReceived(socketClient, e).ConfigureAwait(false);
             if (data != null)
             {
-                await socketClient.SendToTargetClientAsync(new System.Memory<byte>(data, 0, data.Length)).ConfigureAwait(false);
+                // 转发数据到目标客户端
+                await socketClient.SendToTargetClientAsync(new System.Memory<byte>(data, 0, data.Length))
+                    .ConfigureAwait(false);
             }
         }
 
         /// <summary>
         /// 当目标客户端断开。
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="tcpClient"></param>
-        /// <param name="e"></param>
-        protected virtual Task OnTargetClientClosed(NATSessionClient socketClient, ITcpClient tcpClient, ClosedEventArgs e)
+        /// <param name="socketClient">Nat会话客户端</param>
+        /// <param name="tcpClient">断开的Tcp客户端</param>
+        /// <param name="e">断开事件参数</param>
+        /// <returns></returns>
+        protected virtual Task OnTargetClientClosed(NatSessionClient socketClient, ITcpClient tcpClient,
+            ClosedEventArgs e)
         {
             return EasyTask.CompletedTask;
         }
@@ -73,11 +80,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 在目标客户端收到数据时。
         /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="tcpClient"></param>
-        /// <param name="e"></param>
+        /// <param name="socketClient">Nat会话客户端</param>
+        /// <param name="tcpClient">发送数据的Tcp客户端</param>
+        /// <param name="e">接收到的数据事件参数</param>
         /// <returns></returns>
-        protected virtual Task<byte[]> OnTargetClientReceived(NATSessionClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
+        protected virtual Task<byte[]> OnTargetClientReceived(NatSessionClient socketClient, ITcpClient tcpClient,
+            ReceivedDataEventArgs e)
         {
             return Task.FromResult(e.ByteBlock?.ToArray());
         }

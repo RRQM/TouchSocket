@@ -71,9 +71,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 模拟测试运行发送
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
         /// <param name="millisecondsTimeout">超时</param>

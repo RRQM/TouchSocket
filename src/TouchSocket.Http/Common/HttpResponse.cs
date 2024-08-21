@@ -133,7 +133,7 @@ namespace TouchSocket.Http
 
         /// <summary>
         ///  构建响应数据。
-        /// <para>当数据较大时，不建议这样操作，可直接<see cref="Write(byte[], int, int)"/></para>
+        /// <para>当数据较大时，不建议这样操作，可直接<see cref="WriteAsync(ReadOnlyMemory{byte})"/></para>
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="responsed"></param>
@@ -188,7 +188,7 @@ namespace TouchSocket.Http
         /// <returns></returns>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
         {
-            if (!this.ContentComplated.HasValue)
+            if (!this.ContentCompleted.HasValue)
             {
                 if (!this.IsChunk && this.ContentLength == 0)
                 {
@@ -222,14 +222,14 @@ namespace TouchSocket.Http
                                 ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.ContentLength), this.ContentLength, MaxCacheSize);
                             }
                         }
-                        this.ContentComplated = true;
+                        this.ContentCompleted = true;
                         this.m_content = memoryStream.ToArray();
                         return this.m_content;
                     }
                 }
                 catch
                 {
-                    this.ContentComplated = false;
+                    this.ContentCompleted = false;
                     this.m_content = null;
                     return this.m_content;
                 }
@@ -240,10 +240,11 @@ namespace TouchSocket.Http
             }
             else
             {
-                return this.ContentComplated == true ? this.m_content : default;
+                return this.ContentCompleted == true ? this.m_content : default;
             }
         }
 
+        /// <inheritdoc/>
         public override async ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken = default)
         {
             if (this.ContentLength == 0 && !this.IsChunk)
@@ -251,14 +252,14 @@ namespace TouchSocket.Http
                 return InternalBlockResult.Completed;
             }
 
-            if (this.ContentComplated.HasValue && this.ContentComplated.Value)
+            if (this.ContentCompleted.HasValue && this.ContentCompleted.Value)
             {
                 return new InternalBlockResult(this.m_content, true);
             }
             var blockResult = await base.ReadAsync(cancellationToken);
             if (blockResult == InternalBlockResult.Completed)
             {
-                this.ContentComplated = true;
+                this.ContentCompleted = true;
             }
             return blockResult;
         }
@@ -268,7 +269,7 @@ namespace TouchSocket.Http
         {
             this.m_content = content;
             this.ContentLength = content.Length;
-            this.ContentComplated = true;
+            this.ContentCompleted = true;
         }
 
         /// <summary>
@@ -360,7 +361,7 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        protected override void LoadHeaderProterties()
+        protected override void LoadHeaderProperties()
         {
             var first = Regex.Split(this.RequestLine, @"(\s+)").Where(e => e.Trim() != string.Empty).ToArray();
             if (first.Length > 0)

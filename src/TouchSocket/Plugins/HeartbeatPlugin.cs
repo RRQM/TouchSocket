@@ -16,7 +16,7 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// HeartbeatPlugin
+    /// 心跳插件的基类，定义了心跳插件的基本结构和功能。
     /// </summary>
     public abstract class HeartbeatPlugin : PluginBase
     {

@@ -26,6 +26,12 @@ namespace TouchSocket.Core
 
         private readonly Type m_requestType;
 
+        /// <summary>
+        /// 初始化自定义数据处理适配器。
+        /// </summary>
+        /// <remarks>
+        /// 该构造函数在创建<see cref="CustomDataHandlingAdapter{TRequest}"/>实例时，会指定请求类型。
+        /// </remarks>
         public CustomDataHandlingAdapter()
         {
             this.m_requestType = typeof(TRequest);
@@ -49,55 +55,66 @@ namespace TouchSocket.Core
         /// </summary>
         protected int SurLength { get; set; }
 
+        /// <summary>
+        /// 尝试解析请求数据块。
+        /// </summary>
+        /// <typeparam name="TByteBlock">字节块类型，必须实现IByteBlock接口。</typeparam>
+        /// <param name="byteBlock">待解析的字节块。</param>
+        /// <param name="request">解析出的请求对象。</param>
+        /// <returns>解析是否成功。</returns>
         public bool TryParseRequest<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
         {
-            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            // 检查缓存是否超时，如果超时则清除缓存。
+            if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
             }
 
+            // 如果临时字节块为空，则尝试直接解析。
             if (this.m_tempByteBlock.IsEmpty)
             {
                 return this.Single(ref byteBlock, out request) == FilterResult.Success;
             }
             else
             {
+                // 如果剩余长度小于等于0，则抛出异常。
                 if (this.SurLength <= 0)
                 {
                     throw new Exception();
                 }
 
+                // 计算本次可以读取的长度。
                 var len = Math.Min(this.SurLength, byteBlock.CanReadLength);
 
+                // 从输入字节块中读取数据到临时字节块中。
                 var block = this.m_tempByteBlock;
-
                 block.Write(byteBlock.Span.Slice(byteBlock.Position, len));
                 byteBlock.Position += len;
                 this.SurLength -= len;
 
+                // 重置临时字节块并准备下一次使用。
                 this.m_tempByteBlock = ValueByteBlock.Empty;
 
+                // 回到字节块的起始位置。
                 block.SeekToStart();
                 try
                 {
+                    // 尝试解析字节块。
                     var filterResult = this.Single(ref block, out request);
                     switch (filterResult)
                     {
                         case FilterResult.Cache:
                             {
+                                // 如果临时字节块不为空，则继续缓存。
                                 if (!this.m_tempByteBlock.IsEmpty)
                                 {
-                                    //接着缓存
                                     byteBlock.Position += this.m_tempByteBlock.Length;
-                                }
-                                else
-                                {
-
                                 }
                                 return false;
                             }
                         case FilterResult.Success:
                             {
+                                // 如果字节块中还有剩余数据，则回退指针。
                                 if (block.CanReadLength > 0)
                                 {
                                     byteBlock.Position -= block.CanReadLength;
@@ -106,6 +123,7 @@ namespace TouchSocket.Core
                             }
                         case FilterResult.GoOn:
                         default:
+                            // 对于需要继续解析的情况，也回退指针。
                             if (block.CanReadLength > 0)
                             {
                                 byteBlock.Position -= block.CanReadLength;
@@ -115,10 +133,10 @@ namespace TouchSocket.Core
                 }
                 finally
                 {
+                    // 释放字节块资源。
                     block.Dispose();
                 }
             }
-
         }
 
         /// <summary>
@@ -159,7 +177,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
             }
@@ -188,48 +206,69 @@ namespace TouchSocket.Core
             base.Reset();
         }
 
+        /// <summary>
+        /// 判断请求对象是否应该被缓存。
+        /// </summary>
+        /// <param name="request">请求对象。</param>
+        /// <returns>返回布尔值，指示请求对象是否应该被缓存。</returns>
         protected virtual bool IsBeCached(in TRequest request)
         {
+            // 如果请求对象类型是值类型，则判断其哈希码是否与默认值不同；
+            // 如果是引用类型，则判断对象本身是否为null。
             return this.m_requestType.IsValueType ? request.GetHashCode() != default(TRequest).GetHashCode() : request != null;
         }
 
+        /// <summary>
+        /// 处理单个字节块，提取请求对象。
+        /// </summary>
+        /// <typeparam name="TByteBlock">字节块类型，需要实现IByteBlock接口。</typeparam>
+        /// <param name="byteBlock">字节块，将被解析以提取请求对象。</param>
+        /// <param name="request">输出参数，提取出的请求对象。</param>
+        /// <returns>返回过滤结果，指示处理的状态。</returns>
         protected FilterResult Single<TByteBlock>(ref TByteBlock byteBlock, out TRequest request) where TByteBlock : IByteBlock
         {
+            // 初始化临时缓存容量。
             var tempCapacity = 1024 * 64;
+            // 执行过滤操作，根据是否应该缓存来决定如何处理字节块和请求对象。
             var filterResult = this.Filter(ref byteBlock, this.IsBeCached(this.m_tempRequest), ref this.m_tempRequest, ref tempCapacity);
             switch (filterResult)
             {
                 case FilterResult.Success:
-
+                    // 如果过滤结果是成功，则设置请求对象并重置临时请求对象为默认值。
                     request = this.m_tempRequest;
                     this.m_tempRequest = default;
                     return filterResult;
 
                 case FilterResult.Cache:
+                    // 如果过滤结果需要缓存，则创建一个新的字节块来缓存数据。
                     if (byteBlock.CanReadLength > 0)
                     {
                         this.m_tempByteBlock = new ValueByteBlock(tempCapacity);
                         this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
 
+                        // 如果缓存的数据长度超过设定的最大包大小，则抛出异常。
                         if (this.m_tempByteBlock.Length > this.MaxPackageSize)
                         {
                             throw new Exception("缓存的数据长度大于设定值的情况下未收到解析信号");
                         }
 
+                        // 将字节块指针移到末尾。
                         byteBlock.SeekToEnd();
                     }
+                    // 更新缓存时间。
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                     request = default;
                     return filterResult;
 
                 case FilterResult.GoOn:
                 default:
+                    // 对于继续或默认的过滤结果，更新缓存时间。
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                     request = default;
                     return filterResult;
@@ -281,14 +320,14 @@ namespace TouchSocket.Core
                         }
                         if (this.UpdateCacheTimeWhenRev)
                         {
-                            this.LastCacheTime = DateTime.Now;
+                            this.LastCacheTime = DateTime.UtcNow;
                         }
                         return;
 
                     case FilterResult.GoOn:
                         if (this.UpdateCacheTimeWhenRev)
                         {
-                            this.LastCacheTime = DateTime.Now;
+                            this.LastCacheTime = DateTime.UtcNow;
                         }
                         break;
                 }

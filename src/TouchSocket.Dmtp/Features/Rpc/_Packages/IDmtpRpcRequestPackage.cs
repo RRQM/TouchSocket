@@ -10,21 +10,43 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc
 {
+    /// <summary>
+    /// IDmtpRpcRequestPackage接口定义了远程过程调用请求包的结构和行为。
+    /// 它继承自IReadonlyRouterPackage，提供额外的属性和方法来支持远程过程调用机制。
+    /// </summary>
     public interface IDmtpRpcRequestPackage : IReadonlyRouterPackage
     {
+        /// <summary>
+        /// 获取序列化类型。
+        /// 序列化类型指示了用于序列化包内容的方法或格式。
+        /// </summary>
+        /// <value>序列化类型</value>
         SerializationType SerializationType { get; }
+
+        /// <summary>
+        /// 获取元数据。
+        /// 元数据提供了关于包的附加信息，如发送者、接收者等。
+        /// </summary>
+        /// <value>元数据对象</value>
         Metadata Metadata { get; }
+
+        /// <summary>
+        /// 获取反馈类型。
+        /// 反馈类型指示了调用方期望的反馈方式，如无反馈、单向反馈等。
+        /// </summary>
+        /// <value>反馈类型</value>
         FeedbackType Feedback { get; }
+
+        /// <summary>
+        /// 获取调用键。
+        /// 调用键是用于标识和跟踪特定远程过程调用的唯一标识符。
+        /// </summary>
+        /// <value>调用键字符串</value>
         string InvokeKey { get; }
     }
 }

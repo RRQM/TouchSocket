@@ -42,7 +42,7 @@ namespace TouchSocket.Dmtp
         /// 已完成长度
         /// </summary>
         /// <returns></returns>
-        public long CompletedLength { get => this.completedLength; }
+        public long CompletedLength => this.completedLength;
 
         /// <summary>
         /// 流量控制器。
@@ -52,7 +52,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 由<see cref="Result"/>的结果，判断是否已结束操作。
         /// </summary>
-        public virtual bool IsEnd { get => this.Result.ResultCode != ResultCode.Default; }
+        public virtual bool IsEnd => this.Result.ResultCode != ResultCode.Default;
 
         /// <summary>
         /// 数据源的全部长度。
@@ -92,34 +92,45 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 从上次获取到此次获得的速度
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回本次计算得到的速度</returns>
         public long Speed()
         {
+            // 将临时速度变量的值赋给速度变量，以反映本次计算得到的速度
             this.m_speed = this.m_speedTemp;
+            // 将临时速度变量重置为0，为下一次速度计算做准备
             this.m_speedTemp = 0;
+            // 返回本次计算得到的速度
             return this.m_speed;
         }
 
         /// <summary>
         /// 添加流速(线程安全)
         /// </summary>
-        /// <param name="flow"></param>
+        /// <param name="flow">要添加的流速值</param>
         protected virtual void ProtectedAddFlow(int flow)
         {
+            // 添加流量前，通过m_flowGate的检查和等待机制确保线程安全
             this.m_flowGate.AddCheckWait(flow);
+
+            // 使用Interlocked类确保在多线程环境下对m_speedTemp的访问是原子操作
             Interlocked.Add(ref this.m_speedTemp, flow);
+
+            // 更新进度：计算已完成长度与总长度的比例，转换为浮点数表示完成度
             this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
         }
 
         /// <summary>
-        /// 添加流速(线程安全)
+        /// 异步安全地添加流速
         /// </summary>
-        /// <param name="flow"></param>
-        /// <returns></returns>
+        /// <param name="flow">要添加的流速值</param>
+        /// <returns>一个等待完成的任务</returns>
         protected virtual async Task ProtectedAddFlowAsync(int flow)
         {
+            // 使用流速门控机制，安全地添加并检查流速，确保线程安全
             await this.m_flowGate.AddCheckWaitAsync(flow).ConfigureAwait(false);
+            // 原子操作更新临时速度值，以确保线程安全
             Interlocked.Add(ref this.m_speedTemp, flow);
+            // 更新进度，计算已完成长度与总长度的比例
             this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
         }
     }

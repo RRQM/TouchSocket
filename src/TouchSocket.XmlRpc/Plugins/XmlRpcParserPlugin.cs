@@ -212,7 +212,7 @@ namespace TouchSocket.XmlRpc
             {
                 if (rpcMethod.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }

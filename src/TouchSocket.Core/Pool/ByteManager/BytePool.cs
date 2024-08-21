@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading;
-
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -19,8 +17,6 @@ namespace TouchSocket.Core
     /// </summary>
     public sealed class BytePool : ArrayPool<byte>
     {
-        private readonly Timer m_timer;
-
         static BytePool()
         {
             Default = new BytePool();
@@ -40,10 +36,6 @@ namespace TouchSocket.Core
         /// <param name="maxArraysPerBucket"></param>
         public BytePool(int maxArrayLength, int maxArraysPerBucket) : base(maxArrayLength, maxArraysPerBucket)
         {
-            this.m_timer = new Timer((o) =>
-            {
-                this.Clear();
-            }, null, 1000 * 60 * 60, 1000 * 60 * 60);
             this.AutoZero = false;
             this.MaxBlockSize = maxArrayLength;
         }

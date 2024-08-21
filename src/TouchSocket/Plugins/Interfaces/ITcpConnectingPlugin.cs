@@ -15,17 +15,19 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// 具有预备连接的插件接口
+    /// 定义了基于TCP连接前的插件接口，继承自IPlugin接口。
+    /// 该接口提供了特定于TCP连接操作的额外功能和要求。
     /// </summary>
     public interface ITcpConnectingPlugin : IPlugin
     {
         /// <summary>
         /// 在即将完成连接时触发。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">正在连接的客户端会话对象。</param>
+        /// <param name="e">包含连接信息的事件参数。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。</returns>
         Task OnTcpConnecting(ITcpSession client, ConnectingEventArgs e);
     }
 }

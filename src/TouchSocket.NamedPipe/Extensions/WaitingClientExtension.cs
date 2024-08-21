@@ -14,13 +14,28 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
 {
+    /// <summary>
+    /// 提供扩展方法以创建等待客户端实例。
+    /// </summary>
     public static class WaitingClientExtension
     {
+        /// <summary>
+        /// 为 INamedPipeClient 类型的客户端创建一个等待客户端实例。
+        /// </summary>
+        /// <param name="client">要为其创建等待客户端的 INamedPipeClient 实例。</param>
+        /// <param name="waitingOptions">等待选项，用于配置等待行为。</param>
+        /// <returns>返回一个配置好的等待客户端实例。</returns>
         public static IWaitingClient<INamedPipeClient, IReceiverResult> CreateWaitingClient(this INamedPipeClient client, WaitingOptions waitingOptions)
         {
             return client.CreateWaitingClient<INamedPipeClient, IReceiverResult>(waitingOptions);
         }
 
+        /// <summary>
+        /// 为 INamedPipeSessionClient 类型的客户端创建一个等待客户端实例。
+        /// </summary>
+        /// <param name="client">要为其创建等待客户端的 INamedPipeSessionClient 实例。</param>
+        /// <param name="waitingOptions">等待选项，用于配置等待行为。</param>
+        /// <returns>返回一个配置好的等待客户端实例。</returns>
         public static IWaitingClient<INamedPipeSessionClient, IReceiverResult> CreateWaitingClient(this INamedPipeSessionClient client, WaitingOptions waitingOptions)
         {
             return client.CreateWaitingClient<INamedPipeSessionClient, IReceiverResult>(waitingOptions);

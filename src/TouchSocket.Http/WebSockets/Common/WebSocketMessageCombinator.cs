@@ -3,10 +3,20 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
-    public struct WebSocketMessage : IDisposable
+    /// <summary>
+    /// WebSocket消息结构体，实现了IDisposable接口，用于处理WebSocket消息的生命周期。
+    /// </summary>
+    public readonly struct WebSocketMessage : IDisposable
     {
+        // 定义一个动作，用于在消息释放时调用。
         private readonly Action m_disposeAction;
 
+        /// <summary>
+        /// 初始化WebSocketMessage结构体的新实例。
+        /// </summary>
+        /// <param name="opcode">消息的数据类型，使用WSDataType枚举表示。</param>
+        /// <param name="payloadData">消息的负载数据，使用ByteBlock结构表示。</param>
+        /// <param name="disposeAction">在消息释放时需要调用的动作。</param>
         public WebSocketMessage(WSDataType opcode, ByteBlock payloadData, Action disposeAction)
         {
             this.Opcode = opcode;
@@ -14,9 +24,19 @@ namespace TouchSocket.Http.WebSockets
             this.m_disposeAction = disposeAction;
         }
 
+        /// <summary>
+        /// 获取消息的数据类型。
+        /// </summary>
         public WSDataType Opcode { get; }
+
+        /// <summary>
+        /// 获取消息的负载数据。
+        /// </summary>
         public ByteBlock PayloadData { get; }
 
+        /// <summary>
+        /// 释放消息资源。
+        /// </summary>
         public void Dispose()
         {
             this.m_disposeAction.Invoke();
@@ -32,6 +52,12 @@ namespace TouchSocket.Http.WebSockets
         private bool m_combining;
         private WSDataType m_wSDataType;
 
+        /// <summary>
+        /// 尝试将数据帧组合成WebSocket消息。
+        /// </summary>
+        /// <param name="dataFrame">待组合的数据帧。</param>
+        /// <param name="webSocketMessage">组合成功的WebSocket消息。</param>
+        /// <returns>如果成功组合则返回true；否则返回false。</returns>
         public bool TryCombine(WSDataFrame dataFrame, out WebSocketMessage webSocketMessage)
         {
             var data = dataFrame.PayloadData;

@@ -16,11 +16,18 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
+
     /// <summary>
-    /// ISerialSendingPlugin
+    /// 串行发送插件接口，继承自通用插件接口IPlugin
     /// </summary>
     public interface ISerialSendingPlugin : IPlugin
     {
+        /// <summary>
+        /// 在串行数据发送前触发的事件处理程序
+        /// </summary>
+        /// <param name="client">串行端口会话客户端</param>
+        /// <param name="e">发送事件参数</param>
+        /// <returns>异步任务</returns>
         Task OnSerialSending(ISerialPortSession client, SendingEventArgs e);
     }
 }

@@ -81,7 +81,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
             }
@@ -108,7 +108,7 @@ namespace TouchSocket.Core
                     this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
             }
@@ -133,7 +133,7 @@ namespace TouchSocket.Core
                     this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, cacheLength - startIndex));
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
             }

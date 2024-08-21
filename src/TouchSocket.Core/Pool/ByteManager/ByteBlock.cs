@@ -33,36 +33,46 @@ namespace TouchSocket.Core
 
         #region 构造函数
 
+        /// <summary>
+        /// 使用 ValueByteBlock 初始化 ByteBlock 对象。
+        /// </summary>
+        /// <param name="valueByteBlock">包含字节数据的 ValueByteBlock 对象。</param>
         public ByteBlock(in ValueByteBlock valueByteBlock)
         {
+            // 直接使用 ValueByteBlock 中的内存数组和字节池。
             this.m_buffer = valueByteBlock.TotalMemory.GetArray().Array;
             this.m_bytePool = valueByteBlock.BytePool;
+            // 初始化位置和长度信息。
             this.m_position = valueByteBlock.Position;
             this.m_length = valueByteBlock.Length;
+            // 设置一个固定的游标距离。
             this.m_dis = 1;
         }
 
         /// <summary>
-        ///  字节块流
+        /// 无参数构造函数，初始化一个具有默认大小的 ByteBlock 对象。
         /// </summary>
-        /// <param name="byteSize"></param>
+        /// <param name="byteSize">ByteBlock 的初始大小，默认为 64KB。</param>
         public ByteBlock(int byteSize = 1024 * 64)
         {
+            // 使用默认字节池初始化。
             this.m_bytePool = BytePool.Default;
+            // 从字节池租用指定大小的字节数组。
             this.m_buffer = BytePool.Default.Rent(byteSize);
         }
 
         /// <summary>
-        /// 字节块流
+        /// 使用指定的字节池和大小初始化 ByteBlock 对象。
         /// </summary>
-        /// <param name="byteSize"></param>
-        /// <param name="bytePool"></param>
+        /// <param name="byteSize">ByteBlock 的初始大小。</param>
+        /// <param name="bytePool">用于 ByteBlock 的 BytePool 实例。</param>
         public ByteBlock(int byteSize, BytePool bytePool)
         {
+            // 确保字节池不为空。
             this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool);
+            // 从指定的字节池租用字节数组。
             this.m_buffer = bytePool.Rent(byteSize);
         }
-
         /// <summary>
         /// 实例化一个已知内存的对象。且该内存不会被回收。
         /// </summary>
@@ -86,6 +96,7 @@ namespace TouchSocket.Core
 
         #region 属性
 
+        /// <inheritdoc/>
         public ReadOnlyMemory<byte> Memory
         {
             get
@@ -95,6 +106,7 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <inheritdoc/>
         public Memory<byte> TotalMemory
         {
             get
@@ -104,6 +116,7 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <inheritdoc/>
         public ReadOnlySpan<byte> Span
         {
             get
@@ -113,59 +126,41 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 仅当内存块可用，且<see cref="CanReadLength"/>>0时为True。
-        /// </summary>
+        /// <inheritdoc/>
         public bool CanRead => this.Using && this.CanReadLength > 0;
 
-        /// <summary>
-        /// 还能读取的长度，计算为<see cref="Length"/>与<see cref="Position"/>的差值。
-        /// </summary>
+        /// <inheritdoc/>
         public int CanReadLength => this.m_length - this.m_position;
 
-        /// <summary>
-        /// 容量
-        /// </summary>
+        /// <inheritdoc/>
         public int Capacity => this.m_buffer.Length;
 
-        /// <summary>
-        /// 空闲长度，准确掌握该值，可以避免内存扩展，计算为<see cref="Capacity"/>与<see cref="Position"/>的差值。
-        /// </summary>
+        /// <inheritdoc/>
         public int FreeLength => this.Capacity - this.m_position;
 
-        /// <summary>
-        /// 表示持续性持有，为True时，Dispose将调用无效。
-        /// </summary>
+        /// <inheritdoc/>
         public bool Holding => this.m_holding;
 
-        /// <summary>
-        /// Int真实长度
-        /// </summary>
+        /// <inheritdoc/>
         public int Length => this.m_length;
 
-        /// <summary>
-        /// int型流位置
-        /// </summary>
+        /// <inheritdoc/>
         public int Position
         {
             get => this.m_position;
             set => this.m_position = value;
         }
 
-        /// <summary>
-        /// 使用状态
-        /// </summary>
+        /// <inheritdoc/>
         public bool Using => this.m_dis == 0;
 
+        /// <inheritdoc/>
         public bool IsStruct => false;
 
+        /// <inheritdoc/>
         public BytePool BytePool { get => this.m_bytePool; }
 
-        /// <summary>
-        /// 返回或设置索引对应的值。
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte this[int index]
         {
             get
@@ -182,10 +177,7 @@ namespace TouchSocket.Core
 
         #endregion 属性
 
-        /// <summary>
-        /// 清空所有内存数据
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
+        /// <inheritdoc/>
         public void Clear()
         {
             this.ThrowIfDisposed();
@@ -221,11 +213,7 @@ namespace TouchSocket.Core
             base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// 将内存块初始化到刚申请的状态。
-        /// <para>仅仅重置<see cref="Position"/>和<see cref="Length"/>属性。</para>
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">内存块已释放</exception>
+        /// <inheritdoc/>
         public void Reset()
         {
             this.ThrowIfDisposed();
@@ -234,12 +222,7 @@ namespace TouchSocket.Core
             this.m_holding = false;
         }
 
-        /// <summary>
-        /// 重新设置容量
-        /// </summary>
-        /// <param name="capacity">新尺寸</param>
-        /// <param name="retainedData">是否保留原数据</param>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <inheritdoc/>
         public void SetCapacity(int capacity, bool retainedData = false)
         {
             this.ThrowIfDisposed();
@@ -275,12 +258,7 @@ namespace TouchSocket.Core
             this.m_buffer = bytes;
         }
 
-        /// <summary>
-        /// 设置持续持有属性，当为True时，调用Dispose会失效，表示该对象将长期持有，直至设置为False。
-        /// 当为False时，会自动调用Dispose。
-        /// </summary>
-        /// <param name="holding"></param>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <inheritdoc/>
         public void SetHolding(bool holding)
         {
             this.ThrowIfDisposed();
@@ -294,11 +272,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 设置实际长度
-        /// </summary>
-        /// <param name="value"></param>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <inheritdoc/>
         public void SetLength(int value)
         {
             this.ThrowIfDisposed();
@@ -311,13 +285,7 @@ namespace TouchSocket.Core
 
         #region Seek
 
-        /// <summary>
-        /// 设置流位置
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="origin"></param>
-        /// <returns></returns>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <inheritdoc/>
         public int Seek(int offset, SeekOrigin origin)
         {
             this.ThrowIfDisposed();
@@ -338,29 +306,19 @@ namespace TouchSocket.Core
             return this.m_position;
         }
 
-        /// <summary>
-        /// 移动游标
-        /// </summary>
-        /// <param name="position"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void Seek(int position)
         {
             this.m_position = position;
         }
 
-        /// <summary>
-        /// 设置游标到末位
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void SeekToEnd()
         {
             this.m_position = this.m_length;
         }
 
-        /// <summary>
-        /// 设置游标到首位
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void SeekToStart()
         {
             this.m_position = 0;
@@ -370,12 +328,7 @@ namespace TouchSocket.Core
 
         #region ToArray
 
-        /// <summary>
-        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte[] ToArray(int offset, int length)
         {
             this.ThrowIfDisposed();
@@ -384,39 +337,25 @@ namespace TouchSocket.Core
             return buffer;
         }
 
-        /// <summary>
-        /// 转换为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte[] ToArray()
         {
             return this.ToArray(0, this.Length);
         }
 
-        /// <summary>
-        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte[] ToArray(int offset)
         {
             return this.ToArray(offset, this.Length - offset);
         }
 
-        /// <summary>
-        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte[] ToArrayTake(int length)
         {
             return this.ToArray(this.m_position, length);
         }
 
-        /// <summary>
-        /// 将当前<see cref="Position"/>至有效长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public byte[] ToArrayTake()
         {
             return this.ToArray(this.m_position, this.Length - this.m_position);
@@ -424,134 +363,15 @@ namespace TouchSocket.Core
 
         #endregion ToArray
 
-        #region AsSegment
-
-        /// <summary>
-        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment(int offset, int length)
-        {
-            this.ThrowIfDisposed();
-            return new ArraySegment<byte>(this.m_buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 转换为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment()
-        {
-            return this.AsSegment(0, this.Length);
-        }
-
-        /// <summary>
-        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment(int offset)
-        {
-            return this.AsSegment(offset, this.Length - offset);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegmentTake(int length)
-        {
-            return this.AsSegment(this.m_position, length);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至有效长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegmentTake()
-        {
-            return this.AsSegment(this.m_position, this.Length - this.m_position);
-        }
-
-        #endregion AsSegment
-
-        #region ToMemory
-
-        /// <summary>
-        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public Memory<byte> ToMemory(int offset, int length)
-        {
-            this.ThrowIfDisposed();
-            return new Memory<byte>(this.m_buffer, offset, length).ToArray();
-        }
-
-        /// <summary>
-        /// 转换为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public Memory<byte> ToMemory()
-        {
-            return this.ToMemory(0, this.Length);
-        }
-
-        /// <summary>
-        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public Memory<byte> ToMemory(int offset)
-        {
-            return this.ToMemory(offset, this.Length - offset);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public Memory<byte> ToMemoryTake(int length)
-        {
-            return this.ToMemory(this.m_position, length);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至有效长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public Memory<byte> ToMemoryTake()
-        {
-            return this.ToMemory(this.m_position, this.Length - this.m_position);
-        }
-
-        #endregion ToMemory
-
         #region ToString
 
-        /// <summary>
-        /// 从指定位置转化到有效内存
-        /// </summary>
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override string ToString()
         {
             return this.ToString(0, this.Length);
         }
 
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <param name="offset">偏移量</param>
-        /// <param name="length">长度</param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public string ToString(int offset, int length)
         {
             this.ThrowIfDisposed();
@@ -559,11 +379,7 @@ namespace TouchSocket.Core
             return Encoding.UTF8.GetString(this.m_buffer, offset, length);
         }
 
-        /// <summary>
-        /// 转换为UTF-8字符
-        /// </summary>
-        /// <param name="offset">偏移量</param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public string ToString(int offset)
         {
             this.ThrowIfDisposed();
@@ -574,18 +390,22 @@ namespace TouchSocket.Core
         #endregion ToString
 
         #region BufferWriter
+
+        /// <inheritdoc/>
         public void Advance(int count)
         {
             this.m_position += count;
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
+        /// <inheritdoc/>
         public Memory<byte> GetMemory(int sizeHint = 0)
         {
             this.ExtendSize(sizeHint);
             return new Memory<byte>(this.m_buffer, this.m_position, this.m_buffer.Length - this.m_position);
         }
 
+        /// <inheritdoc/>
         public Span<byte> GetSpan(int sizeHint = 0)
         {
             this.ExtendSize(sizeHint);

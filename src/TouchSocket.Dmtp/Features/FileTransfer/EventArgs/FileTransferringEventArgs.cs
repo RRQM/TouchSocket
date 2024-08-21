@@ -14,18 +14,19 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
 {
+
     /// <summary>
-    /// FileTransferingEventArgs
+    /// 文件传输事件参数类，继承自 MsgPermitEventArgs
     /// </summary>
-    public class FileTransferingEventArgs : MsgPermitEventArgs
+    public class FileTransferringEventArgs : MsgPermitEventArgs
     {
         /// <summary>
-        /// FileTransferingEventArgs
+        /// 构造函数，用于初始化 FileTransferringEventArgs 对象。
         /// </summary>
-        /// <param name="transferType"></param>
-        /// <param name="metadata"></param>
-        /// <param name="fileInfo"></param>
-        public FileTransferingEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo)
+        /// <param name="transferType">传输类型，表示文件传输的操作类型（例如上传或下载）。</param>
+        /// <param name="metadata">文件的元数据信息。</param>
+        /// <param name="fileInfo">远程文件的信息，包含了文件传输过程中所需的具体信息。</param>
+        public FileTransferringEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo)
         {
             this.TransferType = transferType;
             this.FileInfo = fileInfo;

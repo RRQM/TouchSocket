@@ -43,7 +43,7 @@ namespace TouchSocket.Core
 
         private FileStorage()
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             this.AccessTimeout = TimeSpan.FromSeconds(60);
         }
 
@@ -136,7 +136,7 @@ namespace TouchSocket.Core
         /// </summary>
         public void Flush()
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             this.FileStream.Flush();
         }
 
@@ -150,7 +150,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public int Read(long stratPos, byte[] buffer, int offset, int length)
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             using (var writeLock = new WriteLock(this.m_lockSlim))
             {
                 if (this.m_disposedValue)
@@ -175,19 +175,32 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <summary>
+        /// 从当前文件中读取字节。
+        /// </summary>
+        /// <param name="stratPos">开始读取的位置。</param>
+        /// <param name="span">用于接收读取数据的字节跨度。</param>
+        /// <returns>实际读取的字节数。</returns>
+        /// <exception cref="ObjectDisposedException">如果当前对象已被处置。</exception>
+        /// <exception cref="System.IO.IOException">如果文件仅被写入。</exception>
         public int Read(long stratPos, Span<byte> span)
         {
-            this.AccessTime = DateTime.Now;
+            // 更新访问时间，用于跟踪文件的最近访问时间。
+            this.AccessTime = DateTime.UtcNow;
+            // 使用写锁保护共享资源，确保读操作的线程安全性。
             using (var writeLock = new WriteLock(this.m_lockSlim))
             {
+                // 检查对象是否已被处置，如果是，则抛出异常。
                 if (this.m_disposedValue)
                 {
                     throw new ObjectDisposedException(this.GetType().FullName);
                 }
+                // 检查文件访问模式，如果是写模式，则抛出异常。
                 if (this.FileAccess == FileAccess.Write)
                 {
                     ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(this.FileInfo.FullName));
                 }
+                // 如果启用了缓存，则尝试从内部数组复制数据到跨度。
                 if (this.Cache)
                 {
                     var r = (int)Math.Min(this.m_fileData.Length - stratPos, span.Length);
@@ -196,6 +209,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
+                    // 如果未启用缓存，则将文件指针移到指定位置并从文件中读取数据。
                     this.FileStream.Position = stratPos;
                     return this.FileStream.Read(span);
                 }
@@ -223,7 +237,7 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         public void Write(long stratPos, byte[] buffer, int offset, int length)
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             using (var writeLock = new WriteLock(this.m_lockSlim))
             {
                 if (this.m_disposedValue)

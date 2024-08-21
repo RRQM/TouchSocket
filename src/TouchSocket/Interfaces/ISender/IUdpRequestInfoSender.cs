@@ -11,24 +11,29 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// IRequsetInfoSend
+    /// 定义UDP请求信息发送接口。
     /// </summary>
-    public interface IRequsetInfoSender
+    public interface IUdpRequestInfoSender
     {
         /// <summary>
         /// 异步发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>
         /// </summary>
-        /// <param name="requestInfo">解析对象</param>
+        /// <param name="endPoint">发送数据的目标端点。</param>
+        /// <param name="requestInfo">要发送的请求信息，包含具体的请求数据和元信息。</param>
         /// <exception cref="ClientNotConnectedException">客户端没有连接</exception>
         /// <exception cref="OverlengthException">发送数据超长</exception>
         /// <exception cref="Exception">其他异常</exception>
-        Task SendAsync(IRequestInfo requestInfo);
+        /// <remarks>
+        /// 此方法为异步非阻塞方式，调用后立即返回，不保证数据发送成功。
+        /// </remarks>
+        Task SendAsync(EndPoint endPoint, IRequestInfo requestInfo);
     }
 }

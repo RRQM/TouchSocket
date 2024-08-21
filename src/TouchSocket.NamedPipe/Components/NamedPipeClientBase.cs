@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -300,40 +299,48 @@ namespace TouchSocket.NamedPipe
             return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
+
         /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
+        /// 触发命名管道发送事件的异步方法。
         /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
+        /// <param name="memory">待发送的字节内存。</param>
+        /// <returns>一个等待任务，结果指示发送操作是否成功。</returns>
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
+            // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
             return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
         }
 
         /// <summary>
         /// 设置适配器
         /// </summary>
-        /// <param name="adapter"></param>
+        /// <param name="adapter">要设置的适配器实例</param>
         protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
         {
+            // 检查当前实例是否已被释放
             this.ThrowIfDisposed();
+
+            // 如果传入的适配器为空，则抛出参数为空的异常
             if (adapter is null)
             {
                 throw new ArgumentNullException(nameof(adapter));
             }
 
+            // 如果当前实例已有配置，则将配置应用到新适配器上
             if (this.Config != null)
             {
                 adapter.Config(this.Config);
             }
 
+            // 将当前实例的日志记录器设置到适配器上
             adapter.Logger = this.Logger;
+            // 调用适配器的OnLoaded方法，通知适配器已被加载
             adapter.OnLoaded(this);
+            // 设置适配器接收数据时的回调方法
             adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
-            //adapter.SendCallBack = this.ProtectedDefaultSend;
+            // 设置适配器发送数据时的异步回调方法
             adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
+            // 将适配器实例设置为当前数据处理适配器
             this.m_dataHandlingAdapter = adapter;
         }
 
@@ -448,27 +455,6 @@ namespace TouchSocket.NamedPipe
         #endregion Throw
 
         #region 直接发送
-
-        ///// <inheritdoc/>
-        //protected void ProtectedDefaultSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThrowIfDisposed();
-        //    this.ThrowIfClientNotConnected();
-        //    if (this.OnNamedPipeSending(buffer, offset, length).GetFalseAwaitResult())
-        //    {
-        //        try
-        //        {
-        //            this.m_semaphoreSlimForSend.Wait();
-        //            this.m_pipeStream.Write(buffer, offset, length);
-        //            this.LastSendTime = DateTime.Now;
-        //        }
-        //        finally
-        //        {
-        //            this.m_semaphoreSlimForSend.Release();
-        //        }
-        //    }
-        //}
-
         /// <inheritdoc/>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
@@ -484,7 +470,7 @@ namespace TouchSocket.NamedPipe
                 var segment = memory.GetArray();
                 await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
 #endif
-                this.LastSentTime = DateTime.Now;
+                this.LastSentTime = DateTime.UtcNow;
             }
             finally
             {
@@ -571,72 +557,84 @@ namespace TouchSocket.NamedPipe
         #region 异步发送
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据，根据是否配置了数据处理适配器来决定数据的发送方式。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
-        protected Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
+        /// <param name="memory">待发送的字节内存。</param>
+        /// <returns>一个异步任务，表示发送操作。</returns>
+        protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
+            // 如果未配置数据处理适配器，则使用默认的发送方式。
             if (this.ProtectedDataHandlingAdapter == null)
             {
                 return this.ProtectedDefaultSendAsync(memory);
             }
             else
             {
+                // 如果配置了数据处理适配器，则使用适配器指定的发送方式。
                 return this.ProtectedDataHandlingAdapter.SendInputAsync(memory);
             }
         }
 
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步安全发送请求信息。
         /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="requestInfo">请求信息对象，包含要发送的数据。</param>
+        /// <returns>返回一个任务，表示异步操作的结果。</returns>
+        /// <remarks>
+        /// 此方法用于在发送请求之前验证是否可以发送请求信息，
+        /// 并通过<see cref="ProtectedDataHandlingAdapter"/>适配器安全处理发送过程。
+        /// </remarks>
         protected Task ProtectedSendAsync(IRequestInfo requestInfo)
         {
+            // 验证当前状态是否允许发送请求信息，如果不允许则抛出异常。
             this.ThrowIfCannotSendRequestInfo();
+            // 调用ProtectedDataHandlingAdapter的SendInputAsync方法异步发送请求信息。
             return this.ProtectedDataHandlingAdapter.SendInputAsync(requestInfo);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送经过处理的数据。
+        /// 如果ProtectedDataHandlingAdapter未设置或者不支持拼接发送，则将transferBytes合并到一个连续的内存块中再发送。
+        /// 如果ProtectedDataHandlingAdapter已设置且支持拼接发送，则直接发送transferBytes。
         /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="transferBytes">待发送的字节数据列表，每个元素包含要传输的字节片段。</param>
+        /// <returns>发送任务。</returns>
         protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
         {
+            // 检查ProtectedDataHandlingAdapter是否已设置且支持拼接发送
             if (this.ProtectedDataHandlingAdapter == null || !this.ProtectedDataHandlingAdapter.CanSplicingSend)
             {
+                // 如果不支持拼接发送，计算所有字节片段的总长度
                 var length = 0;
                 foreach (var item in transferBytes)
                 {
                     length += item.Count;
                 }
+                // 使用计算出的总长度创建一个连续的内存块
                 using (var byteBlock = new ByteBlock(length))
                 {
+                    // 将每个字节片段写入连续的内存块
                     foreach (var item in transferBytes)
                     {
                         byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
+                    // 根据ProtectedDataHandlingAdapter的状态选择发送方法
                     if (this.ProtectedDataHandlingAdapter == null)
                     {
+                        // 如果未设置ProtectedDataHandlingAdapter，使用默认发送方法
                         await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
+                        // 如果已设置ProtectedDataHandlingAdapter但不支持拼接发送，使用Adapter的发送方法
                         await this.ProtectedDataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
+                // 如果已设置ProtectedDataHandlingAdapter且支持拼接发送，直接使用Adapter的发送方法
                 await this.ProtectedDataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }

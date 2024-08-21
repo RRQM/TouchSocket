@@ -17,11 +17,11 @@ using LogLevel = TouchSocket.Core.LogLevel;
 
 namespace TouchSocket.Hosting
 {
-    internal class AspnetcoreLogger : LoggerBase
+    internal class AspNetCoreLogger : LoggerBase
     {
         private readonly ILoggerFactory m_loggerFactory;
 
-        public AspnetcoreLogger(ILoggerFactory loggerFactory)
+        public AspNetCoreLogger(ILoggerFactory loggerFactory)
         {
             this.m_loggerFactory = loggerFactory;
         }

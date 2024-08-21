@@ -16,16 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IDmtpRoutingPlugin
+    /// 定义了IDmtpRoutingPlugin接口，它是IPlugin接口的子接口，用于处理DMTP路由插件的转发逻辑。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpRoutingPlugin: IPlugin
+    public interface IDmtpRoutingPlugin : IPlugin
     {
         /// <summary>
-        /// 当需要转发路由包时
+        /// 当需要转发路由包时调用的方法。
+        /// 该方法详细描述了在路由包需要被转发时所采取的行动。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
+        /// <param name="client">一个IDmtpActorObject类型的参数，表示与当前会话相关的客户端信息。</param>
+        /// <param name="e">一个PackageRouterEventArgs类型的参数，包含了需要被路由的包的相关信息。</param>
+        /// <returns>返回一个Task对象，表明该方法是一个异步方法。</returns>
         Task OnDmtpRouting(IDmtpActorObject client, PackageRouterEventArgs e);
     }
 }

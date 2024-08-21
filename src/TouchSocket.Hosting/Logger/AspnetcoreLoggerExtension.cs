@@ -10,23 +10,25 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TouchSocket.Hosting;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// AspnetcoreLoggerExtension
+    /// 为 Registrator 提供扩展方法，使其能够注册 AspNetCoreLogger。
     /// </summary>
-    public static class AspnetcoreLoggerExtension
+    public static class AspNetCoreLoggerExtension
     {
-        public static void AddAspnetcoreLogger(this IRegistrator registrator)
+        /// <summary>
+        /// 向 IRegistrator 实例中添加 AspNetCoreLogger。
+        /// </summary>
+        /// <param name="registrator">要扩展的 IRegistrator 实例。</param>
+        /// <remarks>
+        /// 此方法通过注册 AspNetCoreLogger 实例为日志记录提供支持，该实例在应用程序中作为单例使用。
+        /// </remarks>
+        public static void AddAspNetCoreLogger(this IRegistrator registrator)
         {
-            registrator.RegisterSingleton<ILog,AspnetcoreLogger>();
+            registrator.RegisterSingleton<ILog, AspNetCoreLogger>();
         }
     }
 }

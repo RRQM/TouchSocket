@@ -94,22 +94,28 @@ namespace TouchSocket.SerialPorts
         }
 
         /// <summary>
-        /// 当收到原始数据
+        /// 当收到原始数据时
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
+        /// <param name="byteBlock">包含接收数据的字节块</param>
+        /// <returns>
+        /// 如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。
+        /// 返回<see langword="false"/>则表示数据未被处理，可能会继续向下传递。
+        /// </returns>
         protected virtual ValueTask<bool> OnSerialReceiving(ByteBlock byteBlock)
         {
+            // 默认实现，不对收到的数据进行处理
             return EasyValueTask.FromResult(false);
         }
 
         /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
+        /// 在序列化发送前调用的虚拟方法。
         /// </summary>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        /// <returns>返回值表示是否允许发送</returns>
+        /// <param name="memory">待发送的字节序列。</param>
+        /// <returns>一个表示操作结果的<see cref="ValueTask{T}"/>，始终返回 true。</returns>
+        /// <remarks>
+        /// 此方法的存在是为了提供一个扩展点，允许在序列化数据发送之前进行自定义处理。
+        /// 默认实现直接返回 true，表示默认情况下允许序列化发送继续进行。
+        /// </remarks>
         protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
         {
             return EasyValueTask.FromResult(true);
@@ -189,10 +195,7 @@ namespace TouchSocket.SerialPorts
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             lock (this.m_semaphoreForConnect)
@@ -250,49 +253,62 @@ namespace TouchSocket.SerialPorts
         #endregion Connect
 
         /// <summary>
-        /// Abort。
+        /// 中止连接方法
         /// </summary>
-        /// <param name="manual"></param>
-        /// <param name="msg"></param>
+        /// <param name="manual">是否为手动断开连接</param>
+        /// <param name="msg">断开连接的原因</param>
         protected void Abort(bool manual, string msg)
         {
+            // 锁定连接操作，确保线程安全
             lock (this.m_semaphoreForConnect)
             {
+                // 检查是否当前处于在线状态
                 if (this.m_online)
                 {
+                    // 将状态设置为离线
                     this.m_online = false;
+                    // 安全释放串口核心资源
                     this.m_serialCore.SafeDispose();
+                    // 安全释放数据处理适配器资源
                     this.m_dataHandlingAdapter.SafeDispose();
+                    // 启动一个新的任务，用于处理串口关闭事件
                     Task.Factory.StartNew(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }
 
+
         /// <summary>
-        /// 设置适配器
+        /// 设置数据处理适配器。
         /// </summary>
-        /// <param name="adapter"></param>
+        /// <param name="adapter">要设置的适配器实例。</param>
+        /// <exception cref="ArgumentNullException">如果提供的适配器实例为null，则抛出此异常。</exception>
         protected void SetAdapter(SingleStreamDataHandlingAdapter adapter)
         {
+            // 检查当前实例是否已被释放，如果是，则抛出异常。
             this.ThrowIfDisposed();
+            // 检查adapter参数是否为null，如果是，则抛出ArgumentNullException异常。
             if (adapter is null)
             {
                 throw new ArgumentNullException(nameof(adapter));
             }
 
+            // 如果当前实例的配置不为空，则将配置应用到适配器上。
             if (this.Config != null)
             {
                 adapter.Config(this.Config);
             }
 
+            // 设置适配器的日志记录器和加载、接收数据的回调方法。
             adapter.Logger = this.Logger;
             adapter.OnLoaded(this);
             adapter.ReceivedAsyncCallBack = this.PrivateHandleReceivedData;
             //adapter.SendCallBack = this.ProtectedDefaultSend;
             adapter.SendAsyncCallBack = this.ProtectedDefaultSendAsync;
+
+            // 将提供的适配器实例设置为当前实例的数据处理适配器。
             this.m_dataHandlingAdapter = adapter;
         }
-
         private static SerialCore CreateSerial(SerialPortOption option)
         {
             var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits)
@@ -361,13 +377,28 @@ namespace TouchSocket.SerialPorts
 
         #region Receiver
 
-        /// <inheritdoc/>
+
+        /// <summary>
+        /// 清除接收器对象
+        /// </summary>
+        /// <remarks>
+        /// 将内部接收器对象置为null，以释放资源或重置状态
+        /// </remarks>
         protected void ProtectedClearReceiver()
         {
             this.m_receiver = null;
         }
 
-        /// <inheritdoc/>
+
+        /// <summary>
+        /// 创建或获取一个接收器对象。
+        /// </summary>
+        /// <param name="receiverObject">接收器客户端对象，用于接收操作结果。</param>
+        /// <returns>返回一个实现了IReceiver&lt;IReceiverResult&gt;接口的接收器对象。</returns>
+        /// <remarks>
+        /// 这个方法使用了空条件运算符（??=）来实现懒加载，即只有当m_receiver为null时才会创建一个新的InternalReceiver对象。
+        /// 这样做可以提高性能，因为无需频繁地创建接收器实例。
+        /// </remarks>
         protected IReceiver<IReceiverResult> ProtectedCreateReceiver(IReceiverClient<IReceiverResult> receiverObject)
         {
             return this.m_receiver ??= new InternalReceiver(receiverObject);
@@ -411,12 +442,21 @@ namespace TouchSocket.SerialPorts
 
         #region 发送
 
-        /// <inheritdoc/>
+
+        /// <summary>
+        /// 异步发送数据，保护方法。
+        /// </summary>
+        /// <param name="memory">待发送的字节数据内存。</param>
+        /// <returns>异步任务。</returns>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
+            // 检查实例是否已被处置，确保资源正确管理。
             this.ThrowIfDisposed();
+            // 检查客户端是否已连接，防止在未连接状态下尝试发送数据。
             this.ThrowIfClientNotConnected();
+            // 触发序列发送事件之前置处理，为实际数据发送做准备。
             await this.OnSerialSending(memory).ConfigureAwait(false);
+            // 通过序列核心发送数据，实际的数据发送操作。
             await this.m_serialCore.SendAsync(memory).ConfigureAwait(false);
         }
 
@@ -424,73 +464,85 @@ namespace TouchSocket.SerialPorts
 
         #region 异步发送
 
+
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据，通过适配器模式灵活处理数据发送。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="memory">待发送的只读字节内存块。</param>
+        /// <returns>一个异步任务，表示发送操作。</returns>
         protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
+            // 如果数据处理适配器未设置，则使用默认发送方式。
             if (this.m_dataHandlingAdapter == null)
             {
                 return this.ProtectedDefaultSendAsync(memory);
             }
             else
             {
+                // 否则，使用适配器的发送方法进行数据发送。
                 return this.m_dataHandlingAdapter.SendInputAsync(memory);
             }
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送请求信息的受保护方法。
+        /// 
+        /// 此方法首先检查当前对象是否能够发送请求信息，如果不能，则抛出异常。
+        /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
         /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="requestInfo">要发送的请求信息。</param>
+        /// <returns>返回一个任务，该任务代表异步操作的结果。</returns>
         protected Task ProtectedSendAsync(in IRequestInfo requestInfo)
         {
+            // 检查是否具备发送请求的条件，如果不具备则抛出异常
             this.ThrowIfCannotSendRequestInfo();
+
+            // 使用数据处理适配器异步发送输入请求
             return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据。
+        /// 如果数据处理适配器不存在或无法拼接发送，则将所有传输字节合并到一个连续的内存块中发送。
+        /// 如果数据处理适配器存在且支持拼接发送，则直接发送传输字节列表。
         /// </summary>
-        /// <param name="transferBytes"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="transferBytes">要发送的字节数据列表，每个项代表一个字节片段。</param>
+        /// <returns>发送任务。</returns>
         protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
         {
+            // 检查数据处理适配器是否存在且支持拼接发送
             if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
             {
+                // 如果不支持拼接发送，则计算所有字节片段的总长度
                 var length = 0;
                 foreach (var item in transferBytes)
                 {
                     length += item.Count;
                 }
+                // 使用计算出的总长度创建一个连续的内存块
                 using (var byteBlock = new ByteBlock(length))
                 {
+                    // 将每个字节片段写入连续的内存块
                     foreach (var item in transferBytes)
                     {
                         byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
+                    // 根据数据处理适配器的存在与否，选择不同的发送方式
                     if (this.m_dataHandlingAdapter == null)
                     {
+                        // 如果没有数据处理适配器，则使用默认方式发送
                         await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                     else
                     {
+                        // 如果有数据处理适配器，则通过适配器发送
                         await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
+                // 如果数据处理适配器支持拼接发送，则直接发送字节列表
                 await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }

@@ -188,7 +188,7 @@ namespace TouchSocket.Core
         /// </summary>
         protected override void Reset()
         {
-            this.LastCacheTime = DateTime.Now;
+            this.LastCacheTime = DateTime.UtcNow;
         }
     }
 }

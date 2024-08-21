@@ -26,15 +26,6 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public const string acceptMask = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-        /// <summary>
-        /// 构建数据
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="dataFrame"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
         public static bool Build(ByteBlock byteBlock, WSDataFrame dataFrame, ReadOnlyMemory<byte> memory)
         {
             int payloadLength;

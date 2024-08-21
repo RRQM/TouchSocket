@@ -22,8 +22,8 @@ namespace TouchSocket.Core
         /// <summary>
         /// 异步配置设置项
         /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
+        /// <param name="config">配置对象</param>
+        /// <returns>异步任务</returns>
         Task SetupAsync(TouchSocketConfig config);
     }
 }

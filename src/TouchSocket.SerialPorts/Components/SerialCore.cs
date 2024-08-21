@@ -16,7 +16,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Sources;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
@@ -152,14 +151,7 @@ namespace TouchSocket.SerialPorts
             }
         }
 
-        /// <summary>
-        /// 异步发送数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
+        
         public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);

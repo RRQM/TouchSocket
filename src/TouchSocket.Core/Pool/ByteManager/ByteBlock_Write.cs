@@ -19,7 +19,7 @@ namespace TouchSocket.Core
     public sealed partial class ByteBlock
     {
         #region Write
-
+        /// <inheritdoc/>
         public unsafe void Write(ReadOnlySpan<byte> span)
         {
             this.ThrowIfDisposed();
@@ -66,9 +66,7 @@ namespace TouchSocket.Core
 
         #region ByteBlock
 
-        /// <summary>
-        /// 写入<see cref="ByteBlock"/>值
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteByteBlock(ByteBlock byteBlock)
         {
             if (byteBlock is null)
@@ -86,13 +84,7 @@ namespace TouchSocket.Core
 
         #region Package
 
-        /// <summary>
-        /// 以包进行写入。允许null值。
-        /// 读取时调用<see cref="IByteBlock.ReadPackage{TPackage}"/>，解包。或者先判断<see cref="IByteBlock.ReadIsNull"/>，然后自行解包。
-        /// </summary>
-        /// <typeparam name="TPackage"></typeparam>
-        /// <param name="package"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void WritePackage<TPackage>(TPackage package) where TPackage : class, IPackage
         {
             this.WriteIsNull(package);
@@ -104,9 +96,7 @@ namespace TouchSocket.Core
 
         #region Null
 
-        /// <summary>
-        /// 判断该值是否为Null，然后写入标识值
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteIsNull<T>(T t) where T : class
         {
             if (t == null)
@@ -119,12 +109,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 判断该值是否为Null，然后写入标识值
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="t"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void WriteIsNull<T>(T? t) where T : struct
         {
             if (t.HasValue)
@@ -137,17 +122,13 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 写入一个标识非Null值
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteNotNull()
         {
             this.WriteByte(1);
         }
 
-        /// <summary>
-        /// 写入一个标识Null值
-        /// </summary>
+        /// <inheritdoc/>
         public void WriteNull()
         {
             this.WriteByte(0);
@@ -157,12 +138,7 @@ namespace TouchSocket.Core
 
         #region BytesPackage
 
-        /// <summary>
-        /// 写入一个独立的<see cref="byte"/>数组包，值可以为null。
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <inheritdoc/>
         public void WriteBytesPackage(byte[] value, int offset, int length)
         {
             if (value == null)
@@ -180,10 +156,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 写入一个独立的<see cref="byte"/>数组包。值可以为null。
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteBytesPackage(byte[] value)
         {
             if (value == null)
@@ -205,17 +178,7 @@ namespace TouchSocket.Core
 
         #region String
 
-        /// <summary>
-        /// 写入<see cref="string"/>值。值可以为null，或者空。
-        /// <para>注意：该操作不具备通用性，读取时必须使用ReadString。或者得先做出判断，由默认端序的int32值标识，具体如下：</para>
-        /// <list type="bullet">
-        /// <item>小于0，表示字符串为null</item>
-        /// <item>等于0，表示字符串为""</item>
-        /// <item>大于0，表示字符串在utf-8编码下的字节长度。</item>
-        /// </list>
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="headerType"></param>
+        /// <inheritdoc/>
         public void WriteString(string value, FixedHeaderType headerType = FixedHeaderType.Int)
         {
             if (value == null)
@@ -316,6 +279,7 @@ namespace TouchSocket.Core
 
         #region VarUInt32
 
+        /// <inheritdoc/>
         public int WriteVarUInt32(uint value)
         {
             this.ExtendSize(5);
@@ -340,10 +304,7 @@ namespace TouchSocket.Core
 
         #region Int32
 
-        /// <summary>
-        /// 写入默认端序的<see cref="int"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteInt32(int value)
         {
             var size = 4;
@@ -353,11 +314,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入指定端序的<see cref="int"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteInt32(int value, EndianType endianType)
         {
             var size = 4;
@@ -371,10 +328,7 @@ namespace TouchSocket.Core
 
         #region Int16
 
-        /// <summary>
-        /// 写入默认端序的<see cref="short"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteInt16(short value)
         {
             var size = 2;
@@ -384,11 +338,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="short"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteInt16(short value, EndianType endianType)
         {
             var size = 2;
@@ -402,10 +352,7 @@ namespace TouchSocket.Core
 
         #region Int64
 
-        /// <summary>
-        /// 写入默认端序的<see cref="long"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteInt64(long value)
         {
             var size = 8;
@@ -415,11 +362,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="long"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteInt64(long value, EndianType endianType)
         {
             var size = 8;
@@ -433,10 +376,7 @@ namespace TouchSocket.Core
 
         #region Boolean
 
-        /// <summary>
-        /// 写入<see cref="bool"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteBoolean(bool value)
         {
             var size = 1;
@@ -446,10 +386,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入bool数组。
-        /// </summary>
-        /// <param name="values"></param>
+        /// <inheritdoc/>
         public void WriteBooleans(bool[] values)
         {
             var size = values.Length % 8 == 0 ? values.Length / 8 : values.Length / 8 + 1;
@@ -463,11 +400,7 @@ namespace TouchSocket.Core
 
         #region Byte
 
-        /// <summary>
-        /// 写入<see cref="byte"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public void WriteByte(byte value)
         {
             var size = 1;
@@ -481,10 +414,7 @@ namespace TouchSocket.Core
 
         #region Char
 
-        /// <summary>
-        /// 写入默认端序的<see cref="char"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteChar(char value)
         {
             var size = 2;
@@ -494,11 +424,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="char"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteChar(char value, EndianType endianType)
         {
             var size = 2;
@@ -512,10 +438,7 @@ namespace TouchSocket.Core
 
         #region Double
 
-        /// <summary>
-        /// 写入默认端序的<see cref="double"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteDouble(double value)
         {
             var size = 8;
@@ -525,11 +448,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="double"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteDouble(double value, EndianType endianType)
         {
             var size = 8;
@@ -543,10 +462,7 @@ namespace TouchSocket.Core
 
         #region Float
 
-        /// <summary>
-        /// 写入默认端序的<see cref="float"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteFloat(float value)
         {
             var size = 4;
@@ -556,11 +472,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="float"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteFloat(float value, EndianType endianType)
         {
             var size = 4;
@@ -574,10 +486,7 @@ namespace TouchSocket.Core
 
         #region UInt16
 
-        /// <summary>
-        /// 写入默认端序的<see cref="ushort"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteUInt16(ushort value)
         {
             var size = 2;
@@ -587,11 +496,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="ushort"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteUInt16(ushort value, EndianType endianType)
         {
             var size = 2;
@@ -605,10 +510,7 @@ namespace TouchSocket.Core
 
         #region UInt32
 
-        /// <summary>
-        /// 写入默认端序的<see cref="uint"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteUInt32(uint value)
         {
             var size = 4;
@@ -618,11 +520,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="uint"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteUInt32(uint value, EndianType endianType)
         {
             var size = 4;
@@ -636,10 +534,7 @@ namespace TouchSocket.Core
 
         #region UInt64
 
-        /// <summary>
-        /// 写入默认端序的<see cref="ulong"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteUInt64(ulong value)
         {
             var size = 8;
@@ -649,11 +544,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="ulong"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteUInt64(ulong value, EndianType endianType)
         {
             var size = 8;
@@ -667,10 +558,7 @@ namespace TouchSocket.Core
 
         #region Decimal
 
-        /// <summary>
-        /// 写入默认端序的<see cref="decimal"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteDecimal(decimal value)
         {
             var size = sizeof(decimal);
@@ -680,11 +568,7 @@ namespace TouchSocket.Core
             this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
         }
 
-        /// <summary>
-        /// 写入<see cref="decimal"/>值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="endianType">指定端序</param>
+        /// <inheritdoc/>
         public void WriteDecimal(decimal value, EndianType endianType)
         {
             var size = 16;
@@ -698,10 +582,7 @@ namespace TouchSocket.Core
 
         #region DateTime
 
-        /// <summary>
-        /// 写入<see cref="DateTime"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteDateTime(DateTime value)
         {
             var size = 8;
@@ -715,10 +596,7 @@ namespace TouchSocket.Core
 
         #region TimeSpan
 
-        /// <summary>
-        /// 写入<see cref="TimeSpan"/>值
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc/>
         public void WriteTimeSpan(TimeSpan value)
         {
             var size = 8;
@@ -731,7 +609,7 @@ namespace TouchSocket.Core
         #endregion TimeSpan
 
         #region GUID
-
+        /// <inheritdoc/>
         public void WriteGuid(in Guid value)
         {
             var size = 16;

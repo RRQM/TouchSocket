@@ -10,31 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp.FileTransfer
+namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// FileTransferedEventArgs
+    /// 定义了一个接口，用于异步发送标识符和请求信息
     /// </summary>
-    public class FileTransferedEventArgs : FileTransferingEventArgs
+    public interface IIdRequestInfoSender
     {
-        /// <summary>
-        /// FileTransferedEventArgs
-        /// </summary>
-        /// <param name="transferType"></param>
-        /// <param name="result"></param>
-        /// <param name="metadata"></param>
-        /// <param name="fileInfo"></param>
-        public FileTransferedEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo, Result result)
-            : base(transferType, metadata, fileInfo)
-        {
-            this.Result = result;
-        }
 
         /// <summary>
-        /// 结果
+        /// 异步发送指定标识符和请求信息的方法
         /// </summary>
-        public Result Result { get; private set; }
+        /// <param name="id">要发送的标识符</param>
+        /// <param name="requestInfo">请求信息对象，包含发送的具体内容</param>
+        /// <returns>返回一个任务，表示异步操作的完成</returns>
+        Task SendAsync(string id, IRequestInfo requestInfo);
     }
 }

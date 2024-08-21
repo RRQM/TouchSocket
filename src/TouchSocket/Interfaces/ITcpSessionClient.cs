@@ -12,10 +12,11 @@
 
 namespace TouchSocket.Sockets
 {
+    
     /// <summary>
-    /// 服务器辅助类接口
+    /// 定义 ITcpSessionClient 接口，继承自多个接口，以支持 TCP 会话客户端的功能。
     /// </summary>
-    public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequsetInfoSender, ITcpListenableClient, ISessionClient, IReceiverClient<IReceiverResult>
+    public interface ITcpSessionClient : ITcpSession, IClientSender, IIdSender, IIdRequestInfoSender, ITcpListenableClient, ISessionClient, IReceiverClient<IReceiverResult>
     {
         /// <summary>
         /// 断开连接
@@ -25,8 +26,10 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// <para>
+        /// 此事件标识在与 <see cref="ITcpSessionClient"/> 的连接即将主动断开时发生的事件。提供此事件是为了允许执行断开连接前的清理操作。
         /// </para>
         /// </summary>
         ClosingEventHandler<ITcpSessionClient> Closing { get; set; }
+
     }
 }

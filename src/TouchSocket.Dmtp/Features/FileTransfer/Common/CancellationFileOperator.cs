@@ -44,9 +44,10 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 在指定的时间之后取消传输。
         /// </summary>
-        /// <param name="delay"></param>
+        /// <param name="delay">延迟时间，在该时间之后取消传输</param>
         public void CancelAfter(TimeSpan delay)
         {
+            // 使用内部的CancellationTokenSource来实现取消操作
             this.m_tokenSource.CancelAfter(delay);
         }
     }

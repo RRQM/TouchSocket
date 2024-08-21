@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.IO.Ports;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts

@@ -16,9 +16,11 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// ITcpDmtpSessionClient
+    /// 定义了一个接口，用于通过TCP协议实现的Dmtp会话客户端。
+    /// 它扩展了ITcpSession、ITcpListenableClient、IResolverObject、IDmtpActorObject和ISessionClient接口，
+    /// 提供了一种机制，使得客户端能够参与基于TCP的Dmtp会话，包括监听、解析和会话管理功能。
     /// </summary>
-    public interface ITcpDmtpSessionClient : ITcpSession, ITcpListenableClient, IClosableClient, IResolverObject, IDmtpActorObject, IIdClient
+    public interface ITcpDmtpSessionClient : ITcpSession, ITcpListenableClient, IResolverObject, IDmtpActorObject, ISessionClient
     {
     }
 }

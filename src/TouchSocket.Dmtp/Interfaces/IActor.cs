@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IActor
+    /// 定义了Actor接口，用于规范Actor的行为。
     /// </summary>
     public interface IActor
     {
@@ -27,7 +27,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 处理收到的消息。
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">接收到的消息。</param>
         /// <returns>当满足本协议时，应当返回<see langword="true"/>，其他时候应该返回<see langword="false"/>.</returns>
         public Task<bool> InputReceivedData(DmtpMessage message);
     }

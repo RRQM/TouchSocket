@@ -83,19 +83,25 @@ namespace TouchSocket.Core
 
         #region Enum
 
+
         /// <summary>
-        /// 获取自定义attribute
+        /// 获取枚举成员上绑定的指定类型的自定义属性
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="enumObj"></param>
-        /// <returns></returns>
+        /// <param name="enumObj">枚举对象</param>
+        /// <typeparam name="T">要获取的属性类型</typeparam>
+        /// <returns>指定类型的自定义属性</returns>
         public static T GetAttribute<T>(this Enum enumObj) where T : Attribute
         {
+            // 获取枚举对象的类型
             var type = enumObj.GetType();
-            var enumName = Enum.GetName(type, enumObj);  //获取对应的枚举名
+            // 获取对应的枚举名
+            var enumName = Enum.GetName(type, enumObj);
+            // 获取枚举名对应的字段信息
             var field = type.GetField(enumName);
+            // 获取字段上绑定的指定类型的自定义属性
             var attr = field.GetCustomAttribute(typeof(T), false);
 
+            // 返回获取到的自定义属性
             return (T)attr;
         }
 
@@ -103,53 +109,104 @@ namespace TouchSocket.Core
 
         #region SetBit
 
+        /// <summary>
+        /// 对于给定的无符号长整型数值，设置指定索引位置的位值为指定的布尔值。
+        /// </summary>
+        /// <param name="b">原始数值。</param>
+        /// <param name="index">位索引，范围为0到63。</param>
+        /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
+        /// <returns>修改后的数值。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
         public static ulong SetBit(this ulong b, int index, bool bitvalue)
         {
+            // 检查索引范围是否有效
             if (index < 0 || index > 63)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 63);
             }
 
+            // 构造一个基数，用于在指定索引位置设置位值
             ulong baseNumber = 1;
+            // 根据bitvalue的值，设置位
             return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
         }
 
+        /// <summary>
+        /// 对于给定的无符号整型数值，设置指定索引位置的位值为指定的布尔值。
+        /// </summary>
+        /// <param name="b">原始数值。</param>
+        /// <param name="index">位索引，范围为0到31。</param>
+        /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
+        /// <returns>修改后的数值。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
         public static uint SetBit(this uint b, int index, bool bitvalue)
         {
+            // 检查索引范围是否有效
             if (index < 0 || index > 31)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 31);
             }
 
+            // 构造一个基数，用于在指定索引位置设置位值
             uint baseNumber = 1;
+            // 根据bitvalue的值，设置位
             return bitvalue ? b | baseNumber << index : b & ~(baseNumber << index);
         }
 
+        /// <summary>
+        /// 对于给定的无符号短整型数值，设置指定索引位置的位值为指定的布尔值。
+        /// </summary>
+        /// <param name="b">原始数值。</param>
+        /// <param name="index">位索引，范围为0到15。</param>
+        /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
+        /// <returns>修改后的数值。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
         public static ushort SetBit(this ushort b, int index, bool bitvalue)
         {
+            // 检查索引范围是否有效
             if (index < 0 || index > 15)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 15);
             }
 
+            // 构造一个基数，用于在指定索引位置设置位值
             ushort baseNumber = 1;
+            // 根据bitvalue的值，设置位
             return bitvalue ? (ushort)(b | baseNumber << index) : (ushort)(b & ~(baseNumber << index));
         }
 
+        /// <summary>
+        /// 对于给定的无符号字节型数值，设置指定索引位置的位值为指定的布尔值。
+        /// </summary>
+        /// <param name="b">原始数值。</param>
+        /// <param name="index">位索引，范围为0到7。</param>
+        /// <param name="bitvalue">要设置的位值（true为1，false为0）。</param>
+        /// <returns>修改后的数值。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在有效范围内时抛出异常。</exception>
         public static byte SetBit(this byte b, int index, bool bitvalue)
         {
+            // 检查索引范围是否有效
             if (index < 0 || index > 7)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
             }
 
+            // 构造一个基数，用于在指定索引位置设置位值
             byte baseNumber = 1;
+            // 根据bitvalue的值，设置位
             return bitvalue ? (byte)(b | baseNumber << index) : (byte)(b & ~(baseNumber << index));
         }
 
         #endregion
 
         #region GetBit
+        /// <summary>
+        /// 获取无符号长整型数值中的指定位置的位是否为1。
+        /// </summary>
+        /// <param name="b">要检查的无符号长整型数值。</param>
+        /// <param name="index">要检查的位的位置，从0到63。</param>
+        /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到63之间时，抛出此异常。</exception>
         public static bool GetBit(this ulong b, int index)
         {
             if (index > 63 || index < 0)
@@ -159,6 +216,13 @@ namespace TouchSocket.Core
             return (b & (ulong)1 << index) != 0;
         }
 
+        /// <summary>
+        /// 获取无符号整型数值中的指定位置的位是否为1。
+        /// </summary>
+        /// <param name="b">要检查的无符号整型数值。</param>
+        /// <param name="index">要检查的位的位置，从0到31。</param>
+        /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到31之间时，抛出此异常。</exception>
         public static bool GetBit(this uint b, int index)
         {
             if (index > 31 || index < 0)
@@ -168,6 +232,13 @@ namespace TouchSocket.Core
             return (b & (uint)1 << index) != 0;
         }
 
+        /// <summary>
+        /// 获取无符号短整型数值中的指定位置的位是否为1。
+        /// </summary>
+        /// <param name="b">要检查的无符号短整型数值。</param>
+        /// <param name="index">要检查的位的位置，从0到15。</param>
+        /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到15之间时，抛出此异常。</exception>
         public static bool GetBit(this ushort b, int index)
         {
             if (index > 15 || index < 0)
@@ -177,6 +248,13 @@ namespace TouchSocket.Core
             return (b & 1 << index) != 0;
         }
 
+        /// <summary>
+        /// 获取字节型数值中的指定位置的位是否为1。
+        /// </summary>
+        /// <param name="b">要检查的字节型数值。</param>
+        /// <param name="index">要检查的位的位置，从0到7。</param>
+        /// <returns>如果指定位置的位为1，则返回true；否则返回false。</returns>
+        /// <exception cref="ArgumentOutOfRangeException">当索引值不在0到7之间时，抛出此异常。</exception>
         public static bool GetBit(this byte b, int index)
         {
             if (index > 7 || index < 0)
@@ -187,88 +265,6 @@ namespace TouchSocket.Core
         }
         #endregion
 
-        #region Byte
-
-        ///// <summary>
-        ///// 获取字节中的指定Bit的值
-        ///// </summary>
-        ///// <param name="this">字节</param>
-        ///// <param name="index">Bit的索引值(0-7)</param>
-        ///// <returns></returns>
-        //public static int GetBit(this byte @this, int index)
-        //{
-        //    byte x;
-        //    switch (index)
-        //    {
-        //        case 0: { x = 0x01; } break;
-        //        case 1: { x = 0x02; } break;
-        //        case 2: { x = 0x04; } break;
-        //        case 3: { x = 0x08; } break;
-        //        case 4: { x = 0x10; } break;
-        //        case 5: { x = 0x20; } break;
-        //        case 6: { x = 0x40; } break;
-        //        case 7: { x = 0x80; } break;
-        //        default:
-        //            {
-        //                ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        //                return default;
-        //            }
-        //    }
-        //    return (@this & x) == x ? 1 : 0;
-        //}
-
-        ///// <summary>
-        ///// 设置字节中的指定Bit的值
-        ///// </summary>
-        ///// <param name="this">字节</param>
-        ///// <param name="index">Bit的索引值(0-7)</param>
-        ///// <param name="bitvalue">Bit值(0,1)</param>
-        ///// <returns></returns>
-        //public static byte SetBit(this byte @this, int index, int bitvalue)
-        //{
-        //    var _byte = @this;
-        //    if (bitvalue == 0)
-        //    {
-        //        switch (index)
-        //        {
-        //            case 0: { return _byte &= 0xFE; }
-        //            case 1: { return _byte &= 0xFD; }
-        //            case 2: { return _byte &= 0xFB; }
-        //            case 3: { return _byte &= 0xF7; }
-        //            case 4: { return _byte &= 0xEF; }
-        //            case 5: { return _byte &= 0xDF; }
-        //            case 6: { return _byte &= 0xBF; }
-        //            case 7: { return _byte &= 0x7F; }
-        //            default:
-        //                {
-        //                    ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        //                    return default;
-        //                }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        switch (index)
-        //        {
-        //            case 0: { return _byte |= 0x01; }
-        //            case 1: { return _byte |= 0x02; }
-        //            case 2: { return _byte |= 0x04; }
-        //            case 3: { return _byte |= 0x08; }
-        //            case 4: { return _byte |= 0x10; }
-        //            case 5: { return _byte |= 0x20; }
-        //            case 6: { return _byte |= 0x40; }
-        //            case 7: { return _byte |= 0x80; }
-        //            default:
-        //                {
-        //                    ThrowHelper.ThrowArgumentOutOfRangeException_BetweenAnd(nameof(index), index, 0, 7);
-        //                    return default;
-        //                }
-        //        }
-        //    }
-        //}
-
-        #endregion Byte
-
         #region Byte[]
 
         /// <summary>
@@ -277,24 +273,25 @@ namespace TouchSocket.Core
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        /// <param name="splite"></param>
+        /// <param name="split"></param>
         /// <returns></returns>
-        public static string ByBytesToHexString(this byte[] buffer, int offset, int length, string splite = default)
+        public static string ByBytesToHexString(this byte[] buffer, int offset, int length, string split = default)
         {
-            return string.IsNullOrEmpty(splite)
+            return string.IsNullOrEmpty(split)
                 ? BitConverter.ToString(buffer, offset, length).Replace("-", string.Empty)
-                : BitConverter.ToString(buffer, offset, length).Replace("-", splite);
+                : BitConverter.ToString(buffer, offset, length).Replace("-", split);
         }
 
+
         /// <summary>
-        /// 字节数组转16进制字符
+        /// 将字节缓冲区转换为十六进制字符串。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="splite"></param>
-        /// <returns></returns>
-        public static string ByBytesToHexString(this byte[] buffer, string splite = default)
+        /// <param name="buffer">要转换的字节缓冲区。</param>
+        /// <param name="split">可选参数，用于指定分隔符，默认为空。</param>
+        /// <returns>转换后的十六进制字符串。</returns>
+        public static string ByBytesToHexString(this byte[] buffer, string split = default)
         {
-            return ByBytesToHexString(buffer, 0, buffer.Length, splite);
+            return ByBytesToHexString(buffer, 0, buffer.Length, split);
         }
         /// <summary>
         /// 索引第一个包含数组的索引位置，例如：在{0,1,2,3,1,2,3}中索引{2,3}，则返回3。
@@ -424,16 +421,27 @@ namespace TouchSocket.Core
             return Convert.ToBase64String(data);
         }
 
+        /// <summary>
+        /// 将字节数组转换为UTF-8编码的字符串。
+        /// </summary>
+        /// <param name="data">要转换的字节数组。</param>
+        /// <returns>转换后的UTF-8编码字符串。</returns>
         public static string ToUtf8String(this byte[] data)
         {
             return Encoding.UTF8.GetString(data);
         }
 
+        /// <summary>
+        /// 将字节数组的一部分转换为UTF-8编码的字符串。
+        /// </summary>
+        /// <param name="data">要转换的字节数组。</param>
+        /// <param name="offset">数组中开始转换的索引位置。</param>
+        /// <param name="length">要转换的字节数。</param>
+        /// <returns>转换后的UTF-8编码字符串。</returns>
         public static string ToUtf8String(this byte[] data, int offset, int length)
         {
             return Encoding.UTF8.GetString(data, offset, length);
         }
-
         #endregion Byte[]
 
         #region Type
@@ -614,11 +622,29 @@ namespace TouchSocket.Core
 
         #region Memory
 
+        /// <summary>
+        /// 从指定的 <see cref="Memory{T}"/> 对象中获取内部数组。
+        /// </summary>
+        /// <param name="memory">要获取内部数组的内存对象。</param>
+        /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+        /// <remarks>
+        /// 此方法通过将 <see cref="Memory{T}"/> 对象转换为 <see cref="ReadOnlyMemory{T}"/> 对象，
+        /// 然后调用 <see cref="GetArray(ReadOnlyMemory{byte})"/> 方法来获取内部数组。
+        /// </remarks>
         public static ArraySegment<byte> GetArray(this Memory<byte> memory)
         {
             return ((ReadOnlyMemory<byte>)memory).GetArray();
         }
 
+        /// <summary>
+        /// 从指定的 <see cref="ReadOnlyMemory{T}"/> 对象中获取内部数组。
+        /// </summary>
+        /// <param name="memory">要获取内部数组的只读内存对象。</param>
+        /// <returns>一个表示内存内部数组的 <see cref="ArraySegment{T}"/> 对象。</returns>
+        /// <remarks>
+        /// 此方法尝试通过 <see cref="MemoryMarshal.TryGetArray"/> 方法获取内存的内部数组。
+        /// 如果成功，直接返回结果；如果失败（即内存不是由数组支持的），则将内存复制到数组并返回该数组的段。
+        /// </remarks>
         public static ArraySegment<byte> GetArray(this ReadOnlyMemory<byte> memory)
         {
             return MemoryMarshal.TryGetArray(memory, out var result) ? result : new ArraySegment<byte>(memory.ToArray());
@@ -653,30 +679,50 @@ namespace TouchSocket.Core
         #endregion EndPoint
 
         #region Span<byte>
+        /// <summary>
+        /// 将字节的连续内存表示形式转换为字符串。
+        /// </summary>
+        /// <param name="span">要转换为字符串的字节范围。</param>
+        /// <param name="encoding">用于解码字节的编码。</param>
+        /// <returns>转换后的字符串。</returns>
         public static unsafe string ToString(this Span<byte> span, Encoding encoding)
         {
+            // 根据目标框架选择不同的实现方式
 #if NET6_0_OR_GREATER
+            // 对于.NET 6.0及以上版本，直接使用内置方法
             return encoding.GetString(span);
 #elif NET462_OR_GREATER
+            // 对于.NET 4.6.2到.NET 5.0的版本，使用指针访问提高效率
             fixed (byte* p = &span[0])
             {
                 return encoding.GetString(p, span.Length);
             }
 #else
+            // 对于更早的版本，将Span转换为数组再处理
             return encoding.GetString(span.ToArray());
 #endif
         }
 
+        /// <summary>
+        /// 将只读的字节连续内存表示形式转换为字符串。
+        /// </summary>
+        /// <param name="span">要转换为字符串的只读字节范围。</param>
+        /// <param name="encoding">用于解码字节的编码。</param>
+        /// <returns>转换后的字符串。</returns>
         public static unsafe string ToString(this ReadOnlySpan<byte> span, Encoding encoding)
         {
+            // 根据目标框架选择不同的实现方式
 #if NET6_0_OR_GREATER
-          return  encoding.GetString(span);
+            // 对于.NET 6.0及以上版本，直接使用内置方法
+            return encoding.GetString(span);
 #elif NET462_OR_GREATER
+            // 对于.NET 4.6.2到.NET 5.0的版本，使用指针访问提高效率
             fixed (byte* p = &span[0])
             {
                 return encoding.GetString(p, span.Length);
             }
 #else
+            // 对于更早的版本，将ReadOnlySpan转换为数组再处理
             return encoding.GetString(span.ToArray());
 #endif
         }
@@ -687,59 +733,84 @@ namespace TouchSocket.Core
 
         private static readonly DateTimeOffset s_utc1970 = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
+
         /// <summary>
-        /// 格林尼治标准时间
+        /// 将DateTime对象转换为GMT格式的字符串。
         /// </summary>
-        /// <param name="dt"></param>
-        /// <returns></returns>
+        /// <param name="dt">要转换的DateTime对象。</param>
+        /// <returns>转换后的GMT格式字符串。</returns>
         public static string ToGMTString(this DateTime dt)
         {
+            // 使用"r"格式字符串和InvariantCulture确保GMT格式的正确性
             return dt.ToString("r", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
-        /// 将时间转为毫秒级别的短整形
+        /// 将DateTime对象转换为自1970年1月1日以来的毫秒数的32位无符号整数表示。
         /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
+        /// <param name="time">要转换的DateTime对象。</param>
+        /// <returns>自1970年1月1日以来的毫秒数的32位无符号整数。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ConvertTime(this in DateTime time)
+        public static uint ToUnsignedMillis(this in DateTime time)
         {
+            // 计算自1970年1月1日以来的毫秒数，并转换为32位无符号整数
             return (uint)(Convert.ToInt64(time.Subtract(s_utc_time).TotalMilliseconds) & 0xffffffff);
         }
 
         /// <summary>
-        /// 将时间转为毫秒级别的短整形
+        /// 将DateTimeOffset对象转换为自1970年1月1日以来的毫秒数的32位无符号整数表示。
         /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
+        /// <param name="time">要转换的DateTimeOffset对象。</param>
+        /// <returns>自1970年1月1日以来的毫秒数的32位无符号整数。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ConvertTime(this in DateTimeOffset time)
+        public static uint ToUnsignedMillis(this in DateTimeOffset time)
         {
+            // 计算自1970年1月1日以来的毫秒数，并转换为32位无符号整数
             return (uint)(Convert.ToInt64(time.Subtract(s_utc1970).TotalMilliseconds) & 0xffffffff);
         }
         #endregion
 
         #region Stream
-#if (!NET6_0_OR_GREATER)&&(!NETSTANDARD2_1_OR_GREATER)
+#if (!NET6_0_OR_GREATER) && (!NETSTANDARD2_1_OR_GREATER)
+        /// <summary>
+        /// 异步读取数据到指定的内存区域。
+        /// </summary>
+        /// <param name="stream">要读取数据的流。</param>
+        /// <param name="memory">要读取数据到的内存区域。</param>
+        /// <param name="cancellationToken">用于取消操作的令牌。</param>
+        /// <returns>读取到的数据长度。</returns>
         public static Task<int> ReadAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken)
         {
+            // 获取内存区域对应的数组
             var bytes = memory.GetArray();
+            // 调用异步方法读取数据到指定的数组区域
             return stream.ReadAsync(bytes.Array, bytes.Offset, bytes.Count);
         }
 
+        /// <summary>
+        /// 从流中读取数据到指定的字节跨度。
+        /// </summary>
+        /// <param name="stream">要读取数据的流。</param>
+        /// <param name="span">要读取数据到的字节跨度。</param>
+        /// <returns>读取到的数据长度。</returns>
         public static int Read(this Stream stream, Span<byte> span)
         {
+            // 获取字节跨度的长度
             var len = span.Length;
+            // 从字节池中租用一个缓冲区
             var buffer = BytePool.Default.Rent(len);
             try
             {
+                // 从流中读取数据到缓冲区
                 var r = stream.Read(buffer, 0, len);
+                // 将缓冲区的数据复制到字节跨度
                 Unsafe.CopyBlock(ref span[0], ref buffer[0], (uint)r);
+                // 返回读取到的数据长度
                 return r;
             }
             finally
             {
+                // 将缓冲区归还到字节池
                 BytePool.Default.Return(buffer);
             }
         }

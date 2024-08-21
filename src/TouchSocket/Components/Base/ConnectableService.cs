@@ -62,20 +62,24 @@ namespace TouchSocket.Sockets
         /// <inheritdoc cref="IConnectableService.GetClients"/>
         protected abstract IEnumerable<IClient> GetClients();
 
+
         /// <summary>
-        /// 获取下一个新Id
+        /// 尝试获取下一个新的标识符。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回新的标识符，如果内部方法调用失败，则返回默认的新标识符。</returns>
         protected virtual string GetNextNewId()
         {
             try
             {
+                // 尝试调用内部方法获取新的标识符。
                 return this.m_getDefaultNewId.Invoke();
             }
             catch (Exception ex)
             {
+                // 如果调用过程中发生异常，记录异常信息。
                 this.Logger?.Exception(ex);
             }
+            // 如果调用内部方法失败，则使用此方法作为回退，返回一个默认的新标识符。
             return this.GetDefaultNewId();
         }
 

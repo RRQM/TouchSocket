@@ -30,8 +30,28 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         ConnectingEventHandler<INamedPipeClient> Connecting { get; set; }
 
+        /// <summary>
+        /// 获取或设置管道客户端关闭时的事件处理程序。
+        /// </summary>
+        /// <remarks>
+        /// 此事件用于在管道客户端连接关闭后执行清理操作或其他响应措施。
+        /// </remarks>
         ClosedEventHandler<INamedPipeClient> Closed { get; set; }
+
+        /// <summary>
+        /// 获取或设置管道客户端即将关闭时的事件处理程序。
+        /// </summary>
+        /// <remarks>
+        /// 此事件用于在管道客户端连接关闭之前执行必要的资源释放或其他预关闭操作。
+        /// </remarks>
         ClosingEventHandler<INamedPipeClient> Closing { get; set; }
+
+        /// <summary>
+        /// 获取或设置接收到数据时的事件处理程序。
+        /// </summary>
+        /// <remarks>
+        /// 此事件用于在管道客户端从服务器接收到数据时进行处理，以实现数据的及时处理或存储。
+        /// </remarks>
         ReceivedEventHandler<INamedPipeClient> Received { get; set; }
     }
 }

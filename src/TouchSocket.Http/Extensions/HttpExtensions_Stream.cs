@@ -20,6 +20,16 @@ namespace TouchSocket.Http
 {
     public static partial class HttpExtensions
     {
+        /// <summary>
+        /// 为指定的 HTTP 响应创建一个写入流。
+        /// </summary>
+        /// <param name="response">要关联写入流的 HTTP 响应对象。</param>
+        /// <returns>一个 <see cref="Stream"/> 对象，用于向 HTTP 响应写入数据。</returns>
+        /// <remarks>
+        /// 此方法提供了一种方便的方式来获取一个写入流，该流可以直接与指定的 HTTP 响应对象关联，
+        /// 从而简化了向 HTTP 响应写入数据的过程。
+        /// </remarks>
+        /// <typeparam name="TResponse">HTTP 响应的类型，必须是 <see cref="HttpResponse"/> 的一个子类。</typeparam>
         public static Stream CreateWriteStream<TResponse>(this TResponse response) where TResponse : HttpResponse
         {
             return new InternalWriteStream(response);

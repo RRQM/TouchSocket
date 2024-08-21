@@ -19,7 +19,8 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// UDP基类服务器。
+    /// UdpSession 类，继承自 UdpSessionBase 并实现 IUdpSession 接口。
+    /// 这个类提供了与 UDP 会话相关的操作和属性，是 UDP 会话管理的核心组件。
     /// </summary>
     public class UdpSession : UdpSessionBase, IUdpSession
     {
@@ -44,7 +45,6 @@ namespace TouchSocket.Sockets
             await base.OnUdpReceived(e).ConfigureAwait(false);
         }
 
-
         #region 向默认远程异步发送
 
         /// <inheritdoc/>
@@ -53,12 +53,7 @@ namespace TouchSocket.Sockets
             return this.ProtectedSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
         public virtual Task SendAsync(IRequestInfo requestInfo)
         {
             return this.ProtectedSendAsync(requestInfo);
@@ -68,16 +63,7 @@ namespace TouchSocket.Sockets
 
         #region 向设置的远程异步发送
 
-        /// <summary>
-        /// 向设置的远程异步发送
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <inheritdoc/>
         public virtual Task SendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             return this.ProtectedSendAsync(endPoint, memory);
@@ -93,20 +79,13 @@ namespace TouchSocket.Sockets
 
         #region 组合发送
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
         public Task SendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             return this.ProtectedSendAsync(transferBytes);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
         public Task SendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
             return this.ProtectedSendAsync(endPoint, transferBytes);

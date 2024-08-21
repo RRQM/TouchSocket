@@ -6,6 +6,9 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
+    /// <summary>
+    /// WebSocket扩展类
+    /// </summary>
     public static class WebSocketExtension
     {
         #region string
@@ -17,10 +20,10 @@ namespace TouchSocket.Http.WebSockets
         /// 相关用法请按照<see cref="IWebSocket.ReadAsync(CancellationToken)"/>进行。
         /// </para>
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
+        /// <param name="webSocket">要读取数据的WebSocket实例</param>
+        /// <param name="byteBlock">用于存储接收到的数据的字节块</param>
+        /// <param name="token">用于取消操作的取消令牌</param>
+        /// <returns>返回一个任务，该任务在完成后将包含读取到的字符串</returns>
         public static async Task ReadStringAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken token = default)
         {
             if (!webSocket.AllowAsyncRead)
@@ -85,9 +88,9 @@ namespace TouchSocket.Http.WebSockets
         /// 相关用法请按照<see cref="IWebSocket.ReadAsync(CancellationToken)"/>进行。
         /// </para>
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
+        /// <param name="webSocket">要读取数据的WebSocket实例</param>
+        /// <param name="token">用于取消异步读取操作的取消令牌</param>
+        /// <returns>返回异步读取到的字符串</returns>
         public static async Task<string> ReadStringAsync(this IWebSocket webSocket, CancellationToken token = default)
         {
             using (var byteBlock = new ByteBlock(1024 * 64))
@@ -109,10 +112,10 @@ namespace TouchSocket.Http.WebSockets
         /// 相关用法请按照<see cref="IWebSocket.ReadAsync(CancellationToken)"/>进行。
         /// </para>
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
+        /// <param name="webSocket">要读取数据的WebSocket实例。</param>
+        /// <param name="byteBlock">用于存储读取的二进制数据的容器。</param>
+        /// <param name="token">用于取消异步读取操作的取消令牌。</param>
+        /// <returns>返回一个Task对象，表示异步读取操作。</returns>
         public static async Task ReadBinaryAsync(this IWebSocket webSocket, ByteBlock byteBlock, CancellationToken token = default)
         {
             if (!webSocket.AllowAsyncRead)
@@ -177,10 +180,10 @@ namespace TouchSocket.Http.WebSockets
         /// 相关用法请按照<see cref="IWebSocket.ReadAsync(CancellationToken)"/>进行。
         /// </para>
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="stream"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
+        /// <param name="webSocket">要读取数据的WebSocket实例。</param>
+        /// <param name="stream">用于存储读取的二进制数据的流。</param>
+        /// <param name="token">用于取消异步读取操作的取消令牌。默认值为<see cref="CancellationToken.None"/>。</param>
+        /// <returns>返回一个<see cref="Task"/>对象，表示异步读取操作。</returns>
         public static async Task ReadBinaryAsync(this IWebSocket webSocket, Stream stream, CancellationToken token = default)
         {
             if (!webSocket.AllowAsyncRead)
@@ -206,13 +209,13 @@ namespace TouchSocket.Http.WebSockets
                                 //收到的是中继包
                                 if (dataFrame.FIN)//判断是否为最终包
                                 {
-                                    var segment = data.AsSegment();
+                                    var segment = data.Memory.GetArray();
                                     await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
                                     return;
                                 }
                                 else
                                 {
-                                    var segment = data.AsSegment();
+                                    var segment = data.Memory.GetArray();
                                     await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
                                 }
                             }
@@ -222,13 +225,13 @@ namespace TouchSocket.Http.WebSockets
                             {
                                 if (dataFrame.FIN)//判断是不是最后的包
                                 {
-                                    var segment = data.AsSegment();
+                                    var segment = data.Memory.GetArray();
                                     await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
                                     return;
                                 }
                                 else
                                 {
-                                    var segment = data.AsSegment();
+                                    var segment = data.Memory.GetArray();
                                     await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
                                 }
                             }
@@ -260,10 +263,11 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 获取消息合并器。
         /// </summary>
-        /// <param name="webSocket"></param>
-        /// <returns></returns>
+        /// <param name="webSocket">WebSocket实例</param>
+        /// <returns>消息合并器实例</returns>
         public static WebSocketMessageCombinator GetMessageCombinator(this IWebSocket webSocket)
         {
+            // 从WebSocket客户端的属性中获取消息合并器实例
             return webSocket.Client.GetValue(WebSocketMessageCombinatorProperty);
         }
 

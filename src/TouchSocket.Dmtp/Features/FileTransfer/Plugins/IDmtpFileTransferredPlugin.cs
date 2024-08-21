@@ -10,27 +10,23 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Sockets
+namespace TouchSocket.Dmtp.FileTransfer
 {
+
     /// <summary>
-    /// 字节事件
+    /// 定义了一个插件接口，用于处理文件传输完成时的通知。
     /// </summary>
-    public class BytesEventArgs : TouchSocketEventArgs
+    public interface IDmtpFileTransferredPlugin : IPlugin
     {
         /// <summary>
-        /// 构造函数
+        /// 当文件通过Dmtp协议传输完成时触发的事件处理程序。
         /// </summary>
-        /// <param name="data"></param>
-        public BytesEventArgs(byte[] data)
-        {
-            this.ReceivedDataBytes = data;
-        }
-
-        /// <summary>
-        /// 字节数组
-        /// </summary>
-        public byte[] ReceivedDataBytes { get; private set; }
+        /// <param name="client">发起文件传输的客户端对象。</param>
+        /// <param name="e">包含文件传输相关信息的事件参数。</param>
+        /// <returns>一个Task对象，标识异步操作的完成。</returns>
+        Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e);
     }
 }

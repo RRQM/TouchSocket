@@ -36,6 +36,12 @@ namespace TouchSocket.Http
 
         private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
         private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
+        /// <summary>
+        /// 定义缓存的最大大小，这里设置为100MB。
+        /// 这个值是根据预期的内存使用量和性能需求确定的。
+        /// 过大的缓存可能会导致内存使用率过高，影响系统的其他部分。
+        /// 过小的缓存则可能无法有效减少对外部资源的访问，降低程序的运行效率。
+        /// </summary>
         public const int MaxCacheSize = 1024 * 1024 * 100;
 
         /// <summary>
@@ -56,7 +62,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 内容填充完成
         /// </summary>
-        public bool? ContentComplated { get; protected set; } = null;
+        public bool? ContentCompleted { get; protected set; } = null;
 
         /// <summary>
         /// 内容长度
@@ -81,10 +87,10 @@ namespace TouchSocket.Http
         {
             get
             {
-                var keepalive = this.Headers.Get(HttpHeaders.Connection);
+                var keepAlive = this.Headers.Get(HttpHeaders.Connection);
                 return this.ProtocolVersion == "1.0"
-                    ? !keepalive.IsNullOrEmpty() && keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
-                    : keepalive.IsNullOrEmpty() || keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
+                    ? !keepAlive.IsNullOrEmpty() && keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
+                    : keepAlive.IsNullOrEmpty() || keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
             }
             set
             {
@@ -183,7 +189,7 @@ namespace TouchSocket.Http
 
             //Request Headers
             this.GetRequestHeaders(rows);
-            this.LoadHeaderProterties();
+            this.LoadHeaderProperties();
         }
 
         #region Content
@@ -191,22 +197,25 @@ namespace TouchSocket.Http
         /// <summary>
         /// 设置一次性内容
         /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
+        /// <param name="content">要设置的内容，作为只读内存块传入</param>
         public abstract void SetContent(in ReadOnlyMemory<byte> content);
 
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回一个包含字节的只读内存的任务。</returns>
+        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
         public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
+        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
         public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
         {
+            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
+            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
             return Task.Run(async () => await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
         }
 
@@ -225,7 +234,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 读取信息
         /// </summary>
-        protected abstract void LoadHeaderProterties();
+        protected abstract void LoadHeaderProperties();
 
         private void GetRequestHeaders(string[] rows)
         {
@@ -249,7 +258,7 @@ namespace TouchSocket.Http
         internal virtual void ResetHttp()
         {
             this.m_headers.Clear();
-            this.ContentComplated = null;
+            this.ContentCompleted = null;
             this.RequestLine = default;
 
             this.m_httpBlockSegment.InternalReset();
@@ -257,11 +266,23 @@ namespace TouchSocket.Http
 
         #region Read
 
+        /// <summary>
+        /// 异步读取HTTP块段的内容。
+        /// </summary>
+        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
+        /// <returns>返回一个<see cref="IBlockResult{T}"/>，表示异步读取操作的结果。</returns>
         public virtual ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken)
         {
+            // 调用m_httpBlockSegment的InternalValueWaitAsync方法，等待HTTP块段的内部值。
             return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// 异步读取并复制流数据
+        /// </summary>
+        /// <param name="stream">需要读取并复制的流</param>
+        /// <param name="cancellationToken">异步操作的取消令牌</param>
+        /// <returns>一个异步任务，表示复制操作的完成</returns>
         public async Task ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
         {
             while (true)
@@ -290,6 +311,11 @@ namespace TouchSocket.Http
 
         #region Write
 
+        /// <summary>
+        /// 异步写入字节序列到流中。
+        /// </summary>
+        /// <param name="memory">待写入的字节序列，使用<see cref="ReadOnlyMemory{T}"/>类型以提高性能并支持不可变性。</param>
+        /// <returns>返回一个Task对象，表示异步写入操作的完成。</returns>
         public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
 
         #endregion Write

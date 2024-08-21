@@ -21,7 +21,7 @@ namespace TouchSocket.Rpc.RateLimiting
     /// 使用限流策略
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
-    public sealed class EnableRateLimitingAttribute : RpcActionFilterAttribute
+    public class EnableRateLimitingAttribute : RpcActionFilterAttribute
     {
         private RateLimitLease m_rateLimitLease;
 

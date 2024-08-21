@@ -16,18 +16,18 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// DmtpPluginManagerExtension
+    /// Dmtp插件管理器扩展类
     /// </summary>
     public static class DmtpPluginManagerExtension
     {
         /// <summary>
-        /// DmtpRpc心跳。客户端、服务器均，但是一般建议仅客户端使用即可。
+        /// 启用DmtpRpc心跳功能。该功能既可用于客户端，也可用于服务器端，但通常建议仅在客户端使用。
         /// <para>
-        /// 默认心跳每3秒进行一次。最大失败3次即判定为断开连接。
+        /// 心跳默认每3秒发送一次。当心跳失败次数达到最大值（默认为3次）时，将判定为连接断开。
         /// </para>
         /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
+        /// <param name="pluginManager">插件管理器，用于管理包括心跳插件在内的各种插件。</param>
+        /// <returns>返回新创建并已添加到插件管理器的DmtpHeartbeatPlugin实例。</returns>
         public static DmtpHeartbeatPlugin UseDmtpHeartbeat(this IPluginManager pluginManager)
         {
             var heartbeat = new DmtpHeartbeatPlugin();
@@ -40,9 +40,9 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 使用<see cref="IDmtpClient"/>断线重连。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
+        /// <typeparam name="TClient">要重连的客户端类型，必须实现<see cref="IDmtpClient"/>接口。</typeparam>
+        /// <param name="pluginManager">插件管理器，用于添加重连插件。</param>
+        /// <returns>返回创建的重连插件实例。</returns>
         public static ReconnectionPlugin<TClient> UseDmtpReconnection<TClient>(this IPluginManager pluginManager) where TClient : IDmtpClient
         {
             var reconnectionPlugin = new DmtpReconnectionPlugin<TClient>();
@@ -53,8 +53,8 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 使用<see cref="IDmtpClient"/>断线重连。
         /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
+        /// <param name="pluginManager">插件管理器，用于添加重连插件。</param>
+        /// <returns>返回创建的重连插件实例。</returns>
         public static ReconnectionPlugin<IDmtpClient> UseWebSocketReconnection(this IPluginManager pluginManager)
         {
             var reconnectionPlugin = new DmtpReconnectionPlugin<IDmtpClient>();

@@ -137,7 +137,7 @@ namespace TouchSocket.SocketIo
 
         #region Send
 
-        protected Task SendAsync(List<DataItem> dataItems)
+        private Task SendAsync(List<DataItem> dataItems)
         {
             return this.SendAsyncAction.Invoke(dataItems);
         }

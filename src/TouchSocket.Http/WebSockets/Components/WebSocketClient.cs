@@ -45,29 +45,47 @@ namespace TouchSocket.Http.WebSockets
         /// <inheritdoc/>
         public WSDataFrameEventHandler<IWebSocketClient> Received { get; set; }
 
+        /// <summary>
+        /// 当WebSocket连接关闭时执行的任务。
+        /// </summary>
+        /// <param name="e">包含关闭事件相关信息的参数。</param>
+        /// <returns>一个等待完成的任务。</returns>
         protected override async Task OnWebSocketClosed(ClosedEventArgs e)
         {
+            // 检查是否已注册关闭事件处理程序
             if (this.Closed != null)
             {
+                // 如果已注册，则调用处理程序并传递事件参数
                 await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回
                 if (e.Handled)
                 {
                     return;
                 }
             }
+            // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
             await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// 当WebSocket即将关闭时，执行异步任务。
+        /// </summary>
+        /// <param name="e">提供了关闭事件的相关信息。</param>
+        /// <returns>返回一个异步任务。</returns>
         protected override async Task OnWebSocketClosing(ClosedEventArgs e)
         {
+            // 检查是否注册了关闭事件的处理程序
             if (this.Closing != null)
             {
+                // 如果已注册，调用处理程序并传递事件参数
                 await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回，不再执行后续代码
                 if (e.Handled)
                 {
                     return;
                 }
             }
+            // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
             await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureAwait(false);
         }
 
@@ -133,7 +151,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        public Task<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
+        public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
         {
             return this.WebSocket.ReadAsync(token);
         }
@@ -154,12 +172,6 @@ namespace TouchSocket.Http.WebSockets
         public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true)
         {
             return this.WebSocket.SendAsync(memory, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public ValueTask<IWebSocketReceiveResult> ValueReadAsync(CancellationToken token)
-        {
-            return this.WebSocket.ValueReadAsync(token);
         }
     }
 }

@@ -22,15 +22,15 @@ namespace TouchSocket.Sockets
     public class ClientNotFindException : Exception
     {
         /// <summary>
-        /// 构造函数
+        /// 默认构造函数
         /// </summary>
         public ClientNotFindException() : this(TouchSocketResource.ClientNotFind)
         { }
 
         /// <summary>
-        /// 构造函数
+        /// 带信息的构造函数
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">异常信息</param>
         public ClientNotFindException(string message) : base(message) { }
     }
 }

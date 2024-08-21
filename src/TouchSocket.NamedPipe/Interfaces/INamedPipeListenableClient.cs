@@ -12,11 +12,24 @@
 
 namespace TouchSocket.NamedPipe
 {
+    /// <summary>
+    /// 定义了一个接口，用于指定命名管道客户端的监听功能。
+    /// </summary>
     public interface INamedPipeListenableClient
     {
         /// <summary>
-        /// 包含此辅助类的主服务器类
+        /// 获取包含此辅助类的主服务器类。
         /// </summary>
+        /// <value>主服务器类的实例。</value>
         INamedPipeServiceBase Service { get; }
+
+        /// <summary>
+        /// 获取监听配置。
+        /// <para>
+        /// 注意：一般情况下不要随意修改该值。
+        /// </para>
+        /// </summary>
+        /// <value>命名管道的监听选项。</value>
+        NamedPipeListenOption ListenOption { get; }
     }
 }

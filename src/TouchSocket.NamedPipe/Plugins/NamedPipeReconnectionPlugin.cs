@@ -23,16 +23,27 @@ namespace TouchSocket.NamedPipe
     [PluginOption(Singleton = true)]
     public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> where TClient : INamedPipeClient
     {
+        /// <inheritdoc/>
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
+        /// <summary>
+        /// 构造函数，用于初始化NamedPipeReconnectionPlugin实例。
+        /// </summary>
+        /// <remarks>
+        /// 该构造函数通过设置ActionForCheck属性来定义检查管道连接状态的操作。
+        /// </remarks>
         public NamedPipeReconnectionPlugin()
         {
+            // 定义一个lambda表达式，用于检查连接状态。
+            // 参数c表示当前连接对象，参数i表示重试次数，但在此场景中未使用。
+            // 返回连接对象的Online属性值，表示连接状态。
             this.ActionForCheck = (c, i) =>
             {
                 return Task.FromResult<bool?>(c.Online);
             };
         }
 
+        /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);

@@ -15,11 +15,21 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc
 {
+
     /// <summary>
-    /// Rpc接口
+    /// 定义了远程过程调用(RPC)客户端的基本操作。
+    /// 该接口提供了发起RPC请求的方法。
     /// </summary>
     public interface IRpcClient
     {
-        Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption,params object[] parameters);
+        /// <summary>
+        /// 异步调用一个操作。
+        /// </summary>
+        /// <param name="invokeKey">操作的标识键。</param>
+        /// <param name="returnType">返回值的类型。</param>
+        /// <param name="invokeOption">调用选项，用于指定调用的特定选项。</param>
+        /// <param name="parameters">传递给操作的参数。</param>
+        /// <returns>一个任务，其结果是操作的返回值。</returns>
+        Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters);
     }
 }

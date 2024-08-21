@@ -10,21 +10,31 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-namespace TouchSocket.Core
+using TouchSocket.Core;
+
+namespace TouchSocket.Dmtp.FileTransfer
 {
     /// <summary>
-    /// 返回通知接口
+    /// FileTransferedEventArgs
     /// </summary>
-    public interface IResult
+    public class FileTransferredEventArgs : FileTransferringEventArgs
     {
         /// <summary>
-        /// 是否成功
+        /// FileTransferedEventArgs
         /// </summary>
-        ResultCode ResultCode { get; }
+        /// <param name="transferType"></param>
+        /// <param name="result"></param>
+        /// <param name="metadata"></param>
+        /// <param name="fileInfo"></param>
+        public FileTransferredEventArgs(TransferType transferType, Metadata metadata, RemoteFileInfo fileInfo, Result result)
+            : base(transferType, metadata, fileInfo)
+        {
+            this.Result = result;
+        }
 
         /// <summary>
-        /// 消息
+        /// 结果
         /// </summary>
-        string Message { get; }
+        public Result Result { get; private set; }
     }
 }

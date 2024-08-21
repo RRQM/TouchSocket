@@ -11,15 +11,14 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// DmtpAdapter
+    /// DmtpAdapter 类，继承自 CustomFixedHeaderByteBlockDataHandlingAdapter&lt;DmtpMessage&gt;
+    /// 该类用于特定地处理 DmtpMessage，通过自定义的固定头部字节块数据处理适配器实现。
     /// </summary>
     public class DmtpAdapter : CustomFixedHeaderByteBlockDataHandlingAdapter<DmtpMessage>
     {

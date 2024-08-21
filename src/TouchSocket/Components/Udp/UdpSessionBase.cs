@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -25,11 +24,13 @@ using TouchSocket.Resources;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// UDP基类服务器。
+    /// UdpSessionBase 类是 UDP 会话的基础抽象类，继承自 ServiceBase 类，并实现了 IUdpSessionBase 接口。
+    /// 它提供了 UDP 会话管理的基本功能，包括创建和关闭会话等。
     /// </summary>
     public abstract class UdpSessionBase : ServiceBase, IUdpSessionBase
     {
         #region 字段
+
         private ServerState m_serverState;
         private InternalUdpReceiver m_receiver;
         private UdpDataHandlingAdapter m_dataHandlingAdapter;
@@ -38,15 +39,25 @@ namespace TouchSocket.Sockets
         private UdpNetworkMonitor m_monitor;
         private readonly List<Task> m_receiveTasks = new List<Task>();
         private readonly SemaphoreSlim m_semaphoreSlimForReceiver = new SemaphoreSlim(1, 1);
+
         #endregion 字段
 
         /// <summary>
-        /// 构造函数
+        /// 构造函数，初始化UDP会话基类。
         /// </summary>
-        public UdpSessionBase()
+        /// <remarks>
+        /// 该构造函数负责创建和初始化一个UDP会话对象。它设置了会话的协议类型为UDP，
+        /// 并创建了一个UDP套接字用于会话。此外，还初始化了一个用于监控UDP网络状态的对象。
+        /// </remarks>
+        protected UdpSessionBase()
         {
+            // 设置当前会话的协议类型为UDP
             this.Protocol = Protocol.Udp;
+
+            // 创建一个新的UDP套接字，用于接收和发送数据报
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+            // 初始化一个UDP网络监控对象，用于监控当前会话的网络状态
             this.m_monitor = new UdpNetworkMonitor(null, socket);
         }
 
@@ -61,17 +72,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         protected UdpDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
 
-        /// <summary>
-        /// 监听器
-        /// </summary>
+        /// <inheritdoc/>
         public UdpNetworkMonitor Monitor => this.m_monitor;
 
         /// <inheritdoc/>
         public Protocol Protocol { get; protected set; }
 
-        /// <summary>
-        /// 默认远程节点
-        /// </summary>
+        /// <inheritdoc/>
         public IPHost RemoteIPHost => this.Config?.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
 
         /// <inheritdoc/>
@@ -83,28 +90,35 @@ namespace TouchSocket.Sockets
         public bool IsClient { get; protected set; }
 
         /// <summary>
-        /// 退出组播
+        /// 从组播组中退出。
         /// </summary>
-        /// <param name="multicastAddr"></param>
+        /// <param name="multicastAddr">指定的组播地址。</param>
+        /// <exception cref="ObjectDisposedException">如果当前对象已被处置，则引发异常。</exception>
+        /// <exception cref="ArgumentNullException">如果multicastAddr为null，则引发异常。</exception>
         public void DropMulticastGroup(IPAddress multicastAddr)
         {
+            // 检查当前对象是否已被处置
             if (this.DisposedValue)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
 
+            // 检查组播地址是否为空
             if (multicastAddr is null)
             {
                 throw new ArgumentNullException(nameof(multicastAddr));
             }
 
+            // 根据Socket的地址族类型，执行相应的退出组播组操作
             if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
             {
+                // 对于IPv4地址，创建并设置IP多播选项
                 var optionValue = new MulticastOption(multicastAddr);
                 this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, optionValue);
             }
             else
             {
+                // 对于IPv6地址，创建并设置IPv6多播选项
                 var optionValue2 = new IPv6MulticastOption(multicastAddr);
                 this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.DropMembership, optionValue2);
             }
@@ -114,25 +128,32 @@ namespace TouchSocket.Sockets
         /// 加入组播。
         /// <para>组播地址为 224.0.0.0 ~ 239.255.255.255，其中 224.0.0.0~224.255.255.255 不建议在用户程序中使用，因为它们一般都有特殊用途。</para>
         /// </summary>
-        /// <param name="multicastAddr"></param>
+        /// <param name="multicastAddr">要加入的组播地址。</param>
+        /// <exception cref="ArgumentNullException">如果 <paramref name="multicastAddr"/> 为 null，则抛出此异常。</exception>
+        /// <exception cref="ObjectDisposedException">如果当前对象已被处置，则抛出此异常。</exception>
         public void JoinMulticastGroup(IPAddress multicastAddr)
         {
+            // 检查组播地址是否为空
             if (multicastAddr is null)
             {
                 throw new ArgumentNullException(nameof(multicastAddr));
             }
+            // 检查当前对象是否已被处置
             if (this.DisposedValue)
             {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
 
+            // 根据不同的地址族设置组播成员资格
             if (this.m_monitor.Socket.AddressFamily == AddressFamily.InterNetwork)
             {
+                // 对于IPv4地址，创建并应用组播选项
                 var optionValue = new MulticastOption(multicastAddr);
                 this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, optionValue);
             }
             else
             {
+                // 对于IPv6地址，创建并应用组播选项
                 var optionValue2 = new IPv6MulticastOption(multicastAddr);
                 this.m_monitor.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, optionValue2);
             }
@@ -201,10 +222,7 @@ namespace TouchSocket.Sockets
             await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (!this.DisposedValue)
@@ -220,19 +238,28 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 处理已接收到的数据。
         /// </summary>
+        /// <param name="e">包含接收到的数据的事件参数</param>
+        /// <remarks>
+        /// 此方法使用异步模式调用所有实现的处理程序来处理接收到的UDP数据。
+        /// 它不直接处理数据，而是提供一个集中的位置来触发所有相关的插件处理程序。
+        /// </remarks>
         protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
+            // 触发所有实现了IUdpReceivedPlugin接口的插件的处理方法，并传递接收到的数据事件参数。
             await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 当即将发送时，如果覆盖父类方法，则不会触发插件。
+        /// 在UDP数据即将发送时触发插件。
+        /// 如果当前类覆盖了父类的方法，则不会触发插件。
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="memory"></param>
-        /// <returns></returns>
+        /// <param name="endPoint">发送目标的端点。</param>
+        /// <param name="memory">待发送的字节数据。</param>
+        /// <returns>返回一个ValueTask布尔对象，指示插件是否处理了发送事件。</returns>
         protected virtual ValueTask<bool> OnUdpSending(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
+            // 提升插件管理器以异步方式提升IUdpSendingPlugin接口的事件
+            // 使用UdpSendingEventArgs包装待发送的数据和目标端点
             return this.PluginManager.RaiseAsync(typeof(IUdpSendingPlugin), this, new UdpSendingEventArgs(memory, endPoint));
         }
 
@@ -241,7 +268,7 @@ namespace TouchSocket.Sockets
         /// 可用于设置Socket参数。
         /// 父类方法可覆盖。
         /// </summary>
-        /// <param name="socket"></param>
+        /// <param name="socket">待设置的Socket对象</param>
         protected virtual void PreviewBind(Socket socket)
         {
         }
@@ -249,21 +276,28 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 设置适配器
         /// </summary>
-        /// <param name="adapter"></param>
+        /// <param name="adapter">要设置的适配器实例</param>
         protected void SetAdapter(UdpDataHandlingAdapter adapter)
         {
+            // 检查当前实例是否已被释放
             this.ThrowIfDisposed();
+            // 如果适配器参数为空，则抛出ArgumentNullException异常
             ThrowHelper.ThrowArgumentNullExceptionIf(adapter, nameof(adapter));
 
+            // 如果当前实例的配置信息不为空，则将配置信息应用到适配器上
             if (this.Config != null)
             {
                 adapter.Config(this.Config);
             }
+            // 设置适配器的日志记录器
             adapter.Logger = this.Logger;
+            // 通知适配器当前实例的状态
             adapter.OnLoaded(this);
+            // 设置适配器接收到数据时的回调方法
             adapter.ReceivedCallBack = this.PrivateHandleReceivedData;
-            //adapter.SendCallBack = this.ProtectedDefaultSend;
+            // 设置适配器发送数据时的异步回调方法
             adapter.SendCallBackAsync = this.ProtectedDefaultSendAsync;
+            // 将提供的适配器设置为当前实例的数据处理适配器
             this.m_dataHandlingAdapter = adapter;
         }
 
@@ -327,47 +361,6 @@ namespace TouchSocket.Sockets
                 task.FireAndForget();
                 this.m_receiveTasks.Add(task);
             }
-
-            //#if NET45_OR_GREATER || NET6_0_OR_GREATER
-            //            for (var i = 0; i < threadCount; i++)
-            //            {
-            //                var eventArg = new SocketAsyncEventArgs();
-            //                this.m_socketAsyncs.Add(eventArg);
-            //                eventArg.Completed += this.IO_Completed;
-            //                var byteBlock = new ByteBlock(1024 * 64);
-            //                eventArg.UserToken = byteBlock;
-            //                eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-            //                eventArg.RemoteEndPoint = iPHost.EndPoint;
-            //                if (!socket.ReceiveFromAsync(eventArg))
-            //                {
-            //                    this.ProcessReceive(socket, eventArg);
-            //                }
-            //            }
-            //#else
-            //            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            //            {
-            //                for (var i = 0; i < threadCount; i++)
-            //                {
-            //                    var eventArg = new SocketAsyncEventArgs();
-            //                    this.m_socketAsyncs.Add(eventArg);
-            //                    eventArg.Completed += this.IO_Completed;
-            //                    var byteBlock = new ByteBlock(1024 * 64);
-            //                    eventArg.UserToken = byteBlock;
-            //                    eventArg.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-            //                    eventArg.RemoteEndPoint = iPHost.EndPoint;
-            //                    if (!socket.ReceiveFromAsync(eventArg))
-            //                    {
-            //                        this.ProcessReceive(socket, eventArg);
-            //                    }
-            //                }
-            //            }
-            //            else
-            //            {
-            //                var thread = new Thread(this.Received);
-            //                thread.IsBackground = true;
-            //                thread.Start();
-            //            }
-            //#endif
         }
 
         private async Task RunReceive()
@@ -421,7 +414,7 @@ namespace TouchSocket.Sockets
                     return;
                 }
 
-                this.m_lastReceivedTime = DateTime.Now;
+                this.m_lastReceivedTime = DateTime.UtcNow;
 
                 if (await this.ReceivingData(byteBlock).ConfigureAwait(false))
                 {
@@ -444,12 +437,17 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 当收到原始数据
+        /// 当收到原始数据时，处理数据。
+        /// 该方法提供了一个机制，通过该机制可以对原始数据进行自定义处理，而不必修改具体的传输逻辑。
         /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
+        /// <param name="byteBlock">包含收到的原始数据的字节块。</param>
+        /// <returns>
+        /// 如果返回<see langword="true"/>，则表示数据已被当前处理者完全处理，且不会再向下传递至其他处理者或消费者。
+        /// 返回<see langword="false"/>表示当前处理者未处理数据，数据可能会被传递给下一个处理者或消费者。
+        /// </returns>
         protected virtual ValueTask<bool> ReceivingData(ByteBlock byteBlock)
         {
+            // 默认实现选择不处理数据，允许数据继续传递到下一个处理者或消费者。
             return EasyValueTask.FromResult(false);
         }
 
@@ -474,13 +472,13 @@ namespace TouchSocket.Sockets
         #region Throw
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ThorwIfRemoteIPHostNull()
+        private void ThrowIfRemoteIPHostNull()
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(this.RemoteIPHost, nameof(this.RemoteIPHost));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ThorwIfCannotSend()
+        private void ThrowIfCannotSend()
         {
             if (this.m_serverState != ServerState.Running)
             {
@@ -499,171 +497,150 @@ namespace TouchSocket.Sockets
 
         #endregion Throw
 
-        //#region 向默认远程同步发送
-
-        ///// <summary>
-        ///// 向默认终结点发送
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        //protected virtual void ProtectedSend(byte[] buffer, int offset, int length)
-        //{
-        //    this.ThorwIfRemoteIPHostNull();
-        //    this.ProtectedSend(this.RemoteIPHost.EndPoint, buffer, offset, length);
-        //}
-
-        ///// <summary>
-        ///// 向默认终结点发送
-        ///// </summary>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected virtual void ProtectedSend(IRequestInfo requestInfo)
-        //{
-        //    this.ThorwIfRemoteIPHostNull();
-        //    this.ProtectedSend(this.RemoteIPHost.EndPoint, requestInfo);
-        //}
-
-        //#endregion 向默认远程同步发送
-
         #region 向默认远程异步发送
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 异步发送数据，使用提供的内存数据。
+        /// </summary>
+        /// <param name="memory">要发送的字节数据的内存段。</param>
+        /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
         protected virtual Task ProtectedSendAsync(ReadOnlyMemory<byte> memory)
         {
-            this.ThorwIfRemoteIPHostNull();
+            // 确保RemoteIPHost不为null，因为发送操作需要它。
+            this.ThrowIfRemoteIPHostNull();
+            // 调用重载的ProtectedSendAsync方法，传递目的端点和内存数据。
             return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, memory);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据，使用提供的请求信息。
         /// </summary>
-        /// <param name="requestInfo"></param>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="requestInfo">包含要发送数据的请求信息的对象。</param>
+        /// <returns>返回一个任务，表示发送操作的异步执行。</returns>
         protected virtual Task ProtectedSendAsync(IRequestInfo requestInfo)
         {
-            this.ThorwIfRemoteIPHostNull();
+            // 确保RemoteIPHost不为null，因为发送操作需要它。
+            this.ThrowIfRemoteIPHostNull();
+            // 调用重载的ProtectedSendAsync方法，传递目的端点和请求信息。
             return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, requestInfo);
         }
 
         #endregion 向默认远程异步发送
 
-        //#region 向设置的远程同步发送
-
-        ///// <summary>
-        ///// 向设置的远程同步发送
-        ///// </summary>
-        ///// <param name="remoteEP"></param>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected virtual void ProtectedSend(EndPoint remoteEP, byte[] buffer, int offset, int length)
-        //{
-        //    if (this.m_dataHandlingAdapter == null)
-        //    {
-        //        this.ProtectedDefaultSend(remoteEP, buffer, offset, length);
-        //    }
-        //    else
-        //    {
-        //        this.m_dataHandlingAdapter.SendInput(remoteEP, buffer, offset, length);
-        //    }
-        //}
-
-        ///// <summary>
-        ///// 向设置终结点发送
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected virtual void ProtectedSend(EndPoint endPoint, IRequestInfo requestInfo)
-        //{
-        //    this.ThrowIfCannotSendRequestInfo();
-        //    this.m_dataHandlingAdapter.SendInput(endPoint, requestInfo);
-        //}
-
-        //#endregion 向设置的远程同步发送
-
         #region 向设置的远程异步发送
 
         /// <summary>
-        /// 向设置的远程异步发送
+        /// 异步发送数据到指定的端点。
+        /// 该方法通过适配器转发数据，如果适配器未设置，则采用默认发送方式。
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="memory"></param>
-        /// <exception cref="ClientNotConnectedException"></exception>
-        /// <exception cref="OverlengthException"></exception>
-        /// <exception cref="Exception"></exception>
+        /// <param name="endPoint">要发送数据到的目标端点。</param>
+        /// <param name="memory">待发送的字节数据。</param>
+        /// <returns>返回一个任务，表示异步操作的结果。</returns>
         protected virtual Task ProtectedSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
+            // 根据m_dataHandlingAdapter是否已设置，选择不同的发送方式
             return this.m_dataHandlingAdapter == null
-                ? this.ProtectedDefaultSendAsync(endPoint, memory)
-                : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory);
+                ? this.ProtectedDefaultSendAsync(endPoint, memory) // 使用默认发送方式
+                : this.m_dataHandlingAdapter.SendInputAsync(endPoint, memory); // 通过适配器发送数据
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 异步发送请求信息到指定的端点。
+        /// 在发送之前，会检查是否具备发送请求信息的能力，并通过适配器进行发送。
+        /// </summary>
+        /// <param name="endPoint">要发送数据到的目标端点。</param>
+        /// <param name="requestInfo">待发送的请求信息。</param>
+        /// <returns>返回一个任务，表示异步操作的结果。</returns>
         protected virtual Task ProtectedSendAsync(EndPoint endPoint, IRequestInfo requestInfo)
         {
+            // 检查是否具备发送请求信息的能力
             this.ThrowIfCannotSendRequestInfo();
+            // 通过适配器发送请求信息
             return this.m_dataHandlingAdapter.SendInputAsync(endPoint, requestInfo);
         }
 
         #endregion 向设置的远程异步发送
 
-
         #region DefaultSendAsync
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送只读字节内存到远程主机。
+        /// 此方法提供了一种默认的发送方式，确保只有在可以发送且远程IP主机不为空时才尝试发送数据。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory">要发送的只读字节内存。</param>
+        /// <returns>一个等待任务，表示异步操作。</returns>
         protected async Task ProtectedDefaultSendAsync(ReadOnlyMemory<byte> memory)
         {
-            this.ThorwIfCannotSend();
-            this.ThorwIfRemoteIPHostNull();
+            // 如果不能发送数据，则抛出异常。
+            this.ThrowIfCannotSend();
+            // 如果远程IP主机为空，则抛出异常。
+            this.ThrowIfRemoteIPHostNull();
+            // 异步调用实际的发送方法，并传入远程主机的端点和要发送的数据。
             await this.ProtectedDefaultSendAsync(this.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="memory"></param>
 #if NET6_0_OR_GREATER
+        /// <summary>
+        /// 异步发送数据到指定的端点。
+        ///
+        /// 此方法用于封装实际的数据发送逻辑，在发送之前会进行必要的检查和调用事件处理程序，以确保数据的正确发送。
+        /// </summary>
+        /// <param name="endPoint">要发送数据到的端点。</param>
+        /// <param name="memory">待发送的数据，以只读内存块的形式。</param>
+        /// <remarks>
+        /// <para>在执行实际的数据发送之前，方法会：</para>
+        /// <list type="bullet">
+        /// <item>检查当前对象是否已经被释放（通过调用ThrowIfDisposed方法），如果是，则抛出异常。</item>
+        /// <item>检查当前对象是否处于可以发送数据的状态（通过调用<see cref="ThrowIfCannotSend"/>方法），如果不是，则抛出异常。</item>
+        /// <item>触发<see cref="OnUdpSending"/>事件，允许自定义在实际发送数据之前的逻辑。</item>
+        /// </list>
+        /// <para>之后，使用<see cref="Socket.SendToAsync(ArraySegment{byte}, SocketFlags, EndPoint)"/>方法异步地将数据发送到指定的端点。</para>
+        /// <para>发送完成后，更新最后一次发送时间（<see cref="m_lastSendTime"/>）为当前的UTC时间。</para>
+        /// </remarks>
         protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfDisposed();
-            this.ThorwIfCannotSend();
+            this.ThrowIfCannotSend();
             await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
             await this.Monitor.Socket.SendToAsync(memory, SocketFlags.None, endPoint);
-            this.m_lastSendTime = DateTime.Now;
+            this.m_lastSendTime = DateTime.UtcNow;
         }
 #else
 
+        /// <summary>
+        /// 异步发送数据到指定的端点。
+        /// </summary>
+        /// <param name="endPoint">要发送数据到的端点。</param>
+        /// <param name="memory">待发送的数据，以只读内存形式提供。</param>
+        /// <remarks>
+        /// 此方法为异步发送操作提供保护措施，确保数据在发送前进行必要的检查，
+        /// 并通过UDP协议进行发送。
+        /// </remarks>
         protected async Task ProtectedDefaultSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            this.ThorwIfCannotSend();
+            // 检查是否具备发送条件，如果不具备则抛出异常。
+            this.ThrowIfCannotSend();
+            // 检查对象是否已被释放，如果已被释放则抛出异常。
             this.ThrowIfDisposed();
 
+            // 触发发送前的事件，允许修改数据或执行其他操作。
             await this.OnUdpSending(endPoint, memory).ConfigureAwait(false);
+            // 尝试将只读内存转换为数组形式，以便发送。
             if (MemoryMarshal.TryGetArray(memory, out var segment))
             {
+                // 使用Socket的SendTo方法直接发送数据。
                 this.Monitor.Socket.SendTo(segment.Array, segment.Offset, segment.Count, SocketFlags.None, endPoint);
             }
             else
             {
+                // 如果无法直接转换为数组，则将内存复制到数组中。
                 var array = memory.ToArray();
 
+                // 使用Socket的SendTo方法发送数据数组。
                 this.Monitor.Socket.SendTo(array, 0, array.Length, SocketFlags.None, endPoint);
             }
-            this.m_lastSendTime = DateTime.Now;
+            // 更新最后一次发送时间。
+            this.m_lastSendTime = DateTime.UtcNow;
         }
 
 #endif
@@ -672,84 +649,53 @@ namespace TouchSocket.Sockets
 
         #region 组合发送
 
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //protected void ProtectedSend(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ThorwIfRemoteIPHostNull();
-        //    this.ProtectedSend(this.RemoteIPHost.EndPoint, transferBytes);
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="endPoint"></param>
-        ///// <param name="transferBytes"></param>
-        //protected void ProtectedSend(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    this.ThrowIfDisposed();
-        //    if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
-        //    {
-        //        var length = 0;
-        //        foreach (var item in transferBytes)
-        //        {
-        //            length += item.Count;
-        //        }
-        //        using (var byteBlock = new ByteBlock(length))
-        //        {
-        //            foreach (var item in transferBytes)
-        //            {
-        //                byteBlock.Write(item.Array, item.Offset, item.Count);
-        //            }
-        //            if (this.m_dataHandlingAdapter == null)
-        //            {
-        //                this.ProtectedDefaultSend(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-        //            }
-        //            else
-        //            {
-        //                this.m_dataHandlingAdapter.SendInput(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        this.m_dataHandlingAdapter.SendInput(endPoint, transferBytes);
-        //    }
-        //}
-
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步安全发送数据方法。
+        ///
+        /// 本方法提供了一种安全的异步数据发送方式，确保在发送过程中，
+        /// 使用了端点信息并且避免了潜在的空引用错误。
         /// </summary>
-        /// <param name="transferBytes"></param>
+        /// <param name="transferBytes">要发送的字节数据集合。</param>
+        /// <returns>返回一个任务，表示异步操作的完成。</returns>
         protected Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
         {
-            this.ThorwIfRemoteIPHostNull();
+            // 检查RemoteIPHost是否为null，因为发送数据前需要确保目标端点已设置。
+            this.ThrowIfRemoteIPHostNull();
+            // 调用重载的ProtectedSendAsync方法，传入远端端点和要传输的字节数据。
             return this.ProtectedSendAsync(this.RemoteIPHost.EndPoint, transferBytes);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步发送数据到指定的端点。
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="transferBytes"></param>
+        /// <param name="endPoint">要发送数据的端点。</param>
+        /// <param name="transferBytes">待发送的字节数据列表，每个项包含要传输的字节片段。</param>
+        /// <returns>异步操作任务。</returns>
         protected async Task ProtectedSendAsync(EndPoint endPoint, IList<ArraySegment<byte>> transferBytes)
         {
+            // 确保对象未被释放
             this.ThrowIfDisposed();
+
+            // 检查是否需要拼接发送数据
             if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
             {
+                // 计算所有数据片段的总长度
                 var length = 0;
                 foreach (var item in transferBytes)
                 {
                     length += item.Count;
                 }
+
+                // 创建一个具有计算出的长度的字节块，用于拼接所有数据片段
                 using (var byteBlock = new ByteBlock(length))
                 {
+                    // 将每个数据片段写入字节块
                     foreach (var item in transferBytes)
                     {
                         byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
+
+                    // 根据数据处理适配器的存在与否，选择不同的发送方法
                     if (this.m_dataHandlingAdapter == null)
                     {
                         await this.ProtectedDefaultSendAsync(endPoint, byteBlock.Memory).ConfigureAwait(false);
@@ -762,6 +708,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
+                // 如果数据处理适配器支持拼接发送，则直接使用适配器发送数据列表
                 await this.m_dataHandlingAdapter.SendInputAsync(endPoint, transferBytes).ConfigureAwait(false);
             }
         }
@@ -770,15 +717,23 @@ namespace TouchSocket.Sockets
 
         #region Receiver
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 创建或获取一个UDP接收器对象。
+        /// </summary>
+        /// <param name="receiverObject">接收器客户端对象，用于处理UDP接收结果。</param>
+        /// <returns>返回一个<see cref="IReceiver{TResult}"/>类型的接收器对象。</returns>
         protected IReceiver<IUdpReceiverResult> ProtectedCreateReceiver(IReceiverClient<IUdpReceiverResult> receiverObject)
         {
+            // 使用null合并运算符确保m_receiver只在首次调用时被实例化，以提高性能并减少资源消耗。
             return this.m_receiver ??= new InternalUdpReceiver(receiverObject);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// 清除当前的UDP接收器对象。
+        /// </summary>
         protected void ProtectedClearReceiver()
         {
+            // 将m_receiver设置为null，以确保在不再需要时，接收器对象可以被垃圾回收。
             this.m_receiver = null;
         }
 

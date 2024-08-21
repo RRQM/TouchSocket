@@ -48,6 +48,15 @@ namespace TouchSocket.Core
 
         #region SemaphoreSlim
 
+        /// <summary>
+        /// 使用指定的超时和取消令牌等待信号量。
+        /// </summary>
+        /// <param name="semaphoreSlim">要等待的信号量。</param>
+        /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
+        /// <param name="token">用于取消操作的取消令牌。</param>
+        /// <remarks>
+        /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
+        /// </remarks>
         public static void WaitTime(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
         {
             if (!semaphoreSlim.Wait(millisecondsTimeout, token))
@@ -56,6 +65,16 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <summary>
+        /// 异步等待信号量，具有指定的超时和取消令牌。
+        /// </summary>
+        /// <param name="semaphoreSlim">要等待的信号量。</param>
+        /// <param name="millisecondsTimeout">等待的超时时间（以毫秒为单位）。</param>
+        /// <param name="token">用于取消操作的取消令牌。</param>
+        /// <returns>一个Task对象，表示异步等待操作。</returns>
+        /// <remarks>
+        /// 如果信号量未在指定的超时时间内释放，则抛出超时异常。
+        /// </remarks>
         public static async Task WaitTimeAsync(this SemaphoreSlim semaphoreSlim, int millisecondsTimeout, CancellationToken token)
         {
             if (!await semaphoreSlim.WaitAsync(millisecondsTimeout, token).ConfigureAwait(false))
@@ -160,18 +179,27 @@ namespace TouchSocket.Core
             }
         }
 
+        /// <summary>
+        /// 启动一个任务并立即返回，任务执行过程中发生的异常不会导致程序崩溃。
+        /// </summary>
+        /// <param name="task">要启动的异步任务。</param>
         public static void FireAndForget(this Task task)
         {
+            // 检查传入的任务是否为空，如果是空则直接返回，不执行后续逻辑。
             if (task is null)
             {
                 return;
             }
 
+            // 如果任务已经完成，则检查是否有异常，如果有异常则通过GC.KeepAlive防止异常对象被过早回收。
             if (task.IsCompleted)
             {
                 GC.KeepAlive(task.Exception);
                 return;
             }
+
+            // 如果任务尚未完成，则注册一个在任务出现异常时执行的继续操作。
+            // 这里使用GC.KeepAlive防止异常对象被过早回收，同时通过TaskContinuationOptions.OnlyOnFaulted确保只有在任务出现异常时才执行继续操作。
             task.ContinueWith(t => GC.KeepAlive(t.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
 

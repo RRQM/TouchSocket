@@ -10,29 +10,37 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// Tcp系列服务器接口
+    /// 定义了一个泛型接口 ITcpService{TClient}，用于处理 TCP 服务的核心功能。
     /// </summary>
-    public interface ITcpService<TClient> : ITcpServiceBase<TClient>, IIdSender, IIdRequsetInfoSender, IPluginObject where TClient : ITcpSessionClient
+    /// <typeparam name="TClient">客户端会话类型，必须实现 ITcpSessionClient 接口。</typeparam>
+    public interface ITcpService<TClient> : ITcpServiceBase<TClient>, IIdSender, IIdRequestInfoSender
+        where TClient : ITcpSessionClient
+
     {
         /// <summary>
-        /// 用户连接完成
+        /// 用户连接完成时的事件处理程序
         /// </summary>
         ConnectedEventHandler<TClient> Connected { get; set; }
 
+
         /// <summary>
-        /// 有用户连接的时候
+        /// 当有用户连接时触发的事件
         /// </summary>
         ConnectingEventHandler<TClient> Connecting { get; set; }
 
+
         /// <summary>
-        /// 有用户断开连接
+        /// 用户断开连接事件的事件处理程序
         /// </summary>
+        /// <typeparam name="TClient">客户端类型的泛型参数</typeparam>
+        /// <remarks>
+        /// 此属性用于获取或设置一个事件处理程序，该处理程序在用户断开连接时被调用
+        /// </remarks>
         ClosedEventHandler<TClient> Closed { get; set; }
+
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。

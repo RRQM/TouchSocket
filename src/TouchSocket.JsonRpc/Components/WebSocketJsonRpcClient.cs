@@ -12,7 +12,6 @@
 
 using System;
 using System.Net.WebSockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +66,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }
@@ -177,13 +176,14 @@ namespace TouchSocket.JsonRpc
         {
         }
 
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var context = new JsonRpcWaitResult();
             var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-            invokeOption  ??= InvokeOption.WaitInvoke;
+            invokeOption ??= InvokeOption.WaitInvoke;
 
-            parameters  ??= new object[0];
+            parameters ??= new object[0];
 
             var jsonRpcRequest = new JsonRpcRequest
             {

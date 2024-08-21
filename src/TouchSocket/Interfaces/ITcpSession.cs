@@ -16,14 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 表示Tcp连接链路
+    /// 定义了一个ITcpSession接口，该接口继承自IClient, IResolverConfigObject, IOnlineClient, IClosableClient等多个接口。
+    /// 该接口的目的是为TCP会话提供一组标准的方法和属性，以实现TCP会话的创建、管理和关闭等功能。
     /// </summary>
     public interface ITcpSession : IClient, IResolverConfigObject, IOnlineClient, IClosableClient
+
     {
         /// <summary>
         /// 数据处理适配器
         /// </summary>
         SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
+
 
         /// <summary>
         /// IP地址

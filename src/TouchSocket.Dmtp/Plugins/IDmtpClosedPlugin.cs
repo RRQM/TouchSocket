@@ -17,16 +17,16 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IDmtpClosedPlugin
+    /// 定义了一个插件接口，用于处理会话关闭后的操作
     /// </summary>
-    public interface IDmtpClosedPlugin: IPlugin
+    public interface IDmtpClosedPlugin : IPlugin
     {
         /// <summary>
         /// 会话断开后触发
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">触发事件的客户端对象</param>
+        /// <param name="e">断开事件的参数</param>
+        /// <returns>一个异步任务，表示操作的完成</returns>
         Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e);
     }
 }

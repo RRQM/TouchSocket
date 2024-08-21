@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 重新设置Id
         /// </summary>
-        /// <param name="newId"></param>
+        /// <param name="newId">新的Id值</param>
         Task ResetIdAsync(string newId);
 
         /// <summary>

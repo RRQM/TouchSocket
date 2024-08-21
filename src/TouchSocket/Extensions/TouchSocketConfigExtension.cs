@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// TouchSocketConfigExtension
+    /// 触摸套接字配置扩展类
     /// </summary>
     public static class TouchSocketConfigExtension
     {
@@ -66,7 +66,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static TouchSocketConfig SetMinBufferSize(this TouchSocketConfig config, int value)
         {
-            if (value<1024)
+            if (value < 1024)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
             }
@@ -84,11 +84,11 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public static TouchSocketConfig SetMaxBufferSize(this TouchSocketConfig config, int value)
         {
-            if (value<1024)
+            if (value < 1024)
             {
                 ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(value), value, 1024);
             }
-            
+
             config.SetValue(MaxBufferSizeProperty, value);
             return config;
         }

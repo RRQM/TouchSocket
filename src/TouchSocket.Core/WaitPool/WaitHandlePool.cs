@@ -16,10 +16,12 @@ using System.Threading;
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// 等待处理数据
+    /// WaitHandlePool 类用于管理具有等待句柄的资源，提供了一种线程安全的资源分配和回收机制。
+    /// 它的目的是优化资源使用，通过重用资源来减少创建和销毁资源的开销。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">资源类型，必须实现 IWaitHandle 接口。</typeparam>
     public class WaitHandlePool<T> : DisposableObject where T : IWaitHandle
     {
         private readonly ConcurrentDictionary<int, WaitData<T>> m_waitDic;
@@ -31,8 +33,12 @@ namespace TouchSocket.Core
         private int m_minSign = int.MinValue;
 
         /// <summary>
-        /// 构造函数
+        /// 初始化WaitHandle池。
         /// </summary>
+        /// <remarks>
+        /// 在构造函数中，初始化了四个并发集合，用于管理和存储等待数据。
+        /// 这些集合分别用于同步和异步操作的等待数据，以及它们之间的转换。
+        /// </remarks>
         public WaitHandlePool()
         {
             this.m_waitDic = new ConcurrentDictionary<int, WaitData<T>>();
@@ -110,120 +116,157 @@ namespace TouchSocket.Core
             }
         }
 
+
         /// <summary>
-        ///  获取一个可等待对象
+        /// 获取同步等待数据对象，并为其设置结果。
         /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
+        /// <param name="result">要设置给等待数据对象的结果。</param>
+        /// <param name="autoSign">是否自动签名，默认为true。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitData<T> GetWaitData(T result, bool autoSign = true)
         {
+            // 尝试从同步等待队列中取出一个等待数据对象
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
+                // 如果自动签名开启，则为结果对象设置签名
                 if (autoSign)
                 {
                     result.Sign = this.GetSign();
                 }
+                // 设置等待数据对象的结果
                 waitData.SetResult(result);
+                // 将结果对象的签名和等待数据对象添加到字典中
                 this.m_waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitData<T>();
+            // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
                 result.Sign = this.GetSign();
             }
+            // 设置等待数据对象的结果
             waitData.SetResult(result);
+            // 将结果对象的签名和等待数据对象添加到字典中
             this.m_waitDic.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        /// 获取一个可等待对象。并out返回标识。
+        /// 获取同步等待数据对象，并为其设置默认结果。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
+        /// <param name="sign">返回签名。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitData<T> GetWaitData(out int sign)
         {
+            // 尝试从同步等待队列中取出一个等待数据对象
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
+                // 生成签名
                 sign = this.GetSign();
+                // 设置等待数据对象的默认结果
                 waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
                 this.m_waitDic.TryAdd(sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitData<T>();
+            // 生成签名
             sign = this.GetSign();
+            // 设置等待数据对象的默认结果
             waitData.SetResult(default);
+            // 将签名和等待数据对象添加到字典中
             this.m_waitDic.TryAdd(sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        ///  获取一个可等待对象
+        /// 获取异步等待数据对象，并为其设置结果。
         /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
+        /// <param name="result">要设置给等待数据对象的结果。</param>
+        /// <param name="autoSign">是否自动签名，默认为true。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitDataAsync<T> GetWaitDataAsync(T result, bool autoSign = true)
         {
+            // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
+                // 如果自动签名开启，则为结果对象设置签名
                 if (autoSign)
                 {
                     result.Sign = this.GetSign();
                 }
+                // 设置等待数据对象的结果
                 waitData.SetResult(result);
+                // 将结果对象的签名和等待数据对象添加到字典中
                 this.m_waitDicAsync.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitDataAsync<T>();
+            // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
                 result.Sign = this.GetSign();
             }
+            // 设置等待数据对象的结果
             waitData.SetResult(result);
+            // 将结果对象的签名和等待数据对象添加到字典中
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        ///  获取一个可等待对象
+        /// 获取异步等待数据对象，并为其设置默认结果。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
+        /// <param name="sign">返回签名。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitDataAsync<T> GetWaitDataAsync(out int sign)
         {
+            // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
+                // 生成签名
                 sign = this.GetSign();
+                // 设置等待数据对象的默认结果
                 waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
                 this.m_waitDicAsync.TryAdd(sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitDataAsync<T>();
+            // 生成签名
             sign = this.GetSign();
+            // 设置等待数据对象的默认结果
             waitData.SetResult(default);
+            // 将签名和等待数据对象添加到字典中
             this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
         }
 
-        /// <summary>
-        /// 让等待对象恢复运行
+       
+               /// <summary>
+        /// 根据标志设置异步等待数据为运行状态。
         /// </summary>
-        /// <param name="sign"></param>
+        /// <param name="sign">操作的标志。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
         public bool SetRun(int sign)
         {
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set();
                 return true;
             }
 
+            // 尝试从同步等待数据字典中获取并设置等待数据
             if (this.m_waitDic.TryGetValue(sign, out var waitData))
             {
                 waitData.Set();
@@ -234,17 +277,20 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 让等待对象恢复运行
+        /// 根据标志和结果对象设置等待数据为运行状态。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <param name="waitResult"></param>
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitResult">等待的结果对象。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
         public bool SetRun(int sign, T waitResult)
         {
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
                 return true;
             }
+            // 尝试从同步等待数据字典中获取并设置等待数据
             if (this.m_waitDic.TryGetValue(sign, out var waitData))
             {
                 waitData.Set(waitResult);
@@ -255,17 +301,20 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 让等待对象恢复运行
+        /// 根据结果对象的标志设置异步等待数据为运行状态。
         /// </summary>
-        /// <param name="waitResult"></param>
+        /// <param name="waitResult">等待的结果对象，包含标志和数据。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
         public bool SetRun(T waitResult)
         {
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
                 return true;
             }
 
+            // 尝试从同步等待数据字典中获取并设置等待数据
             if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
             {
                 waitData.Set(waitResult);
@@ -275,20 +324,29 @@ namespace TouchSocket.Core
             return false;
         }
 
+        /// <summary>
+        /// 尝试获取指定标志的同步等待数据。
+        /// </summary>
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitData">获取到的等待数据。</param>
+        /// <returns>如果找到等待数据，则返回true；否则返回false。</returns>
         public bool TryGetData(int sign, out WaitData<T> waitData)
         {
             return this.m_waitDic.TryGetValue(sign, out waitData);
         }
 
+        /// <summary>
+        /// 尝试获取指定标志的异步等待数据。
+        /// </summary>
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitDataAsync">获取到的异步等待数据。</param>
+        /// <returns>如果找到异步等待数据，则返回true；否则返回false。</returns>
         public bool TryGetDataAsync(int sign, out WaitDataAsync<T> waitDataAsync)
         {
             return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
         }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
+        
+         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

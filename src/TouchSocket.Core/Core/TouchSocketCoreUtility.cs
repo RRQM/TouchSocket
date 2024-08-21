@@ -60,11 +60,23 @@ namespace TouchSocket.Core
 #endif
         private static int s_seed;
 
+        /// <summary>
+        /// 生成指定范围内的随机Int64整数
+        /// </summary>
+        /// <returns>返回一个在0到10000000之间的随机Int64整数</returns>
         public static long GenerateRandomInt64()
         {
-            return (long)Math.Floor((new Random(s_seed++)).NextDouble() * 10000000D);
-        }
+            // 使用种子生成器创建一个新的随机数生成器实例
+            // 种子递增以保持随机性
+            Random random = new Random(s_seed++);
 
+            // 生成一个0到1之间的随机双精度浮点数
+            double randomDouble = random.NextDouble();
+
+            // 将随机双精度浮点数乘以10000000，然后取其整数部分
+            // 以获得一个在0到10000000之间的随机Int64整数
+            return (long)Math.Floor(randomDouble * 10000000D);
+        }
         /// <summary>
         /// 判断输入的字符串是否是一个超链接
         /// </summary>

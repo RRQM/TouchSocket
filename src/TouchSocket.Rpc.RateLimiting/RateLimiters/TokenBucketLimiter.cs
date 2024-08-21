@@ -15,7 +15,7 @@ using System.Threading.RateLimiting;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
-    internal sealed class TokenBucketLimiterPolicy : RateLimiterPolicy
+    internal sealed class TokenBucketLimiterPolicy : RateLimiterPolicy<MethodInfo>
     {
         private readonly TokenBucketRateLimiterOptions m_options;
 
@@ -23,7 +23,10 @@ namespace TouchSocket.Rpc.RateLimiting
         {
             this.m_options = options;
         }
-
+        protected override MethodInfo GetPartitionKey(ICallContext callContext)
+        {
+            return callContext.RpcMethod.Info;
+        }
         protected override RateLimiter NewRateLimiter(MethodInfo method)
         {
             return new TokenBucketRateLimiter(this.m_options);

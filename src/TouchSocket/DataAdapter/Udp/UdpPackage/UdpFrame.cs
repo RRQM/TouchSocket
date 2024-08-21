@@ -11,10 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -49,13 +46,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         public ushort SN { get; set; }
 
-        /// <summary>
-        /// 解析
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
         public unsafe bool Parse(ReadOnlySpan<byte> span)
         {
             var length = span.Length;

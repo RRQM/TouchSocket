@@ -115,20 +115,20 @@ namespace TouchSocket.Dmtp.AspNetCore
         }
 
         /// <inheritdoc/>
-        public async Task ResetIdAsync(string targetId)
+        public async Task ResetIdAsync(string newId)
         {
-            if (string.IsNullOrEmpty(targetId))
+            if (string.IsNullOrEmpty(newId))
             {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+                throw new ArgumentException($"“{nameof(newId)}”不能为 null 或空。", nameof(newId));
             }
 
-            if (this.m_id == targetId)
+            if (this.m_id == newId)
             {
                 return;
             }
 
-            await this.DmtpActor.ResetIdAsync(targetId).ConfigureAwait(false);
-            await this.ProtectedResetIdAsync(targetId).ConfigureAwait(false);
+            await this.DmtpActor.ResetIdAsync(newId).ConfigureAwait(false);
+            await this.ProtectedResetIdAsync(newId).ConfigureAwait(false);
         }
 
         internal void InternalSetConfig(TouchSocketConfig config)

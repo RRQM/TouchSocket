@@ -21,7 +21,8 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// UdpDmtpService
+    /// 定义了UDP数据传输协议（DMTP）的实现类。
+    /// 该类继承自UdpSessionBase并实现了IUdpDmtp接口，提供了基于UDP协议的数据传输机制。
     /// </summary>
     public partial class UdpDmtp : UdpSessionBase, IUdpDmtp
     {
@@ -29,15 +30,19 @@ namespace TouchSocket.Dmtp
         private readonly ConcurrentDictionary<EndPoint, UdpDmtpClient> m_udpDmtpClients = new ConcurrentDictionary<EndPoint, UdpDmtpClient>();
 
         /// <summary>
-        /// 构造函数
+        /// UdpDmtp类的构造函数。
+        /// 初始化一个定时器，用于定期清理不活跃的客户端连接。
         /// </summary>
         public UdpDmtp()
         {
+            // 初始化定时器，每隔一段时间执行一次清理任务
             this.m_timer = new Timer((obj) =>
             {
+                // 移除超过1分钟未活跃的客户端
                 this.m_udpDmtpClients.RemoveWhen((kv) =>
                 {
-                    if (DateTime.Now - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
+                    // 如果客户端最后一次活跃时间距现在超过1分钟，则认为该客户端不活跃
+                    if (DateTime.UtcNow - kv.Value.LastActiveTime > TimeSpan.FromMinutes(1))
                     {
                         return true;
                     }
@@ -50,13 +55,19 @@ namespace TouchSocket.Dmtp
         public IDmtpActor DmtpActor => this.PrivateGetUdpDmtpClientAsync().DmtpActor;
 
         /// <summary>
-        /// 通过终结点获取<see cref="IUdpDmtpClient"/>
+        /// 异步地通过终结点获取 <see cref="IUdpDmtpClient"/> 实例。
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <returns></returns>
+        /// <param name="endPoint">指定的终结点，用于创建 <see cref="IUdpDmtpClient"/> 实例。</param>
+        /// <returns>返回一个任务，该任务的结果是 <see cref="IUdpDmtpClient"/> 实例。</returns>
         public async Task<IUdpDmtpClient> GetUdpDmtpClientAsync(EndPoint endPoint)
         {
-            return await this.PrivateGetUdpDmtpClient(endPoint).ConfigureAwait(false);
+            // 调用内部私有方法来获取 UDP DMTP 客户端实例，且不在调用上下文中等待结果。
+            return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(false);
+        }
+
+        internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory)
+        {
+            return this.ProtectedSendAsync(m_endPoint, memory);
         }
 
         /// <inheritdoc/>
@@ -68,9 +79,15 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
+        {
+            base.LoadConfig(config);
+        }
+
+        /// <inheritdoc/>
         protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
-            var client =await this.PrivateGetUdpDmtpClient(e.EndPoint).ConfigureAwait(false);
+            var client = await this.PrivateGetUdpDmtpClientAsync(e.EndPoint).ConfigureAwait(false);
             if (client == null)
             {
                 return;
@@ -86,13 +103,7 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            base.LoadConfig(config);
-        }
-
-        private async Task<UdpDmtpClient> PrivateGetUdpDmtpClient(EndPoint endPoint)
+        private async Task<UdpDmtpClient> PrivateGetUdpDmtpClientAsync(EndPoint endPoint)
         {
             if (!this.m_udpDmtpClients.TryGetValue(endPoint, out var udpRpcActor))
             {
@@ -108,23 +119,13 @@ namespace TouchSocket.Dmtp
             return udpRpcActor;
         }
 
-        private IUdpDmtpClient PrivateGetUdpDmtpClientAsync()
+        private UdpDmtpClient PrivateGetUdpDmtpClientAsync()
         {
             if (this.RemoteIPHost == null)
             {
                 throw new ArgumentNullException(nameof(this.RemoteIPHost));
             }
-            return this.PrivateGetUdpDmtpClient(this.RemoteIPHost.EndPoint).GetFalseAwaitResult();
-        }
-
-        //internal void InternalSend(EndPoint m_endPoint, ArraySegment<byte>[] transferBytes)
-        //{
-        //    this.ProtectedSend(m_endPoint, transferBytes);
-        //}
-
-        internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory)
-        {
-            return this.ProtectedSendAsync(m_endPoint, memory);
+            return this.PrivateGetUdpDmtpClientAsync(this.RemoteIPHost.EndPoint).GetFalseAwaitResult();
         }
     }
 }

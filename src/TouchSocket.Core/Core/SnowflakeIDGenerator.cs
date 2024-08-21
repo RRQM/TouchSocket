@@ -59,7 +59,7 @@ namespace TouchSocket.Core
             }
 
             s_workerId = workerId;
-            this.m_twepoch = DateTime.Now.Ticks - 10000;
+            this.m_twepoch = DateTime.UtcNow.Ticks - 10000;
         }
 
         /// <summary>

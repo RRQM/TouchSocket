@@ -36,7 +36,7 @@ namespace TouchSocket.Dmtp
                     {
                         return;
                     }
-                    if ((DateTime.Now - client.DmtpActor.LastActiveTime < this.Tick))
+                    if (DateTime.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
                     {
                         continue;
                     }

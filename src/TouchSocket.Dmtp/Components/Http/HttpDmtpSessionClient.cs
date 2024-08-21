@@ -19,7 +19,8 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// Http服务器辅助类
+    /// 抽象类 HttpDmtpSessionClient 继承自 HttpSessionClient，并实现 IHttpDmtpSessionClient 接口。
+    /// 该类提供了与 HTTP DMTP 协议相关的会话客户端功能。
     /// </summary>
     public abstract class HttpDmtpSessionClient : HttpSessionClient, IHttpDmtpSessionClient
     {
@@ -55,10 +56,7 @@ namespace TouchSocket.Dmtp
             await base.CloseAsync(msg).ConfigureAwait(false);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (this.DisposedValue)
@@ -66,17 +64,10 @@ namespace TouchSocket.Dmtp
                 return;
             }
             base.Dispose(disposing);
-            if (disposing&&this.m_dmtpActor!=null)
+            if (disposing && this.m_dmtpActor != null)
             {
                 this.m_dmtpActor.Dispose();
             }
-        }
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpClosed(ClosedEventArgs e)
-        {
-            await base.OnTcpClosed(e);
-            await this.OnDmtpClosed(e).ConfigureAwait(false);
         }
 
         #endregion 断开
@@ -84,14 +75,14 @@ namespace TouchSocket.Dmtp
         #region ResetId
 
         ///<inheritdoc/>
-        public override async Task ResetIdAsync(string targetId)
+        public override async Task ResetIdAsync(string newId)
         {
             if (this.m_dmtpActor == null)
             {
-                await base.ResetIdAsync(targetId).ConfigureAwait(false);
+                await base.ResetIdAsync(newId).ConfigureAwait(false);
                 return;
             }
-            await this.m_dmtpActor.ResetIdAsync(targetId).ConfigureAwait(false);
+            await this.m_dmtpActor.ResetIdAsync(newId).ConfigureAwait(false);
         }
 
         #endregion ResetId
@@ -120,23 +111,12 @@ namespace TouchSocket.Dmtp
             this.SetAdapter(new DmtpAdapter());
         }
 
-        //private void ThisDmtpActorOutputSend(DmtpActor actor, ArraySegment<byte>[] transferBytes)
-        //{
-        //    base.ProtectedSend(transferBytes);
-        //}
-
         private Task ThisDmtpActorOutputSendAsync(DmtpActor actor, ReadOnlyMemory<byte> memory)
         {
             return base.ProtectedDefaultSendAsync(memory);
         }
 
         #region Override
-
-        /// <inheritdoc/>
-        protected override async Task OnTcpClosing(ClosingEventArgs e)
-        {
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
-        }
 
         /// <inheritdoc/>
         protected override async Task OnReceivedHttpRequest(HttpContext httpContext)
@@ -153,6 +133,20 @@ namespace TouchSocket.Dmtp
                 return;
             }
             await base.OnReceivedHttpRequest(httpContext).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosed(ClosedEventArgs e)
+        {
+            await this.OnDmtpClosed(e).ConfigureAwait(false);
+            await base.OnTcpClosed(e);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosing(ClosingEventArgs e)
+        {
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
+            await base.OnTcpClosing(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -212,29 +206,72 @@ namespace TouchSocket.Dmtp
         #region 事件
 
         /// <summary>
-        /// 当创建通道
+        /// 当创建通道时触发的事件处理程序
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含通道创建信息的事件参数</param>
         protected virtual async Task OnCreatedChannel(CreateChannelEventArgs e)
         {
+            // 如果事件已经被处理，则直接返回
             if (e.Handled)
             {
                 return;
             }
 
+            // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件关于通道创建的事件
             await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 当Dmtp关闭以后。
+        /// </summary>
+        /// <param name="e">事件参数</param>
+        /// <returns></returns>
+        protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
+        {
+            //如果事件已经被处理，则直接返回
+            if (e.Handled)
+            {
+                return;
+            }
+            //通知插件管理器，Dmtp已经关闭
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 当Dmtp即将被关闭时触发。
+        /// <para>
+        /// 该触发条件有2种：
+        /// <list type="number">
+        /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
+        /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
+        /// </list>
+        /// </para>
+        /// </summary>
+        /// <param name="e">提供了关闭事件的相关信息。</param>
+        /// <returns>返回一个Task对象，表示异步操作的完成。</returns>
+        protected virtual async Task OnDmtpClosing(ClosingEventArgs e)
+        {
+            // 如果关闭事件已经被处理，则直接返回，不再执行后续操作。
+            if (e.Handled)
+            {
+                return;
+            }
+            // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         /// <summary>
         /// 在完成握手连接时
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含握手信息的事件参数</param>
         protected virtual async Task OnHandshaked(DmtpVerifyEventArgs e)
         {
+            // 如果握手已经被处理，则不再执行后续操作
             if (e.Handled)
             {
                 return;
             }
+            // 触发插件管理器中的握手完成插件事件
             await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
@@ -252,51 +289,18 @@ namespace TouchSocket.Dmtp
         }
 
         /// <summary>
-        /// 在需要转发路由包时。
+        /// 当需要转发路由包时。
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">包含路由包相关信息的事件参数。</param>
         protected virtual async Task OnRouting(PackageRouterEventArgs e)
         {
+            // 如果事件已经被处理，则直接返回。
             if (e.Handled)
             {
                 return;
             }
+            // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包。
             await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// 当Dmtp关闭以后。
-        /// </summary>
-        /// <param name="e">事件参数</param>
-        /// <returns></returns>
-        protected virtual async Task OnDmtpClosed(ClosedEventArgs e)
-        {
-            if (e.Handled)
-            {
-                return;
-            }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// 当Dmtp即将被关闭时触发。
-        /// <para>
-        /// 该触发条件有2种：
-        /// <list type="number">
-        /// <item>终端主动调用<see cref="CloseAsync(string)"/>。</item>
-        /// <item>终端收到<see cref="DmtpActor.P0_Close"/>的请求。</item>
-        /// </list>
-        /// </para>
-        /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        protected virtual async Task OnDmtpClosing(ClosingEventArgs e)
-        {
-            if (e.Handled)
-            {
-                return;
-            }
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件
