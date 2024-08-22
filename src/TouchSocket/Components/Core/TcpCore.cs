@@ -176,7 +176,6 @@ namespace TouchSocket.Sockets
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
         }
-
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
@@ -189,12 +188,13 @@ namespace TouchSocket.Sockets
                 return;
             }
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(false);
+            await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
+                , sslOption.SslProtocols
+                , sslOption.CheckCertificateRevocation).ConfigureAwait(false);
 
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
         }
-
         /// <summary>
         /// 以Ssl客户端模式授权
         /// </summary>
