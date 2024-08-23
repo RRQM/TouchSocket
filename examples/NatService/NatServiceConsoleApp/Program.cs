@@ -15,34 +15,34 @@ using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
-namespace NATServiceConsoleApp
+namespace NatServiceConsoleApp
 {
-    internal class MyNATService : NATService
+    internal class MyNatService : NatService
     {
-        protected override Task<byte[]> OnNATReceived(NATSessionClient socketClient, ReceivedDataEventArgs e)
+        protected override Task<byte[]> OnNatReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
         {
             //服务器收到的数据
-            return base.OnNATReceived(socketClient, e);
+            return base.OnNatReceived(socketClient, e);
         }
 
-        protected override Task OnTargetClientClosed(NATSessionClient socketClient, ITcpClient tcpClient, ClosedEventArgs e)
+        protected override Task OnTargetClientClosed(NatSessionClient socketClient, ITcpClient tcpClient, ClosedEventArgs e)
         {
             socketClient.Logger.Info($"{socketClient.IP}:{socketClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
             return base.OnTargetClientClosed(socketClient, tcpClient, e);
         }
 
-        protected override Task<byte[]> OnTargetClientReceived(NATSessionClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
+        protected override Task<byte[]> OnTargetClientReceived(NatSessionClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
         {
             //连接的客户端收到的数据
             return base.OnTargetClientReceived(socketClient, tcpClient, e);
         }
 
-        protected override async Task OnTcpConnected(NATSessionClient socketClient, ConnectedEventArgs e)
+        protected override async Task OnTcpConnected(NatSessionClient socketClient, ConnectedEventArgs e)
         {
             await base.OnTcpConnected(socketClient, e);
             try
             {
-                //此处模拟的是只要连接到NAT服务器，就转发。
+                //此处模拟的是只要连接到Nat服务器，就转发。
                 //实际上，这个方法可以随时调用。
                 await socketClient.AddTargetClientAsync(new TouchSocketConfig()
                      .SetRemoteIPHost("127.0.0.1:7789")
@@ -61,7 +61,7 @@ namespace NATServiceConsoleApp
     {
         private static async Task Main(string[] args)
         {
-            var service = new MyNATService();
+            var service = new MyNatService();
             var config = new TouchSocketConfig();
             config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
 

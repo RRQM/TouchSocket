@@ -22,6 +22,7 @@ namespace BytePoolConsoleApp
         {
             NewBytePool();
             BaseWriteRead();
+            BufferWriterWriteRead();
             PrimitiveWriteRead();
             BytesPackageWriteRead();
             IPackageWriteRead();
@@ -56,7 +57,7 @@ namespace BytePoolConsoleApp
                 byteBlock.SeekToStart();
 
                 //使用下列方式即可高效完成读取
-                var memory=byteBlock.ReadBytesPackageMemory();
+                var memory = byteBlock.ReadBytesPackageMemory();
 
             }
         }
@@ -72,10 +73,32 @@ namespace BytePoolConsoleApp
 
                 byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
-                var byteValue = (byte)byteBlock.ReadByte();
+                var byteValue = byteBlock.ReadByte();
                 var intValue = byteBlock.ReadInt32();
                 var longValue = byteBlock.ReadInt64();
                 var stringValue = byteBlock.ReadString();
+            }
+        }
+
+        private static void BufferWriterWriteRead()
+        {
+            using (var byteBlock = new ByteBlock())
+            {
+                var span = byteBlock.GetSpan(4);
+                span[0] = 0;
+                span[1] = 1;
+                span[2] = 2;
+                span[3] = 3;
+                byteBlock.Advance(4);
+
+                var memory = byteBlock.GetMemory(4);
+                memory.Span[0] = 4;
+                memory.Span[1] = 5;
+                memory.Span[2] = 6;
+                memory.Span[3] = 7;
+                byteBlock.Advance(4);
+
+                //byteBlock.Length 应该是8
             }
         }
 
@@ -152,7 +175,7 @@ namespace BytePoolConsoleApp
         //{
         //    this.Property = byteBlock.ReadInt32();
         //}
-     
+
     }
 
     internal class MyClass

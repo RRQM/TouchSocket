@@ -345,6 +345,13 @@ namespace WebSocketConsoleApp
                         {
                             case WSDataType.Cont:
                                 {
+                                    //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                    //var segment = data.AsSegment();
+                                    //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                                    //如果是net6.0以上，直接写入span即可
+                                    stream.Write(data.Span);
+
                                     //收到的是中继包
                                     if (dataFrame.FIN)//判断是否为最终包
                                     {
@@ -362,13 +369,6 @@ namespace WebSocketConsoleApp
                                     else
                                     {
                                         //否，继续缓存
-
-                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
-                                        //var segment = data.AsSegment();
-                                        //stream.Write(segment.Array, segment.Offset, segment.Count);
-
-                                        //如果是net6.0以上，直接写入span即可
-                                        stream.Write(data.Span);
                                     }
                                 }
                                 break;

@@ -89,9 +89,10 @@ namespace WebApiClientApp
         /// <summary>
         /// 此处可以做WebApi的请求之前和之后的拦截。
         /// </summary>
-        private class MyWebApiPlugin : PluginBase, IWebApiPlugin<IWebApiClientBase>
+        private class MyWebApiPlugin : PluginBase, IWebApiRequestPlugin,IWebApiResponsePlugin
         {
-            public async Task OnRequest(IWebApiClientBase client, WebApiEventArgs e)
+
+            public async Task OnWebApiRequest(IWebApiClientBase client, WebApiEventArgs e)
             {
                 if (e.IsHttpMessage)//发送的是System.Net.Http.HttpClient为通讯主体
                 {
@@ -107,7 +108,7 @@ namespace WebApiClientApp
                 await e.InvokeNext();
             }
 
-            public async Task OnResponse(IWebApiClientBase client, WebApiEventArgs e)
+            public async Task OnWebApiResponse(IWebApiClientBase client, WebApiEventArgs e)
             {
                 await e.InvokeNext();
             }
