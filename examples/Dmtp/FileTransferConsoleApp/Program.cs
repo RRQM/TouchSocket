@@ -751,7 +751,7 @@ namespace FileTransferConsoleApp
         }
     }
 
-    internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin, IDmtpRoutingPlugin
+    internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTransferredPlugin, IDmtpRoutingPlugin
     {
         private readonly ILog m_logger;
 
@@ -767,7 +767,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
+        public async Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
             if (e.TransferType.IsPull())
@@ -791,7 +791,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
+        public async Task OnDmtpFileTransferring(IDmtpActorObject client, FileTransferringEventArgs e)
         {
             foreach (var item in e.Metadata.Keys)
             {
