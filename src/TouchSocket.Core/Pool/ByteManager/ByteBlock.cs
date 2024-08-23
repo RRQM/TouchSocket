@@ -363,6 +363,61 @@ namespace TouchSocket.Core
 
         #endregion ToArray
 
+        #region AsSegment
+
+
+        /// <summary>
+        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public ArraySegment<byte> AsSegment(int offset, int length)
+        {
+            ThrowIfDisposed();
+            return new ArraySegment<byte>(m_buffer, offset, length);
+        }
+
+        /// <summary>
+        /// 转换为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <returns></returns>
+        public ArraySegment<byte> AsSegment()
+        {
+            return AsSegment(0, m_length);
+        }
+
+        /// <summary>
+        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public ArraySegment<byte> AsSegment(int offset)
+        {
+            return AsSegment(offset, m_length - offset);
+        }
+
+        /// <summary>
+        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public ArraySegment<byte> AsSegmentTake(int length)
+        {
+            return AsSegment(m_position, length);
+        }
+
+        /// <summary>
+        /// 将当前<see cref="Position"/>至有效长度转化为有效内存。本操作不递增<see cref="Position"/>
+        /// </summary>
+        /// <returns></returns>
+        public ArraySegment<byte> AsSegmentTake()
+        {
+            return AsSegment(m_position, m_length - m_position);
+        }
+
+        #endregion
+
         #region ToString
 
         /// <inheritdoc/>
