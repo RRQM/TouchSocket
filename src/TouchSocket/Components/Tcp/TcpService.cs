@@ -713,7 +713,7 @@ namespace TouchSocket.Sockets
                             try
                             {
                                 await client.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureFalseAwait();
-                                _ = client.BeginReceiveSsl();
+                                client.BeginReceiveSsl();
                             }
                             catch (Exception ex)
                             {

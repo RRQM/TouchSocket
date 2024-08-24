@@ -264,6 +264,7 @@ namespace TouchSocket.Sockets
             {
                 throw new Exception("请先完成Ssl验证授权");
             }
+
             while (this.m_online)
             {
                 var byteBlock = new ByteBlock(this.ReceiveBufferSize);
