@@ -85,6 +85,7 @@ namespace WebApiServerApp
         }
     }
 
+    //[CustomResponse]
     public partial class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
@@ -203,6 +204,25 @@ namespace WebApiServerApp
             return Task.FromResult("ok");
         }
     }
+
+    //class CustomResponseAttribute:RpcActionFilterAttribute
+    //{
+    //    public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
+    //    {
+    //        if (callContext is IWebApiCallContext webApiCallContext)
+    //        {
+    //           var response= webApiCallContext.HttpContext.Response;
+
+    //            response.FromJson(invokeResult.Result.ToJsonString());
+    //            response.SetStatus(200,"Success");
+    //            response.Headers.Remove("server");
+
+    //           await response.AnswerAsync();
+    //        }
+
+    //        return invokeResult;
+    //    }
+    //}
 
     public class MyClass
     {
