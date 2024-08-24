@@ -289,17 +289,17 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private void Authenticate()
+        private async Task AuthenticateAsync()
         {
             if (this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) is ClientSslOption sslOption)
             {
-                this.m_tcpCore.Authenticate(sslOption);
+                await this.m_tcpCore.AuthenticateAsync(sslOption);
             }
         }
 
 #if NET6_0_OR_GREATER
 
-                /// <summary>
+        /// <summary>
         /// 异步连接服务器
         /// </summary>
         /// <param name="millisecondsTimeout">连接超时时间，单位为毫秒</param>
@@ -360,7 +360,7 @@ namespace TouchSocket.Sockets
                 // 设置当前Socket
                 this.SetSocket(socket);
                 // 进行身份验证
-                this.Authenticate();
+                await this.AuthenticateAsync().ConfigureAwait(false);
                 // 触发连接成功的事件
                 _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
             }
@@ -411,7 +411,7 @@ namespace TouchSocket.Sockets
                 // 设置新的Socket为当前使用
                 this.SetSocket(socket);
                 // 进行身份验证
-                this.Authenticate();
+                await this.AuthenticateAsync().ConfigureAwait(false);
                 // 启动新任务，处理连接后的操作
                 _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
             }

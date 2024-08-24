@@ -17,8 +17,9 @@ using TouchSocket.Sockets;
 namespace TouchSocket.SerialPorts
 {
 
+
     /// <summary>
-    /// 定义了一个串行连接插件的接口，该插件在建立串行连接时被通知。
+    /// 定义一个接口，用于表示与串行端口连接的插件
     /// </summary>
     public interface ISerialConnectedPlugin : IPlugin
     {

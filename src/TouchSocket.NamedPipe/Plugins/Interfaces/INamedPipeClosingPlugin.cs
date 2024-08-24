@@ -19,14 +19,14 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
-    public interface INamedPipeClosingPlugin: IPlugin
+    public interface INamedPipeClosingPlugin : IPlugin
     {
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">命名管道的会话客户端。</param>
+        /// <param name="e">断开连接事件参数。</param>
+        /// <returns>一个表示异步操作的任务。</returns>
         Task OnNamedPipeClosing(INamedPipeSession client, ClosingEventArgs e);
     }
 }

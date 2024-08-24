@@ -9,19 +9,19 @@ namespace TouchSocket.Core
     public readonly struct Result<T> : IResult<T>
     {
         /// <summary>
-        /// 结果值。
+        /// 结果消息，提供操作的描述信息。
         /// </summary>
-        private readonly T m_value;
-        
+        private readonly string m_message;
+
         /// <summary>
         /// 结果代码，用于表示操作的状态。
         /// </summary>
         private readonly ResultCode m_resultCode;
-        
+
         /// <summary>
-        /// 结果消息，提供操作的描述信息。
+        /// 结果值。
         /// </summary>
-        private readonly string m_message;
+        private readonly T m_value;
 
         /// <summary>
         /// 初始化<see cref="Result{T}"/>结构。
@@ -61,19 +61,19 @@ namespace TouchSocket.Core
         /// <param name="value">操作的返回值。</param>
         public Result(T value) : this(value, ResultCode.Success, ResultCode.Success.GetDescription()) { }
 
+        /// <inheritdoc/>
+        public bool IsSuccess => this.ResultCode == ResultCode.Success;
+
+        /// <inheritdoc/>
+        public string Message => this.m_message;
+
+        /// <inheritdoc/>
+        public ResultCode ResultCode => this.m_resultCode;
+
         /// <summary>
         /// 获取结果值。
         /// </summary>
         public T Value => this.m_value;
-
-        /// <inheritdoc/>
-        public ResultCode ResultCode => m_resultCode;
-
-        /// <inheritdoc/>
-        public string Message => m_message;
-
-        /// <inheritdoc/>
-        public bool IsSuccess => this.ResultCode== ResultCode.Success;
 
         /// <summary>
         /// 隐式类型转换操作符，将值类型<typeparamref name="T"/>转换为<see cref="Result{T}"/>类型。
@@ -85,5 +85,15 @@ namespace TouchSocket.Core
             return new Result<T>(value);
         }
 
+        /// <summary>
+        /// 隐式转换运算符，将<see cref="Result"/>类型转换为<see cref="Result{T}"/>类型。
+        /// </summary>
+        /// <param name="result">原始的<see cref="Result"/>对象。</param>
+        /// <returns>转换后的<see cref="Result{T}"/>对象，其中T为泛型参数。</returns>
+        public static implicit operator Result<T>(Result result)
+        {
+            // 使用传入的Result对象的ResultCode和Message属性值创建一个新的Result<T>对象
+            return new Result<T>(result.ResultCode, result.Message);
+        }
     }
 }

@@ -19,14 +19,15 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 具有预备连接的插件接口
     /// </summary>
-    public interface INamedPipeConnectingPlugin: IPlugin
+    public interface INamedPipeConnectingPlugin : IPlugin
     {
         /// <summary>
         /// 在即将完成连接时触发。
+        /// 该方法用于处理命名管道在连接建立前的事件。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">表示命名管道会话的接口。</param>
+        /// <param name="e">包含连接信息的事件参数。</param>
+        /// <returns>一个表示异步操作的任务。</returns>
         Task OnNamedPipeConnecting(INamedPipeSession client, ConnectingEventArgs e);
     }
 }

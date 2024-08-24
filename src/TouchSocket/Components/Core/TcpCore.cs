@@ -135,47 +135,48 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool UseSsl => this.m_useSsl;
 
-        /// <summary>
-        /// 以Ssl服务器模式授权
-        /// </summary>
-        /// <param name="sslOption"></param>
-        public void Authenticate(ServiceSslOption sslOption)
-        {
-            if (this.m_useSsl)
-            {
-                return;
-            }
+        ///// <summary>
+        ///// 以Ssl服务器模式授权
+        ///// </summary>
+        ///// <param name="sslOption"></param>
+        //public void Authenticate(ServiceSslOption sslOption)
+        //{
+        //    if (this.m_useSsl)
+        //    {
+        //        return;
+        //    }
 
-            var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            sslStream.AuthenticateAsServer(sslOption.Certificate);
+        //    var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
+        //    sslStream.AuthenticateAsServer(sslOption.Certificate);
 
-            this.m_sslStream = sslStream;
-            this.m_useSsl = true;
-        }
+        //    this.m_sslStream = sslStream;
+        //    this.m_useSsl = true;
+        //}
 
-        /// <summary>
-        /// 以Ssl客户端模式授权
-        /// </summary>
-        /// <param name="sslOption"></param>
-        public void Authenticate(ClientSslOption sslOption)
-        {
-            if (this.m_useSsl)
-            {
-                return;
-            }
+        ///// <summary>
+        ///// 以Ssl客户端模式授权
+        ///// </summary>
+        ///// <param name="sslOption"></param>
+        //public void Authenticate(ClientSslOption sslOption)
+        //{
+        //    if (this.m_useSsl)
+        //    {
+        //        return;
+        //    }
 
-            var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            if (sslOption.ClientCertificates == null)
-            {
-                sslStream.AuthenticateAsClient(sslOption.TargetHost);
-            }
-            else
-            {
-                sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
-            }
-            this.m_sslStream = sslStream;
-            this.m_useSsl = true;
-        }
+        //    var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
+        //    if (sslOption.ClientCertificates == null)
+        //    {
+        //        sslStream.AuthenticateAsClient(sslOption.TargetHost);
+        //    }
+        //    else
+        //    {
+        //        sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
+        //    }
+        //    this.m_sslStream = sslStream;
+        //    this.m_useSsl = true;
+        //}
+
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
@@ -188,13 +189,17 @@ namespace TouchSocket.Sockets
                 return;
             }
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
+
             await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
                 , sslOption.SslProtocols
                 , sslOption.CheckCertificateRevocation).ConfigureAwait(false);
 
+            //await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(false);
+
             this.m_sslStream = sslStream;
             this.m_useSsl = true;
         }
+
         /// <summary>
         /// 以Ssl客户端模式授权
         /// </summary>

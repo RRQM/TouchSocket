@@ -13,6 +13,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
@@ -99,6 +100,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public ReadOnlyMemory<byte> Memory
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 this.ThrowIfDisposed();
@@ -119,6 +121,7 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public ReadOnlySpan<byte> Span
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 this.ThrowIfDisposed();
@@ -325,98 +328,6 @@ namespace TouchSocket.Core
         }
 
         #endregion Seek
-
-        #region ToArray
-
-        /// <inheritdoc/>
-        public byte[] ToArray(int offset, int length)
-        {
-            this.ThrowIfDisposed();
-            var buffer = new byte[length];
-            Array.Copy(this.m_buffer, offset, buffer, 0, buffer.Length);
-            return buffer;
-        }
-
-        /// <inheritdoc/>
-        public byte[] ToArray()
-        {
-            return this.ToArray(0, this.Length);
-        }
-
-        /// <inheritdoc/>
-        public byte[] ToArray(int offset)
-        {
-            return this.ToArray(offset, this.Length - offset);
-        }
-
-        /// <inheritdoc/>
-        public byte[] ToArrayTake(int length)
-        {
-            return this.ToArray(this.m_position, length);
-        }
-
-        /// <inheritdoc/>
-        public byte[] ToArrayTake()
-        {
-            return this.ToArray(this.m_position, this.Length - this.m_position);
-        }
-
-        #endregion ToArray
-
-        #region AsSegment
-
-
-        /// <summary>
-        /// 从指定位置转化到指定长度的有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment(int offset, int length)
-        {
-            ThrowIfDisposed();
-            return new ArraySegment<byte>(m_buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 转换为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment()
-        {
-            return AsSegment(0, m_length);
-        }
-
-        /// <summary>
-        /// 从指定位置转为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegment(int offset)
-        {
-            return AsSegment(offset, m_length - offset);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至指定长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegmentTake(int length)
-        {
-            return AsSegment(m_position, length);
-        }
-
-        /// <summary>
-        /// 将当前<see cref="Position"/>至有效长度转化为有效内存。本操作不递增<see cref="Position"/>
-        /// </summary>
-        /// <returns></returns>
-        public ArraySegment<byte> AsSegmentTake()
-        {
-            return AsSegment(m_position, m_length - m_position);
-        }
-
-        #endregion
 
         #region ToString
 
