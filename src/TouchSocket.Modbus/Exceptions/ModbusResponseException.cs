@@ -24,10 +24,11 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// Modbus响应异常
         /// </summary>
-        /// <param name="errorCode"></param>
+        /// <param name="errorCode">异常错误码，用于标识异常的类型</param>
         public ModbusResponseException(ModbusErrorCode errorCode) : base(errorCode.GetDescription())
         {
-            this.ErrorCode = errorCode;
+            // 初始化异常对象，将错误码描述作为异常信息
+            this.ErrorCode = errorCode; // 保存异常错误码，以便后续处理
         }
 
         /// <summary>

@@ -82,7 +82,7 @@ namespace TouchSocket.WebApi
                     break;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default)).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, default)).ConfigureAwait(false);
 
             using (var tokenSource = new CancellationTokenSource(invokeOption.Timeout))
             {
@@ -92,7 +92,7 @@ namespace TouchSocket.WebApi
                 }
                 var response = await this.HttpClient.SendAsync(request, tokenSource.Token).ConfigureAwait(false);
 
-                await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, response)).ConfigureAwait(false);
 
                 if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {

@@ -16,17 +16,18 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
+
     /// <summary>
-    /// 即将断开连接(仅主动断开时有效)。
+    /// 定义串口关闭时的插件接口，继承自通用插件接口IPlugin
     /// </summary>
     public interface ISerialClosingPlugin : IPlugin
     {
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">串口会话客户端</param>
+        /// <param name="e">关闭事件参数</param>
+        /// <returns>异步任务</returns>
         Task OnSerialClosing(ISerialPortSession client, ClosingEventArgs e);
     }
 }

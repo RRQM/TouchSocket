@@ -14,6 +14,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace TouchSocket.Core
 {
@@ -64,7 +65,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取只读内存。
         /// </summary>
-        ReadOnlyMemory<byte> Memory { get; }
+        ReadOnlyMemory<byte> Memory { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; }
 
         /// <summary>
         /// 获取或设置位置。
@@ -74,7 +75,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取只读字节跨度。
         /// </summary>
-        ReadOnlySpan<byte> Span { get; }
+        ReadOnlySpan<byte> Span { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; }
 
         /// <summary>
         /// 获取总内存。
@@ -583,44 +584,6 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="value">新的长度值。</param>
         void SetLength(int value);
-
-        #region ToArray
-
-        /// <summary>
-        /// 将当前对象转换为一个新的字节数组。
-        /// </summary>
-        /// <returns>一个新的字节数组，表示当前对象。</returns>
-        byte[] ToArray();
-
-        /// <summary>
-        /// 将当前对象转换为一个新的字节数组，并在新数组的开头留出指定的偏移量。
-        /// </summary>
-        /// <param name="offset">新数组开头的偏移量。</param>
-        /// <returns>一个新的字节数组，表示当前对象，开头有指定的偏移量。</returns>
-        byte[] ToArray(int offset);
-
-        /// <summary>
-        /// 将当前对象转换为一个新的字节数组，指定新数组的长度。
-        /// </summary>
-        /// <param name="offset">新数组的起始偏移量。</param>
-        /// <param name="length">新数组的长度。</param>
-        /// <returns>一个新的字节数组，表示当前对象的指定长度。</returns>
-        byte[] ToArray(int offset, int length);
-
-        /// <summary>
-        /// 将当前对象转换为一个新的字节数组，该数组包含当前对象的所有元素。
-        /// </summary>
-        /// <returns>一个新的字节数组，包含当前对象的所有元素。</returns>
-        byte[] ToArrayTake();
-
-        /// <summary>
-        /// 将当前对象转换为一个新的字节数组，该数组的长度由指定的长度参数决定。
-        /// </summary>
-        /// <param name="length">新数组的长度。</param>
-        /// <returns>一个新的字节数组，其长度由指定的长度参数决定。</returns>
-        byte[] ToArrayTake(int length);
-
-        #endregion ToArray
 
         #region ToString
 

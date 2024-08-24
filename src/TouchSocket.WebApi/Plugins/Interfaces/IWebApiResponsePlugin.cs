@@ -16,31 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// IWebApiPlugin
+    /// 定义一个接口，用于处理Web API响应后的操作
     /// </summary>
-    public interface IWebApiPlugin<in TClient> : IPlugin where TClient : IWebApiClientBase
+    public interface IWebApiResponsePlugin : IPlugin
     {
         /// <summary>
-        /// 在请求之前
+        /// 在收到响应之后执行的操作
+        /// 此方法允许在Web API客户端收到响应后对其进行自定义处理
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnRequest(TClient client, WebApiEventArgs e);
-
-        /// <summary>
-        /// 在收到响应之后
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnResponse(TClient client, WebApiEventArgs e);
-    }
-
-    /// <summary>
-    /// IWebApiPlugin
-    /// </summary>
-    public interface IWebApiPlugin : IWebApiPlugin<IWebApiClientBase>
-    {
+        /// <param name="client">发出请求的Web API客户端实例</param>
+        /// <param name="e">包含响应信息的事件参数</param>
+        /// <returns>一个任务对象，代表异步操作</returns>
+        Task OnWebApiResponse(IWebApiClientBase client, WebApiEventArgs e);
     }
 }

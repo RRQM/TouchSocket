@@ -15,8 +15,10 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc
 {
+
     /// <summary>
-    /// RpcActionFilterAttribute
+    /// 表示一个抽象类，用于实现RPC操作的过滤器属性。
+    /// 继承自系统基类Attribute，并实现IRpcActionFilter接口。
     /// </summary>
     public abstract class RpcActionFilterAttribute : Attribute, IRpcActionFilter
     {

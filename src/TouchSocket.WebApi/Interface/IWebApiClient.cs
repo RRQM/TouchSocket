@@ -17,8 +17,13 @@ using TouchSocket.Sockets;
 namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// IWebApiClient
+    /// 定义了一个用于Web API客户端操作的公共接口，该接口继承自多个基接口，以支持丰富的网络和会话功能
     /// </summary>
+    /// <remarks>
+    /// 此接口结合了IWebApiClientBase, IHttpSession, ISetupConfigObject, IOnlineClient和ITcpConnectableClient的功能，
+    /// 提供了一种综合的方法来实现Web API的客户端操作。实现这个接口的类将能够发起Web API请求，
+    /// 管理会话状态，配置客户端设置，处理在线状态，并支持TCP连接管理。
+    /// </remarks>
     public interface IWebApiClient : IWebApiClientBase, IHttpSession, ISetupConfigObject, IOnlineClient, ITcpConnectableClient
     {
     }

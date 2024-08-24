@@ -22,30 +22,41 @@ namespace TouchSocket.Modbus
     public static class TouchSocketModbusUtility
     {
         /// <summary>
-        /// CRC16_Modbus效验
+        /// 计算CRC16_Modbus校验值
         /// </summary>
-        /// <param name="memory"></param>
-        /// <returns>计算后的数组</returns>
+        /// <param name="memory">待计算校验值的字节序列</param>
+        /// <returns>包含CRC校验值的字节数组</returns>
+        /// <remarks>
+        /// CRC16_Modbus是一种循环冗余校验算法，常用于Modbus协议中数据的完整性校验。
+        /// 该方法接收一个只读字节内存块，计算并返回其CRC校验值。
+        /// 校验值用于确保数据在传输过程中的完整性，接收方会使用同样的算法计算接收到的数据的校验值，
+        /// 并与接收到的校验值进行比较，以检测数据传输过程中是否发生了改变。
+        /// </remarks>
         public static byte[] ToModbusCrc(ReadOnlyMemory<byte> memory)
         {
+            // 获取内存块的数组表示及其相关属性
             var memoryArray = memory.GetArray();
-
             var byteData = memoryArray.Array;
             var offset = memoryArray.Offset;
             var length = memoryArray.Count;
 
+            // 初始化存放CRC校验值的数组
             var CRC = new byte[2];
 
+            // 初始化CRC寄存器
             ushort wCrc = 0xFFFF;
+            // 遍历数据，计算CRC校验值
             for (var i = offset; i < length; i++)
             {
                 wCrc ^= Convert.ToUInt16(byteData[i]);
+                // 逐位处理字节
                 for (var j = 0; j < 8; j++)
                 {
+                    // 根据CRC算法进行位操作
                     if ((wCrc & 0x0001) == 1)
                     {
                         wCrc >>= 1;
-                        wCrc ^= 0xA001;//异或多项式
+                        wCrc ^= 0xA001; // 异或多项式
                     }
                     else
                     {
@@ -53,9 +64,10 @@ namespace TouchSocket.Modbus
                     }
                 }
             }
-
-            CRC[1] = (byte)((wCrc & 0xFF00) >> 8);//高位在后
-            CRC[0] = (byte)(wCrc & 0x00FF);       //低位在前
+            // 准备返回结果，高位在后，低位在前
+            CRC[1] = (byte)((wCrc & 0xFF00) >> 8);
+            CRC[0] = (byte)(wCrc & 0x00FF);
+            // 返回计算得到的CRC校验值
             return CRC;
         }
 

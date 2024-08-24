@@ -45,29 +45,6 @@ namespace TouchSocket.Modbus
             base.LoadConfig(config);
         }
 
-        ///// <inheritdoc/>
-        //public IModbusResponse 123SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
-        //{
-        //    this.m_semaphoreSlimForRequest.WaitTime(millisecondsTimeout, token);
-        //    try
-        //    {
-        //        var modbusTcpRequest = new ModbusRtuRequest(request);
-
-        //        this.ProtectedSend(modbusTcpRequest);
-        //        this.m_waitData.SetCancellationToken(token);
-        //        var waitDataStatus = this.m_waitData.Wait(millisecondsTimeout);
-        //        waitDataStatus.ThrowIfNotRunning();
-
-        //        var response = this.m_waitData.WaitResult;
-        //        TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
-        //        return response;
-        //    }
-        //    finally
-        //    {
-        //        this.m_semaphoreSlimForRequest.Release();
-        //    }
-        //}
-
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {

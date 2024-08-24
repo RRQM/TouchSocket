@@ -24,9 +24,9 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 客户端连接成功后触发
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">表示当前会话的接口，可用于发送和接收数据</param>
+        /// <param name="e">包含连接事件的信息</param>
+        /// <returns>返回一个任务对象，表示异步操作的结果</returns>
         Task OnNamedPipeConnected(INamedPipeSession client, ConnectedEventArgs e);
     }
 }

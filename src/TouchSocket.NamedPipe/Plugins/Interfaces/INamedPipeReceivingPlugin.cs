@@ -17,16 +17,16 @@ using TouchSocket.Sockets;
 namespace TouchSocket.NamedPipe
 {
     /// <summary>
-    /// INamedPipeReceivingPlugin
+    /// 定义了一个命名管道接收插件接口，用于在收到数据时执行特定操作。
     /// </summary>
     public interface INamedPipeReceivingPlugin : IPlugin
     {
         /// <summary>
         /// 在刚收到数据时触发，即在适配器之前。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="client">触发事件的命名管道会话客户端。</param>
+        /// <param name="e">包含收到的数据及其他相关信息的事件参数。</param>
+        /// <returns>一个任务对象，表示异步操作。</returns>
         Task OnNamedPipeReceiving(INamedPipeSession client, ByteBlockEventArgs e);
     }
 }

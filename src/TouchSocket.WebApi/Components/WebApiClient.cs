@@ -25,7 +25,7 @@ namespace TouchSocket.WebApi
     /// </summary>
     public class WebApiClient : HttpClientBase, IWebApiClient
     {
-        private readonly object[] m_empty=new object[0];
+        private readonly object[] m_empty = new object[0];
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -47,7 +47,7 @@ namespace TouchSocket.WebApi
 
         #region Rpc调用
 
-
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var strs = invokeKey.Split(':');
@@ -89,12 +89,12 @@ namespace TouchSocket.WebApi
                     break;
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, default));
+            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, default));
 
             using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
             {
                 var response = responseResult.Response;
-                await this.PluginManager.RaiseAsync(typeof(IWebApiPlugin), this, new WebApiEventArgs(request, response));
+                await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this, new WebApiEventArgs(request, response));
 
                 if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {

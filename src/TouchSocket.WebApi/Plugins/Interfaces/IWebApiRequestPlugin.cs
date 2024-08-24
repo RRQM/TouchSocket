@@ -12,21 +12,20 @@
 
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
-namespace TouchSocket.NamedPipe
+namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// 具有断开连接的插件接口
+    /// 定义一个用于处理Web API请求的插件接口
     /// </summary>
-    public interface INamedPipeClosedPlugin : IPlugin
+    public interface IWebApiRequestPlugin : IPlugin
     {
         /// <summary>
-        /// 会话断开后触发
+        /// 在请求之前
         /// </summary>
-        /// <param name="client">断开连接的命名管道客户端会话</param>
-        /// <param name="e">包含断开连接事件的数据</param>
-        /// <returns>一个异步任务，表示操作的结果</returns>
-        Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e);
+        /// <param name="client">Web API客户端基类实例，用于发送请求</param>
+        /// <param name="e">包含请求相关信息的事件参数</param>
+        /// <returns>一个任务对象，用于异步操作</returns>
+        Task OnWebApiRequest(IWebApiClientBase client, WebApiEventArgs e);
     }
 }

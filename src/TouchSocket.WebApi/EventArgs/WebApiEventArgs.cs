@@ -16,15 +16,15 @@ using TouchSocket.Http;
 namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// WebApiEventArgs
+    /// 提供Web API事件参数的类
     /// </summary>
     public partial class WebApiEventArgs : PluginEventArgs
     {
         /// <summary>
-        /// WebApiEventArgs
+        /// 初始化WebApiEventArgs类的新实例
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
+        /// <param name="request">表示HTTP请求的对象</param>
+        /// <param name="response">表示HTTP响应的对象</param>
         public WebApiEventArgs(HttpRequest request, HttpResponse response)
         {
             this.Request = request;
@@ -33,23 +33,26 @@ namespace TouchSocket.WebApi
         }
 
         /// <summary>
-        /// 是否以HttpMessage请求
+        /// 获取或设置一个值，该值指示是否以HttpMessage方式请求
         /// </summary>
         public bool IsHttpMessage { get; set; }
 
         /// <summary>
-        /// Http请求
+        /// 获取HTTP请求对象
         /// </summary>
         public HttpRequest Request { get; }
 
         /// <summary>
-        /// Http响应
+        /// 获取HTTP响应对象
         /// </summary>
         public HttpResponse Response { get; }
     }
 
-#if NETSTANDARD2_0_OR_GREATER||NET481_OR_GREATER||NET6_0_OR_GREATER
+#if NETSTANDARD2_0_OR_GREATER || NET481_OR_GREATER || NET6_0_OR_GREATER
 
+    /// <summary>
+    /// WebAPI事件参数类，用于封装HTTP请求和响应信息
+    /// </summary>
     public partial class WebApiEventArgs
     {
         /// <summary>
@@ -60,8 +63,8 @@ namespace TouchSocket.WebApi
         /// <summary>
         /// WebApiEventArgs
         /// </summary>
-        /// <param name="requestMessage"></param>
-        /// <param name="responseMessage"></param>
+        /// <param name="requestMessage">HTTP请求消息</param>
+        /// <param name="responseMessage">HTTP响应消息</param>
         public WebApiEventArgs(System.Net.Http.HttpRequestMessage requestMessage, System.Net.Http.HttpResponseMessage responseMessage)
         {
             this.RequestMessage = requestMessage;
