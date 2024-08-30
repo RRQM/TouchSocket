@@ -90,15 +90,14 @@ var udpDmtp = new UdpDmtp();
 
 var config = new TouchSocketConfig();
 config.SetBindIPHost(new IPHost(7789))
-     .SetContainer(GetContainer())
      .ConfigureContainer(a =>
      {
          a.AddConsoleLogger();
      });
 
-udpDmtp.Setup(config);
+await udpDmtp.SetupAsync(config);
 
-udpDmtp.Start();
+await udpDmtp.StartAsync();
 ```
 
 :::info 备注
