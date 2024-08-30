@@ -131,15 +131,15 @@ using (var responseResult = await client.RequestAsync(request, 1000 * 10))
     {
         using (var blockResult = await response.ReadAsync())
         {
+            //每次读到的数据
+            var memory = blockResult.Memory;
+            Console.WriteLine(memory.Length);
+
             if (blockResult.IsCompleted)
             {
                 //数据读完成
                 break;
             }
-
-            //每次读到的数据
-            var memory = blockResult.Memory;
-            Console.WriteLine(memory.Length);
         }
     }
 }
