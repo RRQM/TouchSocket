@@ -90,7 +90,6 @@ var udpDmtp = new UdpDmtp();
 
 var config = new TouchSocketConfig();
 config.SetBindIPHost(new IPHost(7789))
-     .SetContainer(GetContainer())
      .ConfigureContainer(a =>
      {
          a.AddConsoleLogger();
