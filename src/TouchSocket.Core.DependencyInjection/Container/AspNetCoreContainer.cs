@@ -39,6 +39,11 @@ namespace TouchSocket.Core.AspNetCore
                 this.m_serviceProvider ??= privoder;
                 return this;
             });
+
+            if (!this.IsRegistered(typeof(ILog)))
+            {
+                this.RegisterSingleton<ILog>(new LoggerGroup());
+            }
         }
 
         /// <inheritdoc/>
