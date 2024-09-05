@@ -38,73 +38,80 @@ title: 模板解析“非固定包头”数据适配器
 ```csharp showLineNumbers
 public class MyUnfixedHeaderRequestInfo : IUnfixedHeaderRequestInfo
 {
-    private int bodyLength;
     /// <summary>
     /// 接口实现，标识数据长度
     /// </summary>
-    public int BodyLength
-    {
-        get { return bodyLength; }
-    }
+    public int BodyLength { get; private set; }
 
-   
-    private byte[] body;
+    /// <summary>
+    /// 自定义属性，标识数据类型
+    /// </summary>
+    public byte DataType { get; set; }
+
+    /// <summary>
+    /// 自定义属性，标识指令类型
+    /// </summary>
+    public byte OrderType { get; set; }
+
     /// <summary>
     /// 自定义属性，标识实际数据
     /// </summary>
-    public byte[] Body
-    {
-        get { return body; }
-    }
+    public byte[] Body { get; set; }
 
 
-    public bool OnParsingBody(byte[] body)
+
+    public int HeaderLength { get; private set; }
+
+    public bool OnParsingBody(ReadOnlySpan<byte> body)
     {
-        if (body.Length == this.bodyLength)
+        if (body.Length == this.BodyLength)
         {
-            this.body = body;
+            this.Body = body.ToArray();
             return true;
         }
         return false;
     }
 
 
-    public bool OnParsingHeader(ByteBlock byteBlock)
+    public bool OnParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
     {
-        //此处逻辑和固定包头模板基本一致。也需要对BodyLength作出赋值。
-        //但是不同固定包头的是，需要自己移动已读的游标。并且返回正确的值。
-        
-        //下列通过假逻辑实现Http协议的解析。
+        //在使用不固定包头解析时
 
-        //从现有的可读数据中，读取“\r\n\r\n”，以此来分割http的headers和body。
-        int index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, Encoding.UTF8.GetBytes("\r\n\r\n"));
-        if (index > 0)
+        //【首先】需要先解析包头
+        if (byteBlock.CanReadLength < 3)
         {
-            //索引到了“\r\n\r\n”，以此推断出，在当前缓存区中，由byteBlock.Pos至index的数据即为headers。
-            int headerLength = index - byteBlock.Pos;
-            string headers = Encoding.UTF8.GetString(byteBlock.Buffer, byteBlock.Pos,headerLength);//解码headers
-            byteBlock.Pos += headerLength;//然后将缓存区的游标移至headers结束的位置。
-
-            //最后通过headers，解析出后续的body的长度，然后在此处赋值。
-            this.bodyLength = 0;//此处的0是占位值。
-            return true;
-        }
-        else
-        {
-            //没索引到“\r\n\r\n”，以此推断出，在当前缓存区中，header的接收尚未完成，
-            //所以返回false，并且不需要修改游标。
+            //即直接缓存
             return false;
         }
+
+        //先保存一下初始游标，如果解析时还需要缓存，可能需要回退游标
+        var position = byteBlock.Position;
+
+        //【然后】ReadToSpan会递增游标，所以不需要再递增游标
+        var header = byteBlock.ReadToSpan(3);
+
+        //如果使用Span自行裁剪的话，就需要手动递增游标
+        //var header=byteBlock.Span.Slice(position,3);
+        //byteBlock.Position += 3;
+
+        //【然后】解析包头，和BodyLength
+        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
+        this.BodyLength = header[0] - 2;
+        this.DataType = header[1];
+        this.OrderType = header[2];
+
+        //【最后】对HeaderLength做有效赋值
+        this.HeaderLength = 3;
+
+        return true;
     }
 }
-
-
 ```
 
 新建MyCustomUnfixedHeaderDataHandlingAdapter继承**CustomUnfixedHeaderDataHandlingAdapter**。
 
 ```csharp showLineNumbers
-public class MyCustomUnfixedHeaderDataHandlingAdapter : CustomUnfixedHeaderDataHandlingAdapter<MyUnfixedHeaderRequestInfo>
+public class MyUnfixedHeaderCustomDataHandlingAdapter : CustomUnfixedHeaderDataHandlingAdapter<MyUnfixedHeaderRequestInfo>
 {
     protected override MyUnfixedHeaderRequestInfo GetInstance()
     {
@@ -116,23 +123,84 @@ public class MyCustomUnfixedHeaderDataHandlingAdapter : CustomUnfixedHeaderDataH
 【接收】
 
 ```csharp showLineNumbers
-TcpService service = new TcpService();
-service.Received = (client, e) =>
+private static async Task Main(string[] args)
 {
-    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (e.RequestInfo is MyUnfixedHeaderRequestInfo myRequestInfo)
+    var service = await CreateService();
+    var client = await CreateClient();
+
+    ConsoleLogger.Default.Info("按任意键发送10次");
+    while (true)
     {
-        //此处可以处理MyUnfixedHeaderRequestInfo的相关信息了。
-        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
+        Console.ReadKey();
+        for (var i = 0; i < 10; i++)
+        {
+            var myRequestInfo = new MyUnfixedHeaderRequestInfo()
+            {
+                Body = Encoding.UTF8.GetBytes("hello"),
+                DataType = (byte)i,
+                OrderType = (byte)i
+            };
+
+            //构建发送数据
+            using (var byteBlock = new ByteBlock(1024))
+            {
+                byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                byteBlock.WriteByte((byte)myRequestInfo.DataType);//然后数据类型
+                byteBlock.WriteByte((byte)myRequestInfo.OrderType);//然后指令类型
+                byteBlock.Write(myRequestInfo.Body);//再写数据
+
+                await client.SendAsync(byteBlock.Memory);
+            }
+        }
     }
-    return EasyTask.CompletedTask;
-};
+}
 
-await service.SetupAsync(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetTcpDataHandlingAdapter(() => { return new MyCustomUnfixedHeaderDataHandlingAdapter(); }));//配置适配器
+private static async Task<TcpClient> CreateClient()
+{
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new MyUnfixedHeaderCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-await service.StartAsync();//启动
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+
+        if (e.RequestInfo is MyUnfixedHeaderRequestInfo myRequest)
+        {
+            client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
+        }
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new MyUnfixedHeaderCustomDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
 ```
 
 :::tip 提示
