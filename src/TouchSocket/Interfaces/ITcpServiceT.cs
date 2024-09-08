@@ -35,7 +35,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 用户断开连接事件的事件处理程序
         /// </summary>
-        /// <typeparam name="TClient">客户端类型的泛型参数</typeparam>
         /// <remarks>
         /// 此属性用于获取或设置一个事件处理程序，该处理程序在用户断开连接时被调用
         /// </remarks>

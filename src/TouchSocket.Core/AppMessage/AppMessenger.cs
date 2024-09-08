@@ -168,7 +168,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.Format(token));
+                ThrowHelper.ThrowMessageNotFoundException(token);
             }
         }
 

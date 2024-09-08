@@ -44,7 +44,7 @@ namespace TouchSocket.Rpc.RateLimiting
             // 同时指定周期事件处理方法为当前实例的OnPeriod方法。
             this.m_valueCounter = new ValueCounter()
             {
-                Period = m_maxLifetime,
+                Period = this.m_maxLifetime,
                 OnPeriod = this.OnPeriod
             };
         }
@@ -57,11 +57,11 @@ namespace TouchSocket.Rpc.RateLimiting
         /// </summary>
         public TimeSpan MaxLifetime
         {
-            get => m_maxLifetime;
+            get => this.m_maxLifetime;
             set
             {
-                m_maxLifetime = value;
-                m_valueCounter.Period = TimeSpan.FromTicks(m_maxLifetime.Ticks / 10);
+                this.m_maxLifetime = value;
+                this.m_valueCounter.Period = TimeSpan.FromTicks(m_maxLifetime.Ticks / 10);
             }
         }
 

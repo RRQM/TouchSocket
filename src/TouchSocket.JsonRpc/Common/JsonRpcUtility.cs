@@ -47,7 +47,7 @@ namespace TouchSocket.JsonRpc
         {
 #if NET6_0_OR_GREATER
             return jsonString.FromJsonString<JsonRpcWaitResult>();
-            return (JsonRpcWaitResult)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcWaitResult), TouchSokcetJsonRpcSourceGenerationContext.Default);
+            return (JsonRpcWaitResult)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcWaitResult), TouchSocketJsonRpcSourceGenerationContext.Default);
 #else
             return jsonString.FromJsonString<JsonRpcWaitResult>();
 #endif

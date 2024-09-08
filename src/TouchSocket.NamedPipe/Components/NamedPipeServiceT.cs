@@ -50,13 +50,13 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 客户端连接完成，覆盖父类方法将不会触发事件。
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeConnected(TClient socketClient, ConnectedEventArgs e)
+        protected virtual Task OnNamedPipeConnected(TClient sessionClient, ConnectedEventArgs e)
         {
             if (this.Connected != null)
             {
-                return this.Connected.Invoke(socketClient, e);
+                return this.Connected.Invoke(sessionClient, e);
             }
             return EasyTask.CompletedTask;
         }
@@ -64,13 +64,13 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 客户端请求连接，覆盖父类方法将不会触发事件。
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeConnecting(TClient socketClient, ConnectingEventArgs e)
+        protected virtual Task OnNamedPipeConnecting(TClient sessionClient, ConnectingEventArgs e)
         {
             if (this.Connecting != null)
             {
-                return this.Connecting.Invoke(socketClient, e);
+                return this.Connecting.Invoke(sessionClient, e);
             }
             return EasyTask.CompletedTask;
         }
@@ -78,13 +78,13 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 客户端断开连接，覆盖父类方法将不会触发事件。
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeClosed(TClient socketClient, ClosedEventArgs e)
+        protected virtual Task OnNamedPipeClosed(TClient sessionClient, ClosedEventArgs e)
         {
             if (this.Closed != null)
             {
-                return this.Closed.Invoke(socketClient, e);
+                return this.Closed.Invoke(sessionClient, e);
             }
             return EasyTask.CompletedTask;
         }
@@ -92,13 +92,13 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeClosing(TClient socketClient, ClosingEventArgs e)
+        protected virtual Task OnNamedPipeClosing(TClient sessionClient, ClosingEventArgs e)
         {
             if (this.Closing != null)
             {
-                return this.Closing.Invoke(socketClient, e);
+                return this.Closing.Invoke(sessionClient, e);
             }
             return EasyTask.CompletedTask;
         }
@@ -106,40 +106,40 @@ namespace TouchSocket.NamedPipe
         /// <summary>
         /// 当收到适配器数据。
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <param name="e"></param>
-        protected virtual Task OnNamedPipeReceived(TClient socketClient, ReceivedDataEventArgs e)
+        protected virtual Task OnNamedPipeReceived(TClient sessionClient, ReceivedDataEventArgs e)
         {
             if (this.Received != null)
             {
-                return this.Received.Invoke(socketClient, e);
+                return this.Received.Invoke(sessionClient, e);
             }
             return EasyTask.CompletedTask;
         }
 
-        private Task OnClientConnected(NamedPipeSessionClient socketClient, ConnectedEventArgs e)
+        private Task OnClientConnected(NamedPipeSessionClient sessionClient, ConnectedEventArgs e)
         {
-            return this.OnNamedPipeConnected((TClient)socketClient, e);
+            return this.OnNamedPipeConnected((TClient)sessionClient, e);
         }
 
-        private Task OnClientConnecting(NamedPipeSessionClient socketClient, ConnectingEventArgs e)
+        private Task OnClientConnecting(NamedPipeSessionClient sessionClient, ConnectingEventArgs e)
         {
-            return this.OnNamedPipeConnecting((TClient)socketClient, e);
+            return this.OnNamedPipeConnecting((TClient)sessionClient, e);
         }
 
-        private Task OnClientClosed(NamedPipeSessionClient socketClient, ClosedEventArgs e)
+        private Task OnClientClosed(NamedPipeSessionClient sessionClient, ClosedEventArgs e)
         {
-            return this.OnNamedPipeClosed((TClient)socketClient, e);
+            return this.OnNamedPipeClosed((TClient)sessionClient, e);
         }
 
-        private Task OnClientClosing(NamedPipeSessionClient socketClient, ClosingEventArgs e)
+        private Task OnClientClosing(NamedPipeSessionClient sessionClient, ClosingEventArgs e)
         {
-            return this.OnNamedPipeClosing((TClient)socketClient, e);
+            return this.OnNamedPipeClosing((TClient)sessionClient, e);
         }
 
-        private Task OnClientReceivedData(NamedPipeSessionClient socketClient, ReceivedDataEventArgs e)
+        private Task OnClientReceivedData(NamedPipeSessionClient sessionClient, ReceivedDataEventArgs e)
         {
-            return this.OnNamedPipeReceived((TClient)socketClient, e);
+            return this.OnNamedPipeReceived((TClient)sessionClient, e);
         }
 
         #endregion 事件

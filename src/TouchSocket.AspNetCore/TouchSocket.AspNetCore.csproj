@@ -25,10 +25,4 @@
 	<ItemGroup>
 	  <Folder Include="Dmtp\Common\" />
 	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 </Project>

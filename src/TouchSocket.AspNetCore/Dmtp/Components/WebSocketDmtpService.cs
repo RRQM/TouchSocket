@@ -69,9 +69,9 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 return;
             }
-            if (this.m_clients.TryGetValue(sourceId, out var socketClient))
+            if (this.m_clients.TryGetValue(sourceId, out var sessionClient))
             {
-                await socketClient.ResetIdAsync(targetId).ConfigureAwait(false);
+                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
             }
             else
             {
@@ -260,22 +260,22 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// 尝试添加客户端到集合中。
         /// </summary>
         /// <param name="id">客户端标识符。</param>
-        /// <param name="socketClient">WebSocketDmtpSessionClient对象。</param>
+        /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
         /// <returns>如果添加成功返回true，否则返回false。</returns>
-        internal bool TryAdd(string id, WebSocketDmtpSessionClient socketClient)
+        internal bool TryAdd(string id, WebSocketDmtpSessionClient sessionClient)
         {
-            return this.m_clients.TryAdd(id, socketClient);
+            return this.m_clients.TryAdd(id, sessionClient);
         }
 
         /// <summary>
         /// 尝试从集合中移除客户端。
         /// </summary>
         /// <param name="id">客户端标识符。</param>
-        /// <param name="socketClient">移除的WebSocketDmtpSessionClient对象。</param>
+        /// <param name="sessionClient">移除的WebSocketDmtpSessionClient对象。</param>
         /// <returns>如果移除成功返回true，否则返回false。</returns>
-        internal bool TryRemove(string id, out WebSocketDmtpSessionClient socketClient)
+        internal bool TryRemove(string id, out WebSocketDmtpSessionClient sessionClient)
         {
-            return this.m_clients.TryRemoveClient(id, out socketClient);
+            return this.m_clients.TryRemoveClient(id, out sessionClient);
         }
 
         #endregion internal

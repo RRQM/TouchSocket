@@ -12,6 +12,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
@@ -86,7 +87,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowArgumentNullExceptionIfStringIsNullOrEmpty(string stringValue, string name)
+        public static void ThrowArgumentNullExceptionIfStringIsNullOrEmpty(string stringValue,string name)
         {
             if (string.IsNullOrEmpty(stringValue))
             {
@@ -95,7 +96,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static T ThrowArgumentNullExceptionIf<T>(T obj, [CallerMemberName] string objectName = default) where T : class
+        public static T ThrowArgumentNullExceptionIf<T>(T obj,string objectName) where T : class
         {
             return obj ?? throw new ArgumentNullException(TouchSocketCoreResource.ArgumentIsNull.Format(objectName));
         }
@@ -122,6 +123,15 @@ namespace TouchSocket.Core
         public static void ThrowObjectDisposedException(object obj)
         {
             throw new ObjectDisposedException(TouchSocketCoreResource.ObjectDisposed.Format(obj.GetType().FullName, obj.GetHashCode()));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowObjectDisposedExceptionIf(IDisposableObject disposableObject)
+        {
+            if (disposableObject.DisposedValue)
+            {
+                throw new ObjectDisposedException(TouchSocketCoreResource.ObjectDisposed.Format(disposableObject.GetType().FullName, disposableObject.GetHashCode()));
+            }
         }
     }
 }

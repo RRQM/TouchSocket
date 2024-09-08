@@ -19,12 +19,6 @@
 	  <ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
 		<PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
 	</ItemGroup>

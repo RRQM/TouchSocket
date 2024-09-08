@@ -22,16 +22,19 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// Tcp客户端
+    /// TcpClientBase类是作为一个抽象基类设计的，它继承自SetupConfigObject，并实现了ITcpSession接口。
+    /// 这个类的主要目的是为TCP会话相关的操作提供一个基础框架，同时整合了配置设定的功能。
     /// </summary>
     public abstract class TcpClientBase : SetupConfigObject, ITcpSession
     {
         /// <summary>
-        /// Tcp客户端
+        /// 构造函数用于初始化TcpClientBase类的实例。
         /// </summary>
         public TcpClientBase()
         {
+            // 设置协议为TCP
             this.Protocol = Protocol.Tcp;
         }
 
@@ -267,7 +270,7 @@ namespace TouchSocket.Sockets
                             }
                         }
                     }
-                    else if (result.HasError)
+                    else if (result.SocketError != null)
                     {
                         byteBlock.Dispose();
                         this.Abort(false, result.SocketError.Message);

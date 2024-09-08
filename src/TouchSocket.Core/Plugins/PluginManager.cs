@@ -48,7 +48,7 @@ namespace TouchSocket.Core
 
         void IPluginManager.Add(IPlugin plugin)
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(plugin);
+            ThrowHelper.ThrowArgumentNullExceptionIf(plugin,nameof(plugin));
 
             this.ThrowIfDisposed();
 

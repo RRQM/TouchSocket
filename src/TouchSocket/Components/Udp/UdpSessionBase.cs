@@ -384,7 +384,7 @@ namespace TouchSocket.Sockets
                                 byteBlock.SetLength(result.BytesTransferred);
                                 await this.HandleReceivingData(byteBlock, result.RemoteEndPoint).ConfigureAwait(false);
                             }
-                            else if (result.HasError)
+                            else if (result.SocketError != null)
                             {
                                 this.Logger?.Error(this, result.SocketError.Message);
                                 return;

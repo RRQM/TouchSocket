@@ -72,7 +72,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         public HttpContext HttpContext => this.m_httpContext;
 
         /// <inheritdoc/>
-        public string Id =>this.m_id;
+        public string Id => this.m_id;
 
         /// <inheritdoc/>
         public bool IsClient => false;
@@ -104,10 +104,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <inheritdoc/>
         public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
-        /// <summary>
-        /// 关闭通信
-        /// </summary>
-        /// <param name="msg"></param>
+        /// <inheritdoc/>
         public Task CloseAsync(string msg)
         {
             this.Abort(true, msg);
@@ -219,28 +216,28 @@ namespace TouchSocket.Dmtp.AspNetCore
         protected async Task ProtectedResetIdAsync(string targetId)
         {
             var sourceId = this.m_id;
-            if (this.m_service.TryRemove(this.m_id, out var socketClient))
+            if (this.m_service.TryRemove(this.m_id, out var sessionClient))
             {
-                socketClient.m_id = targetId;
-                if (this.m_service.TryAdd(this.m_id, socketClient))
+                sessionClient.m_id = targetId;
+                if (this.m_service.TryAdd(this.m_id, sessionClient))
                 {
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, targetId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), sessionClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
                 else
                 {
-                    socketClient.m_id = sourceId;
-                    if (this.m_service.TryAdd(socketClient.m_id, socketClient))
+                    sessionClient.m_id = sourceId;
+                    if (this.m_service.TryAdd(sessionClient.m_id, sessionClient))
                     {
                         throw new Exception("Id重复");
                     }
                     else
                     {
-                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
+                        await sessionClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
                     }
                 }
             }

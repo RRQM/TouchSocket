@@ -17,10 +17,11 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class WaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> where TClient : IReceiverClient<TResult>, ISender where TResult : IReceiverResult
+    internal sealed class WaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> 
+        where TClient : IReceiverClient<TResult>, ISender , IRequestInfoSender
+        where TResult : IReceiverResult
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        //private CancellationTokenSource m_cancellationTokenSource;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
@@ -34,7 +35,6 @@ namespace TouchSocket.Sockets
 
         #region 发送
 
-        
         public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
             await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
@@ -105,16 +105,76 @@ namespace TouchSocket.Sockets
             }
         }
 
-        public async Task<byte[]> SendThenReturnAsync(ReadOnlyMemory<byte> memory, CancellationToken token)
+        public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken token)
         {
-            return (await this.SendThenResponseAsync(memory, token).ConfigureAwait(false)).Data;
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+
+            try
+            {
+                if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
+                {
+                    using (var receiver = session.CreateReceiver())
+                    {
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureAwait(false);
+
+                        while (true)
+                        {
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            {
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                if (this.WaitingOptions.FilterFunc == null)
+                                {
+                                    return response;
+                                }
+                                else
+                                {
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    {
+                                        return response;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var receiver = this.Client.CreateReceiver())
+                    {
+                        await this.Client.SendAsync(requestInfo).ConfigureAwait(false);
+                        while (true)
+                        {
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            {
+                                if (receiverResult.IsCompleted)
+                                {
+                                    ThrowHelper.ThrowClientNotConnectedException();
+                                }
+                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+
+                                if (this.WaitingOptions.FilterFunc == null)
+                                {
+                                    return response;
+                                }
+                                else
+                                {
+                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    {
+                                        return response;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                this.m_semaphoreSlim.Release();
+            }
         }
 
         #endregion 发送
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
     }
 }

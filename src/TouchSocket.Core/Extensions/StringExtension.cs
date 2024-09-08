@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,7 +30,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool IsNullOrEmpty(this string str)
+        public static bool IsNullOrEmpty([NotNullWhen(false)]this string str)
         {
             return string.IsNullOrEmpty(str);
         }
@@ -39,7 +40,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool IsNullOrWhiteSpace(this string str)
+        public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string str)
         {
             return string.IsNullOrWhiteSpace(str);
         }
@@ -49,7 +50,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool HasValue(this string str)
+        public static bool HasValue([NotNullWhen(true)] this string str)
         {
             return !string.IsNullOrWhiteSpace(str);
         }

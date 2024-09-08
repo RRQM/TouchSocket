@@ -814,6 +814,50 @@ namespace TouchSocket.Core
                 BytePool.Default.Return(buffer);
             }
         }
+
+        /// <summary>
+        /// 异步地将只读内存块中的字节内容写入流中，并支持取消操作。
+        /// </summary>
+        /// <param name="stream">此方法扩展的流对象，表示要写入的流。</param>
+        /// <param name="memory">只读内存块，其中包含要写入的字节数据。</param>
+        /// <param name="token">用于取消异步写入操作的取消令牌。</param>
+        /// <remarks>
+        /// 此方法利用内存块的 GetArray 方法获取数组段信息，然后使用现有的 WriteAsync 方法异步地将内容写入流中，提高了写入操作的效率和灵活性。
+        /// </remarks>
+        public static async ValueTask WriteAsync(this Stream stream, ReadOnlyMemory<byte> memory, CancellationToken token)
+        {
+            var segment = memory.GetArray();
+            await stream.WriteAsync(segment.Array, segment.Offset, segment.Count, token);
+        }
+
+        /// <summary>
+        /// 使用缓冲区高效地将只读字节跨度写入流。
+        /// </summary>
+        /// <param name="stream">要写入的流。</param>
+        /// <param name="span">要写入流的只读字节跨度。</param>
+        /// <remarks>
+        /// 该方法通过使用字节池来优化内存分配和释放，减少内存分配的开销。
+        /// </remarks>
+        public static void Write(this Stream stream, ReadOnlySpan<byte> span)
+        {
+            // 获取字节跨度的长度
+            var len = span.Length;
+            // 从字节池中租用一个缓冲区
+            var buffer = BytePool.Default.Rent(len);
+            try
+            {
+                // 将字节跨度的内容复制到租用的缓冲区中
+                span.CopyTo(buffer);
+
+                // 将缓冲区的内容写入流
+                stream.Write(buffer, 0, len);
+            }
+            finally
+            {
+                // 将使用完的缓冲区归还到字节池，以便其他操作重用
+                BytePool.Default.Return(buffer);
+            }
+        }
 #endif
         #endregion
     }

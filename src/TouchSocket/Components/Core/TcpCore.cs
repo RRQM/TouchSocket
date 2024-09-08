@@ -56,9 +56,9 @@ namespace TouchSocket.Sockets
         private readonly AsyncResetEvent m_asyncResetEventForSend = new AsyncResetEvent(true, false);
         private readonly ConcurrentQueue<SendSegment> m_sendingBytes = new ConcurrentQueue<SendSegment>();
         private readonly SemaphoreSlim m_semaphoreSlimForMax = new SemaphoreSlim(BatchSize);
-        //private readonly ConcurrentStack<SendSegment> m_stores = new ConcurrentStack<SendSegment>();
         private ExceptionDispatchInfo m_exceptionDispatchInfo;
         private short m_version;
+        private readonly SocketOperationResult m_result = new SocketOperationResult();
         #endregion 字段
 
         /// <summary>
@@ -135,48 +135,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool UseSsl => this.m_useSsl;
 
-        ///// <summary>
-        ///// 以Ssl服务器模式授权
-        ///// </summary>
-        ///// <param name="sslOption"></param>
-        //public void Authenticate(ServiceSslOption sslOption)
-        //{
-        //    if (this.m_useSsl)
-        //    {
-        //        return;
-        //    }
-
-        //    var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-        //    sslStream.AuthenticateAsServer(sslOption.Certificate);
-
-        //    this.m_sslStream = sslStream;
-        //    this.m_useSsl = true;
-        //}
-
-        ///// <summary>
-        ///// 以Ssl客户端模式授权
-        ///// </summary>
-        ///// <param name="sslOption"></param>
-        //public void Authenticate(ClientSslOption sslOption)
-        //{
-        //    if (this.m_useSsl)
-        //    {
-        //        return;
-        //    }
-
-        //    var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-        //    if (sslOption.ClientCertificates == null)
-        //    {
-        //        sslStream.AuthenticateAsClient(sslOption.TargetHost);
-        //    }
-        //    else
-        //    {
-        //        sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
-        //    }
-        //    this.m_sslStream = sslStream;
-        //    this.m_useSsl = true;
-        //}
-
+       
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
@@ -227,7 +186,6 @@ namespace TouchSocket.Sockets
 
         public async ValueTask<SocketOperationResult> ReadAsync(Memory<byte> memory)
         {
-            SocketOperationResult result;
             if (this.m_useSsl)
             {
 #if NET6_0_OR_GREATER
@@ -238,15 +196,16 @@ namespace TouchSocket.Sockets
                 var bytes = memory.GetArray();
                 var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureAwait(false);
 #endif
-                result = new SocketOperationResult(r);
+                this.m_result.BytesTransferred = r;
+                this.m_receiveCounter.Increment(r);
+                return this.m_result;
             }
             else
             {
-                result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
+              var  result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
+                this.m_receiveCounter.Increment(result.BytesTransferred);
+                return result;
             }
-
-            this.m_receiveCounter.Increment(result.BytesTransferred);
-            return result;
         }
 
         /// <summary>
@@ -322,8 +281,8 @@ namespace TouchSocket.Sockets
 
                     Array.Copy(segment.Array, segment.Offset, sendSegment, 0, segment.Count);
 
-                    
-                    this.m_sendingBytes.Enqueue(new SendSegment(sendSegment,memory.Length,this.m_version));
+
+                    this.m_sendingBytes.Enqueue(new SendSegment(sendSegment, memory.Length, this.m_version));
                     //var byteBlock = new ValueByteBlock(memory.Length);
                     //byteBlock.Write(memory.Span);
                     //this.m_ints.Enqueue(byteBlock);
@@ -426,7 +385,7 @@ namespace TouchSocket.Sockets
                 while (length > 0)
                 {
                     var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(false);
-                    if (result.HasError)
+                    if (result.SocketError != null)
                     {
                         throw result.SocketError;
                     }

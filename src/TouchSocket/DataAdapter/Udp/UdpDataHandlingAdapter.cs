@@ -58,7 +58,16 @@ namespace TouchSocket.Sockets
 
         #region SendInputAsync
 
-        //发送数据的切入点，该方法由框架自动调用。
+        /// <summary>
+        /// 异步发送输入数据。
+        /// </summary>
+        /// <param name="endPoint">要发送数据的端点。</param>
+        /// <param name="memory">包含要发送的数据的只读内存。</param>
+        /// <returns>返回一个任务，表示发送操作。</returns>
+        /// <remarks>
+        /// 此方法是一个异步操作，用于向指定的端点发送输入数据。
+        /// 它使用PreviewSendAsync方法来执行实际的发送操作。
+        /// </remarks>
         public Task SendInputAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             return this.PreviewSendAsync(endPoint, memory);
@@ -89,20 +98,26 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 处理已经经过预先处理后的数据
         /// </summary>
-        /// <param name="remoteEndPoint"></param>
-        /// <param name="byteBlock">以二进制形式传递</param>
-        /// <param name="requestInfo">以解析实例传递</param>
+        /// <param name="remoteEndPoint">远程端点，标识数据来源</param>
+        /// <param name="byteBlock">接收到的二进制数据块</param>
+        /// <param name="requestInfo">解析后的请求信息</param>
+        /// <returns>一个异步任务，代表处理过程</returns>
         protected Task GoReceived(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
         {
+            // 调用接收回调，继续处理接收到的数据
             return this.ReceivedCallBack.Invoke(remoteEndPoint, byteBlock, requestInfo);
         }
 
-        //发送已经经过预先处理后的数据
+        /// <summary>
+        /// 发送已经经过预先处理后的数据
+        /// </summary>
+        /// <param name="endPoint">目标端点，表示数据发送的目的地址</param>
+        /// <param name="memory">已经经过预先处理的字节数据，以 ReadOnlyMemory 方式传递以提高性能</param>
+        /// <returns>返回一个 Task 对象，表示异步操作的完成</returns>
         protected Task GoSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             return this.SendCallBackAsync.Invoke(endPoint, memory);
         }
-
         /// <summary>
         /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(EndPoint,ByteBlock, IRequestInfo)"/>处理数据
         /// </summary>
@@ -136,8 +151,13 @@ namespace TouchSocket.Sockets
             }
         }
 
-        //当发送数据前预先处理数据
-        protected virtual Task PreviewSendAsync(EndPoint endPoint,ReadOnlyMemory<byte> memory)
+        /// <summary>
+        /// 当发送数据前预先处理数据。
+        /// </summary>
+        /// <param name="endPoint">数据发送的目标端点。</param>
+        /// <param name="memory">待发送的字节数据内存。</param>
+        /// <returns>一个表示异步操作完成的 <see cref="Task"/> 对象。</returns>
+        protected virtual Task PreviewSendAsync(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
             return this.GoSendAsync(endPoint, memory);
         }

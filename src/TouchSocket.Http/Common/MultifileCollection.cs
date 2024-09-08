@@ -49,20 +49,20 @@ namespace TouchSocket.Http
                 var boundary = $"--{this.m_request.GetBoundary()}".ToUTF8Bytes();
 
 
-                var indexs = context.Span.IndexOfInclude(0, context.Length, boundary);
-                if (indexs.Count <= 0)
+                var indexes = context.Span.IndexOfInclude(0, context.Length, boundary);
+                if (indexes.Count <= 0)
                 {
                     throw new Exception("没有发现由Boundary包裹的数据。");
                 }
                 //var files = new List<IFormFile>();
-                for (var i = 0; i < indexs.Count; i++)
+                for (var i = 0; i < indexes.Count; i++)
                 {
-                    if (i + 1 < indexs.Count)
+                    if (i + 1 < indexes.Count)
                     {
                         var internalFormFile = new InternalFormFile();
                         //files.Add(internalFormFile);
-                        var index = context.Span.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
-                        var line = context.Span.Slice(indexs[i] + 3, index - indexs[i] - 6).ToString(Encoding.UTF8);
+                        var index = context.Span.IndexOfFirst(indexes[i] + 3, indexes[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
+                        var line = context.Span.Slice(indexes[i] + 3, index - indexes[i] - 6).ToString(Encoding.UTF8);
                         var lines = line.Split(new string[] { ";", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                         internalFormFile.DataPair = new NameValueCollection();
                         foreach (var item in lines)
@@ -74,7 +74,7 @@ namespace TouchSocket.Http
                             }
                         }
 
-                        var length = indexs[i + 1] - (index + 2) - boundary.Length;
+                        var length = indexes[i + 1] - (index + 2) - boundary.Length;
                         //var data = new byte[length];
                         //Array.Copy(context, index + 1, data, 0, length);
                         //string ssss = Encoding.UTF8.GetString(data);
@@ -101,29 +101,30 @@ namespace TouchSocket.Http
 
     public partial class MultifileCollection : IAsyncEnumerable<IFormFile>
     {
+        /// <inheritdoc/>
         public async IAsyncEnumerator<IFormFile> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             if (this.m_request.ContentCompleted == null || this.m_request.ContentCompleted == true)
             {
-                var context =await this.m_request.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
+                var context = await this.m_request.GetContentAsync(CancellationToken.None).ConfigureAwait(false);
 
                 var boundary = $"--{this.m_request.GetBoundary()}".ToUTF8Bytes();
 
 
-                var indexs = context.Span.IndexOfInclude(0, context.Length, boundary);
-                if (indexs.Count <= 0)
+                var indexes = context.Span.IndexOfInclude(0, context.Length, boundary);
+                if (indexes.Count <= 0)
                 {
                     throw new Exception("没有发现由Boundary包裹的数据。");
                 }
                 //var files = new List<IFormFile>();
-                for (var i = 0; i < indexs.Count; i++)
+                for (var i = 0; i < indexes.Count; i++)
                 {
-                    if (i + 1 < indexs.Count)
+                    if (i + 1 < indexes.Count)
                     {
                         var internalFormFile = new InternalFormFile();
                         //files.Add(internalFormFile);
-                        var index = context.Span.IndexOfFirst(indexs[i] + 3, indexs[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
-                        var line = context.Span.Slice(indexs[i] + 3, index - indexs[i] - 6).ToString(Encoding.UTF8);
+                        var index = context.Span.IndexOfFirst(indexes[i] + 3, indexes[i + 1], Encoding.UTF8.GetBytes("\r\n\r\n"));
+                        var line = context.Span.Slice(indexes[i] + 3, index - indexes[i] - 6).ToString(Encoding.UTF8);
                         var lines = line.Split(new string[] { ";", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                         internalFormFile.DataPair = new NameValueCollection();
                         foreach (var item in lines)
@@ -135,7 +136,7 @@ namespace TouchSocket.Http
                             }
                         }
 
-                        var length = indexs[i + 1] - (index + 2) - boundary.Length;
+                        var length = indexes[i + 1] - (index + 2) - boundary.Length;
                         //var data = new byte[length];
                         //Array.Copy(context, index + 1, data, 0, length);
                         //string ssss = Encoding.UTF8.GetString(data);

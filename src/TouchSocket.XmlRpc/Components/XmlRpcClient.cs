@@ -25,15 +25,13 @@ namespace TouchSocket.XmlRpc
     /// </summary>
     public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     {
-        private readonly object m_invokeLocker = new object();
-
         /// <inheritdoc/>
         public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
             return this.TcpConnectAsync(millisecondsTimeout, token);
         }
 
-        
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             invokeOption  ??= InvokeOption.WaitInvoke;

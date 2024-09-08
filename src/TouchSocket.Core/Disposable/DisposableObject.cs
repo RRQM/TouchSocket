@@ -25,30 +25,33 @@ namespace TouchSocket.Core
         /// </summary>
         private volatile bool m_disposedValue;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public bool DisposedValue => this.m_disposedValue;
 
         /// <summary>
-        /// 判断是否已经被释放，如果是，则抛出异常。
+        /// 判断当前对象是否已经被释放。
+        /// 如果已经被释放，则抛出ObjectDisposedException异常。
         /// </summary>
-        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="ObjectDisposedException">当对象已经被释放时抛出此异常</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfDisposed()
         {
+            // 检查对象是否已经被释放
             if (this.m_disposedValue)
             {
+                // 如果对象已被释放，抛出ObjectDisposedException异常
                 ThrowHelper.ThrowObjectDisposedException(this);
             }
         }
 
+
         /// <summary>
-        /// 调用释放，切换释放状态。
+        /// 处置资源
         /// </summary>
-        /// <param name="disposing"></param>
+        /// <param name="disposing">一个值，表示是否释放托管资源</param>
         protected virtual void Dispose(bool disposing)
         {
+            // 标记当前对象为已处置状态
             this.m_disposedValue = true;
         }
 

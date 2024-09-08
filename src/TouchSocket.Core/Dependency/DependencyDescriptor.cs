@@ -22,14 +22,14 @@ namespace TouchSocket.Core
         /// <summary>
         /// 初始化一个单例实例。
         /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="instance"></param>
+        /// <param name="fromType">要从该类型创建实例的类型。</param>
+        /// <param name="instance">创建的单例实例。</param>
         public DependencyDescriptor(Type fromType, object instance)
         {
-            this.FromType = fromType;
-            this.ToInstance = instance;
-            this.Lifetime = Lifetime.Singleton;
-            this.ToType = instance.GetType();
+            this.FromType = fromType; // 设置从哪个类型创建实例
+            this.ToInstance = instance; // 设置要创建的实例
+            this.Lifetime = Lifetime.Singleton; // 设置实例的生命周期为单例
+            this.ToType = instance.GetType(); // 设置实例的类型
         }
 
         /// <summary>

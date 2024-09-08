@@ -16,7 +16,6 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-
     /// <summary>
     /// 定义异步请求信息发送器的接口。
     /// </summary>

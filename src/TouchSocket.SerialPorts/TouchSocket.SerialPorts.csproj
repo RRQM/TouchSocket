@@ -10,11 +10,6 @@
 		<Authors>若汝棋茗;Diego</Authors>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 	<ItemGroup Condition="'$(TargetFramework)'!='net45' AND '$(TargetFramework)'!='net481'">
 		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
 	</ItemGroup>

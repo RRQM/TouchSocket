@@ -66,7 +66,7 @@ namespace TouchSocket.JsonRpc
                         {
                             var responseJsonString = await response.GetBodyAsync().ConfigureAwait(false);
 
-                            ThrowHelper.ThrowArgumentNullExceptionIf(responseJsonString);
+                            ThrowHelper.ThrowArgumentNullExceptionIf(responseJsonString, nameof(responseJsonString));
 
                             var resultContext = JsonRpcUtility.ToJsonRpcWaitResult(responseJsonString);
 

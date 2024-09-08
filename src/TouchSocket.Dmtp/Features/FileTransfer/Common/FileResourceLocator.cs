@@ -309,7 +309,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             }
 
             // 实际写入文件操作
-            this.FileStorage.Write(srcFileSection.Offset, value.Array, value.Offset, value.Count);
+            this.FileStorage.Write(srcFileSection.Offset, value);
 
             // 确保数据写入磁盘
             this.FileStorage.Flush();

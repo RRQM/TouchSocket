@@ -9,12 +9,6 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.NamedPipe</PackageOutputPath>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Common\InternalClientCollection.cs" />

@@ -14,25 +14,26 @@ using System.Collections.Generic;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
+
     /// <summary>
-    /// RateLimiterOptions
+    /// 限速器配置类
     /// </summary>
     public class RateLimiterOptions
     {
         /// <summary>
-        /// RateLimiterPolicys
+        /// 限速策略字典，用于存储不同的限速策略
         /// </summary>
-        public Dictionary<string, IRateLimiterPolicy> RateLimiterPolicys { get; private set; } = new Dictionary<string, IRateLimiterPolicy>();
+        public Dictionary<string, IRateLimiterPolicy> RateLimiterPolicies { get; private set; } = new Dictionary<string, IRateLimiterPolicy>();
 
         /// <summary>
-        /// 添加限流策略
+        /// 添加限速策略方法
         /// </summary>
-        /// <param name="policyName"></param>
-        /// <param name="rateLimiterPolicy"></param>
-        /// <returns></returns>
+        /// <param name="policyName">限速策略名称，用作策略的唯一标识</param>
+        /// <param name="rateLimiterPolicy">具体的限速策略实例</param>
+        /// <returns>当前的RateLimiterOptions实例，支持链式调用</returns>
         public RateLimiterOptions AddPolicy(string policyName, IRateLimiterPolicy rateLimiterPolicy)
         {
-            this.RateLimiterPolicys.Add(policyName, rateLimiterPolicy);
+            this.RateLimiterPolicies.Add(policyName, rateLimiterPolicy);
             return this;
         }
     }

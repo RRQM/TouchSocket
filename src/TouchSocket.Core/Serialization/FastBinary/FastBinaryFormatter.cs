@@ -146,7 +146,7 @@ namespace TouchSocket.Core
         public static void Serialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, in T graph, FastSerializerContext serializerContext)
             where TByteBlock : IByteBlock
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(serializerContext);
+            ThrowHelper.ThrowArgumentNullExceptionIf(serializerContext, nameof(serializerContext));
 
             var startPosition = byteBlock.Position;
 

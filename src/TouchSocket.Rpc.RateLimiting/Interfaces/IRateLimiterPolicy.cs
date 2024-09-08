@@ -14,16 +14,17 @@ using System.Threading.RateLimiting;
 
 namespace TouchSocket.Rpc.RateLimiting
 {
+
     /// <summary>
-    /// IRateLimiterPolicy
+    /// 定义了一个接口，用于根据上下文信息获取限流器实例
     /// </summary>
     public interface IRateLimiterPolicy
     {
         /// <summary>
-        /// GetRateLimiter
+        /// 根据给定的调用上下文获取相应的限流器实例
         /// </summary>
-        /// <param name="callContext"></param>
-        /// <returns></returns>
+        /// <param name="callContext">调用上下文，包含关于请求的信息</param>
+        /// <returns>返回一个限流器实例</returns>
         RateLimiter GetRateLimiter(ICallContext callContext);
     }
 }

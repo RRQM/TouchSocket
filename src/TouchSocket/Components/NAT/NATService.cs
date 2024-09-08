@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -18,76 +20,9 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp端口转发服务器
     /// </summary>
-    public class NatService : TcpService<NatSessionClient>
+    public abstract class NatService<TClient> : TcpServiceBase<TClient>, INatService<TClient> 
+        where TClient : NatSessionClient
     {
-        /// <inheritdoc/>
-        protected override void ClientInitialized(NatSessionClient client)
-        {
-            base.ClientInitialized(client);
-            // 设置当目标客户端断开时的处理方法
-            client.m_internalDis = this.OnTargetClientClosed;
-            // 设置当目标客户端接收到数据时的处理方法
-            client.m_internalTargetClientRev = this.OnTargetClientReceived;
-        }
-
-        /// <inheritdoc/>
-        protected override NatSessionClient NewClient()
-        {
-            return new NatSessionClient();
-        }
-
-        /// <summary>
-        /// 在NAT服务器收到数据时。
-        /// </summary>
-        /// <param name="socketClient">NAT会话客户端</param>
-        /// <param name="e">接收到的数据事件参数</param>
-        /// <returns>需要转发的数据。</returns>
-        protected virtual Task<byte[]> OnNatReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
-        {
-            return Task.FromResult(e.ByteBlock?.ToArray());
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient">Nat会话客户端</param>
-        /// <param name="e">接收到的数据事件参数</param>
-        protected sealed override async Task OnTcpReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
-        {
-            // 从NAT服务器接收到数据后的处理
-            var data = await this.OnNatReceived(socketClient, e).ConfigureAwait(false);
-            if (data != null)
-            {
-                // 转发数据到目标客户端
-                await socketClient.SendToTargetClientAsync(new System.Memory<byte>(data, 0, data.Length))
-                    .ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
-        /// 当目标客户端断开。
-        /// </summary>
-        /// <param name="socketClient">Nat会话客户端</param>
-        /// <param name="tcpClient">断开的Tcp客户端</param>
-        /// <param name="e">断开事件参数</param>
-        /// <returns></returns>
-        protected virtual Task OnTargetClientClosed(NatSessionClient socketClient, ITcpClient tcpClient,
-            ClosedEventArgs e)
-        {
-            return EasyTask.CompletedTask;
-        }
-
-        /// <summary>
-        /// 在目标客户端收到数据时。
-        /// </summary>
-        /// <param name="socketClient">Nat会话客户端</param>
-        /// <param name="tcpClient">发送数据的Tcp客户端</param>
-        /// <param name="e">接收到的数据事件参数</param>
-        /// <returns></returns>
-        protected virtual Task<byte[]> OnTargetClientReceived(NatSessionClient socketClient, ITcpClient tcpClient,
-            ReceivedDataEventArgs e)
-        {
-            return Task.FromResult(e.ByteBlock?.ToArray());
-        }
+       
     }
 }

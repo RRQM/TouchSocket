@@ -22,10 +22,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 </Project>

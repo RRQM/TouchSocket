@@ -215,9 +215,9 @@ namespace TouchSocket.NamedPipe
 
         private NamedPipeSessionClient GetClientOrThrow(string id)
         {
-            if (this.ProtectedTryGetClient(id, out var socketClient))
+            if (this.ProtectedTryGetClient(id, out var sessionClient))
             {
-                return (NamedPipeSessionClient)socketClient;
+                return (NamedPipeSessionClient)sessionClient;
             }
 
             throw new ClientNotFindException();
