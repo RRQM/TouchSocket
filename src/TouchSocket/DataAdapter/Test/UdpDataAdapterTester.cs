@@ -71,10 +71,11 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 模拟测试运行发送
         /// </summary>
+        /// <param name="memory">待测试的内存块</param>
         /// <param name="testCount">测试次数</param>
         /// <param name="expectedCount">期待测试次数</param>
-        /// <param name="millisecondsTimeout">超时</param>
-        /// <returns></returns>
+        /// <param name="millisecondsTimeout">超时时间（毫秒）</param>
+        /// <returns>测试运行的时间差</returns>
         public TimeSpan Run(ReadOnlyMemory<byte> memory, int testCount, int expectedCount, int millisecondsTimeout)
         {
             this.m_count = 0;
@@ -98,17 +99,6 @@ namespace TouchSocket.Sockets
             throw new TimeoutException();
         }
 
-        ///// <summary>
-        ///// 模拟发送
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="testCount">测试次数</param>
-        ///// <param name="expectedCount">期待测试次数</param>
-        ///// <param name="millisecondsTimeout">超时</param>
-        //public TimeSpan Run(byte[] buffer, int testCount, int expectedCount, int millisecondsTimeout)
-        //{
-        //    return this.Run(buffer, 0, buffer.Length, testCount, expectedCount, millisecondsTimeout);
-        //}
 
         private async Task BeginSend()
         {
@@ -146,7 +136,7 @@ namespace TouchSocket.Sockets
 
         private Task SendCallback(EndPoint endPoint, ReadOnlyMemory<byte> memory)
         {
-            var array=memory.ToArray();
+            var array = memory.ToArray();
             var asyncByte = new QueueDataBytes(array, 0, array.Length);
             //Array.Copy(buffer, offset, asyncByte.Buffer, 0, length);
             this.m_asyncBytes.Enqueue(asyncByte);

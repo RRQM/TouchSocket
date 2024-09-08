@@ -15,16 +15,16 @@ using System.Threading.Tasks;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 当配置Config完成时触发。
+    /// 定义了一个插件接口，用于在配置加载完成后执行特定操作。
     /// </summary>
     public interface ILoadedConfigPlugin : IPlugin
     {
         /// <summary>
-        /// 当完成配置载入时
+        /// 当配置加载完成时调用。
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
+        /// <param name="sender">发送事件的对象，这里是配置对象本身。</param>
+        /// <param name="e">包含事件数据的事件参数。</param>
+        /// <returns>一个任务对象，表示异步操作的结果。</returns>
         Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e);
     }
 }

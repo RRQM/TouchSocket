@@ -308,7 +308,7 @@ namespace TouchSocket.Sockets
                             }
                         }
                     }
-                    else if (result.HasError)
+                    else if (result.SocketError != null)
                     {
                         byteBlock.Dispose();
                         this.Abort(false, result.SocketError.Message);
@@ -531,12 +531,12 @@ namespace TouchSocket.Sockets
             // 保存当前对象的旧Id。
             var sourceId = this.m_id;
             // 尝试从内部存储中移除当前对象的Id，并获取关联的socket客户端。
-            if (this.m_tryRemoveAction(sourceId, out var socketClient))
+            if (this.m_tryRemoveAction(sourceId, out var sessionClient))
             {
                 // 将获取到的socket客户端的Id更新为目标Id。
-                socketClient.m_id = targetId;
+                sessionClient.m_id = targetId;
                 // 尝试将更新了Id的socket客户端重新添加到内部存储中。
-                if (this.m_tryAddAction(socketClient))
+                if (this.m_tryAddAction(sessionClient))
                 {
                     // 如果添加成功，触发Id更改事件，并等待所有更改完成。
                     await this.IdChanged(sourceId, targetId).ConfigureAwait(false);
@@ -558,12 +558,12 @@ namespace TouchSocket.Sockets
         /// 尝试通过Id获得对应的客户端
         /// </summary>
         /// <param name="id">客户端的唯一标识符</param>
-        /// <param name="socketClient">输出参数，用于返回找到的客户端实例</param>
+        /// <param name="sessionClient">输出参数，用于返回找到的客户端实例</param>
         /// <returns>如果找到对应的客户端，则返回true；否则返回false</returns>
-        protected bool ProtectedTryGetClient(string id, out TcpSessionClientBase socketClient)
+        protected bool ProtectedTryGetClient(string id, out TcpSessionClientBase sessionClient)
         {
             // 调用内部方法m_tryGet来尝试获取客户端
-            return this.m_tryGet(id, out socketClient);
+            return this.m_tryGet(id, out sessionClient);
         }
 
         /// <summary>

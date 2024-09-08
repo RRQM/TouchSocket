@@ -113,14 +113,20 @@ namespace TouchSocket.Core
         /// <exception cref="InvalidOperationException">当字节序类型不支持时抛出</exception>
         public static TouchSocketBitConverter GetBitConverter(EndianType endianType)
         {
-            return endianType switch
+            switch (endianType)
             {
-                EndianType.Little => LittleEndian,
-                EndianType.Big => BigEndian,
-                EndianType.LittleSwap => LittleSwapEndian,
-                EndianType.BigSwap => BigSwapEndian,
-                _ => throw new InvalidOperationException(TouchSocketCoreResource.InvalidParameter.Format(nameof(endianType))),
-            };
+                case EndianType.Little:return LittleEndian;
+                   
+                case EndianType.Big: return BigEndian;
+                   
+                case EndianType.LittleSwap: return LittleSwapEndian;
+                    
+                case EndianType.BigSwap: return  BigSwapEndian;
+                    
+                default:
+                    ThrowHelper.ThrowInvalidEnumArgumentException(endianType);
+                    return default;
+            }
         }
 
         /// <summary>
@@ -373,9 +379,10 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ToUInt16(byte[] buffer, int offset)
         {
-            if (buffer.Length - offset < 2)
+            var len = buffer.Length - offset;
+            if (len < 2)
             {
-                throw new ArgumentOutOfRangeException(nameof(offset));
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(len), len, 2);
             }
 
             unsafe

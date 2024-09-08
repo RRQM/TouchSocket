@@ -70,7 +70,7 @@ namespace TouchSocket.Core
         public ByteBlock(int byteSize, BytePool bytePool)
         {
             // 确保字节池不为空。
-            this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool);
+            this.m_bytePool = ThrowHelper.ThrowArgumentNullExceptionIf(bytePool, nameof(bytePool));
             // 从指定的字节池租用字节数组。
             this.m_buffer = bytePool.Rent(byteSize);
         }

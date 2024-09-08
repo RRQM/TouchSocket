@@ -224,36 +224,6 @@ namespace TouchSocket.Core
             return new FileStorageWriter(GetFileStorageForWrite(fileInfo));
         }
 
-        /// <summary>
-        /// 加载文件为缓存读取流
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="Exception"></exception>
-        public static void LoadFileForCacheRead(string path)
-        {
-            ThrowIfPathIsNull(path);
-
-            path = Path.GetFullPath(path);
-            if (m_pathStorage.TryGetValue(path, out var storage))
-            {
-                if (storage.FileAccess != FileAccess.Read || !storage.Cache)
-                {
-                    ThrowHelper.ThrowUnknownErrorException();
-                }
-                return;
-            }
-            if (FileStorage.TryCreateCacheFileStorage(path, out var fileStorage, out var msg))
-            {
-                m_pathStorage.TryAdd(path, fileStorage);
-            }
-            else
-            {
-                throw new Exception(msg);
-            }
-        }
-
         private static void DelayRunReleaseFile(string path, int time)
         {
             Task.Run(async () =>

@@ -11,83 +11,222 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// 端口转发辅助类，继承自TcpSessionClient。
+    /// 端口转发辅助类，继承自<see cref="TcpSessionClient"/>。
     /// </summary>
-    public class NatSessionClient : TcpSessionClient, INatSessionClient
+    public abstract class NatSessionClient : TcpSessionClientBase, INatSessionClient
     {
-        // 定义一个处理断开连接事件的委托方法。
-        internal Func<NatSessionClient, ITcpClient, ClosedEventArgs, Task> m_internalDis;
-
-        // 定义一个处理接收数据事件的委托方法。
-        internal Func<NatSessionClient, ITcpClient, ReceivedDataEventArgs, Task<byte[]>> m_internalTargetClientRev;
-
         // 保存所有目标客户端的列表。
-        private readonly ConcurrentList<ITcpClient> m_targetClients = new ConcurrentList<ITcpClient>();
+        private readonly ConcurrentList<NatTargetClient> m_targetClients = new ConcurrentList<NatTargetClient>();
 
         /// <inheritdoc/>
-        public async Task<ITcpClient> AddTargetClientAsync(TouchSocketConfig config, Action<ITcpClient> setupAction = default)
+        public async Task AddTargetClientAsync(NatTargetClient client)
         {
-            // 创建一个新的TcpClient实例。
-            var tcpClient = new TcpClient();
-            // 注册断开连接事件处理程序。
-            tcpClient.Closed += this.TcpClient_Disconnected;
+            if (this.m_targetClients.Contains(client))
+            {
+                return;
+            }
+            //此处的逻辑是以防重复订阅
+            //注册断开连接事件处理程序。
+            client.m_internalClosed -= this.NatTargetClient_Closed;
+            client.m_internalClosed += this.NatTargetClient_Closed;
+
             // 注册接收数据事件处理程序。
-            tcpClient.Received += this.TcpClient_Received;
-            // 异步设置TcpClient的配置。
-            await tcpClient.SetupAsync(config).ConfigureAwait(false);
-            // 执行回调操作，如果提供了的话。
-            setupAction?.Invoke(tcpClient);
-            // 异步连接TcpClient。
-            await tcpClient.ConnectAsync().ConfigureAwait(false);
+            client.m_internalReceived -= this.NatTargetClient_Received;
+            client.m_internalReceived += this.NatTargetClient_Received;
+
+            if (!client.Online)
+            {
+                await client.ConnectAsync().ConfigureAwait(false);
+            }
 
             // 将新的TcpClient添加到目标客户端列表中。
-            this.m_targetClients.Add(tcpClient);
-            return tcpClient;
+            this.m_targetClients.Add(client);
         }
 
         /// <inheritdoc/>
-        public ITcpClient[] GetTargetClients()
+        public async Task AddTargetClientAsync(Action<TouchSocketConfig> setupAction)
         {
-            return this.m_targetClients.ToArray();
+            // 创建一个新的TcpClient实例。
+            var client = new NatTargetClient();
+            var config = new TouchSocketConfig();
+            setupAction.Invoke(config);
+
+            await client.SetupAsync(config).ConfigureAwait(false);
+            await this.AddTargetClientAsync(client).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
-        public async Task SendToTargetClientAsync(ReadOnlyMemory<byte> memory)
+        public IEnumerable<NatTargetClient> GetTargetClients()
         {
-            // 遍历目标客户端列表，尝试发送数据。
-            foreach (var socket in this.m_targetClients)
+            return this.m_targetClients;
+        }
+
+        /// <inheritdoc/>
+        public bool RemoveTargetClient(NatTargetClient client)
+        {
+            if (this.m_targetClients.Remove(client))
             {
-                try
+                if (!client.StandBy)
                 {
-                    await socket.SendAsync(memory).ConfigureAwait(false);
+                    client.TryShutdown();
+                    client.SafeDispose();
                 }
-                catch
+
+                client.m_internalClosed -= this.NatTargetClient_Closed;
+                client.m_internalReceived -= this.NatTargetClient_Received;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 当NAT连接关闭时的虚拟方法。
+        /// </summary>
+        /// <param name="e">关闭事件的参数。</param>
+        /// <returns>一个等待完成的任务。</returns>
+        protected virtual Task OnNatClosed(ClosedEventArgs e)
+        {
+            // 遍历目标客户端列表，关闭并释放资源。
+            foreach (var client in this.m_targetClients)
+            {
+                // 移除并处理目标客户端。
+                this.RemoveTargetClient(client);
+            }
+
+            // 返回已完成的任务，表示处理完毕。
+            return EasyTask.CompletedTask;
+        }
+
+        /// <summary>
+        /// 当建立NAT连接时触发的抽象异步事件处理方法。
+        /// </summary>
+        /// <param name="e">包含连接信息的事件参数。</param>
+        /// <returns>一个异步任务，表示事件处理的完成。</returns>
+        protected abstract Task OnNatConnected(ConnectedEventArgs e);
+
+        /// <summary>
+        /// 在Nat服务器收到数据时。
+        /// </summary>
+        /// <param name="e">接收到的数据事件参数</param>
+        /// <returns>需要转发的数据。</returns>
+        protected virtual async Task OnNatReceived(ReceivedDataEventArgs e)
+        {
+            foreach (var client in this.GetTargetClients())
+            {
+                if (!client.Online)
                 {
-                    // 如果发送失败，捕获异常但不进行处理。
+                    continue;
+                }
+
+                if (e.ByteBlock != null)
+                {
+                    // 转发数据到目标客户端
+
+                    try
+                    {
+                        await client.SendAsync(e.ByteBlock.Memory).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.Exception(ex);
+                    }
+                }
+
+                if (e.RequestInfo != null)
+                {
+                    // 转发数据到目标客户端
+                    try
+                    {
+                        await client.SendAsync(e.RequestInfo).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger?.Exception(ex);
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// 当Tcp连接关闭时的事件处理程序。
+        /// 当目标客户端断开。
         /// </summary>
-        /// <param name="e">包含关闭信息的事件参数。</param>
-        protected override async Task OnTcpClosed(ClosedEventArgs e)
+        /// <param name="client">断开的Tcp客户端</param>
+        /// <param name="e">断开事件参数</param>
+        /// <returns></returns>
+        protected abstract Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e);
+
+        /// <summary>
+        /// 在目标客户端收到数据时。
+        /// </summary>
+        /// <param name="client">发送数据的Tcp客户端</param>
+        /// <param name="e">接收到的数据事件参数</param>
+        /// <returns></returns>
+        protected virtual async Task OnTargetClientReceived(NatTargetClient client, ReceivedDataEventArgs e)
         {
-            // 遍历目标客户端列表，关闭并释放资源。
-            foreach (var client in this.m_targetClients)
+            if (!this.Online)
             {
-                client.TryShutdown();
-                client.SafeDispose();
+                return;
             }
+
+            if (e.ByteBlock != null)
+            {
+                // 转发数据到当前客户端
+
+                try
+                {
+                    await this.ProtectedSendAsync(e.ByteBlock.Memory).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(ex);
+                }
+            }
+
+            if (e.RequestInfo != null)
+            {
+                // 转发数据到当前客户端
+                try
+                {
+                    await this.ProtectedSendAsync(e.RequestInfo).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger?.Exception(ex);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override sealed async Task OnTcpClosed(ClosedEventArgs e)
+        {
+            await this.OnNatClosed(e).ConfigureAwait(false);
+
             // 调用基类的事件处理程序。
             await base.OnTcpClosed(e).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpConnected(ConnectedEventArgs e)
+        {
+            await base.OnTcpConnected(e).ConfigureAwait(false);
+            await this.OnNatConnected(e).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override sealed async Task OnTcpReceived(ReceivedDataEventArgs e)
+        {
+            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await this.OnNatReceived(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -95,21 +234,9 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client">断开连接的客户端。</param>
         /// <param name="e">包含断开连接信息的事件参数。</param>
-        private async Task TcpClient_Disconnected(ITcpSession client, ClosedEventArgs e)
+        private async Task NatTargetClient_Closed(ITcpSession client, ClosedEventArgs e)
         {
-            // 遍历客户端的插件，尝试调用断开连接的委托方法。
-            foreach (var item in client.PluginManager.Plugins)
-            {
-                if (typeof(ReconnectionPlugin<>) == item.GetType().GetGenericTypeDefinition())
-                {
-                    await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureAwait(false);
-                    return;
-                }
-            }
-            // 如果没有找到相应的插件，释放资源并从目标列表中移除客户端。
-            client.Dispose();
-            this.m_targetClients.Remove((ITcpClient)client);
-            await this.m_internalDis.Invoke(this, (ITcpClient)client, e).ConfigureAwait(false);
+            await this.OnTargetClientClosed((NatTargetClient)client, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -117,31 +244,16 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="client">接收到数据的客户端。</param>
         /// <param name="e">包含接收数据信息的事件参数。</param>
-        private async Task TcpClient_Received(ITcpClient client, ReceivedDataEventArgs e)
+        private async Task NatTargetClient_Received(NatTargetClient client, ReceivedDataEventArgs e)
         {
             // 如果当前对象已被释放，则不处理接收到的数据。
-            if (this.DisposedValue)
+            if (this.DisposedValue || !this.Online)
             {
                 return;
             }
 
-            try
-            {
-                // 调用接收数据的委托方法处理数据。
-                var data = await this.m_internalTargetClientRev.Invoke(this, client, e).ConfigureAwait(false);
-                if (data != null)
-                {
-                    // 如果当前对象在线，则发送数据。
-                    if (this.Online)
-                    {
-                        await this.SendAsync(data).ConfigureAwait(false);
-                    }
-                }
-            }
-            catch
-            {
-                // 如果处理数据时发生异常，捕获异常但不进行处理。
-            }
+            // 调用接收数据的委托方法处理数据。
+            await this.OnTargetClientReceived(client, e).ConfigureAwait(false);
         }
     }
 }

@@ -18,9 +18,6 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
 {
-    /// <summary>
-    /// WebApiAttribute
-    /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WebApiAttribute : RpcAttribute
     {
@@ -54,11 +51,7 @@ namespace TouchSocket.WebApi
             return new Type[] { typeof(IWebApiClientBase) };
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="rpcMethod"></param>
-        /// <returns></returns>
         public override string GetInvokeKey(RpcMethod rpcMethod)
         {
             var parameters = rpcMethod.GetNormalParameters().ToList();
@@ -104,15 +97,6 @@ namespace TouchSocket.WebApi
                             stringBuilder.Append('&');
                         }
                     }
-
-                    //for (; i < rpcMethod.ParameterNames.Length - 1; i++)
-                    //{
-                    //    stringBuilder.Append(rpcMethod.ParameterNames[i] + "={&}".Replace("&", i.ToString()));
-                    //    if (i != rpcMethod.ParameterNames.Length - 2)
-                    //    {
-                    //        stringBuilder.Append('&');
-                    //    }
-                    //}
                     actionUrl = stringBuilder.ToString();
                 }
                 return $"POST:{actionUrl}";

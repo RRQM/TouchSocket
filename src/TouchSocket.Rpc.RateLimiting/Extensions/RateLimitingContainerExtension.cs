@@ -16,20 +16,23 @@ using TouchSocket.Core;
 namespace TouchSocket.Rpc.RateLimiting
 {
     /// <summary>
-    /// RateLimitingContainerExtension
+    /// 提供扩展方法以方便注册限流策略。
     /// </summary>
     public static class RateLimitingContainerExtension
     {
         /// <summary>
         /// 向注册器中注册限流策略。
         /// </summary>
-        /// <param name="registrator"></param>
-        /// <param name="action"></param>
-        /// <returns></returns>
+        /// <param name="registrator">需要注册限流策略的注册器。</param>
+        /// <param name="action">用于配置限流策略选项的委托。</param>
+        /// <returns>返回配置了限流策略的注册器。</returns>
         public static IRegistrator AddRateLimiter(this IRegistrator registrator, Action<RateLimiterOptions> action)
         {
+            // 创建一个新的RateLimiterOptions实例以供配置。
             var options = new RateLimiterOptions();
+            // 使用提供的委托配置RateLimiterOptions实例。
             action.Invoke(options);
+            // 将配置好的限流服务注册到注册器中。
             return registrator.RegisterSingleton<IRateLimitService>(new RateLimitService(options));
         }
     }

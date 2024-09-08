@@ -76,11 +76,14 @@ namespace TouchSocket.Sockets
             }
 
             // 调用自定义的客户端断开连接处理逻辑
-            await this.m_onClientDisconnected(this, e).ConfigureAwait(false);
-            // 如果事件已被处理，则直接返回
-            if (e.Handled)
+            if (this.m_onClientDisconnected != null)
             {
-                return;
+                await this.m_onClientDisconnected(this, e).ConfigureAwait(false);
+                // 再次检查事件是否已被处理
+                if (e.Handled)
+                {
+                    return;
+                }
             }
 
             // 调用基类的OnTcpClosed方法，传递事件参数
@@ -106,12 +109,17 @@ namespace TouchSocket.Sockets
             }
 
             // 调用内部的客户端断开连接处理方法
-            await this.m_onClientDisconnecting(this, e).ConfigureAwait(false);
-            // 再次检查事件是否已被处理
-            if (e.Handled)
+            if (this.m_onClientDisconnecting != null)
             {
-                return;
+                await this.m_onClientDisconnecting(this, e).ConfigureAwait(false);
+                // 再次检查事件是否已被处理
+                if (e.Handled)
+                {
+                    return;
+                }
             }
+
+
             // 调用基类的即将断开连接方法
             await base.OnTcpClosing(e).ConfigureAwait(false);
         }
@@ -123,12 +131,14 @@ namespace TouchSocket.Sockets
         protected override async Task OnTcpConnected(ConnectedEventArgs e)
         {
             // 触发客户端连接事件，允许派生类处理连接逻辑。
-            await this.m_onClientConnected(this, e).ConfigureAwait(false);
-
-            // 如果事件已经被处理，则直接返回不继续执行默认的连接逻辑。
-            if (e.Handled)
+            if (this.m_onClientConnected != null)
             {
-                return;
+                await this.m_onClientConnected(this, e).ConfigureAwait(false);
+                // 再次检查事件是否已被处理
+                if (e.Handled)
+                {
+                    return;
+                }
             }
 
             // 执行基类的OnTcpConnected方法，继续默认的连接处理流程。
@@ -143,11 +153,14 @@ namespace TouchSocket.Sockets
         protected override async Task OnTcpConnecting(ConnectingEventArgs e)
         {
             // 触发客户端连接事件，允许派生类处理连接逻辑
-            await this.m_onClientConnecting(this, e).ConfigureAwait(false);
-            // 如果事件已经被处理，则不再继续父类的连接逻辑
-            if (e.Handled)
+            if (this.m_onClientConnecting != null)
             {
-                return;
+                await this.m_onClientConnecting(this, e).ConfigureAwait(false);
+                // 如果事件已经被处理，则不再继续父类的连接逻辑
+                if (e.Handled)
+                {
+                    return;
+                }
             }
 
             // 调用基类的连接逻辑继续处理连接
@@ -163,11 +176,14 @@ namespace TouchSocket.Sockets
         protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             // 调用注册的事件处理程序来处理接收到的数据
-            await this.m_onClientReceivedData(this, e).ConfigureAwait(false);
-            // 如果数据已经被处理，则不再向下传递
-            if (e.Handled)
+            if (this.m_onClientReceivedData != null)
             {
-                return;
+                await this.m_onClientReceivedData(this, e).ConfigureAwait(false);
+                // 如果数据已经被处理，则不再向下传递
+                if (e.Handled)
+                {
+                    return;
+                }
             }
 
             // 调用基类的相应方法继续处理数据
@@ -212,9 +228,9 @@ namespace TouchSocket.Sockets
 
         private TcpSessionClient GetClientOrThrow(string id)
         {
-            if (this.ProtectedTryGetClient(id, out var socketClient))
+            if (this.ProtectedTryGetClient(id, out var sessionClient))
             {
-                return (TcpSessionClient)socketClient;
+                return (TcpSessionClient)sessionClient;
             }
             ThrowHelper.ThrowClientNotFindException(id);
             return default;

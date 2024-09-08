@@ -12,10 +12,4 @@
 	  <ProjectReference Include="..\TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj" />
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 </Project>

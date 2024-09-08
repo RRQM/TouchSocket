@@ -31,12 +31,12 @@ namespace TouchSocket.Rpc.RateLimiting
         public string PolicyName { get; }
 
         /// <summary>
-        /// 使用限流策略
+        /// 构造函数：初始化EnableRateLimitingAttribute对象
         /// </summary>
-        /// <param name="policyName"></param>
+        /// <param name="policyName">限流策略的名称</param>
         public EnableRateLimitingAttribute(string policyName)
         {
-            this.PolicyName = policyName;
+            this.PolicyName = policyName; // 设置限流策略名称
         }
 
         /// <inheritdoc/>

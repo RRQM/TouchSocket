@@ -15,30 +15,11 @@ using System.Net.Sockets;
 
 namespace TouchSocket.Sockets
 {
-    internal readonly struct SocketOperationResult
+    internal class SocketOperationResult
     {
-        public SocketOperationResult(int bytesTransferred, EndPoint remoteEndPoint)
-        {
-            this.SocketError = null;
-            this.BytesTransferred = bytesTransferred;
-            this.RemoteEndPoint = remoteEndPoint;
-        }
-
-        public SocketOperationResult(int bytesTransferred)
-        {
-            this.SocketError = null;
-            this.BytesTransferred = bytesTransferred;
-        }
-
-        public SocketOperationResult(SocketException exception)
-        {
-            this.SocketError = exception;
-            this.BytesTransferred = 0;
-        }
-
-        public readonly int BytesTransferred { get; }
-        public readonly bool HasError => this.SocketError != null;
-        public EndPoint RemoteEndPoint { get; }
-        public readonly SocketException SocketError { get; }
+        public int BytesTransferred;
+        public EndPoint RemoteEndPoint;
+        public SocketException SocketError;
+        public IPPacketInformation ReceiveMessageFromPacketInfo;
     }
 }

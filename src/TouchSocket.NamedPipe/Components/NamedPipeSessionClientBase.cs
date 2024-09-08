@@ -279,36 +279,36 @@ namespace TouchSocket.NamedPipe
             var sourceId = this.Id;
 
             // 尝试从内部集合中移除当前Id
-            if (this.m_tryRemoveAction(this.Id, out var socketClient))
+            if (this.m_tryRemoveAction(this.Id, out var sessionClient))
             {
                 // 更新Socket客户端的Id
-                socketClient.Id = newId;
+                sessionClient.Id = newId;
 
                 // 尝试将更新后的Socket客户端添加回集合
-                if (this.m_tryAddAction(socketClient))
+                if (this.m_tryAddAction(sessionClient))
                 {
                     // 如果插件管理器已启用，通知相关插件Id已更改
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, newId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), socketClient, e).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), sessionClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
                 else
                 {
                     // 如果添加失败，恢复原来的Id
-                    socketClient.Id = sourceId;
+                    sessionClient.Id = sourceId;
 
                     // 再次尝试添加，如果失败，则抛出异常
-                    if (this.m_tryAddAction(socketClient))
+                    if (this.m_tryAddAction(sessionClient))
                     {
                         throw new Exception("Id重复");
                     }
                     else
                     {
                         // 如果恢复旧Id也失败，则关闭Socket客户端
-                        await socketClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
+                        await sessionClient.CloseAsync("修改新Id时操作失败，且回退旧Id时也失败。").ConfigureAwait(false);
                     }
                 }
             }
@@ -323,12 +323,12 @@ namespace TouchSocket.NamedPipe
         /// 尝试通过Id获得对应的客户端
         /// </summary>
         /// <param name="id">客户端的唯一标识符</param>
-        /// <param name="socketClient">输出参数，用于返回找到的客户端实例</param>
+        /// <param name="sessionClient">输出参数，用于返回找到的客户端实例</param>
         /// <returns>如果找到对应的客户端，则返回true；否则返回false</returns>
-        protected bool ProtectedTryGetClient(string id, out NamedPipeSessionClientBase socketClient)
+        protected bool ProtectedTryGetClient(string id, out NamedPipeSessionClientBase sessionClient)
         {
             // 调用内部方法尝试获取客户端
-            return this.m_tryGet(id, out socketClient);
+            return this.m_tryGet(id, out sessionClient);
         }
 
         /// <summary>

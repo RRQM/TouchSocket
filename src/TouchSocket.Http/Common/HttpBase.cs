@@ -28,15 +28,6 @@ namespace TouchSocket.Http
     public abstract class HttpBase : IRequestInfo
     {
         /// <summary>
-        /// 服务器版本
-        /// </summary>
-        public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
-        private static readonly byte[] s_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
-
-        private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
-        private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
-        /// <summary>
         /// 定义缓存的最大大小，这里设置为100MB。
         /// 这个值是根据预期的内存使用量和性能需求确定的。
         /// 过大的缓存可能会导致内存使用率过高，影响系统的其他部分。
@@ -45,14 +36,42 @@ namespace TouchSocket.Http
         public const int MaxCacheSize = 1024 * 1024 * 100;
 
         /// <summary>
-        /// 能否写入。
+        /// 服务器版本
         /// </summary>
-        public abstract bool CanWrite { get; }
+        public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private static readonly byte[] s_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+
+        private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
+        private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
+
+        /// <summary>
+        /// 可接受MIME类型
+        /// </summary>
+        public string Accept
+        {
+            get => this.m_headers.Get(HttpHeaders.Accept);
+            set => this.m_headers.Add(HttpHeaders.Accept, value);
+        }
+
+        /// <summary>
+        /// 允许编码
+        /// </summary>
+        public string AcceptEncoding
+        {
+            get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
+            set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
+        }
 
         /// <summary>
         /// 能否读取。
         /// </summary>
         public abstract bool CanRead { get; }
+
+        /// <summary>
+        /// 能否写入。
+        /// </summary>
+        public abstract bool CanWrite { get; }
 
         /// <summary>
         /// 客户端
@@ -76,6 +95,20 @@ namespace TouchSocket.Http
             }
             set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
         }
+
+        /// <summary>
+        /// 内容类型
+        /// </summary>
+        public string ContentType
+        {
+            get => this.m_headers.Get(HttpHeaders.ContentType);
+            set => this.m_headers.Add(HttpHeaders.ContentType, value);
+        }
+
+        /// <summary>
+        /// 请求头集合
+        /// </summary>
+        public IHttpHeader Headers => this.m_headers;
 
         /// <summary>
         /// 保持连接。
@@ -116,38 +149,6 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 内容类型
-        /// </summary>
-        public string ContentType
-        {
-            get => this.m_headers.Get(HttpHeaders.ContentType);
-            set => this.m_headers.Add(HttpHeaders.ContentType, value);
-        }
-
-        /// <summary>
-        /// 允许编码
-        /// </summary>
-        public string AcceptEncoding
-        {
-            get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
-            set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
-        }
-
-        /// <summary>
-        /// 可接受MIME类型
-        /// </summary>
-        public string Accept
-        {
-            get => this.m_headers.Get(HttpHeaders.Accept);
-            set => this.m_headers.Add(HttpHeaders.Accept, value);
-        }
-
-        /// <summary>
-        /// 请求头集合
-        /// </summary>
-        public IHttpHeader Headers => this.m_headers;
-
-        /// <summary>
         /// 协议名称，默认HTTP
         /// </summary>
         public Protocol Protocols { get; protected set; } = Protocol.Http;
@@ -161,6 +162,16 @@ namespace TouchSocket.Http
         /// 请求行
         /// </summary>
         public string RequestLine { get; private set; }
+
+        internal Task CompleteInput()
+        {
+            return this.m_httpBlockSegment.InternalComplete();
+        }
+
+        internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+        {
+            return this.m_httpBlockSegment.InternalInputAsync(memory);
+        }
 
         internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
@@ -179,56 +190,13 @@ namespace TouchSocket.Http
             }
         }
 
-        private void ReadHeaders(ReadOnlySpan<byte> span)
+        internal virtual void ResetHttp()
         {
-            var data = span.ToString(Encoding.UTF8);
-            var rows = Regex.Split(data, "\r\n");
+            this.m_headers.Clear();
+            this.ContentCompleted = null;
+            this.RequestLine = default;
 
-            //Request URL & Method & Version
-            this.RequestLine = rows[0];
-
-            //Request Headers
-            this.GetRequestHeaders(rows);
-            this.LoadHeaderProperties();
-        }
-
-        #region Content
-
-        /// <summary>
-        /// 设置一次性内容
-        /// </summary>
-        /// <param name="content">要设置的内容，作为只读内存块传入</param>
-        public abstract void SetContent(in ReadOnlyMemory<byte> content);
-
-        /// <summary>
-        /// 获取一次性内容。
-        /// </summary>
-        /// <returns>返回一个包含字节的只读内存的任务。</returns>
-        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
-        public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// 获取一次性内容。
-        /// </summary>
-        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
-        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
-        public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
-        {
-            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
-            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-            return Task.Run(async () => await this.GetContentAsync(cancellationToken)).GetFalseAwaitResult();
-        }
-
-        #endregion Content
-
-        internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
-        {
-            return this.m_httpBlockSegment.InternalInputAsync(memory);
-        }
-
-        internal Task CompleteInput()
-        {
-            return this.m_httpBlockSegment.InternalComplete();
+            this.m_httpBlockSegment.InternalReset();
         }
 
         /// <summary>
@@ -255,14 +223,47 @@ namespace TouchSocket.Http
             }
         }
 
-        internal virtual void ResetHttp()
+        private void ReadHeaders(ReadOnlySpan<byte> span)
         {
-            this.m_headers.Clear();
-            this.ContentCompleted = null;
-            this.RequestLine = default;
+            var data = span.ToString(Encoding.UTF8);
+            var rows = Regex.Split(data, "\r\n");
 
-            this.m_httpBlockSegment.InternalReset();
+            //Request URL & Method & Version
+            this.RequestLine = rows[0];
+
+            //Request Headers
+            this.GetRequestHeaders(rows);
+            this.LoadHeaderProperties();
         }
+
+        #region Content
+
+        /// <summary>
+        /// 获取一次性内容。
+        /// </summary>
+        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
+        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
+        public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
+        {
+            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
+            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
+            return Task.Run(async () => await this.GetContentAsync(cancellationToken).ConfigureAwait(false)).GetFalseAwaitResult();
+        }
+
+        /// <summary>
+        /// 获取一次性内容。
+        /// </summary>
+        /// <returns>返回一个包含字节的只读内存的任务。</returns>
+        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
+        public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 设置一次性内容
+        /// </summary>
+        /// <param name="content">要设置的内容，作为只读内存块传入</param>
+        public abstract void SetContent(in ReadOnlyMemory<byte> content);
+
+        #endregion Content
 
         #region Read
 
@@ -292,12 +293,7 @@ namespace TouchSocket.Http
                     if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
                     {
                         var memory = blockResult.Memory;
-#if NET6_0_OR_GREATER
                         await stream.WriteAsync(memory, cancellationToken);
-#else
-                        var segment = memory.GetArray();
-                        await stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
-#endif
                     }
                     if (blockResult.IsCompleted)
                     {

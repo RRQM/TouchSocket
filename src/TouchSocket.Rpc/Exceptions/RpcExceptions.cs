@@ -21,29 +21,25 @@ namespace TouchSocket.Rpc
     public class RpcException : Exception
     {
         /// <summary>
-        ///构造函数
+        /// 默认构造函数，初始化RpcException对象，不带特定错误信息和内部异常
         /// </summary>
         public RpcException() : base() { }
 
+
         /// <summary>
-        ///构造函数
+        /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">解释异常原因的错误消息</param>
         public RpcException(string message) : base(message) { }
 
-        /// <summary>
-        ///构造函数
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="inner"></param>
-        public RpcException(string message, System.Exception inner) : base(message, inner) { }
 
         /// <summary>
-        ///构造函数
+        /// 构造函数重载，初始化RpcException对象，并携带指定的错误信息和内部异常
         /// </summary>
-        /// <param name="info"></param>
-        /// <param name="context"></param>
-        protected RpcException(System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        /// <param name="message">解释异常原因的错误消息</param>
+        /// <param name="inner">导致当前异常发生的内部异常</param>
+        public RpcException(string message, System.Exception inner) : base(message, inner) { }
+
+
     }
 }

@@ -66,7 +66,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 加载配置
         /// </summary>
-        /// <param name="config"></param>
+        /// <param name="config">要加载的配置对象</param>
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
         }

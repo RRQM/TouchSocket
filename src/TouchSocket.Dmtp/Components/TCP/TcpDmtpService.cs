@@ -90,9 +90,9 @@ namespace TouchSocket.Dmtp
             }
         }
 
-        private Task PrivateConnecting(TcpDmtpSessionClient socketClient, ConnectingEventArgs e)
+        private Task PrivateConnecting(TcpDmtpSessionClient sessionClient, ConnectingEventArgs e)
         {
-            socketClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
+            sessionClient.InternalSetDmtpActor(new SealedDmtpActor(this.m_allowRoute)
             {
                 Id = e.Id,
                 FindDmtpActor = this.FindDmtpActor

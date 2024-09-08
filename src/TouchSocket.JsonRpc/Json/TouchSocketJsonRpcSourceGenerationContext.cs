@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
-    /// TouchSokcetJsonRpcSourceGenerationContext
+    /// TouchSocketJsonRpcSourceGenerationContext
     /// </summary>
     [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(JsonRpcResponseContext))]
@@ -31,7 +31,7 @@ namespace TouchSocket.JsonRpc
     [JsonSerializable(typeof(JsonRpcErrorResponse))]
     [JsonSerializable(typeof(JsonRpcWaitResult))]
     [JsonSerializable(typeof(object))]
-    internal partial class TouchSokcetJsonRpcSourceGenerationContext : JsonSerializerContext
+    internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
     {
     }
 }

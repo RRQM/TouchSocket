@@ -41,19 +41,13 @@ namespace TouchSocket.Core
             this.Dispose(disposing: false);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanRead => this.FileStorage.FileStream.CanRead;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSeek => this.FileStorage.FileStream.CanSeek;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanWrite => this.FileStorage.FileStream.CanWrite;
 
         /// <summary>
@@ -61,45 +55,28 @@ namespace TouchSocket.Core
         /// </summary>
         public FileStorage FileStorage { get; private set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override long Length => this.FileStorage.FileStream.Length;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override long Position { get => this.m_position; set => this.m_position = value; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
 
         public override void Flush()
         {
             this.FileStorage.Flush();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var r = this.FileStorage.Read(this.m_position, buffer, offset, count);
+            var r = this.FileStorage.Read(this.m_position, new System.Span<byte>(buffer, offset, count));
             this.m_position += r;
             return r;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="offset"></param>
-        /// <param name="origin"></param>
-        /// <returns></returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
@@ -119,31 +96,20 @@ namespace TouchSocket.Core
             return this.m_position;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="value"></param>
         public override void SetLength(long value)
         {
             this.FileStorage.FileStream.SetLength(value);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            this.FileStorage.Write(this.m_position, buffer, offset, count);
+            this.FileStorage.Write(this.m_position, new System.ReadOnlySpan<byte>(buffer, offset, count));
             this.m_position += count;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (Interlocked.Decrement(ref this.m_dis) == 0)

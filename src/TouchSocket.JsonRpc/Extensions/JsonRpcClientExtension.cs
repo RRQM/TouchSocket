@@ -56,25 +56,25 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// 获取基于Tcp协议或者WebSocket协议的双工JsonRpc端
         /// </summary>
-        /// <param name="socketClient"></param>
+        /// <param name="sessionClient"></param>
         /// <returns></returns>
-        public static IJsonRpcActionClient GetJsonRpcActionClient(this ISessionClient socketClient)
+        public static IJsonRpcActionClient GetJsonRpcActionClient(this ISessionClient sessionClient)
         {
-            if (socketClient.TryGetValue(JsonRpcActionClientProperty, out var actionClient))
+            if (sessionClient.TryGetValue(JsonRpcActionClientProperty, out var actionClient))
             {
                 return actionClient;
             }
 
-            if (socketClient.Protocol == Protocol.Tcp)
+            if (sessionClient.Protocol == Protocol.Tcp)
             {
-                actionClient = new TcpServerJsonRpcClient((ITcpSessionClient)socketClient);
-                socketClient.SetValue(JsonRpcActionClientProperty, actionClient);
+                actionClient = new TcpServerJsonRpcClient((ITcpSessionClient)sessionClient);
+                sessionClient.SetValue(JsonRpcActionClientProperty, actionClient);
                 return actionClient;
             }
-            else if (socketClient.Protocol == Protocol.WebSocket)
+            else if (sessionClient.Protocol == Protocol.WebSocket)
             {
-                actionClient = new WebSocketServerJsonRpcClient((IHttpSessionClient)socketClient);
-                socketClient.SetValue(JsonRpcActionClientProperty, actionClient);
+                actionClient = new WebSocketServerJsonRpcClient((IHttpSessionClient)sessionClient);
+                sessionClient.SetValue(JsonRpcActionClientProperty, actionClient);
                 return actionClient;
             }
             else

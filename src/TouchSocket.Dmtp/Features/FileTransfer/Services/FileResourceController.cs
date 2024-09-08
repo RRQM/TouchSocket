@@ -107,7 +107,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             this.ThrowIfDisposed();
             using (var byteBlock = FilePool.GetReader(fileInfo))
             {
-                return byteBlock.Read(buffer, 0, buffer.Length);
+                return byteBlock.Read(buffer);
             }
         }
 
@@ -137,7 +137,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             this.ThrowIfDisposed();
             using (var byteBlock = FilePool.GetWriter(path))
             {
-                byteBlock.Write(buffer, offset, length);
+                byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
             }
         }
 

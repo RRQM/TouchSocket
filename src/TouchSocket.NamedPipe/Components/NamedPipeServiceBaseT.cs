@@ -130,9 +130,9 @@ namespace TouchSocket.NamedPipe
             {
                 return;
             }
-            if (this.m_clients.TryGetClient(sourceId, out TClient socketClient))
+            if (this.m_clients.TryGetClient(sourceId, out TClient sessionClient))
             {
-                await socketClient.ResetIdAsync(targetId).ConfigureAwait(false);
+                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
             }
             else
             {

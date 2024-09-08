@@ -19,9 +19,9 @@ namespace TouchSocket.JsonRpc
     {
         private readonly ITcpSessionClient m_client;
 
-        public TcpServerJsonRpcClient(ITcpSessionClient socketClient)
+        public TcpServerJsonRpcClient(ITcpSessionClient sessionClient)
         {
-            this.m_client = socketClient;
+            this.m_client = sessionClient;
         }
 
         //protected override void SendJsonString(string jsonString)

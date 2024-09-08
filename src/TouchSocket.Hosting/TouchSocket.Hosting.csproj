@@ -10,12 +10,6 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Hosting</PackageOutputPath>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj" />
 		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />

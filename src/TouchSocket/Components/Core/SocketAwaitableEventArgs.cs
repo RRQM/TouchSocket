@@ -12,16 +12,18 @@
 
 using System;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Sockets
 {
-    internal class SocketAwaitableEventArgs : SocketAsyncEventArgs, IValueTaskSource<SocketOperationResult>
+    internal abstract class SocketAwaitableEventArgs : SocketAsyncEventArgs, IValueTaskSource<SocketOperationResult>
     {
         private static readonly Action<object> s_continuationCompleted = _ => { };
 
         private volatile Action<object> m_continuation;
+        private readonly SocketOperationResult m_socketOperationResult = new SocketOperationResult();
 
         protected override void OnCompleted(SocketAsyncEventArgs _)
         {
@@ -46,22 +48,47 @@ namespace TouchSocket.Sockets
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected SocketOperationResult GetSocketOperationResult()
+        {
+            if (this.SocketError != SocketError.Success)
+            {
+                this.m_socketOperationResult.SocketError = CreateException(this.SocketError);
+                this.m_socketOperationResult.BytesTransferred = default;
+                this.m_socketOperationResult.RemoteEndPoint = default;
+                this.m_socketOperationResult.ReceiveMessageFromPacketInfo =default;
+            }
+            else
+            {
+                this.m_socketOperationResult.SocketError = null;
+                this.m_socketOperationResult.BytesTransferred = this.BytesTransferred;
+                this.m_socketOperationResult.RemoteEndPoint = this.RemoteEndPoint;
+                this.m_socketOperationResult.ReceiveMessageFromPacketInfo = this.ReceiveMessageFromPacketInfo;
+            }
+
+            return this.m_socketOperationResult;
+        }
+
         #region IValueTaskSource
 
         public SocketOperationResult GetResult(short token)
         {
             this.m_continuation = null;
 
-            return this.SocketError != SocketError.Success
-                ? new SocketOperationResult(CreateException(this.SocketError))
-                : new SocketOperationResult(this.BytesTransferred, this.RemoteEndPoint);
+            return this.GetSocketOperationResult();
         }
 
         public ValueTaskSourceStatus GetStatus(short token)
         {
-            return !ReferenceEquals(this.m_continuation, s_continuationCompleted) ? ValueTaskSourceStatus.Pending :
-                    this.SocketError == SocketError.Success ? ValueTaskSourceStatus.Succeeded :
+            if (!ReferenceEquals(this.m_continuation, s_continuationCompleted))
+            {
+                return ValueTaskSourceStatus.Pending;
+            }
+            else
+            {
+                return this.SocketError == SocketError.Success ? ValueTaskSourceStatus.Succeeded :
                     ValueTaskSourceStatus.Faulted;
+            }
         }
 
         public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)

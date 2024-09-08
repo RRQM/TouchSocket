@@ -36,7 +36,6 @@ namespace TouchSocket.Sockets
             return $"IP&Port={client.IP}:{client.Port},Id={client.Id},Protocol={client.Protocol}";
         }
 
-
         /// <summary>
         /// 获取客户端的IP和端口号
         /// </summary>
@@ -165,6 +164,7 @@ namespace TouchSocket.Sockets
             // 调用带有自定义名称参数的SafeCloseAsync方法，这里使用方法名作为操作标识。
             return SafeCloseAsync(client, nameof(SafeCloseAsync));
         }
+
         #endregion CloseAsync
 
         #region Close
@@ -334,6 +334,7 @@ namespace TouchSocket.Sockets
             // 这种方法适用于不需要处理异步操作结果的场景。
             client.ConnectAsync(millisecondsTimeout, cancellationToken).GetFalseAwaitResult();
         }
+
         /// <summary>
         /// 同步执行连接操作。
         /// </summary>

@@ -12,29 +12,32 @@
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// MsgEventArgs
+    /// 消息事件参数类，继承自PluginEventArgs。
+    /// 该类用于封装消息相关的数据，在事件处理过程中传递。
     /// </summary>
     public class MsgEventArgs : PluginEventArgs
     {
         /// <summary>
-        ///  构造函数
+        /// 初始化MsgEventArgs类的新实例，指定消息内容。
         /// </summary>
-        /// <param name="mes"></param>
+        /// <param name="mes">要传递的消息字符串。</param>
         public MsgEventArgs(string mes)
         {
             this.Message = mes;
         }
 
         /// <summary>
-        /// 构造函数
+        /// 初始化MsgEventArgs类的空实例。
         /// </summary>
         public MsgEventArgs()
         {
         }
 
         /// <summary>
-        /// 消息
+        /// 获取或设置消息文本。
+        /// 该属性用于存储和检索事件期间的消息内容。
         /// </summary>
         public string Message { get; set; }
     }

@@ -27,13 +27,13 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpRequest : HttpBase
     {
-        private HttpClientBase m_httpClientBase;
         private readonly HttpSessionClient m_httpSessionClient;
         private readonly bool m_isServer;
         private readonly InternalHttpParams m_query = new InternalHttpParams();
         private bool m_canRead;
         private ReadOnlyMemory<byte> m_content;
         private InternalHttpParams m_forms;
+        private HttpClientBase m_httpClientBase;
         private InternalHttpParams m_params;
         private bool m_sentHeader;
         private int m_sentLength;
@@ -67,11 +67,6 @@ namespace TouchSocket.Http
             // 设置标志，表示当前请求允许写入
             this.CanWrite = true;
             // 保存传入的 HttpClientBase 实例，用于后续的 HTTP 请求操作
-            this.m_httpClientBase = httpClientBase;
-        }
-
-        internal void SetHttpClientBase(HttpClientBase httpClientBase)
-        {
             this.m_httpClientBase = httpClientBase;
         }
 
@@ -290,6 +285,26 @@ namespace TouchSocket.Http
             }
         }
 
+        /// <inheritdoc/>
+        internal override void ResetHttp()
+        {
+            base.ResetHttp();
+            this.m_canRead = true;
+            this.m_content = null;
+            this.m_sentHeader = false;
+            this.RelativeURL = "/";
+            this.URL = "/";
+            this.m_sentLength = 0;
+            this.m_params?.Clear();
+            this.m_query.Clear();
+            this.m_forms?.Clear();
+        }
+
+        internal void SetHttpClientBase(HttpClientBase httpClientBase)
+        {
+            this.m_httpClientBase = httpClientBase;
+        }
+
         #region Write
 
         /// <inheritdoc/>
@@ -316,21 +331,6 @@ namespace TouchSocket.Http
         }
 
         #endregion Write
-
-        /// <inheritdoc/>
-        internal override void ResetHttp()
-        {
-            base.ResetHttp();
-            this.m_canRead = true;
-            this.m_content = null;
-            this.m_sentHeader = false;
-            this.RelativeURL = "/";
-            this.URL = "/";
-            this.m_sentLength = 0;
-            this.m_params?.Clear();
-            this.m_query.Clear();
-            this.m_forms?.Clear();
-        }
 
         /// <inheritdoc/>
         protected override void LoadHeaderProperties()

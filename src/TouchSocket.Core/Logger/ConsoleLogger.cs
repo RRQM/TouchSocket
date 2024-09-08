@@ -17,7 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 控制台日志记录器
     /// </summary>
-    public class ConsoleLogger : LoggerBase
+    public sealed class ConsoleLogger : LoggerBase
     {
         static ConsoleLogger()
         {
@@ -50,7 +50,7 @@ namespace TouchSocket.Core
         {
             lock (typeof(ConsoleLogger))
             {
-                Console.Write(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
+                Console.Write(DateTime.Now.ToString(this.DateTimeFormat));
                 Console.Write(" | ");
                 switch (logLevel)
                 {
@@ -75,8 +75,8 @@ namespace TouchSocket.Core
                 if (exception != null)
                 {
                     Console.Write(" | ");
-                    Console.Write($"【异常消息】：{exception.Message}");
-                    Console.Write($"【堆栈】：{exception.StackTrace ?? "未知"}");
+                    Console.Write($"[Exception Message]：{exception.Message}");
+                    Console.Write($"[Stack Trace]：{exception.StackTrace}");
                 }
                 Console.WriteLine();
 

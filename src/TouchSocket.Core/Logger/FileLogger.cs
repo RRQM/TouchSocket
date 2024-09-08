@@ -11,7 +11,9 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace TouchSocket.Core
@@ -20,43 +22,68 @@ namespace TouchSocket.Core
     /// 文件日志记录器
     /// <para>会在指定目录下，生成logs文件夹，然后按[yyyy-MM-dd].log的形式，每日生成日志</para>
     /// </summary>
-    public class FileLogger : LoggerBase, IDisposable
+    public sealed class FileLogger : LoggerBase, IDisposable
     {
-        private readonly object m_lock = new object();
-        private readonly string m_rootPath;
+        private const int MaxRetryCount = 10;
+        private readonly ConcurrentDictionary<string, FileStorageWriter> m_writers = new ConcurrentDictionary<string, FileStorageWriter>();
+        private Func<LogLevel, string> m_createLogFolder;
         private bool m_disposedValue;
-        private FileStorageWriter m_writer;
+        private int m_retryCount;
 
         /// <summary>
-        /// 构造函数
+        /// 初始化文件日志记录器
         /// </summary>
-        /// <param name="rootPath">日志根目录</param>
-        public FileLogger(string rootPath = "logs")
+        /// <remarks>
+        /// 在类的构造函数中定义了一个lambda表达式，用于创建日志文件夹的路径
+        /// </remarks>
+        public FileLogger()
         {
-            if (rootPath is null)
+            // 定义一个lambda表达式，根据当前时间生成日志文件夹的路径
+            // 这里的lambda表达式接收一个日志级别参数，但实际上并不使用它，只是为了符合委托的定义
+            // 表达式的结果是根据当前日期格式化后的字符串，确保每天的日志被打包在不同的文件夹中
+            m_createLogFolder = (logLevel) =>
             {
-                throw new ArgumentNullException(nameof(rootPath));
-            }
-            this.m_rootPath = rootPath;
+                return $"logs\\{DateTime.Now.ToString("[yyyy-MM-dd]")}";
+            };
         }
 
         /// <summary>
-        /// 析构函数
+        /// 析构函数，用于在对象被垃圾回收时进行资源清理
         /// </summary>
         ~FileLogger()
         {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+            // 析构函数，用于在对象被垃圾回收时进行资源清理
+            // 将 disposing 参数设为 false，表示仅释放非托管资源
+            // 此处的清理工作已经委托给 Dispose 方法处理
             this.Dispose(disposing: false);
         }
+
+        /// <summary>
+        /// 获取或设置一个函数，用于根据日志级别创建日志文件夹。
+        /// </summary>
+        /// <value>
+        /// 当前用于根据日志级别创建日志文件夹的函数。
+        /// </value>
+        /// <exception cref="System.ArgumentNullException">
+        /// 如果尝试设置的值为 null，则抛出此异常。
+        /// </exception>
+        public Func<LogLevel, string> CreateLogFolder
+        {
+            get => m_createLogFolder;
+            set => m_createLogFolder = ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(CreateLogFolder));
+        }
+
+        /// <summary>
+        /// 文件名格式化字符串。默认为“0000”，当第1个文件，即为0001.log，第2个文件为0002.log，以此类推。
+        /// </summary>
+        public string FileNameFormat { get; set; } = "0000";
 
         /// <summary>
         /// 最大日志尺寸
         /// </summary>
         public int MaxSize { get; set; } = 1024 * 1024;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public void Dispose()
         {
             // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
@@ -64,93 +91,102 @@ namespace TouchSocket.Core
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// 释放
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        /// <inheritdoc/>
+        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+        {
+            var loggerString = this.CreateLogString(logLevel, source, message, exception);
+
+            this.WriteLogStringToFile(loggerString, logLevel);
+        }
+
+        private void Dispose(bool disposing)
         {
             if (!this.m_disposedValue)
             {
                 if (disposing)
                 {
-                    // TODO: 释放托管状态(托管对象)
+                    foreach (var item in this.m_writers)
+                    {
+                        item.Value.SafeDispose();
+                    }
+
+                    this.m_writers.Clear();
                 }
 
-                this.m_writer?.Dispose();
                 this.m_disposedValue = true;
             }
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="logLevel"></param>
-        /// <param name="source"></param>
-        /// <param name="message"></param>
-        /// <param name="exception"></param>
-        protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
+        private FileStorageWriter GetFileStorageWriter(string dirPath)
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
-            stringBuilder.Append(" | ");
-            stringBuilder.Append(logLevel.ToString());
-            stringBuilder.Append(" | ");
-            stringBuilder.Append(message);
-
-            if (exception != null)
+            if (this.m_writers.TryGetValue(dirPath, out var writer))
             {
-                stringBuilder.Append(" | ");
-                stringBuilder.Append($"【异常消息】：{exception.Message}");
-                stringBuilder.Append($"【堆栈】：{exception.StackTrace ?? "未知"}");
+                return writer;
             }
-            stringBuilder.AppendLine();
-
-            this.Print(stringBuilder.ToString());
-        }
-
-        private void Print(string logString)
-        {
-            try
+            else
             {
-                lock (this.m_lock)
+                if (!Directory.Exists(dirPath))
                 {
-                    if (this.m_writer == null || this.m_writer.DisposedValue)
-                    {
-                        var dir = Path.Combine(this.m_rootPath, DateTime.Now.ToString("[yyyy-MM-dd]"));
-                        if (!Directory.Exists(dir))
-                        {
-                            Directory.CreateDirectory(dir);
-                        }
+                    Directory.CreateDirectory(dirPath);
+                }
 
-                        var count = 0;
-                        string path = null;
-                        while (true)
+                var count = 0;
+                while (true)
+                {
+                    var filePath = Path.Combine(dirPath, $"{count.ToString(this.FileNameFormat)}" + ".log");
+                    if (!(File.Exists(filePath) && new FileInfo(filePath).Length > this.MaxSize))
+                    {
+                        writer = FilePool.GetWriter(filePath);
+                        writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
+
+                        if (this.m_writers.TryAdd(dirPath, writer))
                         {
-                            path = Path.Combine(dir, $"{count:0000}" + ".log");
-                            if (!File.Exists(path))
-                            {
-                                this.m_writer = FilePool.GetWriter(path);
-                                this.m_writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
-                                break;
-                            }
-                            count++;
+                            return writer;
+                        }
+                        else
+                        {
+                            return this.GetFileStorageWriter(dirPath);
                         }
                     }
-                    this.m_writer.Write(Encoding.UTF8.GetBytes(logString));
-                    this.m_writer.FileStorage.Flush();
-                    if (this.m_writer.FileStorage.Length > this.MaxSize)
-                    {
-                        //this.m_writer.FileStorage.Flush();
-                        this.m_writer.SafeDispose();
-                        this.m_writer = null;
-                    }
+                    count++;
                 }
             }
-            catch
+        }
+
+        private void WriteLogStringToFile(string logString, LogLevel logLevel)
+        {
+            var dirPath = this.CreateLogFolder(logLevel);
+
+            var writer = this.GetFileStorageWriter(dirPath);
+
+            lock (writer)
             {
-                this.m_writer.SafeDispose();
-                this.m_writer = null;
+                try
+                {
+                    writer.Write(Encoding.UTF8.GetBytes(logString));
+                    writer.FileStorage.Flush();
+                    if (writer.FileStorage.Length > this.MaxSize)
+                    {
+                        if (this.m_writers.TryRemove(dirPath, out var fileStorageWriter))
+                        {
+                            fileStorageWriter.SafeDispose();
+                        }
+                    }
+
+                    m_retryCount = 0;
+                }
+                catch
+                {
+                    if (this.m_writers.TryRemove(dirPath, out var fileStorageWriter))
+                    {
+                        fileStorageWriter.SafeDispose();
+                    }
+
+                    if (++m_retryCount < MaxRetryCount)
+                    {
+                        WriteLogStringToFile(logString, logLevel);
+                    }
+                }
             }
         }
     }

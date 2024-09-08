@@ -34,12 +34,7 @@ namespace TouchSocket.Sockets
                 return new ValueTask<SocketOperationResult>(this, 0);
             }
 
-            var bytesTransferred = this.BytesTransferred;
-            var error = this.SocketError;
-
-            return error == SocketError.Success
-                ? new ValueTask<SocketOperationResult>(new SocketOperationResult(bytesTransferred, this.RemoteEndPoint))
-                : new ValueTask<SocketOperationResult>(new SocketOperationResult(CreateException(error)));
+            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
         }
 
         public ValueTask<SocketOperationResult> ReceiveAsync(Socket socket, EndPoint endPoint, Memory<byte> buffer)
@@ -57,12 +52,7 @@ namespace TouchSocket.Sockets
                 return new ValueTask<SocketOperationResult>(this, 0);
             }
 
-            var bytesTransferred = this.BytesTransferred;
-            var error = this.SocketError;
-
-            return error == SocketError.Success
-                ? new ValueTask<SocketOperationResult>(new SocketOperationResult(bytesTransferred, this.RemoteEndPoint))
-                : new ValueTask<SocketOperationResult>(new SocketOperationResult(CreateException(error)));
+            return new ValueTask<SocketOperationResult>(this.GetSocketOperationResult());
         }
     }
 }
