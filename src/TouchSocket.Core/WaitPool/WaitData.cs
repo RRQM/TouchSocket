@@ -49,6 +49,10 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public void Reset()
         {
+            if (this.m_tokenRegistration != default)
+            {
+                this.m_tokenRegistration.Dispose();
+            }
             this.m_status = WaitDataStatus.Default;
             this.WaitResult = default;
             this.m_waitHandle.Reset();
