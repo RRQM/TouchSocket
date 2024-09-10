@@ -1,7 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<Version>2.1.0-rc.32</Version>
+		<Version>2.1.0-rc.33</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
