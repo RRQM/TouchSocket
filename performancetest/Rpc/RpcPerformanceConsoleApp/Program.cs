@@ -4,7 +4,7 @@ namespace RpcPerformanceConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
             consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
@@ -28,13 +28,9 @@ namespace RpcPerformanceConsoleApp
             consoleAction.Add("3.3", "TouchSocketRpc测试BigString", () => TouchSocketRpc.StartBigStringClient(count));
 
             consoleAction.ShowAll();
-            while (true)
-            {
-                if (!consoleAction.Run(Console.ReadLine()))
-                {
-                    Console.WriteLine("命令不正确，请输入“h|help|?”获得帮助。");
-                }
-            }
+
+            await consoleAction.RunCommandLineAsync();
+
         }
 
         private static void ConsoleAction_OnException(Exception ex)

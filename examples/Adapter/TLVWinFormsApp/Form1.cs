@@ -47,7 +47,7 @@ namespace TLVWinFormsApp
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
+                    a.AddEasyLogger(this.ShowMsg);
                 })
                 .ConfigurePlugins(a =>
                 {
@@ -74,7 +74,7 @@ namespace TLVWinFormsApp
                   })
                   .ConfigureContainer(a =>
                   {
-                      a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
+                      a.AddEasyLogger(this.ShowMsg);
                   })
                   //.SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//���ʹ��TLVPlugin������˲����ʡ�ԡ�
                   .ConfigurePlugins(a =>

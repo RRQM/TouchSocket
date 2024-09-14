@@ -203,7 +203,7 @@ namespace FileTransferConsoleApp
 
             //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
             var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata);
-            if (result.IsSuccess())
+            if (result.IsSuccess)
             {
                 //成功
             }

@@ -17,58 +17,115 @@ using TouchSocket.Sockets;
 
 namespace NatServiceConsoleApp
 {
-    internal class MyNatService : NatService
-    {
-        protected override Task<byte[]> OnNatReceived(NatSessionClient socketClient, ReceivedDataEventArgs e)
-        {
-            //服务器收到的数据
-            return base.OnNatReceived(socketClient, e);
-        }
-
-        protected override Task OnTargetClientClosed(NatSessionClient socketClient, ITcpClient tcpClient, ClosedEventArgs e)
-        {
-            socketClient.Logger.Info($"{socketClient.IP}:{socketClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
-            return base.OnTargetClientClosed(socketClient, tcpClient, e);
-        }
-
-        protected override Task<byte[]> OnTargetClientReceived(NatSessionClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
-        {
-            //连接的客户端收到的数据
-            return base.OnTargetClientReceived(socketClient, tcpClient, e);
-        }
-
-        protected override async Task OnTcpConnected(NatSessionClient socketClient, ConnectedEventArgs e)
-        {
-            await base.OnTcpConnected(socketClient, e);
-            try
-            {
-                //此处模拟的是只要连接到Nat服务器，就转发。
-                //实际上，这个方法可以随时调用。
-                await socketClient.AddTargetClientAsync(new TouchSocketConfig()
-                     .SetRemoteIPHost("127.0.0.1:7789")
-                     .ConfigurePlugins(a =>
-                     {
-                     }));
-            }
-            catch (Exception ex)
-            {
-                socketClient.Logger.Exception(ex);
-            }
-        }
-    }
-
     internal class Program
     {
         private static async Task Main(string[] args)
         {
             var service = new MyNatService();
-            var config = new TouchSocketConfig();
-            config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
+            await service.SetupAsync(new TouchSocketConfig()
+                 .SetListenIPHosts(7788)
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddLogger(logger =>
+                     {
+                         logger.AddConsoleLogger();
+                         logger.AddFileLogger();
+                     });
+                 }));
 
-            await service.SetupAsync(config);
             await service.StartAsync();
 
-            Console.WriteLine("转发服务器已启动。已将7788端口转发到127.0.0.1:7789地址");
+            service.Logger.Info("转发服务器已启动。已将7788端口转发到127.0.0.1:7789与127.0.0.1:7790地址");
+            while (true)
+            {
+                Console.ReadKey();
+            }
+        }
+    }
+
+    internal class MyNatService : NatService<MyNatSessionClient>
+    {
+        protected override MyNatSessionClient NewClient()
+        {
+            return new MyNatSessionClient();
+        }
+    }
+
+    class MyNatSessionClient : NatSessionClient
+    {
+        #region 抽象类必须实现
+        protected override async Task OnNatConnected(ConnectedEventArgs e)
+        {
+            try
+            {
+                await this.AddTargetClientAsync(config =>
+                {
+                    config.SetRemoteIPHost("127.0.0.1:7789");
+                    //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+                });
+
+                //也可以再添加个转发端，实现一对多转发
+                await this.AddTargetClientAsync(config =>
+                {
+                    config.SetRemoteIPHost("127.0.0.1:7790");
+                    //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+                });
+            }
+            catch (Exception ex)
+            {
+                //目标客户端无法连接，也就是无法转发
+                this.Logger.Exception(ex);
+            }
+        }
+
+        protected override async Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e)
+        {
+            //可以自己重连，或者其他操作
+
+            //或者直接移除
+            this.RemoveTargetClient(client);
+            await EasyTask.CompletedTask;
+        }
+        #endregion
+
+        #region 可选重写方法
+        protected override Task OnNatReceived(ReceivedDataEventArgs e)
+        {
+            return base.OnNatReceived(e);
+        }
+
+
+        protected override Task OnTargetClientReceived(NatTargetClient client, ReceivedDataEventArgs e)
+        {
+            return base.OnTargetClientReceived(client, e);
+        }
+        #endregion
+    }
+
+    class MultipleToOneNatSessionClient : NatSessionClient
+    {
+        protected override async Task OnNatConnected(ConnectedEventArgs e)
+        {
+            await this.AddTargetClientAsync(MyClientClass.TargetClient);
+        }
+
+        protected override async Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e)
+        {
+            //不做任何处理
+            await e.InvokeNext();
+        }
+    }
+
+    static class MyClientClass
+    {
+        public static NatTargetClient TargetClient { get; }
+
+        //初始化步骤可以在任意地方先调用
+        public static async Task InitAsync()
+        {
+            //使用独立模式初始化，这样当NatSessionClient断开时不会释放该资源
+            var client = new NatTargetClient(true);
+            await client.ConnectAsync("127.0.0.1:7789");
         }
     }
 }

@@ -73,11 +73,11 @@ namespace FastBinaryFormatterConsoleApp
             student.Dic4.Add(3, new Arg(3));
 
             var byteBlock = new ByteBlock(1024 * 512);
-            SerializeConvert.FastBinarySerialize(byteBlock, student);
+            FastBinaryFormatter.Serialize(byteBlock, student);
 
             Console.WriteLine("序列化完成");
 
-            var newStudent = SerializeConvert.FastBinaryDeserialize<Student>(byteBlock.Buffer, 0);
+            var newStudent = FastBinaryFormatter.Deserialize<Student>(byteBlock);
             byteBlock.Dispose();
 
             Console.WriteLine(Equals(student.P1, newStudent.P1));

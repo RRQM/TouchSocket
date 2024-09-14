@@ -38,11 +38,11 @@ namespace TcpStressTestingConsoleApp
                             {
                                 foreach (var id in service.GetIds())
                                 {
-                                    if (service.TryGetSocketClient(id, out var socketClient))
+                                    if (service.TryGetClient(id, out var socketClient))
                                     {
                                         try
                                         {
-                                            socketClient.Send(byteBlock);
+                                            await socketClient.SendAsync(byteBlock.Memory);
                                         }
                                         catch (Exception ex)
                                         {
@@ -126,7 +126,7 @@ namespace TcpStressTestingConsoleApp
                     var clients = new List<TcpClient>();
                     for (var i = 0; i < count; i++)
                     {
-                        var client = GetTcpClient();
+                        var client =await GetTcpClient();
                         clients.Add(client);
                     }
 
@@ -162,22 +162,22 @@ namespace TcpStressTestingConsoleApp
 
         }
 
-        static TcpClient GetTcpClient()
+        static async Task<TcpClient> GetTcpClient()
         {
             var tcpClient = new TcpClient();
             //载入配置
-            tcpClient.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                })
-                .ConfigurePlugins(a =>
-                {
-                })
-                );
+            await tcpClient.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个日志注入
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                 })
+                 );
 
-            tcpClient.Connect(1000 * 30);//调用连接，当连接不成功时，会抛出异常。
+            await tcpClient.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
             //tcpClient.Logger.Info("客户端成功连接");
             return tcpClient;
         }

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--<ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Core">
+      <HintPath>..\..\..\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>-->
+
+	<ItemGroup>
+		<PackageReference Include="TouchSocket.Core" Version="2.1.0-rc.37" />
+	</ItemGroup>
+</Project>
