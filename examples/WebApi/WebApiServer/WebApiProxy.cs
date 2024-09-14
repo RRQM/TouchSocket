@@ -1,15 +1,3 @@
-//------------------------------------------------------------------------------
-//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
-//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
-//  CSDN博客：https://blog.csdn.net/qq_40374647
-//  哔哩哔哩视频：https://space.bilibili.com/94253567
-//  Gitee源代码仓库：https://gitee.com/RRQM_Home
-//  Github源代码仓库：https://github.com/RRQM
-//  API首页：https://touchsocket.net/
-//  交流QQ群：234762506
-//  感谢您的下载和使用
-//------------------------------------------------------------------------------
-
 /*
 此代码由Rpc工具直接生成，非必要请不要修改此处代码
 */
@@ -130,6 +118,21 @@ System.String UploadBigFile(IInvokeOption invokeOption = default);
 /// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
 /// <exception cref="System.Exception">其他异常</exception>
 Task<System.String> UploadBigFileAsync(IInvokeOption invokeOption = default);
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.String GetString(IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.String> GetStringAsync(IInvokeOption invokeOption = default);
 
 }
 public class ApiServer :IApiServer
@@ -336,6 +339,33 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 return (System.String) await this.Client.InvokeAsync("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
 }
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.String GetString(IInvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+System.String returnData=(System.String)this.Client.Invoke("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<System.String> GetStringAsync(IInvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+return (System.String) await this.Client.InvokeAsync("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
+}
+
 }
 public static class ApiServerExtensions
 {
@@ -478,6 +508,25 @@ return returnData;
 public static async Task<System.String> UploadBigFileAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 return (System.String) await client.InvokeAsync("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.String GetString<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+System.String returnData=(System.String)client.Invoke("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<System.String> GetStringAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+return (System.String) await client.InvokeAsync("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
 }
 
 }

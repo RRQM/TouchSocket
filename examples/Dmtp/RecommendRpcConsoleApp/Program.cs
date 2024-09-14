@@ -21,11 +21,11 @@ namespace RecommendRpcConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+                   .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -48,23 +48,23 @@ namespace RecommendRpcConsoleApp
                        VerifyToken = "Dmtp"
                    });//设定连接口令，作用类似账号密码
 
-            service.SetupAsync(config);
-            service.StartAsync();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
 
             var client = new TcpDmtpClient();
-            client.SetupAsync(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc();
-                })
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                }));
-            client.ConnectAsync();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc();
+                 })
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Dmtp"
+                 }));
+            await client.ConnectAsync();
 
             //Login即为在RpcClassLibrary中自动生成的项目
             var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });

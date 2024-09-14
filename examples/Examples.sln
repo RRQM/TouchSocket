@@ -283,9 +283,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomBigFixedHeaderConsole
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomBigUnfixedHeaderConsoleApp", "Adapter\CustomBigUnfixedHeaderConsoleApp\CustomBigUnfixedHeaderConsoleApp.csproj", "{D0086181-DE0B-4E2D-BEB4-D3147FBCFDEB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NatService简单示例", "NatService简单示例", "{6A3BF583-187B-4092-8480-78C313AA0A17}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NatService", "NatService", "{6A3BF583-187B-4092-8480-78C313AA0A17}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NatServiceConsoleApp", "NatService\NatServiceConsoleApp\NatServiceConsoleApp.csproj", "{CD3BBC88-2682-4B1D-8A1C-4BD9C7FE1D02}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomUnfixedHeaderConsoleApp", "Adapter\CustomUnfixedHeaderConsoleApp\CustomUnfixedHeaderConsoleApp.csproj", "{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggerConsoleApp", "Core\LoggerConsoleApp\LoggerConsoleApp.csproj", "{BCB59020-7C64-4DE6-9F5B-FB031746D493}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastBinaryFormatterConsoleApp", "Core\FastBinaryFormatterConsoleApp\FastBinaryFormatterConsoleApp.csproj", "{C58500D3-9D03-48A6-A85F-A46EA32F0520}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -637,6 +643,18 @@ Global
 		{CD3BBC88-2682-4B1D-8A1C-4BD9C7FE1D02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD3BBC88-2682-4B1D-8A1C-4BD9C7FE1D02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD3BBC88-2682-4B1D-8A1C-4BD9C7FE1D02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCB59020-7C64-4DE6-9F5B-FB031746D493}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCB59020-7C64-4DE6-9F5B-FB031746D493}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCB59020-7C64-4DE6-9F5B-FB031746D493}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCB59020-7C64-4DE6-9F5B-FB031746D493}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C58500D3-9D03-48A6-A85F-A46EA32F0520}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C58500D3-9D03-48A6-A85F-A46EA32F0520}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C58500D3-9D03-48A6-A85F-A46EA32F0520}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C58500D3-9D03-48A6-A85F-A46EA32F0520}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -759,6 +777,9 @@ Global
 		{13D915B0-28AE-49B8-BB09-0452930343F9} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{D0086181-DE0B-4E2D-BEB4-D3147FBCFDEB} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
 		{CD3BBC88-2682-4B1D-8A1C-4BD9C7FE1D02} = {6A3BF583-187B-4092-8480-78C313AA0A17}
+		{08CF66DD-BB9E-4ECC-9A2D-1AB860D5A046} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{BCB59020-7C64-4DE6-9F5B-FB031746D493} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
+		{C58500D3-9D03-48A6-A85F-A46EA32F0520} = {A228384F-7DF9-4144-B84E-AC8BF2F69D1B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

@@ -95,6 +95,24 @@ namespace WebApiServerApp
             Console.WriteLine("以下连接用于测试webApi");
             Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 
+            //var client = new HttpClient();
+            //await client.ConnectAsync("http://127.0.0.1:7789");//先做连接
+
+            ////创建一个请求
+            //var request = new HttpRequest();
+            //request.InitHeaders()
+            //    .AddHeader(HttpHeaders.Accept, "text/plain")
+            //    .SetUrl("/ApiServer/GetString")
+            //    .SetHost(client.RemoteIPHost.Host)
+            //    .AsGet();
+
+
+            //using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            //{
+            //    var response = responseResult.Response;
+
+            //    string str = await response.GetBodyAsync();
+            //}
             Console.ReadKey();
         }
     }
@@ -201,6 +219,13 @@ namespace WebApiServerApp
             }
             Console.WriteLine("ok");
             return "ok";
+        }
+
+        [WebApi(HttpMethodType.GET)]
+        public string GetString()
+        {
+            Console.WriteLine("GetString");
+            return "hello";
         }
     }
 

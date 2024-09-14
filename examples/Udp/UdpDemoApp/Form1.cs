@@ -62,7 +62,7 @@ namespace UdpDemoApp
                  })
                  .ConfigureContainer(a =>
                  {
-                     a.SetSingletonLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
+                     a.AddLogger(new LoggerGroup(new EasyLogger(this.ShowMsg), new FileLogger()));
                  }));
             this.m_udpSession.StartAsync();
             this.m_udpSession.Logger.Info("等待接收");

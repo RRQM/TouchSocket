@@ -20,13 +20,13 @@ namespace Log4netConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = CreateService();
+            var service = await CreateService();
             Console.ReadKey();
         }
 
-        private static TcpService CreateService()
+        private static async Task<TcpService> CreateService()
         {
             var service = new TcpService();
             service.Received = async (client, e) =>
@@ -38,17 +38,27 @@ namespace Log4netConsoleApp
                 await client.SendAsync(mes);//将收到的信息直接返回给发送方
             };
 
-            service.SetupAsync(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-                .ConfigurePlugins(a =>
-                {
-                    //a.Add();//此处可以添加插件
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddLogger(new Mylog4netLogger());//添加Mylog4netLogger日志
-                }));
-            service.StartAsync();//启动
+            await service.SetupAsync(new TouchSocketConfig()//载入配置
+                 .SetListenIPHosts(7789)
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddLogger(logger =>
+                     {
+                         logger.AddConsoleLogger();
+                         logger.AddFileLogger(fileLogger =>
+                         {
+                             fileLogger.MaxSize = 1024 * 1024;
+                             fileLogger.LogLevel = LogLevel.Debug;
+                         });
+
+                         logger.AddLogger(new Mylog4netLogger());//添加Mylog4netLogger日志
+                     });
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     //a.Add();//此处可以添加插件
+                 }));
+            await service.StartAsync();//启动
             service.Logger.Info("服务器成功启动");
             return service;
         }
