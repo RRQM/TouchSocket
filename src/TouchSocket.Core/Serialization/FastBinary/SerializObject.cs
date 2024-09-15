@@ -193,11 +193,21 @@ namespace TouchSocket.Core
             return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.Default)
                           .Where(p =>
                           {
-                              return p.IsDefined(typeof(FastSerializedAttribute), false) || p.CanWrite &&
-                              p.CanRead &&
-                              (!p.IsDefined(typeof(FastNonSerializedAttribute), false) &&
-                              (p.SetMethod.GetParameters().Length == 1) &&
-                              (p.GetMethod.GetParameters().Length == 0));
+                              if (p.IsDefined(typeof(FastSerializedAttribute), false))
+                              {
+                                  return true;
+                              }
+
+                              if (p.IsDefined(typeof(FastNonSerializedAttribute), false))
+                              {
+                                  return false;
+                              }
+
+                              if (p.CanPublicRead()&&p.CanPublicWrite())
+                              {
+                                  return true;
+                              }
+                              return false;
                           })
                           .ToArray();
         }

@@ -137,6 +137,7 @@ namespace TouchSocket.Core
                     if (!(File.Exists(filePath) && new FileInfo(filePath).Length > this.MaxSize))
                     {
                         writer = FilePool.GetWriter(filePath);
+                        writer.SeekToEnd();
                         writer.FileStorage.AccessTimeout = TimeSpan.MaxValue;
 
                         if (this.m_writers.TryAdd(dirPath, writer))

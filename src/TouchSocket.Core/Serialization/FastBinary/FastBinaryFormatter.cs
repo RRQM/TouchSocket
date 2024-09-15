@@ -82,57 +82,18 @@ namespace TouchSocket.Core
         #region Serialize
 
         /// <summary>
-        /// 将指定对象序列化为字节数组。
+        /// 序列化给定对象并将其写入字节块。
         /// </summary>
-        /// <typeparam name="T">要序列化的对象类型。</typeparam>
-        /// <param name="graph">要序列化的对象。</param>
-        /// <returns>序列化后的字节数组。</returns>
-        public static byte[] SerializeToBytes<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>([DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph)
-        {
-            var byteBlock = new ValueByteBlock(1024 * 64);
-            try
-            {
-                Serialize(ref byteBlock, graph);
-                return byteBlock.ToArray();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 使用指定的序列化上下文将对象序列化为字节数组。
-        /// </summary>
-        /// <typeparam name="T">要序列化的对象类型。</typeparam>
-        /// <param name="graph">要序列化的对象。</param>
-        /// <param name="serializerContext">用于序列化的上下文。</param>
-        /// <returns>序列化后的字节数组。</returns>
-        public static byte[] SerializeToBytes<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>([DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph, FastSerializerContext serializerContext)
-        {
-            var byteBlock = new ValueByteBlock(1024 * 64);
-            try
-            {
-                Serialize(ref byteBlock, graph, serializerContext);
-                return byteBlock.ToArray();
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 将指定对象序列化到提供的字节块中。
-        /// </summary>
-        /// <typeparam name="TByteBlock">字节块的类型，必须实现IByteBlock接口。</typeparam>
-        /// <typeparam name="T">要序列化的对象类型。</typeparam>
         /// <param name="byteBlock">用于存储序列化数据的字节块。</param>
         /// <param name="graph">要序列化的对象。</param>
-        public static void Serialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph)
-            where TByteBlock : IByteBlock
+        /// <param name="serializerContext">（可选）序列化上下文，提供额外的序列化设置或上下文。</param>
+        /// <typeparam name="T">要序列化的对象类型。</typeparam>
+        /// <remarks>
+        /// 此方法提供了一种便捷的方式来序列化对象至字节块，利用提供的序列化上下文进行序列化过程。
+        /// </remarks>
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, in T graph, FastSerializerContext serializerContext = null)
         {
-            Serialize(ref byteBlock, graph, s_defaultFastSerializerContext);
+            Serialize(ref byteBlock, graph, serializerContext);
         }
 
         /// <summary>
@@ -143,10 +104,10 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">用于存储序列化数据的字节块。</param>
         /// <param name="graph">要序列化的对象。</param>
         /// <param name="serializerContext">用于序列化的上下文。</param>
-        public static void Serialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, in T graph, FastSerializerContext serializerContext)
+        public static void Serialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, in T graph, FastSerializerContext serializerContext = null)
             where TByteBlock : IByteBlock
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(serializerContext, nameof(serializerContext));
+            serializerContext ??= s_defaultFastSerializerContext;
 
             var startPosition = byteBlock.Position;
 
@@ -158,6 +119,27 @@ namespace TouchSocket.Core
             byteBlock.WriteByte(1);
 
             byteBlock.Position = pos;
+        }
+
+        /// <summary>
+        /// 使用指定的序列化上下文将对象序列化为字节数组。
+        /// </summary>
+        /// <typeparam name="T">要序列化的对象类型。</typeparam>
+        /// <param name="graph">要序列化的对象。</param>
+        /// <param name="serializerContext">用于序列化的上下文。</param>
+        /// <returns>序列化后的字节数组。</returns>
+        public static byte[] SerializeToBytes<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>([DynamicallyAccessedMembers(DynamicallyAccessed)] in T graph, FastSerializerContext serializerContext = null)
+        {
+            var byteBlock = new ValueByteBlock(1024 * 64);
+            try
+            {
+                Serialize(ref byteBlock, graph, serializerContext);
+                return byteBlock.ToArray();
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
         }
 
         private static void SerializeIListOrArray<TByteBlock>(ref TByteBlock byteBlock, in IEnumerable param, FastSerializerContext serializerContext) where TByteBlock : IByteBlock
@@ -393,39 +375,44 @@ namespace TouchSocket.Core
 
         #region Deserialize
 
-
         /// <summary>
-        /// 从字节块中反序列化对象。
+        /// 反序列化字节块为指定类型的对象。
         /// </summary>
-        /// <typeparam name="TByteBlock">实现IByteBlock接口的类型，用于读取字节数据。</typeparam>
-        /// <param name="byteBlock">包含序列化数据的字节块。</param>
-        /// <param name="type">要反序列化为的类型。</param>
+        /// <param name="byteBlock">包含待反序列化数据的字节块。</param>
+        /// <param name="serializerContext">（可选）快速序列化上下文，用于优化性能。</param>
+        /// <typeparam name="T">要反序列化为的类型。</typeparam>
         /// <returns>反序列化后的对象。</returns>
-        /// <exception cref="Exception">如果数据流解析失败。</exception>
-        public static object Deserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type)
-            where TByteBlock : IByteBlock
+        public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ByteBlock byteBlock, FastSerializerContext serializerContext = null)
         {
-            // 检查数据流是否正确，如果不是，则抛出异常。
-            if (byteBlock.ReadByte() != 1)
-            {
-                throw new Exception("Fast反序列化数据流解析错误。");
-            }
-            // 使用默认的FastSerializerContext进行反序列化。
-            return Deserialize(type, ref byteBlock, s_defaultFastSerializerContext);
+            // 调用泛型方法 Deserialize，使用 ByteBlock 作为泛型参数，进行反序列化操作
+            return Deserialize<ByteBlock, T>(ref byteBlock, serializerContext);
+        }
+        /// <summary>
+        /// 反序列化字节块为指定类型。
+        /// </summary>
+        /// <param name="byteBlock">包含待反序列化数据的字节块。</param>
+        /// <param name="serializerContext">（可选）序列化上下文，用于控制序列化行为。</param>
+        /// <typeparam name="T">要反序列化的类型，该类型标记有[DynamicallyAccessedMembers]特性，表示在运行时会动态访问其成员。</typeparam>
+        /// <returns>反序列化后的对象。</returns>
+        public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref ValueByteBlock byteBlock, FastSerializerContext serializerContext = null)
+        {
+            // 调用泛型方法 Deserialize，使用 ValueByteBlock 作为数据容器，T 为目标类型，进行反序列化操作
+            return Deserialize<ValueByteBlock, T>(ref byteBlock, serializerContext);
         }
 
         /// <summary>
-        /// 从字节块中反序列化出指定类型的对象。
+        /// 将字节数组反序列化为指定类型的实例。
         /// </summary>
-        /// <typeparam name="TByteBlock">实现IByteBlock接口的类型，用于读取字节数据。</typeparam>
-        /// <typeparam name="T">要反序列化为的类型。</typeparam>
-        /// <param name="byteBlock">包含序列化数据的字节块。</param>
-        /// <returns>反序列化后的对象。</returns>
-        public static T Deserialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock)
-            where TByteBlock : IByteBlock
+        /// <param name="bytes">包含已序列化数据的字节数组。</param>
+        /// <param name="serializerContext">（可选）用于序列化和反序列化过程的上下文对象。</param>
+        /// <typeparam name="T">要反序列化的目标类型。</typeparam>
+        /// <returns>反序列化后的目标类型实例。</returns>
+        public static T Deserialize<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(byte[] bytes, FastSerializerContext serializerContext = null)
         {
-            // 调用重载的Deserialize方法，使用类型信息进行反序列化。
-            return (T)Deserialize(ref byteBlock, typeof(T));
+            // 创建一个包装字节数组的ValueByteBlock对象，以便处理反序列化过程。
+            var byteBlock = new ValueByteBlock(bytes);
+            // 调用重载的Deserialize方法，使用ValueByteBlock帮助类进行反序列化操作。
+            return Deserialize<ValueByteBlock, T>(ref byteBlock, serializerContext);
         }
 
         /// <summary>
@@ -436,7 +423,7 @@ namespace TouchSocket.Core
         /// <param name="byteBlock">包含序列化数据的字节块。</param>
         /// <param name="serializerContext">用于反序列化的FastSerializerContext实例。</param>
         /// <returns>反序列化后的对象。</returns>
-        public static T Deserialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, FastSerializerContext serializerContext)
+        public static T Deserialize<TByteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] T>(ref TByteBlock byteBlock, FastSerializerContext serializerContext = null)
             where TByteBlock : IByteBlock
         {
             // 调用重载的Deserialize方法，传入类型信息和序列化上下文进行反序列化。
@@ -451,8 +438,7 @@ namespace TouchSocket.Core
         /// <param name="type">要反序列化为的类型。</param>
         /// <param name="serializerContext">用于反序列化的FastSerializerContext实例。</param>
         /// <returns>反序列化后的对象。</returns>
-        /// <exception cref="ArgumentNullException">如果serializerContext为null。</exception>
-        public static object Deserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, FastSerializerContext serializerContext)
+        public static object Deserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type type, FastSerializerContext serializerContext = null)
             where TByteBlock : IByteBlock
         {
             // 检查数据流是否正确，如果不是，则抛出异常。
@@ -460,14 +446,12 @@ namespace TouchSocket.Core
             {
                 throw new Exception("Fast反序列化数据流解析错误。");
             }
-            // 检查serializerContext是否为null，如果是，则抛出异常。
-            if (serializerContext is null)
-            {
-                throw new ArgumentNullException(nameof(serializerContext));
-            }
+
+            serializerContext ??= s_defaultFastSerializerContext;
             // 使用提供的序列化上下文进行反序列化。
             return Deserialize(type, ref byteBlock, serializerContext);
         }
+
         private static object Deserialize<TByteBlock>(Type type, ref TByteBlock byteBlock, FastSerializerContext serializerContext)
             where TByteBlock : IByteBlock
         {
