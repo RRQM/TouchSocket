@@ -9,42 +9,28 @@ namespace RpcPerformanceConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            try
-            {
-                var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
-                consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
+            var consoleAction = new ConsoleAction("h|help|?");//设置帮助命令
+            consoleAction.OnException += ConsoleAction_OnException;//订阅执行异常输出
 
-                StartServer();
+            StartServer();
 
-                var count = 100000;
+            var count = 100000;
 
-                consoleAction.Add("3.1", "DmtpRpc测试Sum", () => StartSumClient(count));
-                consoleAction.Add("3.2", "DmtpRpc测试GetBytes", () => StartGetBytesClient(count));
-                consoleAction.Add("3.3", "DmtpRpc测试BigString", () => StartBigStringClient(count));
+            consoleAction.Add("3.1", "DmtpRpc测试Sum", () => StartSumClient(count));
+            consoleAction.Add("3.2", "DmtpRpc测试GetBytes", () => StartGetBytesClient(count));
+            consoleAction.Add("3.3", "DmtpRpc测试BigString", () => StartBigStringClient(count));
 
-                consoleAction.ShowAll();
-                while (true)
-                {
-                    if (!consoleAction.Run(Console.ReadLine()))
-                    {
-                        Console.WriteLine("命令不正确，请输入“h|help|?”获得帮助。");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ConsoleLogger.Default.Exception(ex);
-            }
+            consoleAction.ShowAll();
 
+            await consoleAction.RunCommandLineAsync();
         }
 
         public static void StartServer()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
-                   //.SetRegistrator(new MyContainer())
                    .SetListenIPHosts(7789)
                    .ConfigureContainer(a =>
                    {

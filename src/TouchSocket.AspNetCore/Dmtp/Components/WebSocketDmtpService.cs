@@ -12,9 +12,7 @@
 
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -22,65 +20,80 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
+
     /// <summary>
-    /// WebSocketDmtpService
+    /// WebSocketDmtpService 类，继承自 ConnectableService，并实现 IWebSocketDmtpService 接口。
+    /// 该类用于处理WebSocket的连接和服务。
     /// </summary>
-    public class WebSocketDmtpService : SetupConfigObject, IWebSocketDmtpService
+    public class WebSocketDmtpService : ConnectableService<WebSocketDmtpSessionClient>, IWebSocketDmtpService
     {
-        #region SocketClient
-
-        private readonly ConcurrentDictionary<string, WebSocketDmtpSocketClient> m_socketClients = new ConcurrentDictionary<string, WebSocketDmtpSocketClient>();
-
         /// <summary>
-        /// 数量
+        /// 构造函数，初始化服务器状态为运行中。
         /// </summary>
-        public int Count => this.m_socketClients.Count;
-
-        /// <summary>
-        /// 获取SocketClient
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public WebSocketDmtpSocketClient this[string id]
+        public WebSocketDmtpService()
         {
-            get
+            this.m_serverState = ServerState.Running;
+        }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 获取所有客户端的标识符。
+        /// </summary>
+        /// <returns>客户端标识符的集合。</returns>
+        public override IEnumerable<string> GetIds()
+        {
+            return this.m_clients.Keys;
+        }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 异步重置客户端标识符。
+        /// </summary>
+        /// <param name="sourceId">源客户端标识符。</param>
+        /// <param name="targetId">目标客户端标识符。</param>
+        /// <exception cref="ArgumentException">抛出异常，如果sourceId或targetId为空。</exception>
+        /// <exception cref="ClientNotFindException">抛出异常，如果源客户端不存在。</exception>
+        public override async Task ResetIdAsync(string sourceId, string targetId)
+        {
+            if (string.IsNullOrEmpty(sourceId))
             {
-                this.TryGetSocketClient(id, out var t);
-                return t;
+                throw new ArgumentException($"“{nameof(sourceId)}”不能为 null 或空。", nameof(sourceId));
+            }
+
+            if (string.IsNullOrEmpty(targetId))
+            {
+                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
+            }
+
+            if (sourceId == targetId)
+            {
+                return;
+            }
+            if (this.m_clients.TryGetValue(sourceId, out var sessionClient))
+            {
+                await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
+            }
+            else
+            {
+                throw new ClientNotFindException(TouchSocketAspNetCoreResource.ClientNotFind.GetDescription(sourceId));
             }
         }
 
+        /// <inheritdoc/>
         /// <summary>
-        /// 获取所有的客户端
+        /// 检查指定标识符的客户端是否存在。
         /// </summary>
-        /// <returns></returns>
-        public IEnumerable<WebSocketDmtpSocketClient> GetClients()
+        /// <param name="id">要检查的客户端标识符。</param>
+        /// <returns>如果客户端存在返回true，否则返回false。</returns>
+        public override bool ClientExists(string id)
         {
-            return this.m_socketClients.Values;
-        }
 
-        /// <summary>
-        /// 获取Id集合
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<string> GetIds()
-        {
-            return this.m_socketClients.Keys;
-        }
-
-        /// <summary>
-        /// 根据Id判断SocketClient是否存在
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public bool SocketClientExist(string id)
-        {
             if (string.IsNullOrEmpty(id))
             {
                 return false;
             }
 
-            if (this.m_socketClients.ContainsKey(id))
+            if (this.m_clients.ContainsKey(id))
             {
                 return true;
             }
@@ -88,91 +101,18 @@ namespace TouchSocket.Dmtp.AspNetCore
         }
 
         /// <summary>
-        /// 尝试获取实例
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="socketClient"></param>
-        /// <returns></returns>
-        public bool TryGetSocketClient(string id, out WebSocketDmtpSocketClient socketClient)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                socketClient = null;
-                return false;
-            }
-
-            return this.m_socketClients.TryGetValue(id, out socketClient);
-        }
-
-        internal bool TryAdd(string id, WebSocketDmtpSocketClient socketClient)
-        {
-            return this.m_socketClients.TryAdd(id, socketClient);
-        }
-
-        internal bool TryRemove(string id, out WebSocketDmtpSocketClient socketClient)
-        {
-            if (string.IsNullOrEmpty(id))
-            {
-                socketClient = null;
-                return false;
-            }
-            return this.m_socketClients.TryRemove(id, out socketClient);
-        }
-
-        #endregion SocketClient
-
-        private long m_idCount;
-
-        /// <summary>
-        /// 获取默认新Id。
-        /// </summary>
-        public Func<string> GetDefaultNewId { get; private set; }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
-
-        /// <inheritdoc/>
-        public void ResetId(string oldId, string newId)
-        {
-            if (string.IsNullOrEmpty(oldId))
-            {
-                throw new ArgumentException($"“{nameof(oldId)}”不能为 null 或空。", nameof(oldId));
-            }
-
-            if (string.IsNullOrEmpty(newId))
-            {
-                throw new ArgumentException($"“{nameof(newId)}”不能为 null 或空。", nameof(newId));
-            }
-
-            if (oldId == newId)
-            {
-                return;
-            }
-            if (this.m_socketClients.TryGetValue(oldId, out var socketClient))
-            {
-                socketClient.ResetId(newId);
-            }
-            else
-            {
-                throw new ClientNotFindException(TouchSocketAspNetCoreResource.ClientNotFind.GetDescription(oldId));
-            }
-        }
-
-        /// <summary>
         /// 从WebSocket获取新客户端。
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
+        /// <param name="context">HTTP上下文对象。</param>
+        /// <returns>异步任务。</returns>
         public async Task SwitchClientAsync(HttpContext context)
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                var id = this.GetDefaultNewId();
-                var client = new WebSocketDmtpSocketClient();
-                if (!this.TryAdd(id, client))
+                var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+                var id = this.GetNextNewId();
+                var client = new WebSocketDmtpSessionClient();
+                if (!this.m_clients.TryAdd(id, client))
                 {
                     throw new Exception("Id重复");
                 }
@@ -182,7 +122,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 client.InternalSetId(id);
                 client.InternalSetPluginManager(this.PluginManager);
                 client.SetDmtpActor(this.CreateDmtpActor(client));
-                await client.Start(webSocket, context);
+                await client.Start(webSocket, context).ConfigureAwait(false);
             }
             else
             {
@@ -190,21 +130,54 @@ namespace TouchSocket.Dmtp.AspNetCore
             }
         }
 
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            base.LoadConfig(config);
-            if (config.GetValue(TouchSocketConfigExtension.GetDefaultNewIdProperty) is Func<string> fun)
-            {
-                this.GetDefaultNewId = fun;
-            }
-            else
-            {
-                this.GetDefaultNewId = () => { return Interlocked.Increment(ref this.m_idCount).ToString(); };
-            }
-        }
+        #region Fields
 
-        private DmtpActor CreateDmtpActor(WebSocketDmtpSocketClient client)
+        /// <summary>
+        /// 客户端集合，用于存储和管理WebSocket客户端。
+        /// </summary>
+        private readonly InternalClientCollection<WebSocketDmtpSessionClient> m_clients = new InternalClientCollection<WebSocketDmtpSessionClient>();
+
+        /// <summary>
+        /// 服务器状态。
+        /// </summary>
+        private readonly ServerState m_serverState;
+
+        #endregion Fields
+
+        #region 属性
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 获取客户端数量。
+        /// </summary>
+        public override int Count => this.m_clients.Count;
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 获取服务器状态。
+        /// </summary>
+        public override ServerState ServerState => this.m_serverState;
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 获取验证令牌。
+        /// </summary>
+        public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 获取客户端集合。
+        /// </summary>
+        public override IClientCollection<WebSocketDmtpSessionClient> Clients => this.m_clients;
+
+        #endregion 属性
+
+        /// <summary>
+        /// 创建DmtpActor对象。
+        /// </summary>
+        /// <param name="client">关联的WebSocketDmtpSessionClient对象。</param>
+        /// <returns>SealedDmtpActor对象。</returns>
+        private SealedDmtpActor CreateDmtpActor(WebSocketDmtpSessionClient client)
         {
             return new SealedDmtpActor(true)
             {
@@ -213,13 +186,98 @@ namespace TouchSocket.Dmtp.AspNetCore
             };
         }
 
+        /// <summary>
+        /// 服务查找DmtpActor的方法。
+        /// </summary>
+        /// <param name="id">DmtpActor的标识符。</param>
+        /// <returns>DmtpActor对象或默认值。</returns>
         private Task<IDmtpActor> OnServiceFindDmtpActor(string id)
         {
-            if (this.TryGetSocketClient(id, out var client))
+            if (this.TryGetClient(id, out var client))
             {
                 return Task.FromResult(client.DmtpActor);
             }
             return Task.FromResult<IDmtpActor>(default);
         }
+
+        #region override
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 异步清除所有客户端。
+        /// </summary>
+        /// <returns>异步任务。</returns>
+        public override async Task ClearAsync()
+        {
+            foreach (var id in this.GetIds())
+            {
+                if (this.TryGetClient(id, out var client))
+                {
+                    await client.CloseAsync().ConfigureAwait(false);
+                    client.SafeDispose();
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 异步启动服务。该操作不支持，并抛出异常。
+        /// </summary>
+        /// <returns>异步任务。</returns>
+        /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
+        public override Task StartAsync()
+        {
+            throw new NotSupportedException("此服务的生命周期跟随主Host");
+        }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 异步停止服务。该操作不支持，并抛出异常。
+        /// </summary>
+        /// <returns>异步任务。</returns>
+        /// <exception cref="NotSupportedException">抛出不支持异常。</exception>
+        public override Task StopAsync()
+        {
+            throw new NotSupportedException("此服务的生命周期跟随主Host");
+        }
+
+        /// <inheritdoc/>
+        /// <summary>
+        /// 创建新的WebSocketDmtpSessionClient对象。该操作未实现。
+        /// </summary>
+        /// <returns>新的WebSocketDmtpSessionClient对象。</returns>
+        /// <exception cref="NotImplementedException">抛出未实现异常。</exception>
+        protected override WebSocketDmtpSessionClient NewClient()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion override
+
+        #region internal
+
+        /// <summary>
+        /// 尝试添加客户端到集合中。
+        /// </summary>
+        /// <param name="id">客户端标识符。</param>
+        /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
+        /// <returns>如果添加成功返回true，否则返回false。</returns>
+        internal bool TryAdd(string id, WebSocketDmtpSessionClient sessionClient)
+        {
+            return this.m_clients.TryAdd(id, sessionClient);
+        }
+
+        /// <summary>
+        /// 尝试从集合中移除客户端。
+        /// </summary>
+        /// <param name="id">客户端标识符。</param>
+        /// <param name="sessionClient">移除的WebSocketDmtpSessionClient对象。</param>
+        /// <returns>如果移除成功返回true，否则返回false。</returns>
+        internal bool TryRemove(string id, out WebSocketDmtpSessionClient sessionClient)
+        {
+            return this.m_clients.TryRemoveClient(id, out sessionClient);
+        }
+
+        #endregion internal
     }
 }

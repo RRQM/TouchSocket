@@ -69,7 +69,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 元素数量。
         /// </summary>
-        public int Count { get => this.m_key1ToValue.Count; }
+        public int Count => this.m_key1ToValue.Count;
 
         /// <summary>
         /// Key1集合

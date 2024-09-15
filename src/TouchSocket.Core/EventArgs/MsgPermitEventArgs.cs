@@ -12,29 +12,30 @@
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// 消息事件
+    /// MsgPermitEventArgs 类继承自 PermitEventArgs 类，用于封装消息许可的事件参数
     /// </summary>
     public class MsgPermitEventArgs : PermitEventArgs
     {
         /// <summary>
-        ///  构造函数
+        /// 初始化 MsgPermitEventArgs 类的新实例，包含消息内容
         /// </summary>
-        /// <param name="mes"></param>
+        /// <param name="mes">要处理的消息</param>
         public MsgPermitEventArgs(string mes)
         {
             this.Message = mes;
         }
 
         /// <summary>
-        /// 构造函数
+        /// 初始化 MsgPermitEventArgs 类的新实例，不带初始消息内容
         /// </summary>
         public MsgPermitEventArgs()
         {
         }
 
         /// <summary>
-        /// 消息
+        /// 获取或设置此许可事件关联的消息
         /// </summary>
         public string Message { get; set; }
     }

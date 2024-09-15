@@ -26,10 +26,14 @@ namespace TouchSocket.JsonRpc
         private string m_jsonRpcUrl = "/jsonrpc";
 
         /// <summary>
-        /// HttpJsonRpcParserPlugin
+        /// 构造函数，用于初始化 <see cref="HttpJsonRpcParserPlugin"/> 类的新实例。
         /// </summary>
-        /// <param name="rpcServerProvider"></param>
-        /// <param name="resolver"></param>
+        /// <param name="rpcServerProvider">IRpcServerProvider 类型的参数，提供 RPC 服务器服务。</param>
+        /// <param name="resolver">IResolver 接口类型的参数，用于解析依赖项。</param>
+        /// <remarks>
+        /// 该构造函数调用基类的构造函数，传递 <paramref name="rpcServerProvider"/> 和 <paramref name="resolver"/> 参数。
+        /// 这对于确保基类能够访问 RPC 服务器提供者和依赖项解析器至关重要。
+        /// </remarks>
         public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
         {
         }
@@ -38,7 +42,7 @@ namespace TouchSocket.JsonRpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -51,10 +55,12 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <summary>
-        /// 当挂载在<see cref="HttpService"/>时，匹配Url然后响应。当设置为null或空时，会全部响应。
+        /// 设置JSON-RPC URL的匹配规则。
+        /// 当挂载在<see cref="HttpService"/>时，根据指定的URL进行匹配并响应请求。
+        /// 如果设置为null或空，将对所有请求进行响应。
         /// </summary>
-        /// <param name="jsonRpcUrl"></param>
-        /// <returns></returns>
+        /// <param name="jsonRpcUrl">要匹配的JSON-RPC URL。</param>
+        /// <returns>返回当前的<see cref="HttpJsonRpcParserPlugin"/>实例，支持链式调用。</returns>
         public HttpJsonRpcParserPlugin SetJsonRpcUrl(string jsonRpcUrl)
         {
             this.JsonRpcUrl = jsonRpcUrl;
@@ -62,7 +68,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -87,25 +93,25 @@ namespace TouchSocket.JsonRpc
 
                 var httpResponse = ((HttpJsonRpcCallContext)callContext).HttpContext.Response;
                 httpResponse.FromJson(str);
-                httpResponse.Answer();
+                await httpResponse.AnswerAsync().ConfigureAwait(false);
             }
             catch
             {
             }
         }
 
-        private async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Post)
             {
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvoke(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context));
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context)).ConfigureAwait(false);
                     return;
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
     }
 }

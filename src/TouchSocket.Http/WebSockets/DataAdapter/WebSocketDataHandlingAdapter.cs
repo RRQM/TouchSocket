@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Threading.Tasks;
 using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
@@ -44,9 +45,9 @@ namespace TouchSocket.Http.WebSockets
             var index = offset;
             dataFrame = new WSDataFrame
             {
-                RSV1 = dataBuffer[offset].GetBit(6) == 1,
-                RSV2 = dataBuffer[offset].GetBit(5) == 1,
-                RSV3 = dataBuffer[offset].GetBit(4) == 1,
+                RSV1 = dataBuffer[offset].GetBit(6),
+                RSV2 = dataBuffer[offset].GetBit(5),
+                RSV3 = dataBuffer[offset].GetBit(4),
                 FIN = (dataBuffer[offset] >> 7) == 1,
                 Opcode = (WSDataType)(dataBuffer[offset] & 0xf),
                 Mask = (dataBuffer[++offset] >> 7) == 1
@@ -72,7 +73,7 @@ namespace TouchSocket.Http.WebSockets
                 if (length < 12)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -87,7 +88,7 @@ namespace TouchSocket.Http.WebSockets
                 if (length < (offset - index) + 4)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, index, length);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, index, length));
                     offset = index;
                     return FilterResult.GoOn;
                 }
@@ -104,12 +105,12 @@ namespace TouchSocket.Http.WebSockets
             var surlen = length - (offset - index);
             if (payloadLength <= surlen)
             {
-                byteBlock.Write(dataBuffer, offset, payloadLength);
+                byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, payloadLength));
                 offset += payloadLength;
             }
             else
             {
-                byteBlock.Write(dataBuffer, offset, surlen);
+                byteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, surlen));
                 offset += surlen;
             }
 
@@ -120,43 +121,43 @@ namespace TouchSocket.Http.WebSockets
         /// 当接收到数据时处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            var buffer = byteBlock.Buffer;
-            var r = byteBlock.Len;
+            var buffer = byteBlock.Memory.GetArray().Array;
+            var r = byteBlock.Length;
 
             if (this.m_tempByteBlock != null)
             {
-                this.m_tempByteBlock.Write(buffer, 0, r);
+                this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
                 buffer = this.m_tempByteBlock.ToArray();
-                r = this.m_tempByteBlock.Pos;
+                r = this.m_tempByteBlock.Position;
                 this.m_tempByteBlock.Dispose();
                 this.m_tempByteBlock = null;
             }
 
             if (this.m_dataFrameTemp == null)
             {
-                this.SplitPackage(buffer, 0, r);
+                await this.SplitPackageAsync(buffer, 0, r).ConfigureAwait(false);
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_dataFrameTemp);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
                     this.m_dataFrameTemp = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, this.m_surPlusLength);
-                    this.PreviewHandle(this.m_dataFrameTemp);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
                     this.m_dataFrameTemp = null;
-                    this.SplitPackage(buffer, this.m_surPlusLength, r);
+                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureAwait(false);
                 }
                 else
                 {
-                    this.m_dataFrameTemp.PayloadData.Write(buffer, 0, r);
+                    this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, r));
                     this.m_surPlusLength -= r;
                 }
             }
@@ -174,15 +175,15 @@ namespace TouchSocket.Http.WebSockets
             base.Reset();
         }
 
-        private void PreviewHandle(WSDataFrame dataFrame)
+        private async Task PreviewHandle(WSDataFrame dataFrame)
         {
             try
             {
                 if (dataFrame.Mask)
                 {
-                    WSTools.DoMask(dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Buffer, 0, dataFrame.PayloadData.Len, dataFrame.MaskingKey);
+                    WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory.Span, dataFrame.MaskingKey);
                 }
-                this.GoReceived(null, dataFrame);
+                await this.GoReceivedAsync(null, dataFrame).ConfigureAwait(false);
             }
             finally
             {
@@ -196,14 +197,14 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="dataBuffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
-        private void SplitPackage(byte[] dataBuffer, int offset, int length)
+        private async Task SplitPackageAsync(byte[] dataBuffer, int offset, int length)
         {
             while (offset < length)
             {
                 if (length - offset < 2)
                 {
                     this.m_tempByteBlock ??= new ByteBlock();
-                    this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
+                    this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                     return;
                 }
 
@@ -212,18 +213,18 @@ namespace TouchSocket.Http.WebSockets
                     case FilterResult.Cache:
                         {
                             this.m_tempByteBlock ??= new ByteBlock();
-                            this.m_tempByteBlock.Write(dataBuffer, offset, length - offset);
+                            this.m_tempByteBlock.Write(new System.ReadOnlySpan<byte>(dataBuffer, offset, length - offset));
                             return;
                         }
                     case FilterResult.Success:
                         {
-                            if (dataFrame.PayloadLength == dataFrame.PayloadData.Len)
+                            if (dataFrame.PayloadLength == dataFrame.PayloadData.Length)
                             {
-                                this.PreviewHandle(dataFrame);
+                                await this.PreviewHandle(dataFrame).ConfigureAwait(false);
                             }
                             else
                             {
-                                this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Len;
+                                this.m_surPlusLength = dataFrame.PayloadLength - dataFrame.PayloadData.Length;
                                 this.m_dataFrameTemp = dataFrame;
                             }
                         }

@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
 
 namespace TouchSocket.Core
@@ -17,26 +18,19 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件写入器。
     /// </summary>
-    public partial class FileStorageWriter : DisposableObject, IWrite
+    public partial class FileStorageWriter : SafetyDisposableObject
     {
-        private int m_dis = 1;
+        private long m_position;
+
 
         /// <summary>
-        /// 构造函数
+        /// 初始化FileStorageWriter的实例。
         /// </summary>
-        /// <param name="fileStorage"></param>
+        /// <param name="fileStorage">文件存储服务的实例，用于后续的文件写入操作。</param>
         public FileStorageWriter(FileStorage fileStorage)
         {
-            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer"></param>
-        public virtual void Write(byte[] buffer)
-        {
-            this.Write(buffer, 0, buffer.Length);
+            // 当fileStorage为null时，抛出带有参数名称的ArgumentException，确保fileStorage参数不是null
+            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
         }
 
         /// <summary>
@@ -56,55 +50,36 @@ namespace TouchSocket.Core
         /// <summary>
         /// 游标位置
         /// </summary>
-        public int Pos
-        {
-            get => (int)this.Position;
-            set => this.Position = value;
-        }
+        public long Position { get => m_position; set => m_position = value; }
+
 
         /// <summary>
-        /// 游标位置
+        /// 将文件指针移动到文件末尾。
         /// </summary>
-        public long Position { get; set; }
-
-        /// <summary>
-        /// 移动Pos到流末尾
-        /// </summary>
-        /// <returns></returns>
+        /// <returns>返回文件末尾的位置。</returns>
         public long SeekToEnd()
         {
+            // 设置文件指针到文件末尾，并返回该位置
             return this.Position = this.FileStorage.Length;
         }
 
         /// <summary>
-        /// 读取数据到缓存区
+        /// 将一组只读字节写入文件存储。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public void Write(byte[] buffer, int offset, int length)
+        /// <param name="span">要写入的只读字节范围。</param>
+        public void Write(ReadOnlySpan<byte> span)
         {
-            this.FileStorage.Write(this.Position, buffer, offset, length);
-            this.Position += length;
+            // 调用FileStorage的Write方法，将当前Position位置的span长度字节写入。
+            this.FileStorage.Write(this.Position, span);
+            // 使用Interlocked类的Add方法，线程安全地更新当前Position。
+            Interlocked.Add(ref this.m_position, span.Length);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        protected override void SafetyDispose(bool disposing)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-            if (Interlocked.Decrement(ref this.m_dis) == 0)
-            {
-                FilePool.TryReleaseFile(this.FileStorage.Path);
-                this.FileStorage = null;
-            }
-            base.Dispose(disposing);
+            FilePool.TryReleaseFile(this.FileStorage.Path);
+            this.FileStorage = null;
         }
     }
 }

@@ -20,8 +20,8 @@ namespace TouchSocket.Rpc.RateLimiting
         /// <summary>
         /// 获取限流策略
         /// </summary>
-        /// <param name="policyName"></param>
-        /// <returns></returns>
+        /// <param name="policyName">限流策略名称</param>
+        /// <returns>返回对应的限流策略对象</returns>
         IRateLimiterPolicy GetRateLimiterPolicy(string policyName);
     }
 }

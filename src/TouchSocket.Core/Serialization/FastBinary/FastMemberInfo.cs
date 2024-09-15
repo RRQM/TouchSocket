@@ -26,14 +26,9 @@ namespace TouchSocket.Core
         {
             if (enableIndex)
             {
-                if (memberInfo.GetCustomAttribute(typeof(FastMemberAttribute), false) is FastMemberAttribute fastMamberAttribute)
-                {
-                    this.Index = fastMamberAttribute.Index;
-                }
-                else
-                {
-                    throw new Exception($"成员{memberInfo.Name}未标识{nameof(FastMemberAttribute)}特性。");
-                }
+                this.Index = memberInfo.GetCustomAttribute(typeof(FastMemberAttribute), false) is FastMemberAttribute fastMamberAttribute
+                    ? fastMamberAttribute.Index
+                    : throw new Exception($"成员{memberInfo.Name}未标识{nameof(FastMemberAttribute)}特性。");
             }
 
             if (memberInfo is PropertyInfo propertyInfo)

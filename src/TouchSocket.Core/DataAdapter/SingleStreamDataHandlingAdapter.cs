@@ -40,17 +40,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 当接收数据处理完成后，回调该函数执行接收
         /// </summary>
-        public Action<ByteBlock, IRequestInfo> ReceivedCallBack { get; set; }
+        public Func<ByteBlock, IRequestInfo, Task> ReceivedAsyncCallBack { get; set; }
 
         /// <summary>
         /// 当发送数据处理完成后，回调该函数执行异步发送
         /// </summary>
-        public Func<byte[], int, int, Task> SendAsyncCallBack { get; set; }
-
-        /// <summary>
-        /// 当发送数据处理完成后，回调该函数执行发送
-        /// </summary>
-        public Action<byte[], int, int> SendCallBack { get; set; }
+        public Func<ReadOnlyMemory<byte>, Task> SendAsyncCallBack { get; set; }
 
         /// <summary>
         /// 是否在收到数据时，即刷新缓存时间。默认true。
@@ -70,11 +65,11 @@ namespace TouchSocket.Core
         /// 收到数据的切入点，该方法由框架自动调用。
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void ReceivedInput(ByteBlock byteBlock)
+        public async Task ReceivedInputAsync(ByteBlock byteBlock)
         {
             try
             {
-                this.PreviewReceived(byteBlock);
+                await this.PreviewReceivedAsync(byteBlock).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -83,35 +78,6 @@ namespace TouchSocket.Core
         }
 
         #region SendInput
-
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        public void SendInput(IRequestInfo requestInfo)
-        {
-            this.PreviewSend(requestInfo);
-        }
-
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void SendInput(byte[] buffer, int offset, int length)
-        {
-            this.PreviewSend(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 发送数据的切入点，该方法由框架自动调用。
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        public void SendInput(IList<ArraySegment<byte>> transferBytes)
-        {
-            this.PreviewSend(transferBytes);
-        }
 
         /// <summary>
         /// 发送数据的切入点，该方法由框架自动调用。
@@ -126,12 +92,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 发送数据的切入点，该方法由框架自动调用。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public Task SendInputAsync(byte[] buffer, int offset, int length)
+        public Task SendInputAsync(ReadOnlyMemory<byte> memory)
         {
-            return this.PreviewSendAsync(buffer, offset, length);
+            return this.PreviewSendAsync(memory);
         }
 
         /// <summary>
@@ -147,68 +110,30 @@ namespace TouchSocket.Core
         /// 当发送数据前预先处理数据
         /// </summary>
         /// <param name="requestInfo"></param>
-        protected virtual void PreviewSend(IRequestInfo requestInfo)
-        {
-            if (requestInfo == null)
-            {
-                throw new ArgumentNullException(nameof(requestInfo));
-            }
-            var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
-            {
-                requestInfoBuilder.Build(byteBlock);
-                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-            }
-        }
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected virtual void PreviewSend(byte[] buffer, int offset, int length)
-        {
-            this.GoSend(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// 组合发送预处理数据，
-        /// 当属性SplicingSend实现为True时，系统才会调用该方法。
-        /// </summary>
-        /// <param name="transferBytes">代发送数据组合</param>
-        protected virtual void PreviewSend(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// 当发送数据前预先处理数据
-        /// </summary>
-        /// <param name="requestInfo"></param>
         protected virtual async Task PreviewSendAsync(IRequestInfo requestInfo)
         {
-            if (requestInfo == null)
-            {
-                throw new ArgumentNullException(nameof(requestInfo));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIf(requestInfo, nameof(requestInfo));
+
             var requestInfoBuilder = (IRequestInfoBuilder)requestInfo;
-            using (var byteBlock = new ByteBlock(requestInfoBuilder.MaxLength))
+
+            var byteBlock = new ValueByteBlock(requestInfoBuilder.MaxLength);
+            try
             {
-                requestInfoBuilder.Build(byteBlock);
-                await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+                requestInfoBuilder.Build(ref byteBlock);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 
         /// <summary>
         /// 当发送数据前预先处理数据
         /// </summary>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected virtual Task PreviewSendAsync(byte[] buffer, int offset, int length)
+        protected virtual Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
         {
-            return this.GoSendAsync(buffer, offset, length);
+            return this.GoSendAsync(memory);
         }
 
         /// <summary>
@@ -237,46 +162,33 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock">以二进制形式传递</param>
         /// <param name="requestInfo">以解析实例传递</param>
-        protected virtual void GoReceived(ByteBlock byteBlock, IRequestInfo requestInfo)
+        protected virtual Task GoReceivedAsync(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.ReceivedCallBack.Invoke(byteBlock, requestInfo);
-        }
-
-        /// <summary>
-        /// 发送已经经过预先处理后的数据
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        protected virtual void GoSend(byte[] buffer, int offset, int length)
-        {
-            this.SendCallBack.Invoke(buffer, offset, length);
+            return this.ReceivedAsyncCallBack == null ? EasyTask.CompletedTask : this.ReceivedAsyncCallBack.Invoke(byteBlock, requestInfo);
         }
 
         /// <summary>
         /// 异步发送已经经过预先处理后的数据
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory"></param>
         /// <returns></returns>
-        protected virtual Task GoSendAsync(byte[] buffer, int offset, int length)
+        protected virtual Task GoSendAsync(ReadOnlyMemory<byte> memory)
         {
-            return this.SendAsyncCallBack.Invoke(buffer, offset, length);
+            return this.SendAsyncCallBack == null ? EasyTask.CompletedTask : this.SendAsyncCallBack.Invoke(memory);
         }
 
         /// <summary>
-        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceived(ByteBlock, IRequestInfo)"/>处理数据
+        /// 当接收到数据后预先处理数据,然后调用<see cref="GoReceivedAsync(ByteBlock, IRequestInfo)"/>处理数据
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected abstract void PreviewReceived(ByteBlock byteBlock);
+        protected abstract Task PreviewReceivedAsync(ByteBlock byteBlock);
 
         /// <summary>
         /// 重置解析器到初始状态，一般在<see cref="DataHandlingAdapter.OnError(Exception,string, bool, bool)"/>被触发时，由返回值指示是否调用。
         /// </summary>
         protected override void Reset()
         {
-            this.LastCacheTime = DateTime.Now;
+            this.LastCacheTime = DateTime.UtcNow;
         }
     }
 }

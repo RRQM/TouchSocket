@@ -17,35 +17,29 @@ namespace TouchSocket.Core
     /// </summary>
     public class WaitPackage : PackageBase, IWaitResult
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public string Message { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        public long Sign { get; set; }
+        public int Sign { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public byte Status { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.Sign);
-            byteBlock.Write(this.Status);
-            byteBlock.Write(this.Message);
+            byteBlock.WriteInt32(this.Sign);
+            byteBlock.WriteByte(this.Status);
+            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
-            this.Sign = byteBlock.ReadInt64();
-            this.Status = (byte)byteBlock.ReadByte();
-            this.Message = byteBlock.ReadString();
+            this.Sign = byteBlock.ReadInt32();
+            this.Status = byteBlock.ReadByte();
+            this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
         }
     }
 }

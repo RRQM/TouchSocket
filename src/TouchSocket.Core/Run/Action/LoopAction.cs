@@ -11,202 +11,202 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// 循环动作
+    /// LoopAction 类用于在指定循环次数和间隔下执行异步操作。
+    /// 它支持暂停、恢复和重新运行操作。
     /// </summary>
-    public class LoopAction : EasyTask, IDisposable
+    public sealed class LoopAction : DisposableObject
     {
         /// <summary>
-        /// 析构函数
+        /// 异步自动重置事件，用于控制循环执行的同步点。
         /// </summary>
-        ~LoopAction()
-        {
-            this.Dispose();
-        }
+        private readonly AsyncAutoResetEvent m_waitHandle;
 
-        private readonly EventWaitHandle m_waitHandle;
+        /// <summary>
+        /// 执行操作的委托，接受 LoopAction 实例作为参数。
+        /// </summary>
+        private readonly Func<LoopAction, Task> m_executeAction;
 
-        private LoopAction(int count, TimeSpan interval, Action<LoopAction> action)
+        /// <summary>
+        /// 初始化 LoopAction 实例。
+        /// </summary>
+        /// <param name="count">循环执行次数，-1 表示无限循环。</param>
+        /// <param name="interval">两次执行操作之间的间隔时间。</param>
+        /// <param name="action">要执行的异步操作。</param>
+        public LoopAction(int count, TimeSpan interval, Func<LoopAction, Task> action)
         {
             this.LoopCount = count;
-            this.ExecuteAction = action;
+            this.m_executeAction = action;
             this.Interval = interval;
-            this.m_waitHandle = new AutoResetEvent(false);
+            this.m_waitHandle = new AsyncAutoResetEvent(false);
         }
 
         /// <summary>
-        /// 创建可循环操作体
+        /// 创建并返回一个 LoopAction 实例，该实例将在指定次数和间隔下执行给定的异步操作。
         /// </summary>
-        /// <param name="count">循环次数，设为-1时一直循环</param>
-        /// <param name="interval">每次循环间隔</param>
-        /// <param name="action">执行委托</param>
-        /// <returns></returns>
+        /// <param name="count">循环执行次数。</param>
+        /// <param name="interval">两次执行操作之间的间隔时间。</param>
+        /// <param name="action">要执行的异步操作。</param>
+        /// <returns>一个新的 LoopAction 实例。</returns>
         public static LoopAction CreateLoopAction(int count, TimeSpan interval, Action<LoopAction> action)
         {
-            return new LoopAction(count, interval, action);
+            Task Run(LoopAction loop)
+            {
+                action(loop);
+                return EasyTask.CompletedTask;
+            }
+            return new LoopAction(count, interval, Run);
         }
 
         /// <summary>
-        /// 创建可循环操作体
+        /// 创建并返回一个 LoopAction 实例，该实例将在指定次数和以毫秒为单位的间隔下执行给定的异步操作。
         /// </summary>
-        /// <param name="count">循环次数，设为-1时一直循环</param>
-        /// <param name="intervalMS">每次循环间隔，毫秒</param>
-        /// <param name="action">执行委托</param>
-        /// <returns></returns>
+        /// <param name="count">循环执行次数。</param>
+        /// <param name="intervalMS">两次执行操作之间的间隔时间（毫秒）。</param>
+        /// <param name="action">要执行的异步操作。</param>
+        /// <returns>一个新的 LoopAction 实例。</returns>
         public static LoopAction CreateLoopAction(int count, int intervalMS, Action<LoopAction> action)
         {
-            return new LoopAction(count, TimeSpan.FromMilliseconds(intervalMS), action);
+            return CreateLoopAction(count, TimeSpan.FromMilliseconds(intervalMS), action);
         }
 
         /// <summary>
-        /// 创建可循环操作体
+        /// 创建并返回一个 LoopAction 实例，该实例将在指定次数和无间隔下执行给定的异步操作。
         /// </summary>
-        /// <param name="count">循环次数，设为-1时一直循环</param>
-        /// <param name="action">执行委托</param>
-        /// <returns></returns>
+        /// <param name="count">循环执行次数。</param>
+        /// <param name="action">要执行的异步操作。</param>
+        /// <returns>一个新的 LoopAction 实例。</returns>
         public static LoopAction CreateLoopAction(int count, Action<LoopAction> action)
         {
             return CreateLoopAction(count, TimeSpan.Zero, action);
         }
 
         /// <summary>
-        /// 创建可循环操作体
+        /// 创建并返回一个 LoopAction 实例，该实例将在无限次数和指定间隔下执行给定的异步操作。
         /// </summary>
-        /// <param name="interval">每次循环间隔</param>
-        /// <param name="action">执行委托</param>
-        /// <returns></returns>
+        /// <param name="interval">两次执行操作之间的间隔时间。</param>
+        /// <param name="action">要执行的异步操作。</param>
+        /// <returns>一个新的 LoopAction 实例。</returns>
         public static LoopAction CreateLoopAction(TimeSpan interval, Action<LoopAction> action)
         {
             return CreateLoopAction(-1, interval, action);
         }
 
         /// <summary>
-        /// 创建可循环操作体
+        /// 创建并返回一个 LoopAction 实例，该实例将在无限次数和无间隔下执行给定的异步操作。
         /// </summary>
-        /// <param name="action">执行委托</param>
-        /// <returns></returns>
+        /// <param name="action">要执行的异步操作。</param>
+        /// <returns>一个新的 LoopAction 实例。</returns>
         public static LoopAction CreateLoopAction(Action<LoopAction> action)
         {
             return CreateLoopAction(-1, TimeSpan.Zero, action);
         }
 
         /// <summary>
-        /// 已执行次数
+        /// 已执行次数。
         /// </summary>
         public int ExecutedCount { get; private set; }
 
         /// <summary>
-        /// 执行间隔
+        /// 执行间隔。
         /// </summary>
         public TimeSpan Interval { get; private set; }
 
         /// <summary>
-        /// 循环次数
+        /// 循环次数。
         /// </summary>
         public int LoopCount { get; }
 
         /// <summary>
-        /// 执行委托
-        /// </summary>
-        public Action<LoopAction> ExecuteAction { get; private set; }
-
-        /// <summary>
-        /// 是否在运行
+        /// 是否在运行。
         /// </summary>
         public RunStatus RunStatus { get; private set; }
 
         /// <summary>
-        /// 运行
+        /// 运行 LoopAction 实例，如果已运行则不执行任何操作。
         /// </summary>
         public void Run()
         {
-            if (this.RunStatus == RunStatus.None)
-            {
-                this.RunStatus = RunStatus.Running;
-                if (this.LoopCount >= 0)
-                {
-                    for (var i = 0; i < this.LoopCount; i++)
-                    {
-                        if (this.RunStatus == RunStatus.Disposed)
-                        {
-                            return;
-                        }
-                        this.ExecuteAction.Invoke(this);
-                        this.ExecutedCount++;
-                        if (this.RunStatus == RunStatus.Paused)
-                        {
-                            this.m_waitHandle.WaitOne();
-                        }
-                        this.m_waitHandle.WaitOne(this.Interval);
-                    }
-                }
-                else
-                {
-                    while (true)
-                    {
-                        if (this.RunStatus == RunStatus.Disposed)
-                        {
-                            return;
-                        }
-                        this.ExecuteAction.Invoke(this);
-                        this.ExecutedCount++;
-                        if (this.RunStatus == RunStatus.Paused)
-                        {
-                            this.m_waitHandle.WaitOne();
-                        }
-                        this.m_waitHandle.WaitOne(this.Interval);
-                    }
-                }
-                this.RunStatus = RunStatus.Completed;
-            }
+            this.RunAsync().GetFalseAwaitResult();
         }
 
         /// <summary>
-        /// 重新运行
+        /// 重新运行 LoopAction 实例，重置已执行次数和运行状态。
         /// </summary>
         public void Rerun()
         {
-            if (this.RunStatus == RunStatus.Disposed)
-            {
-                throw new Exception("无法利用已释放的资源");
-            }
+            this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
             this.Run();
         }
 
         /// <summary>
-        /// 以异步重新运行
+        /// 以异步方式重新运行 LoopAction 实例。
         /// </summary>
-        /// <returns></returns>
-        public Task RerunAsync()
+        /// <returns>异步操作任务。</returns>
+        public async Task RerunAsync()
         {
-            if (this.RunStatus == RunStatus.Disposed)
-            {
-                throw new Exception("无法利用已释放的资源");
-            }
+            this.ThrowIfDisposed();
             this.RunStatus = RunStatus.None;
-            return this.RunAsync();
+            await this.RunAsync().ConfigureAwait(false);
         }
 
         /// <summary>
-        /// 以异步运行
+        /// 以异步方式运行 LoopAction 实例。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>异步操作任务。</returns>
         public Task RunAsync()
         {
-            return Task.Run(() =>
-            {
-                this.Run();
-            });
+            return this.RunStatus != RunStatus.None
+                ? EasyTask.CompletedTask
+                : Task.Run(async () =>
+             {
+                 this.RunStatus = RunStatus.Running;
+                 if (this.LoopCount >= 0)
+                 {
+                     for (var i = 0; i < this.LoopCount; i++)
+                     {
+                         if (this.RunStatus == RunStatus.Disposed)
+                         {
+                             return;
+                         }
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
+                         this.ExecutedCount++;
+                         if (this.RunStatus == RunStatus.Paused)
+                         {
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
+                         }
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
+                     }
+                 }
+                 else
+                 {
+                     while (true)
+                     {
+                         if (this.RunStatus == RunStatus.Disposed)
+                         {
+                             return;
+                         }
+                         await this.m_executeAction.Invoke(this).ConfigureAwait(false);
+                         this.ExecutedCount++;
+                         if (this.RunStatus == RunStatus.Paused)
+                         {
+                             await this.m_waitHandle.WaitOneAsync().ConfigureAwait(false);
+                         }
+                         await this.m_waitHandle.WaitOneAsync(this.Interval).ConfigureAwait(false);
+                     }
+                 }
+                 this.RunStatus = RunStatus.Completed;
+             });
         }
 
         /// <summary>
-        /// 暂停
+        /// 暂停正在运行的 LoopAction 实例。
         /// </summary>
         public void Pause()
         {
@@ -218,7 +218,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 回复
+        /// 恢复已暂停的 LoopAction 实例。
         /// </summary>
         public void Resume()
         {
@@ -230,19 +230,18 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 释放资源
+        /// 处置 LoopAction 实例，释放所有资源。
         /// </summary>
-        public void Dispose()
+        /// <param name="disposing">是否为托管资源。</param>
+        protected override void Dispose(bool disposing)
         {
-            if (this.RunStatus == RunStatus.Disposed)
+            if (this.DisposedValue)
             {
                 return;
             }
-            if (this.RunStatus == RunStatus.Completed)
-            {
-                this.m_waitHandle.Dispose();
-            }
+            this.m_waitHandle.Dispose();
             this.RunStatus = RunStatus.Disposed;
+            base.Dispose(disposing);
         }
     }
 }

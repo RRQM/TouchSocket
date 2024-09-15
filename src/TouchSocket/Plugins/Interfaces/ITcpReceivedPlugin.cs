@@ -16,23 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// ITcpReceivedPlugin
+    /// 定义了一个ITcpReceivedPlugin接口，该接口继承自IPlugin接口。
+    /// 用于处理TCP接收数据的插件，提供了一种扩展机制，允许开发人员实现自定义的数据处理逻辑。
     /// </summary>
-    public interface ITcpReceivedPlugin<in TClient> : IPlugin where TClient : ITcpClientBase
+    public interface ITcpReceivedPlugin : IPlugin
     {
         /// <summary>
         /// 在收到数据时触发
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnTcpReceived(TClient client, ReceivedDataEventArgs e);
-    }
-
-    /// <summary>
-    /// ITcpReceivedPlugin
-    /// </summary>
-    public interface ITcpReceivedPlugin : ITcpReceivedPlugin<ITcpClientBase>
-    {
+        /// <param name="client">触发事件的TCP会话客户端</param>
+        /// <param name="e">包含接收到的数据和相关状态的事件参数</param>
+        /// <returns>一个Task对象，表示异步操作的结果</returns>
+        Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e);
     }
 }

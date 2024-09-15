@@ -23,13 +23,13 @@ namespace TouchSocket.Core
     /// </summary>
     public class AppMessenger
     {
-        private static readonly Lazy<AppMessenger> m_instanceLazy;
+        private static readonly Lazy<AppMessenger> s_instanceLazy;
 
         private readonly ConcurrentDictionary<string, List<MessageInstance>> m_tokenAndInstance = new ConcurrentDictionary<string, List<MessageInstance>>();
 
         static AppMessenger()
         {
-            m_instanceLazy = new Lazy<AppMessenger>(() => new AppMessenger());
+            s_instanceLazy = new Lazy<AppMessenger>(() => new AppMessenger());
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace TouchSocket.Core
         {
             get
             {
-                return m_instanceLazy.Value;
+                return s_instanceLazy.Value;
             }
         }
 
@@ -60,7 +60,7 @@ namespace TouchSocket.Core
             {
                 if (!this.AllowMultiple)
                 {
-                    throw new MessageRegisteredException(TouchSocketCoreResource.TokenExisted.GetDescription(token));
+                    ThrowHelper.ThrowMessageRegisteredException(token);
                 }
 
                 value.Add(messageInstance);
@@ -158,7 +158,7 @@ namespace TouchSocket.Core
                         clear.Add(item);
                         continue;
                     }
-                    await item.InvokeAsync(item.MessageObject, parameters);
+                    await item.InvokeAsync(item.MessageObject, parameters).ConfigureAwait(false);
                 }
 
                 foreach (var item in clear)
@@ -168,7 +168,7 @@ namespace TouchSocket.Core
             }
             else
             {
-                throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.GetDescription(token));
+                ThrowHelper.ThrowMessageNotFoundException(token);
             }
         }
 
@@ -197,11 +197,11 @@ namespace TouchSocket.Core
 
                     if (i == list.Count - 1)
                     {
-                        result = await item.InvokeAsync<T>(item.MessageObject, parameters);
+                        result = await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(false);
                     }
                     else
                     {
-                        await item.InvokeAsync<T>(item.MessageObject, parameters);
+                        await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(false);
                     }
                 }
 
@@ -213,7 +213,8 @@ namespace TouchSocket.Core
             }
             else
             {
-                throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.GetDescription(token));
+                ThrowHelper.ThrowMessageNotFoundException(token);
+                return default;
             }
         }
     }

@@ -33,12 +33,6 @@ namespace TouchSocket.Dmtp
         int Available { get; }
 
         /// <summary>
-        /// 缓存容量
-        /// </summary>
-        [Obsolete("此配置已被弃用")]
-        int CacheCapacity { get; set; }
-
-        /// <summary>
         /// 判断当前通道能否调用<see cref="MoveNext()"/>
         /// </summary>
         bool CanMoveNext { get; }
@@ -83,28 +77,23 @@ namespace TouchSocket.Dmtp
         /// </summary>
         bool Using { get; }
 
+        /// <summary>
+        /// 获取上次操作的时间。
+        /// </summary>
         DateTime LastOperationTime { get; }
 
         /// <summary>
-        /// 取消
+        /// 异步取消操作
         /// </summary>
-        void Cancel(string operationMes = null);
-
-        /// <summary>
-        /// 异步取消
-        /// </summary>
-        /// <returns></returns>
+        /// <param name="operationMes">可选参数，用于提供取消操作的详细信息</param>
+        /// <returns>返回一个Task对象，表示异步取消操作的完成</returns>
         Task CancelAsync(string operationMes = null);
-
-        /// <summary>
-        /// 完成操作
-        /// </summary>
-        void Complete(string operationMes = null);
 
         /// <summary>
         /// 异步完成操作
         /// </summary>
-        /// <returns></returns>
+        /// <param name="operationMes">操作信息，可选参数，默认为null</param>
+        /// <returns>返回一个Task对象，表示异步操作的完成</returns>
         Task CompleteAsync(string operationMes = null);
 
         /// <summary>
@@ -113,14 +102,8 @@ namespace TouchSocket.Dmtp
         ByteBlock GetCurrent();
 
         /// <summary>
-        /// 继续。
-        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
-        /// </summary>
-        /// <param name="operationMes"></param>
-        void HoldOn(string operationMes = null);
-
-        /// <summary>
         /// 异步调用继续
+        /// <para>调用该指令时，接收方会跳出接收，但是通道依然可用，所以接收方需要重新调用<see cref="MoveNext()"/></para>
         /// </summary>
         /// <param name="operationMes"></param>
         /// <returns></returns>
@@ -139,19 +122,10 @@ namespace TouchSocket.Dmtp
         Task<bool> MoveNextAsync();
 
         /// <summary>
-        /// 写入通道
+        /// 异步写入通道
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        void Write(byte[] data, int offset, int length);
-
-        /// <summary>
-        /// 写入通道
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        Task WriteAsync(byte[] data, int offset, int length);
+        /// <param name="memory">待写入的字节内存块</param>
+        /// <returns>一个代表写入操作的Task对象</returns>
+        Task WriteAsync(ReadOnlyMemory<byte> memory);
     }
 }

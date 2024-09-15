@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -32,41 +33,48 @@ namespace TouchSocket.JsonRpc
         public ActionMap ActionMap { get; private set; } = new ActionMap(true);
 
         /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        {
+            return this.TcpConnectAsync(millisecondsTimeout, token);
+        }
+
+        /// <inheritdoc/>
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitData(context);
-
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
+            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
+            invokeOption ??= InvokeOption.WaitInvoke;
 
             parameters ??= new object[0];
+
             var jsonRpcRequest = new JsonRpcRequest
             {
-                Method = method,
+                Method = invokeKey,
                 Params = parameters,
                 Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
             };
+
             switch (invokeOption.FeedbackType)
             {
                 case FeedbackType.OnlySend:
                     {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
+                        var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
                         this.m_waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitSend:
                     {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
+                        var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
                         this.m_waitHandle.Destroy(waitData);
                         return default;
                     }
                 case FeedbackType.WaitInvoke:
                     {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        waitData.Wait(invokeOption.Timeout);
+                        var data = SerializeConvert.JsonSerializeToBytes(jsonRpcRequest);
+                        await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
+                        await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false);
                         var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
                         this.m_waitHandle.Destroy(waitData);
 
@@ -85,204 +93,20 @@ namespace TouchSocket.JsonRpc
                         }
                         else
                         {
-                            if (returnType.IsPrimitive || returnType == typeof(string))
+                            if (returnType != null)
                             {
-                                return resultContext.Result.ToString().ParseToType(returnType);
+                                if (returnType.IsPrimitive || returnType == typeof(string))
+                                {
+                                    return resultContext.Result.ToString().ParseToType(returnType);
+                                }
+                                else
+                                {
+                                    return resultContext.Result.ToJsonString().FromJsonString(returnType);
+                                }
                             }
                             else
                             {
-                                return resultContext.Result.ToJsonString().FromJsonString(returnType);
-                            }
-                        }
-                    }
-                default:
-                    return default;
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitData(context);
-
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest()
-            {
-                Method = method,
-                Params = parameters
-            };
-
-            jsonRpcRequest.Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0;
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        waitData.Wait(invokeOption.Timeout);
-                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
-                        this.m_waitHandle.Destroy(waitData);
-
-                        if (resultContext.Status == 0)
-                        {
-                            throw new TimeoutException("等待结果超时");
-                        }
-                        if (resultContext.Error != null)
-                        {
-                            throw new RpcException(resultContext.Error.Message);
-                        }
-                        break;
-                    }
-                default:
-                    return;
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            this.Invoke(method, invokeOption, ref parameters, null);
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.Invoke(returnType, method, invokeOption, ref parameters, null);
-        }
-
-        /// <inheritdoc/>
-        public async Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest()
-            {
-                Method = method,
-                Params = parameters
-            };
-
-            jsonRpcRequest.Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0;
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        await waitData.WaitAsync(invokeOption.Timeout);
-                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
-                        this.m_waitHandle.Destroy(waitData);
-
-                        if (resultContext.Status == 0)
-                        {
-                            throw new TimeoutException("等待结果超时");
-                        }
-                        if (resultContext.Error != null)
-                        {
-                            throw new RpcException(resultContext.Error.Message);
-                        }
-                        break;
-                    }
-                default:
-                    return;
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task<object> InvokeAsync(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = method,
-                Params = parameters,
-                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-            };
-
-            switch (invokeOption.FeedbackType)
-            {
-                case FeedbackType.OnlySend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return default;
-                    }
-                case FeedbackType.WaitSend:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        this.m_waitHandle.Destroy(waitData);
-                        return default;
-                    }
-                case FeedbackType.WaitInvoke:
-                    {
-                        this.Send(SerializeConvert.JsonSerializeToBytes(jsonRpcRequest));
-                        await waitData.WaitAsync(invokeOption.Timeout);
-                        var resultContext = (JsonRpcWaitResult)waitData.WaitResult;
-                        this.m_waitHandle.Destroy(waitData);
-
-                        if (resultContext.Status == 0)
-                        {
-                            throw new TimeoutException("等待结果超时");
-                        }
-                        if (resultContext.Error != null)
-                        {
-                            throw new RpcException(resultContext.Error.Message);
-                        }
-
-                        if (resultContext.Result == null)
-                        {
-                            return default;
-                        }
-                        else
-                        {
-                            if (returnType.IsPrimitive || returnType == typeof(string))
-                            {
-                                return resultContext.Result.ToString().ParseToType(returnType);
-                            }
-                            else
-                            {
-                                return resultContext.Result.ToJsonString().FromJsonString(returnType);
+                                return default;
                             }
                         }
                     }
@@ -304,7 +128,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override Task ReceivedData(ReceivedDataEventArgs e)
+        protected override Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             string jsonString = null;
             if (e.ByteBlock == null)
@@ -321,7 +145,7 @@ namespace TouchSocket.JsonRpc
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return base.ReceivedData(e);
+                return EasyTask.CompletedTask;
             }
 
             try
@@ -343,7 +167,7 @@ namespace TouchSocket.JsonRpc
             catch
             {
             }
-            return base.ReceivedData(e);
+            return EasyTask.CompletedTask;
         }
 
         private void RegisterServer(RpcMethod[] rpcMethods)
@@ -352,12 +176,12 @@ namespace TouchSocket.JsonRpc
             {
                 if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }
 
-        private void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        private async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -378,15 +202,15 @@ namespace TouchSocket.JsonRpc
                         Id = callContext.JsonRpcContext.Id
                     };
                 }
-                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                this.Send(str);
+                var data = JsonRpcUtility.ToJsonRpcResponseString(response).ToUTF8Bytes();
+                await this.ProtectedSendAsync(new Memory<byte>(data)).ConfigureAwait(false);
             }
             catch
             {
             }
         }
 
-        private void ThisInvoke(object obj)
+        private async Task ThisInvoke(object obj)
         {
             var callContext = (JsonRpcCallContextBase)obj;
             var invokeResult = new InvokeResult();
@@ -415,7 +239,7 @@ namespace TouchSocket.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                invokeResult = this.m_rpcServerProvider.Execute(callContext, callContext.JsonRpcContext.Parameters);
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
             }
 
             if (!callContext.JsonRpcContext.Id.HasValue)
@@ -423,7 +247,7 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            this.Response(callContext, invokeResult.Result, error);
+            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
         }
     }
 }

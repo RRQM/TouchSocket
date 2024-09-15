@@ -1,4 +1,16 @@
-﻿using RpcProxy;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using RpcProxy;
 using System;
 using System.Windows.Forms;
 using TouchSocket.Core;
@@ -53,7 +65,7 @@ namespace DmtpClientApp
                 {
                     this.m_client = new TcpDmtpClient();
                 }
-                this.m_client.Setup(new TouchSocketConfig()
+                this.m_client.SetupAsync(new TouchSocketConfig()
                 .SetRemoteIPHost("127.0.0.1:7789")
                 .ConfigurePlugins(a =>
                 {
@@ -65,8 +77,8 @@ namespace DmtpClientApp
                     .SetMaxFailCount(3);
 
                     //使用重连
-                    a.UseReconnection<TcpDmtpClient>()
-                    .UsePolling()
+                    a.UseDmtpReconnection<TcpDmtpClient>()
+                    .UsePolling(TimeSpan.FromSeconds(3))
                     .SetActionForCheck(async (c, i) =>//重新定义检活策略
                     {
                         //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用
@@ -88,15 +100,14 @@ namespace DmtpClientApp
                         {
                             return false;
                         }
-                    })
-                    .SetTick(TimeSpan.FromSeconds(3));
+                    });
                 })
                 .SetDmtpOption(new DmtpOption()
                 {
                     VerifyToken = "Rpc",
                     Id = "asdasd"
                 }));
-                this.m_client.Connect();
+                this.m_client.ConnectAsync();
 
                 MessageBox.Show("连接成功");
             }
@@ -119,10 +130,6 @@ namespace DmtpClientApp
 
         private void button7_Click(object sender, EventArgs e)
         {
-            //扩展调用时，首先要保证本地已有代理文件，然后调用和和本地调用一样。只是会多一个调用配置参数。
-            var result = this.m_client.GetDmtpRpcActor().OutBytes(out var bytes, InvokeOption.WaitInvoke);
-
-            MessageBox.Show(result.ToString()); ;
         }
     }
 }

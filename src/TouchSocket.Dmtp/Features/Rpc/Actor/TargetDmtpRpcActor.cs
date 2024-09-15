@@ -27,48 +27,17 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="rpcActor"></param>
+        /// <param name="targetId">目标标识符</param>
+        /// <param name="rpcActor">远程过程调用（RPC）行为接口</param>
         public TargetDmtpRpcActor(string targetId, IDmtpRpcActor rpcActor)
         {
-            this.m_targetId = targetId;
-            this.m_rpcActor = rpcActor;
+            this.m_targetId = targetId; // 初始化目标标识符
+            this.m_rpcActor = rpcActor; // 初始化RPC行为接口
         }
 
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
+        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, parameters);
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            return this.m_rpcActor.Invoke(returnType, this.m_targetId, invokeKey, invokeOption, ref parameters, types);
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            this.m_rpcActor.Invoke(this.m_targetId, invokeKey, invokeOption, ref parameters, types);
-        }
-
-        /// <inheritdoc/>
-        public Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.InvokeAsync(this.m_targetId, invokeKey, invokeOption, parameters);
-        }
-
-        /// <inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.m_rpcActor.InvokeAsync(returnType, this.m_targetId, invokeKey, invokeOption, parameters);
+            return this.m_rpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
         }
     }
 }

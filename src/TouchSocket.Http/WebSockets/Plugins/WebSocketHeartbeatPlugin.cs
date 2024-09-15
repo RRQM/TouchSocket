@@ -26,7 +26,7 @@ namespace TouchSocket.Http.WebSockets
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this.OnWebSocketHandshaked);
+            pluginManager.Add<IWebSocket, HttpContextEventArgs>(typeof(IWebSocketHandshakedPlugin), this.OnWebSocketHandshaked);
         }
 
         private Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
@@ -36,15 +36,15 @@ namespace TouchSocket.Http.WebSockets
                 var failedCount = 0;
                 while (true)
                 {
-                    await Task.Delay(this.Tick);
-                    if (!client.IsHandshaked)
+                    await Task.Delay(this.Tick).ConfigureAwait(false);
+                    if (!client.Online)
                     {
                         return;
                     }
 
                     try
                     {
-                        client.Ping();
+                        await client.PingAsync().ConfigureAwait(false);
                         failedCount = 0;
                     }
                     catch
@@ -53,7 +53,7 @@ namespace TouchSocket.Http.WebSockets
                     }
                     if (failedCount > this.MaxFailCount)
                     {
-                        client.Close("自动心跳失败次数达到最大，已断开连接。");
+                        await client.CloseAsync("自动心跳失败次数达到最大，已断开连接。").ConfigureAwait(false);
                     }
                 }
             });

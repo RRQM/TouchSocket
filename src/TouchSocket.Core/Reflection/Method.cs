@@ -167,14 +167,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public virtual object Invoke(object instance, params object[] parameters)
         {
-            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
-            {
-                return this.Info.Invoke(instance, parameters);
-            }
-            else
-            {
-                return this.m_invoker.Invoke(instance, parameters);
-            }
+            return GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
+                ? this.Info.Invoke(instance, parameters)
+                : this.m_invoker.Invoke(instance, parameters);
         }
 
         /// <summary>
@@ -193,28 +188,16 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.Task:
                     {
-                        object re;
-                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
+                            ? this.Info.Invoke(instance, parameters)
+                            : this.m_invoker.Invoke(instance, parameters);
                         return (Task)re;
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        object re;
-                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
+                            ? this.Info.Invoke(instance, parameters)
+                            : this.m_invoker.Invoke(instance, parameters);
                         return (Task)re;
                     }
                 default:
@@ -242,15 +225,9 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        object re;
-                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
-                        {
-                            re = this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            re = this.m_invoker.Invoke(instance, parameters);
-                        }
+                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
+                            ? this.Info.Invoke(instance, parameters)
+                            : this.m_invoker.Invoke(instance, parameters);
                         return (Task<TResult>)re;
                     }
                 default:
@@ -281,16 +258,10 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        Task task;
-                        if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect)
-                        {
-                            task = (Task)this.Info.Invoke(instance, parameters);
-                        }
-                        else
-                        {
-                            task = (Task)this.m_invoker.Invoke(instance, parameters);
-                        }
-                        await task;
+                        var task = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
+                            ? (Task)this.Info.Invoke(instance, parameters)
+                            : (Task)this.m_invoker.Invoke(instance, parameters);
+                        await task.ConfigureAwait(false);
                         return DynamicMethodMemberAccessor.Default.GetValue(task, "Result");
                     }
                 default:

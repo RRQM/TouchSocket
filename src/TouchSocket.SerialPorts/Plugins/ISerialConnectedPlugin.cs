@@ -16,24 +16,19 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
-    /// <summary>
-    /// 具有完成连接动作的插件接口
-    /// </summary>
-    public interface ISerialConnectedPlugin<in TClient> : IPlugin where TClient : ISerialPortClient
-    {
-        /// <summary>
-        /// 客户端连接成功后触发
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnSerialConnected(TClient client, ConnectedEventArgs e);
-    }
+
 
     /// <summary>
-    /// ISerialConnectedPlugin
+    /// 定义一个接口，用于表示与串行端口连接的插件
     /// </summary>
-    public interface ISerialConnectedPlugin : ISerialConnectedPlugin<ISerialPortClient>
+    public interface ISerialConnectedPlugin : IPlugin
     {
+        /// <summary>
+        /// 当串行端口会话建立连接时调用的方法。
+        /// </summary>
+        /// <param name="client">建立连接的串行端口会话客户端。</param>
+        /// <param name="e">连接事件的参数。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。</returns>
+        Task OnSerialConnected(ISerialPortSession client, ConnectedEventArgs e);
     }
 }

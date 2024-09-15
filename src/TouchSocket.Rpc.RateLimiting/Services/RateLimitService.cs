@@ -16,16 +16,16 @@ namespace TouchSocket.Rpc.RateLimiting
 {
     internal class RateLimitService : IRateLimitService
     {
-        private readonly Dictionary<string, IRateLimiterPolicy> m_rateLimiterPolicys;
+        private readonly Dictionary<string, IRateLimiterPolicy> m_rateLimiterPolicies;
 
         public RateLimitService(RateLimiterOptions options)
         {
-            this.m_rateLimiterPolicys = options.RateLimiterPolicys;
+            this.m_rateLimiterPolicies = options.RateLimiterPolicies;
         }
 
         public IRateLimiterPolicy GetRateLimiterPolicy(string policyName)
         {
-            if (this.m_rateLimiterPolicys.TryGetValue(policyName, out var rateLimiter))
+            if (this.m_rateLimiterPolicies.TryGetValue(policyName, out var rateLimiter))
             {
                 return rateLimiter;
             }

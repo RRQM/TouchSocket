@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -24,11 +36,11 @@ namespace TcpWaitingClientWinFormsApp
                 this.m_tcpClient.SafeDispose();
                 this.m_tcpClient = new TcpClient();
 
-                //��������
-                this.m_tcpClient.Setup(new TouchSocketConfig()
+                //��������
+                this.m_tcpClient.SetupAsync(new TouchSocketConfig()
                     .SetRemoteIPHost(this.textBox1.Text));
 
-                this.m_tcpClient.Connect();//�������ӣ������Ӳ��ɹ�ʱ�����׳��쳣��
+                this.m_tcpClient.ConnectAsync();//�������ӣ������Ӳ��ɹ�ʱ�����׳��쳣��
             }
             catch (Exception ex)
             {
@@ -46,7 +58,7 @@ namespace TcpWaitingClientWinFormsApp
                 var bytes = waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
+                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
                 }
             }
             catch (Exception ex)
@@ -79,7 +91,7 @@ namespace TcpWaitingClientWinFormsApp
                 var bytes = waitingClient.SendThenReturn(this.textBox3.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
+                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
                 }
             }
             catch (Exception ex)
@@ -117,7 +129,7 @@ namespace TcpWaitingClientWinFormsApp
                 var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUTF8Bytes());
                 if (bytes != null)
                 {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
+                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
                 }
             }
             catch (Exception ex)

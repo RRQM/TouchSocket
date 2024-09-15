@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 用户自定义固定包头解析器，使用该适配器时，接收方收到的数据中，<see cref="ByteBlock"/>将为null，同时<see cref="IRequestInfo"/>将实现为TFixedHeaderRequestInfo。
     /// </summary>
-    public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestInfo> : CustomDataHandlingAdapter<TFixedHeaderRequestInfo> where TFixedHeaderRequestInfo : class, IFixedHeaderRequestInfo
+    public abstract class CustomFixedHeaderDataHandlingAdapter<TFixedHeaderRequestInfo> : CustomDataHandlingAdapter<TFixedHeaderRequestInfo> where TFixedHeaderRequestInfo : IFixedHeaderRequestInfo
     {
         /// <summary>
         /// 固定包头的长度。
@@ -24,71 +26,74 @@ namespace TouchSocket.Core
 
         /// <summary>
         /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
-        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
-        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
-        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
+        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLength"/>的数据</para>
+        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
         /// </summary>
         /// <param name="byteBlock">字节块</param>
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
         /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
         /// <returns></returns>
-        protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
+        protected override FilterResult Filter<TByteBlock>(ref TByteBlock byteBlock, bool beCached, ref TFixedHeaderRequestInfo request, ref int tempCapacity)
         {
             if (beCached)
             {
-                if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
+                if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
                 {
                     tempCapacity = request.BodyLength + this.HeaderLength;
+                    this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                     return FilterResult.Cache;
                 }
 
-                var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
-                if (request.OnParsingBody(body))
+                //var body = byteBlock.ToArray(byteBlock.Position, request.BodyLength);
+                if (request.OnParsingBody(byteBlock.Span.Slice(byteBlock.Position, request.BodyLength)))
                 {
-                    byteBlock.Pos += request.BodyLength;
+                    byteBlock.Position += request.BodyLength;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Pos += 1;
+                    byteBlock.Position += 1;
                     return FilterResult.GoOn;
                 }
             }
             else
             {
-                if (this.HeaderLength > byteBlock.CanReadLen)
+                if (this.HeaderLength > byteBlock.CanReadLength)
                 {
+                    this.SurLength = this.HeaderLength - byteBlock.CanReadLength;
                     return FilterResult.Cache;
                 }
 
                 var requestInfo = this.GetInstance();
-                var header = byteBlock.ToArray(byteBlock.Pos, this.HeaderLength);
-                if (requestInfo.OnParsingHeader(header))
+                //var header = byteBlock.ToArray(byteBlock.Position, this.HeaderLength);
+                if (requestInfo.OnParsingHeader(byteBlock.Span.Slice(byteBlock.Position, this.HeaderLength)))
                 {
-                    byteBlock.Pos += this.HeaderLength;
+                    byteBlock.Position += this.HeaderLength;
                     request = requestInfo;
-                    if (request.BodyLength > byteBlock.CanReadLen)//body不满足解析，开始缓存，然后保存对象
+                    if (request.BodyLength > byteBlock.CanReadLength)//body不满足解析，开始缓存，然后保存对象
                     {
                         tempCapacity = request.BodyLength + this.HeaderLength;
+                        this.SurLength = request.BodyLength - byteBlock.CanReadLength;
                         return FilterResult.Cache;
                     }
 
-                    var body = byteBlock.ToArray(byteBlock.Pos, request.BodyLength);
-                    if (request.OnParsingBody(body))
+                    //var body = byteBlock.ToArray(byteBlock.Position, request.BodyLength);
+                    if (request.OnParsingBody(byteBlock.Span.Slice(byteBlock.Position, request.BodyLength)))
                     {
-                        byteBlock.Pos += request.BodyLength;
+                        byteBlock.Position += request.BodyLength;
                         return FilterResult.Success;
                     }
                     else
                     {
-                        byteBlock.Pos += 1;
+                        byteBlock.Position += 1;
                         return FilterResult.GoOn;
                     }
                 }
                 else
                 {
-                    byteBlock.Pos += 1;
+                    byteBlock.Position += 1;
                     return FilterResult.GoOn;
                 }
             }
@@ -118,7 +123,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="header"></param>
         /// <returns></returns>
-        bool OnParsingHeader(byte[] header);
+        bool OnParsingHeader(ReadOnlySpan<byte> header);
 
         /// <summary>
         /// 当收到数据，由框架封送有效载荷数据。
@@ -126,6 +131,6 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="body">载荷数据</param>
         /// <returns>是否成功有效</returns>
-        bool OnParsingBody(byte[] body);
+        bool OnParsingBody(ReadOnlySpan<byte> body);
     }
 }

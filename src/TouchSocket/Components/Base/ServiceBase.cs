@@ -18,22 +18,16 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 服务器基类
     /// </summary>
-    public abstract class ServiceBase : SetupConfigObject, IService
+    public abstract class ServiceBase : SetupConfigObject, IServiceBase
     {
         /// <inheritdoc/>
-        public abstract string ServerName { get; }
+        public string ServerName => this.Config?.GetValue(TouchSocketConfigExtension.ServerNameProperty);
 
         /// <inheritdoc/>
         public abstract ServerState ServerState { get; }
 
         /// <inheritdoc/>
-        public abstract void Start();
-
-        /// <inheritdoc/>
         public abstract Task StartAsync();
-
-        /// <inheritdoc/>
-        public abstract void Stop();
 
         /// <inheritdoc/>
         public abstract Task StopAsync();

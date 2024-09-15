@@ -59,7 +59,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 序列化选择器
         /// </summary>
-        public SerializationSelector SerializationSelector { get; set; } = new DefaultSerializationSelector();
+        public ISerializationSelector SerializationSelector { get; set; } = new DefaultSerializationSelector();
 
         /// <inheritdoc/>
         public ushort StartProtocol { get; set; }
@@ -94,7 +94,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public DmtpRpcFeature SetSerializationSelector(SerializationSelector selector)
+        public DmtpRpcFeature SetSerializationSelector(ISerializationSelector selector)
         {
             this.SerializationSelector = selector;
             return this;
@@ -116,7 +116,7 @@ namespace TouchSocket.Dmtp.Rpc
             {
                 if (rpcMethod.GetAttribute<DmtpRpcAttribute>() is DmtpRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }
@@ -127,8 +127,8 @@ namespace TouchSocket.Dmtp.Rpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(nameof(IDmtpHandshakingPlugin.OnDmtpHandshaking), this.OnDmtpHandshaking);
-            pluginManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(nameof(IDmtpReceivedPlugin.OnDmtpReceived), this.OnDmtpReceived);
+            pluginManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(typeof(IDmtpHandshakingPlugin), this.OnDmtpHandshaking);
+            pluginManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(typeof(IDmtpReceivedPlugin), this.OnDmtpReceived);
         }
 
         private async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
@@ -140,20 +140,20 @@ namespace TouchSocket.Dmtp.Rpc
             dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpRpcActor(dmtpRpcActor);
 
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor dmtpRpcActor)
             {
-                if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureFalseAwait())
+                if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
                 {
                     e.Handled = true;
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureFalseAwait();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         #endregion Config

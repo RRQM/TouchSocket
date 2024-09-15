@@ -15,17 +15,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 	</ItemGroup>
 	
 	
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 </Project>

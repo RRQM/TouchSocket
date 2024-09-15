@@ -28,14 +28,14 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <summary>
         /// 实例化一个中间件
         /// </summary>
-        /// <param name="m_url"></param>
-        /// <param name="next"></param>
-        /// <param name="rpcService"></param>
+        /// <param name="m_url">WebSocket URL</param>
+        /// <param name="next">下一个请求委托，用于表示当前中间件的下一个中间件或终端行动</param>
+        /// <param name="rpcService">WebSocket DMTP 服务，用于处理WebSocket的相关操作</param>
         public WebSocketDmtpMiddleware(string m_url, RequestDelegate next, IWebSocketDmtpService rpcService)
         {
-            this.Url = m_url;
-            this.m_next = next ?? throw new ArgumentNullException(nameof(next));
-            this.m_websocketDmtpService = rpcService;
+            this.Url = m_url; // 存储URL
+            this.m_next = next ?? throw new ArgumentNullException(nameof(next)); // 确保下一个请求委托不为空，否则抛出异常
+            this.m_websocketDmtpService = rpcService; // 存储WebSocket DMTP服务实例
         }
 
         /// <summary>
@@ -56,11 +56,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             if (context.Request.Path.Equals(this.Url, StringComparison.OrdinalIgnoreCase))
             {
-                await this.m_websocketDmtpService.SwitchClientAsync(context);
+                await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureAwait(false);
             }
             else
             {
-                await this.m_next(context);
+                await this.m_next(context).ConfigureAwait(false);
             }
         }
     }

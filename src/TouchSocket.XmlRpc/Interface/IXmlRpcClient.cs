@@ -10,15 +10,17 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.XmlRpc
 {
     /// <summary>
     /// IWebApiClient
     /// </summary>
-    public interface IXmlRpcClient : IRpcClient, IHttpClient
+    public interface IXmlRpcClient : IRpcClient, IHttpSession, ISetupConfigObject, IOnlineClient, ITcpConnectableClient
     {
     }
 }

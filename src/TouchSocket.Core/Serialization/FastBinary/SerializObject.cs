@@ -24,7 +24,7 @@ namespace TouchSocket.Core
     {
         internal Method AddMethod;
         internal Type[] ArgTypes;
-        internal Type ArrayType;
+        // internal Type ArrayType;
         internal bool EnableIndex;
         internal Dictionary<byte, FastMemberInfo> FastMemberInfoDicForIndex;
         internal Dictionary<string, FastMemberInfo> FastMemberInfoDicForName;
@@ -55,7 +55,7 @@ namespace TouchSocket.Core
             if (type.IsArray)//数组
             {
                 this.InstanceType = InstanceType.Array;
-                this.ArrayType = type.GetElementType();
+                this.ArgTypes = new Type[] { type.GetElementType() };
             }
             else if (type.IsClass || type.IsStruct())
             {
@@ -116,6 +116,10 @@ namespace TouchSocket.Core
                 if (type.GetCustomAttribute(typeof(FastConverterAttribute), false) is FastConverterAttribute attribute)
                 {
                     this.Converter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
+                }
+                else if (typeof(IPackage).IsAssignableFrom(type))
+                {
+                    this.Converter = new PackageFastBinaryConverter();
                 }
 
                 if (type.GetCustomAttribute(typeof(FastSerializedAttribute), false) is FastSerializedAttribute fastSerializedAttribute)

@@ -119,6 +119,21 @@ System.String UploadBigFile(IInvokeOption invokeOption = default);
 /// <exception cref="System.Exception">其他异常</exception>
 Task<System.String> UploadBigFileAsync(IInvokeOption invokeOption = default);
 
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+System.String GetString(IInvokeOption invokeOption = default);
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+Task<System.String> GetStringAsync(IInvokeOption invokeOption = default);
+
 }
 public class ApiServer :IApiServer
 {
@@ -135,12 +150,12 @@ public IRpcClient Client{get;private set; }
 /// <exception cref="System.Exception">其他异常</exception>
 public System.Int32 Sum(System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-object[] parameters = new object[]{a,b};
-System.Int32 returnData=(System.Int32)Client.Invoke(typeof(System.Int32),"GET:/apiserver/sumab?a={0}&b={1}",invokeOption, parameters);
+object[] @_parameters = new object[]{a,b};
+System.Int32 returnData=(System.Int32)this.Client.Invoke("GET:/apiserver/sumab?a={0}&b={1}",typeof(System.Int32),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -148,12 +163,12 @@ return returnData;
 ///</summary>
 public async Task<System.Int32> SumAsync(System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{a,b};
-return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"GET:/apiserver/sumab?a={0}&b={1}",invokeOption, parameters);
+return (System.Int32) await this.Client.InvokeAsync("GET:/apiserver/sumab?a={0}&b={1}",typeof(System.Int32),invokeOption, parameters);
 }
 
 ///<summary>
@@ -164,11 +179,11 @@ return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"GET:/apiser
 /// <exception cref="System.Exception">其他异常</exception>
 public MyClass GetMyClass(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-MyClass returnData=(MyClass)Client.Invoke(typeof(MyClass),"GET:/apiserver/getmyclass",invokeOption, null);
+MyClass returnData=(MyClass)this.Client.Invoke("GET:/apiserver/getmyclass",typeof(MyClass),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -176,11 +191,11 @@ return returnData;
 ///</summary>
 public async Task<MyClass> GetMyClassAsync(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-return (MyClass) await Client.InvokeAsync(typeof(MyClass),"GET:/apiserver/getmyclass",invokeOption, null);
+return (MyClass) await this.Client.InvokeAsync("GET:/apiserver/getmyclass",typeof(MyClass),invokeOption, null);
 }
 
 ///<summary>
@@ -191,12 +206,12 @@ return (MyClass) await Client.InvokeAsync(typeof(MyClass),"GET:/apiserver/getmyc
 /// <exception cref="System.Exception">其他异常</exception>
 public System.Int32 TestPost(MyClass myClass,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-object[] parameters = new object[]{myClass};
-System.Int32 returnData=(System.Int32)Client.Invoke(typeof(System.Int32),"POST:/apiserver/testpost?",invokeOption, parameters);
+object[] @_parameters = new object[]{myClass};
+System.Int32 returnData=(System.Int32)this.Client.Invoke("POST:/apiserver/testpost?",typeof(System.Int32),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -204,12 +219,12 @@ return returnData;
 ///</summary>
 public async Task<System.Int32> TestPostAsync(MyClass myClass,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{myClass};
-return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"POST:/apiserver/testpost?",invokeOption, parameters);
+return (System.Int32) await this.Client.InvokeAsync("POST:/apiserver/testpost?",typeof(System.Int32),invokeOption, parameters);
 }
 
 ///<summary>
@@ -220,12 +235,12 @@ return (System.Int32) await Client.InvokeAsync(typeof(System.Int32),"POST:/apise
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String DownloadFile(System.String id,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-object[] parameters = new object[]{id};
-System.String returnData=(System.String)Client.Invoke(typeof(System.String),"GET:/apiserver/downloadfile?id={0}",invokeOption, parameters);
+object[] @_parameters = new object[]{id};
+System.String returnData=(System.String)this.Client.Invoke("GET:/apiserver/downloadfile?id={0}",typeof(System.String),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -233,12 +248,12 @@ return returnData;
 ///</summary>
 public async Task<System.String> DownloadFileAsync(System.String id,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{id};
-return (System.String) await Client.InvokeAsync(typeof(System.String),"GET:/apiserver/downloadfile?id={0}",invokeOption, parameters);
+return (System.String) await this.Client.InvokeAsync("GET:/apiserver/downloadfile?id={0}",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -249,11 +264,11 @@ return (System.String) await Client.InvokeAsync(typeof(System.String),"GET:/apis
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String PostContent(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-System.String returnData=(System.String)Client.Invoke(typeof(System.String),"POST:/apiserver/postcontent",invokeOption, null);
+System.String returnData=(System.String)this.Client.Invoke("POST:/apiserver/postcontent",typeof(System.String),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -261,11 +276,11 @@ return returnData;
 ///</summary>
 public async Task<System.String> PostContentAsync(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/apiserver/postcontent",invokeOption, null);
+return (System.String) await this.Client.InvokeAsync("POST:/apiserver/postcontent",typeof(System.String),invokeOption, null);
 }
 
 ///<summary>
@@ -276,12 +291,12 @@ return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/api
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String UploadMultiFile(System.String id,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-object[] parameters = new object[]{id};
-System.String returnData=(System.String)Client.Invoke(typeof(System.String),"POST:/apiserver/uploadmultifile?id={0}",invokeOption, parameters);
+object[] @_parameters = new object[]{id};
+System.String returnData=(System.String)this.Client.Invoke("POST:/apiserver/uploadmultifile?id={0}",typeof(System.String),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -289,12 +304,12 @@ return returnData;
 ///</summary>
 public async Task<System.String> UploadMultiFileAsync(System.String id,IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
 object[] parameters = new object[]{id};
-return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/apiserver/uploadmultifile?id={0}",invokeOption, parameters);
+return (System.String) await this.Client.InvokeAsync("POST:/apiserver/uploadmultifile?id={0}",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -305,11 +320,11 @@ return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/api
 /// <exception cref="System.Exception">其他异常</exception>
 public System.String UploadBigFile(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-System.String returnData=(System.String)Client.Invoke(typeof(System.String),"POST:/apiserver/uploadbigfile",invokeOption, null);
+System.String returnData=(System.String)this.Client.Invoke("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -317,11 +332,38 @@ return returnData;
 ///</summary>
 public async Task<System.String> UploadBigFileAsync(IInvokeOption invokeOption = default)
 {
-if(Client==null)
+if(this.Client==null)
 {
 throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 }
-return (System.String) await Client.InvokeAsync(typeof(System.String),"POST:/apiserver/uploadbigfile",invokeOption, null);
+return (System.String) await this.Client.InvokeAsync("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public System.String GetString(IInvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+System.String returnData=(System.String)this.Client.Invoke("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public async Task<System.String> GetStringAsync(IInvokeOption invokeOption = default)
+{
+if(this.Client==null)
+{
+throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
+}
+return (System.String) await this.Client.InvokeAsync("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
 }
 
 }
@@ -335,8 +377,8 @@ public static class ApiServerExtensions
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.Int32 Sum<TClient>(this TClient client,System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-object[] parameters = new object[]{a,b};
-System.Int32 returnData=(System.Int32)client.Invoke(typeof(System.Int32),"GET:/apiserver/sumab?a={0}&b={1}",invokeOption, parameters);
+object[] @_parameters = new object[]{a,b};
+System.Int32 returnData=(System.Int32)client.Invoke("GET:/apiserver/sumab?a={0}&b={1}",typeof(System.Int32),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -345,7 +387,7 @@ return returnData;
 public static async Task<System.Int32> SumAsync<TClient>(this TClient client,System.Int32 a,System.Int32 b,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{a,b};
-return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"GET:/apiserver/sumab?a={0}&b={1}",invokeOption, parameters);
+return (System.Int32) await client.InvokeAsync("GET:/apiserver/sumab?a={0}&b={1}",typeof(System.Int32),invokeOption, parameters);
 }
 
 ///<summary>
@@ -356,7 +398,7 @@ return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"GET:/apiser
 /// <exception cref="System.Exception">其他异常</exception>
 public static MyClass GetMyClass<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-MyClass returnData=(MyClass)client.Invoke(typeof(MyClass),"GET:/apiserver/getmyclass",invokeOption, null);
+MyClass returnData=(MyClass)client.Invoke("GET:/apiserver/getmyclass",typeof(MyClass),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -364,7 +406,7 @@ return returnData;
 ///</summary>
 public static async Task<MyClass> GetMyClassAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-return (MyClass) await client.InvokeAsync(typeof(MyClass),"GET:/apiserver/getmyclass",invokeOption, null);
+return (MyClass) await client.InvokeAsync("GET:/apiserver/getmyclass",typeof(MyClass),invokeOption, null);
 }
 
 ///<summary>
@@ -375,8 +417,8 @@ return (MyClass) await client.InvokeAsync(typeof(MyClass),"GET:/apiserver/getmyc
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.Int32 TestPost<TClient>(this TClient client,MyClass myClass,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-object[] parameters = new object[]{myClass};
-System.Int32 returnData=(System.Int32)client.Invoke(typeof(System.Int32),"POST:/apiserver/testpost?",invokeOption, parameters);
+object[] @_parameters = new object[]{myClass};
+System.Int32 returnData=(System.Int32)client.Invoke("POST:/apiserver/testpost?",typeof(System.Int32),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -385,7 +427,7 @@ return returnData;
 public static async Task<System.Int32> TestPostAsync<TClient>(this TClient client,MyClass myClass,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{myClass};
-return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"POST:/apiserver/testpost?",invokeOption, parameters);
+return (System.Int32) await client.InvokeAsync("POST:/apiserver/testpost?",typeof(System.Int32),invokeOption, parameters);
 }
 
 ///<summary>
@@ -396,8 +438,8 @@ return (System.Int32) await client.InvokeAsync(typeof(System.Int32),"POST:/apise
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String DownloadFile<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-object[] parameters = new object[]{id};
-System.String returnData=(System.String)client.Invoke(typeof(System.String),"GET:/apiserver/downloadfile?id={0}",invokeOption, parameters);
+object[] @_parameters = new object[]{id};
+System.String returnData=(System.String)client.Invoke("GET:/apiserver/downloadfile?id={0}",typeof(System.String),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -406,7 +448,7 @@ return returnData;
 public static async Task<System.String> DownloadFileAsync<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{id};
-return (System.String) await client.InvokeAsync(typeof(System.String),"GET:/apiserver/downloadfile?id={0}",invokeOption, parameters);
+return (System.String) await client.InvokeAsync("GET:/apiserver/downloadfile?id={0}",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -417,7 +459,7 @@ return (System.String) await client.InvokeAsync(typeof(System.String),"GET:/apis
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String PostContent<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-System.String returnData=(System.String)client.Invoke(typeof(System.String),"POST:/apiserver/postcontent",invokeOption, null);
+System.String returnData=(System.String)client.Invoke("POST:/apiserver/postcontent",typeof(System.String),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -425,7 +467,7 @@ return returnData;
 ///</summary>
 public static async Task<System.String> PostContentAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/apiserver/postcontent",invokeOption, null);
+return (System.String) await client.InvokeAsync("POST:/apiserver/postcontent",typeof(System.String),invokeOption, null);
 }
 
 ///<summary>
@@ -436,8 +478,8 @@ return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/api
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String UploadMultiFile<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-object[] parameters = new object[]{id};
-System.String returnData=(System.String)client.Invoke(typeof(System.String),"POST:/apiserver/uploadmultifile?id={0}",invokeOption, parameters);
+object[] @_parameters = new object[]{id};
+System.String returnData=(System.String)client.Invoke("POST:/apiserver/uploadmultifile?id={0}",typeof(System.String),invokeOption, @_parameters);
 return returnData;
 }
 ///<summary>
@@ -446,7 +488,7 @@ return returnData;
 public static async Task<System.String> UploadMultiFileAsync<TClient>(this TClient client,System.String id,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
 object[] parameters = new object[]{id};
-return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/apiserver/uploadmultifile?id={0}",invokeOption, parameters);
+return (System.String) await client.InvokeAsync("POST:/apiserver/uploadmultifile?id={0}",typeof(System.String),invokeOption, parameters);
 }
 
 ///<summary>
@@ -457,7 +499,7 @@ return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/api
 /// <exception cref="System.Exception">其他异常</exception>
 public static System.String UploadBigFile<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-System.String returnData=(System.String)client.Invoke(typeof(System.String),"POST:/apiserver/uploadbigfile",invokeOption, null);
+System.String returnData=(System.String)client.Invoke("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
 return returnData;
 }
 ///<summary>
@@ -465,7 +507,26 @@ return returnData;
 ///</summary>
 public static async Task<System.String> UploadBigFileAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
 TouchSocket.WebApi.IWebApiClientBase{
-return (System.String) await client.InvokeAsync(typeof(System.String),"POST:/apiserver/uploadbigfile",invokeOption, null);
+return (System.String) await client.InvokeAsync("POST:/apiserver/uploadbigfile",typeof(System.String),invokeOption, null);
+}
+
+///<summary>
+///无注释信息
+///</summary>
+/// <exception cref="System.TimeoutException">调用超时</exception>
+/// <exception cref="TouchSocket.Rpc.RpcInvokeException">Rpc调用异常</exception>
+/// <exception cref="System.Exception">其他异常</exception>
+public static System.String GetString<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+System.String returnData=(System.String)client.Invoke("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
+return returnData;
+}
+///<summary>
+///无注释信息
+///</summary>
+public static async Task<System.String> GetStringAsync<TClient>(this TClient client,IInvokeOption invokeOption = default) where TClient:
+TouchSocket.WebApi.IWebApiClientBase{
+return (System.String) await client.InvokeAsync("GET:/apiserver/getstring",typeof(System.String),invokeOption, null);
 }
 
 }

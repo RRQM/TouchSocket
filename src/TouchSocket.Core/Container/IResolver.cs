@@ -14,24 +14,25 @@ using System;
 
 namespace TouchSocket.Core
 {
-    /// <summary>
-    /// IResolver
+        /// <summary>
+    /// IResolver 接口定义了如何解析类型实例。
+    /// 它继承自 IServiceProvider 和 IRegistered 接口。
     /// </summary>
     public interface IResolver : IServiceProvider, IRegistered
     {
         /// <summary>
-        /// 创建目标类型的对应实例。
+        /// 解析给定类型和键对应的实例。
         /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <param name="fromType">要解析的目标类型。</param>
+        /// <param name="key">可选的实例标识符。</param>
+        /// <returns>解析出的实例。</returns>
         object Resolve(Type fromType, string key);
 
         /// <summary>
-        /// 创建目标类型的对应实例。
+        /// 解析给定类型的实例，不使用键。
         /// </summary>
-        /// <param name="fromType"></param>
-        /// <returns></returns>
+        /// <param name="fromType">要解析的目标类型。</param>
+        /// <returns>解析出的实例。</returns>
         object Resolve(Type fromType);
     }
 }

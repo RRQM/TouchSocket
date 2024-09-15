@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     public interface IConfigObject : IDependencyObject, ILoggerObject
     {
         /// <summary>
-        /// 设置项
+        /// 配置项
         /// </summary>
         TouchSocketConfig Config { get; }
     }

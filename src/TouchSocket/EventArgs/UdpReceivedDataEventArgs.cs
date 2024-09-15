@@ -16,16 +16,18 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// Udp接收消息
+    /// UdpReceivedDataEventArgs 类，继承自 ReceivedDataEventArgs 类
+    /// 用于封装 UDP 接收到的数据及相关信息
     /// </summary>
     public class UdpReceivedDataEventArgs : ReceivedDataEventArgs
     {
         /// <summary>
         /// 构造函数
+        /// 初始化 UdpReceivedDataEventArgs 对象
         /// </summary>
-        /// <param name="endPoint"></param>
-        /// <param name="byteBlock"></param>
-        /// <param name="requestInfo"></param>
+        /// <param name="endPoint">接收数据的终结点</param>
+        /// <param name="byteBlock">接收到的数据块</param>
+        /// <param name="requestInfo">请求信息，提供关于此次接收请求的元数据</param>
         public UdpReceivedDataEventArgs(EndPoint endPoint, ByteBlock byteBlock, IRequestInfo requestInfo) : base(byteBlock, requestInfo)
         {
             this.EndPoint = endPoint;
@@ -33,6 +35,7 @@ namespace TouchSocket.Sockets
 
         /// <summary>
         /// 接收终结点
+        /// 表示数据是从哪个终结点接收的
         /// </summary>
         public EndPoint EndPoint { get; }
     }

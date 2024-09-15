@@ -10,20 +10,14 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Hosting</PackageOutputPath>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket.Core.DependencyInjection\TouchSocket.Core.DependencyInjection.csproj" />
 		<ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
@@ -54,6 +48,22 @@
 	<ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketHostingResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketHostingResource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketHostingResource.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TouchSocketHostingResource.Designer.cs</LastGenOutput>
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	  </EmbeddedResource>
 	</ItemGroup>
 
 </Project>

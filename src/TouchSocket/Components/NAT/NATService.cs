@@ -10,7 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Net.Sockets;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -19,63 +20,9 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// Tcp端口转发服务器
     /// </summary>
-    public class NATService : TcpService<NATSocketClient>
+    public abstract class NatService<TClient> : TcpServiceBase<TClient>, INatService<TClient> 
+        where TClient : NatSessionClient
     {
-        /// <inheritdoc/>
-        protected override NATSocketClient GetClientInstence(Socket socket, TcpNetworkMonitor monitor)
-        {
-            var client = base.GetClientInstence(socket, monitor);
-            client.m_internalDis = this.OnTargetClientDisconnected;
-            client.m_internalTargetClientRev = this.OnTargetClientReceived;
-            return client;
-        }
-
-        /// <summary>
-        /// 在NAT服务器收到数据时。
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        /// <returns>需要转发的数据。</returns>
-        protected virtual byte[] OnNATReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
-        {
-            return e.ByteBlock?.ToArray();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="e"></param>
-        protected override sealed async Task OnReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
-        {
-            await EasyTask.CompletedTask;
-            var data = this.OnNATReceived(socketClient, e);
-            if (data != null)
-            {
-                socketClient.SendToTargetClient(data, 0, data.Length);
-            }
-        }
-
-        /// <summary>
-        /// 当目标客户端断开。
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="tcpClient"></param>
-        /// <param name="e"></param>
-        protected virtual void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, DisconnectEventArgs e)
-        {
-        }
-
-        /// <summary>
-        /// 在目标客户端收到数据时。
-        /// </summary>
-        /// <param name="socketClient"></param>
-        /// <param name="tcpClient"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        protected virtual byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
-        {
-            return e.ByteBlock?.ToArray();
-        }
+       
     }
 }

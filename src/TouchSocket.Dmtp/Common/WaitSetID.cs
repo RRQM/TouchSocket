@@ -22,12 +22,19 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        public WaitSetId(string oldId, string newId)
+        /// <param name="sourceId"></param>
+        /// <param name="targetId"></param>
+        public WaitSetId(string sourceId, string targetId)
         {
-            this.OldId = oldId;
-            this.NewId = newId;
+            this.OldId = sourceId;
+            this.NewId = targetId;
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public WaitSetId()
+        {
         }
 
         /// <summary>

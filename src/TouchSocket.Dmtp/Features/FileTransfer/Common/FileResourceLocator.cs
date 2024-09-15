@@ -30,23 +30,23 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 根据资源信息，初始化一个仅读的定位器。
         /// </summary>
-        /// <param name="fileResourceInfo"></param>
+        /// <param name="fileResourceInfo">资源信息对象，包含文件资源的详细信息。</param>
         public FileResourceLocator(FileResourceInfo fileResourceInfo)
         {
             this.FileResourceInfo = fileResourceInfo;
             this.FileAccess = FileAccess.Read;
             this.FileStorage = FilePool.GetFileStorageForRead(fileResourceInfo.FileInfo.FullName);
             this.LocatorPath = fileResourceInfo.FileInfo.FullName;
-            this.LastActiveTime = DateTime.Now;
+            this.LastActiveTime = DateTime.UtcNow;
         }
 
         /// <summary>
         /// 根据资源信息和保存目录，初始化一个可写入的定位器。
         /// </summary>
-        /// <param name="fileResourceInfo"></param>
-        /// <param name="locatorPath"></param>
-        /// <param name="overwrite"></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="fileResourceInfo">资源信息对象，包含文件资源的详细信息。</param>
+        /// <param name="locatorPath">定位器路径，即文件资源的保存目录。</param>
+        /// <param name="overwrite">是否覆盖现有文件，默认为 true。</param>
+        /// <exception cref="ArgumentException">当 locatorPath 为 null 或空字符串时抛出。</exception>
         public FileResourceLocator(FileResourceInfo fileResourceInfo, string locatorPath, bool overwrite = true)
         {
             if (string.IsNullOrEmpty(locatorPath))
@@ -61,7 +61,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             this.FileResourceInfo = fileResourceInfo;
             this.FileAccess = FileAccess.Write;
             this.FileStorage = FilePool.GetFileStorageForWrite(this.LocatorPath + ExtensionName);
-            this.LastActiveTime = DateTime.Now;
+            this.LastActiveTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -92,83 +92,101 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 获取一个默认状态，或者失败状态的文件片段
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回默认状态或者失败状态的文件片段</returns>
         public FileSection GetDefaultOrFailFileSection()
         {
-            this.LastActiveTime = DateTime.Now;
+            // 更新最后活跃时间
+            this.LastActiveTime = DateTime.UtcNow;
+            // 如果文件访问模式为读取，则返回默认值
             if (this.FileAccess == FileAccess.Read)
             {
                 return default;
             }
             else
             {
+                // 否则，返回文件资源信息中状态为默认或失败的第一个文件片段
                 return this.FileResourceInfo.FileSections.FirstOrDefault(a => a.Status == FileSectionStatus.Default || a.Status == FileSectionStatus.Fail);
             }
         }
 
         /// <summary>
-        /// 获取没有完成的文件块集合。
+        /// 获取没有完成的文件块集合
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回未完成的文件块集合</returns>
         public FileSection[] GetUnfinishedFileSection()
         {
-            this.LastActiveTime = DateTime.Now;
+            // 更新最后活跃时间
+            this.LastActiveTime = DateTime.UtcNow;
+            // 根据文件访问模式决定返回值
+            // 如果是读取模式，则返回空数组
+            // 否则，返回所有未完成状态的文件片段集合
             return this.FileAccess == FileAccess.Read
                 ? (new FileSection[0])
                 : this.FileResourceInfo.FileSections.Where(a => a.Status != FileSectionStatus.Finished).ToArray();
         }
 
         /// <summary>
-        /// 读取字节。
+        /// 从指定位置读取字节并存储到指定的字节跨度中。
         /// </summary>
-        /// <param name="pos"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int ReadBytes(long pos, byte[] buffer, int offset, int length)
+        /// <param name="pos">要开始读取的文件位置。</param>
+        /// <param name="span">用于存储读取的字节的跨度。</param>
+        /// <returns>读取的字节数。</returns>
+        public int ReadBytes(long pos, Span<byte> span)
         {
-            this.LastActiveTime = DateTime.Now;
-            return this.FileStorage.Read(pos, buffer, offset, length);
+            // 更新最后一次活动时间，用于跟踪访问时间
+            this.LastActiveTime = DateTime.UtcNow;
+            // 调用底层文件存储系统的读取方法，读取字节并返回读取的字节数
+            return this.FileStorage.Read(pos, span);
         }
 
         /// <summary>
         /// 按文件块读取。
         /// </summary>
-        /// <param name="fileSection"></param>
-        /// <returns></returns>
+        /// <param name="fileSection">要读取的文件块信息。</param>
+        /// <returns>包含读取结果的FileSectionResult对象。</returns>
         public FileSectionResult ReadFileSection(FileSection fileSection)
         {
             try
             {
-                this.LastActiveTime = DateTime.Now;
+                // 更新上次活跃时间，用于跟踪文件访问器的使用情况。
+                this.LastActiveTime = DateTime.UtcNow;
+                // 检查文件访问权限，确保是读权限。
                 if (this.FileAccess != FileAccess.Read)
                 {
                     return new FileSectionResult(ResultCode.Error, "该定位器是只写的。", default, fileSection);
                 }
+                // 检查文件块索引是否超出范围。
                 if (fileSection.Index >= this.FileResourceInfo.FileSections.Length)
                 {
                     return new FileSectionResult(ResultCode.Error, "实际数据块索引超出，可能写入的文件已经发生变化。", default, fileSection);
                 }
+                // 获取指定索引的旧文件块信息，以验证文件块的一致性。
                 var oldFileSection = this.FileResourceInfo.FileSections[fileSection.Index];
+                // 验证传入的文件块与现有的文件块是否一致。
                 if (oldFileSection != fileSection)
                 {
                     return new FileSectionResult(ResultCode.Error, "数据块不一致。", default, fileSection);
                 }
+                // 创建一个与文件块长度相同的字节块，用于存储读取的数据。
                 var bufferByteBlock = new ByteBlock(fileSection.Length);
-                var r = this.FileStorage.Read(oldFileSection.Offset, bufferByteBlock.Buffer, 0, fileSection.Length);
+                // 从文件存储中读取数据到字节块中。
+                var r = this.FileStorage.Read(oldFileSection.Offset, bufferByteBlock.TotalMemory.Span.Slice(0, fileSection.Length));
+                // 验证读取的长度是否与预期一致。
                 if (r != fileSection.Length)
                 {
                     return new FileSectionResult(ResultCode.Error, "读取长度不一致。", default, fileSection);
                 }
                 else
                 {
+                    // 调整字节块的实际长度以匹配读取的长度。
                     bufferByteBlock.SetLength(r);
+                    // 返回成功的结果，包含读取的字节块。
                     return new FileSectionResult(ResultCode.Success, bufferByteBlock, fileSection);
                 }
             }
             catch (Exception ex)
             {
+                // 捕获并处理任何异常，返回异常信息。
                 return new FileSectionResult(ResultCode.Exception, ex.Message, default, fileSection);
             }
         }
@@ -176,48 +194,61 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 重新载入资源信息，并覆盖现有的分块的所有信息。要求资源路径必须一致。
         /// </summary>
-        /// <param name="fileResourceInfo"></param>
-        /// <exception cref="Exception"></exception>
+        /// <param name="fileResourceInfo">要重新加载的文件资源信息对象</param>
+        /// <exception cref="Exception">如果资源路径不一致，则抛出异常</exception>
         public void ReloadFileResourceInfo(FileResourceInfo fileResourceInfo)
         {
-            this.LastActiveTime = DateTime.Now;
+            // 更新资源的最后活跃时间
+            this.LastActiveTime = DateTime.UtcNow;
+            // 检查新旧资源路径是否一致，如果不一致则抛出异常
             if (fileResourceInfo.FileInfo.FullName != this.FileResourceInfo.FileInfo.FullName)
             {
                 throw new Exception("资源指向的地址不一致。");
             }
 
+            // 更新当前实例的文件资源信息
             this.FileResourceInfo = fileResourceInfo;
         }
 
         /// <summary>
         /// 尝试完成该资源。
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回结果，成功或失败的原因。</returns>
         public Result TryFinished()
         {
-            this.LastActiveTime = DateTime.Now;
+            // 更新最后一次活跃时间
+            this.LastActiveTime = DateTime.UtcNow;
+
+            // 如果是读取模式，则直接返回成功
             if (this.FileAccess == FileAccess.Read)
             {
                 return Result.Success;
             }
+
             try
             {
+                // 检查是否有未完成的文件块
                 if (this.GetUnfinishedFileSection().Length > 0)
                 {
                     return new Result(ResultCode.Fail, "还有文件块没有完成。");
                 }
+
+                // 确保文件长度一致
                 if (this.FileStorage.Length != this.FileResourceInfo.FileInfo.Length)
                 {
                     return new Result(ResultCode.Fail, "文件长度不一致。");
                 }
 
+                // 尝试释放文件，最多尝试10次
                 for (var i = 0; i < 10; i++)
                 {
-                    if (this.FileStorage.TryReleaseFile().IsSuccess())
+                    if (this.FileStorage.TryReleaseFile().IsSuccess)
                     {
                         break;
                     }
                 }
+
+                // 确保文件移动并重命名，最多尝试10次
                 for (var i = 0; i < 10; i++)
                 {
                     File.Move(this.LocatorPath + ExtensionName, this.LocatorPath);
@@ -227,10 +258,12 @@ namespace TouchSocket.Dmtp.FileTransfer
                     }
                 }
 
+                // 所有检查通过，返回成功
                 return Result.Success;
             }
             catch (Exception ex)
             {
+                // 异常情况下，返回异常信息
                 return new Result(ex);
             }
         }
@@ -238,78 +271,88 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 写入文件块
         /// </summary>
-        /// <param name="fileSection"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="fileSection">要写入的文件块信息</param>
+        /// <param name="value">要写入的字节数据</param>
+        /// <returns>写入操作的结果</returns>
         public Result WriteFileSection(FileSection fileSection, ArraySegment<byte> value)
         {
-            try
+            // 更新最后一次活动时间，用于跟踪文件操作的时间点
+            this.LastActiveTime = DateTime.UtcNow;
+
+            // 检查当前文件访问模式是否为写，确保操作的正确性
+            if (this.FileAccess != FileAccess.Write)
             {
-                this.LastActiveTime = DateTime.Now;
-                if (this.FileAccess != FileAccess.Write)
-                {
-                    return new Result(ResultCode.Error, "该定位器是只读的。");
-                }
-
-                if (fileSection.Index >= this.FileResourceInfo.FileSections.Length)
-                {
-                    fileSection.Status = FileSectionStatus.Fail;
-                    return new Result(ResultCode.Error, "实际数据块索引超出，可能写入的文件已经发生变化。");
-                }
-
-                var srcFileSection = this.FileResourceInfo.FileSections[fileSection.Index];
-
-                if (value.Count != fileSection.Length)
-                {
-                    fileSection.Status = FileSectionStatus.Fail;
-                    return new Result(ResultCode.Error, "实际数据长度与期望长度不一致。");
-                }
-
-                if (!srcFileSection.Equals(fileSection))
-                {
-                    return new Result(ResultCode.Error, "数据块不一致。");
-                }
-                this.FileStorage.Write(srcFileSection.Offset, value.Array, value.Offset, value.Count);
-                this.FileStorage.Flush();
-                fileSection.Status = FileSectionStatus.Finished;
-                srcFileSection.Status = FileSectionStatus.Finished;
-                return Result.Success;
+                return new Result(ResultCode.Error, "该定位器是只读的。");
             }
-            catch (Exception ex)
+
+            // 验证文件块索引是否超出文件资源信息的范围
+            if (fileSection.Index >= this.FileResourceInfo.FileSections.Length)
             {
-                return new Result(ex);
+                fileSection.Status = FileSectionStatus.Fail;
+                return new Result(ResultCode.Error, "实际数据块索引超出，可能写入的文件已经发生变化。");
             }
+
+            // 获取对应索引处的源文件块信息
+            var srcFileSection = this.FileResourceInfo.FileSections[fileSection.Index];
+
+            // 检查传入的数据长度是否与文件块期望的长度一致
+            if (value.Count != fileSection.Length)
+            {
+                fileSection.Status = FileSectionStatus.Fail;
+                return new Result(ResultCode.Error, "实际数据长度与期望长度不一致。");
+            }
+
+            // 比较传入的文件块信息与源文件块是否一致，确保数据的一致性
+            if (!srcFileSection.Equals(fileSection))
+            {
+                return new Result(ResultCode.Error, "数据块不一致。");
+            }
+
+            // 实际写入文件操作
+            this.FileStorage.Write(srcFileSection.Offset, value);
+
+            // 确保数据写入磁盘
+            this.FileStorage.Flush();
+
+            // 更新文件块状态为完成
+            fileSection.Status = FileSectionStatus.Finished;
+            srcFileSection.Status = FileSectionStatus.Finished;
+
+            // 返回写入成功结果
+            return Result.Success;
         }
 
         /// <summary>
         /// 写入文件块
         /// </summary>
-        /// <param name="fileSectionResult"></param>
-        /// <returns></returns>
+        /// <param name="fileSectionResult">包含文件部分和值的结果对象</param>
+        /// <returns>写入操作的结果</returns>
         public Result WriteFileSection(FileSectionResult fileSectionResult)
         {
-            this.LastActiveTime = DateTime.Now;
+            // 更新最后一次活跃时间，用于跟踪最近的访问时间
+            this.LastActiveTime = DateTime.UtcNow;
+
+            // 检查文件访问权限是否为写，如果是读-only，则返回错误结果
             if (this.FileAccess != FileAccess.Write)
             {
                 return new Result(ResultCode.Error, "该定位器是只读的。");
             }
             else
             {
-                if (!fileSectionResult.IsSuccess())
+                // 如果文件部分的结果不成功，则返回该结果
+                if (!fileSectionResult.IsSuccess)
                 {
                     return new Result(fileSectionResult);
                 }
                 else
                 {
-                    return this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value);
+                    // 调用内部方法写入文件部分和值
+                    return this.WriteFileSection(fileSectionResult.FileSection, fileSectionResult.Value.Memory.GetArray());
                 }
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             this.FileStorage.TryReleaseFile();

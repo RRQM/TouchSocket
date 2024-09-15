@@ -71,7 +71,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 设置适配器相关的配置
         /// </summary>
-        public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = DependencyProperty<AdapterOption>.Register("AdapterOption", new AdapterOption());
+        public static readonly DependencyProperty<AdapterOption> AdapterOptionProperty = new("AdapterOption", new AdapterOption());
 
         /// <summary>
         /// 设置适配器相关的配置
@@ -94,10 +94,15 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] BuildAsBytes(this IRequestInfoBuilder requestInfo)
         {
-            using (var byteBlock = new ByteBlock(requestInfo.MaxLength))
+            var byteBlock = new ByteBlock(requestInfo.MaxLength);
+            try
             {
-                requestInfo.Build(byteBlock);
+                requestInfo.Build(ref byteBlock);
                 return byteBlock.ToArray();
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 

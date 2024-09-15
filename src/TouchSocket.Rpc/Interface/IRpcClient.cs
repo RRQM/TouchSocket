@@ -15,93 +15,21 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Rpc
 {
+
     /// <summary>
-    /// Rpc接口
+    /// 定义了远程过程调用(RPC)客户端的基本操作。
+    /// 该接口提供了发起RPC请求的方法。
     /// </summary>
     public interface IRpcClient
     {
         /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
+        /// 异步调用一个操作。
         /// </summary>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        void Invoke(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="returnType"></param>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>服务器返回结果</returns>
-        object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="returnType"></param>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="types">对应类型集合</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回值</returns>
-        object Invoke(Type returnType, string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
-
-        /// <summary>
-        /// Rpc调用
-        /// </summary>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="types"></param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        void Invoke(string invokeKey, IInvokeOption invokeOption, ref object[] parameters, Type[] types);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        Task InvokeAsync(string invokeKey, IInvokeOption invokeOption, params object[] parameters);
-
-        /// <summary>
-        /// Rpc调用
-        /// <para>如果调用端为客户端，则会调用服务器Rpc服务。</para>
-        /// <para>如果调用端为服务器，则会反向调用客户端Rpc服务。</para>
-        /// </summary>
-        /// <param name="returnType">返回值类型</param>
-        /// <param name="invokeKey">调用键</param>
-        /// <param name="parameters">参数</param>
-        /// <param name="invokeOption">Rpc调用设置</param>
-        /// <exception cref="TimeoutException">调用超时</exception>
-        /// <exception cref="RpcInvokeException">Rpc异常</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>服务器返回结果</returns>
-        Task<object> InvokeAsync(Type returnType, string invokeKey, IInvokeOption invokeOption, params object[] parameters);
+        /// <param name="invokeKey">操作的标识键。</param>
+        /// <param name="returnType">返回值的类型。</param>
+        /// <param name="invokeOption">调用选项，用于指定调用的特定选项。</param>
+        /// <param name="parameters">传递给操作的参数。</param>
+        /// <returns>一个任务，其结果是操作的返回值。</returns>
+        Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters);
     }
 }

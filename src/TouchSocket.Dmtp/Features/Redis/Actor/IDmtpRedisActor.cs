@@ -19,7 +19,7 @@ namespace TouchSocket.Dmtp.Redis
     /// <summary>
     /// 具有远程键值存贮的操作端。
     /// </summary>
-    public interface IDmtpRedisActor : ICache<string, byte[]>, IActor
+    public interface IDmtpRedisActor : ICacheAsync<string, byte[]>, IActor
     {
         /// <summary>
         /// 序列化转换器。
@@ -37,62 +37,42 @@ namespace TouchSocket.Dmtp.Redis
         int Timeout { get; set; }
 
         /// <summary>
-        /// <inheritdoc cref="ICache{TKey, TValue}.AddCache(ICacheEntry{TKey, TValue})"/>
+        /// 添加一个缓存项到缓存中，如果键已经存在，则不进行任何操作。
+        /// 该方法用于异步地添加缓存项。
         /// </summary>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="duration"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public bool Add<TValue>(string key, TValue value, int duration = 60000);
+        /// <typeparam name="TValue">缓存值的类型。</typeparam>
+        /// <param name="key">缓存项的键。</param>
+        /// <param name="value">缓存项的值。</param>
+        /// <param name="duration">缓存项的过期时间，单位为毫秒。默认为60000毫秒（1分钟）。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。结果为true表示添加成功，false表示失败（例如，键已经存在）。</returns>
+        /// <exception cref="ArgumentNullException">如果键或值为null，则抛出该异常。</exception>
+        /// <exception cref="TimeoutException">如果异步操作超时，则抛出该异常。</exception>
+        /// <exception cref="Exception">如果发生其他异常，则抛出该异常。</exception>
+        public Task<bool> AddAsync<TValue>(string key, TValue value, int duration = 60000);
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 异步获取缓存的键值对。
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public Task<bool> AddCacheAsync(ICacheEntry<string, byte[]> entity);
+        /// <typeparam name="TValue">缓存值的类型</typeparam>
+        /// <param name="key">缓存的键</param>
+        /// <returns>缓存的值</returns>
+        /// <exception cref="ArgumentNullException">如果 <paramref name="key"/> 为空或为 null，则抛出此异常。</exception>
+        /// <exception cref="TimeoutException">如果获取操作超时，则抛出此异常。</exception>
+        /// <exception cref="Exception">如果发生其他异常，则抛出此异常。</exception>
+        public Task<TValue> GetAsync<TValue>(string key);
 
         /// <summary>
-        /// 获取缓存的键值对。
-        /// </summary>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public TValue Get<TValue>(string key);
-
-        /// <summary>
+        /// 设置缓存值
         /// <inheritdoc cref="ICache{TKey, TValue}.SetCache(ICacheEntry{TKey, TValue})"/>
         /// </summary>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="duration"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public bool Set<TValue>(string key, TValue value, int duration = 60000);
-
-        /// <summary>
-        /// 获取指定键的值。
-        /// </summary>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">参数为空</exception>
-        /// <exception cref="TimeoutException">操作超时</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public bool TryGet<TValue>(string key, out TValue value);
+        /// <typeparam name="TValue">缓存值的类型</typeparam>
+        /// <param name="key">缓存的键</param>
+        /// <param name="value">缓存的值</param>
+        /// <param name="duration">缓存的持续时间</param>
+        /// <returns>操作是否成功</returns>
+        /// <exception cref="ArgumentNullException">当参数为空时抛出</exception>
+        /// <exception cref="TimeoutException">当操作超时时抛出</exception>
+        /// <exception cref="Exception">当发生其他异常时抛出</exception>
+        public Task<bool> SetAsync<TValue>(string key, TValue value, int duration = 60000);
     }
 }

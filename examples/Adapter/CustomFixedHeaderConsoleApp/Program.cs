@@ -1,4 +1,16 @@
-﻿using System.Text;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -6,10 +18,10 @@ namespace CustomFixedHeaderConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = CreateService();
-            var client = CreateClient();
+            var service = await CreateService();
+            var client =await CreateClient();
 
             ConsoleLogger.Default.Info("按任意键发送10次");
             while (true)
@@ -27,34 +39,35 @@ namespace CustomFixedHeaderConsoleApp
                     //构建发送数据
                     using (var byteBlock = new ByteBlock(1024))
                     {
-                        byteBlock.Write((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
-                        byteBlock.Write((byte)myRequestInfo.DataType);//然后数据类型
-                        byteBlock.Write((byte)myRequestInfo.OrderType);//然后指令类型
+                        byteBlock.WriteByte((byte)(myRequestInfo.Body.Length + 2));//先写长度，因为该长度还包含数据类型和指令类型，所以+2
+                        byteBlock.WriteByte((byte)myRequestInfo.DataType);//然后数据类型
+                        byteBlock.WriteByte((byte)myRequestInfo.OrderType);//然后指令类型
                         byteBlock.Write(myRequestInfo.Body);//再写数据
-                        client.Send(byteBlock);
+
+                        await client.SendAsync(byteBlock.Memory);
                     }
                 }
             }
         }
 
-        private static TcpClient CreateClient()
+        private static async Task<TcpClient> CreateClient()
         {
             var client = new TcpClient();
             //载入配置
-            client.Setup(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }));
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个日志注入
+                 }));
 
-            client.Connect();//调用连接，当连接不成功时，会抛出异常。
+            await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
             client.Logger.Info("客户端成功连接");
             return client;
         }
 
-        private static TcpService CreateService()
+        private static async Task<TcpService> CreateService()
         {
             var service = new TcpService();
             service.Received = (client, e) =>
@@ -68,18 +81,18 @@ namespace CustomFixedHeaderConsoleApp
                 return Task.CompletedTask;
             };
 
-            service.Setup(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-                .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-                })
-                .ConfigurePlugins(a =>
-                {
-                    //a.Add();//此处可以添加插件
-                }));
-            service.Start();//启动
+            await service.SetupAsync(new TouchSocketConfig()//载入配置
+                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                 .SetTcpDataHandlingAdapter(() => new MyFixedHeaderCustomDataHandlingAdapter())
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     //a.Add();//此处可以添加插件
+                 }));
+            await service.StartAsync();//启动
             service.Logger.Info("服务器已启动");
             return service;
         }
@@ -124,17 +137,17 @@ namespace CustomFixedHeaderConsoleApp
         /// </summary>
         public byte[] Body { get; set; }
 
-        public bool OnParsingBody(byte[] body)
+        public bool OnParsingBody(ReadOnlySpan<byte> body)
         {
             if (body.Length == this.BodyLength)
             {
-                this.Body = body;
+                this.Body = body.ToArray();
                 return true;
             }
             return false;
         }
 
-        public bool OnParsingHeader(byte[] header)
+        public bool OnParsingHeader(ReadOnlySpan<byte> header)
         {
             //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
             this.BodyLength = header[0] - 2;

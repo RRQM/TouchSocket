@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -22,9 +23,8 @@ namespace TouchSocket.Core
     /// </summary>
     public class TerminatorPackageAdapter : SingleStreamDataHandlingAdapter
     {
-        private ByteBlock m_tempByteBlock;
-
         private readonly byte[] m_terminatorCode;
+        private ByteBlock m_tempByteBlock;
 
         /// <summary>
         /// 构造函数
@@ -79,36 +79,36 @@ namespace TouchSocket.Core
         /// 预处理
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            if (this.CacheTimeoutEnable && DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (this.CacheTimeoutEnable && DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.Reset();
             }
-            var buffer = byteBlock.Buffer;
-            var r = byteBlock.Len;
+            var array = byteBlock.Memory.GetArray();
+            var buffer = array.Array;
+            var cacheLength = byteBlock.Length;
             if (this.m_tempByteBlock != null)
             {
-                this.m_tempByteBlock.Write(buffer, 0, r);
-                buffer = this.m_tempByteBlock.Buffer;
-                r = this.m_tempByteBlock.Pos;
+                this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
+                buffer = this.m_tempByteBlock.Memory.GetArray().Array;
+                cacheLength = this.m_tempByteBlock.Position;
             }
 
-            var indexes = buffer.IndexOfInclude(0, r, this.m_terminatorCode);
+            var indexes = buffer.IndexOfInclude(0, cacheLength, this.m_terminatorCode);
             if (indexes.Count == 0)
             {
-                if (r > this.MaxPackageSize)
+                if (cacheLength > this.MaxPackageSize)
                 {
-                    this.Reset();
-                    this.Logger?.Error("在已接收数据大于设定值的情况下未找到终止因子，已放弃接收");
+                    throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(cacheLength), this.MaxPackageSize));
                 }
                 else if (this.m_tempByteBlock == null)
                 {
-                    this.m_tempByteBlock = new ByteBlock(r * 2);
-                    this.m_tempByteBlock.Write(buffer, 0, r);
+                    this.m_tempByteBlock = new ByteBlock(cacheLength * 2);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, cacheLength));
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
             }
@@ -119,140 +119,41 @@ namespace TouchSocket.Core
                 {
                     var length = this.ReserveTerminatorCode ? lastIndex - startIndex + 1 : lastIndex - startIndex - this.m_terminatorCode.Length + 1;
                     var packageByteBlock = new ByteBlock(length);
-                    packageByteBlock.Write(buffer, startIndex, length);
+                    packageByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, length));
 
-                    var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Pos);
+                    //var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Position);
 
-                    this.PreviewHandle(packageByteBlock);
+                    await this.PreviewHandle(packageByteBlock).ConfigureAwait(false);
                     startIndex = lastIndex + 1;
                 }
                 this.Reset();
-                if (startIndex < r)
+                if (startIndex < cacheLength)
                 {
-                    this.m_tempByteBlock = new ByteBlock((r - startIndex) * 2);
-                    this.m_tempByteBlock.Write(buffer, startIndex, r - startIndex);
+                    this.m_tempByteBlock = new ByteBlock((cacheLength - startIndex) * 2);
+                    this.m_tempByteBlock.Write(new ReadOnlySpan<byte>(buffer, startIndex, cacheLength - startIndex));
                     if (this.UpdateCacheTimeWhenRev)
                     {
-                        this.LastCacheTime = DateTime.Now;
+                        this.LastCacheTime = DateTime.UtcNow;
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// 预处理
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
+        /// <inheritdoc/>
+        protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
         {
-            if (length > this.MaxPackageSize)
+            if (memory.Length > this.MaxPackageSize)
             {
-                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
+                throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(memory.Length), this.MaxPackageSize));
             }
-            var dataLen = length - offset + this.m_terminatorCode.Length;
+            var dataLen = memory.Length + this.m_terminatorCode.Length;
             var byteBlock = new ByteBlock(dataLen);
-            byteBlock.Write(buffer, offset, length);
+            byteBlock.Write(memory.Span);
             byteBlock.Write(this.m_terminatorCode);
 
             try
             {
-                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
-        {
-            var length = 0;
-            foreach (var item in transferBytes)
-            {
-                length += item.Count;
-            }
-            if (length > this.MaxPackageSize)
-            {
-                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
-            }
-            var dataLen = length + this.m_terminatorCode.Length;
-            var byteBlock = new ByteBlock(dataLen);
-            foreach (var item in transferBytes)
-            {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
-            }
-
-            byteBlock.Write(this.m_terminatorCode);
-
-            try
-            {
-                this.GoSend(byteBlock.Buffer, 0, byteBlock.Len);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        protected override void PreviewSend(IRequestInfo requestInfo)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        protected override void Reset()
-        {
-            this.m_tempByteBlock.SafeDispose();
-            this.m_tempByteBlock = null;
-            base.Reset();
-        }
-
-        private void PreviewHandle(ByteBlock byteBlock)
-        {
-            try
-            {
-                byteBlock.Position = 0;
-                this.GoReceived(byteBlock, null);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override Task PreviewSendAsync(IRequestInfo requestInfo)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        protected override async Task PreviewSendAsync(byte[] buffer, int offset, int length)
-        {
-            if (length > this.MaxPackageSize)
-            {
-                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
-            }
-            var dataLen = length - offset + this.m_terminatorCode.Length;
-            var byteBlock = new ByteBlock(dataLen);
-            byteBlock.Write(buffer, offset, length);
-            byteBlock.Write(this.m_terminatorCode);
-
-            try
-            {
-                await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
             }
             finally
             {
@@ -270,20 +171,43 @@ namespace TouchSocket.Core
             }
             if (length > this.MaxPackageSize)
             {
-                throw new Exception("发送的数据长度大于适配器设定的最大值，接收方可能会抛弃。");
+                throw new Exception(TouchSocketCoreResource.ValueMoreThan.Format(nameof(length), this.MaxPackageSize));
             }
             var dataLen = length + this.m_terminatorCode.Length;
             var byteBlock = new ByteBlock(dataLen);
             foreach (var item in transferBytes)
             {
-                byteBlock.Write(item.Array, item.Offset, item.Count);
+                byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
             }
 
             byteBlock.Write(this.m_terminatorCode);
 
             try
             {
-                await this.GoSendAsync(byteBlock.Buffer, 0, byteBlock.Len);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        protected override void Reset()
+        {
+            this.m_tempByteBlock.SafeDispose();
+            this.m_tempByteBlock = null;
+            base.Reset();
+        }
+
+        private async Task PreviewHandle(ByteBlock byteBlock)
+        {
+            try
+            {
+                byteBlock.Position = 0;
+                await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(false);
             }
             finally
             {

@@ -15,18 +15,18 @@ namespace TouchSocket.Core
     /// <summary>
     /// 插件泛型基础事件委托
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TEventArgs"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <typeparam name="TClient">客户端类型，表示事件发生的上下文环境</typeparam>
+    /// <typeparam name="TEventArgs">事件参数类型，必须继承自PluginEventArgs</typeparam>
+    /// <param name="client">触发事件的客户端实例</param>
+    /// <param name="e">包含事件数据的事件参数</param>
     public delegate void PluginEventHandler<TClient, TEventArgs>(TClient client, TEventArgs e) where TEventArgs : PluginEventArgs;
 
     /// <summary>
     /// TouchSocket基础泛型事件委托
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TEventArgs"></typeparam>
-    /// <param name="client"></param>
-    /// <param name="e"></param>
+    /// <typeparam name="TClient">触发事件的客户端类型</typeparam>
+    /// <typeparam name="TEventArgs">事件参数类型</typeparam>
+    /// <param name="client">触发事件的客户端实例</param>
+    /// <param name="e">事件参数</param>
     public delegate void TouchSocketEventHandler<TClient, TEventArgs>(TClient client, TEventArgs e) where TEventArgs : TouchSocketEventArgs;
 }

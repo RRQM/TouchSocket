@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
@@ -17,7 +18,7 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// 基于Tcp协议的JsonRpc客户端。
     /// </summary>
-    public interface ITcpJsonRpcClient : IJsonRpcClient, ITcpClient
+    public interface ITcpJsonRpcClient : IJsonRpcClient, ISetupConfigObject, IClient, ITcpSession, IOnlineClient, ITcpConnectableClient
     {
     }
 }

@@ -21,16 +21,17 @@ namespace TouchSocket.Dmtp.Rpc
     public class DmtpInvokeOption : InvokeOption
     {
         /// <summary>
-        /// 构造函数
+        /// 构造函数：初始化DmtpInvokeOption对象
         /// </summary>
         public DmtpInvokeOption() : base()
         {
         }
 
+
         /// <summary>
-        /// 构造函数
+        /// 初始化 DmtpInvokeOption 类的新实例，并设置超时时间。
         /// </summary>
-        /// <param name="millisecondsTimeout"></param>
+        /// <param name="millisecondsTimeout">执行操作的超时时间，以毫秒为单位。</param>
         public DmtpInvokeOption(int millisecondsTimeout) : base(millisecondsTimeout)
         {
             this.Timeout = millisecondsTimeout;

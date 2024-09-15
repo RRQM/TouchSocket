@@ -13,7 +13,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace TouchSocket.Core
@@ -81,18 +80,13 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string ToFileLengthString(long length)
         {
-            if (length < 1024)
-            {
-                return $"{length}B";
-            }
-            else
-            {
-                return length < 1024 * 1024
+            return length < 1024
+                ? $"{length}B"
+                : length < 1024 * 1024
                     ? $"{(length / 1024.0).ToString("0.00")}Kb"
                     : length < 1024 * 1024 * 1024
                                     ? $"{(length / (1024.0 * 1024)).ToString("0.00")}Mb"
                                     : $"{(length / (1024.0 * 1024 * 1024)).ToString("0.00")}Gb";
-            }
         }
 
         /// <summary>
@@ -266,44 +260,40 @@ namespace TouchSocket.Core
             }
         }
 
-# if NET45_OR_GREATER
+        /// <summary>
+        /// 路径格式化。
+        /// </summary>
+        /// <remarks>
+        /// 此操作会把路径中的所有反斜杠替换为正斜杠。例如：C:\\a.txt替换为C:/a.txt
+        /// </remarks>
+        /// <param name="pathString"></param>
+        /// <returns></returns>
+        public static string PathFormat(string pathString)
+        {
+            return pathString.Replace('\\', '/');
+        }
 
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr _lopen(string lpPathName, int iReadWrite);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool CloseHandle(IntPtr hObject);
-
-        private const int OF_READWRITE = 2;
-
-        private const int OF_SHARE_DENY_NONE = 0x40;
-
-        private static readonly IntPtr HFILE_ERROR = new IntPtr(-1);
 
         /// <summary>
-        /// 判断文件是否被已打开
+        /// 判断该路径是否为文件夹
         /// </summary>
-        /// <param name="fileFullName"></param>
+        /// <param name="path"></param>
         /// <returns></returns>
-        public static bool FileIsOpen(string fileFullName)
+        public static bool IsDirectory(string path)
         {
-            if (!File.Exists(fileFullName))
+            try
             {
-                return false;
+                if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+                {
+                    return true;
+                }
             }
-
-            var handle = _lopen(fileFullName, OF_READWRITE | OF_SHARE_DENY_NONE);
-
-            if (handle == HFILE_ERROR)
+            catch (Exception)
             {
-                return true;
+
             }
-
-            CloseHandle(handle);
-
             return false;
         }
 
-#endif
     }
 }

@@ -12,10 +12,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -29,7 +30,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool IsNullOrEmpty(this string str)
+        public static bool IsNullOrEmpty([NotNullWhen(false)]this string str)
         {
             return string.IsNullOrEmpty(str);
         }
@@ -39,7 +40,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool IsNullOrWhiteSpace(this string str)
+        public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string str)
         {
             return string.IsNullOrWhiteSpace(str);
         }
@@ -49,7 +50,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static bool HasValue(this string str)
+        public static bool HasValue([NotNullWhen(true)] this string str)
         {
             return !string.IsNullOrWhiteSpace(str);
         }
@@ -66,6 +67,12 @@ namespace TouchSocket.Core
             if (string.IsNullOrEmpty(value))
             {
                 returnValue = default;
+                return true;
+            }
+
+            if (destinationType.IsEnum)
+            {
+                returnValue = Enum.Parse(destinationType, value);
                 return true;
             }
 
@@ -150,7 +157,8 @@ namespace TouchSocket.Core
                 case TypeCode.Object:
                 case TypeCode.DBNull:
                 default:
-                    throw new NotSupportedException("不支持该类型");
+                    returnValue = default;
+                    return false;
             }
         }
 
@@ -174,35 +182,12 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object ParseToType(this string value, Type destinationType)
         {
-            object returnValue;
-            if ((value == null) || destinationType.IsInstanceOfType(value))
+            if (TryParseToType(value, destinationType, out var returnValue))
             {
-                return value;
+                return returnValue;
             }
-            var str = value;
-            if ((str != null) && (str.Length == 0))
-            {
-                return null;
-            }
-            var converter = TypeDescriptor.GetConverter(destinationType);
-            var flag = converter.CanConvertFrom(value.GetType());
-            if (!flag)
-            {
-                converter = TypeDescriptor.GetConverter(value.GetType());
-            }
-            if (!flag && !converter.CanConvertTo(destinationType))
-            {
-                throw new InvalidOperationException("无法转换成类型：" + value.ToString() + "==>" + destinationType);
-            }
-            try
-            {
-                returnValue = flag ? converter.ConvertFrom(null, null, value) : converter.ConvertTo(null, null, value, destinationType);
-            }
-            catch (Exception e)
-            {
-                throw new InvalidOperationException(" 类型转换出错：" + value.ToString() + "==>" + destinationType, e);
-            }
-            return returnValue;
+            ThrowHelper.ThrowNotSupportedException(TouchSocketCoreResource.StringParseToTypeFail.Format(value, destinationType));
+            return default;
         }
 
         /// <summary>
@@ -262,18 +247,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static string Format(this string str, params object[] ps)
         {
-            if (ps == null || ps.Length == 0)
-            {
-                return str;
-            }
-            try
-            {
-                return string.Format(str, ps);
-            }
-            catch
-            {
-                return str;
-            }
+            return string.Format(str, ps);
         }
 
         /// <summary>

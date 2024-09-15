@@ -59,7 +59,7 @@ namespace TouchSocket.Dmtp.Redis
             };
 
             dmtpRedisActor.SetProtocolFlags(this.StartProtocol);
-            client.DmtpActor.SetStmpRedisActor(dmtpRedisActor);
+            client.DmtpActor.SetDmtpRedisActor(dmtpRedisActor);
 
             return e.InvokeNext();
         }
@@ -69,13 +69,13 @@ namespace TouchSocket.Dmtp.Redis
         {
             if (client.DmtpActor.GetDmtpRedisActor() is DmtpRedisActor redisClient)
             {
-                if (await redisClient.InputReceivedData(e.DmtpMessage))
+                if (await redisClient.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
                 {
                     e.Handled = true;
                     return;
                 }
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <summary>

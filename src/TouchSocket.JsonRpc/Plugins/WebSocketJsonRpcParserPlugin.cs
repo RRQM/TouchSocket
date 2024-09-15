@@ -68,13 +68,13 @@ namespace TouchSocket.JsonRpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, HttpContextEventArgs>(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this.OnWebSocketHandshaked);
+            pluginManager.Add<IWebSocket, HttpContextEventArgs>(typeof(IWebSocketHandshakedPlugin), this.OnWebSocketHandshaked);
 
-            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this.OnWebSocketReceived);
+            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(typeof(IWebSocketReceivedPlugin), this.OnWebSocketReceived);
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -96,7 +96,7 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                ((IHttpSocketClient)callContext.Caller).WebSocket.Send(str);
+                await ((IHttpSessionClient)callContext.Caller).WebSocket.SendAsync(str).ConfigureAwait(false);
             }
             catch
             {
@@ -107,13 +107,13 @@ namespace TouchSocket.JsonRpc
         {
             if (this.AllowJsonRpc != null)
             {
-                if (await this.AllowJsonRpc.Invoke(client, e.Context))
+                if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(false))
                 {
                     client.Client.SetIsJsonRpc();
                 }
             }
 
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
@@ -123,7 +123,7 @@ namespace TouchSocket.JsonRpc
                 var jsonRpcStr = e.DataFrame.ToText();
                 if (jsonRpcStr.IsNullOrEmpty())
                 {
-                    await e.InvokeNext();
+                    await e.InvokeNext().ConfigureAwait(false);
                     return;
                 }
 
@@ -136,12 +136,12 @@ namespace TouchSocket.JsonRpc
                 }
                 else
                 {
-                    _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr));
+                    _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr));
                 }
             }
             else
             {
-                await e.InvokeNext();
+                await e.InvokeNext().ConfigureAwait(false);
             }
         }
     }

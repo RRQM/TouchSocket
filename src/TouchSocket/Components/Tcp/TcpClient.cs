@@ -10,32 +10,168 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
+
     /// <summary>
-    /// 简单Tcp客户端
+    /// 表示一个TCP客户端，继承自TcpClientBase并实现了ITcpClient接口。
+    /// 该类提供了与远程服务器建立TCP连接的功能。
     /// </summary>
-    public class TcpClient : TcpClientBase
+    [System.Diagnostics.DebuggerDisplay("{IP}:{Port}")]
+    public class TcpClient : TcpClientBase, ITcpClient
     {
-        /// <summary>
-        /// 接收到数据
-        /// </summary>
-        public ReceivedEventHandler<TcpClient> Received { get; set; }
+        #region 事件
 
         /// <inheritdoc/>
-        protected override async Task ReceivedData(ReceivedDataEventArgs e)
+        public ClosedEventHandler<ITcpClient> Closed { get; set; }
+
+        /// <inheritdoc/>
+        public ClosingEventHandler<ITcpClient> Closing { get; set; }
+
+        /// <inheritdoc/>
+        public ConnectedEventHandler<ITcpClient> Connected { get; set; }
+
+        /// <inheritdoc/>
+        public ConnectingEventHandler<ITcpClient> Connecting { get; set; }
+
+        /// <inheritdoc/>
+        public ReceivedEventHandler<ITcpClient> Received { get; set; }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosed(ClosedEventArgs e)
         {
-            if (this.Received != null)
+            if (this.Closed != null)
             {
-                await this.Received.Invoke(this, e);
+                await this.Closed.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.ReceivedData(e);
+
+            await base.OnTcpClosed(e).ConfigureAwait(false);
         }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpClosing(ClosingEventArgs e)
+        {
+            if (this.Closing != null)
+            {
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            await base.OnTcpClosing(e).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnTcpConnected(ConnectedEventArgs e)
+        {
+            if (this.Connected != null)
+            {
+                await this.Connected.Invoke(this, e).ConfigureAwait(false);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            await base.OnTcpConnected(e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 准备连接的时候，此时已初始化Socket，但是并未建立Tcp连接
+        /// </summary>
+        /// <param name="e"></param>
+        protected override async Task OnTcpConnecting(ConnectingEventArgs e)
+        {
+            if (this.Connecting != null)
+            {
+                await this.Connecting.Invoke(this, e).ConfigureAwait(false);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            await base.OnTcpConnecting(e).ConfigureAwait(false);
+        }
+
+        #endregion 事件
+
+        #region Connect
+
+        /// <inheritdoc/>
+        public virtual Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        {
+            return this.TcpConnectAsync(millisecondsTimeout, token);
+        }
+
+        #endregion Connect
+
+        #region Receiver
+
+        /// <inheritdoc/>
+        public void ClearReceiver()
+        {
+            this.ProtectedClearReceiver();
+        }
+
+        /// <inheritdoc/>
+        public IReceiver<IReceiverResult> CreateReceiver()
+        {
+            return this.ProtectedCreateReceiver(this);
+        }
+
+        #endregion Receiver
+
+        /// <summary>
+        /// 当收到适配器处理的数据时。
+        /// </summary>
+        /// <param name="e"></param>
+        protected override async Task OnTcpReceived(ReceivedDataEventArgs e)
+        {
+            if (this.Received != null)
+            {
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            await base.OnTcpReceived(e).ConfigureAwait(false);
+        }
+
+        #region 异步发送
+
+        /// <inheritdoc/>
+        public virtual Task SendAsync(ReadOnlyMemory<byte> memory)
+        {
+            return this.ProtectedSendAsync(memory);
+        }
+
+        /// <inheritdoc/>
+        public virtual Task SendAsync(IRequestInfo requestInfo)
+        {
+            return this.ProtectedSendAsync(requestInfo);
+        }
+
+        /// <inheritdoc/>
+        public virtual Task SendAsync(IList<ArraySegment<byte>> transferBytes)
+        {
+            return this.ProtectedSendAsync(transferBytes);
+        }
+
+        #endregion 异步发送
     }
 }

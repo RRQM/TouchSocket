@@ -16,23 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IDmtpPlugin
+    /// 定义了一个插件接口，该插件用于处理接收到的Dmtp消息。
     /// </summary>
-    public interface IDmtpReceivedPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpReceivedPlugin : IPlugin
     {
         /// <summary>
-        /// 收到DmtpMessage数据
+        /// 当接收到DmtpMessage数据时触发。
+        /// 此方法允许插件处理通过Dmtp协议收到的消息。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDmtpReceived(TClient client, DmtpMessageEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpReceivedPlugin
-    /// </summary>
-    public interface IDmtpReceivedPlugin : IDmtpReceivedPlugin<IDmtpActorObject>
-    {
+        /// <param name="client">发送消息的客户端对象，实现了IDmtpActorObject接口。</param>
+        /// <param name="e">包含收到消息的详细信息的事件参数。</param>
+        /// <returns>一个Task对象，表明该方法是一个异步操作。</returns>
+        Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e);
     }
 }

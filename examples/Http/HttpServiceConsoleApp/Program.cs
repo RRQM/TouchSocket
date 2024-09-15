@@ -1,4 +1,17 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -17,7 +30,7 @@ namespace ConsoleApp
             //最后客户端需要先安装证书。
 
             var service = new HttpService();
-            service.Setup(new TouchSocketConfig()//加载配置
+            service.SetupAsync(new TouchSocketConfig()//加载配置
                 .SetListenIPHosts(7789)
                 .ConfigureContainer(a =>
                 {
@@ -47,7 +60,7 @@ namespace ConsoleApp
                     //2、处理header为Option的探视跨域请求。
                     a.UseDefaultHttpServicePlugin();
                 }));
-            service.Start();
+            service.StartAsync();
 
             Console.WriteLine("Http服务器已启动");
             Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");
@@ -59,9 +72,9 @@ namespace ConsoleApp
         }
     }
 
-    public class MyHttpPlug4 : PluginBase, IHttpPlugin<IHttpSocketClient>
+    public class MyHttpPlug4 : PluginBase, IHttpPlugin
     {
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.IsPost())
             {
@@ -69,30 +82,41 @@ namespace ConsoleApp
                 {
                     try
                     {
-                        if (e.Context.Request.TryGetContent(out var bodys))//一次性获取请求体
-                        {
-                            return;
-                        }
+                        //情况1，数据较小一次性获取请求体
+                        ReadOnlyMemory<byte> content = await e.Context.Request.GetContentAsync();
 
-                        while (true)//当数据太大时，可持续读取
+                        //情况2，当数据太大时，可持续读取
+                        while (true)
                         {
                             var buffer = new byte[1024 * 64];
-                            var r = e.Context.Request.Read(buffer, 0, buffer.Length);
-                            if (r == 0)
-                            {
-                                return;
-                            }
 
-                            //这里可以一直处理读到的数据。
+                            using (var blockResult = await e.Context.Request.ReadAsync())
+                            {
+                                if (blockResult.IsCompleted)
+                                {
+                                    break;
+                                }
+
+                                //这里可以一直处理读到的数据。
+                                blockResult.Memory.CopyTo(buffer);
+                            }
                         }
 
-                        //下面逻辑是接收小文件。
+                        //情况3，或者把数据读到流
+                        using (var stream = new MemoryStream())
+                        {
+                            //
+                            await e.Context.Request.ReadCopyToAsync(stream);
+                        }
+
+
+                        //情况4，接收小文件。
 
                         if (e.Context.Request.ContentLength > 1024 * 1024 * 100)//全部数据体超过100Mb则直接拒绝接收。
                         {
-                            e.Context.Response
-                                .SetStatus(403, "数据过大")
-                                .Answer();
+                            await e.Context.Response
+                                 .SetStatus(403, "数据过大")
+                                 .AnswerAsync();
                             return;
                         }
 
@@ -100,7 +124,16 @@ namespace ConsoleApp
                         //所以上传文件不宜过大，不然会内存溢出。
                         var multifileCollection = e.Context.Request.GetMultifileCollection();
 
-                        foreach (var item in multifileCollection)
+                        //foreach (var item in multifileCollection)
+                        //{
+                        //    var stringBuilder = new StringBuilder();
+                        //    stringBuilder.Append($"文件名={item.FileName}\t");
+                        //    stringBuilder.Append($"数据长度={item.Length}");
+                        //    client.Logger.Info(stringBuilder.ToString());
+                        //}
+
+                        //一般强烈建议使用此处的异步迭代器，一般net5以上的都支持
+                        await foreach (var item in multifileCollection)
                         {
                             var stringBuilder = new StringBuilder();
                             stringBuilder.Append($"文件名={item.FileName}\t");
@@ -108,10 +141,10 @@ namespace ConsoleApp
                             client.Logger.Info(stringBuilder.ToString());
                         }
 
-                        e.Context.Response
-                                .SetStatus()
-                                .FromText("Ok")
-                                .Answer();
+                        await e.Context.Response
+                                 .SetStatus()
+                                 .FromText("Ok")
+                                 .AnswerAsync();
                     }
                     catch (Exception ex)
                     {
@@ -123,9 +156,9 @@ namespace ConsoleApp
         }
     }
 
-    public class MyHttpPlug3 : PluginBase, IHttpPlugin<IHttpSocketClient>
+    public class MyHttpPlug3 : PluginBase, IHttpPlugin
     {
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.IsGet())
             {
@@ -152,7 +185,7 @@ namespace ConsoleApp
                              .SetStatus()//必须要有状态
                              .SetContentTypeByExtension(".html")
                              .SetContent(stringBuilder.ToString());
-                    e.Context.Response.Answer();
+                    await e.Context.Response.AnswerAsync();
                     return;
                 }
             }
@@ -161,9 +194,9 @@ namespace ConsoleApp
         }
     }
 
-    public class MyHttpPlug2 : PluginBase, IHttpPlugin<IHttpSocketClient>
+    public class MyHttpPlug2 : PluginBase, IHttpPlugin
     {
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.IsGet())
             {
@@ -172,15 +205,13 @@ namespace ConsoleApp
                     try
                     {
                         //直接回应文件。
-                        e.Context.Response
-                            .SetStatus()//必须要有状态
-                            .FromFile(@"D:\System\Windows.iso", e.Context.Request);
+                        await e.Context.Response
+                              .SetStatus()//必须要有状态
+                              .FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), e.Context.Request);
                     }
                     catch (Exception ex)
                     {
-                        e.Context.Response.SetStatus(403, ex.Message)
-                            .FromText(ex.Message)
-                            .Answer();
+                        await e.Context.Response.SetStatus(403, ex.Message).FromText(ex.Message).AnswerAsync();
                     }
 
                     return;
@@ -190,20 +221,24 @@ namespace ConsoleApp
         }
     }
 
-    public class MyHttpPlug1 : PluginBase, IHttpPlugin<IHttpSocketClient>
+    public class MyHttpPlug1 : PluginBase, IHttpPlugin
     {
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Request.IsGet())
+            var request = e.Context.Request;//http请求体
+            var response = e.Context.Response;//http响应体
+
+            if (request.IsGet() && request.UrlEquals("/success"))
             {
-                if (e.Context.Request.UrlEquals("/success"))
-                {
-                    //直接响应文字
-                    e.Context.Response.FromText("Success").Answer();//直接回应
-                    Console.WriteLine("处理完毕");
-                    return;
-                }
+                //直接响应文字
+                await response
+                     .SetStatus(200, "success")
+                     .FromText("Success")
+                     .AnswerAsync();//直接回应
+                Console.WriteLine("处理/success");
+                return;
             }
+
 
             //无法处理，调用下一个插件
             await e.InvokeNext();

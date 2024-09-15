@@ -15,8 +15,12 @@ using TouchSocket.Rpc;
 namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// IWebApiClientBase
+    /// 定义了一个基础的Web API客户端接口，该接口扩展了IRpcClient。
     /// </summary>
+    /// <remarks>
+    /// 此接口的目的是为Web API客户端提供一个统一的接口定义，任何实现该接口的类都继承了RPC客户端的基本功能，
+    /// 并且可能提供了Web API特定的功能和方法。
+    /// </remarks>
     public interface IWebApiClientBase : IRpcClient
     {
     }

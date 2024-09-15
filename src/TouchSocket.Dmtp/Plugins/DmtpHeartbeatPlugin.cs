@@ -32,16 +32,16 @@ namespace TouchSocket.Dmtp
                 while (true)
                 {
                     await Task.Delay(this.Tick);
-                    if (client.DmtpActor == null || !client.DmtpActor.IsHandshaked)
+                    if (client.DmtpActor == null || !client.DmtpActor.Online)
                     {
                         return;
                     }
-                    if ((DateTime.Now - client.DmtpActor.LastActiveTime < this.Tick))
+                    if (DateTime.UtcNow - client.DmtpActor.LastActiveTime < this.Tick)
                     {
                         continue;
                     }
 
-                    if (client.DmtpActor.Ping())
+                    if (await client.DmtpActor.PingAsync())
                     {
                         failedCount = 0;
                     }
@@ -50,7 +50,7 @@ namespace TouchSocket.Dmtp
                         failedCount++;
                         if (failedCount > this.MaxFailCount)
                         {
-                            client.DmtpActor.Close("自动心跳失败次数达到最大，已断开连接。");
+                            await client.DmtpActor.CloseAsync("自动心跳失败次数达到最大，已断开连接。");
                         }
                     }
                 }

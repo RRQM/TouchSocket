@@ -15,19 +15,20 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// IdChangedEventArgs
+    /// Id变更事件参数类，用于插件内部Id发生变化时传递相关信息
     /// </summary>
     public class IdChangedEventArgs : PluginEventArgs
     {
+
         /// <summary>
-        /// IdChangedEventArgs
+        /// 初始化Id变更事件参数对象
         /// </summary>
-        /// <param name="oldId"></param>
-        /// <param name="newId"></param>
-        public IdChangedEventArgs(string oldId, string newId)
+        /// <param name="sourceId">旧Id</param>
+        /// <param name="targetId">新Id</param>
+        public IdChangedEventArgs(string sourceId, string targetId)
         {
-            this.OldId = oldId;
-            this.NewId = newId;
+            this.OldId = sourceId;
+            this.NewId = targetId;
         }
 
         /// <summary>

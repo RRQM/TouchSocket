@@ -14,8 +14,10 @@ using TouchSocket.Dmtp.AspNetCore;
 
 namespace Microsoft.AspNetCore.Builder
 {
+
     /// <summary>
-    /// ApplicationBuilderExtensions
+    /// 应用程序构建器扩展方法的静态部分。
+    /// 这些扩展方法旨在简化应用程序构建过程，通过提供一些快捷方式来增强应用构建器的功能。
     /// </summary>
     public static partial class ApplicationBuilderExtensions
     {
@@ -23,9 +25,9 @@ namespace Microsoft.AspNetCore.Builder
         /// 使用基于WebSocket的Dmtp服务器。
         /// <para>启用该功能时，请先启用WebSocket。</para>
         /// </summary>
-        /// <param name="builder"></param>
-        /// <param name="url"></param>
-        /// <returns></returns>
+        /// <param name="builder">应用程序构建器实例。</param>
+        /// <param name="url">WebSocket的路径。</param>
+        /// <returns>返回应用程序构建器实例。</returns>
         public static IApplicationBuilder UseWebSocketDmtp(this IApplicationBuilder builder, string url = "/websocketdmtp")
         {
             return builder.UseMiddleware<WebSocketDmtpMiddleware>(url);

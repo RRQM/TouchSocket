@@ -1,4 +1,16 @@
-﻿using System;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -26,13 +38,12 @@ namespace UnityServerConsoleApp
         private static void StartUdpService(int port)
         {
             var udpService = new UdpSession();
-            udpService.Received = (c, e) =>
+            udpService.Received = async (c, e) =>
             {
-                udpService.Send(e.EndPoint, e.ByteBlock);
-                Console.WriteLine($"收到：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
-                return EasyTask.CompletedTask;
+                await udpService.SendAsync(e.EndPoint, e.ByteBlock.Memory);
+                Console.WriteLine($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
             };
-            udpService.Setup(new TouchSocketConfig()
+            udpService.SetupAsync(new TouchSocketConfig()
                  .SetBindIPHost(new IPHost(port))
                  .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
                                                                                      //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
@@ -40,7 +51,7 @@ namespace UnityServerConsoleApp
                  {
                      a.AddConsoleLogger();//添加一个日志注入
                  }));
-            udpService.Start();
+            udpService.StartAsync();
 
             udpService.Logger.Info($"UdpService已启动，端口：{port}");
         }
@@ -73,8 +84,8 @@ namespace UnityServerConsoleApp
                        VerifyToken = "Dmtp"
                    });
 
-            service.Setup(config);
-            service.Start();
+            service.SetupAsync(config);
+            service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
         }
@@ -82,7 +93,7 @@ namespace UnityServerConsoleApp
         private static void StartTcpService(int port)
         {
             var service = new TcpService();
-            service.Setup(new TouchSocketConfig()//载入配置
+            service.SetupAsync(new TouchSocketConfig()//载入配置
                 .SetListenIPHosts(new IPHost[] { new IPHost(port) })
                 .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
                 .ConfigurePlugins(a =>
@@ -93,7 +104,7 @@ namespace UnityServerConsoleApp
                 {
                     a.AddConsoleLogger();//添加一个日志注入
                 }));
-            service.Start();//启动
+            service.StartAsync();//启动
             service.Logger.Info($"Tcp服务器已启动，端口{port}");
         }
     }
@@ -102,24 +113,31 @@ namespace UnityServerConsoleApp
     {
     }
 
-    internal class MyPlguin : PluginBase, ITcpConnectedPlugin<ISocketClient>, ITcpDisconnectedPlugin<ISocketClient>, ITcpReceivedPlugin<ISocketClient>
+    internal class MyPlguin : PluginBase, ITcpConnectedPlugin, ITcpClosedPlugin, ITcpReceivedPlugin
     {
-        public async Task OnTcpConnected(ISocketClient client, ConnectedEventArgs e)
+        public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
         {
-            client.Logger.Info($"客户端{client.GetInfo()}已连接");
+            client.Logger.Info($"客户端{client.GetIPPort()}已断开");
             await e.InvokeNext();
         }
 
-        public async Task OnTcpDisconnected(ISocketClient client, DisconnectEventArgs e)
+        public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
         {
-            client.Logger.Info($"客户端{client.GetInfo()}已断开连接");
+            client.Logger.Info($"客户端{client.GetIPPort()}已连接");
             await e.InvokeNext();
         }
 
-        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+
+        public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
-            client.Logger.Info($"接收到信息：{Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len)}");
-            client.Send($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
+            client.Logger.Info($"接收到信息：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+
+            if (client is ITcpSessionClient sessionClient)
+            {
+                await sessionClient.SendAsync($"服务器已收到你发送的消息：{e.ByteBlock.ToString()}");
+            }
+
+
             await e.InvokeNext();
         }
     }

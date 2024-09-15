@@ -8,14 +8,32 @@
 		<Title>TouchSocket</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="InternalVisible.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Common\InternalClientCollection.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Receiver\InternalReceiver.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Receiver\InternalReceiverResult.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketResource.Designer.cs">
+	    <DependentUpon>TouchSocketResource.resx</DependentUpon>
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketResource.resx">
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	    <LastGenOutput>TouchSocketResource.Designer.cs</LastGenOutput>
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	  </EmbeddedResource>
+	</ItemGroup>
 </Project>

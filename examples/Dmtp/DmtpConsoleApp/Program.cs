@@ -1,4 +1,16 @@
-﻿using System.Text;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.NamedPipe;
@@ -8,18 +20,18 @@ namespace DmtpConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var action = new ConsoleAction();
             action.Add("1", "测试连接", Connect_1);
             action.Add("2", "测试以普通Tcp连接", Connect_2);
-            action.Add("3", "发送消息", Send);
+            action.Add("3", "发送消息", SendAsync);
             action.OnException += Action_OnException;
-            var service = CreateTcpDmtpService();
+            var service = await CreateTcpDmtpService();
 
             action.ShowAll();
 
-            action.RunCommandLine();
+            await action.RunCommandLineAsync();
         }
 
         private static void Action_OnException(Exception obj)
@@ -27,33 +39,33 @@ namespace DmtpConsoleApp
             Console.WriteLine(obj.Message);
         }
 
-        private static void Send()
+        private static async Task SendAsync()
         {
             using var client = new TcpDmtpClient();
 
-            client.Setup(new TouchSocketConfig()
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();
-                })
-                .ConfigurePlugins(a =>
-                {
-                    //此处使用委托注册插件。和类插件功能一样
-                    a.Add(nameof(IDmtpReceivedPlugin.OnDmtpReceived), async (object s, DmtpMessageEventArgs e) =>
-                    {
-                        var msg = e.DmtpMessage.BodyByteBlock.ToString();
-                        await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
-                        await e.InvokeNext();
-                    });
-                })
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp",//设置Token验证连接
-                    Id = "defaultId",//设置默认Id
-                    Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     //此处使用委托注册插件。和类插件功能一样
+                     a.Add(typeof(IDmtpReceivedPlugin), async (object s, DmtpMessageEventArgs e) =>
+                     {
+                         var msg = e.DmtpMessage.BodyByteBlock.ToString();
+                         await Console.Out.WriteLineAsync($"收到服务器回信，协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
+                         await e.InvokeNext();
+                     });
+                 })
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Dmtp",//设置Token验证连接
+                     Id = "defaultId",//设置默认Id
+                     Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 }));
+            await client.ConnectAsync();
 
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
 
@@ -65,14 +77,14 @@ namespace DmtpConsoleApp
             //文件传输会用[25,35)的协议。
 
             //此处使用1000，基本就不会冲突。
-            client.Send(1000, Encoding.UTF8.GetBytes("hello"));
+            await client.SendAsync(1000, Encoding.UTF8.GetBytes("hello"));
         }
 
         /// <summary>
         /// 使用普通tcp连接
         /// </summary>
         /// <returns></returns>
-        private static async void Connect_2()
+        private static async Task Connect_2()
         {
             using var tcpClient = new TcpClient();//创建一个普通的tcp客户端。
             tcpClient.Received = (client, e) =>
@@ -84,7 +96,7 @@ namespace DmtpConsoleApp
                 var flags = e.ByteBlock.ReadUInt16(EndianType.Big);
                 var length = e.ByteBlock.ReadInt32(EndianType.Big);
 
-                var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
+                var json = e.ByteBlock.Span.ToString(Encoding.UTF8);
 
                 ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
                 return Task.CompletedTask;
@@ -108,7 +120,7 @@ namespace DmtpConsoleApp
             #region 连接
 
             //开始链接服务器
-            tcpClient.Connect("127.0.0.1:7789");
+            await tcpClient.ConnectAsync("127.0.0.1:7789");
 
             //以json的数据方式。
             //其中Token、Metadata为连接的验证数据，分别为字符串、字符串字典类型。
@@ -127,7 +139,7 @@ namespace DmtpConsoleApp
                 byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
                 byteBlock.Write(jsonBytes);
 
-                tcpClient.Send(byteBlock);
+                await tcpClient.SendAsync(byteBlock.Memory);
             }
 
             #endregion 连接
@@ -145,7 +157,7 @@ namespace DmtpConsoleApp
                 byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
                 byteBlock.Write(jsonBytes);
 
-                tcpClient.Send(byteBlock);
+                await tcpClient.SendAsync(byteBlock.Memory);
             }
 
             #endregion Ping
@@ -159,29 +171,29 @@ namespace DmtpConsoleApp
         /// 2、设置Metadata，可以传递更多的验证信息。
         /// 3、设置默认Id。
         /// </summary>
-        private static void Connect_1()
+        private static async Task Connect_1()
         {
             using var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();
-                })
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp",//设置Token验证连接
-                    Id = "defaultId",//设置默认Id
-                    Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+                 })
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Dmtp",//设置Token验证连接
+                     Id = "defaultId",//设置默认Id
+                     Metadata = new Metadata().Add("a", "a")//设置Metadata，可以传递更多的验证信息
+                 }));
+            await client.ConnectAsync();
 
-            client.Ping();
+            await client.PingAsync();
 
             client.Logger.Info($"{nameof(Connect_1)}连接成功，Id={client.Id}");
         }
 
-        private static TcpDmtpService CreateTcpDmtpService()
+        private static async Task<TcpDmtpService> CreateTcpDmtpService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -200,8 +212,8 @@ namespace DmtpConsoleApp
                        VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;
@@ -241,7 +253,7 @@ namespace DmtpConsoleApp
                 await Console.Out.WriteLineAsync($"从协议{e.DmtpMessage.ProtocolFlags}收到信息，内容：{msg}");
 
                 //向客户端回发消息
-                client.Send(1001, Encoding.UTF8.GetBytes("收到"));
+                await client.SendAsync(1001, Encoding.UTF8.GetBytes("收到"));
                 return;
             }
 

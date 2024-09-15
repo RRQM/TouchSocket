@@ -10,15 +10,19 @@
 		<Authors>若汝棋茗;Diego</Authors>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
 	<ItemGroup Condition="'$(TargetFramework)'!='net45' AND '$(TargetFramework)'!='net481'">
-		<PackageReference Include="System.IO.Ports" Version="6.0.0" />
+		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiver.cs" Link="Common\InternalReceiver.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalReceiverResult.cs" Link="Common\InternalReceiverResult.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 </Project>

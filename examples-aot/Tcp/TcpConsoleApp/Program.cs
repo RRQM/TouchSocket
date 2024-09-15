@@ -46,7 +46,8 @@ namespace TcpConsoleApp
             tcpClient.Received = (client, e) =>
             {
                 //从服务器收到信息
-                var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+
                 tcpClient.Logger.Info($"客户端接收到信息：{mes}");
                 return EasyTask.CompletedTask;
             };
@@ -57,9 +58,8 @@ namespace TcpConsoleApp
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
-                    a.UseReconnection()
-                    .SetTick(TimeSpan.FromSeconds(1))
-                    .UsePolling();
+                    a.UseTcpReconnection()
+                    .UsePolling(TimeSpan.FromSeconds(1));
                 })
                 .ConfigureContainer(a =>
                 {
@@ -84,8 +84,8 @@ namespace TcpConsoleApp
     [AutoInjectForSingleton]
     internal partial class MyServicePluginClass : PluginBase
     {
-        [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
-        public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
+        [GeneratorPlugin(typeof(IServerStartedPlugin))]
+        public Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
         {
             if (sender is ITcpService service)
             {
@@ -105,8 +105,8 @@ namespace TcpConsoleApp
             return e.InvokeNext();
         }
 
-        [GeneratorPlugin(nameof(IServerStopedPlugin.OnServerStoped))]
-        public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
+        [GeneratorPlugin(typeof(IServerStopedPlugin))]
+        public Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e)
         {
             Console.WriteLine("服务已停止");
             return e.InvokeNext();
@@ -116,28 +116,33 @@ namespace TcpConsoleApp
     [AutoInjectForSingleton]
     partial class TcpServiceReceivedPlugin : PluginBase
     {
-        [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+        public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             //从客户端收到信息
-            var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+            var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
             if (mes == "close")
             {
                 throw new CloseException(mes);
             }
             client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
 
-            client.Send(mes);//将收到的信息直接返回给发送方
+            if (client is not ITcpSessionClient sessionClient)
+            {
+                return;
+            }
 
-            //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+            await sessionClient.SendAsync(mes);//将收到的信息直接返回给发送方
+
+            //await sessionClient.SendAsync("id", mes);//将收到的信息返回给特定ID的客户端
 
             //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
-            var ids = client.Service.GetIds();
+            var ids = sessionClient.Service.GetIds();
             foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
             {
-                if (clientId != client.Id)//不给自己发
+                if (clientId != sessionClient.Id)//不给自己发
                 {
-                    await client.Service.SendAsync(clientId, mes);
+                    await sessionClient.SendAsync(clientId, mes);
                 }
             }
 
@@ -158,8 +163,8 @@ namespace TcpConsoleApp
             this.m_logger = logger;
         }
 
-        [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-        public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+        [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+        public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             try
             {
@@ -168,7 +173,7 @@ namespace TcpConsoleApp
             catch (CloseException ex)
             {
                 m_logger.Info("拦截到CloseException");
-                client.Close(ex.Message);
+                await client.CloseAsync(ex.Message);
             }
             catch (Exception exx)
             {

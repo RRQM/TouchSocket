@@ -1,4 +1,16 @@
-﻿namespace TrafficCounterConsoleApp
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+namespace TrafficCounterConsoleApp
 {
     internal class Program
     {
@@ -8,12 +20,12 @@
             //service.Received = (client, byteBlock, requestInfo) =>
             //{
             //    //从客户端收到信息
-            //    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            //    string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Length);
             //    Console.WriteLine($"已从{client.Id}接收到信息：{mes}");
             //    client.Send(mes);//将收到的信息直接返回给发送方
             //};
 
-            //service.Setup(new TouchSocketConfig()//载入配置
+            //service.SetupAsync(new TouchSocketConfig()//载入配置
             //    .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
             //    .SetMaxCount(1000)
             //    .SetThreadCount(10)
@@ -25,7 +37,7 @@
             //    {
             //        a.AddConsoleLogger();//添加一个日志注入
             //    }))
-            //    .Start();//启动
+            //    .StartAsync();//启动
             //Timer timer = new Timer((s) =>
             //{
             //    var clients = service.GetClients();
@@ -50,7 +62,7 @@
     //        this.AutoRefresh = autoRefresh;
     //    }
 
-    //    protected override void OnConnected(ITcpClientBase client, TouchSocketEventArgs e)
+    //    protected override void OnConnected(ITcpSession client, TouchSocketEventArgs e)
     //    {
     //        client.SetValue(TrafficCounterEx.AutoRefreshProperty, this.AutoRefresh);
     //        if (this.AutoRefresh)
@@ -70,17 +82,17 @@
     //        base.OnConnected(client, e);
     //    }
 
-    //    protected override void OnSending(ITcpClientBase client, SendingEventArgs e)
+    //    protected override void OnSending(ITcpSession client, SendingEventArgs e)
     //    {
     //        client.SetValue(TrafficCounterEx.SendTempTrafficCounterProperty,
     //            e.Length + client.GetValue<int>(TrafficCounterEx.SendTempTrafficCounterProperty));
     //        base.OnSending(client, e);
     //    }
 
-    //    protected override void OnReceivingData(ITcpClientBase client, ByteBlockEventArgs e)
+    //    protected override void OnReceivingData(ITcpSession client, ByteBlockEventArgs e)
     //    {
     //        client.SetValue(TrafficCounterEx.ReceivedTempTrafficCounterProperty,
-    //            e.ByteBlock.Len + +client.GetValue<int>(TrafficCounterEx.ReceivedTempTrafficCounterProperty));
+    //            e.ByteBlock.Length + +client.GetValue<int>(TrafficCounterEx.ReceivedTempTrafficCounterProperty));
     //        base.OnReceivingData(client, e);
     //    }
     //}

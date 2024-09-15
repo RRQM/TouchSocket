@@ -10,126 +10,127 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.IO;
+//using System;
+//using System.Collections.Generic;
+//using System.IO;
+//using TouchSocket.Resources;
 
-namespace TouchSocket.Core
-{
-    /// <summary>
-    /// 运行配置类
-    /// </summary>
-    public abstract class AppConfigBase
-    {
-        private static readonly Dictionary<Type, object> m_list = new Dictionary<Type, object>();
-        private readonly string m_fullPath;
+//namespace TouchSocket.Core
+//{
+//    /// <summary>
+//    /// 运行配置类
+//    /// </summary>
+//    public abstract class AppConfigBase
+//    {
+//        private static readonly Dictionary<Type, object> s_list = new Dictionary<Type, object>();
+//        private readonly string m_fullPath;
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="fullPath"></param>
-        public AppConfigBase(string fullPath)
-        {
-            if (string.IsNullOrEmpty(fullPath))
-            {
-                throw new ArgumentException($"“{nameof(fullPath)}”不能为 null 或空。", nameof(fullPath));
-            }
+//        /// <summary>
+//        /// 构造函数
+//        /// </summary>
+//        /// <param name="fullPath"></param>
+//        public AppConfigBase(string fullPath)
+//        {
+//            if (string.IsNullOrEmpty(fullPath))
+//            {
+//                throw new ArgumentException(TouchSocketCoreResource.ArgumentIsNull.Format(nameof(fullPath)));
+//            }
 
-            this.m_fullPath = fullPath;
-        }
+//            this.m_fullPath = fullPath;
+//        }
 
-        /// <summary>
-        /// 获取默认配置。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T GetDefault<T>() where T : AppConfigBase, new()
-        {
-            var type = typeof(T);
-            if (m_list.TryGetValue(type, out var value))
-            {
-                return (T)value;
-            }
-            var _default = ((T)Activator.CreateInstance(typeof(T)));
-            _default.Load(out _);
-            m_list.Add(type, _default);
-            return _default;
-        }
+//        /// <summary>
+//        /// 获取默认配置。
+//        /// </summary>
+//        /// <typeparam name="T"></typeparam>
+//        /// <returns></returns>
+//        public static T GetDefault<T>() where T : AppConfigBase, new()
+//        {
+//            var type = typeof(T);
+//            if (s_list.TryGetValue(type, out var value))
+//            {
+//                return (T)value;
+//            }
+//            var _default = ((T)Activator.CreateInstance(typeof(T)));
+//            _default.Load(out _);
+//            s_list.Add(type, _default);
+//            return _default;
+//        }
 
-        /// <summary>
-        /// 获取默认配置，每次调用该方法时，都会重新加载配置。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T GetNewDefault<T>() where T : AppConfigBase, new()
-        {
-            var _default = ((T)Activator.CreateInstance(typeof(T)));
-            _default.Load(out _);
-            if (m_list.ContainsKey(_default.GetType()))
-            {
-                m_list[_default.GetType()] = _default;
-            }
-            else
-            {
-                m_list.Add(_default.GetType(), _default);
-            }
-            return _default;
-        }
+//        /// <summary>
+//        /// 获取默认配置，每次调用该方法时，都会重新加载配置。
+//        /// </summary>
+//        /// <typeparam name="T"></typeparam>
+//        /// <returns></returns>
+//        public static T GetNewDefault<T>() where T : AppConfigBase, new()
+//        {
+//            var _default = ((T)Activator.CreateInstance(typeof(T)));
+//            _default.Load(out _);
+//            if (s_list.ContainsKey(_default.GetType()))
+//            {
+//                s_list[_default.GetType()] = _default;
+//            }
+//            else
+//            {
+//                s_list.Add(_default.GetType(), _default);
+//            }
+//            return _default;
+//        }
 
-        /// <summary>
-        /// 加载配置
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public bool Load(out string msg)
-        {
-            try
-            {
-                if (!File.Exists(this.m_fullPath))
-                {
-                    this.Save(false, out _);
-                }
-                var obj = SerializeConvert.FromJsonString(File.ReadAllText(this.m_fullPath), this.GetType());
-                var ps = this.GetType().GetProperties();
+//        /// <summary>
+//        /// 加载配置
+//        /// </summary>
+//        /// <param name="msg"></param>
+//        /// <returns></returns>
+//        public bool Load(out string msg)
+//        {
+//            try
+//            {
+//                if (!File.Exists(this.m_fullPath))
+//                {
+//                    this.Save(false, out _);
+//                }
+//                var obj = SerializeConvert.FromJsonString(File.ReadAllText(this.m_fullPath), this.GetType());
+//                var ps = this.GetType().GetProperties();
 
-                foreach (var item in ps)
-                {
-                    item.SetValue(this, item.GetValue(obj));
-                }
-                msg = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-                return false;
-            }
-        }
+//                foreach (var item in ps)
+//                {
+//                    item.SetValue(this, item.GetValue(obj));
+//                }
+//                msg = null;
+//                return true;
+//            }
+//            catch (Exception ex)
+//            {
+//                msg = ex.Message;
+//                return false;
+//            }
+//        }
 
-        /// <summary>
-        /// 保存配置
-        /// </summary>
-        /// <param name="overwrite"></param>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public bool Save(bool overwrite, out string msg)
-        {
-            if (overwrite == false && File.Exists(this.m_fullPath))
-            {
-                msg = null;
-                return true;
-            }
-            try
-            {
-                File.WriteAllText(this.m_fullPath, SerializeConvert.ToJsonString(this));
-                msg = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                msg = ex.Message;
-                return false;
-            }
-        }
-    }
-}
+//        /// <summary>
+//        /// 保存配置
+//        /// </summary>
+//        /// <param name="overwrite"></param>
+//        /// <param name="msg"></param>
+//        /// <returns></returns>
+//        public bool Save(bool overwrite, out string msg)
+//        {
+//            if (overwrite == false && File.Exists(this.m_fullPath))
+//            {
+//                msg = null;
+//                return true;
+//            }
+//            try
+//            {
+//                File.WriteAllText(this.m_fullPath, SerializeConvert.ToJsonString(this));
+//                msg = null;
+//                return true;
+//            }
+//            catch (Exception ex)
+//            {
+//                msg = ex.Message;
+//                return false;
+//            }
+//        }
+//    }
+//}

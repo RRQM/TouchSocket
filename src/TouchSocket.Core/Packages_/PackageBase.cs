@@ -21,9 +21,9 @@ namespace TouchSocket.Core
     public abstract class PackageBase : IPackage
     {
         /// <inheritdoc/>
-        public abstract void Package(in ByteBlock byteBlock);
+        public abstract void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
 
         /// <inheritdoc/>
-        public abstract void Unpackage(in ByteBlock byteBlock);
+        public abstract void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock;
     }
 }

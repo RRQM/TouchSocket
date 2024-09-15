@@ -12,41 +12,50 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading;
 
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 依赖项属性
+    /// 依赖属性
     /// </summary>
     [DebuggerDisplay("Name={Name},Id={Id}")]
-    public class DependencyProperty<TValue> : DependencyPropertyBase, IDependencyProperty<TValue>, IEquatable<DependencyProperty<TValue>>
+    public sealed class DependencyProperty<TValue> : DependencyPropertyBase, IEquatable<DependencyProperty<TValue>>
     {
         /// <summary>
-        /// 依赖项属性
+        /// 属性名称
         /// </summary>
-        /// <param name="propertyName"></param>
-        /// <param name="value">依赖项属性值，一般该值应该是值类型，因为它可能会被用于多个依赖对象。</param>
-        public DependencyProperty(string propertyName, TValue value)
+        private readonly string m_name;
+
+        /// <summary>
+        /// 初始化依赖属性。
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="onFailedToGetTheValue">当<see cref="IDependencyObject"/>获取属性失败时，回调该函数</param>
+        /// <param name="placeholder">占位重载，无实际意义</param>
+        public DependencyProperty(string propertyName, Func<IDependencyObject, TValue> onFailedToGetTheValue, bool placeholder)
         {
-            this.DefauleValue = value;
             this.m_name = propertyName;
+            this.OnFailedToGetTheValue = ThrowHelper.ThrowArgumentNullExceptionIf(onFailedToGetTheValue, nameof(onFailedToGetTheValue));
+        }
+
+        /// <summary>
+        /// 初始化依赖属性。
+        /// </summary>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="defaultValue">当<see cref="IDependencyObject"/>获取属性失败时，回调函数将直接返回默认值。</param>
+        public DependencyProperty(string propertyName, TValue defaultValue) : this(propertyName, (o) => defaultValue, false)
+        {
         }
 
         /// <summary>
         /// 属性名称
         /// </summary>
-        protected string m_name;
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public TValue DefauleValue { get; private set; }
-
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
         public string Name => this.m_name;
+
+        /// <summary>
+        /// 当<see cref="IDependencyObject"/>获取属性失败时，回调该函数
+        /// </summary>
+        public Func<IDependencyObject, TValue> OnFailedToGetTheValue { get; }
 
         /// <summary>
         /// 判断否
@@ -77,6 +86,7 @@ namespace TouchSocket.Core
         /// <param name="propertyName"></param>
         /// <param name="value">依赖项属性值，一般该值应该是值类型，因为它可能会被用于多个依赖对象。</param>
         /// <returns></returns>
+        [Obsolete("此方法已被弃用，请使用new直接代替", true)]
         public static DependencyProperty<TValue> Register(string propertyName, TValue value)
         {
             var dp = new DependencyProperty<TValue>(propertyName, value);
@@ -118,26 +128,5 @@ namespace TouchSocket.Core
         {
             return this.Id;
         }
-    }
-
-    /// <summary>
-    /// DependencyPropertyBase
-    /// </summary>
-    public class DependencyPropertyBase
-    {
-        private static int m_idCount = 0;
-
-        /// <summary>
-        /// 依赖项属性
-        /// </summary>
-        protected DependencyPropertyBase()
-        {
-            this.Id = Interlocked.Increment(ref m_idCount);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public int Id { get; }
     }
 }

@@ -17,5 +17,6 @@ namespace TouchSocket.Core
     /// </summary>
     public interface IRequestInfo
     {
+
     }
 }

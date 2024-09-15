@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Collections.Specialized;
 
 namespace TouchSocket.Http
@@ -32,7 +33,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 实际的数据
         /// </summary>
-        public byte[] Data { get; }
+        public ReadOnlyMemory<byte> Data { get; }
 
         /// <summary>
         /// 数据对
@@ -66,10 +67,10 @@ namespace TouchSocket.Http
 
         public string ContentType => this.DataPair["Content-Type"];
 
-        public byte[] Data { get; set; }
+        public ReadOnlyMemory<byte> Data { get; set; }
         public NameValueCollection DataPair { get; set; }
         public string FileName => this.DataPair["filename"];
-        public long Length => this.Data == null ? 0 : this.Data.Length;
+        public long Length => this.Data.IsEmpty ? 0 : this.Data.Length;
 
         public string Name => this.DataPair["name"];
         //public int Read(byte[] buffer, int offset, int count)

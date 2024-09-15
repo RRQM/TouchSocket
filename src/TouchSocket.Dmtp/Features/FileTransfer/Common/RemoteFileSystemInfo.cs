@@ -52,18 +52,18 @@ namespace TouchSocket.Dmtp.FileTransfer
         public string Name { get; set; }
 
         /// <inheritdoc/>
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.LastWriteTime);
-            byteBlock.Write(this.LastAccessTime);
-            byteBlock.Write(this.CreationTime);
-            byteBlock.Write((int)this.Attributes);
-            byteBlock.Write(this.FullName);
-            byteBlock.Write(this.Name);
+            byteBlock.WriteDateTime(this.LastWriteTime);
+            byteBlock.WriteDateTime(this.LastAccessTime);
+            byteBlock.WriteDateTime(this.CreationTime);
+            byteBlock.WriteInt32((int)this.Attributes);
+            byteBlock.WriteString(this.FullName);
+            byteBlock.WriteString(this.Name);
         }
 
         /// <inheritdoc/>
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.LastWriteTime = byteBlock.ReadDateTime();
             this.LastAccessTime = byteBlock.ReadDateTime();

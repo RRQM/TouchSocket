@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -10,9 +10,9 @@
 	<ItemGroup>
 		<PackageReference Include="BeetleX.XRPC" Version="1.2.0.1802" />
 		<PackageReference Include="BeetleX.XRPC.Hosting" Version="1.2.0.1802" />
-		<PackageReference Include="NewLife.Remoting" Version="3.0.2024.805" />
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.0.15" />
-		<PackageReference Include="TouchSocket.Hosting" Version="2.0.15" />
+		<PackageReference Include="NewLife.Remoting" Version="3.1.2024.914-beta0002" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.1.0-rc.37" />
+		<PackageReference Include="TouchSocket.Hosting" Version="2.1.0-rc.37" />
 	</ItemGroup>
 
 	<!--<ItemGroup>

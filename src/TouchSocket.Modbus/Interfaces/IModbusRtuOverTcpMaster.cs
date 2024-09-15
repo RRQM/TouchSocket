@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Sockets;
+
 namespace TouchSocket.Modbus
 {
     /// <summary>
     /// 基于Tcp协议，且使用Rtu数据格式的Modbus主站接口
     /// </summary>
-    public interface IModbusRtuOverTcpMaster : IModbusTcpMaster
+    public interface IModbusRtuOverTcpMaster : IModbusTcpMaster, ITcpConnectableClient, IClient, ITcpSession
     {
     }
 }

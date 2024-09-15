@@ -23,7 +23,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// DmtpRpcPackage
         /// </summary>
-        DmtpRpcPackage DmtpRpcPackage { get; }
+        IDmtpRpcRequestPackage DmtpRpcPackage { get; }
 
         /// <summary>
         /// 序列化类型

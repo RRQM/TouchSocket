@@ -41,6 +41,6 @@ namespace TouchSocket.JsonRpc
         /// id
         /// </summary>
         [JsonProperty("id")]
-        public long? Id { get; set; }
+        public int? Id { get; set; }
     }
 }

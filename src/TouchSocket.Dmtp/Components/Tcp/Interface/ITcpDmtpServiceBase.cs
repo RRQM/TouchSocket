@@ -15,7 +15,9 @@ using TouchSocket.Sockets;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// ITcpDmtpServiceBase
+    /// 定义了一个接口，整合了ITcpServiceBase和IDmtpService的功能。
+    /// 该接口用于提供基于TCP协议的DMTP服务支持。
+    /// 实现此接口的类应能够处理TCP服务和DMTP服务相关的操作。
     /// </summary>
     public interface ITcpDmtpServiceBase : ITcpServiceBase, IDmtpService
     {

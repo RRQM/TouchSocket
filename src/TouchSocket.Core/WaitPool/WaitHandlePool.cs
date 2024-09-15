@@ -16,28 +16,33 @@ using System.Threading;
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// 等待处理数据
+    /// WaitHandlePool 类用于管理具有等待句柄的资源，提供了一种线程安全的资源分配和回收机制。
+    /// 它的目的是优化资源使用，通过重用资源来减少创建和销毁资源的开销。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">资源类型，必须实现 IWaitHandle 接口。</typeparam>
     public class WaitHandlePool<T> : DisposableObject where T : IWaitHandle
     {
-        private readonly ConcurrentDictionary<long, WaitData<T>> m_waitDic;
-        private readonly ConcurrentDictionary<long, WaitDataAsync<T>> m_waitDicAsync;
+        private readonly ConcurrentDictionary<int, WaitData<T>> m_waitDic;
+        private readonly ConcurrentDictionary<int, WaitDataAsync<T>> m_waitDicAsync;
         private readonly ConcurrentQueue<WaitData<T>> m_waitQueue;
         private readonly ConcurrentQueue<WaitDataAsync<T>> m_waitQueueAsync;
-        private long m_maxSign = long.MaxValue;
-        private long m_minSign = long.MinValue;
-        private long m_waitCount;
-        private long m_waitReverseCount;
+        private int m_currentSign;
+        private int m_maxSign = int.MaxValue;
+        private int m_minSign = int.MinValue;
 
         /// <summary>
-        /// 构造函数
+        /// 初始化WaitHandle池。
         /// </summary>
+        /// <remarks>
+        /// 在构造函数中，初始化了四个并发集合，用于管理和存储等待数据。
+        /// 这些集合分别用于同步和异步操作的等待数据，以及它们之间的转换。
+        /// </remarks>
         public WaitHandlePool()
         {
-            this.m_waitDic = new ConcurrentDictionary<long, WaitData<T>>();
-            this.m_waitDicAsync = new ConcurrentDictionary<long, WaitDataAsync<T>>();
+            this.m_waitDic = new ConcurrentDictionary<int, WaitData<T>>();
+            this.m_waitDicAsync = new ConcurrentDictionary<int, WaitDataAsync<T>>();
             this.m_waitQueue = new ConcurrentQueue<WaitData<T>>();
             this.m_waitQueueAsync = new ConcurrentQueue<WaitDataAsync<T>>();
         }
@@ -45,12 +50,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 最大Sign
         /// </summary>
-        public long MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
+        public int MaxSign { get => this.m_maxSign; set => this.m_maxSign = value; }
 
         /// <summary>
         /// 最小Sign
         /// </summary>
-        public long MinSign { get => this.m_minSign; set => this.m_minSign = value; }
+        public int MinSign { get => this.m_minSign; set => this.m_minSign = value; }
 
         /// <summary>
         /// 取消全部
@@ -111,306 +116,262 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
-        public WaitData<T> GetReverseWaitData(T result, bool autoSign = true)
-        {
-            if (this.m_waitQueue.TryDequeue(out var waitData))
-            {
-                if (autoSign)
-                {
-                    result.Sign = this.GetSign(true);
-                }
-                waitData.SetResult(result);
-                this.m_waitDic.TryAdd(result.Sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitData<T>();
-            if (autoSign)
-            {
-                result.Sign = this.GetSign(true);
-            }
-            waitData.SetResult(result);
-            this.m_waitDic.TryAdd(result.Sign, waitData);
-            return waitData;
-        }
 
         /// <summary>
-        /// 获取一个Sign为负数的可等待对象
+        /// 获取同步等待数据对象，并为其设置结果。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
-        public WaitData<T> GetReverseWaitData(out long sign)
-        {
-            if (this.m_waitQueue.TryDequeue(out var waitData))
-            {
-                sign = this.GetSign(true);
-                waitData.SetResult(default);
-                this.m_waitDic.TryAdd(sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitData<T>();
-            sign = this.GetSign(true);
-            waitData.SetResult(default);
-            this.m_waitDic.TryAdd(sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
-        public WaitDataAsync<T> GetReverseWaitDataAsync(T result, bool autoSign = true)
-        {
-            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
-            {
-                if (autoSign)
-                {
-                    result.Sign = this.GetSign(true);
-                }
-                waitData.SetResult(result);
-                this.m_waitDicAsync.TryAdd(result.Sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitDataAsync<T>();
-            if (autoSign)
-            {
-                result.Sign = this.GetSign(true);
-            }
-            waitData.SetResult(result);
-            this.m_waitDicAsync.TryAdd(result.Sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        ///  获取一个Sign为负数的可等待对象
-        /// </summary>
-        /// <returns></returns>
-        public WaitDataAsync<T> GetReverseWaitDataAsync(out long sign)
-        {
-            if (this.m_waitQueueAsync.TryDequeue(out var waitData))
-            {
-                sign = this.GetSign(true);
-                waitData.SetResult(default);
-                this.m_waitDicAsync.TryAdd(sign, waitData);
-                return waitData;
-            }
-
-            waitData = new WaitDataAsync<T>();
-            sign = this.GetSign(true);
-            waitData.SetResult(default);
-            this.m_waitDicAsync.TryAdd(sign, waitData);
-            return waitData;
-        }
-
-        /// <summary>
-        ///  获取一个可等待对象
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
+        /// <param name="result">要设置给等待数据对象的结果。</param>
+        /// <param name="autoSign">是否自动签名，默认为true。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitData<T> GetWaitData(T result, bool autoSign = true)
         {
+            // 尝试从同步等待队列中取出一个等待数据对象
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
+                // 如果自动签名开启，则为结果对象设置签名
                 if (autoSign)
                 {
-                    result.Sign = this.GetSign(false);
+                    result.Sign = this.GetSign();
                 }
+                // 设置等待数据对象的结果
                 waitData.SetResult(result);
+                // 将结果对象的签名和等待数据对象添加到字典中
                 this.m_waitDic.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitData<T>();
+            // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
-                result.Sign = this.GetSign(false);
+                result.Sign = this.GetSign();
             }
+            // 设置等待数据对象的结果
             waitData.SetResult(result);
+            // 将结果对象的签名和等待数据对象添加到字典中
             this.m_waitDic.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        /// 获取一个可等待对象。并out返回标识。
+        /// 获取同步等待数据对象，并为其设置默认结果。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
-        public WaitData<T> GetWaitData(out long sign)
+        /// <param name="sign">返回签名。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
+        public WaitData<T> GetWaitData(out int sign)
         {
+            // 尝试从同步等待队列中取出一个等待数据对象
             if (this.m_waitQueue.TryDequeue(out var waitData))
             {
-                sign = this.GetSign(false);
+                // 生成签名
+                sign = this.GetSign();
+                // 设置等待数据对象的默认结果
                 waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
                 this.m_waitDic.TryAdd(sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitData<T>();
-            sign = this.GetSign(false);
+            // 生成签名
+            sign = this.GetSign();
+            // 设置等待数据对象的默认结果
             waitData.SetResult(default);
+            // 将签名和等待数据对象添加到字典中
             this.m_waitDic.TryAdd(sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        ///  获取一个可等待对象
+        /// 获取异步等待数据对象，并为其设置结果。
         /// </summary>
-        /// <param name="result"></param>
-        /// <param name="autoSign">设置为false时，不会生成sign</param>
-        /// <returns></returns>
+        /// <param name="result">要设置给等待数据对象的结果。</param>
+        /// <param name="autoSign">是否自动签名，默认为true。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
         public WaitDataAsync<T> GetWaitDataAsync(T result, bool autoSign = true)
         {
+            // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
+                // 如果自动签名开启，则为结果对象设置签名
                 if (autoSign)
                 {
-                    result.Sign = this.GetSign(false);
+                    result.Sign = this.GetSign();
                 }
+                // 设置等待数据对象的结果
                 waitData.SetResult(result);
+                // 将结果对象的签名和等待数据对象添加到字典中
                 this.m_waitDicAsync.TryAdd(result.Sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitDataAsync<T>();
+            // 如果自动签名开启，则为结果对象设置签名
             if (autoSign)
             {
-                result.Sign = this.GetSign(false);
+                result.Sign = this.GetSign();
             }
+            // 设置等待数据对象的结果
             waitData.SetResult(result);
+            // 将结果对象的签名和等待数据对象添加到字典中
             this.m_waitDicAsync.TryAdd(result.Sign, waitData);
             return waitData;
         }
 
         /// <summary>
-        ///  获取一个可等待对象
+        /// 获取异步等待数据对象，并为其设置默认结果。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <returns></returns>
-        public WaitDataAsync<T> GetWaitDataAsync(out long sign)
+        /// <param name="sign">返回签名。</param>
+        /// <returns>初始化后的等待数据对象。</returns>
+        public WaitDataAsync<T> GetWaitDataAsync(out int sign)
         {
+            // 尝试从异步等待队列中取出一个等待数据对象
             if (this.m_waitQueueAsync.TryDequeue(out var waitData))
             {
-                sign = this.GetSign(false);
+                // 生成签名
+                sign = this.GetSign();
+                // 设置等待数据对象的默认结果
                 waitData.SetResult(default);
+                // 将签名和等待数据对象添加到字典中
                 this.m_waitDicAsync.TryAdd(sign, waitData);
                 return waitData;
             }
 
+            // 如果队列中没有可取出的等待数据对象，则新建一个
             waitData = new WaitDataAsync<T>();
-            sign = this.GetSign(false);
+            // 生成签名
+            sign = this.GetSign();
+            // 设置等待数据对象的默认结果
             waitData.SetResult(default);
+            // 将签名和等待数据对象添加到字典中
             this.m_waitDicAsync.TryAdd(sign, waitData);
             return waitData;
         }
 
-        /// <summary>
-        /// 让等待对象恢复运行
+       
+               /// <summary>
+        /// 根据标志设置异步等待数据为运行状态。
         /// </summary>
-        /// <param name="sign"></param>
-        public bool SetRun(long sign)
+        /// <param name="sign">操作的标志。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
+        public bool SetRun(int sign)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(sign, out var waitData))
-            {
-                waitData.Set();
-                result = true;
-            }
-
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set();
-                result = true;
+                return true;
             }
-            return result;
+
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set();
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
-        /// 让等待对象恢复运行
+        /// 根据标志和结果对象设置等待数据为运行状态。
         /// </summary>
-        /// <param name="sign"></param>
-        /// <param name="waitResult"></param>
-        public bool SetRun(long sign, T waitResult)
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitResult">等待的结果对象。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
+        public bool SetRun(int sign, T waitResult)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(sign, out var waitData))
-            {
-                waitData.Set(waitResult);
-                result = true;
-            }
-
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
-                result = true;
+                return true;
             }
-            return result;
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
-        /// 让等待对象恢复运行
+        /// 根据结果对象的标志设置异步等待数据为运行状态。
         /// </summary>
-        /// <param name="waitResult"></param>
+        /// <param name="waitResult">等待的结果对象，包含标志和数据。</param>
+        /// <returns>如果找到并设置等待数据，则返回true；否则返回false。</returns>
         public bool SetRun(T waitResult)
         {
-            var result = false;
-            if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
-            {
-                waitData.Set(waitResult);
-                result = true;
-            }
-
+            // 尝试从异步等待数据字典中获取并设置等待数据
             if (this.m_waitDicAsync.TryGetValue(waitResult.Sign, out var waitDataAsync))
             {
                 waitDataAsync.Set(waitResult);
-                result = true;
+                return true;
             }
-            return result;
+
+            // 尝试从同步等待数据字典中获取并设置等待数据
+            if (this.m_waitDic.TryGetValue(waitResult.Sign, out var waitData))
+            {
+                waitData.Set(waitResult);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// 尝试获取指定标志的同步等待数据。
         /// </summary>
-        /// <param name="disposing"></param>
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitData">获取到的等待数据。</param>
+        /// <returns>如果找到等待数据，则返回true；否则返回false。</returns>
+        public bool TryGetData(int sign, out WaitData<T> waitData)
+        {
+            return this.m_waitDic.TryGetValue(sign, out waitData);
+        }
+
+        /// <summary>
+        /// 尝试获取指定标志的异步等待数据。
+        /// </summary>
+        /// <param name="sign">操作的标志。</param>
+        /// <param name="waitDataAsync">获取到的异步等待数据。</param>
+        /// <returns>如果找到异步等待数据，则返回true；否则返回false。</returns>
+        public bool TryGetDataAsync(int sign, out WaitDataAsync<T> waitDataAsync)
+        {
+            return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
+        }
+        
+         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            foreach (var item in this.m_waitDic.Values)
+            if (disposing)
             {
-                item.SafeDispose();
-            }
-            foreach (var item in this.m_waitQueue)
-            {
-                item.SafeDispose();
-            }
-            this.m_waitDic.Clear();
+                foreach (var item in this.m_waitDic.Values)
+                {
+                    item.SafeDispose();
+                }
+                foreach (var item in this.m_waitQueue)
+                {
+                    item.SafeDispose();
+                }
+                this.m_waitDic.Clear();
 
-            this.m_waitQueue.Clear();
+                this.m_waitQueue.Clear();
+            }
+
             base.Dispose(disposing);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private long GetSign(bool reverse)
+        private int GetSign()
         {
-            if (reverse)
-            {
-                Interlocked.CompareExchange(ref this.m_waitReverseCount, 0, this.m_minSign);
-                return Interlocked.Decrement(ref this.m_waitReverseCount);
-            }
-            else
-            {
-                Interlocked.CompareExchange(ref this.m_waitCount, 0, this.m_maxSign);
-                return Interlocked.Increment(ref this.m_waitCount);
-            }
+            Interlocked.CompareExchange(ref this.m_currentSign, 0, this.m_maxSign);
+            return Interlocked.Increment(ref this.m_currentSign);
         }
     }
 }

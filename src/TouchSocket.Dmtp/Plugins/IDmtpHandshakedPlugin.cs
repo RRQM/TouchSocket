@@ -16,24 +16,16 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// IDmtpHandshakedPlugin
+    /// 定义了一个插件接口，该插件在完成与Dmtp的握手连接后需要被调用。
     /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public interface IDmtpHandshakedPlugin<in TClient> : IPlugin where TClient : IDmtpActorObject
+    public interface IDmtpHandshakedPlugin : IPlugin
     {
         /// <summary>
-        /// 在完成握手连接时。
+        /// 在完成握手连接时被调用的方法。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDmtpHandshaked(TClient client, DmtpVerifyEventArgs e);
-    }
-
-    /// <summary>
-    /// IDmtpHandshakedPlugin
-    /// </summary>
-    public interface IDmtpHandshakedPlugin : IDmtpHandshakedPlugin<IDmtpActorObject>
-    {
+        /// <param name="client">参与握手的Dmtp客户端对象。</param>
+        /// <param name="e">握手验证事件参数。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。</returns>
+        Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e);
     }
 }

@@ -23,15 +23,15 @@ namespace TouchSocket.Core
         public string Message { get; set; }
 
         /// <inheritdoc/>
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.Message);
+            byteBlock.WriteString(this.Message, FixedHeaderType.Ushort);
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            this.Message = byteBlock.ReadString();
+            this.Message = byteBlock.ReadString(FixedHeaderType.Ushort);
         }
     }
 }

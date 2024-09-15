@@ -15,14 +15,16 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp
 {
     /// <summary>
-    /// DmtpMessageEventArgs
+    /// Dmtp消息事件参数类，继承自PluginEventArgs
+    /// 用于封装Dmtp消息相关的事件数据
     /// </summary>
     public class DmtpMessageEventArgs : PluginEventArgs
     {
         /// <summary>
-        /// DmtpMessageEventArgs
+        /// 初始化DmtpMessageEventArgs对象
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">Dmtp消息实例</param>
+        /// 将传入的Dmtp消息对象存储在当前类的DmtpMessage属性中
         public DmtpMessageEventArgs(DmtpMessage message)
         {
             this.DmtpMessage = message;
@@ -31,6 +33,7 @@ namespace TouchSocket.Dmtp
         /// <summary>
         /// Dmtp消息
         /// </summary>
+        /// <value>当前事件相关的Dmtp消息对象</value>
         public DmtpMessage DmtpMessage { get; }
     }
 }

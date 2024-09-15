@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System.IO.Ports;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
@@ -19,7 +18,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 串口客户端接口。
     /// </summary>
-    public interface ISerialPortClient : IClient, ISender, IDefaultSender, IPluginObject, IRequsetInfoSender, ISetupConfigObject, IOnlineClient, IAdapterObject, IConnectObject, ICloseObject, ILoggerObject, IResolverObject, IReceiverObject
+    public interface ISerialPortClient : ISerialPortSession, IClientSender, IReceiverClient<IReceiverResult>
     {
         /// <summary>
         /// 成功打开串口
@@ -29,23 +28,28 @@ namespace TouchSocket.SerialPorts
         /// <summary>
         /// 准备连接串口的时候
         /// </summary>
-        SerialConnectingEventHandler<ISerialPortClient> Connecting { get; set; }
+        ConnectingEventHandler<ISerialPortClient> Connecting { get; set; }
 
         /// <summary>
         /// 断开连接
         /// </summary>
-        DisconnectEventHandler<ISerialPortClient> Disconnected { get; set; }
+        ClosedEventHandler<ISerialPortClient> Closed { get; set; }
 
         /// <summary>
         /// 即将断开连接(仅主动断开时有效)。
         /// <para>
         /// </para>
         /// </summary>
-        DisconnectEventHandler<ISerialPortClient> Disconnecting { get; set; }
+        ClosingEventHandler<ISerialPortClient> Closing { get; set; }
 
         /// <summary>
         /// 主通信器
         /// </summary>
         SerialPort MainSerialPort { get; }
+
+        /// <summary>
+        /// 接收到数据
+        /// </summary>
+        ReceivedEventHandler<ISerialPortClient> Received { get; set; }
     }
 }

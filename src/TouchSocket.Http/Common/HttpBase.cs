@@ -11,9 +11,12 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
 
@@ -22,25 +25,48 @@ namespace TouchSocket.Http
     /// <summary>
     /// Http基础头部
     /// </summary>
-    public abstract class HttpBase : BlockReader, IRequestInfo
+    public abstract class HttpBase : IRequestInfo
     {
+        /// <summary>
+        /// 定义缓存的最大大小，这里设置为100MB。
+        /// 这个值是根据预期的内存使用量和性能需求确定的。
+        /// 过大的缓存可能会导致内存使用率过高，影响系统的其他部分。
+        /// 过小的缓存则可能无法有效减少对外部资源的访问，降低程序的运行效率。
+        /// </summary>
+        public const int MaxCacheSize = 1024 * 1024 * 100;
+
         /// <summary>
         /// 服务器版本
         /// </summary>
         public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-        private static readonly byte[] m_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
+        private static readonly byte[] s_rnrnCode = Encoding.UTF8.GetBytes("\r\n\r\n");
 
-        private readonly InternalHttpHeader m_headers;
+        private readonly InternalHttpHeader m_headers = new InternalHttpHeader();
+        private readonly HttpBlockSegment m_httpBlockSegment = new HttpBlockSegment();
 
         /// <summary>
-        /// 构造函数
+        /// 可接受MIME类型
         /// </summary>
-        public HttpBase()
+        public string Accept
         {
-            this.ReadTimeout = 1000 * 30;
-            this.m_headers = new InternalHttpHeader();
+            get => this.m_headers.Get(HttpHeaders.Accept);
+            set => this.m_headers.Add(HttpHeaders.Accept, value);
         }
+
+        /// <summary>
+        /// 允许编码
+        /// </summary>
+        public string AcceptEncoding
+        {
+            get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
+            set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
+        }
+
+        /// <summary>
+        /// 能否读取。
+        /// </summary>
+        public abstract bool CanRead { get; }
 
         /// <summary>
         /// 能否写入。
@@ -50,12 +76,12 @@ namespace TouchSocket.Http
         /// <summary>
         /// 客户端
         /// </summary>
-        public abstract ITcpClientBase Client { get; }
+        public abstract IClient Client { get; }
 
         /// <summary>
         /// 内容填充完成
         /// </summary>
-        public bool? ContentComplated { get; protected set; } = null;
+        public bool? ContentCompleted { get; protected set; } = null;
 
         /// <summary>
         /// 内容长度
@@ -65,21 +91,24 @@ namespace TouchSocket.Http
             get
             {
                 var contentLength = this.m_headers.Get(HttpHeaders.ContentLength);
-                if (contentLength.IsNullOrEmpty())
-                {
-                    return 0;
-                }
-                if (long.TryParse(contentLength, out var value))
-                {
-                    return value;
-                }
-                return 0;
+                return contentLength.IsNullOrEmpty() ? 0 : long.TryParse(contentLength, out var value) ? value : 0;
             }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
-            }
+            set => this.m_headers.Add(HttpHeaders.ContentLength, value.ToString());
         }
+
+        /// <summary>
+        /// 内容类型
+        /// </summary>
+        public string ContentType
+        {
+            get => this.m_headers.Get(HttpHeaders.ContentType);
+            set => this.m_headers.Add(HttpHeaders.ContentType, value);
+        }
+
+        /// <summary>
+        /// 请求头集合
+        /// </summary>
+        public IHttpHeader Headers => this.m_headers;
 
         /// <summary>
         /// 保持连接。
@@ -91,29 +120,10 @@ namespace TouchSocket.Http
         {
             get
             {
-                var keepalive = this.Headers.Get(HttpHeaders.Connection);
-                if (this.ProtocolVersion == "1.0")
-                {
-                    if (keepalive.IsNullOrEmpty())
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
-                else
-                {
-                    if (keepalive.IsNullOrEmpty())
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return keepalive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
+                var keepAlive = this.Headers.Get(HttpHeaders.Connection);
+                return this.ProtocolVersion == "1.0"
+                    ? !keepAlive.IsNullOrEmpty() && keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase)
+                    : keepAlive.IsNullOrEmpty() || keepAlive.Equals("keep-alive", StringComparison.OrdinalIgnoreCase);
             }
             set
             {
@@ -139,70 +149,9 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 内容类型
-        /// </summary>
-        public string ContentType
-        {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.ContentType);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.ContentType, value);
-            }
-        }
-
-        /// <summary>
-        /// 允许编码
-        /// </summary>
-        public string AcceptEncoding
-        {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.AcceptEncoding);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
-            }
-        }
-
-        /// <summary>
-        /// 可接受MIME类型
-        /// </summary>
-        public string Accept
-        {
-            get
-            {
-                return this.m_headers.Get(HttpHeaders.Accept);
-            }
-            set
-            {
-                this.m_headers.Add(HttpHeaders.Accept, value);
-            }
-        }
-
-        /// <summary>
-        /// 传递标识
-        /// </summary>
-        public object Flag { get; set; }
-
-        /// <summary>
-        /// 请求头集合
-        /// </summary>
-        public IHttpHeader Headers
-        {
-            get
-            {
-                return this.m_headers;
-            }
-        }
-
-        /// <summary>
         /// 协议名称，默认HTTP
         /// </summary>
-        public Protocol Protocols { get; set; } = Protocol.Http;
+        public Protocol Protocols { get; protected set; } = Protocol.Http;
 
         /// <summary>
         /// HTTP协议版本，默认1.1
@@ -214,20 +163,25 @@ namespace TouchSocket.Http
         /// </summary>
         public string RequestLine { get; private set; }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public bool ParsingHeader(ByteBlock byteBlock, int length)
+        internal Task CompleteInput()
         {
-            var index = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, length, m_rnrnCode);
+            return this.m_httpBlockSegment.InternalComplete();
+        }
+
+        internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+        {
+            return this.m_httpBlockSegment.InternalInputAsync(memory);
+        }
+
+        internal bool ParsingHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            var index = byteBlock.Span.Slice(byteBlock.Position).IndexOf(s_rnrnCode);
             if (index > 0)
             {
-                var headerLength = index - byteBlock.Pos;
-                this.ReadHeaders(byteBlock.Buffer, byteBlock.Pos, headerLength);
-                byteBlock.Pos += headerLength;
+                var headerLength = index - byteBlock.Position;
+                this.ReadHeaders(byteBlock.Span.Slice(byteBlock.Position, headerLength));
+                byteBlock.Position += headerLength;
+                byteBlock.Position += 4;
                 return true;
             }
             else
@@ -236,81 +190,19 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// 从Request中持续读取数据。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public override int Read(byte[] buffer, int offset, int count)
+        internal virtual void ResetHttp()
         {
-            return base.Read(buffer, offset, count);
-        }
+            this.m_headers.Clear();
+            this.ContentCompleted = null;
+            this.RequestLine = default;
 
-        /// <summary>
-        /// 从内存中读取
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void ReadHeaders(byte[] buffer, int offset, int length)
-        {
-            var data = Encoding.UTF8.GetString(buffer, offset, length);
-            var rows = Regex.Split(data, "\r\n");
-
-            //Request URL & Method & Version
-            this.RequestLine = rows[0];
-
-            //Request Headers
-            this.GetRequestHeaders(rows);
-            this.LoadHeaderProterties();
-        }
-
-        /// <summary>
-        /// 设置一次性内容
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        public abstract void SetContent(byte[] content);
-
-        /// <summary>
-        /// 获取一次性内容。
-        /// </summary>
-        /// <returns></returns>
-        public abstract bool TryGetContent(out byte[] content);
-
-        /// <summary>
-        /// 持续写入内容。
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        public abstract void WriteContent(byte[] buffer, int offset, int count);
-
-        internal bool InternalInput(byte[] buffer, int offset, int length)
-        {
-            return this.Input(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!this.DisposedValue && this.CanRead)
-            {
-                this.TryGetContent(out _);
-            }
-
-            base.Dispose(disposing);
+            this.m_httpBlockSegment.InternalReset();
         }
 
         /// <summary>
         /// 读取信息
         /// </summary>
-        protected abstract void LoadHeaderProterties();
+        protected abstract void LoadHeaderProperties();
 
         private void GetRequestHeaders(string[] rows)
         {
@@ -331,15 +223,124 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
-        /// 重置Http状态。
-        /// </summary>
-        public virtual void Reset()
+        private void ReadHeaders(ReadOnlySpan<byte> span)
         {
-            base.ResetBlock();
-            this.m_headers.Clear();
-            this.ContentComplated = null;
-            this.RequestLine = default;
+            var data = span.ToString(Encoding.UTF8);
+            var rows = Regex.Split(data, "\r\n");
+
+            //Request URL & Method & Version
+            this.RequestLine = rows[0];
+
+            //Request Headers
+            this.GetRequestHeaders(rows);
+            this.LoadHeaderProperties();
         }
+
+        #region Content
+
+        /// <summary>
+        /// 获取一次性内容。
+        /// </summary>
+        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
+        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
+        public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
+        {
+            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
+            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
+            return Task.Run(async () => await this.GetContentAsync(cancellationToken).ConfigureAwait(false)).GetFalseAwaitResult();
+        }
+
+        /// <summary>
+        /// 获取一次性内容。
+        /// </summary>
+        /// <returns>返回一个包含字节的只读内存的任务。</returns>
+        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
+        public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 设置一次性内容
+        /// </summary>
+        /// <param name="content">要设置的内容，作为只读内存块传入</param>
+        public abstract void SetContent(in ReadOnlyMemory<byte> content);
+
+        #endregion Content
+
+        #region Read
+
+        /// <summary>
+        /// 异步读取HTTP块段的内容。
+        /// </summary>
+        /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
+        /// <returns>返回一个<see cref="IBlockResult{T}"/>，表示异步读取操作的结果。</returns>
+        public virtual ValueTask<IBlockResult<byte>> ReadAsync(CancellationToken cancellationToken)
+        {
+            // 调用m_httpBlockSegment的InternalValueWaitAsync方法，等待HTTP块段的内部值。
+            return this.m_httpBlockSegment.InternalValueWaitAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// 异步读取并复制流数据
+        /// </summary>
+        /// <param name="stream">需要读取并复制的流</param>
+        /// <param name="cancellationToken">异步操作的取消令牌</param>
+        /// <returns>一个异步任务，表示复制操作的完成</returns>
+        public async Task ReadCopyToAsync(Stream stream, CancellationToken cancellationToken = default)
+        {
+            while (true)
+            {
+                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                    {
+                        var memory = blockResult.Memory;
+                        await stream.WriteAsync(memory, cancellationToken);
+                    }
+                    if (blockResult.IsCompleted)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        #endregion Read
+
+        #region Write
+
+        /// <summary>
+        /// 异步写入字节序列到流中。
+        /// </summary>
+        /// <param name="memory">待写入的字节序列，使用<see cref="ReadOnlyMemory{T}"/>类型以提高性能并支持不可变性。</param>
+        /// <returns>返回一个Task对象，表示异步写入操作的完成。</returns>
+        public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
+
+        #endregion Write
+
+        #region Class
+
+        private class HttpBlockSegment : BlockSegment<byte>
+        {
+            internal Task InternalComplete()
+            {
+                return base.Complete(string.Empty);
+            }
+
+            internal Task InternalInputAsync(ReadOnlyMemory<byte> memory)
+            {
+                return base.InputAsync(memory);
+            }
+
+            internal void InternalReset()
+            {
+                base.Reset();
+            }
+
+            internal ValueTask<IBlockResult<byte>> InternalValueWaitAsync(CancellationToken cancellationToken)
+            {
+                return base.ValueWaitAsync(cancellationToken);
+            }
+        }
+
+        #endregion Class
     }
 }

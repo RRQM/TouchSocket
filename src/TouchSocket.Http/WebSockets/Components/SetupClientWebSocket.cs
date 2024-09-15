@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// SetupClientWebSocket
     /// </summary>
-    public abstract class SetupClientWebSocket : SetupConfigObject, IClient, ICloseObject, IConnectObject
+    public abstract class SetupClientWebSocket : SetupConfigObject, IClosableClient
     {
         /// <summary>
         /// SetupClientWebSocket
@@ -57,17 +57,11 @@ namespace TouchSocket.Http.WebSockets
         #region 连接
 
         /// <inheritdoc/>
-        public virtual void Connect(int millisecondsTimeout, CancellationToken token)
-        {
-            this.ConnectAsync(millisecondsTimeout, token).GetFalseAwaitResult();
-        }
-
-        /// <inheritdoc/>
         public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
-                await this.m_semaphoreForConnect.WaitAsync();
                 if (this.m_isHandshaked)
                 {
                     return;
@@ -77,7 +71,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     this.m_client.SafeDispose();
                     this.m_client = new ClientWebSocket();
-                    await this.m_client.ConnectAsync(this.RemoteIPHost, token);
+                    await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(false);
                     _ = this.BeginReceive();
                 }
 
@@ -106,17 +100,18 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 是否已完成连接
         /// </summary>
-        protected bool ProtectedIsHandshaked { get => this.m_isHandshaked; }
+        protected bool ProtectedIsHandshaked => this.m_isHandshaked;
 
         /// <summary>
         /// 通讯实际客户端
         /// </summary>
-        protected ClientWebSocket Client { get => this.m_client; }
+        protected ClientWebSocket Client => this.m_client;
 
         /// <inheritdoc/>
-        public virtual void Close(string msg)
+        public virtual Task CloseAsync(string msg)
         {
-            this.BreakOut(msg, true);
+            this.Abort(true, msg);
+            return EasyTask.CompletedTask;
         }
 
         /// <summary>
@@ -124,7 +119,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="manual"></param>
-        protected void BreakOut(string msg, bool manual)
+        protected void Abort(bool manual, string msg)
         {
             lock (this.m_semaphoreForConnect)
             {
@@ -134,7 +129,7 @@ namespace TouchSocket.Http.WebSockets
                     this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None);
                     this.m_client.SafeDispose();
 
-                    this.OnDisconnected(new DisconnectEventArgs(manual, msg));
+                    this.OnDisconnected(new ClosedEventArgs(manual, msg));
                 }
             }
         }
@@ -148,7 +143,7 @@ namespace TouchSocket.Http.WebSockets
             }
             if (disposing)
             {
-                this.BreakOut($"调用{nameof(Dispose)}", true);
+                this.Abort(true, $"调用{nameof(Dispose)}");
             }
 
             base.Dispose(disposing);
@@ -167,7 +162,7 @@ namespace TouchSocket.Http.WebSockets
         /// 已断开连接。
         /// </summary>
         /// <param name="e"></param>
-        protected abstract void OnDisconnected(DisconnectEventArgs e);
+        protected abstract void OnDisconnected(ClosedEventArgs e);
 
         /// <summary>
         /// 收到数据
@@ -185,7 +180,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     using (var byteBlock = new ByteBlock(this.m_receiveBufferSize))
                     {
-                        var result = await this.m_client.ReceiveAsync(new ArraySegment<byte>(byteBlock.Buffer, 0, byteBlock.Capacity), default);
+                        var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory.GetArray(), default).ConfigureAwait(false);
                         if (result.Count == 0)
                         {
                             break;
@@ -193,26 +188,26 @@ namespace TouchSocket.Http.WebSockets
                         byteBlock.SetLength(result.Count);
                         this.m_receiveCounter.Increment(result.Count);
 
-                        await this.OnReceived(result, byteBlock).ConfigureFalseAwait();
+                        await this.OnReceived(result, byteBlock).ConfigureAwait(false);
                     }
                 }
 
-                this.BreakOut("远程终端主动关闭", false);
+                this.Abort(false, "远程终端主动关闭");
             }
             catch (Exception ex)
             {
-                this.BreakOut(ex.Message, false);
+                this.Abort(false, ex.Message);
             }
         }
 
         private void OnReceivePeriod(long value)
         {
-            this.m_receiveBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_receiveBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
         }
 
         private void OnSendPeriod(long value)
         {
-            this.m_sendBufferSize = TouchSocketUtility.HitBufferLength(value);
+            this.m_sendBufferSize = TouchSocketCoreUtility.HitBufferLength(value);
         }
     }
 }

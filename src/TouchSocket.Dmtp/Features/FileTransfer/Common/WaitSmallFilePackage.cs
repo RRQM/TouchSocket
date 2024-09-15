@@ -23,18 +23,18 @@ namespace TouchSocket.Dmtp.FileTransfer
         public Metadata Metadata { get; set; }
         public string Path { get; set; }
 
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
-            byteBlock.Write(this.Path);
+            base.PackageBody(ref byteBlock);
+            byteBlock.WriteString(this.Path);
             byteBlock.WritePackage(this.Metadata);
             byteBlock.WritePackage(this.FileInfo);
             byteBlock.WriteBytesPackage(this.Data, 0, this.Len);
         }
 
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.Path = byteBlock.ReadString();
             this.Metadata = byteBlock.ReadPackage<Metadata>();
             this.FileInfo = byteBlock.ReadPackage<RemoteFileInfo>();

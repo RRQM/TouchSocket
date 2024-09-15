@@ -17,23 +17,17 @@ using TouchSocket.Sockets;
 namespace TouchSocket.SerialPorts
 {
     /// <summary>
-    /// 具有预备连接的插件接口
+    /// 定义一个串行连接建立前的操作接口
     /// </summary>
-    public interface ISerialConnectingPlugin<in TClient> : IPlugin where TClient : ISerialPortClient
+    public interface ISerialConnectingPlugin : IPlugin
     {
         /// <summary>
-        /// 在即将完成连接时触发。
+        /// 在串行连接建立之前触发的事件处理程序
+        /// 此方法允许在实际连接建立之前执行一些操作，比如数据验证或预处理
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnSerialConnecting(TClient client, ConnectingEventArgs e);
-    }
-
-    /// <summary>
-    /// ISerialConnectingPlugin
-    /// </summary>
-    public interface ISerialConnectingPlugin : ISerialConnectingPlugin<ISerialPortClient>
-    {
+        /// <param name="client">串行会话客户端，表示与之通信的物理或虚拟串行端口</param>
+        /// <param name="e">连接事件参数，包含有关连接事件的额外信息</param>
+        /// <returns>异步任务，表示事件处理的异步操作</returns>
+        Task OnSerialConnecting(ISerialPortSession client, ConnectingEventArgs e);
     }
 }

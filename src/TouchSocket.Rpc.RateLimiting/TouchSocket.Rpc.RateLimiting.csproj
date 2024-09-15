@@ -9,14 +9,8 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc.RateLimiting</PackageOutputPath>
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup>
-		<PackageReference Include="System.Threading.RateLimiting" Version="7.0.0" />
+		<PackageReference Include="System.Threading.RateLimiting" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

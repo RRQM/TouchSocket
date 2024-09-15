@@ -13,10 +13,12 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+       /// <summary>
     /// IP解析映射
     /// </summary>
     public class IPHost : Uri
@@ -76,17 +78,12 @@ namespace TouchSocket.Sockets
                 }
                 if (this.HostNameType == UriHostNameType.Unknown || this.HostNameType == UriHostNameType.Basic)
                 {
-                    throw new Exception("无法获取终结点。");
+                    throw new Exception(TouchSocketResource.UnableToObtainEndpoint);
                 }
 
-                if (this.HostNameType == UriHostNameType.Dns)
-                {
-                    this.m_endPoint = new DnsEndPoint(this.DnsSafeHost, this.Port);
-                }
-                else
-                {
-                    this.m_endPoint = new IPEndPoint(IPAddress.Parse(this.DnsSafeHost), this.Port);
-                }
+                this.m_endPoint = this.HostNameType == UriHostNameType.Dns
+                    ? new DnsEndPoint(this.DnsSafeHost, this.Port)
+                    : new IPEndPoint(IPAddress.Parse(this.DnsSafeHost), this.Port);
                 return this.m_endPoint;
             }
         }
@@ -132,12 +129,12 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 解析一个组的地址。
         /// </summary>
-        /// <param name="strs"></param>
+        /// <param name="ipHostStrings"></param>
         /// <returns></returns>
-        public static IPHost[] ParseIPHosts(string[] strs)
+        public static IPHost[] ParseIPHosts(string[] ipHostStrings)
         {
             var iPs = new List<IPHost>();
-            foreach (var item in strs)
+            foreach (var item in ipHostStrings)
             {
                 iPs.Add(new IPHost(item));
             }
@@ -146,53 +143,7 @@ namespace TouchSocket.Sockets
 
         private static string VerifyUri(string uriString)
         {
-            if (TouchSocketUtility.IsURL(uriString))
-            {
-                return uriString;
-            }
-
-            return $"tcp://{uriString}";
+            return TouchSocketCoreUtility.IsURL(uriString) ? uriString : $"tcp://{uriString}";
         }
-
-        ///// <summary>
-        ///// 返回EndPoint字符串
-        ///// </summary>
-        ///// <returns></returns>
-        //public override string ToString()
-        //{
-        //    return this.EndPoint == null ? null : this.EndPoint.ToString();
-        //}
-
-        //private static bool HostNameToIP(string hostname, out IPAddress[] address)
-        //{
-        //    try
-        //    {
-        //        var hostInfo = Dns.GetHostEntry(hostname);
-        //        address = hostInfo.AddressList;
-        //        return address.Length > 0;
-        //    }
-        //    catch
-        //    {
-        //        address = null;
-        //        return false;
-        //    }
-        //}
-
-        //private void Analysis(string ip, string port)
-        //{
-        //    try
-        //    {
-        //        var portNum = int.Parse(port);
-        //        var endPoint = new IPEndPoint(IPAddress.Parse(ip), portNum);
-        //        this.AddressFamily = ip.Contains(":") ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
-        //        this.EndPoint = endPoint;
-        //        this.IP = ip;
-        //        this.Port = portNum;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new Exception($"IPHost初始化失败，信息:{ex.Message}", ex);
-        //    }
-        //}
     }
 }

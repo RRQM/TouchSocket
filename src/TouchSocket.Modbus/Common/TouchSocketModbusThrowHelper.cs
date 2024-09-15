@@ -20,15 +20,18 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 判断Modbus状态，非成功状态将抛出异常。
         /// </summary>
-        /// <param name="errorCode"></param>
-        /// <exception cref="ModbusResponseException"></exception>
+        /// <param name="errorCode">要判断的Modbus错误代码。</param>
+        /// <exception cref="ModbusResponseException">当errorCode非Success时抛出此异常。</exception>
         public static void ThrowIfNotSuccess(ModbusErrorCode errorCode)
         {
+            // 根据错误代码判断是否需要抛出异常
             switch (errorCode)
             {
+                // 如果错误代码表示成功，则不执行任何操作
                 case ModbusErrorCode.Success:
                     break;
 
+                // 对于其他任何错误代码，均抛出ModbusResponseException异常
                 default:
                     throw new ModbusResponseException(errorCode);
             }

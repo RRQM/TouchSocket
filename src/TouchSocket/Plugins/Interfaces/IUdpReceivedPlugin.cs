@@ -16,23 +16,16 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// IUdpReceivedPlugin
+    /// 定义了一个UDP接收插件接口，该接口继承自IPlugin。
     /// </summary>
-    public interface IUdpReceivedPlugin<in TClient> : IPlugin where TClient : IUdpSession
+    public interface IUdpReceivedPlugin : IPlugin
     {
         /// <summary>
         /// 在收到数据时触发
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnUdpReceived(TClient client, UdpReceivedDataEventArgs e);
-    }
-
-    /// <summary>
-    /// IUdpReceivedPlugin
-    /// </summary>
-    public interface IUdpReceivedPlugin : IUdpReceivedPlugin<IUdpSession>
-    {
+        /// <param name="client">发送数据的客户端会话</param>
+        /// <param name="e">包含接收数据的信息的事件参数</param>
+        /// <returns>一个等待完成的异步任务</returns>
+        Task OnUdpReceived(IUdpSessionBase client, UdpReceivedDataEventArgs e);
     }
 }

@@ -27,16 +27,16 @@ namespace TouchSocket.Core
     /// <typeparam name="T"></typeparam>
     public class ArrayPool<T>
     {
-        private const int m_defaultMaxArrayLength = 1024 * 1024;
+        private const int DefaultMaxArrayLength = 1024 * 1024;
 
-        private const int m_defaultMaxNumberOfArraysPerBucket = 50;
+        private const int DefaultMaxNumberOfArraysPerBucket = 50;
 
         private readonly Bucket[] m_buckets;
 
         /// <summary>
         /// 提供一个数组对象的池化容器。
         /// </summary>
-        public ArrayPool() : this(m_defaultMaxArrayLength, m_defaultMaxNumberOfArraysPerBucket)
+        public ArrayPool() : this(DefaultMaxArrayLength, DefaultMaxNumberOfArraysPerBucket)
         {
         }
 
@@ -104,8 +104,6 @@ namespace TouchSocket.Core
         /// 最大请求尺寸梯度。
         /// </summary>
         public int MaxBucketsToTry { get; set; } = 5;
-
-        private int Id => this.GetHashCode();
 
         /// <summary>
         /// 获取一个不小于指定尺寸的池化数组对象。
@@ -236,7 +234,10 @@ namespace TouchSocket.Core
                 }
                 finally
                 {
-                    if (lockTaken) this.m_lock.Exit(false);
+                    if (lockTaken)
+                    {
+                        this.m_lock.Exit(false);
+                    }
                 }
             }
 
@@ -262,7 +263,10 @@ namespace TouchSocket.Core
                     }
                     finally
                     {
-                        if (lockTaken) this.m_lock.Exit(false);
+                        if (lockTaken)
+                        {
+                            this.m_lock.Exit(false);
+                        }
                     }
                 }
             }
@@ -291,7 +295,10 @@ namespace TouchSocket.Core
                     }
                     finally
                     {
-                        if (lockTaken) this.m_lock.Exit(false);
+                        if (lockTaken)
+                        {
+                            this.m_lock.Exit(false);
+                        }
                     }
                 }
             }
@@ -314,7 +321,10 @@ namespace TouchSocket.Core
                 }
                 finally
                 {
-                    if (lockTaken) this.m_lock.Exit(false);
+                    if (lockTaken)
+                    {
+                        this.m_lock.Exit(false);
+                    }
                 }
 
                 if (allocateBuffer)
@@ -347,7 +357,10 @@ namespace TouchSocket.Core
                 }
                 finally
                 {
-                    if (lockTaken) this.m_lock.Exit(false);
+                    if (lockTaken)
+                    {
+                        this.m_lock.Exit(false);
+                    }
                 }
             }
         }

@@ -17,10 +17,11 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class WaitingClient<TClient> : DisposableObject, IWaitingClient<TClient> where TClient : IReceiverObject, ISender
+    internal sealed class WaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> 
+        where TClient : IReceiverClient<TResult>, ISender , IRequestInfoSender
+        where TResult : IReceiverResult
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        //private CancellationTokenSource m_cancellationTokenSource;
 
         public WaitingClient(TClient client, WaitingOptions waitingOptions)
         {
@@ -28,29 +29,27 @@ namespace TouchSocket.Sockets
             this.WaitingOptions = waitingOptions;
         }
 
-        public bool CanSend => this.Client.CanSend;
-
         public TClient Client { get; private set; }
 
         public WaitingOptions WaitingOptions { get; set; }
 
         #region 发送
 
-        public ResponsedData SendThenResponse(byte[] buffer, int offset, int length, CancellationToken token = default)
+        public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+
             try
             {
-                this.m_semaphoreSlim.Wait(token);
-
                 if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        session.Send(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
 
                         while (true)
                         {
-                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -73,14 +72,14 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        this.Client.Send(buffer, offset, length);
+                        await this.Client.SendAsync(memory).ConfigureAwait(false);
                         while (true)
                         {
-                            using (var receiverResult = receiver.ReadAsync(token).GetFalseAwaitResult())
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
-                                if (receiverResult.IsClosed)
+                                if (receiverResult.IsCompleted)
                                 {
-                                    throw new NotConnectedException();
+                                    ThrowHelper.ThrowClientNotConnectedException();
                                 }
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -106,21 +105,21 @@ namespace TouchSocket.Sockets
             }
         }
 
-        public async Task<ResponsedData> SendThenResponseAsync(byte[] buffer, int offset, int length, CancellationToken token = default)
+        public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken token)
         {
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+
             try
             {
-                await this.m_semaphoreSlim.WaitAsync(token);
-
                 if (this.WaitingOptions.RemoteIPHost != null && this.Client is IUdpSession session)
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, buffer, offset, length);
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureAwait(false);
 
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -143,14 +142,14 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        await this.Client.SendAsync(buffer, offset, length);
+                        await this.Client.SendAsync(requestInfo).ConfigureAwait(false);
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
-                                if (receiverResult.IsClosed)
+                                if (receiverResult.IsCompleted)
                                 {
-                                    throw new NotConnectedException();
+                                    ThrowHelper.ThrowClientNotConnectedException();
                                 }
                                 var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
 
@@ -174,36 +173,8 @@ namespace TouchSocket.Sockets
             {
                 this.m_semaphoreSlim.Release();
             }
-        }
-
-        public byte[] SendThenReturn(byte[] buffer, int offset, int length, CancellationToken token)
-        {
-            return this.SendThenResponse(buffer, offset, length, token).Data;
-        }
-
-        public async Task<byte[]> SendThenReturnAsync(byte[] buffer, int offset, int length, CancellationToken token)
-        {
-            return (await this.SendThenResponseAsync(buffer, offset, length, token)).Data;
         }
 
         #endregion 发送
-
-        protected override void Dispose(bool disposing)
-        {
-            //this.Cancel();
-            this.Client = default;
-            base.Dispose(disposing);
-        }
-
-        //private void Cancel()
-        //{
-        //    try
-        //    {
-        //        this.m_cancellationTokenSource?.Cancel();
-        //    }
-        //    catch
-        //    {
-        //    }
-        //}
     }
 }

@@ -62,7 +62,7 @@ namespace TouchSocket.XmlRpc
         }
 
         /// <inheritdoc/>
-        public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Post)
             {
@@ -160,7 +160,7 @@ namespace TouchSocket.XmlRpc
 
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                     }
 
                     var httpResponse = e.Context.Response;
@@ -178,7 +178,7 @@ namespace TouchSocket.XmlRpc
                     }
                     try
                     {
-                        httpResponse.Answer();
+                        await httpResponse.AnswerAsync().ConfigureAwait(false);
                     }
                     finally
                     {
@@ -192,7 +192,7 @@ namespace TouchSocket.XmlRpc
                 }
             }
 
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace TouchSocket.XmlRpc
             {
                 if (rpcMethod.GetAttribute<XmlRpcAttribute>() is XmlRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }

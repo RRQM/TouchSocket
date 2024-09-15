@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.FileTransfer;
 using TouchSocket.Sockets;
@@ -17,55 +29,43 @@ namespace FileTransferConsoleApp
         /// </summary>
         public const long MaxSpeed = 1024 * 1024L;
 
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = GetTcpDmtpService();
-            var client = GetTcpDmtpClient();
+            var service = await GetTcpDmtpService();
+            var client = await GetTcpDmtpClient();
 
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
-            consoleAction.Add("1", "测试客户端向服务器请求文件", () => { ClientPullFileFromService(client); });
-            consoleAction.Add("2", "测试客户端向服务器推送文件", () => { ClientPushFileFromService(client); });
+            consoleAction.Add("1", "测试客户端向服务器请求文件", async () => { await ClientPullFileFromService(client); });
+            consoleAction.Add("2", "测试客户端向服务器推送文件", async () => { await ClientPushFileFromService(client); });
 
-            //此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SocketClient同步Id。
+            //此处，因为Dmtp组件，在客户端连接上服务器之后，客户端会与服务器的SessionClient同步Id。
             //详情：http://rrqm_home.gitee.io/touchsocket/docs/dmtpbaseconnection
             //所以此处直接使用客户端Id。
-            consoleAction.Add("3", "测试服务器向客户端请求文件", () => { ServicePullFileFromClient(service, client.Id); });
-            consoleAction.Add("4", "测试服务器向客户端推送文件", () => { ServicePushFileFromClient(service, client.Id); });
+            consoleAction.Add("3", "测试服务器向客户端请求文件", async () => { await ServicePullFileFromClient(service, client.Id); });
+            consoleAction.Add("4", "测试服务器向客户端推送文件", async () => { await ServicePushFileFromClient(service, client.Id); });
 
-            consoleAction.Add("5", "测试客户端向其他客户端请求文件", () => { ClientPullFileFromClient(); });
-            consoleAction.Add("6", "测试客户端向其他客户端推送文件", () => { ClientPushFileFromClient(); });
+            consoleAction.Add("5", "测试客户端向其他客户端请求文件", async () => { await ClientPullFileFromClient(); });
+            consoleAction.Add("6", "测试客户端向其他客户端推送文件", async () => { await ClientPushFileFromClient(); });
 
-            consoleAction.Add("7", "测试客户端向服务器请求小文件", () => { PullSmallFileFromService(client); });
-            consoleAction.Add("8", "测试客户端向服务器推送小文件", () => { PushSmallFileFromService(client); });
+            consoleAction.Add("7", "测试客户端向服务器请求小文件", async () => { await PullSmallFileFromService(client); });
+            consoleAction.Add("8", "测试客户端向服务器推送小文件", async () => { await PushSmallFileFromService(client); });
 
-            consoleAction.Add("9", "测试客户端工厂向服务器请求文件", () => { MultithreadingClientPullFileFromService(); });
-            consoleAction.Add("10", "测试客户端工厂向服务器推送文件", () => { MultithreadingClientPushFileFromService(); });
+            consoleAction.Add("9", "测试客户端工厂向服务器请求文件", async () => { await MultithreadingClientPullFileFromService(); });
+            consoleAction.Add("10", "测试客户端工厂向服务器推送文件", async () => { await MultithreadingClientPushFileFromService(); });
 
             consoleAction.ShowAll();
 
-            while (true)
-            {
-                if (!consoleAction.Run(Console.ReadLine()))
-                {
-                    consoleAction.ShowAll();
-                }
-            }
+            await consoleAction.RunCommandLineAsync();
         }
 
         /// <summary>
         /// 多线程推送文件
         /// </summary>
-        private static void MultithreadingClientPushFileFromService()
+        private static async Task MultithreadingClientPushFileFromService()
         {
             using var clientFactory = CreateClientFactory();
-            var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
 
-            if (!resultCon.IsSuccess())
-            {
-                //没有连接
-                return;
-            }
             ConsoleLogger.Default.Info("开始向服务器推送文件");
 
             /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
@@ -108,10 +108,10 @@ namespace FileTransferConsoleApp
                 ConsoleLogger.Default.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-            IResult result = clientFactory.PushFile(fileOperator);
+            IResult result = await clientFactory.PushFileAsync(fileOperator);
 
             ConsoleLogger.Default.Info($"向服务器推送文件结束，{result}");
 
@@ -123,15 +123,10 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 多线程请求文件
         /// </summary>
-        private static void MultithreadingClientPullFileFromService()
+        private static async Task MultithreadingClientPullFileFromService()
         {
             using var clientFactory = CreateClientFactory();
-            var resultCon = clientFactory.CheckStatus();//检验连接状态，一般当主通行器连接时，即认为在连接状态。
-            if (!resultCon.IsSuccess())
-            {
-                //没有连接
-                return;
-            }
+
             ConsoleLogger.Default.Info("开始从服务器下载文件");
 
             /****此处的逻辑是在程序运行目录下创建一个空内容，但是有长度的文件，用于测试****/
@@ -173,10 +168,10 @@ namespace FileTransferConsoleApp
                 ConsoleLogger.Default.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = clientFactory.PullFile(fileOperator);
+            IResult result = await clientFactory.PullFileAsync(fileOperator);
 
             ConsoleLogger.Default.Info($"从服务器下载文件结束，{result}");
 
@@ -189,7 +184,7 @@ namespace FileTransferConsoleApp
         /// 推送小文件
         /// </summary>
         /// <param name="client"></param>
-        private static void PushSmallFileFromService(TcpDmtpClient client)
+        private static async Task PushSmallFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载小文件");
             var filePath = "PushSmallFileFromService.Test";
@@ -207,8 +202,8 @@ namespace FileTransferConsoleApp
             metadata.Add("2", "2");
 
             //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-            var result = client.GetDmtpFileTransferActor().PushSmallFile(saveFilePath, new FileInfo(filePath), metadata);
-            if (result.IsSuccess())
+            var result = await client.GetDmtpFileTransferActor().PushSmallFileAsync(saveFilePath, new FileInfo(filePath), metadata);
+            if (result.IsSuccess)
             {
                 //成功
             }
@@ -225,7 +220,7 @@ namespace FileTransferConsoleApp
         /// 请求小文件
         /// </summary>
         /// <param name="client"></param>
-        private static void PullSmallFileFromService(TcpDmtpClient client)
+        private static async Task PullSmallFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载小文件");
 
@@ -246,7 +241,7 @@ namespace FileTransferConsoleApp
             metadata.Add("2", "2");
 
             //此方法会阻塞，直到传输结束，也可以使用PullSmallFileAsync
-            var result = client.GetDmtpFileTransferActor().PullSmallFile(filePath, metadata);
+            var result = await client.GetDmtpFileTransferActor().PullSmallFileAsync(filePath, metadata);
             var data = result.Value;//此处即是下载的小文件的实际数据
             result.Save(saveFilePath, overwrite: true);//将数据保存到指定路径。
 
@@ -266,10 +261,10 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 客户端向其他客户端推送文件。
         /// </summary>
-        private static void ClientPushFileFromClient()
+        private static async Task ClientPushFileFromClient()
         {
-            using var client1 = GetTcpDmtpClient();
-            using var client2 = GetTcpDmtpClient();
+            using var client1 = await GetTcpDmtpClient();
+            using var client2 = await GetTcpDmtpClient();
 
             ConsoleLogger.Default.Info("开始从其他客户端下载文件");
 
@@ -311,10 +306,10 @@ namespace FileTransferConsoleApp
                 client1.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = client1.GetDmtpFileTransferActor().PushFile(client2.Id, fileOperator);
+            IResult result = await client1.GetDmtpFileTransferActor().PushFileAsync(client2.Id, fileOperator);
 
             ConsoleLogger.Default.Info("从其他客户端下载文件结束");
             client1.Logger.Info(result.ToString());
@@ -327,10 +322,10 @@ namespace FileTransferConsoleApp
         /// <summary>
         /// 客户端从其他客户端下载文件。
         /// </summary>
-        private static void ClientPullFileFromClient()
+        private static async Task ClientPullFileFromClient()
         {
-            using var client1 = GetTcpDmtpClient();
-            using var client2 = GetTcpDmtpClient();
+            using var client1 = await GetTcpDmtpClient();
+            using var client2 = await GetTcpDmtpClient();
 
             ConsoleLogger.Default.Info("开始从其他客户端下载文件");
 
@@ -372,10 +367,10 @@ namespace FileTransferConsoleApp
                 client1.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = client1.GetDmtpFileTransferActor().PullFile(client2.Id, fileOperator);
+            IResult result = await client1.GetDmtpFileTransferActor().PullFileAsync(client2.Id, fileOperator);
 
             ConsoleLogger.Default.Info("从其他客户端下载文件结束");
             client1.Logger.Info(result.ToString());
@@ -390,9 +385,9 @@ namespace FileTransferConsoleApp
         /// </summary>
         /// <param name="service">服务器</param>
         /// <param name="targetId">服务器要请求的客户端Id</param>
-        private static void ServicePushFileFromClient(TcpDmtpService service, string targetId)
+        private static async Task ServicePushFileFromClient(TcpDmtpService service, string targetId)
         {
-            if (!service.TryGetSocketClient(targetId, out var socketClient))
+            if (!service.TryGetClient(targetId, out var socketClient))
             {
                 throw new Exception($"没有找到Id={targetId}的客户端");
             }
@@ -437,10 +432,10 @@ namespace FileTransferConsoleApp
                 socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-            IResult result = socketClient.GetDmtpFileTransferActor().PushFile(fileOperator);
+            IResult result = await socketClient.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 
             ConsoleLogger.Default.Info("服务器主动推送客户端文件结束");
             socketClient.Logger.Info(result.ToString());
@@ -455,9 +450,9 @@ namespace FileTransferConsoleApp
         /// </summary>
         /// <param name="service">服务器</param>
         /// <param name="targetId">服务器要请求的客户端Id</param>
-        private static void ServicePullFileFromClient(TcpDmtpService service, string targetId)
+        private static async Task ServicePullFileFromClient(TcpDmtpService service, string targetId)
         {
-            if (!service.TryGetSocketClient(targetId, out var socketClient))
+            if (!service.TryGetClient(targetId, out var socketClient))
             {
                 throw new Exception($"没有找到Id={targetId}的客户端");
             }
@@ -502,10 +497,10 @@ namespace FileTransferConsoleApp
                 socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+            IResult result = await socketClient.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 
             ConsoleLogger.Default.Info("从客户端下载文件结束");
             socketClient.Logger.Info(result.ToString());
@@ -519,7 +514,7 @@ namespace FileTransferConsoleApp
         /// 客户端从服务器下载文件。
         /// </summary>
         /// <param name="client"></param>
-        private static void ClientPullFileFromService(TcpDmtpClient client)
+        private static async Task ClientPullFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("开始从服务器下载文件");
 
@@ -561,10 +556,10 @@ namespace FileTransferConsoleApp
                 client.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-            IResult result = client.GetDmtpFileTransferActor().PullFile(fileOperator);
+            IResult result = await client.GetDmtpFileTransferActor().PullFileAsync(fileOperator);
 
             ////关于断点续传
             ////在执行完PullFile(fileOperator)或PushFile(fileOperator)时。只要返回的结果不是Success。
@@ -602,7 +597,7 @@ namespace FileTransferConsoleApp
         /// 客户端上传文件到服务器。
         /// </summary>
         /// <param name="client"></param>
-        private static void ClientPushFileFromService(TcpDmtpClient client)
+        private static async Task ClientPushFileFromService(TcpDmtpClient client)
         {
             ConsoleLogger.Default.Info("上传文件到服务器");
 
@@ -644,10 +639,10 @@ namespace FileTransferConsoleApp
                 client.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
             });
 
-            loopAction.RunAsync();
+            _ = loopAction.RunAsync();
 
             //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-            IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
+            IResult result = await client.GetDmtpFileTransferActor().PushFileAsync(fileOperator);
 
             ConsoleLogger.Default.Info("上传文件到服务器结束");
             client.Logger.Info(result.ToString());
@@ -657,9 +652,9 @@ namespace FileTransferConsoleApp
             File.Delete(saveFilePath);
         }
 
-        private static TcpDmtpClient GetTcpDmtpClient()
+        private static async Task<TcpDmtpClient> GetTcpDmtpClient()
         {
-            var client = new TouchSocketConfig()
+            var client = await new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -679,13 +674,13 @@ namespace FileTransferConsoleApp
                        .SetTick(TimeSpan.FromSeconds(3))
                        .SetMaxFailCount(3);
                    })
-                   .BuildWithTcpDmtpClient();
+                   .BuildClientAsync<TcpDmtpClient>();
 
             client.Logger.Info("连接成功");
             return client;
         }
 
-        private static TcpDmtpService GetTcpDmtpService()
+        private static async Task<TcpDmtpService> GetTcpDmtpService()
         {
             var service = new TcpDmtpService();
 
@@ -709,8 +704,8 @@ namespace FileTransferConsoleApp
                        VerifyToken = "File"//连接验证口令。
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
             service.Logger.Info("服务器成功启动");
             return service;
         }
@@ -729,7 +724,7 @@ namespace FileTransferConsoleApp
             {
                 MinCount = 5,
                 MaxCount = 10,
-                OnGetTransferConfig = () => //配置辅助通信
+                GetConfig = () => //配置辅助通信
                 {
                     return new TouchSocketConfig()
                     .SetRemoteIPHost("127.0.0.1:7789")
@@ -743,18 +738,8 @@ namespace FileTransferConsoleApp
                     });
                 }
             };
-            clientFactory.MainConfig//配置主通信
-                         .SetRemoteIPHost("127.0.0.1:7789")
-                         .SetDmtpOption(new DmtpOption()
-                         {
-                             VerifyToken = "File"
-                         })
-                         .ConfigurePlugins(a =>
-                         {
-                             a.UseDmtpFileTransfer();
-                         });
 
-            clientFactory.SetFindTransferIds((client, targetId) =>
+            clientFactory.SetFindTransferIds((targetId) =>
             {
                 //此处的操作不唯一，可能需要rpc实现。
                 //其目的比较简单，就是获取到targetId对应的主客户端的所有传输客户端的Id集合。
@@ -766,7 +751,7 @@ namespace FileTransferConsoleApp
         }
     }
 
-    internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin, IDmtpRoutingPlugin
+    internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTransferredPlugin, IDmtpRoutingPlugin
     {
         private readonly ILog m_logger;
 
@@ -782,7 +767,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
+        public async Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e)
         {
             //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
             if (e.TransferType.IsPull())
@@ -806,7 +791,7 @@ namespace FileTransferConsoleApp
         /// <param name="client"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        public async Task OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
+        public async Task OnDmtpFileTransferring(IDmtpActorObject client, FileTransferringEventArgs e)
         {
             foreach (var item in e.Metadata.Keys)
             {

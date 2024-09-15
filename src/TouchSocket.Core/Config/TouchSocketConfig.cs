@@ -25,6 +25,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public TouchSocketConfig Clone()
         {
+            this.ThrowIfDisposed();
+
             var config = new TouchSocketConfig();
             this.CloneTo(config, true);
             return config;

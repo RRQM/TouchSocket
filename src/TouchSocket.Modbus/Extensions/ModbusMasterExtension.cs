@@ -13,14 +13,33 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
     /// <summary>
-    /// ModbusClientExtension
+    /// ModbusMaster扩展类
+    /// 该类提供了一些对ModbusMaster实例进行操作的扩展方法
     /// </summary>
     public static class ModbusMasterExtension
     {
+        #region 同步
+        /// <summary>
+        /// 向Modbus从机设备发送一个Modbus请求。
+        /// </summary>
+        /// <param name="master">Modbus主控接口。</param>
+        /// <param name="request">要发送的Modbus请求。</param>
+        /// <param name="millisecondsTimeout">操作超时的时间，以毫秒为单位。</param>
+        /// <param name="token">用于取消操作的取消令牌。</param>
+        /// <returns>返回从Modbus从机设备接收到的响应。</returns>
+        public static IModbusResponse SendModbusRequest(this IModbusMaster master, ModbusRequest request, int millisecondsTimeout, CancellationToken token)
+        {
+            // 使用异步方法 SendModbusRequestAsync 发送请求，并直接获取结果，而不等待异步操作完成。
+            // 这样做是因为我们假设调用者已经处理了异步相关的逻辑，这里只是一个直接的同步包装。
+            return master.SendModbusRequestAsync(request, millisecondsTimeout, token).GetFalseAwaitResult();
+        }
+        #endregion
+
         #region ReadWrite 默认超时
 
         /// <summary>
@@ -363,7 +382,7 @@ namespace TouchSocket.Modbus
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadCoils, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -381,7 +400,7 @@ namespace TouchSocket.Modbus
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadDiscreteInputs, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
             return response.CreateReader().ToBoolensFromBit().Take(quantity).ToArray();
         }
 
@@ -399,7 +418,7 @@ namespace TouchSocket.Modbus
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadHoldingRegisters, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
             return response;
         }
 
@@ -417,7 +436,7 @@ namespace TouchSocket.Modbus
         {
             var request = new ModbusRequest(slaveId, FunctionCode.ReadInputRegisters, startingAddress, quantity);
 
-            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            var response = await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
             return response;
         }
 
@@ -534,7 +553,7 @@ namespace TouchSocket.Modbus
             request.StartingAddress = startingAddress;
             request.SetValue(values);
 
-            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -552,7 +571,7 @@ namespace TouchSocket.Modbus
             request.StartingAddress = startingAddress;
             request.SetValue(bytes);
 
-            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -570,7 +589,7 @@ namespace TouchSocket.Modbus
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -588,7 +607,7 @@ namespace TouchSocket.Modbus
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -606,7 +625,7 @@ namespace TouchSocket.Modbus
             request.StartingAddress = startingAddress;
             request.SetValue(value);
 
-            await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         #endregion WriteAsync
@@ -654,7 +673,7 @@ namespace TouchSocket.Modbus
             request.ReadStartAddress = startingAddressForRead;
             request.ReadQuantity = quantityForRead;
             request.SetValue(bytes);
-            return await master.SendModbusRequestAsync(request, millisecondsTimeout, token);
+            return await master.SendModbusRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false);
         }
 
         #endregion ReadWrite

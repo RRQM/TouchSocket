@@ -37,15 +37,15 @@ namespace TouchSocket.Core
         /// <typeparam name="TSender"></typeparam>
         /// <typeparam name="TEventArgs"></typeparam>
         /// <param name="pluginManager"></param>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="func"></param>
-        public static void Add<TSender, TEventArgs>(this IPluginManager pluginManager, string name, Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
+        public static void Add<TSender, TEventArgs>(this IPluginManager pluginManager, Type interfeceType, Func<TSender, TEventArgs, Task> func) where TEventArgs : PluginEventArgs
         {
             Task newFunc(object sender, TouchSocketEventArgs e)
             {
                 return func((TSender)sender, (TEventArgs)e);
             }
-            pluginManager.Add(name, newFunc);
+            pluginManager.Add(interfeceType, newFunc);
         }
 
         /// <summary>
@@ -53,58 +53,58 @@ namespace TouchSocket.Core
         /// </summary>
         /// <typeparam name="TEventArgs"></typeparam>
         /// <param name="pluginManager"></param>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="func"></param>
-        public static void Add<TEventArgs>(this IPluginManager pluginManager, string name, Func<TEventArgs, Task> func) where TEventArgs : PluginEventArgs
+        public static void Add<TEventArgs>(this IPluginManager pluginManager, Type interfeceType, Func<TEventArgs, Task> func) where TEventArgs : PluginEventArgs
         {
             Task newFunc(object sender, TouchSocketEventArgs e)
             {
                 return func((TEventArgs)e);
             }
-            pluginManager.Add(name, newFunc);
+            pluginManager.Add(interfeceType, newFunc);
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
         /// <param name="pluginManager"></param>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="func"></param>
-        public static void Add(this IPluginManager pluginManager, string name, Func<Task> func)
+        public static void Add(this IPluginManager pluginManager, Type interfeceType, Func<Task> func)
         {
             async Task newFunc(object sender, PluginEventArgs e)
             {
-                await func();
-                await e.InvokeNext();
+                await func().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(false);
             }
-            pluginManager.Add(name, newFunc);
+            pluginManager.Add(interfeceType, newFunc);
         }
 
         /// <summary>
         /// 添加插件委托
         /// </summary>
         /// <param name="pluginManager"></param>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="action"></param>
-        public static void Add<T>(this IPluginManager pluginManager, string name, Action<T> action) where T : class
+        public static void Add<T>(this IPluginManager pluginManager, Type interfeceType, Action<T> action) where T : class
         {
             if (typeof(PluginEventArgs).IsAssignableFrom(typeof(T)))
             {
                 async Task newFunc(object sender, PluginEventArgs e)
                 {
                     action(e as T);
-                    await e.InvokeNext();
+                    await e.InvokeNext().ConfigureAwait(false);
                 }
-                pluginManager.Add(name, newFunc);
+                pluginManager.Add(interfeceType, newFunc);
             }
             else
             {
                 async Task newFunc(object sender, PluginEventArgs e)
                 {
                     action((T)sender);
-                    await e.InvokeNext();
+                    await e.InvokeNext().ConfigureAwait(false);
                 }
-                pluginManager.Add(name, newFunc);
+                pluginManager.Add(interfeceType, newFunc);
             }
         }
 
@@ -112,16 +112,16 @@ namespace TouchSocket.Core
         /// 添加插件委托
         /// </summary>
         /// <param name="pluginManager"></param>
-        /// <param name="name"></param>
+        /// <param name="interfeceType"></param>
         /// <param name="action"></param>
-        public static void Add(this IPluginManager pluginManager, string name, Action action)
+        public static void Add(this IPluginManager pluginManager, Type interfeceType, Action action)
         {
             async Task newFunc(object sender, PluginEventArgs e)
             {
                 action();
-                await e.InvokeNext();
+                await e.InvokeNext().ConfigureAwait(false);
             }
-            pluginManager.Add(name, newFunc);
+            pluginManager.Add(interfeceType, newFunc);
         }
     }
 }

@@ -13,6 +13,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using TouchSocket.Core;
+using System;
 
 namespace TouchSocket.Dmtp
 {
@@ -22,10 +23,15 @@ namespace TouchSocket.Dmtp
     {
         public async IAsyncEnumerator<ByteBlock> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            while (await this.MoveNextAsync())
+            ByteBlock byteBlock = null;
+            while (await this.MoveNextAsync().ConfigureAwait(false))
             {
-                yield return this.GetCurrent();
+                cancellationToken.ThrowIfCancellationRequested();
+                byteBlock.SafeDispose();
+                byteBlock = this.GetCurrent();
+                yield return byteBlock;
             }
+            byteBlock.SafeDispose();
         }
     }
 

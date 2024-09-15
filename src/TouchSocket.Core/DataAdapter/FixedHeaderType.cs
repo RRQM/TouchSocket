@@ -18,17 +18,17 @@ namespace TouchSocket.Core
     public enum FixedHeaderType : byte
     {
         /// <summary>
-        /// 以1Byte标识长度，最长接收255
+        /// 以1Byte标识长度，最长接收<see cref="byte.MaxValue"/>
         /// </summary>
         Byte = 1,
 
         /// <summary>
-        /// 以2Byte标识长度，最长接收65535
+        /// 以2Byte标识长度，最长接收<see cref="ushort.MaxValue"/>
         /// </summary>
         Ushort = 2,
 
         /// <summary>
-        /// 以4Byte标识长度，最长接收2147483647
+        /// 以4Byte标识长度，最长接收<see cref="int.MaxValue"/>
         /// </summary>
         Int = 4
     }

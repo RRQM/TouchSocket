@@ -25,11 +25,11 @@ namespace TouchSocket.Rpc
         private CancellationTokenSource m_tokenSource;
 
         /// <summary>
-        /// CallContext
+        /// 初始化CallContext对象。
         /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="rpcMethod"></param>
-        /// <param name="resolver"></param>
+        /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
+        /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
+        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
         public CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
         {
             this.Caller = caller;
@@ -38,8 +38,13 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// CallContext
+        /// CallContext 类的构造函数。
         /// </summary>
+        /// <remarks>
+        /// 此构造函数不需要任何参数，因此是一个无参数的构造函数。
+        /// 它用于初始化 CallContext 类的新实例。
+        /// 尽管在这个构造函数中没有写任何代码，但可能会在未来的版本中添加初始化逻辑。
+        /// </remarks>
         public CallContext()
         {
         }

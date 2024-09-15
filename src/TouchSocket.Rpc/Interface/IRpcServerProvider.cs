@@ -20,19 +20,11 @@ namespace TouchSocket.Rpc
     public interface IRpcServerProvider
     {
         /// <summary>
-        /// 执行Rpc
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
-        InvokeResult Execute(ICallContext callContext, object[] ps);
-
-        /// <summary>
         /// 异步执行Rpc
         /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
+        /// <param name="callContext">调用上下文，包含本次调用的相关上下文信息</param>
+        /// <param name="ps">参数数组，包含传递给Rpc方法的参数</param>
+        /// <returns>返回一个任务，结果是InvokeResult类型，包含Rpc调用的结果信息</returns>
         Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps);
 
         /// <summary>

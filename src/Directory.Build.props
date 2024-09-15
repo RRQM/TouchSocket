@@ -1,9 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
-		<Version>2.0.18</Version>
+		<Version>2.1.0-rc.33</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -13,49 +11,65 @@
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<PackageIcon>logo.png</PackageIcon>
 		<Authors>若汝棋茗</Authors>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<BaseOutputPath>..\..\Build</BaseOutputPath>
 		<DocumentationFile></DocumentationFile>
-		<RepositoryUrl>https://touchsocket.net/</RepositoryUrl>
-		<NoWarn>IDE0290;IDE0090;IDE0305</NoWarn>
+		<NoWarn>IDE0290;IDE0090;IDE0305;IDE0028;IDE0300;IDE0130</NoWarn>
+		<GenerateSatelliteAssemblies>true</GenerateSatelliteAssemblies>
+		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
+		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildProjectName).snk</AssemblyOriginatorKeyFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageIcon>logo.png</PackageIcon>
+		<RepositoryUrl>https://touchsocket.net/</RepositoryUrl>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'!$(MSBuildProjectName.StartsWith(`TouchSocketPro`))' And '$(Configuration)' == 'Release' And '!$(MSBuildProjectName.EndsWith(`SourceGenerator`))'">
+		<!--<IncludeSymbols>True</IncludeSymbols>
+		<DebugSymbols>True</DebugSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedAllSources>True</EmbedAllSources>-->
+
+		<DebugSymbols>True</DebugSymbols>
+		<DebugType>Embedded</DebugType>
+		<EmbedAllSources>True</EmbedAllSources>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<DefineConstants>SystemNetHttp</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net462'">
-		
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net472'">
-		
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemMemory</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net481'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DefaultInterfaceMethods</DefineConstants>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable</DefineConstants>
+		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 	
 	<ItemGroup>

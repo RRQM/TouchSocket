@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 
 namespace PackageConsoleApp
 {
@@ -22,14 +34,19 @@ namespace PackageConsoleApp
                 { 2,new MyClassModel(){ P1=DateTime.Now} }
             };
 
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
-                    myClass.Package(byteBlock);//打包，相当于序列化
+                    myClass.Package(ref byteBlock);//打包，相当于序列化
 
                     byteBlock.Seek(0);//将流位置重置为0
 
                     var myNewClass = new MyPackage();
-                    myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
+                    myNewClass.Unpackage(ref byteBlock);//解包，相当于反序列化
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
 
@@ -49,14 +66,20 @@ namespace PackageConsoleApp
                 { 2,new MyClassModel(){ P1=DateTime.Now} }
             };
 
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+
+                try
                 {
-                    myClass.Package(byteBlock);//打包，相当于序列化
+                    myClass.Package(ref byteBlock);//打包，相当于序列化
 
                     byteBlock.Seek(0);//将流位置重置为0
 
                     var myNewClass = new MyGeneratorPackage();
-                    myNewClass.Unpackage(byteBlock);//解包，相当于反序列化
+                    myNewClass.Unpackage(ref byteBlock);//解包，相当于反序列化
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
         }
@@ -71,13 +94,13 @@ namespace PackageConsoleApp
         public List<int> P5 { get; set; }
         public Dictionary<int, MyClassModel> P6 { get; set; }
 
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
             //基础类型直接写入。
-            byteBlock.Write(this.P1);
-            byteBlock.Write(this.P2);
-            byteBlock.Write(this.P3);
-            byteBlock.Write(this.P4);
+            byteBlock.WriteInt32(this.P1);
+            byteBlock.WriteString(this.P2);
+            byteBlock.WriteChar(this.P3);
+            byteBlock.WriteDouble(this.P4);
 
             //集合类型，可以先判断是否为null
             byteBlock.WriteIsNull(this.P5);
@@ -86,10 +109,10 @@ namespace PackageConsoleApp
                 //如果不为null
                 //就先写入集合长度
                 //然后遍历将每个项写入
-                byteBlock.Write(this.P5.Count);
+                byteBlock.WriteInt32(this.P5.Count);
                 foreach (var item in this.P5)
                 {
-                    byteBlock.Write(item);
+                    byteBlock.WriteInt32(item);
                 }
             }
 
@@ -100,16 +123,16 @@ namespace PackageConsoleApp
                 //如果不为null
                 //就先写入字典长度
                 //然后遍历将每个项，按键、值写入
-                byteBlock.Write(this.P6.Count);
+                byteBlock.WriteInt32(this.P6.Count);
                 foreach (var item in this.P6)
                 {
-                    byteBlock.Write(item.Key);
+                    byteBlock.WriteInt32(item.Key);
                     byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
                 }
             }
         }
 
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             //基础类型按序读取。
             this.P1 = byteBlock.ReadInt32();
@@ -162,12 +185,12 @@ namespace PackageConsoleApp
     {
         public DateTime P1 { get; set; }
 
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            byteBlock.Write(this.P1);
+            byteBlock.WriteDateTime(this.P1);
         }
 
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.P1 = byteBlock.ReadDateTime();
         }

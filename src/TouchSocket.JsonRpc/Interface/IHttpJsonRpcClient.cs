@@ -10,14 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Http;
+using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
     /// <summary>
     /// IHttpJsonRpcClient
     /// </summary>
-    public interface IHttpJsonRpcClient : IJsonRpcClient, IHttpClient
+    public interface IHttpJsonRpcClient : IJsonRpcClient, IHttpSession, ISetupConfigObject, ITcpConnectableClient
     {
     }
 }
