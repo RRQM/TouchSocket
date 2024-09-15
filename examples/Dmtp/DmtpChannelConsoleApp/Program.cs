@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Sockets;
 
@@ -6,22 +18,22 @@ namespace DmtpChannelConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = GetTcpDmtpService();
-            var client = GetTcpDmtpClient();
+            var service = await GetTcpDmtpService();
+            var client = await GetTcpDmtpClient();
 
             var consoleAction = new ConsoleAction();
 
-            consoleAction.Add("1", "测试完成写入", () => { RunComplete(client); });
-            consoleAction.Add("2", "测试Hold", () => { RunHoldOn(client); });
+            consoleAction.Add("1", "测试完成写入", async () => { await RunComplete(client); });
+            consoleAction.Add("2", "测试Hold", async () => { await RunHoldOn(client); });
 
             consoleAction.ShowAll();
 
-            consoleAction.RunCommandLine();
+            await consoleAction.RunCommandLineAsync();
         }
 
-        private static void RunHoldOn(IDmtpActorObject client)
+        private static async Task RunHoldOn(IDmtpActorObject client)
         {
             //HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
 
@@ -39,19 +51,19 @@ namespace DmtpChannelConsoleApp
                     for (var j = 0; j < 10; j++)
                     {
                         //2.持续写入数据
-                        channel.Write(bytes);
+                        await channel.WriteAsync(bytes);
                     }
                     //3.在某个阶段完成数据传输时，可以调用HoldOn
-                    channel.HoldOn("等一下下");
+                    await channel.HoldOnAsync("等一下下");
                 }
                 //4.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-                channel.Complete("我完成了");
+                await channel.CompleteAsync("我完成了");
 
                 ConsoleLogger.Default.Info("通道写入结束");
             }
         }
 
-        private static void RunComplete(IDmtpActorObject client)
+        private static async Task RunComplete(IDmtpActorObject client)
         {
             var count = 1024 * 1;//测试1Gb数据
 
@@ -66,18 +78,18 @@ namespace DmtpChannelConsoleApp
                 for (var i = 0; i < count; i++)
                 {
                     //2.持续写入数据
-                    channel.Write(bytes);
+                    await channel.WriteAsync(bytes);
                 }
 
                 //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-                channel.Complete("我完成了");
+                await channel.CompleteAsync("我完成了");
                 ConsoleLogger.Default.Info("通道写入结束");
             }
         }
 
-        private static TcpDmtpClient GetTcpDmtpClient()
+        private static async Task<TcpDmtpClient> GetTcpDmtpClient()
         {
-            var client = new TouchSocketConfig()
+            var client = await new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -92,13 +104,13 @@ namespace DmtpChannelConsoleApp
                    {
                        a.Add<MyPlugin>();
                    })
-                   .BuildWithTcpDmtpClient();
+                   .BuildClientAsync<TcpDmtpClient>();
 
             client.Logger.Info("连接成功");
             return client;
         }
 
-        private static TcpDmtpService GetTcpDmtpService()
+        private static async Task<TcpDmtpService> GetTcpDmtpService()
         {
             var service = new TcpDmtpService();
 
@@ -118,14 +130,14 @@ namespace DmtpChannelConsoleApp
                        VerifyToken = "Channel"//连接验证口令。
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
             service.Logger.Info("服务器成功启动");
             return service;
         }
     }
 
-    internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
+    internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
     {
         private readonly ILog m_logger;
 
@@ -134,7 +146,7 @@ namespace DmtpChannelConsoleApp
             this.m_logger = logger;
         }
 
-        public async Task OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
+        public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
         {
             if (client.TrySubscribeChannel(e.ChannelId, out var channel))
             {
@@ -154,7 +166,7 @@ namespace DmtpChannelConsoleApp
                         foreach (var byteBlock in channel)
                         {
                             //这里处理数据
-                            count += byteBlock.Len;
+                            count += byteBlock.Length;
                             this.m_logger.Info($"通道已接收：{count}字节");
                         }
 

@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  æ­¤ä»£ç ç‰ˆæƒï¼ˆé™¤ç‰¹åˆ«å£°æ˜æˆ–åœ¨XREFç»“å°¾çš„å‘½åç©ºé—´çš„ä»£ç ï¼‰å½’ä½œè€…æœ¬äººè‹¥æ±æ£‹èŒ—æ‰€æœ‰
+//  æºä»£ç ä½¿ç”¨åè®®éµå¾ªæœ¬ä»“åº“çš„å¼€æºåè®®åŠé™„åŠ åè®®ï¼Œè‹¥æœ¬ä»“åº“æ²¡æœ‰è®¾ç½®ï¼Œåˆ™æŒ‰MITå¼€æºåè®®æˆæƒ
+//  CSDNåšå®¢ï¼šhttps://blog.csdn.net/qq_40374647
+//  å“”å“©å“”å“©è§†é¢‘ï¼šhttps://space.bilibili.com/94253567
+//  Giteeæºä»£ç ä»“åº“ï¼šhttps://gitee.com/RRQM_Home
+//  Githubæºä»£ç ä»“åº“ï¼šhttps://github.com/RRQM
+//  APIé¦–é¡µï¼šhttps://touchsocket.net/
+//  äº¤æµQQç¾¤ï¼š234762506
+//  æ„Ÿè°¢æ‚¨çš„ä¸‹è½½å’Œä½¿ç”¨
+//------------------------------------------------------------------------------
+
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -21,12 +33,12 @@ namespace TLVWinFormsApp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //¶©ÔÄÊÕµ½ÏûÏ¢ÊÂ¼ş
+            //ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ï¢ï¿½Â¼ï¿½
             this.m_tcpService.Received = (client, e) =>
             {
                 if (e.RequestInfo is TLVDataFrame frame)
                 {
-                    client.Logger.Info($"·şÎñÆ÷ÊÕµ½,Tag={frame.Tag},Len={frame.Length},Value={(frame.Value != null ? Encoding.UTF8.GetString(frame.Value) : string.Empty)}");
+                    client.Logger.Info($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½,Tag={frame.Tag},Length={frame.Length},Value={(frame.Value != null ? Encoding.UTF8.GetString(frame.Value) : string.Empty)}");
                 }
                 return EasyTask.CompletedTask;
             };
@@ -35,45 +47,45 @@ namespace TLVWinFormsApp
             config.SetListenIPHosts(new IPHost[] { new IPHost(7789) })
                 .ConfigureContainer(a =>
                 {
-                    a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
+                    a.AddEasyLogger(this.ShowMsg);
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<TLVPlugin>()//Ê¹ÓÃ²å¼ş£¬Ïàµ±ÓÚ×Ô¶¯ÉèÖÃÊÊÅäÆ÷£¬²¢ÇÒÖ÷¶¯»ØÓ¦Ping¡£
-                       .SetLengthType(FixedHeaderType.Int);//ÉèÖÃÖ§³ÖµÄ×î´óÊı¾İÀàĞÍ£¬¸ÃÖµ»¹ÊÜSetMaxPackageSizeÓ°Ïì¡£
+                    a.Add<TLVPlugin>()//Ê¹ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½àµ±ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦Pingï¿½ï¿½
+                       .SetLengthType(FixedHeaderType.Int);//ï¿½ï¿½ï¿½ï¿½Ö§ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½SetMaxPackageSizeÓ°ï¿½ì¡£
                 });
 
-            //ÔØÈëÅäÖÃ
-            this.m_tcpService.Setup(config);
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            this.m_tcpService.SetupAsync(config);
 
-            //Æô¶¯
-            this.m_tcpService.Start();
-            this.m_tcpService.Logger.Info("·şÎñÆ÷³É¹¦Æô¶¯¡£");
+            //ï¿½ï¿½ï¿½ï¿½
+            this.m_tcpService.StartAsync();
+            this.m_tcpService.Logger.Info("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
 
         private readonly TcpClient m_client = new TcpClient();
 
         private void button2_Click(object sender, EventArgs e)
         {
-            this.m_client.Setup(new TouchSocketConfig()
+            this.m_client.SetupAsync(new TouchSocketConfig()
                   .SetAdapterOption(new AdapterOption()
                   {
                       MaxPackageSize = 1024 * 1024 * 10
                   })
                   .ConfigureContainer(a =>
                   {
-                      a.SetSingletonLogger(new EasyLogger(this.ShowMsg));
+                      a.AddEasyLogger(this.ShowMsg);
                   })
-                  //.SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//Èç¹ûÊ¹ÓÃTLVPlugin²å¼ş£¬´Ë²½Öè¿ÉÊ¡ÂÔ¡£
+                  //.SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½TLVPluginï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½Ê¡ï¿½Ô¡ï¿½
                   .ConfigurePlugins(a =>
                   {
-                      a.Add<TLVPlugin>()//Ê¹ÓÃ²å¼ş£¬Ïàµ±ÓÚ×Ô¶¯ÉèÖÃÊÊÅäÆ÷£¬²¢ÇÒÖ÷¶¯»ØÓ¦Ping¡£
-                      .SetLengthType(FixedHeaderType.Int);//ÉèÖÃÖ§³ÖµÄ×î´óÊı¾İÀàĞÍ£¬¸ÃÖµ»¹ÊÜSetMaxPackageSizeÓ°Ïì¡£
+                      a.Add<TLVPlugin>()//Ê¹ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½àµ±ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦Pingï¿½ï¿½
+                      .SetLengthType(FixedHeaderType.Int);//ï¿½ï¿½ï¿½ï¿½Ö§ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½SetMaxPackageSizeÓ°ï¿½ì¡£
                   })
                   .SetRemoteIPHost(new IPHost("127.0.0.1:7789")));
-            this.m_client.Connect();
+            this.m_client.ConnectAsync();
 
-            this.m_client.Logger.Info("Á¬½Ó³É¹¦");
+            this.m_client.Logger.Info("ï¿½ï¿½ï¿½Ó³É¹ï¿½");
         }
 
         private void button3_Click(object sender, EventArgs e)

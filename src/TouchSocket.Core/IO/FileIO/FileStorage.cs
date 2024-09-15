@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TouchSocket.Resources;
 
@@ -25,7 +26,6 @@ namespace TouchSocket.Core
         internal volatile int m_reference;
         private readonly ReaderWriterLockSlim m_lockSlim;
         private bool m_disposedValue;
-        private byte[] m_fileData;
 
         /// <summary>
         /// 初始化一个文件存储器。在该存储器中，读写线程安全。
@@ -42,7 +42,7 @@ namespace TouchSocket.Core
 
         private FileStorage()
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             this.AccessTimeout = TimeSpan.FromSeconds(60);
         }
 
@@ -55,11 +55,6 @@ namespace TouchSocket.Core
         /// 访问超时时间。默认60s
         /// </summary>
         public TimeSpan AccessTimeout { get; set; }
-
-        /// <summary>
-        /// 是否为缓存型。为false时，意味着该文件句柄正在被该程序占用。
-        /// </summary>
-        public bool Cache { get; private set; }
 
         /// <summary>
         /// 访问属性
@@ -93,84 +88,43 @@ namespace TouchSocket.Core
         public int Reference => this.m_reference;
 
         /// <summary>
-        /// 创建一个只读的、已经缓存的文件信息。该操作不会占用文件句柄。
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileStorage"></param>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        public static bool TryCreateCacheFileStorage(string path, out FileStorage fileStorage, out string msg)
-        {
-            path = System.IO.Path.GetFullPath(path);
-            if (!File.Exists(path))
-            {
-                fileStorage = null;
-                msg = TouchSocketCoreResource.FileNotExists.GetDescription(path);
-                return false;
-            }
-            try
-            {
-                fileStorage = new FileStorage()
-                {
-                    Cache = true,
-                    FileAccess = FileAccess.Read,
-                    FileInfo = new FileInfo(path),
-                    Path = path,
-                    m_reference = 0,
-                    m_fileData = File.ReadAllBytes(path)
-                };
-                msg = null;
-                return true;
-            }
-            catch (Exception ex)
-            {
-                fileStorage = null;
-                msg = ex.Message;
-                return false;
-            }
-        }
-
-        /// <summary>
         /// 写入时清空缓存区
         /// </summary>
         public void Flush()
         {
-            this.AccessTime = DateTime.Now;
+            this.AccessTime = DateTime.UtcNow;
             this.FileStream.Flush();
         }
 
         /// <summary>
-        /// 从指定位置，读取数据到缓存区。线程安全。
+        /// 从当前文件中读取字节。
         /// </summary>
-        /// <param name="stratPos"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int Read(long stratPos, byte[] buffer, int offset, int length)
+        /// <param name="startPos">开始读取的位置。</param>
+        /// <param name="span">用于接收读取数据的字节跨度。</param>
+        /// <returns>实际读取的字节数。</returns>
+        /// <exception cref="ObjectDisposedException">如果当前对象已被处置。</exception>
+        /// <exception cref="System.IO.IOException">如果文件仅被写入。</exception>
+        public int Read(long startPos, Span<byte> span)
         {
-            this.AccessTime = DateTime.Now;
+            // 更新访问时间，用于跟踪文件的最近访问时间。
+            this.AccessTime = DateTime.UtcNow;
+            // 使用写锁保护共享资源，确保读操作的线程安全性。
             using (var writeLock = new WriteLock(this.m_lockSlim))
             {
+                // 检查对象是否已被处置，如果是，则抛出异常。
                 if (this.m_disposedValue)
                 {
-                    throw new ObjectDisposedException(this.GetType().FullName);
+                    ThrowHelper.ThrowObjectDisposedException(this);
                 }
+                // 检查文件访问模式，如果是写模式，则抛出异常。
                 if (this.FileAccess == FileAccess.Write)
                 {
-                    throw new Exception("该流不允许读取。");
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileOnlyWrittenTo.Format(this.FileInfo.FullName));
                 }
-                if (this.Cache)
-                {
-                    var r = (int)Math.Min(this.m_fileData.Length - stratPos, length);
-                    Array.Copy(this.m_fileData, stratPos, buffer, offset, r);
-                    return r;
-                }
-                else
-                {
-                    this.FileStream.Position = stratPos;
-                    return this.FileStream.Read(buffer, offset, length);
-                }
+
+
+                this.FileStream.Position = startPos;
+                return this.FileStream.Read(span);
             }
         }
 
@@ -187,27 +141,37 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 从指定位置，写入数据到存储区。线程安全。
+        /// 写入数据到文件的特定位置。
         /// </summary>
-        /// <param name="stratPos"></param>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public void Write(long stratPos, byte[] buffer, int offset, int length)
+        /// <param name="startPos">开始写入的位置。</param>
+        /// <param name="span">要写入的字节跨度。</param>
+        public void Write(long startPos, ReadOnlySpan<byte> span)
         {
-            this.AccessTime = DateTime.Now;
+            // 更新文件的访问时间。
+            this.AccessTime = DateTime.UtcNow;
+
+            // 使用写锁确保线程安全。
             using (var writeLock = new WriteLock(this.m_lockSlim))
             {
+                // 检查对象是否已释放。
                 if (this.m_disposedValue)
                 {
-                    throw new ObjectDisposedException(this.GetType().FullName);
+                    // 如果对象已释放，抛出ObjectDisposedException。
+                    ThrowHelper.ThrowObjectDisposedException(this);
                 }
+
+                // 检查文件访问权限。
                 if (this.FileAccess == FileAccess.Read)
                 {
-                    throw new Exception("该流不允许写入。");
+                    // 如果文件只读，抛出异常。
+                    ThrowHelper.ThrowException(TouchSocketCoreResource.FileReadOnly.Format(this.FileInfo.FullName));
                 }
-                this.FileStream.Position = stratPos;
-                this.FileStream.Write(buffer, offset, length);
+
+                // 设置文件流的位置为指定的开始写入位置。
+                this.FileStream.Position = startPos;
+
+                // 将数据写入文件。
+                this.FileStream.Write(span);
             }
         }
 
@@ -221,7 +185,6 @@ namespace TouchSocket.Core
             {
                 this.m_disposedValue = true;
                 this.FileStream.SafeDispose();
-                this.m_fileData = null;
             }
         }
     }

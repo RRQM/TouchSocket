@@ -20,10 +20,10 @@ namespace TouchSocket.Dmtp
     public class CreateChannelEventArgs : PluginEventArgs
     {
         /// <summary>
-        /// 创建通道事件类
+        /// 初始化创建通道事件类的实例
         /// </summary>
-        /// <param name="channelId"></param>
-        /// <param name="metadata"></param>
+        /// <param name="channelId">通道的标识符</param>
+        /// <param name="metadata">与通道相关的元数据</param>
         public CreateChannelEventArgs(int channelId, Metadata metadata)
         {
             this.ChannelId = channelId;

@@ -48,12 +48,12 @@ namespace TouchSocket.JsonRpc
         /// <param name="callContext"></param>
         /// <param name="result"></param>
         /// <param name="error"></param>
-        protected abstract void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error);
+        protected abstract Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error);
 
         /// <summary>
         /// 调用JsonRpc
         /// </summary>
-        protected async Task ThisInvoke(object obj)
+        protected async Task ThisInvokeAsync(object obj)
         {
             var callContext = (JsonRpcCallContextBase)obj;
             var invokeResult = new InvokeResult();
@@ -82,7 +82,7 @@ namespace TouchSocket.JsonRpc
 
             if (invokeResult.Status == InvokeStatus.Ready)
             {
-                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters);
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
             }
 
             if (!callContext.JsonRpcContext.Id.HasValue)
@@ -90,7 +90,7 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            this.Response(callContext, invokeResult.Result, error);
+            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
         }
 
         private void RegisterServer(RpcMethod[] rpcMethods)
@@ -99,7 +99,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
                 {
-                    this.ActionMap.Add(attribute.GetInvokenKey(rpcMethod), rpcMethod);
+                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
                 }
             }
         }

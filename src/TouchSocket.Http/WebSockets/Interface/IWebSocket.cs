@@ -13,15 +13,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
-    /// IWebSocket
+    /// 定义WebSocket服务的接口，继承自IDisposable, IOnlineClient, IClosableClient接口。
     /// </summary>
-    public interface IWebSocket : IDisposable, IHandshakeObject, ICloseObject
+    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient
     {
         /// <summary>
         /// WebSocket版本
@@ -36,115 +35,53 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 使用的Http客户端
         /// </summary>
-        IHttpClientBase Client { get; }
+        IHttpSession Client { get; }
 
         /// <summary>
-        /// 发送Ping报文。
+        /// 异步发送Ping请求。
         /// </summary>
-        void Ping();
-
-        /// <summary>
-        /// 发送Ping报文
-        /// </summary>
-        /// <returns></returns>
+        /// <returns>任务完成时返回。</returns>
         Task PingAsync();
 
         /// <summary>
-        /// 发送Pong报文。
+        /// 异步执行Pong操作。
         /// </summary>
-        void Pong();
-
-        /// <summary>
-        /// 发送Pong报文
-        /// </summary>
-        /// <returns></returns>
+        /// <returns>一个任务对象，表示异步操作的完成。</returns>
         Task PongAsync();
 
         /// <summary>
         /// 异步等待读取数据
         /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        Task<WebSocketReceiveResult> ReadAsync(CancellationToken token);
-
-#if NET6_0_OR_GREATER
-        /// <summary>
-        /// 值异步等待读取数据
-        /// </summary>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        public ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token);
-#endif
+        /// <param name="token">用于取消异步读取操作的取消令牌</param>
+        /// <returns>返回一个值任务，该任务完成后将包含WebSocket接收的结果</returns>
+        ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token);
 
         /// <summary>
         /// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>
         /// </summary>
-        /// <param name="dataFrame"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(WSDataFrame dataFrame, bool endOfMessage = true);
-
-        /// <summary>
-        /// 发送文本消息
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(string text, bool endOfMessage = true);
-
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(byte[] buffer, int offset, int length, bool endOfMessage = true);
-
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(ByteBlock byteBlock, bool endOfMessage = true);
-
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="endOfMessage"></param>
-        void Send(byte[] buffer, bool endOfMessage = true);
-
-        /// <summary>
-        /// 采用WebSocket协议，发送WS数据。发送结束后，请及时释放<see cref="WSDataFrame"/>
-        /// </summary>
-        /// <param name="dataFrame"></param>
-        /// <param name="endOfMessage"></param>
-        /// <returns></returns>
+        /// <param name="dataFrame">要发送的数据帧</param>
+        /// <param name="endOfMessage">是否是消息的结束标志，默认为true</param>
+        /// <returns>返回一个异步任务，用于指示发送操作的完成状态</returns>
         Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true);
 
+
         /// <summary>
-        /// 发送文本消息
+        /// 异步发送文本消息。
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="endOfMessage"></param>
-        /// <returns></returns>
+        /// <param name="text">要发送的文本内容。</param>
+        /// <param name="endOfMessage">指示是否是消息的结束。默认为true。</param>
+        /// <returns>返回一个任务对象，表示异步操作的结果。</returns>
         Task SendAsync(string text, bool endOfMessage = true);
 
-        /// <summary>
-        /// 发送二进制消息
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="endOfMessage"></param>
-        /// <returns></returns>
-        Task SendAsync(byte[] buffer, bool endOfMessage = true);
 
         /// <summary>
-        /// 发送二进制消息
+        /// 异步发送指定的字节内存数据。
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <param name="endOfMessage"></param>
-        /// <returns></returns>
-        Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true);
+        /// <param name="memory">要发送的字节数据，作为只读内存块。</param>
+        /// <param name="endOfMessage">指示当前数据是否为消息的结束。默认为true。</param>
+        /// <remarks>
+        /// 此方法允许异步发送数据，通过指定是否为消息的结束来控制数据流。
+        /// </remarks>
+        Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true);
     }
 }

@@ -16,9 +16,6 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
 {
-    /// <summary>
-    /// WebApi调用上下文
-    /// </summary>
     internal class WebApiCallContext : CallContext, IWebApiCallContext
     {
         public WebApiCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext) : base(caller, rpcMethod, resolver)
@@ -26,9 +23,7 @@ namespace TouchSocket.WebApi
             this.HttpContext = httpContext;
         }
 
-        /// <summary>
-        /// Http上下文
-        /// </summary>
+        /// <inheritdoc/>
         public HttpContext HttpContext { get; }
     }
 }

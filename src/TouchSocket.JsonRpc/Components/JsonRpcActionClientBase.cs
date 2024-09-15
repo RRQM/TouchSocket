@@ -13,7 +13,6 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Resources;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc
@@ -30,223 +29,223 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public WaitHandlePool<JsonRpcWaitResult> WaitHandle => this.m_waitHandle;
 
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitData(context);
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    var context = new JsonRpcWaitResult();
+        //    var waitData = this.m_waitHandle.GetWaitData(context);
 
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
+        //    if (invokeOption == default)
+        //    {
+        //        invokeOption = InvokeOption.WaitInvoke;
+        //    }
 
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = method,
-                Params = parameters,
-                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-            };
-            try
-            {
-                this.SendJsonString(jsonRpcRequest.ToJsonString());
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                    case FeedbackType.WaitSend:
-                        {
-                            return default;
-                        }
-                    case FeedbackType.WaitInvoke:
-                    default:
-                        {
-                            if (invokeOption.Token.CanBeCanceled)
-                            {
-                                waitData.SetCancellationToken(invokeOption.Token);
-                            }
+        //    parameters ??= new object[0];
+        //    var jsonRpcRequest = new JsonRpcRequest
+        //    {
+        //        Method = method,
+        //        Params = parameters,
+        //        Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
+        //    };
+        //    try
+        //    {
+        //        this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).GetFalseAwaitResult();
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    return default;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //            default:
+        //                {
+        //                    if (invokeOption.Token.CanBeCanceled)
+        //                    {
+        //                        waitData.SetCancellationToken(invokeOption.Token);
+        //                    }
 
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = waitData.WaitResult;
-                                        if (resultContext.Error != null)
-                                        {
-                                            throw new RpcException(resultContext.Error.Message);
-                                        }
+        //                    switch (waitData.Wait(invokeOption.Timeout))
+        //                    {
+        //                        case WaitDataStatus.SetRunning:
+        //                            {
+        //                                var resultContext = waitData.WaitResult;
+        //                                if (resultContext.Error != null)
+        //                                {
+        //                                    throw new RpcException(resultContext.Error.Message);
+        //                                }
 
-                                        if (resultContext.Result == null)
-                                        {
-                                            return default;
-                                        }
-                                        else
-                                        {
-                                            return JsonRpcUtility.ResultParseToType(resultContext.Result, returnType);
-                                        }
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    throw new TimeoutException("等待结果超时");
-                                case WaitDataStatus.Canceled:
-                                    return default;
+        //                                if (resultContext.Result == null)
+        //                                {
+        //                                    return default;
+        //                                }
+        //                                else
+        //                                {
+        //                                    return JsonRpcUtility.ResultParseToType(resultContext.Result, returnType);
+        //                                }
+        //                            }
+        //                        case WaitDataStatus.Overtime:
+        //                            throw new TimeoutException("等待结果超时");
+        //                        case WaitDataStatus.Canceled:
+        //                            return default;
 
-                                case WaitDataStatus.Default:
-                                case WaitDataStatus.Disposed:
-                                default:
-                                    throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
-                            }
-                        }
-                }
-            }
-            finally
-            {
-                this.m_waitHandle.Destroy(waitData);
-            }
-        }
+        //                        case WaitDataStatus.Default:
+        //                        case WaitDataStatus.Disposed:
+        //                        default:
+        //                            throw new UnknownErrorException();
+        //                    }
+        //                }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.m_waitHandle.Destroy(waitData);
+        //    }
+        //}
 
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitData(context);
+        ///// <inheritdoc/>
+        //public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        //{
+        //    var context = new JsonRpcWaitResult();
+        //    var waitData = this.m_waitHandle.GetWaitData(context);
 
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
+        //    if (invokeOption == default)
+        //    {
+        //        invokeOption = InvokeOption.WaitInvoke;
+        //    }
 
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = method,
-                Params = parameters,
-                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-            };
-            try
-            {
-                this.SendJsonString(jsonRpcRequest.ToJsonString());
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                    case FeedbackType.WaitSend:
-                        {
-                            return;
-                        }
-                    case FeedbackType.WaitInvoke:
-                    default:
-                        {
-                            if (invokeOption.Token.CanBeCanceled)
-                            {
-                                waitData.SetCancellationToken(invokeOption.Token);
-                            }
+        //    parameters ??= new object[0];
+        //    var jsonRpcRequest = new JsonRpcRequest
+        //    {
+        //        Method = method,
+        //        Params = parameters,
+        //        Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
+        //    };
+        //    try
+        //    {
+        //        this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).GetFalseAwaitResult();
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    return;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //            default:
+        //                {
+        //                    if (invokeOption.Token.CanBeCanceled)
+        //                    {
+        //                        waitData.SetCancellationToken(invokeOption.Token);
+        //                    }
 
-                            switch (waitData.Wait(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = waitData.WaitResult;
-                                        if (resultContext.Error != null)
-                                        {
-                                            throw new RpcException(resultContext.Error.Message);
-                                        }
-                                        return;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    throw new TimeoutException("等待结果超时");
-                                case WaitDataStatus.Canceled:
-                                    return;
+        //                    switch (waitData.Wait(invokeOption.Timeout))
+        //                    {
+        //                        case WaitDataStatus.SetRunning:
+        //                            {
+        //                                var resultContext = waitData.WaitResult;
+        //                                if (resultContext.Error != null)
+        //                                {
+        //                                    throw new RpcException(resultContext.Error.Message);
+        //                                }
+        //                                return;
+        //                            }
+        //                        case WaitDataStatus.Overtime:
+        //                            throw new TimeoutException("等待结果超时");
+        //                        case WaitDataStatus.Canceled:
+        //                            return;
 
-                                case WaitDataStatus.Default:
-                                case WaitDataStatus.Disposed:
-                                default:
-                                    throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
-                            }
-                        }
-                }
-            }
-            finally
-            {
-                this.m_waitHandle.Destroy(waitData);
-            }
-        }
+        //                        case WaitDataStatus.Default:
+        //                        case WaitDataStatus.Disposed:
+        //                        default:
+        //                            throw new UnknownErrorException();
+        //                    }
+        //                }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.m_waitHandle.Destroy(waitData);
+        //    }
+        //}
 
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            this.Invoke(method, invokeOption, ref parameters, null);
-        }
+        ///// <inheritdoc/>
+        //public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    this.Invoke(method, invokeOption, ref parameters, null);
+        //}
 
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.Invoke(returnType, method, invokeOption, ref parameters, null);
-        }
+        ///// <inheritdoc/>
+        //public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    return this.Invoke(returnType, method, invokeOption, ref parameters, null);
+        //}
 
-        /// <inheritdoc/>
-        public async Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
+        ///// <inheritdoc/>
+        //public async Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
+        //{
+        //    var context = new JsonRpcWaitResult();
+        //    var waitData = this.m_waitHandle.GetWaitDataAsync(context);
 
-            if (invokeOption == default)
-            {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
+        //    if (invokeOption == default)
+        //    {
+        //        invokeOption = InvokeOption.WaitInvoke;
+        //    }
 
-            parameters ??= new object[0];
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = method,
-                Params = parameters,
-                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-            };
-            try
-            {
-                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString());
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                    case FeedbackType.WaitSend:
-                        {
-                            return;
-                        }
-                    case FeedbackType.WaitInvoke:
-                    default:
-                        {
-                            if (invokeOption.Token.CanBeCanceled)
-                            {
-                                waitData.SetCancellationToken(invokeOption.Token);
-                            }
+        //    parameters ??= new object[0];
+        //    var jsonRpcRequest = new JsonRpcRequest
+        //    {
+        //        Method = method,
+        //        Params = parameters,
+        //        Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
+        //    };
+        //    try
+        //    {
+        //        await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString());
+        //        switch (invokeOption.FeedbackType)
+        //        {
+        //            case FeedbackType.OnlySend:
+        //            case FeedbackType.WaitSend:
+        //                {
+        //                    return;
+        //                }
+        //            case FeedbackType.WaitInvoke:
+        //            default:
+        //                {
+        //                    if (invokeOption.Token.CanBeCanceled)
+        //                    {
+        //                        waitData.SetCancellationToken(invokeOption.Token);
+        //                    }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = waitData.WaitResult;
-                                        if (resultContext.Error != null)
-                                        {
-                                            throw new RpcException(resultContext.Error.Message);
-                                        }
-                                        return;
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    throw new TimeoutException("等待结果超时");
-                                case WaitDataStatus.Canceled:
-                                    return;
+        //                    switch (await waitData.WaitAsync(invokeOption.Timeout))
+        //                    {
+        //                        case WaitDataStatus.SetRunning:
+        //                            {
+        //                                var resultContext = waitData.WaitResult;
+        //                                if (resultContext.Error != null)
+        //                                {
+        //                                    throw new RpcException(resultContext.Error.Message);
+        //                                }
+        //                                return;
+        //                            }
+        //                        case WaitDataStatus.Overtime:
+        //                            throw new TimeoutException("等待结果超时");
+        //                        case WaitDataStatus.Canceled:
+        //                            return;
 
-                                case WaitDataStatus.Default:
-                                case WaitDataStatus.Disposed:
-                                default:
-                                    throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
-                            }
-                        }
-                }
-            }
-            finally
-            {
-                this.m_waitHandle.Destroy(waitData);
-            }
-        }
+        //                        case WaitDataStatus.Default:
+        //                        case WaitDataStatus.Disposed:
+        //                        default:
+        //                            throw new UnknownErrorException();
+        //                    }
+        //                }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.m_waitHandle.Destroy(waitData);
+        //    }
+        //}
 
         /// <inheritdoc/>
         public async Task<object> InvokeAsync(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
@@ -268,7 +267,7 @@ namespace TouchSocket.JsonRpc
             };
             try
             {
-                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString());
+                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureAwait(false);
                 switch (invokeOption.FeedbackType)
                 {
                     case FeedbackType.OnlySend:
@@ -284,7 +283,7 @@ namespace TouchSocket.JsonRpc
                                 waitData.SetCancellationToken(invokeOption.Token);
                             }
 
-                            switch (await waitData.WaitAsync(invokeOption.Timeout))
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
                             {
                                 case WaitDataStatus.SetRunning:
                                     {
@@ -311,7 +310,7 @@ namespace TouchSocket.JsonRpc
                                 case WaitDataStatus.Default:
                                 case WaitDataStatus.Disposed:
                                 default:
-                                    throw new Exception(TouchSocketCoreResource.UnknownError.GetDescription());
+                                    throw new UnknownErrorException();
                             }
                         }
                 }
@@ -322,11 +321,11 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        /// <summary>
-        /// 发送Json字符串
-        /// </summary>
-        /// <param name="jsonString"></param>
-        protected abstract void SendJsonString(string jsonString);
+        ///// <summary>
+        ///// 发送Json字符串
+        ///// </summary>
+        ///// <param name="jsonString"></param>
+        //protected abstract void SendJsonString(string jsonString);
 
         /// <summary>
         /// 发送Json字符串
@@ -340,6 +339,76 @@ namespace TouchSocket.JsonRpc
         {
             var waitResult = JsonRpcUtility.ToJsonRpcWaitResult(jsonString);
             this.m_waitHandle.SetRun(waitResult);
+        }
+
+        /// <inheritdoc/>
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+        {
+            var context = new JsonRpcWaitResult();
+            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
+            invokeOption ??= InvokeOption.WaitInvoke;
+
+            parameters ??= new object[0];
+            var jsonRpcRequest = new JsonRpcRequest
+            {
+                Method = invokeKey,
+                Params = parameters,
+                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
+            };
+            try
+            {
+                await this.SendJsonStringAsync(jsonRpcRequest.ToJsonString()).ConfigureAwait(false);
+                switch (invokeOption.FeedbackType)
+                {
+                    case FeedbackType.OnlySend:
+                    case FeedbackType.WaitSend:
+                        {
+                            return default;
+                        }
+                    case FeedbackType.WaitInvoke:
+                    default:
+                        {
+                            if (invokeOption.Token.CanBeCanceled)
+                            {
+                                waitData.SetCancellationToken(invokeOption.Token);
+                            }
+
+                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
+                            {
+                                case WaitDataStatus.SetRunning:
+                                    {
+                                        var resultContext = waitData.WaitResult;
+                                        if (resultContext.Error != null)
+                                        {
+                                            throw new RpcException(resultContext.Error.Message);
+                                        }
+
+                                        if (resultContext.Result == null)
+                                        {
+                                            return default;
+                                        }
+                                        else
+                                        {
+                                            return JsonRpcUtility.ResultParseToType(resultContext.Result, returnType);
+                                        }
+                                    }
+                                case WaitDataStatus.Overtime:
+                                    throw new TimeoutException("等待结果超时");
+                                case WaitDataStatus.Canceled:
+                                    return default;
+
+                                case WaitDataStatus.Default:
+                                case WaitDataStatus.Disposed:
+                                default:
+                                    throw new UnknownErrorException();
+                            }
+                        }
+                }
+            }
+            finally
+            {
+                this.m_waitHandle.Destroy(waitData);
+            }
         }
     }
 }

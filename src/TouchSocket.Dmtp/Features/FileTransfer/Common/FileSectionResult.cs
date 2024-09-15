@@ -16,16 +16,17 @@ using TouchSocket.Core;
 namespace TouchSocket.Dmtp.FileTransfer
 {
     /// <summary>
-    /// FileSectionResult
+    /// 文件分段上传结果类，继承自ResultBase，实现IDisposable接口
     /// </summary>
     public class FileSectionResult : ResultBase, IDisposable
     {
+
         /// <summary>
-        /// FileSectionResult
+        /// 构造函数：初始化FileSectionResult对象，用于处理文件段结果。
         /// </summary>
-        /// <param name="resultCode"></param>
-        /// <param name="value"></param>
-        /// <param name="fileSection"></param>
+        /// <param name="resultCode">结果代码，表示操作的执行情况。</param>
+        /// <param name="value">字节块数据，表示处理的结果值。</param>
+        /// <param name="fileSection">文件段信息，表示操作涉及的文件段。</param>
         public FileSectionResult(ResultCode resultCode, ByteBlock value, FileSection fileSection) : base(resultCode)
         {
             this.Value = value;
@@ -33,12 +34,12 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <summary>
-        /// FileSectionResult
+        /// 构造函数：初始化FileSectionResult对象，用于处理文件段结果，包括错误信息。
         /// </summary>
-        /// <param name="resultCode"></param>
-        /// <param name="message"></param>
-        /// <param name="value"></param>
-        /// <param name="fileSection"></param>
+        /// <param name="resultCode">结果代码，表示操作的执行情况。</param>
+        /// <param name="message">错误消息，提供操作失败的详细信息。</param>
+        /// <param name="value">字节块数据，表示处理的结果值。</param>
+        /// <param name="fileSection">文件段信息，表示操作涉及的文件段。</param>
         public FileSectionResult(ResultCode resultCode, string message, ByteBlock value, FileSection fileSection) : base(resultCode, message)
         {
             this.Value = value;
@@ -56,10 +57,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         public ByteBlock Value { get; private set; }
 
         /// <summary>
-        /// Dispose
+        /// 释放当前对象持有的资源。
         /// </summary>
         public void Dispose()
         {
+            // 释放当前对象持有的资源
             this.Value.Dispose();
         }
     }

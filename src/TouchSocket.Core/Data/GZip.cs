@@ -18,19 +18,19 @@ namespace TouchSocket.Core
     /// <summary>
     /// Gzip操作类
     /// </summary>
-    public static class GZip
+    public static partial class GZip
     {
         /// <summary>
         /// 压缩数据
         /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <param name="stream"></param>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static void Compress(ByteBlock byteBlock, byte[] buffer, int offset, int length)
+        public static void Compress(Stream stream, byte[] buffer, int offset, int length)
         {
-            using (var gZipStream = new GZipStream(byteBlock, CompressionMode.Compress, true))
+            using (var gZipStream = new GZipStream(stream, CompressionMode.Compress, true))
             {
                 gZipStream.Write(buffer, offset, length);
                 gZipStream.Close();
@@ -40,12 +40,12 @@ namespace TouchSocket.Core
         /// <summary>
         /// 压缩数据
         /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <param name="stream"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        public static void Compress(ByteBlock byteBlock, byte[] buffer)
+        public static void Compress(Stream stream, byte[] buffer)
         {
-            Compress(byteBlock, buffer, 0, buffer.Length);
+            Compress(stream, buffer, 0, buffer.Length);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace TouchSocket.Core
         {
             using (var byteBlock = new ByteBlock(length))
             {
-                Compress(byteBlock, buffer, offset, length);
+                Compress(byteBlock.AsStream(), buffer, offset, length);
                 return byteBlock.ToArray();
             }
         }
@@ -82,7 +82,8 @@ namespace TouchSocket.Core
         /// <param name="offset"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static void Decompress(ByteBlock byteBlock, byte[] data, int offset, int length)
+        public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data, int offset, int length)
+            where TByteBlock : IByteBlock
         {
             using (var gZipStream = new GZipStream(new MemoryStream(data, offset, length), CompressionMode.Decompress))
             {
@@ -92,7 +93,7 @@ namespace TouchSocket.Core
                     int r;
                     while ((r = gZipStream.Read(bytes, 0, bytes.Length)) != 0)
                     {
-                        byteBlock.Write(bytes, 0, r);
+                        byteBlock.Write(new System.ReadOnlySpan<byte>(bytes, 0, r));
                     }
                     gZipStream.Close();
                 }
@@ -108,9 +109,10 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="byteBlock"></param>
         /// <param name="data"></param>
-        public static void Decompress(ByteBlock byteBlock, byte[] data)
+        public static void Decompress<TByteBlock>(ref TByteBlock byteBlock, byte[] data)
+            where TByteBlock : IByteBlock
         {
-            Decompress(byteBlock, data, 0, data.Length);
+            Decompress(ref byteBlock, data, 0, data.Length);
         }
 
         /// <summary>
@@ -122,10 +124,15 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static byte[] Decompress(byte[] data, int offset, int length)
         {
-            using (var byteBlock = new ByteBlock(length))
+            var byteBlock = new ByteBlock(length);
+            try
             {
-                Decompress(byteBlock, data, offset, length);
+                Decompress(ref byteBlock, data, offset, length);
                 return byteBlock.ToArray();
+            }
+            finally
+            {
+                byteBlock.Dispose();
             }
         }
 

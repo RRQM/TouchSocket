@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -129,12 +128,26 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T BinaryDeserialize<T>(Stream stream, SerializationBinder binder = null)
         {
+            return (T)BinaryDeserialize(stream);
+        }
+
+                /// <summary>
+        /// 从流中反序列化对象。
+        /// </summary>
+        /// <param name="stream">包含序列化对象数据的流。</param>
+        /// <param name="binder">可选的绑定器，用于控制反序列化过程中的类型绑定。</param>
+        /// <returns>反序列化后的对象。</returns>
+        public static object BinaryDeserialize(Stream stream, SerializationBinder binder = null)
+        {
+            // 创建BinaryFormatter实例以进行反序列化操作
             var bf = new BinaryFormatter();
+            // 如果提供了自定义的SerializationBinder，则将其设置给BinaryFormatter
             if (binder != null)
             {
                 bf.Binder = binder;
             }
-            return (T)bf.Deserialize(stream);
+            // 从流中反序列化对象并返回
+            return bf.Deserialize(stream);
         }
 
         /// <summary>
@@ -179,73 +192,68 @@ namespace TouchSocket.Core
 
 #pragma warning restore SYSLIB0011 // 微软觉得不安全，不推荐使用
 
-        #region Fast二进制序列化
+        //#region Fast二进制序列化
 
-        /// <summary>
-        /// Fast二进制序列化对象
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static void FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ByteBlock stream, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
-        {
-            FastBinaryFormatter.Serialize(stream, obj);
-        }
+        ///// <summary>
+        ///// Fast二进制序列化对象
+        ///// </summary>
+        ///// <param name="byteBlock"></param>
+        ///// <param name="obj"></param>
+        ///// <returns></returns>
+        //public static void FastBinarySerialize<TByteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock,  in T obj)
+        //    where TByteBlock:IByteBlock
+        //{
+        //    FastBinaryFormatter.Serialize(ref byteBlock, obj);
+        //    byteBlock.SetLength(byteBlock.Length);
+        //}
 
-        /// <summary>
-        /// Fast二进制序列化对象
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>([DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] in T obj)
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                FastBinarySerialize(byteBlock, obj);
-                return byteBlock.ToArray();
-            }
-        }
+        ///// <summary>
+        ///// Fast二进制序列化对象
+        ///// </summary>
+        ///// <param name="obj"></param>
+        ///// <returns></returns>
+        //public static byte[] FastBinarySerialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>( in T obj)
+        //{
+        //    var byteBlock = new ByteBlock();
+        //    try
+        //    {
+        //        FastBinarySerialize(ref byteBlock, obj);
+        //        return byteBlock.ToArray();
+        //    }
+        //    finally
+        //    {
+        //        byteBlock.Dispose();
+        //    }
+        //}
 
-        #endregion Fast二进制序列化
+        //#endregion Fast二进制序列化
 
-        #region Fast二进制反序列化
+        //#region Fast二进制反序列化
 
-        /// <summary>
-        /// Fast反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data, int offset)
-        {
-            return (T)FastBinaryFormatter.Deserialize(data, offset, typeof(T));
-        }
+        ///// <summary>
+        ///// Fast反序列化
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="data"></param>
+        ///// <param name="offset"></param>
+        ///// <returns></returns>
+        //public static T FastBinaryDeserialize<TByteBlock,[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(ref TByteBlock byteBlock)where TByteBlock:IByteBlock
+        //{
+        //    return (T)FastBinaryFormatter.Deserialize(ref byteBlock, typeof(T));
+        //}
 
-        /// <summary>
-        /// Fast反序列化
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="offset"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static object FastBinaryDeserialize(byte[] data, int offset, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)
-        {
-            return FastBinaryFormatter.Deserialize(data, offset, type);
-        }
-
-        /// <summary>
-        /// 从Byte[]中反序列化
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static T FastBinaryDeserialize<[DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] T>(byte[] data)
-        {
-            return FastBinaryDeserialize<T>(data, 0);
-        }
-
-        #endregion Fast二进制反序列化
+        ///// <summary>
+        ///// Fast反序列化
+        ///// </summary>
+        ///// <param name="data"></param>
+        ///// <param name="offset"></param>
+        ///// <param name="type"></param>
+        ///// <returns></returns>
+        //public static object FastBinaryDeserialize<TByteBlock>(ref TByteBlock byteBlock, [DynamicallyAccessedMembers(FastBinaryFormatter.DynamicallyAccessed)] Type type)where TByteBlock:IByteBlock
+        //{
+        //    return FastBinaryFormatter.Deserialize(ref byteBlock, type);
+        //}
+        //#endregion Fast二进制反序列化
 
         #region Xml序列化和反序列化
 
@@ -304,29 +312,29 @@ namespace TouchSocket.Core
         /// Xml反序列化
         /// </summary>
         /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="datas">数据</param>
+        /// <param name="dataBytes">数据</param>
         /// <returns></returns>
-        public static T XmlDeserializeFromBytes<T>(byte[] datas)
+        public static T XmlDeserializeFromBytes<T>(byte[] dataBytes)
         {
-            var xmlserializer = new XmlSerializer(typeof(T));
-            using (Stream xmlstream = new MemoryStream(datas))
+            var xmlSerializer = new XmlSerializer(typeof(T));
+            using (Stream xmlStream = new MemoryStream(dataBytes))
             {
-                return (T)xmlserializer.Deserialize(xmlstream);
+                return (T)xmlSerializer.Deserialize(xmlStream);
             }
         }
 
         /// <summary>
         /// Xml反序列化
         /// </summary>
-        /// <param name="datas"></param>
+        /// <param name="dataBytes"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object XmlDeserializeFromBytes(byte[] datas, Type type)
+        public static object XmlDeserializeFromBytes(byte[] dataBytes, Type type)
         {
-            var xmlserializer = new XmlSerializer(type);
-            using (Stream xmlstream = new MemoryStream(datas))
+            var xmlSerializer = new XmlSerializer(type);
+            using (Stream xmlStream = new MemoryStream(dataBytes))
             {
-                return xmlserializer.Deserialize(xmlstream);
+                return xmlSerializer.Deserialize(xmlStream);
             }
         }
 
@@ -338,8 +346,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static object XmlDeserializeFromStream(Stream xmlStream, Type targetType)
         {
-            var xmlserializer = new XmlSerializer(targetType);
-            return xmlserializer.Deserialize(xmlStream);
+            var xmlSerializer = new XmlSerializer(targetType);
+            return xmlSerializer.Deserialize(xmlStream);
         }
 
         /// <summary>
@@ -350,8 +358,8 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T XmlDeserializeFromStream<T>(Stream xmlStream)
         {
-            var xmlserializer = new XmlSerializer(typeof(T));
-            return (T)xmlserializer.Deserialize(xmlStream);
+            var xmlSerializer = new XmlSerializer(typeof(T));
+            return (T)xmlSerializer.Deserialize(xmlStream);
         }
 
         /// <summary>
@@ -384,10 +392,10 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static T XmlDeserializeFromFile<T>(string path)
         {
-            using (Stream xmlstream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            using (Stream xmlStream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var xmlserializer = new XmlSerializer(typeof(T));
-                return (T)xmlserializer.Deserialize(xmlstream);
+                var xmlSerializer = new XmlSerializer(typeof(T));
+                return (T)xmlSerializer.Deserialize(xmlStream);
             }
         }
 
@@ -456,22 +464,22 @@ namespace TouchSocket.Core
         /// Json反序列化
         /// </summary>
         /// <typeparam name="T">反序列化类型</typeparam>
-        /// <param name="datas">数据</param>
+        /// <param name="dataBytes">数据</param>
         /// <returns></returns>
-        public static T JsonDeserializeFromBytes<T>(byte[] datas)
+        public static T JsonDeserializeFromBytes<T>(byte[] dataBytes)
         {
-            return (T)JsonDeserializeFromBytes(datas, typeof(T));
+            return (T)JsonDeserializeFromBytes(dataBytes, typeof(T));
         }
 
         /// <summary>
         /// Xml反序列化
         /// </summary>
-        /// <param name="datas"></param>
+        /// <param name="dataBytes"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static object JsonDeserializeFromBytes(byte[] datas, Type type)
+        public static object JsonDeserializeFromBytes(byte[] dataBytes, Type type)
         {
-            return FromJsonString(Encoding.UTF8.GetString(datas), type);
+            return FromJsonString(Encoding.UTF8.GetString(dataBytes), type);
         }
 
         /// <summary>

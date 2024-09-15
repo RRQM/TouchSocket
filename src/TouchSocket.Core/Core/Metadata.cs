@@ -29,11 +29,7 @@ namespace TouchSocket.Core
         {
             get
             {
-                if (this.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-                return null;
+                return this.TryGetValue(key, out var value) ? value : null;
             }
         }
 
@@ -59,13 +55,13 @@ namespace TouchSocket.Core
         /// 打包
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Package(in ByteBlock byteBlock)
+        public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
-            byteBlock.Write(this.Count);
-            foreach (var item in this.Keys)
+            byteBlock.WriteInt32(this.Count);
+            foreach (var item in this)
             {
-                byteBlock.Write(item);
-                byteBlock.Write(this[item]);
+                byteBlock.WriteString(item.Key, FixedHeaderType.Byte);
+                byteBlock.WriteString(item.Value, FixedHeaderType.Byte);
             }
         }
 
@@ -73,13 +69,13 @@ namespace TouchSocket.Core
         /// 解包
         /// </summary>
         /// <param name="byteBlock"></param>
-        public void Unpackage(in ByteBlock byteBlock)
+        public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             var count = byteBlock.ReadInt32();
             for (var i = 0; i < count; i++)
             {
-                var key = byteBlock.ReadString();
-                var value = byteBlock.ReadString();
+                var key = byteBlock.ReadString(FixedHeaderType.Byte);
+                var value = byteBlock.ReadString(FixedHeaderType.Byte);
                 this.Add(key, value);
             }
         }

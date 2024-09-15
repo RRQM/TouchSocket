@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -20,512 +21,185 @@ using TouchSocket.Core;
 namespace TouchSocket.Sockets
 {
     /// <summary>
-    /// SenderExtension
+    /// 发送者扩展类
     /// </summary>
     public static class SenderExtension
     {
         #region ISend
 
         /// <summary>
-        /// 同步发送数据。
+        /// 异步发送数据。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        public static void Send<TClient>(this TClient client, byte[] buffer) where TClient : ISender
+        /// <typeparam name="TClient">发送器类型参数，必须实现ISender接口。</typeparam>
+        /// <param name="client">发送器实例。</param>
+        /// <param name="memory">待发送的字节内存块，使用<see cref="ReadOnlyMemory{T}"/>类型以强调数据不会被修改。</param>
+        public static void Send<TClient>(this TClient client, ReadOnlyMemory<byte> memory) where TClient : ISender
         {
-            client.Send(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 同步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="byteBlock"></param>
-        public static void Send<TClient>(this TClient client, ByteBlock byteBlock) where TClient : ISender
-        {
-            client.Send(byteBlock.Buffer, 0, byteBlock.Len);
+            // 调用SendAsync方法发送数据，并立即返回，不等待发送完成。这种设计用于提高性能，特别是在高负载情况下。
+            client.SendAsync(memory).GetFalseAwaitResult();
         }
 
         /// <summary>
         /// 以UTF-8的编码同步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="value"></param>
+        /// <typeparam name="TClient">发送者类型，必须实现ISender接口。</typeparam>
+        /// <param name="client">发送者实例。</param>
+        /// <param name="value">待发送的字符串。</param>
         public static void Send<TClient>(this TClient client, string value) where TClient : ISender
         {
+            // 将字符串转换为UTF-8编码的字节序列，然后发送。
             client.Send(Encoding.UTF8.GetBytes(value));
-        }
-
-        /// <summary>
-        /// 异步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        public static Task SendAsync<TClient>(this TClient client, byte[] buffer) where TClient : ISender
-        {
-            return client.SendAsync(buffer, 0, buffer.Length);
         }
 
         /// <summary>
         /// 以UTF-8的编码异步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="value"></param>
+        /// <typeparam name="TClient">发送器类型参数，必须实现ISender接口。</typeparam>
+        /// <param name="client">发送器实例。</param>
+        /// <param name="value">待发送的字符串。</param>
+        /// <returns>返回一个Task对象，表示异步操作。</returns>
         public static Task SendAsync<TClient>(this TClient client, string value) where TClient : ISender
         {
+            // 将字符串转换为UTF-8编码的字节数组，然后异步发送。
             return client.SendAsync(Encoding.UTF8.GetBytes(value));
         }
 
         #endregion ISend
 
-        #region IDefaultSender
-
-        /// <summary>
-        /// 以UTF-8的编码同步发送字符串。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="value"></param>
-        public static void DefaultSend<TClient>(this TClient client, string value) where TClient : IDefaultSender
-        {
-            client.DefaultSend(Encoding.UTF8.GetBytes(value));
-        }
-
-        /// <summary>
-        /// 同步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        public static void DefaultSend<TClient>(this TClient client, byte[] buffer) where TClient : IDefaultSender
-        {
-            client.DefaultSend(buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 同步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="byteBlock"></param>
-        public static void DefaultSend<TClient>(this TClient client, ByteBlock byteBlock) where TClient : IDefaultSender
-        {
-            client.DefaultSend(byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 以UTF-8的编码异步发送字符串。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="value"></param>
-        public static Task DefaultSendAsync<TClient>(this TClient client, string value) where TClient : IDefaultSender
-        {
-            return client.DefaultSendAsync(Encoding.UTF8.GetBytes(value));
-        }
+        #region IClientSender
 
         /// <summary>
         /// 异步发送数据。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="buffer"></param>
-        public static Task DefaultSendAsync<TClient>(this TClient client, byte[] buffer) where TClient : IDefaultSender
+        /// <param name="client">发送数据的客户端对象。</param>
+        /// <param name="bytesList">待发送的字节数据列表。</param>
+        /// <typeparam name="TClient">客户端对象类型，必须实现<see cref="IClientSender"/>接口。</typeparam>
+        public static void Send<TClient>(this TClient client, IList<ArraySegment<byte>> bytesList) where TClient : IClientSender
         {
-            return client.DefaultSendAsync(buffer, 0, buffer.Length);
+            // 调用客户端对象的SendAsync方法发送数据，并忽略返回结果。
+            client.SendAsync(bytesList).GetFalseAwaitResult();
         }
 
-        #endregion IDefaultSender
+        #endregion IClientSender
+
+        #region IRequestInfoSender
+
+        /// <summary>
+        /// 异步发送请求信息。
+        /// </summary>
+        /// <param name="client">发起请求的客户端对象。</param>
+        /// <param name="requestInfo">要发送的请求信息。</param>
+        /// <typeparam name="TClient">客户端对象的类型，必须实现<see cref="IRequestInfoSender"/>接口。</typeparam>
+        public static void Send<TClient>(this TClient client, IRequestInfo requestInfo) where TClient : IRequestInfoSender
+        {
+            // 直接调用客户端对象的SendAsync方法并获取错误的等待结果
+            // 这里使用GetFalseAwaitResult()是因为SendAsync方法可能不返回Task对象
+            // 这种情况下，GetFalseAwaitResult()可以防止编译器警告，并且不会影响程序的执行
+            client.SendAsync(requestInfo).GetFalseAwaitResult();
+        }
+
+        #endregion IRequestInfoSender
 
         #region IIdSender
 
         /// <summary>
+        /// 同步发送请求方法
+        /// </summary>
+        /// <typeparam name="TClient">泛型参数，表示客户端类型，必须实现IIdRequestInfoSender接口</typeparam>
+        /// <param name="client">客户端实例</param>
+        /// <param name="id">请求的目标ID</param>
+        /// <param name="requestInfo">请求信息对象，包含请求的各种细节</param>
+        public static void Send<TClient>(this TClient client, string id, IRequestInfo requestInfo) where TClient : IIdRequestInfoSender
+        {
+            // 调用异步发送方法而不等待结果，实现同步发送的效果
+            client.SendAsync(id, requestInfo).GetFalseAwaitResult();
+        }
+
+        /// <summary>
         /// 以UTF-8的编码同步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
+        /// <typeparam name="TClient">泛型参数，表示客户端类型，必须实现IIdSender接口。</typeparam>
+        /// <param name="client">客户端实例，用于发送数据。</param>
+        /// <param name="id">标识符，用于指定发送的目标。</param>
+        /// <param name="value">要发送的字符串内容。</param>
         public static void Send<TClient>(this TClient client, string id, string value) where TClient : IIdSender
         {
+            // 使用UTF-8编码将字符串转换为字节数组，并发送。
             client.Send(id, Encoding.UTF8.GetBytes(value));
-        }
-
-        /// <summary>
-        /// 同步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="buffer"></param>
-        public static void Send<TClient>(this TClient client, string id, byte[] buffer) where TClient : IIdSender
-        {
-            client.Send(id, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 同步发送数据。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="byteBlock"></param>
-        public static void Send<TClient>(this TClient client, string id, ByteBlock byteBlock) where TClient : IIdSender
-        {
-            client.Send(id, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        /// <summary>
-        /// 以UTF-8的编码异步发送字符串。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="value"></param>
-        public static Task SendAsync<TClient>(this TClient client, string id, string value) where TClient : IIdSender
-        {
-            return client.SendAsync(id, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
         /// 异步发送数据。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="id"></param>
-        /// <param name="buffer"></param>
-        public static Task SendAsync<TClient>(this TClient client, string id, byte[] buffer) where TClient : IIdSender
+        /// <typeparam name="TClient">发送器类型参数，必须实现IIdSender接口。</typeparam>
+        /// <param name="client">发送器实例。</param>
+        /// <param name="id">发送的数据的唯一标识。</param>
+        /// <param name="memory">待发送的字节内存块，使用<see cref="ReadOnlyMemory{T}"/>以强调数据不会被修改。</param>
+        public static void Send<TClient>(this TClient client, string id, in ReadOnlyMemory<byte> memory) where TClient : IIdSender
         {
-            return client.SendAsync(id, buffer, 0, buffer.Length);
-        }
-
-        #endregion IIdSender
-
-        #region IUdpDefaultSender
-
-        /// <summary>
-        /// 以UTF-8的编码同步发送字符串。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="value"></param>
-        public static void DefaultSend<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpDefaultSender
-        {
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            client.DefaultSend(endPoint, Encoding.UTF8.GetBytes(value));
-        }
-
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="buffer">数据区</param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static void DefaultSend<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
-            where TClient : IUdpDefaultSender
-        {
-            client.DefaultSend(endPoint, buffer, 0, buffer.Length);
+            // 直接调用SendAsync方法并获取结果，这里使用GetFalseAwaitResult是因为发送操作不需要等待完成。
+            client.SendAsync(id, memory).GetFalseAwaitResult();
         }
 
         /// <summary>
         /// 以UTF-8的编码异步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="value"></param>
-        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpDefaultSender
+        /// <typeparam name="TClient">发送器类型，必须实现IIdSender接口。</typeparam>
+        /// <param name="client">发送器实例。</param>
+        /// <param name="id">发送的目标标识符。</param>
+        /// <param name="value">要发送的字符串内容。</param>
+        /// <returns>返回一个Task对象，表示异步操作。</returns>
+        public static Task SendAsync<TClient>(this TClient client, string id, string value) where TClient : IIdSender
         {
-            return client.DefaultSendAsync(endPoint, Encoding.UTF8.GetBytes(value));
+            // 将字符串转换为UTF-8编码的字节数组，以便发送。
+            return client.SendAsync(id, Encoding.UTF8.GetBytes(value));
         }
 
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
-            where TClient : IUdpDefaultSender
-        {
-            return client.DefaultSendAsync(endPoint, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 绕过适配器，直接发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="byteBlock"></param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static Task DefaultSendAsync<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
-            where TClient : IUdpDefaultSender
-        {
-            return client.DefaultSendAsync(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
-        }
-
-        #endregion IUdpDefaultSender
+        #endregion IIdSender
 
         #region IUdpClientSender
 
         /// <summary>
         /// 以UTF-8的编码同步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="value"></param>
+        /// <typeparam name="TClient">泛型参数，限定为实现了IUdpClientSender接口的类型。</typeparam>
+        /// <param name="client">用于发送数据的客户端实例。</param>
+        /// <param name="endPoint">发送数据的目的地，表示为一个端点。</param>
+        /// <param name="value">需要发送的字符串数据。</param>
         public static void Send<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
         {
+            // 使用UTF-8编码将字符串转换为字节数组，并通过客户端实例发送。
             client.Send(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
         /// <summary>
-        /// 发送字节流
+        /// 异步发送数据到指定的端点。
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="buffer">数据区</param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static void Send<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
+        /// <typeparam name="TClient">发送客户端的类型，必须实现<see cref="IUdpClientSender"/>接口。</typeparam>
+        /// <param name="client">发送客户端实例。</param>
+        /// <param name="endPoint">数据发送的目标端点。</param>
+        /// <param name="memory">待发送的数据，以只读内存的方式提供。</param>
+        public static void Send<TClient>(this TClient client, EndPoint endPoint, ReadOnlyMemory<byte> memory)
             where TClient : IUdpClientSender
         {
-            client.Send(endPoint, buffer, 0, buffer.Length);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="byteBlock">数据区</param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static void Send<TClient>(this TClient client, EndPoint endPoint, ByteBlock byteBlock)
-            where TClient : IUdpClientSender
-        {
-            client.Send(endPoint, byteBlock.Buffer, 0, byteBlock.Len);
+            // 调用SendAsync方法并忽略结果，实现同步发送数据的逻辑。
+            client.SendAsync(endPoint, memory).GetFalseAwaitResult();
         }
 
         /// <summary>
         /// 以UTF-8的编码异步发送字符串。
         /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="endPoint"></param>
-        /// <param name="value"></param>
+        /// <typeparam name="TClient">泛型参数，表示UDP客户端发送器的类型。</typeparam>
+        /// <param name="client">UDP客户端实例，用于发送数据。</param>
+        /// <param name="endPoint">发送数据的目的地，可以是IP地址和端口号的组合。</param>
+        /// <param name="value">需要发送的字符串内容。</param>
+        /// <returns>返回一个Task对象，代表异步操作的完成状态。</returns>
         public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, string value) where TClient : IUdpClientSender
         {
+            // 使用UTF-8编码将字符串转换为字节数组，然后调用SendAsync方法发送。
             return client.SendAsync(endPoint, Encoding.UTF8.GetBytes(value));
         }
 
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="endPoint">目的终结点</param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        public static Task SendAsync<TClient>(this TClient client, EndPoint endPoint, byte[] buffer)
-            where TClient : IUdpClientSender
-        {
-            return client.SendAsync(endPoint, buffer, 0, buffer.Length);
-        }
-
         #endregion IUdpClientSender
-
-        #region IWaitSender
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="msg"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static byte[] SendThenReturn(this IWaitSender client, string msg, int millisecondsTimeout = 5000)
-        {
-            return SendThenReturn(client, Encoding.UTF8.GetBytes(msg), millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static byte[] SendThenReturn(this IWaitSender client, byte[] buffer, int millisecondsTimeout = 5000)
-        {
-            return SendThenReturn(client, buffer, 0, buffer.Length, millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">数据偏移</param>
-        /// <param name="length">数据长度</param>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        /// <returns></returns>
-        public static byte[] SendThenReturn(this IWaitSender client, byte[] buffer, int offset, int length, int millisecondsTimeout = 5000)
-        {
-            using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
-            {
-                try
-                {
-                    return client.SendThenReturn(buffer, offset, length, tokenSource.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw new TimeoutException();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="byteBlock">数据块载体</param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static byte[] SendThenReturn(this IWaitSender client, ByteBlock byteBlock, int millisecondsTimeout = 5000)
-        {
-            return SendThenReturn(client, byteBlock.Buffer, 0, byteBlock.Len, millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// 发送字节流
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static byte[] SendThenReturn(this IWaitSender client, byte[] buffer, CancellationToken token)
-        {
-            return client.SendThenReturn(buffer, 0, buffer.Length, token);
-        }
-
-        /// <summary>
-        /// 发送流中的有效数据
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="byteBlock">数据块载体</param>
-        /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static byte[] SendThenReturn(this IWaitSender client, ByteBlock byteBlock, CancellationToken token)
-        {
-            return client.SendThenReturn(byteBlock.Buffer, 0, byteBlock.Len, token);
-        }
-
-        #endregion IWaitSender
-
-        #region IWaitSenderAsync
-
-        /// <summary>
-        /// 异步发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static Task<byte[]> SendThenReturnAsync(this IWaitSender client, byte[] buffer, int millisecondsTimeout = 5000)
-        {
-            return SendThenReturnAsync(client, buffer, 0, buffer.Length, millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// 异步发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="msg"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static Task<byte[]> SendThenReturnAsync(this IWaitSender client, string msg, int millisecondsTimeout = 5000)
-        {
-            return SendThenReturnAsync(client, Encoding.UTF8.GetBytes(msg), millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// 异步发送
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="token">取消令箭</param>
-        /// <exception cref="NotConnectedException">客户端没有连接</exception>
-        /// <exception cref="OverlengthException">发送数据超长</exception>
-        /// <exception cref="Exception">其他异常</exception>
-        /// <returns>返回的数据</returns>
-        public static Task<byte[]> SendThenReturnAsync(this IWaitSender client, byte[] buffer, CancellationToken token)
-        {
-            return client.SendThenReturnAsync(buffer, 0, buffer.Length, token);
-        }
-
-        /// <summary>
-        /// 异步发送并等待响应数据
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="buffer">数据缓存区</param>
-        /// <param name="offset">数据偏移</param>
-        /// <param name="length">数据长度</param>
-        /// <param name="millisecondsTimeout">超时时间</param>
-        /// <returns></returns>
-        /// <exception cref="TimeoutException"></exception>
-        public static async Task<byte[]> SendThenReturnAsync(this IWaitSender client, byte[] buffer, int offset, int length, int millisecondsTimeout = 5000)
-        {
-            using (var tokenSource = new CancellationTokenSource(millisecondsTimeout))
-            {
-                try
-                {
-                    return await client.SendThenReturnAsync(buffer, offset, length, tokenSource.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw new TimeoutException();
-                }
-            }
-        }
-
-        #endregion IWaitSenderAsync
     }
 }

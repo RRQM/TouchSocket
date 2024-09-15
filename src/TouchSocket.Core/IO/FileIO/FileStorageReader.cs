@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading;
 
 namespace TouchSocket.Core
@@ -17,18 +18,24 @@ namespace TouchSocket.Core
     /// <summary>
     /// 文件读取器
     /// </summary>
-
-    public partial class FileStorageReader : DisposableObject
+    public partial class FileStorageReader : SafetyDisposableObject
     {
-        private int m_dis = 1;
+        private long m_position;
 
         /// <summary>
-        /// 构造函数
+        /// 初始化FileStorageReader实例。
         /// </summary>
-        /// <param name="fileStorage"></param>
+        /// <param name="fileStorage">文件存储对象，用于处理文件读取操作。</param>
+        /// <remarks>
+        /// 此构造函数接收一个FileStorage对象作为参数，用于后续的文件读取操作。
+        /// 如果传入的FileStorage对象为null，则抛出ArgumentNullException异常，
+        /// 这确保了文件读取操作不会在不合法的参数状态下执行，提高了代码的健壮性。
+        /// </remarks>
         public FileStorageReader(FileStorage fileStorage)
         {
-            this.FileStorage = fileStorage ?? throw new System.ArgumentNullException(nameof(fileStorage));
+            // 使用ThrowHelper提供的扩展方法验证fileStorage参数是否为null，
+            // 并将fileStorage赋值给类成员变量FileStorage。
+            this.FileStorage = ThrowHelper.ThrowArgumentNullExceptionIf(fileStorage, nameof(fileStorage));
         }
 
         /// <summary>
@@ -48,49 +55,28 @@ namespace TouchSocket.Core
         /// <summary>
         /// 游标位置
         /// </summary>
-        public int Pos
-        {
-            get => (int)this.Position;
-            set => this.Position = value;
-        }
+        public long Position { get => m_position; set => m_position = value; }
 
         /// <summary>
-        /// 游标位置
+        /// 从文件存储中读取字节到指定的字节跨度。
         /// </summary>
-        public long Position { get; set; }
-
-        /// <summary>
-        /// 读取数据到缓存区
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public int Read(byte[] buffer, int offset, int length)
+        /// <param name="span">要读取数据的字节跨度。</param>
+        /// <returns>实际读取到的字节数。</returns>
+        public int Read(Span<byte> span)
         {
-            var r = this.FileStorage.Read(this.Position, buffer, offset, length);
-            this.Position += r;
+            // 调用文件存储从当前位置读取数据到字节跨度中
+            var r = this.FileStorage.Read(this.Position, span);
+            // 使用Interlocked类原子性地更新当前位置，以确保多线程环境下的安全性
+            Interlocked.Add(ref this.m_position, r);
+            // 返回实际读取到的字节数
             return r;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
+        protected override void SafetyDispose(bool disposing)
         {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-
-            if (Interlocked.Decrement(ref this.m_dis) == 0)
-            {
-                FilePool.TryReleaseFile(this.FileStorage.Path);
-                this.FileStorage = null;
-            }
-
-            base.Dispose(disposing);
+            FilePool.TryReleaseFile(this.FileStorage.Path);
+            this.FileStorage = null;
         }
     }
 }

@@ -26,7 +26,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static DefaultHttpServicePlugin UseDefaultHttpServicePlugin(this IPluginManager pluginManager)
         {
-            return pluginManager.Add<DefaultHttpServicePlugin>();
+            var plugin = new DefaultHttpServicePlugin();
+            pluginManager.Add(plugin);
+            return plugin;
         }
 
         /// <summary>
@@ -36,7 +38,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static HttpStaticPagePlugin UseHttpStaticPage(this IPluginManager pluginManager)
         {
-            return pluginManager.Add<HttpStaticPagePlugin>();
+            var plugin = new HttpStaticPagePlugin();
+            pluginManager.Add(plugin);
+            return plugin;
         }
 
         /// <summary>

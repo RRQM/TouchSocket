@@ -15,24 +15,21 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.FileTransfer
 {
-    /// <summary>
-    /// IDmtpFileTransferPlugin
-    /// </summary>
-    public interface IDmtpFileTransferingPlugin<TClient> : IPlugin where TClient : IDmtpActorObject
-    {
-        /// <summary>
-        /// 在文件传输即将进行时触发。
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        Task OnDmtpFileTransfering(TClient client, FileTransferingEventArgs e);
-    }
 
     /// <summary>
-    /// IDmtpFileTransferingPlugin
+    /// 定义了一个接口，用于处理文件传输过程中的插件操作。
+    /// 该接口继承自通用插件接口IPlugin，专门用于文件传输过程中的操作。
     /// </summary>
-    public interface IDmtpFileTransferingPlugin : IDmtpFileTransferingPlugin<IDmtpActorObject>
+    public interface IDmtpFileTransferringPlugin : IPlugin
     {
+
+        /// <summary>
+        /// 当文件传输发生时调用的方法。
+        /// 该方法允许插件在文件传输过程中执行自定义逻辑。
+        /// </summary>
+        /// <param name="client">发起文件传输的客户端对象。</param>
+        /// <param name="e">包含文件传输详细信息的事件参数。</param>
+        /// <returns>一个Task对象，表示异步操作的结果。</returns>
+        Task OnDmtpFileTransferring(IDmtpActorObject client, FileTransferringEventArgs e);
     }
 }

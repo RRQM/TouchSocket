@@ -155,7 +155,7 @@ namespace TouchSocket.Http
                 { ".json", "application/json" },
                 { ".jsx", "text/jscript" },
                 { ".latex", "application/x-latex" },
-                { ".lit", "application/x-ms-reader" },
+                { ".lit", "application/x-ms-byteBlock" },
                 { ".lpk", "application/octet-stream" },
                 { ".lsf", "video/x-la-asf" },
                 { ".lsx", "video/x-la-asf" },
@@ -443,12 +443,7 @@ namespace TouchSocket.Http
             }
 
             var index = path.LastIndexOf('.');
-            if (index < 0)
-            {
-                return null;
-            }
-
-            return path.Substring(index);
+            return index < 0 ? null : path.Substring(index);
         }
     }
 }

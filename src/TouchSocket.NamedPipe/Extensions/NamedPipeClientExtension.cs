@@ -24,32 +24,6 @@ namespace TouchSocket.NamedPipe
         #region 连接
 
         /// <summary>
-        /// 连接到指定的命名管道
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="pipeName">管道名称</param>
-        /// <param name="millisecondsTimeout">超时设定</param>
-        /// <returns></returns>
-        public static TClient Connect<TClient>(this TClient client, string pipeName, int millisecondsTimeout = 5000) where TClient : INamedPipeClient
-        {
-            TouchSocketConfig config;
-            if (client.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetPipeName(pipeName);
-                client.Setup(config);
-            }
-            else
-            {
-                config = client.Config;
-                config.SetPipeName(pipeName);
-            }
-            client.Connect(millisecondsTimeout, CancellationToken.None);
-            return client;
-        }
-
-        /// <summary>
         /// 异步连接到指定的命名管道
         /// </summary>
         /// <typeparam name="TClient"></typeparam>
@@ -64,14 +38,14 @@ namespace TouchSocket.NamedPipe
             {
                 config = new TouchSocketConfig();
                 config.SetPipeName(pipeName);
-                client.Setup(config);
+                await client.SetupAsync(config).ConfigureAwait(false);
             }
             else
             {
                 config = client.Config;
                 config.SetPipeName(pipeName);
             }
-            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None);
+            await client.ConnectAsync(millisecondsTimeout, CancellationToken.None).ConfigureAwait(false);
             return client;
         }
 

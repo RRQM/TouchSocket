@@ -34,22 +34,22 @@ namespace TouchSocket.Dmtp
 
         public int GetLen()
         {
-            return this.Data == null ? 1024 : this.Data.Len + 1024;
+            return this.Data == null ? 1024 : this.Data.Length + 1024;
         }
 
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
-            byteBlock.Write(this.RunNow);
-            byteBlock.Write((byte)this.DataType);
-            byteBlock.Write(this.ChannelId);
+            base.PackageBody(ref byteBlock);
+            byteBlock.WriteBoolean(this.RunNow);
+            byteBlock.WriteByte((byte)this.DataType);
+            byteBlock.WriteInt32(this.ChannelId);
 
             byteBlock.WriteByteBlock(this.Data);
         }
 
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.RunNow = byteBlock.ReadBoolean();
             this.DataType = (ChannelDataType)byteBlock.ReadByte();
             this.ChannelId = byteBlock.ReadInt32();

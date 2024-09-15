@@ -131,10 +131,7 @@ namespace TouchSocket.Core
         /// <exception cref="ArgumentNullException"></exception>
         public static void Unregister(this AppMessenger appMessenger, string token)
         {
-            if (token is null)
-            {
-                throw new ArgumentNullException(nameof(token));
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(token,nameof(token));
             appMessenger.Remove(token);
         }
 
@@ -147,31 +144,5 @@ namespace TouchSocket.Core
         {
             return type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
-
-        //private static void RegisterDelegate(this AppMessenger appMessenger, string token, Delegate dele)
-        //{
-        //    if (!typeof(Task).IsAssignableFrom(dele.Method.ReturnType))
-        //    {
-        //        throw new Exception("注册委托的返回值必须继承自Task或其泛型");
-        //    }
-        //    if (token.HasValue())
-        //    {
-        //        appMessenger.Add(token, new MessageInstance(dele));
-        //        return;
-        //    }
-        //    var attributes = dele.Method.GetCustomAttributes();
-        //    foreach (var attribute in attributes)
-        //    {
-        //        if (attribute is AppMessageAttribute att)
-        //        {
-        //            if (token.IsNullOrEmpty())
-        //            {
-        //                token = string.IsNullOrEmpty(att.Token) ? dele.Method.Name : att.Token;
-        //            }
-
-        //            appMessenger.Add(token, new MessageInstance(dele.Method, dele.Target));
-        //        }
-        //    }
-        //}
     }
 }

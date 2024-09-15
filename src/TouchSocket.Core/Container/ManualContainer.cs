@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -109,33 +110,22 @@ namespace TouchSocket.Core
         /// <exception cref="Exception"></exception>
         public object Resolve(Type fromType, string key)
         {
-            if (fromType == typeof(IResolver) || fromType == typeof(IServiceProvider))
-            {
-                return this;
-            }
-            if (this.TryResolve(fromType, out var instance, key))
-            {
-                return instance;
-            }
-
-            throw new Exception($"没有解决容器所需类型：{fromType.FullName}");
+            return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
+                ? this
+                : this.TryResolve(fromType, out var instance, key)
+                ? instance
+                : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
         }
 
         /// <inheritdoc/>
         /// <exception cref="Exception"></exception>
         public object Resolve(Type fromType)
         {
-            if (fromType == typeof(IResolver) || fromType == typeof(IServiceProvider))
-            {
-                return this;
-            }
-
-            if (this.TryResolve(fromType, out var instance))
-            {
-                return instance;
-            }
-
-            throw new Exception($"没有解决容器所需类型：{fromType.FullName}");
+            return fromType == typeof(IResolver) || fromType == typeof(IServiceProvider)
+                ? this
+                : this.TryResolve(fromType, out var instance)
+                ? instance
+                : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
         }
 
         /// <summary>
@@ -171,11 +161,9 @@ namespace TouchSocket.Core
         /// <returns></returns>
         protected virtual bool TryResolve(Type fromType, out object instance, string key)
         {
-            if (key.IsNullOrEmpty())
-            {
-                return this.m_singletonInstances.TryGetValue(fromType.FullName, out instance);
-            }
-            return this.m_singletonInstances.TryGetValue($"{fromType.FullName}{key}", out instance);
+            return key.IsNullOrEmpty()
+                ? this.m_singletonInstances.TryGetValue(fromType.FullName, out instance)
+                : this.m_singletonInstances.TryGetValue($"{fromType.FullName}{key}", out instance);
         }
 
         /// <summary>

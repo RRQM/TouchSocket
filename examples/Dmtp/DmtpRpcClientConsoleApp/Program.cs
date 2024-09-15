@@ -1,4 +1,16 @@
-﻿using RpcProxy;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using RpcProxy;
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
@@ -10,26 +22,20 @@ namespace ClientConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var consoleAction = new ConsoleAction();
             consoleAction.OnException += ConsoleAction_OnException;
 
             consoleAction.Add("1", "直接调用Rpc", RunInvokeT);
             consoleAction.Add("2", "客户端互相调用Rpc", RunInvokeT_2C);
-            consoleAction.Add("3", "测试客户端请求，服务器响应大量流数据", () => { RunRpcPullChannel(); });
-            consoleAction.Add("4", "测试客户端推送大量流数据", () => { RunRpcPushChannel(); });
-            consoleAction.Add("5", "测试取消调用", () => { RunInvokeCancellationToken(); });
+            consoleAction.Add("3", "测试客户端请求，服务器响应大量流数据", RunRpcPullChannel);
+            consoleAction.Add("4", "测试客户端推送大量流数据", RunRpcPushChannel);
+            consoleAction.Add("5", "测试取消调用", RunInvokeCancellationToken);
 
             consoleAction.ShowAll();
 
-            while (true)
-            {
-                if (!consoleAction.Run(Console.ReadLine()))
-                {
-                    consoleAction.ShowAll();
-                }
-            }
+            await consoleAction.RunCommandLineAsync();
         }
 
         private static void ConsoleAction_OnException(Exception obj)
@@ -37,9 +43,9 @@ namespace ClientConsoleApp
             ConsoleLogger.Default.Exception(obj);
         }
 
-        private static void RunInvokeCancellationToken()
+        private static async Task RunInvokeCancellationToken()
         {
-            var client = GetTcpDmtpClient();
+            var client = await GetTcpDmtpClient();
 
             //设置调用配置。当设置可取消操作时，invokeOption必须每次重新new，然后对invokeOption.Token重新赋值。
 
@@ -56,7 +62,7 @@ namespace ClientConsoleApp
 
                 try
                 {
-                    var result = client.GetDmtpRpcActor().TestCancellationToken(invokeOption);
+                    var result = await client.GetDmtpRpcActor().TestCancellationTokenAsync(invokeOption);
                     Console.WriteLine(result);
                 }
                 catch (Exception ex)
@@ -69,24 +75,24 @@ namespace ClientConsoleApp
         /// <summary>
         /// 客户端互相调用Rpc
         /// </summary>
-        private static void RunInvokeT_2C()
+        private static async Task RunInvokeT_2C()
         {
-            var client1 = GetTcpDmtpClient();
-            var client2 = GetTcpDmtpClient();
+            var client1 = await GetTcpDmtpClient();
+            var client2 = await GetTcpDmtpClient();
 
-            client1.GetDmtpRpcActor().InvokeT<bool>(client2.Id, "Notice", InvokeOption.WaitInvoke, "Hello");
+            await client1.GetDmtpRpcActor().InvokeTAsync<bool>(client2.Id, "Notice", InvokeOption.WaitInvoke, "Hello");
 
             //使用下面方法targetRpcClient也能使用代理调用。
             var targetRpcClient = client1.CreateTargetDmtpRpcActor(client2.Id);
-            targetRpcClient.InvokeT<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
+            await targetRpcClient.InvokeTAsync<bool>("Notice", InvokeOption.WaitInvoke, "Hello");
         }
 
         /// <summary>
         /// 直接调用Rpc
         /// </summary>
-        private static void RunInvokeT()
+        private static async Task RunInvokeT()
         {
-            var client = GetTcpDmtpClient();
+            var client = await GetTcpDmtpClient();
 
             //设置调用配置
             var tokenSource = new CancellationTokenSource();//可取消令箭源，可用于取消Rpc的调用
@@ -98,13 +104,13 @@ namespace ClientConsoleApp
                 Token = tokenSource.Token//配置可取消令箭
             };
 
-            var sum = client.GetDmtpRpcActor().InvokeT<int>("Add", invokeOption, 10, 20);
+            var sum = await client.GetDmtpRpcActor().InvokeTAsync<int>("Add", invokeOption, 10, 20);
             client.Logger.Info($"调用Add方法成功，结果：{sum}");
         }
 
-        private static async void RunRpcPullChannel()
+        private static async Task RunRpcPullChannel()
         {
-            using var client = GetTcpDmtpClient();
+            using var client = await GetTcpDmtpClient();
             var status = ChannelStatus.Default;
             var size = 0;
             var channel = client.CreateChannel();//创建通道
@@ -114,67 +120,67 @@ namespace ClientConsoleApp
                 {
                     foreach (var currentByteBlock in channel)
                     {
-                        size += currentByteBlock.Len;//此处可以处理传递来的流数据
+                        size += currentByteBlock.Length;//此处可以处理传递来的流数据
                     }
                     status = channel.Status;//最后状态
                 }
             });
-            var result = client.GetDmtpRpcActor().RpcPullChannel(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
+            var result = await client.GetDmtpRpcActor().RpcPullChannelAsync(channel.Id);//RpcPullChannel是代理方法，此处会阻塞至服务器全部发送完成。
             await task;//等待异步接收完成
             Console.WriteLine($"状态：{status}，size={size}");
         }
 
-        private static async void RunRpcPushChannel()
+        private static async Task RunRpcPushChannel()
         {
-            using var client = GetTcpDmtpClient();
+            using var client = await GetTcpDmtpClient();
             var status = ChannelStatus.Default;
             var size = 0;
             var package = 1024;
-            var channel = client.CreateChannel();//创建通道
-            var task = Task.Run(() =>//这里必须用异步
+            var channel =await client.CreateChannelAsync();//创建通道
+            var task = Task.Run(async () =>//这里必须用异步
             {
                 for (var i = 0; i < 1024; i++)
                 {
                     size += package;
-                    channel.Write(new byte[package]);
+                    await channel.WriteAsync(new byte[package]);
                 }
-                channel.Complete();//必须调用指令函数，如Complete，Cancel，Dispose
+                await channel.CompleteAsync();//必须调用指令函数，如Complete，Cancel，Dispose
 
                 status = channel.Status;
             });
-            var result = client.GetDmtpRpcActor().RpcPushChannel(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
+            var result =await client.GetDmtpRpcActor().RpcPushChannelAsync(channel.Id);//RpcPushChannel是代理方法，此处会阻塞至服务器全部完成。
             await task;//等待异步接收完成
             Console.WriteLine($"状态：{status}，result={result}");
         }
 
-        private static TcpDmtpClient GetTcpDmtpClient()
+        private static async Task<TcpDmtpClient> GetTcpDmtpClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();
-                    a.AddRpcStore(store =>
-                    {
-                        store.RegisterServer<MyClientRpcServer>();
-                    });
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc()
-                    //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                    .SetCreateDmtpRpcActor((actor, serverprovider, resolver) => new MyDmtpRpcActor(actor, serverprovider, resolver));
+            await client.SetupAsync(new TouchSocketConfig()
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<MyClientRpcServer>();
+                     });
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc()
+                     //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
+                     .SetCreateDmtpRpcActor((actor, serverprovider, resolver) => new MyDmtpRpcActor(actor, serverprovider, resolver));
 
-                    a.UseDmtpHeartbeat()
-                    .SetTick(TimeSpan.FromSeconds(3))
-                    .SetMaxFailCount(3);
-                })
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                }));
-            client.Connect();
+                     a.UseDmtpHeartbeat()
+                     .SetTick(TimeSpan.FromSeconds(3))
+                     .SetMaxFailCount(3);
+                 })
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Dmtp"
+                 }));
+            await client.ConnectAsync();
 
             var rpcClient1 = client.GetDmtpRpcActor<IRpcClient1>();
             var rpcClient2 = client.GetDmtpRpcActor<IRpcClient2>();
@@ -219,77 +225,16 @@ namespace ClientConsoleApp
     /// <summary>
     /// 序列化选择器
     /// </summary>
-    public class MySerializationSelector : SerializationSelector
+    public class MySerializationSelector : ISerializationSelector
     {
-        /// <summary>
-        /// 反序列化
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameterBytes"></param>
-        /// <param name="parameterType"></param>
-        /// <returns></returns>
-        public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+        public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
         {
-            if (parameterBytes == null)
-            {
-                return parameterType.GetDefault();
-            }
-            switch (serializationType)
-            {
-                case SerializationType.FastBinary:
-                    {
-                        return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
-                    }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
-                    }
-                case SerializationType.Json:
-                    {
-                        return Encoding.UTF8.GetString(parameterBytes).FromJsonString(parameterType);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
-                    }
-                default:
-                    throw new RpcException("未指定的反序列化方式");
-            }
+            throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 序列化参数
-        /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+        public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
         {
-            if (parameter == null)
-            {
-                return null;
-            }
-            switch (serializationType)
-            {
-                case SerializationType.FastBinary:
-                    {
-                        return SerializeConvert.FastBinarySerialize(parameter);
-                    }
-                case SerializationType.SystemBinary:
-                    {
-                        return SerializeConvert.BinarySerialize(parameter);
-                    }
-                case SerializationType.Json:
-                    {
-                        return SerializeConvert.JsonSerializeToBytes(parameter);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlSerializeToBytes(parameter);
-                    }
-                default:
-                    throw new RpcException("未指定的序列化方式");
-            }
+            throw new NotImplementedException();
         }
     }
 }

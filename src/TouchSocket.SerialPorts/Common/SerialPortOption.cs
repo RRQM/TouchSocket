@@ -44,6 +44,15 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         public StopBits StopBits { get; set; } = StopBits.One;
 
+        ///<inheritdoc cref = "SerialPort.Handshake" />
+        public Handshake Handshake { get; set; }
+
+        ///<inheritdoc cref = "SerialPort.DtrEnable" />
+        public bool DtrEnable { get; set; }
+
+        ///<inheritdoc cref = "SerialPort.RtsEnable" />
+        public bool RtsEnable { get; set; }
+
         /// <inheritdoc/>
         public override string ToString()
         {

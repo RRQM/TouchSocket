@@ -31,8 +31,6 @@ namespace TouchSocket.Core
 
         private volatile bool m_eventSet;
 
-        private static readonly Task m_completeTask = Task.FromResult(true);
-
         /// <summary>
         /// 创建一个异步AsyncResetEvent
         /// </summary>
@@ -47,9 +45,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 异步等待设置此事件
         /// </summary>
-        public async Task WaitOneAsync()
+        public Task WaitOneAsync()
         {
-            await this.WaitOneAsync(CancellationToken.None);
+            return this.WaitOneAsync(CancellationToken.None);
         }
 
         /// <summary>
@@ -62,7 +60,7 @@ namespace TouchSocket.Core
             {
                 using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
                 {
-                    await this.WaitOneAsync(timeoutSource.Token).ConfigureFalseAwait();
+                    await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(false);
                     return true;
                 }
             }
@@ -80,13 +78,7 @@ namespace TouchSocket.Core
         {
             if (cancellationToken.IsCancellationRequested)
             {
-#if NET45
-                var tcs = new TaskCompletionSource<bool>();
-                tcs.TrySetCanceled();
-                return tcs.Task;
-#else
-                return Task.FromCanceled(cancellationToken);
-#endif
+                return EasyTask.FromCanceled(cancellationToken);
             }
 
             lock (this.m_locker)
@@ -98,7 +90,7 @@ namespace TouchSocket.Core
                         this.m_eventSet = false;
                     }
 
-                    return m_completeTask;
+                    return EasyTask.CompletedTask;
                 }
                 else
                 {

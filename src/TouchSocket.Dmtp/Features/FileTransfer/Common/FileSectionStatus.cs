@@ -25,12 +25,12 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <summary>
         /// 正在传输状态
         /// </summary>
-        Transfering,
+        Transferring,
 
         /// <summary>
         /// 传输结束状态
         /// </summary>
-        Transfered,
+        Transferred,
 
         /// <summary>
         /// 失败

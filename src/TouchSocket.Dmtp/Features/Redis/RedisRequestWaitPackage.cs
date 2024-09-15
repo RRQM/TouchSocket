@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.Redis
 {
@@ -21,25 +20,25 @@ namespace TouchSocket.Dmtp.Redis
         public TimeSpan? timeSpan;
         public RedisPackageType packageType;
 
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.Package(byteBlock);
-            byteBlock.Write(this.key);
-            byteBlock.Write((byte)this.packageType);
+            base.Package(ref byteBlock);
+            byteBlock.WriteString(this.key);
+            byteBlock.WriteByte((byte)this.packageType);
             if (this.timeSpan.HasValue)
             {
-                byteBlock.Write((byte)1);
-                byteBlock.Write(this.timeSpan.Value);
+                byteBlock.WriteByte((byte)1);
+                byteBlock.WriteTimeSpan(this.timeSpan.Value);
             }
             else
             {
-                byteBlock.Write((byte)0);
+                byteBlock.WriteByte((byte)0);
             }
         }
 
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.Unpackage(byteBlock);
+            base.Unpackage(ref byteBlock);
             this.key = byteBlock.ReadString();
             this.packageType = (RedisPackageType)byteBlock.ReadByte();
             if (byteBlock.ReadByte() == 1)

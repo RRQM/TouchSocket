@@ -16,7 +16,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
-    internal class InternalHttpParams : Dictionary<string, string>, IHttpParams
+    internal sealed class InternalHttpParams : Dictionary<string, string>, IHttpParams
     {
         public InternalHttpParams() : base(StringComparer.OrdinalIgnoreCase)
         {
@@ -26,15 +26,7 @@ namespace TouchSocket.Http
         {
             get
             {
-                if (key == null)
-                {
-                    return null;
-                }
-                if (this.TryGetValue(key, out var value))
-                {
-                    return value;
-                }
-                return null;
+                return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
             }
 
             set
@@ -59,15 +51,7 @@ namespace TouchSocket.Http
 
         public string Get(string key)
         {
-            if (key == null)
-            {
-                return null;
-            }
-            if (this.TryGetValue(key, out var value))
-            {
-                return value;
-            }
-            return null;
+            return key == null ? null : this.TryGetValue(key, out var value) ? value : null;
         }
     }
 }

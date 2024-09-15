@@ -18,15 +18,15 @@ namespace TouchSocket.Dmtp.Redis
     {
         public byte[] value;
 
-        public override void Package(in ByteBlock byteBlock)
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.Package(byteBlock);
+            base.Package(ref byteBlock);
             byteBlock.WriteBytesPackage(this.value);
         }
 
-        public override void Unpackage(in ByteBlock byteBlock)
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.Unpackage(byteBlock);
+            base.Unpackage(ref byteBlock);
             this.value = byteBlock.ReadBytesPackage();
         }
     }

@@ -23,34 +23,33 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
-            pluginManager.Add<IHttpSocketClient, HttpContextEventArgs>(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
             base.Loaded(pluginManager);
         }
 
         /// <inheritdoc/>
-        private Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
-            if (e.Context.Response.Responsed)
+            var response = e.Context.Response;
+            if (response.Responsed)
             {
-                return EasyTask.CompletedTask;
+                return;
             }
+
             if (e.Context.Request.IsMethod("OPTIONS"))
             {
-                var response = e.Context.Response;
                 response.SetStatus(204, "No Content");
                 response.Headers.Add("Access-Control-Allow-Origin", "*");
                 response.Headers.Add("Access-Control-Allow-Headers", "*");
                 response.Headers.Add("Allow", "OPTIONS, GET, POST");
                 response.Headers.Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
 
-                response.Answer();
+                await response.AnswerAsync();
             }
             else
             {
-                e.Context.Response.UrlNotFind().Answer();
+                await response.UrlNotFind().AnswerAsync();
             }
-
-            return EasyTask.CompletedTask;
         }
     }
 }

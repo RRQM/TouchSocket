@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     public class WaitRouterPackage : MsgRouterPackage, IWaitResult
     {
         /// <inheritdoc/>
-        public long Sign { get; set; }
+        public int Sign { get; set; }
 
         /// <inheritdoc/>
         public byte Status { get; set; }
@@ -29,46 +29,46 @@ namespace TouchSocket.Core
         protected virtual bool IncludedRouter { get; }
 
         /// <inheritdoc/>
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
+            base.PackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
-                byteBlock.Write(this.Sign);
-                byteBlock.Write(this.Status);
+                byteBlock.WriteInt32(this.Sign);
+                byteBlock.WriteByte(this.Status);
             }
         }
 
         /// <inheritdoc/>
-        public override void PackageRouter(in ByteBlock byteBlock)
+        public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageRouter(byteBlock);
+            base.PackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
-                byteBlock.Write(this.Sign);
-                byteBlock.Write(this.Status);
+                byteBlock.WriteInt32(this.Sign);
+                byteBlock.WriteByte(this.Status);
             }
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             if (!this.IncludedRouter)
             {
-                this.Sign = byteBlock.ReadInt64();
-                this.Status = (byte)byteBlock.ReadByte();
+                this.Sign = byteBlock.ReadInt32();
+                this.Status = byteBlock.ReadByte();
             }
         }
 
         /// <inheritdoc/>
-        public override void UnpackageRouter(in ByteBlock byteBlock)
+        public override void UnpackageRouter<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageRouter(byteBlock);
+            base.UnpackageRouter(ref byteBlock);
             if (this.IncludedRouter)
             {
-                this.Sign = byteBlock.ReadInt64();
-                this.Status = (byte)byteBlock.ReadByte();
+                this.Sign = byteBlock.ReadInt32();
+                this.Status = byteBlock.ReadByte();
             }
         }
     }

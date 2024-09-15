@@ -13,7 +13,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -21,466 +20,158 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WebSocketClient用户终端简单实现。
     /// </summary>
-    public class WebSocketClient : WebSocketClientBase
+    public partial class WebSocketClient : WebSocketClientBase, IWebSocketClient
     {
-        /// <summary>
-        /// 收到WebSocket数据
-        /// </summary>
-        public WSDataFrameEventHandler<WebSocketClient> Received { get; set; }
+        /// <inheritdoc/>
+        public bool AllowAsyncRead { get => this.WebSocket.AllowAsyncRead; set => this.WebSocket.AllowAsyncRead = value; }
 
         /// <inheritdoc/>
-        protected override async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
-        {
-            if (this.Received != null)
-            {
-                await this.Received.Invoke(this, e);
-            }
-            await base.OnReceivedWSDataFrame(e);
-        }
-    }
-
-    /// <summary>
-    /// WebSocket用户终端。
-    /// </summary>
-    public class WebSocketClientBase : IWebSocketClient
-    {
-        /// <summary>
-        /// WebSocket用户终端
-        /// </summary>
-        public WebSocketClientBase()
-        {
-            this.m_client = new PrivateHttpClient(this.OnReceivedWSDataFrame);
-        }
-
-        #region Connect
-
-        /// <summary>
-        /// 连接到ws服务器
-        /// </summary>
-        /// <param name="millisecondsTimeout"></param>
-        /// <param name="token"></param>
-        /// <exception cref="WebSocketConnectException"></exception>
-        public virtual void Connect(int millisecondsTimeout, CancellationToken token)
-        {
-            try
-            {
-                this.m_semaphoreSlim.Wait(token);
-                if (!this.m_client.Online)
-                {
-                    this.m_client.Connect(millisecondsTimeout, token);
-                }
-
-                var option = this.m_client.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
-
-                var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-                var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Authority, url, option.Version, out var base64Key);
-                this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)))
-                    .GetFalseAwaitResult();
-
-                var response = this.m_client.Request(request, millisecondsTimeout: millisecondsTimeout, token: token);
-                if (response.StatusCode != 101)
-                {
-                    throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-                }
-                var accept = response.Headers.Get("sec-websocket-accept").Trim();
-                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    this.m_client.MainSocket.SafeDispose();
-                    throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-                }
-
-                this.m_client.InitWebSocket();
-
-                response.Flag = true;
-                Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
-            }
-            finally
-            {
-                this.m_semaphoreSlim.Release();
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
-        {
-            try
-            {
-                await this.m_semaphoreSlim.WaitAsync(millisecondsTimeout, token);
-                if (!this.m_client.Online)
-                {
-                    await this.m_client.ConnectAsync(millisecondsTimeout, token);
-                }
-
-                var option = this.m_client.Config.GetValue(WebSocketConfigExtension.WebSocketOptionProperty);
-
-                var iPHost = this.m_client.Config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-                var url = iPHost.PathAndQuery;
-                var request = WSTools.GetWSRequest(this.m_client.RemoteIPHost.Authority, url, option.Version, out var base64Key);
-
-                await this.OnHandshaking(new HttpContextEventArgs(new HttpContext(request)));
-
-                var response = await this.m_client.RequestAsync(request, millisecondsTimeout: millisecondsTimeout, token: token);
-                if (response.StatusCode != 101)
-                {
-                    throw new WebSocketConnectException($"协议升级失败，信息：{response.StatusMessage}，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-                }
-                var accept = response.Headers.Get("sec-websocket-accept").Trim();
-                if (accept.IsNullOrEmpty() || !accept.Equals(WSTools.CalculateBase64Key(base64Key).Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    this.m_client.MainSocket.SafeDispose();
-                    throw new WebSocketConnectException($"WS服务器返回的应答码不正确，更多信息请捕获WebSocketConnectException异常，获得HttpContext得知。", new HttpContext(request, response));
-                }
-
-                this.m_client.InitWebSocket();
-
-                response.Flag = true;
-                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, new HttpContextEventArgs(new HttpContext(request, response)));
-            }
-            finally
-            {
-                this.m_semaphoreSlim.Release();
-            }
-        }
-
-        #endregion Connect
-
-        #region 字段
-
-        private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
-        private readonly PrivateHttpClient m_client;
-
-        #endregion 字段
-
-        ///// <inheritdoc/>
-        //public IWebSocket WebSocket => m_client.WebSocket;
+        public IHttpSession Client => this;
 
         #region 事件
 
         /// <inheritdoc/>
-        public bool AllowAsyncRead { get => this.m_client.WebSocket.AllowAsyncRead; set => this.m_client.WebSocket.AllowAsyncRead = value; }
+        public ClosedEventHandler<IWebSocketClient> Closed { get; set; }
 
         /// <inheritdoc/>
-        public IHttpClientBase Client => this.m_client;
+        public ClosingEventHandler<IWebSocketClient> Closing { get; set; }
 
         /// <inheritdoc/>
-        public TouchSocketConfig Config => ((IConfigObject)this.m_client).Config;
+        public HttpContextEventHandler<IWebSocketClient> Handshaked { get; set; }
+
+        /// <inheritdoc/>
+        public HttpContextEventHandler<IWebSocketClient> Handshaking { get; set; }
+
+        /// <inheritdoc/>
+        public WSDataFrameEventHandler<IWebSocketClient> Received { get; set; }
 
         /// <summary>
-        /// 表示完成握手后。
+        /// 当WebSocket连接关闭时执行的任务。
         /// </summary>
-        public HttpContextEventHandler<WebSocketClientBase> Handshaked { get; set; }
-
-        /// <summary>
-        /// 表示在即将握手连接时。
-        /// </summary>
-        public HttpContextEventHandler<WebSocketClientBase> Handshaking { get; set; }
-
-        /// <inheritdoc/>
-        public bool IsHandshaked => this.m_client.WebSocket.IsHandshaked;
-
-        /// <inheritdoc/>
-        public DateTime LastReceivedTime => ((IClient)this.m_client).LastReceivedTime;
-
-        /// <inheritdoc/>
-        public DateTime LastSendTime => ((IClient)this.m_client).LastSendTime;
-
-        /// <inheritdoc/>
-        public ILog Logger { get => ((ILoggerObject)this.m_client).Logger; set => ((ILoggerObject)this.m_client).Logger = value; }
-
-        /// <inheritdoc/>
-        public IPluginManager PluginManager => ((IPluginObject)this.m_client).PluginManager;
-
-        /// <inheritdoc/>
-        public Protocol Protocol { get => ((IClient)this.m_client).Protocol; set => ((IClient)this.m_client).Protocol = value; }
-
-        /// <inheritdoc/>
-        public IResolver Resolver => ((IResolverObject)this.m_client).Resolver;
-
-        /// <inheritdoc/>
-        public string Version => this.m_client.WebSocket.Version;
-
-        /// <summary>
-        /// 表示完成握手后。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual async Task OnHandshaked(HttpContextEventArgs e)
+        /// <param name="e">包含关闭事件相关信息的参数。</param>
+        /// <returns>一个等待完成的任务。</returns>
+        protected override async Task OnWebSocketClosed(ClosedEventArgs e)
         {
-            if (e.Handled)
+            // 检查是否已注册关闭事件处理程序
+            if (this.Closed != null)
             {
-                return;
+                // 如果已注册，则调用处理程序并传递事件参数
+                await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回
+                if (e.Handled)
+                {
+                    return;
+                }
             }
+            // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 当WebSocket即将关闭时，执行异步任务。
+        /// </summary>
+        /// <param name="e">提供了关闭事件的相关信息。</param>
+        /// <returns>返回一个异步任务。</returns>
+        protected override async Task OnWebSocketClosing(ClosedEventArgs e)
+        {
+            // 检查是否注册了关闭事件的处理程序
+            if (this.Closing != null)
+            {
+                // 如果已注册，调用处理程序并传递事件参数
+                await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                // 如果事件已被处理，则直接返回，不再执行后续代码
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        protected override async Task OnWebSocketHandshaked(HttpContextEventArgs e)
+        {
             if (this.Handshaked != null)
             {
-                await this.Handshaked.Invoke(this, e);
+                await this.Handshaked.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakedPlugin.OnWebSocketHandshaked), this, e);
+
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this, e).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// 表示在即将握手连接时。
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual async Task OnHandshaking(HttpContextEventArgs e)
+        /// <inheritdoc/>
+        protected override async Task OnWebSocketHandshaking(HttpContextEventArgs e)
         {
-            if (e.Handled)
-            {
-                return;
-            }
             if (this.Handshaking != null)
             {
-                await this.Handshaking.Invoke(this, e).ConfigureFalseAwait();
+                await this.Handshaking.Invoke(this, e).ConfigureAwait(false);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), this, e).ConfigureFalseAwait();
+
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this, e).ConfigureAwait(false);
         }
 
-        private Task PrivateOnHandshaked(object obj)
+        /// <inheritdoc/>
+        protected override async Task OnWebSocketReceived(WSDataFrameEventArgs e)
         {
-            return this.OnHandshaked((HttpContextEventArgs)obj);
+            if (this.Received != null)
+            {
+                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this, e).ConfigureAwait(false);
         }
 
         #endregion 事件
 
         /// <inheritdoc/>
-        public void Close(string msg)
-        {
-            this.m_client.WebSocket.Close(msg);
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            ((IDisposable)this.m_client).Dispose();
-        }
-
-        /// <inheritdoc/>
-        public TValue GetValue<TValue>(IDependencyProperty<TValue> dp)
-        {
-            return ((IDependencyObject)this.m_client).GetValue(dp);
-        }
-
-        /// <inheritdoc/>
-        public bool HasValue<TValue>(IDependencyProperty<TValue> dp)
-        {
-            return ((IDependencyObject)this.m_client).HasValue(dp);
-        }
-
-        /// <inheritdoc/>
-        public void Ping()
-        {
-            this.m_client.WebSocket.Ping();
-        }
+        public string Version => this.WebSocket.Version;
 
         /// <inheritdoc/>
         public Task PingAsync()
         {
-            return this.m_client.WebSocket.PingAsync();
-        }
-
-        /// <inheritdoc/>
-        public void Pong()
-        {
-            this.m_client.WebSocket.Pong();
+            return this.WebSocket.PingAsync();
         }
 
         /// <inheritdoc/>
         public Task PongAsync()
         {
-            return this.m_client.WebSocket.PongAsync();
+            return this.WebSocket.PongAsync();
         }
 
         /// <inheritdoc/>
-        public Task<WebSocketReceiveResult> ReadAsync(CancellationToken token)
+        public ValueTask<IWebSocketReceiveResult> ReadAsync(CancellationToken token)
         {
-            return this.m_client.WebSocket.ReadAsync(token);
-        }
-
-        /// <inheritdoc/>
-        public DependencyObject RemoveValue<TValue>(IDependencyProperty<TValue> dp)
-        {
-            return ((IDependencyObject)this.m_client).RemoveValue(dp);
-        }
-
-        /// <inheritdoc/>
-        public void Send(WSDataFrame dataFrame, bool endOfMessage = true)
-        {
-            this.m_client.WebSocket.Send(dataFrame, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public void Send(string text, bool endOfMessage = true)
-        {
-            this.m_client.WebSocket.Send(text, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public void Send(byte[] buffer, int offset, int length, bool endOfMessage = true)
-        {
-            this.m_client.WebSocket.Send(buffer, offset, length, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public void Send(ByteBlock byteBlock, bool endOfMessage = true)
-        {
-            this.m_client.WebSocket.Send(byteBlock, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public void Send(byte[] buffer, bool endOfMessage = true)
-        {
-            this.m_client.WebSocket.Send(buffer, endOfMessage);
+            return this.WebSocket.ReadAsync(token);
         }
 
         /// <inheritdoc/>
         public Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true)
         {
-            return this.m_client.WebSocket.SendAsync(dataFrame, endOfMessage);
+            return this.WebSocket.SendAsync(dataFrame, endOfMessage);
         }
 
         /// <inheritdoc/>
         public Task SendAsync(string text, bool endOfMessage = true)
         {
-            return this.m_client.WebSocket.SendAsync(text, endOfMessage);
+            return this.WebSocket.SendAsync(text, endOfMessage);
         }
 
         /// <inheritdoc/>
-        public Task SendAsync(byte[] buffer, bool endOfMessage = true)
+        public Task SendAsync(ReadOnlyMemory<byte> memory, bool endOfMessage = true)
         {
-            return this.m_client.WebSocket.SendAsync(buffer, endOfMessage);
+            return this.WebSocket.SendAsync(memory, endOfMessage);
         }
-
-        /// <inheritdoc/>
-        public Task SendAsync(byte[] buffer, int offset, int length, bool endOfMessage = true)
-        {
-            return this.m_client.WebSocket.SendAsync(buffer, offset, length, endOfMessage);
-        }
-
-        /// <inheritdoc/>
-        public void Setup(TouchSocketConfig config)
-        {
-            ((ISetupConfigObject)this.m_client).Setup(config);
-        }
-
-        /// <inheritdoc/>
-        public Task SetupAsync(TouchSocketConfig config)
-        {
-            return ((ISetupConfigObject)this.m_client).SetupAsync(config);
-        }
-
-        /// <inheritdoc/>
-        public DependencyObject SetValue<TValue>(IDependencyProperty<TValue> dp, TValue value)
-        {
-            return ((IDependencyObject)this.m_client).SetValue(dp, value);
-        }
-
-        /// <inheritdoc/>
-        public bool TryGetValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
-        {
-            return ((IDependencyObject)this.m_client).TryGetValue(dp, out value);
-        }
-
-        /// <inheritdoc/>
-        public bool TryRemoveValue<TValue>(IDependencyProperty<TValue> dp, out TValue value)
-        {
-            return ((IDependencyObject)this.m_client).TryRemoveValue(dp, out value);
-        }
-
-#if ValueTask
-
-        /// <inheritdoc/>
-        public async ValueTask<WebSocketReceiveResult> ValueReadAsync(CancellationToken token)
-        {
-            return await this.m_client.WebSocket.ValueReadAsync(token);
-        }
-
-#endif
-
-        /// <summary>
-        /// 当收到WS数据时。
-        /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        protected virtual async Task OnReceivedWSDataFrame(WSDataFrameEventArgs e)
-        {
-            await this.m_client.PluginManager.RaiseAsync(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), this, e).ConfigureFalseAwait();
-        }
-
-        #region InternalClass
-
-        private class PrivateHttpClient : HttpClientBase
-        {
-            private readonly InternalWebSocket m_webSocket;
-
-            private readonly Func<WSDataFrameEventArgs, Task> m_func;
-
-            public PrivateHttpClient(Func<WSDataFrameEventArgs, Task> func)
-            {
-                this.m_webSocket = new InternalWebSocket(this);
-                this.m_func = func;
-            }
-
-            public InternalWebSocket WebSocket { get => this.m_webSocket; }
-
-            public void InitWebSocket()
-            {
-                this.SetAdapter(new WebSocketDataHandlingAdapter());
-                this.Protocol = Protocol.WebSocket;
-                this.m_webSocket.IsHandshaked = true;
-            }
-
-            /// <summary>
-            /// <inheritdoc/>
-            /// </summary>
-            /// <param name="e"></param>
-            protected override async Task OnDisconnected(DisconnectEventArgs e)
-            {
-                this.m_webSocket.IsHandshaked = false;
-                if (this.m_webSocket.AllowAsyncRead)
-                {
-                    _ = this.m_webSocket.TryInputReceiveAsync(null);
-                }
-                await base.OnDisconnected(e);
-            }
-
-            protected override async Task ReceivedData(ReceivedDataEventArgs e)
-            {
-                if (this.m_webSocket.IsHandshaked)
-                {
-                    var dataFrame = (WSDataFrame)e.RequestInfo;
-
-                    if (this.m_webSocket.AllowAsyncRead)
-                    {
-                        if (await this.m_webSocket.TryInputReceiveAsync(dataFrame).ConfigureFalseAwait())
-                        {
-                            return;
-                        }
-                    }
-                    await this.m_func(new WSDataFrameEventArgs(dataFrame));
-                }
-                else
-                {
-                    if (e.RequestInfo is HttpResponse response)
-                    {
-                        response.Flag = false;
-                        await base.ReceivedData(e);
-                        SpinWait.SpinUntil(() =>
-                        {
-                            return (bool)response.Flag;
-                        }, 3000);
-                    }
-                }
-                await base.ReceivedData(e);
-            }
-        }
-
-        #endregion InternalClass
     }
 }

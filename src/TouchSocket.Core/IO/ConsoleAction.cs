@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -20,7 +21,7 @@ namespace TouchSocket.Core
     /// 控制台行为
     /// </summary>
 
-    internal struct VAction
+    internal readonly struct VAction
     {
         /// <summary>
         /// 构造函数
@@ -28,14 +29,14 @@ namespace TouchSocket.Core
         /// <param name="action"></param>
         /// <param name="description"></param>
         /// <param name="fullOrder"></param>
-        public VAction(string description, string fullOrder, Action action)
+        public VAction(string description, string fullOrder, Func<Task> action)
         {
             this.FullOrder = fullOrder;
             this.Action = action ?? throw new ArgumentNullException(nameof(action));
             this.Description = description ?? throw new ArgumentNullException(nameof(description));
         }
 
-        public Action Action { get; }
+        public Func<Task> Action { get; }
 
         public string Description { get; }
         public string FullOrder { get; }
@@ -44,7 +45,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 控制台行为
     /// </summary>
-    public class ConsoleAction
+    public sealed class ConsoleAction
     {
         private readonly Dictionary<string, VAction> m_actions = new Dictionary<string, VAction>();
 
@@ -69,10 +70,10 @@ namespace TouchSocket.Core
 
  -------------------------------------------------------------------
      Author     :   若汝棋茗
-     Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString()}
+     Version    :   {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}
      Gitee      :   https://gitee.com/rrqm_home
      Github     :   https://github.com/rrqm
-     API        :   https://touchsocket.net//
+     API        :   https://touchsocket.net/
  -------------------------------------------------------------------
 ";
             Console.WriteLine(title);
@@ -96,6 +97,22 @@ namespace TouchSocket.Core
         /// <param name="action"></param>
         public void Add(string order, string description, Action action)
         {
+            Task Run()
+            {
+                action.Invoke();
+                return EasyTask.CompletedTask;
+            }
+            this.Add(order, description, Run);
+        }
+
+        /// <summary>
+        /// 添加
+        /// </summary>
+        /// <param name="order">指令，多个指令用“|”分割</param>
+        /// <param name="description">描述</param>
+        /// <param name="action"></param>
+        public void Add(string order, string description, Func<Task> action)
+        {
             var orders = order.ToLower().Split('|');
             foreach (var item in orders)
             {
@@ -104,32 +121,17 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 运行
-        /// </summary>
-        public void RunCommandLine()
-        {
-            while (true)
-            {
-                var str = Console.ReadLine();
-                if (!this.Run(str))
-                {
-                    Console.WriteLine($"没有这个指令。");
-                }
-            }
-        }
-
-        /// <summary>
         /// 执行，返回值仅表示是否有这个指令，异常获取请使用<see cref="OnException"/>
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public bool Run(string order)
+        public async Task<bool> RunAsync(string order)
         {
             if (this.m_actions.TryGetValue(order.ToLower(), out var vAction))
             {
                 try
                 {
-                    vAction.Action.Invoke();
+                    await vAction.Action.Invoke().ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -140,6 +142,21 @@ namespace TouchSocket.Core
             else
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 运行
+        /// </summary>
+        public async Task RunCommandLineAsync()
+        {
+            while (true)
+            {
+                var str = Console.ReadLine();
+                if (!await this.RunAsync(str).ConfigureAwait(false))
+                {
+                    Console.WriteLine($"没有这个指令。");
+                }
             }
         }
 

@@ -36,8 +36,8 @@ namespace TouchSocket.JsonRpc
         protected override void Loaded(IPluginManager pluginManager)
         {
             base.Loaded(pluginManager);
-            pluginManager.Add<ITcpClientBase, ConnectedEventArgs>(nameof(ITcpConnectedPlugin.OnTcpConnected), this.OnTcpConnected);
-            pluginManager.Add<ITcpClientBase, ReceivedDataEventArgs>(nameof(ITcpReceivedPlugin.OnTcpReceived), this.OnTcpReceived);
+            pluginManager.Add<ITcpSession, ConnectedEventArgs>(typeof(ITcpConnectedPlugin), this.OnTcpConnected);
+            pluginManager.Add<ITcpSession, ReceivedDataEventArgs>(typeof(ITcpReceivedPlugin), this.OnTcpReceived);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed void Response(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
             {
@@ -79,15 +79,17 @@ namespace TouchSocket.JsonRpc
                     };
                 }
                 var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                var client = (ITcpClientBase)callContext.Caller;
-                client.Send(str.ToUTF8Bytes());
+                if (callContext.Caller is ISender sender)
+                {
+                    await sender.SendAsync(str.ToUTF8Bytes()).ConfigureAwait(false);
+                }
             }
             catch
             {
             }
         }
 
-        private Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+        private Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
         {
             if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
             {
@@ -97,7 +99,7 @@ namespace TouchSocket.JsonRpc
             return e.InvokeNext();
         }
 
-        private Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+        private Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             if (client.GetIsJsonRpc())
             {
@@ -122,7 +124,7 @@ namespace TouchSocket.JsonRpc
                     }
                     else
                     {
-                        Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
+                        Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
                     }
 
                     return EasyTask.CompletedTask;

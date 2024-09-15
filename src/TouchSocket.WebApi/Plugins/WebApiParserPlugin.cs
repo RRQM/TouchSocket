@@ -78,7 +78,7 @@ namespace TouchSocket.WebApi
         /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
-            pluginManager.Add(nameof(IHttpPlugin.OnHttpRequest), this.OnHttpRequest);
+            pluginManager.Add(typeof(IHttpPlugin), this.OnHttpRequest);
             base.Loaded(pluginManager);
         }
 
@@ -90,12 +90,10 @@ namespace TouchSocket.WebApi
 
                 return target;
             }
-            //return this.Converter.Deserialize(source, targetType);
-
             return default;
         }
 
-        private async Task OnHttpGet(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpGet(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (this.GetRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
             {
@@ -139,35 +137,6 @@ namespace TouchSocket.WebApi
                                 }
                             }
                         }
-
-                        //var i = 0;
-                        //if (rpcMethod.IncludeCallContext)
-                        //{
-                        //    ps[i] = callContext;
-                        //    i++;
-                        //}
-                        //if (e.Context.Request.Query == null)
-                        //{
-                        //    for (; i < rpcMethod.Parameters.Length; i++)
-                        //    {
-                        //        ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    for (; i < rpcMethod.Parameters.Length; i++)
-                        //    {
-                        //        var value = e.Context.Request.Query.Get(rpcMethod.ParameterNames[i]);
-                        //        if (!value.IsNullOrEmpty())
-                        //        {
-                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, rpcMethod.ParameterTypes[i]);
-                        //        }
-                        //        else
-                        //        {
-                        //            ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
-                        //        }
-                        //    }
-                        //}
                     }
                     catch (Exception ex)
                     {
@@ -181,7 +150,7 @@ namespace TouchSocket.WebApi
                 }
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                 }
 
                 if (e.Context.Response.Responsed)
@@ -189,12 +158,13 @@ namespace TouchSocket.WebApi
                     return;
                 }
 
-                this.Response(client, e.Context, invokeResult);
+                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
+                return;
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
-        private async Task OnHttpPost(IHttpSocketClient client, HttpContextEventArgs e)
+        private async Task OnHttpPost(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (this.PostRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
             {
@@ -242,60 +212,6 @@ namespace TouchSocket.WebApi
                                 ps[i] = this.Converter.Deserialize(e.Context, str, parameter.Type);
                             }
                         }
-
-                        //var i = 0;
-
-                        //if (rpcMethod.IncludeCallContext)
-                        //{
-                        //    //包含上下文
-                        //    ps[i] = callContext;
-                        //    i++;
-                        //    index = rpcMethod.Parameters.Length - 2;
-
-                        //}
-                        //else
-                        //{
-                        //    index = rpcMethod.Parameters.Length - 1;
-                        //}
-
-                        //var lastType = rpcMethod.ParameterTypes.LastOrDefault();
-                        //if (true)
-                        //{
-                        //}
-                        //var psLength = rpcMethod.ParameterTypes.Length - 1;
-                        //if (e.Context.Request.Query.Count==0)
-                        //{
-                        //    for (; i < psLength; i++)
-                        //    {
-                        //        ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    for (; i < psLength + 1; i++)
-                        //    {
-                        //        var value = e.Context.Request.Query.Get(rpcMethod.ParameterNames[i]);
-                        //        if (!value.IsNullOrEmpty())
-                        //        {
-                        //            ps[i] = WebApiParserPlugin.PrimitiveParse(value, rpcMethod.ParameterTypes[i]);
-                        //            index--;
-                        //        }
-                        //        else
-                        //        {
-                        //            ps[i] = rpcMethod.ParameterTypes[i].GetDefault();
-                        //        }
-                        //    }
-                        //}
-
-                        //if (index >= 0)
-                        //{
-                        //    var str = e.Context.Request.GetBody();
-                        //    if (rpcMethod.IncludeCallContext)
-                        //    {
-                        //        index++;
-                        //    }
-                        //    ps[index] = this.Converter.Deserialize(e.Context, str, rpcMethod.ParameterTypes[index]);
-                        //}
                     }
                     catch (Exception ex)
                     {
@@ -305,7 +221,7 @@ namespace TouchSocket.WebApi
 
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                     }
 
                     if (e.Context.Response.Responsed)
@@ -318,14 +234,14 @@ namespace TouchSocket.WebApi
                     invokeResult.Status = InvokeStatus.UnEnable;
                 }
 
-                this.Response(client, e.Context, invokeResult);
+                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
             }
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private Task OnHttpRequest(object sender, PluginEventArgs args)
         {
-            var client = (IHttpSocketClient)sender;
+            var client = (IHttpSessionClient)sender;
             var e = (HttpContextEventArgs)args;
 
             if (e.Context.Request.Method == HttpMethod.Get)
@@ -367,7 +283,7 @@ namespace TouchSocket.WebApi
             }
         }
 
-        private void Response(IHttpSocketClient client, HttpContext httpContext, in InvokeResult invokeResult)
+        private async Task ResponseAsync(IHttpSessionClient client, HttpContext httpContext, InvokeResult invokeResult)
         {
             var httpResponse = httpContext.Response;
             var httpRequest = httpContext.Request;
@@ -420,11 +336,7 @@ namespace TouchSocket.WebApi
                     }
             }
 
-            using (var byteBlock = new ByteBlock())
-            {
-                httpResponse.Build(byteBlock);
-                client.DefaultSend(byteBlock);
-            }
+            await httpResponse.AnswerAsync().ConfigureAwait(false);
 
             if (!httpContext.Request.KeepAlive)
             {

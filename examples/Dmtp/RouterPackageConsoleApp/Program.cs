@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.RouterPackage;
 using TouchSocket.Sockets;
@@ -7,7 +19,7 @@ namespace RouterPackageConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             try
             {
@@ -27,12 +39,12 @@ namespace RouterPackageConsoleApp
             consoleAction.Add("2", "测试返回Result", RequestResult);
 
             consoleAction.ShowAll();
-            consoleAction.RunCommandLine();
+            await consoleAction.RunCommandLineAsync();
         }
 
-        private static void RequestResult()
+        private static async Task RequestResult()
         {
-            using var client = GetTcpDmtpClient();
+            using var client = await GetTcpDmtpClient();
             using (var byteBlock = new ByteBlock(1024 * 512))
             {
                 //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
@@ -44,15 +56,15 @@ namespace RouterPackageConsoleApp
                 };
 
                 //发起请求，然后等待一个自定义的响应包。
-                var response = client.GetDmtpRouterPackageActor().Request(requestPackage);
+                var response = await client.GetDmtpRouterPackageActor().RequestAsync(requestPackage);
 
                 client.Logger.Info($"自定义响应成功，{response}");
             }
         }
 
-        private static void RequestMyResponsePackage()
+        private static async Task RequestMyResponsePackage()
         {
-            using var client = GetTcpDmtpClient();
+            using var client = await GetTcpDmtpClient();
             using (var byteBlock = new ByteBlock(1024 * 512))
             {
                 //此处模拟一个大数据块，实际情况中请使用write写入实际数据。
@@ -64,7 +76,7 @@ namespace RouterPackageConsoleApp
                 };
 
                 //发起请求，然后等待一个自定义的响应包。
-                var response = client.GetDmtpRouterPackageActor().Request<MyResponsePackage>(requestPackage);
+                var response = await client.GetDmtpRouterPackageActor().RequestAsync<MyResponsePackage>(requestPackage);
 
                 client.Logger.Info($"自定义响应成功，{response.Message}");
             }
@@ -75,9 +87,9 @@ namespace RouterPackageConsoleApp
             Console.WriteLine(obj.Message);
         }
 
-        private static TcpDmtpClient GetTcpDmtpClient()
+        private static async Task<TcpDmtpClient> GetTcpDmtpClient()
         {
-            var client = new TouchSocketConfig()
+            var client = await new TouchSocketConfig()
                    .SetRemoteIPHost("127.0.0.1:7789")
                    .SetDmtpOption(new DmtpOption()
                    {
@@ -91,13 +103,13 @@ namespace RouterPackageConsoleApp
                    {
                        a.UseDmtpRouterPackage();//添加路由包功能插件
                    })
-                   .BuildWithTcpDmtpClient();
+                   .BuildClientAsync<TcpDmtpClient>();
 
             client.Logger.Info("连接成功");
             return client;
         }
 
-        private static TcpDmtpService GetTcpDmtpService()
+        private static async Task<TcpDmtpService> GetTcpDmtpService()
         {
             var service = new TcpDmtpService();
 
@@ -121,8 +133,8 @@ namespace RouterPackageConsoleApp
                        VerifyToken = "Dmtp"//连接验证口令。
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
             service.Logger.Info("服务器成功启动");
             return service;
         }
@@ -142,15 +154,15 @@ namespace RouterPackageConsoleApp
             /// </summary>
             public ByteBlock ByteBlock { get; set; }
 
-            public override void PackageBody(in ByteBlock byteBlock)
+            public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
             {
-                base.PackageBody(byteBlock);
+                base.PackageBody(ref byteBlock);
                 byteBlock.WriteByteBlock(this.ByteBlock);
             }
 
-            public override void UnpackageBody(in ByteBlock byteBlock)
+            public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
             {
-                base.UnpackageBody(byteBlock);
+                base.UnpackageBody(ref byteBlock);
                 this.ByteBlock = byteBlock.ReadByteBlock();
             }
         }
@@ -218,7 +230,7 @@ namespace RouterPackageConsoleApp
                     response.ByteBlock.SafeDispose();//将使用完成的内存池回收。
                     /*此处即可以获取到请求的包*/
 
-                    e.ResponseSuccess();
+                    await e.ResponseSuccessAsync();
                     this.m_logger.Info($"已响应包请求");
                 }
 

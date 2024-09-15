@@ -17,14 +17,14 @@ namespace TouchSocket.Http
     /// <summary>
     /// IHttpService
     /// </summary>
-    public interface IHttpService<TClient> : IHttpServiceBase, ITcpService<TClient> where TClient : IHttpSocketClient
+    public interface IHttpService<TClient> : IHttpServiceBase, ITcpServiceBase<TClient> where TClient : IHttpSessionClient
     {
     }
 
     /// <summary>
     /// IHttpService
     /// </summary>
-    public interface IHttpService : IHttpService<HttpSocketClient>
+    public interface IHttpService : IHttpService<HttpSessionClient>
     {
     }
 }

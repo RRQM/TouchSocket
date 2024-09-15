@@ -9,19 +9,33 @@
 		<Title>TouchSocket.Dmtp</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Dmtp</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
+	</ItemGroup>
 	
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.Http\TouchSocket.Http.csproj" />
 	  <ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
 		<PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketDmtpResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketDmtpResource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketDmtpResource.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TouchSocketDmtpResource.Designer.cs</LastGenOutput>
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	  </EmbeddedResource>
 	</ItemGroup>
 </Project>

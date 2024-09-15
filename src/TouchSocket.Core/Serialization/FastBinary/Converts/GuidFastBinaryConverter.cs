@@ -16,19 +16,14 @@ namespace TouchSocket.Core
 {
     internal class GuidFastBinaryConverter : FastBinaryConverter<Guid>
     {
-        protected override Guid Read(byte[] buffer, int offset, int len)
+        protected override Guid Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            var bytes = new byte[16];
-            Array.Copy(buffer, offset, bytes, 0, len);
-
-            return new Guid(bytes);
+            return byteBlock.ReadGuid();
         }
 
-        protected override int Write(ByteBlock byteBlock, Guid obj)
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Guid obj)
         {
-            var bytes = obj.ToByteArray();
-            byteBlock.Write(bytes);
-            return bytes.Length;
+            byteBlock.WriteGuid(obj);
         }
     }
 }

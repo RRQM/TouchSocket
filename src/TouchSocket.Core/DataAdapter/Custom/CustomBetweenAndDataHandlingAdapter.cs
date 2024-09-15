@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
     /// 区间数据包处理适配器，支持以任意字符、字节数组起始与结尾的数据包。
     /// </summary>
-    public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo> : CustomDataHandlingAdapter<TBetweenAndRequestInfo> where TBetweenAndRequestInfo : class, IBetweenAndRequestInfo
+    public abstract class CustomBetweenAndDataHandlingAdapter<TBetweenAndRequestInfo> : CustomDataHandlingAdapter<TBetweenAndRequestInfo> where TBetweenAndRequestInfo : IBetweenAndRequestInfo
     {
         /// <summary>
         /// 起始字符，不可以为null，可以为0长度
@@ -34,56 +36,62 @@ namespace TouchSocket.Core
 
         /// <summary>
         /// 筛选解析数据。实例化的TRequest会一直保存，直至解析成功，或手动清除。
-        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLen"/>的数据</para>
-        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Pos"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
-        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Pos"/>移至指定位置。</para>
+        /// <para>当不满足解析条件时，请返回<see cref="FilterResult.Cache"/>，此时会保存<see cref="ByteBlock.CanReadLength"/>的数据</para>
+        /// <para>当数据部分异常时，请移动<see cref="ByteBlock.Position"/>到指定位置，然后返回<see cref="FilterResult.GoOn"/></para>
+        /// <para>当完全满足解析条件时，请返回<see cref="FilterResult.Success"/>最后将<see cref="ByteBlock.Position"/>移至指定位置。</para>
         /// </summary>
         /// <param name="byteBlock">字节块</param>
         /// <param name="beCached">是否为上次遗留对象，当该参数为True时，request也将是上次实例化的对象。</param>
         /// <param name="request">对象。</param>
         /// <param name="tempCapacity">缓存容量。当需要首次缓存时，指示申请的ByteBlock的容量。合理的值可避免ByteBlock扩容带来的性能消耗。</param>
         /// <returns></returns>
-        protected override FilterResult Filter(in ByteBlock byteBlock, bool beCached, ref TBetweenAndRequestInfo request, ref int tempCapacity)
+        protected override FilterResult Filter<T>(ref T byteBlock, bool beCached, ref TBetweenAndRequestInfo request, ref int tempCapacity)
         {
             if (beCached)
             {
-                int len;
-                var pos = byteBlock.Pos;
+                var len = 0;
+                var pos = byteBlock.Position;
                 while (true)
                 {
-                    var indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.EndCode);
+                    var indexEnd = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.EndCode);
                     if (indexEnd == -1)
                     {
-                        byteBlock.Pos = pos;
+                        byteBlock.Position = pos;
                         return FilterResult.Cache;
                     }
-
-                    len = indexEnd - this.EndCode.Length - pos + 1;
-                    if (len >= this.MinSize)
+                    else
                     {
-                        break;
+                        len += indexEnd;
+                        byteBlock.Position += indexEnd;
+                        if (len >= this.MinSize)
+                        {
+                            break;
+                        }
+
+                        len += this.EndCode.Length;
+                        byteBlock.Position += this.EndCode.Length;
                     }
-                    byteBlock.Pos += len + this.EndCode.Length;
+
                 }
 
-                byteBlock.Pos = pos;
-                request.OnParsingBody(byteBlock.ToArray(pos, len));
-                byteBlock.Pos += len;
+                //byteBlock.Position = pos;
+                request.OnParsingBody(byteBlock.Span.Slice(pos, len));
+                byteBlock.Position = len + pos;
 
-                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))
+                if (request.OnParsingEndCode(byteBlock.Span.Slice(byteBlock.Position, this.EndCode.Length)))
                 {
-                    byteBlock.Pos += this.EndCode.Length;
+                    byteBlock.Position += this.EndCode.Length;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Pos += this.EndCode.Length;
+                    byteBlock.Position += this.EndCode.Length;
                     return FilterResult.GoOn;
                 }
             }
             else
             {
-                var indexStart = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.StartCode);
+                var indexStart = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.StartCode);
                 if (indexStart == -1)
                 {
                     return FilterResult.Cache;
@@ -91,49 +99,55 @@ namespace TouchSocket.Core
 
                 var requestInfo = this.GetInstance();
 
-                if (requestInfo.OnParsingStartCode(byteBlock.ToArray(byteBlock.Pos, this.StartCode.Length)))
+                if (requestInfo.OnParsingStartCode(byteBlock.Span.Slice(byteBlock.Position, this.StartCode.Length)))
                 {
-                    byteBlock.Pos += this.StartCode.Length;
+                    byteBlock.Position += this.StartCode.Length;
                 }
                 else
                 {
-                    byteBlock.Pos += 1;
+                    byteBlock.Position += 1;
                     return FilterResult.GoOn;
                 }
 
                 request = requestInfo;
 
-                int len;
-                var pos = byteBlock.Pos;
+                var len = 0;
+                var pos = byteBlock.Position;
                 while (true)
                 {
-                    var indexEnd = byteBlock.Buffer.IndexOfFirst(byteBlock.Pos, byteBlock.CanReadLen, this.EndCode);
+                    var indexEnd = byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength).IndexOf(this.EndCode);
                     if (indexEnd == -1)
                     {
-                        byteBlock.Pos = pos;
+                        byteBlock.Position = pos;
                         return FilterResult.Cache;
                     }
-
-                    len = indexEnd - this.EndCode.Length - pos + 1;
-                    if (len >= this.MinSize)
+                    else
                     {
-                        break;
+                        len += indexEnd;
+                        byteBlock.Position += indexEnd;
+
+                        if (len >= this.MinSize)
+                        {
+                            break;
+                        }
+
+                        len += this.EndCode.Length;
+                        byteBlock.Position += this.EndCode.Length;
                     }
-                    byteBlock.Pos += len + this.EndCode.Length;
                 }
 
-                byteBlock.Pos = pos;
-                request.OnParsingBody(byteBlock.ToArray(pos, len));
-                byteBlock.Pos += len;
+                //byteBlock.Position = pos;
+                request.OnParsingBody(byteBlock.Span.Slice(pos, len));
+                byteBlock.Position = len + pos;
 
-                if (request.OnParsingEndCode(byteBlock.ToArray(byteBlock.Pos, this.EndCode.Length)))
+                if (request.OnParsingEndCode(byteBlock.Span.Slice(byteBlock.Position, this.EndCode.Length)))
                 {
-                    byteBlock.Pos += this.EndCode.Length;
+                    byteBlock.Position += this.EndCode.Length;
                     return FilterResult.Success;
                 }
                 else
                 {
-                    byteBlock.Pos += 1;
+                    byteBlock.Position += 1;
                     return FilterResult.GoOn;
                 }
             }
@@ -156,20 +170,20 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="startCode"></param>
         /// <returns></returns>
-        bool OnParsingStartCode(byte[] startCode);
+        bool OnParsingStartCode(ReadOnlySpan<byte> startCode);
 
         /// <summary>
         /// 当解析数据体。
         /// <para>在此方法中，您必须手动保存Body内容</para>
         /// </summary>
         /// <param name="body"></param>
-        void OnParsingBody(byte[] body);
+        void OnParsingBody(ReadOnlySpan<byte> body);
 
         /// <summary>
         /// 当解析到起始字符时。
         /// </summary>
         /// <param name="endCode"></param>
         /// <returns></returns>
-        bool OnParsingEndCode(byte[] endCode);
+        bool OnParsingEndCode(ReadOnlySpan<byte> endCode);
     }
 }

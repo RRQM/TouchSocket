@@ -32,7 +32,7 @@ namespace TouchSocket.Core
         /// </summary>
         public CacheEntry(TKey key, TValue value)
         {
-            this.UpdateTime = DateTime.Now;
+            this.UpdateTime = DateTime.UtcNow;
             this.Duration = TimeSpan.FromSeconds(60);
             this.Key = key;
             this.Value = value;

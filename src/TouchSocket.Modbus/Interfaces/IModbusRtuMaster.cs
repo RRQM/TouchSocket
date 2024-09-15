@@ -17,7 +17,7 @@ namespace TouchSocket.Modbus
     /// <summary>
     /// 基于串口的Modbus主站接口
     /// </summary>
-    public interface IModbusRtuMaster : ISerialPortClient, IModbusMaster
+    public interface IModbusRtuMaster : IModbusMaster, ISerialPortSession
     {
     }
 }

@@ -38,7 +38,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                 var ints = new List<int>();
                 foreach (var item in this.FileResourceStore)
                 {
-                    if (DateTime.Now - item.Value.LastActiveTime > this.Timeout)
+                    if (DateTime.UtcNow - item.Value.LastActiveTime > this.Timeout)
                     {
                         ints.Add(item.Key);
                     }
@@ -105,9 +105,9 @@ namespace TouchSocket.Dmtp.FileTransfer
         public virtual int ReadAllBytes(FileInfo fileInfo, byte[] buffer)
         {
             this.ThrowIfDisposed();
-            using (var reader = FilePool.GetReader(fileInfo))
+            using (var byteBlock = FilePool.GetReader(fileInfo))
             {
-                return reader.Read(buffer, 0, buffer.Length);
+                return byteBlock.Read(buffer);
             }
         }
 
@@ -119,7 +119,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         }
 
         /// <inheritdoc/>
-        public virtual bool TryRelaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
+        public virtual bool TryReleaseFileResourceLocator(int resourceHandle, out FileResourceLocator locator)
         {
             this.ThrowIfDisposed();
             if (this.FileResourceStore.TryRemove(resourceHandle, out locator))
@@ -135,9 +135,9 @@ namespace TouchSocket.Dmtp.FileTransfer
         public virtual void WriteAllBytes(string path, byte[] buffer, int offset, int length)
         {
             this.ThrowIfDisposed();
-            using (var writer = FilePool.GetWriter(path))
+            using (var byteBlock = FilePool.GetWriter(path))
             {
-                writer.Write(buffer, offset, length);
+                byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
             }
         }
 

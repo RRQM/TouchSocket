@@ -12,6 +12,8 @@
 
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace TouchSocket.Core
 {
@@ -56,12 +58,129 @@ namespace TouchSocket.Core
 #else
         public static readonly byte[] ZeroBytes = Array.Empty<byte>();
 #endif
-
         private static int s_seed;
 
+        /// <summary>
+        /// 生成指定范围内的随机Int64整数
+        /// </summary>
+        /// <returns>返回一个在0到10000000之间的随机Int64整数</returns>
         public static long GenerateRandomInt64()
         {
-            return (long)Math.Floor((new Random(s_seed++)).NextDouble() * 10000000D);
+            // 使用种子生成器创建一个新的随机数生成器实例
+            // 种子递增以保持随机性
+            Random random = new Random(s_seed++);
+
+            // 生成一个0到1之间的随机双精度浮点数
+            double randomDouble = random.NextDouble();
+
+            // 将随机双精度浮点数乘以10000000，然后取其整数部分
+            // 以获得一个在0到10000000之间的随机Int64整数
+            return (long)Math.Floor(randomDouble * 10000000D);
+        }
+        /// <summary>
+        /// 判断输入的字符串是否是一个超链接
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static bool IsURL(string input)
+        {
+            var pattern = @"^[a-zA-Z]+://(\w+(-\w+)*)(\.(\w+(-\w+)*))*(\?\S*)?$?";
+            var regex = new Regex(pattern);
+            return regex.IsMatch(input);
+        }
+
+        /// <summary>
+        /// 判断输入的字符串是否是表示一个IP地址
+        /// </summary>
+        /// <param name="input">被比较的字符串</param>
+        /// <returns>是IP地址则为True</returns>
+        public static bool IsIPv4(string input)
+        {
+            try
+            {
+                var IPs = input.Split('.');
+                var regex = new Regex(@"^\d+$");
+                for (var i = 0; i < IPs.Length; i++)
+                {
+                    if (!regex.IsMatch(IPs[i]))
+                    {
+                        return false;
+                    }
+                    if (Convert.ToUInt16(IPs[i]) > 255)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断输入的字符串是否是合法的IPV6 地址
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static bool IsIPV6(string input)
+        {
+            var temp = input;
+            var strs = temp.Split(':');
+            if (strs.Length > 8)
+            {
+                return false;
+            }
+            var count = StringExtension.HitStringCount(input, "::");
+            string pattern;
+            if (count > 1)
+            {
+                return false;
+            }
+            else if (count == 0)
+            {
+                pattern = @"^([\da-f]{1,4}:){7}[\da-f]{1,4}$";
+
+                var regex = new Regex(pattern);
+                return regex.IsMatch(input);
+            }
+            else
+            {
+                pattern = @"^([\da-f]{1,4}:){0,5}::([\da-f]{1,4}:){0,5}[\da-f]{1,4}$";
+                var regex1 = new Regex(pattern);
+                return regex1.IsMatch(input);
+            }
+        }
+
+        /// <summary>
+        /// 命中BufferLength
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int HitBufferLength(long value)
+        {
+            if (value < 1024 * 100)
+            {
+                return 1024;
+            }
+            else if (value < 1024 * 512)
+            {
+                return 1024 * 10;
+            }
+            else if (value < 1024 * 1024)
+            {
+                return 1024 * 64;
+            }
+            else
+            {
+                return value < 1024 * 1024 * 50
+                    ? 1024 * 512
+                    : value < 1024 * 1024 * 100
+                                    ? 1024 * 1024
+                                    : value < 1024 * 1024 * 1024 ? 1024 * 1024 * 2 : value < 1024 * 1024 * 1024 * 10L ? 1024 * 1024 * 5 : 1024 * 1024 * 10;
+            }
         }
     }
 }

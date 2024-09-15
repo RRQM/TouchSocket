@@ -11,21 +11,22 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
     /// <summary>
     /// Tcp核心
     /// </summary>
-    public class TcpCore : SocketAsyncEventArgs, IDisposableObject, ISender
+    internal sealed class TcpCore : DisposableObject
     {
-        private const string m_msg1 = "远程终端主动关闭";
-
         /// <summary>
         /// 最小缓存尺寸
         /// </summary>
@@ -38,21 +39,26 @@ namespace TouchSocket.Sockets
 
         #region 字段
 
-        /// <summary>
-        /// 同步根
-        /// </summary>
-        public readonly object SyncRoot = new object();
-
-        private long m_bufferRate;
-        private bool m_disposedValue;
-        private volatile bool m_online;
+        private const int BatchSize = 100;
+        private const int MaxMemoryLength = 1024;
+        private readonly Task m_sendTask;
         private int m_receiveBufferSize = 1024 * 10;
         private ValueCounter m_receiveCounter;
         private int m_sendBufferSize = 1024 * 10;
-        private ValueCounter m_sendCounter;
+        private ValueCounter m_sentCounter;
         private Socket m_socket;
+        private SslStream m_sslStream;
+        private bool m_useSsl;
         private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
-
+        private readonly SocketReceiver m_socketReceiver = new SocketReceiver();
+        private readonly SocketSender m_socketSender = new SocketSender();
+        private readonly AsyncResetEvent m_asyncResetEventForTask = new AsyncResetEvent(false, true);
+        private readonly AsyncResetEvent m_asyncResetEventForSend = new AsyncResetEvent(true, false);
+        private readonly ConcurrentQueue<SendSegment> m_sendingBytes = new ConcurrentQueue<SendSegment>();
+        private readonly SemaphoreSlim m_semaphoreSlimForMax = new SemaphoreSlim(BatchSize);
+        private ExceptionDispatchInfo m_exceptionDispatchInfo;
+        private short m_version;
+        private readonly SocketOperationResult m_result = new SocketOperationResult();
         #endregion 字段
 
         /// <summary>
@@ -66,11 +72,14 @@ namespace TouchSocket.Sockets
                 OnPeriod = this.OnReceivePeriod
             };
 
-            this.m_sendCounter = new ValueCounter
+            this.m_sentCounter = new ValueCounter
             {
                 Period = TimeSpan.FromSeconds(1),
                 OnPeriod = this.OnSendPeriod
             };
+
+            this.m_sendTask = Task.Run(this.TaskSend);
+            this.m_sendTask.FireAndForget();
         }
 
         /// <summary>
@@ -81,117 +90,73 @@ namespace TouchSocket.Sockets
             this.Dispose(disposing: false);
         }
 
-        /// <inheritdoc/>
-        public bool CanSend => this.m_online;
-
-        /// <summary>
-        /// 当中断Tcp的时候。当为<see langword="true"/>时，意味着是调用<see cref="Close(string)"/>。当为<see langword="false"/>时，则是其他中断。
-        /// </summary>
-        public Action<TcpCore, bool, string> OnBreakOut { get; set; }
-
-        /// <summary>
-        /// 当发生异常的时候
-        /// </summary>
-        public Action<TcpCore, Exception> OnException { get; set; }
-
-        /// <summary>
-        /// 在线状态
-        /// </summary>
-        public bool Online { get => this.m_online; }
-
-        /// <summary>
-        /// 当收到数据的时候
-        /// </summary>
-        public Action<TcpCore, ByteBlock> OnReceived { get; set; }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.m_socketReceiver.SafeDispose();
+                this.m_socketSender.SafeDispose();
+            }
+            base.Dispose(disposing);
+        }
 
         /// <summary>
         /// 接收缓存池,运行时的值会根据流速自动调整
         /// </summary>
-        public int ReceiveBufferSize
-        {
-            get => Math.Min(Math.Max(this.m_receiveBufferSize, this.MinBufferSize), this.MaxBufferSize);
-        }
+        public int ReceiveBufferSize => Math.Min(Math.Max(this.m_receiveBufferSize, this.MinBufferSize), this.MaxBufferSize);
 
         /// <summary>
         /// 接收计数器
         /// </summary>
-        public ValueCounter ReceiveCounter { get => this.m_receiveCounter; }
+        public ValueCounter ReceiveCounter => this.m_receiveCounter;
 
         /// <summary>
         /// 发送缓存池,运行时的值会根据流速自动调整
         /// </summary>
-        public int SendBufferSize
-        {
-            get => Math.Min(Math.Max(this.m_sendBufferSize, this.MinBufferSize), this.MaxBufferSize);
-        }
+        public int SendBufferSize => Math.Min(Math.Max(this.m_sendBufferSize, this.MinBufferSize), this.MaxBufferSize);
 
         /// <summary>
         /// 发送计数器
         /// </summary>
-        public ValueCounter SendCounter { get => this.m_sendCounter; }
+        public ValueCounter SendCounter => this.m_sentCounter;
 
         /// <summary>
         /// Socket
         /// </summary>
-        public Socket Socket { get => this.m_socket; }
+        public Socket Socket => this.m_socket;
 
         /// <summary>
         /// 提供一个用于客户端-服务器通信的流，该流使用安全套接字层 (SSL) 安全协议对服务器和（可选）客户端进行身份验证。
         /// </summary>
-        public SslStream SslStream { get; private set; }
+        public SslStream SslStream => this.m_sslStream;
 
         /// <summary>
         /// 是否启用了Ssl
         /// </summary>
-        public bool UseSsl { get; private set; }
+        public bool UseSsl => this.m_useSsl;
 
-        /// <inheritdoc/>
-        public bool DisposedValue => this.m_disposedValue;
-
-        /// <summary>
-        /// 以Ssl服务器模式授权
-        /// </summary>
-        /// <param name="sslOption"></param>
-        public virtual void Authenticate(ServiceSslOption sslOption)
-        {
-            var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            sslStream.AuthenticateAsServer(sslOption.Certificate);
-
-            this.SslStream = sslStream;
-            this.UseSsl = true;
-        }
-
-        /// <summary>
-        /// 以Ssl客户端模式授权
-        /// </summary>
-        /// <param name="sslOption"></param>
-        public virtual void Authenticate(ClientSslOption sslOption)
-        {
-            var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            if (sslOption.ClientCertificates == null)
-            {
-                sslStream.AuthenticateAsClient(sslOption.TargetHost);
-            }
-            else
-            {
-                sslStream.AuthenticateAsClient(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
-            }
-            this.SslStream = sslStream;
-            this.UseSsl = true;
-        }
-
+       
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
         /// <param name="sslOption"></param>
         /// <returns></returns>
-        public virtual async Task AuthenticateAsync(ServiceSslOption sslOption)
+        public async Task AuthenticateAsync(ServiceSslOption sslOption)
         {
+            if (this.m_useSsl)
+            {
+                return;
+            }
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
-            await sslStream.AuthenticateAsServerAsync(sslOption.Certificate);
 
-            this.SslStream = sslStream;
-            this.UseSsl = true;
+            await sslStream.AuthenticateAsServerAsync(sslOption.Certificate, sslOption.ClientCertificateRequired
+                , sslOption.SslProtocols
+                , sslOption.CheckCertificateRevocation).ConfigureAwait(false);
+
+            //await sslStream.AuthenticateAsServerAsync(sslOption.Certificate).ConfigureAwait(false);
+
+            this.m_sslStream = sslStream;
+            this.m_useSsl = true;
         }
 
         /// <summary>
@@ -199,119 +164,55 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="sslOption"></param>
         /// <returns></returns>
-        public virtual async Task AuthenticateAsync(ClientSslOption sslOption)
+        public async Task AuthenticateAsync(ClientSslOption sslOption)
         {
+            if (this.m_useSsl)
+            {
+                return;
+            }
+
             var sslStream = (sslOption.CertificateValidationCallback != null) ? new SslStream(new NetworkStream(this.m_socket, false), false, sslOption.CertificateValidationCallback) : new SslStream(new NetworkStream(this.m_socket, false), false);
             if (sslOption.ClientCertificates == null)
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost);
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost).ConfigureAwait(false);
             }
             else
             {
-                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation);
+                await sslStream.AuthenticateAsClientAsync(sslOption.TargetHost, sslOption.ClientCertificates, sslOption.SslProtocols, sslOption.CheckCertificateRevocation).ConfigureAwait(false);
             }
-            this.SslStream = sslStream;
-            this.UseSsl = true;
+            this.m_sslStream = sslStream;
+            this.m_useSsl = true;
         }
 
-        /// <summary>
-        /// 开始以Iocp方式接收
-        /// </summary>
-        public virtual void BeginIocpReceive()
+        public async ValueTask<SocketOperationResult> ReadAsync(Memory<byte> memory)
         {
-            var byteBlock = BytePool.Default.GetByteBlock(this.ReceiveBufferSize);
-
-            try
+            if (this.m_useSsl)
             {
-                this.UserToken = byteBlock;
-                this.SetBuffer(byteBlock.Buffer, 0, byteBlock.Capacity);
-                if (!this.m_socket.ReceiveAsync(this))
-                {
-                    this.m_bufferRate += 2;
-                    this.ProcessReceived(this);
-                }
+#if NET6_0_OR_GREATER
+
+                var r = await this.m_sslStream.ReadAsync(memory).ConfigureAwait(false);
+
+#else
+                var bytes = memory.GetArray();
+                var r = await Task<int>.Factory.FromAsync(this.m_sslStream.BeginRead, this.m_sslStream.EndRead, bytes.Array, 0, bytes.Count, default).ConfigureAwait(false);
+#endif
+                this.m_result.BytesTransferred = r;
+                this.m_receiveCounter.Increment(r);
+                return this.m_result;
             }
-            catch
+            else
             {
-                this.ClearBuffer();
-                byteBlock.Dispose();
-                throw;
+              var  result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
+                this.m_receiveCounter.Increment(result.BytesTransferred);
+                return result;
             }
-        }
-
-        private void ClearBuffer()
-        {
-            try
-            {
-                this.SetBuffer(null, 0, 0);
-            }
-            catch
-            {
-                this.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// 开始以Ssl接收。
-        /// <para>
-        /// 注意，使用该方法时，应先完成授权。
-        /// </para>
-        /// </summary>
-        /// <returns></returns>
-        public virtual async Task BeginSslReceive()
-        {
-            if (!this.UseSsl)
-            {
-                throw new Exception("请先完成Ssl验证授权");
-            }
-
-            while (this.m_online)
-            {
-                var byteBlock = new ByteBlock(this.ReceiveBufferSize);
-                try
-                {
-                    var r = await Task<int>.Factory.FromAsync(this.SslStream.BeginRead, this.SslStream.EndRead, byteBlock.Buffer, 0, byteBlock.Capacity, default);
-                    if (r == 0)
-                    {
-                        this.PrivateBreakOut(false, m_msg1);
-                        return;
-                    }
-
-                    byteBlock.SetLength(r);
-                    this.HandleBuffer(byteBlock);
-                }
-                catch (Exception ex)
-                {
-                    byteBlock.Dispose();
-                    this.PrivateBreakOut(false, ex.Message);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 请求关闭
-        /// </summary>
-        /// <param name="msg"></param>
-        public virtual void Close(string msg)
-        {
-            this.PrivateBreakOut(true, msg);
-        }
-
-        /// <summary>
-        /// 释放对象
-        /// </summary>
-        public new void Dispose()
-        {
-            // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// 重置环境，并设置新的<see cref="Socket"/>。
         /// </summary>
         /// <param name="socket"></param>
-        public virtual void Reset(Socket socket)
+        public void Reset(Socket socket)
         {
             if (socket is null)
             {
@@ -320,83 +221,31 @@ namespace TouchSocket.Sockets
 
             if (!socket.Connected)
             {
-                throw new Exception("新的Socket必须在连接状态。");
+                throw new Exception(TouchSocketResource.SocketHaveToConnected);
             }
             this.Reset();
-            this.m_online = true;
             this.m_socket = socket;
         }
 
         /// <summary>
         /// 重置环境。
         /// </summary>
-        public virtual void Reset()
+        public void Reset()
         {
+            this.m_version++;
+            this.m_exceptionDispatchInfo = null;
+            this.m_useSsl = false;
+            this.m_socketSender.Reset();
             this.m_receiveCounter.Reset();
-            this.m_sendCounter.Reset();
-            this.SslStream?.Dispose();
-            this.SslStream = null;
+            this.m_sentCounter.Reset();
+            this.m_sslStream?.Dispose();
+            this.m_sslStream = null;
             this.m_socket = null;
-            this.OnReceived = null;
-            this.OnBreakOut = null;
-            this.UserToken = null;
-            this.m_bufferRate = 1;
             this.m_receiveBufferSize = this.MinBufferSize;
             this.m_sendBufferSize = this.MinBufferSize;
-            this.m_online = false;
         }
 
-        /// <summary>
-        /// 判断，当不在连接状态时触发异常。
-        /// </summary>
-        /// <exception cref="NotConnectedException"></exception>
-        protected void ThrowIfNotConnected()
-        {
-            if (!this.m_online)
-            {
-                throw new NotConnectedException();
-            }
-        }
-
-        /// <summary>
-        /// 发送数据。
-        /// <para>
-        /// 内部会根据是否启用Ssl，进行直接发送，还是Ssl发送。
-        /// </para>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public virtual void Send(byte[] buffer, int offset, int length)
-        {
-            this.ThrowIfNotConnected();
-            try
-            {
-                this.m_semaphoreForSend.Wait();
-                if (this.UseSsl)
-                {
-                    this.SslStream.Write(buffer, offset, length);
-                }
-                else
-                {
-                    while (length > 0)
-                    {
-                        var r = this.m_socket.Send(buffer, offset, length, SocketFlags.None);
-                        if (r == 0 && length > 0)
-                        {
-                            throw new Exception("发送数据不完全");
-                        }
-                        offset += r;
-                        length -= r;
-                    }
-                }
-                this.m_sendCounter.Increment(length);
-            }
-            finally
-            {
-                this.m_semaphoreForSend.Release();
-            }
-        }
+        #region Send
 
         /// <summary>
         /// 异步发送数据。
@@ -404,56 +253,48 @@ namespace TouchSocket.Sockets
         /// 内部会根据是否启用Ssl，进行直接发送，还是Ssl发送。
         /// </para>
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
+        /// <param name="memory"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public virtual async Task SendAsync(byte[] buffer, int offset, int length)
+        public async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
-            this.ThrowIfNotConnected();
+            await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);
             try
             {
-                await this.m_semaphoreForSend.WaitAsync();
-#if NET6_0_OR_GREATER
-                if (this.UseSsl)
+                if (memory.Length < MaxMemoryLength)
                 {
-                    await this.SslStream.WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, length), CancellationToken.None);
-                }
-                else
-                {
-                    while (length > 0)
-                    {
-                        var r = await this.m_socket.SendAsync(new ArraySegment<byte>(buffer, offset, length), SocketFlags.None, CancellationToken.None);
-                        if (r == 0 && length > 0)
-                        {
-                            throw new Exception("发送数据不完全");
-                        }
-                        offset += r;
-                        length -= r;
-                    }
-                }
-#else
-                if (this.UseSsl)
-                {
-                    await this.SslStream.WriteAsync(buffer, offset, length, CancellationToken.None);
-                }
-                else
-                {
-                    while (length > 0)
-                    {
-                        var r = this.m_socket.Send(buffer, offset, length, SocketFlags.None);
-                        if (r == 0 && length > 0)
-                        {
-                            throw new Exception("发送数据不完全");
-                        }
-                        offset += r;
-                        length -= r;
-                    }
-                }
-#endif
+                    var dispatchInfo = this.m_exceptionDispatchInfo;
+                    dispatchInfo?.Throw();
 
-                this.m_sendCounter.Increment(length);
+                    await this.m_semaphoreSlimForMax.WaitAsync().ConfigureAwait(false);
+
+                    var sendSegment = BytePool.Default.Rent(memory.Length);
+                    //if (!this.m_stores.TryPop(out var sendSegment))
+                    //{
+                    //    sendSegment = new SendSegment()
+                    //    {
+                    //        Date = new byte[MaxMemoryLength]
+                    //    };
+                    //}
+
+                    var segment = memory.GetArray();
+
+                    Array.Copy(segment.Array, segment.Offset, sendSegment, 0, segment.Count);
+
+
+                    this.m_sendingBytes.Enqueue(new SendSegment(sendSegment, memory.Length, this.m_version));
+                    //var byteBlock = new ValueByteBlock(memory.Length);
+                    //byteBlock.Write(memory.Span);
+                    //this.m_ints.Enqueue(byteBlock);
+
+                    this.m_asyncResetEventForSend.Reset();
+
+                    this.m_asyncResetEventForTask.Set();
+                    return;
+                }
+
+                await this.m_asyncResetEventForSend.WaitOneAsync().ConfigureAwait(false);
+                await this.PrivateSendAsync(memory).ConfigureAwait(false);
             }
             finally
             {
@@ -461,151 +302,129 @@ namespace TouchSocket.Sockets
             }
         }
 
-        /// <summary>
-        /// 当中断Tcp时。
-        /// </summary>
-        /// <param name="manual">当为<see langword="true"/>时，意味着是调用<see cref="Close(string)"/>。当为<see langword="false"/>时，则是其他中断。</param>
-        /// <param name="msg"></param>
-        protected virtual void BreakOut(bool manual, string msg)
+        private async Task TaskSend()
         {
-            this.OnBreakOut?.Invoke(this, manual, msg);
-        }
+            var valuesToProcess = new SendSegment[BatchSize];
 
-        /// <summary>
-        /// 释放对象
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.m_disposedValue)
+            while (true)
             {
-                if (disposing)
+                // 重置计数器和数组内容
+                var count = 0;
+
+                // 尝试填充数组
+                while (count < BatchSize && this.m_sendingBytes.TryDequeue(out var value))
                 {
-                    base.Dispose();
-                }
-
-                this.m_disposedValue = true;
-            }
-        }
-
-        /// <summary>
-        /// 当发生异常的时候
-        /// </summary>
-        /// <param name="ex"></param>
-        protected virtual void Exception(Exception ex)
-        {
-            this.OnException?.Invoke(this, ex);
-        }
-
-        #region 接收
-
-        /// <inheritdoc/>
-        protected override sealed void OnCompleted(SocketAsyncEventArgs e)
-        {
-            if (e.LastOperation == SocketAsyncOperation.Receive)
-            {
-                this.m_bufferRate = 1;
-                this.ProcessReceived(e);
-            }
-            else
-            {
-                this.PrivateBreakOut(false, e.LastOperation.ToString());
-            }
-        }
-
-        private void ProcessReceived(SocketAsyncEventArgs e)
-        {
-            try
-            {
-                if (e.SocketError != SocketError.Success)
-                {
-                    this.ClearBuffer();
-                    this.PrivateBreakOut(false, e.SocketError.ToString());
-                }
-                else if (e.BytesTransferred > 0)
-                {
-                    var byteBlock = (ByteBlock)e.UserToken;
-                    byteBlock.SetLength(e.BytesTransferred);
-                    this.HandleBuffer(byteBlock);
-                    var newByteBlock = BytePool.Default.GetByteBlock((int)Math.Min(this.ReceiveBufferSize * this.m_bufferRate, this.MaxBufferSize));
-
-                    e.UserToken = newByteBlock;
-                    e.SetBuffer(newByteBlock.Buffer, 0, newByteBlock.Capacity);
-
-                    if (!this.m_socket.ReceiveAsync(e))
+                    if (value.version == this.m_version)
                     {
-                        this.m_bufferRate += 2;
-                        this.ProcessReceived(e);
+                        valuesToProcess[count++] = value;
                     }
+                    this.m_semaphoreSlimForMax.Release();
+                }
+
+                // 如果有元素需要处理，并且没有异常
+                if (count > 0)
+                {
+                    //Debug.WriteLine(count.ToString());
+                    if (this.m_exceptionDispatchInfo == null)
+                    {
+                        using (var byteBlock = new ValueByteBlock(count * MaxMemoryLength))
+                        {
+                            for (var i = 0; i < count; i++)
+                            {
+                                var value = valuesToProcess[i];
+
+                                byteBlock.Write(new ReadOnlySpan<byte>(value.Date, 0, value.Length));
+
+                                BytePool.Default.Return(value.Date);
+                                //value.Dispose();
+                            }
+
+                            try
+                            {
+                                await this.PrivateSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.m_exceptionDispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                                this.m_sendingBytes.Clear();
+
+                            }
+                        }
+                    }
+
+                    Array.Clear(valuesToProcess, 0, count);
                 }
                 else
                 {
-                    this.ClearBuffer();
-                    this.PrivateBreakOut(false, m_msg1);
+                    //Debug.WriteLine("Pause");
+                    // 队列为空，设置事件并等待
+                    this.m_asyncResetEventForSend.Set();
+                    await this.m_asyncResetEventForTask.WaitOneAsync().ConfigureAwait(false);
                 }
             }
-            catch (Exception ex)
-            {
-                this.ClearBuffer();
-                this.PrivateBreakOut(false, ex.Message);
-            }
         }
 
-        #endregion 接收
-
-        /// <summary>
-        /// 当收到数据的时候
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        protected virtual void Received(ByteBlock byteBlock)
+        private async Task PrivateSendAsync(ReadOnlyMemory<byte> memory)
         {
-            this.OnReceived?.Invoke(this, byteBlock);
+            var length = memory.Length;
+#if NET6_0_OR_GREATER
+                if (this.UseSsl)
+                {
+                    await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+                }
+#else
+            if (this.m_useSsl)
+            {
+                var segment = memory.GetArray();
+                await this.SslStream.WriteAsync(segment.Array, segment.Offset, segment.Count, CancellationToken.None).ConfigureAwait(false);
+            }
+#endif
+            else
+            {
+                var offset = 0;
+                while (length > 0)
+                {
+                    var result = await this.m_socketSender.SendAsync(this.m_socket, memory).ConfigureAwait(false);
+                    if (result.SocketError != null)
+                    {
+                        throw result.SocketError;
+                    }
+                    if (result.BytesTransferred == 0 && length > 0)
+                    {
+                        throw new Exception(TouchSocketResource.IncompleteDataTransmission);
+                    }
+                    offset += result.BytesTransferred;
+                    length -= result.BytesTransferred;
+                }
+
+                //this.m_socketSender.Reset();
+            }
+            this.m_sentCounter.Increment(length);
         }
 
-        private void HandleBuffer(ByteBlock byteBlock)
-        {
-            try
-            {
-                this.m_receiveCounter.Increment(byteBlock.Length);
-                this.Received(byteBlock);
-            }
-            catch (Exception ex)
-            {
-                this.Exception(ex);
-            }
-            finally
-            {
-                byteBlock.Dispose();
-            }
-        }
+        #endregion Send
 
         private void OnReceivePeriod(long value)
         {
-            this.m_receiveBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            //if (this.m_socket != null)
-            //{
-            //    this.m_socket.ReceiveBufferSize = this.m_receiveBufferSize;
-            //}
+            this.m_receiveBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
         }
 
         private void OnSendPeriod(long value)
         {
-            this.m_sendBufferSize = Math.Max(TouchSocketUtility.HitBufferLength(value), this.MinBufferSize);
-            //if (this.m_socket != null)
-            //{
-            //    this.m_socket.SendBufferSize = this.m_sendBufferSize;
-            //}
+            this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
         }
 
-        private void PrivateBreakOut(bool manual, string msg)
+        struct SendSegment
         {
-            lock (this.SyncRoot)
+            public byte[] Date;
+            public int Length;
+            public short version;
+
+            public SendSegment(byte[] bytes, int length, short version)
             {
-                if (this.m_online)
-                {
-                    this.m_online = false;
-                    this.BreakOut(manual, msg);
-                }
+                this.Date = bytes;
+                this.Length = length;
+                this.version = version;
             }
         }
     }

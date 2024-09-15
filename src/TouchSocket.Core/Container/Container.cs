@@ -103,32 +103,17 @@ namespace TouchSocket.Core
                         }
                         lock (descriptor)
                         {
-                            if (descriptor.ToInstance != null)
-                            {
-                                return descriptor.ToInstance;
-                            }
-                            else
-                            {
-                                if (descriptor.ToType.IsGenericType)
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                                }
-                                else
-                                {
-                                    return descriptor.ToInstance = this.Create(descriptor, descriptor.ToType);
-                                }
-                            }
+                            return descriptor.ToInstance != null
+                                ? descriptor.ToInstance
+                                : descriptor.ToType.IsGenericType
+                                    ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                                    : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
 
-                    if (descriptor.ToType.IsGenericType)
-                    {
-                        return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                    }
-                    else
-                    {
-                        return this.Create(descriptor, descriptor.ToType);
-                    }
+                    return descriptor.ToType.IsGenericType
+                        ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
+                        : this.Create(descriptor, descriptor.ToType);
                 }
             }
             k = $"{fromType.FullName}{key}";
@@ -153,14 +138,9 @@ namespace TouchSocket.Core
             }
             else
             {
-                if (fromType.IsPrimitive || fromType == typeof(string))
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.GetDescription(fromType));
-                }
+                return fromType.IsPrimitive || fromType == typeof(string)
+                    ? default
+                    : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
             }
         }
 
@@ -188,32 +168,17 @@ namespace TouchSocket.Core
                         }
                         lock (descriptor)
                         {
-                            if (descriptor.ToInstance != null)
-                            {
-                                return descriptor.ToInstance;
-                            }
-                            else
-                            {
-                                if (descriptor.ToType.IsGenericType)
-                                {
-                                    return (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())));
-                                }
-                                else
-                                {
-                                    return descriptor.ToInstance = this.Create(descriptor, descriptor.ToType);
-                                }
-                            }
+                            return descriptor.ToInstance != null
+                                ? descriptor.ToInstance
+                                : descriptor.ToType.IsGenericType
+                                    ? (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments())))
+                                    : (descriptor.ToInstance = this.Create(descriptor, descriptor.ToType));
                         }
                     }
 
-                    if (descriptor.ToType.IsGenericType)
-                    {
-                        return this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()));
-                    }
-                    else
-                    {
-                        return this.Create(descriptor, descriptor.ToType);
-                    }
+                    return descriptor.ToType.IsGenericType
+                        ? this.Create(descriptor, descriptor.ToType.MakeGenericType(fromType.GetGenericArguments()))
+                        : this.Create(descriptor, descriptor.ToType);
                 }
             }
             k = fromType.FullName;
@@ -238,14 +203,9 @@ namespace TouchSocket.Core
             }
             else
             {
-                if (fromType.IsPrimitive || fromType == typeof(string))
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.GetDescription(fromType));
-                }
+                return fromType.IsPrimitive || fromType == typeof(string)
+                    ? default
+                    : throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
             }
         }
 
@@ -271,7 +231,7 @@ namespace TouchSocket.Core
                 //如果没有被特性标记，那就取构造函数参数最多的作为注入目标
                 if (toType.GetConstructors().Length == 0)
                 {
-                    throw new Exception($"没有找到类型{toType.FullName}的公共构造函数。");
+                    throw new Exception(TouchSocketCoreResource.NotFindPublicConstructor.Format(toType));
                 }
                 ctor = toType.GetConstructors().OrderByDescending(x => x.GetParameters().Length).First();
             }

@@ -33,7 +33,9 @@ namespace TouchSocket.Core
                 var data = md5.ComputeHash(Encoding.UTF8.GetBytes(str));
                 var length = data.Length;
                 for (var i = 0; i < length; i++)
+                {
                     sb.Append(data[i].ToString("X2"));
+                }
             }
             return sb.ToString();
         }
@@ -51,7 +53,9 @@ namespace TouchSocket.Core
                 var data = crypto.ComputeHash(stream);
                 var length = data.Length;
                 for (var i = 0; i < length; i++)
+                {
                     sb.Append(data[i].ToString("X2"));
+                }
             }
             return sb.ToString();
         }
@@ -71,7 +75,9 @@ namespace TouchSocket.Core
                 var data = md5.ComputeHash(buffer, offset, length);
                 var count = data.Length;
                 for (var i = 0; i < count; i++)
+                {
                     sb.Append(data[i].ToString("X2"));
+                }
             }
             return sb.ToString();
         }

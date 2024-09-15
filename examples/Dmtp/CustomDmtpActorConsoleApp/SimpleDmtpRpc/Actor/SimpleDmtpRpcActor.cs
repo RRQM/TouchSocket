@@ -1,4 +1,16 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Dmtp;
 
 namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
@@ -24,14 +36,14 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                 try
                 {
                     var rpcPackage = new SimpleDmtpRpcPackage();
-                    rpcPackage.UnpackageRouter(byteBlock);
+                    rpcPackage.UnpackageRouter(ref byteBlock);
                     if (rpcPackage.Route && this.DmtpActor.AllowRoute)
                     {
-                        if (await this.DmtpActor.TryRoute(new PackageRouterEventArgs(new RouteType("SimpleRpc"), rpcPackage)))
+                        if (await this.DmtpActor.TryRouteAsync(new PackageRouterEventArgs(new RouteType("SimpleRpc"), rpcPackage)))
                         {
                             if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                             {
-                                actor.Send(this.m_invoke_Request, byteBlock);
+                                await actor.SendAsync(this.m_invoke_Request, byteBlock.Memory);
                                 return true;
                             }
                             else
@@ -47,12 +59,12 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                         byteBlock.Reset();
                         rpcPackage.SwitchId();
 
-                        rpcPackage.Package(byteBlock);
-                        this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                        rpcPackage.Package(ref byteBlock);
+                        await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
                     }
                     else
                     {
-                        rpcPackage.UnpackageBody(byteBlock);
+                        rpcPackage.UnpackageBody(ref byteBlock);
                         _ = Task.Factory.StartNew(this.InvokeThis, rpcPackage);
                     }
                 }
@@ -67,17 +79,17 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
                 try
                 {
                     var rpcPackage = new SimpleDmtpRpcPackage();
-                    rpcPackage.UnpackageRouter(byteBlock);
+                    rpcPackage.UnpackageRouter(ref byteBlock);
                     if (this.DmtpActor.AllowRoute && rpcPackage.Route)
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                         {
-                            actor.Send(this.m_invoke_Response, byteBlock);
+                            await actor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
                         }
                     }
                     else
                     {
-                        rpcPackage.UnpackageBody(byteBlock);
+                        rpcPackage.UnpackageBody(ref byteBlock);
                         this.DmtpActor.WaitHandlePool.SetRun(rpcPackage);
                     }
                 }
@@ -90,45 +102,60 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             return false;
         }
 
-        private void InvokeThis(object obj)
+        private async void InvokeThis(object obj)
         {
             var package = (SimpleDmtpRpcPackage)obj;
 
             var methodModel = this.TryFindMethod.Invoke(package.MethodName);
             if (methodModel == null)
             {
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
                     package.Status = 4;
                     package.SwitchId();
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                    package.Package(ref byteBlock);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
                     return;
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
 
             try
             {
                 methodModel.Method.Invoke(methodModel.Target, default);
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
                     package.Status = 1;
                     package.SwitchId();
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                    package.Package(ref byteBlock);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
                     return;
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
             catch (Exception ex)
             {
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
                     package.Status = 5;
                     package.Message = ex.Message;
                     package.SwitchId();
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                    package.Package(ref byteBlock);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock.Memory);
                     return;
+                }
+                finally
+                {
+                    byteBlock.Dispose();
                 }
             }
         }
@@ -175,25 +202,30 @@ namespace CustomDmtpActorConsoleApp.SimpleDmtpRpc
             this.PrivateInvoke(targetId, methodName);
         }
 
-        private void PrivateInvoke(string id, string methodName)
+        private async void PrivateInvoke(string id, string methodName)
         {
             var package = new SimpleDmtpRpcPackage()
             {
                 MethodName = methodName,
-                Route = id.HasValue(),
                 SourceId = this.DmtpActor.Id,
                 TargetId = id
             };
 
-            var waitData = this.DmtpActor.WaitHandlePool.GetReverseWaitData(package);
+            var waitData = this.DmtpActor.WaitHandlePool.GetWaitData(package);
 
             try
             {
-                using (var byteBlock = new ByteBlock())
+                var byteBlock = new ByteBlock();
+                try
                 {
-                    package.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Request, byteBlock);
+                    package.Package(ref byteBlock);
+                    await this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock.Memory);
                 }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+
                 switch (waitData.Wait(5000))
                 {
                     case WaitDataStatus.SetRunning:

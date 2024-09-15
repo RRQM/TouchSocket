@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
+using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -40,6 +42,23 @@ namespace TouchSocket.Core
         public int MaxPackageSize { get; set; } = 1024 * 1024 * 10;
 
         /// <summary>
+        /// 如果指定的长度超过最大包大小，则抛出异常。
+        /// </summary>
+        /// <param name="length">待检查的长度值。</param>
+        /// <remarks>
+        /// 此方法用于确保传入的数据长度不会超过预设的最大包大小限制，
+        /// 以避免处理过大的数据包导致的性能问题或内存溢出等问题。
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void ThrowIfMoreThanMaxPackageSize(int length)
+        {
+            if (length > this.MaxPackageSize)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(length), length, this.MaxPackageSize);
+            }
+        }
+
+        /// <summary>
         /// 适配器所有者
         /// </summary>
         public object Owner { get; private set; }
@@ -53,7 +72,7 @@ namespace TouchSocket.Core
         {
             if (this.Owner != null)
             {
-                throw new Exception("此适配器已被其他终端使用，请重新创建对象。");
+                throw new Exception(TouchSocketCoreResource.AdapterAlreadyUsed);
             }
             this.Owner = owner;
         }
@@ -73,7 +92,7 @@ namespace TouchSocket.Core
             }
             if (log)
             {
-                this.Logger?.Error(error);
+                this.Logger?.Exception(this, error, ex);
             }
         }
 

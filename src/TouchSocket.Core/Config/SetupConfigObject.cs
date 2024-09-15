@@ -18,52 +18,39 @@ namespace TouchSocket.Core
     /// <summary>
     /// 具有设置配置的对象
     /// </summary>
-    public abstract class SetupConfigObject : ConfigObject, ISetupConfigObject
+    public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObject
     {
+        private IPluginManager m_pluginManager;
+        private IResolver m_resolver;
         private TouchSocketConfig m_config;
 
         /// <inheritdoc/>
         public override TouchSocketConfig Config => this.m_config;
 
         /// <inheritdoc/>
-        public IPluginManager PluginManager { get; private set; }
+        public override IPluginManager PluginManager => this.m_pluginManager;
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; private set; }
+        public override IResolver Resolver => this.m_resolver;
 
-        /// <inheritdoc/>
-        public void Setup(TouchSocketConfig config)
+        private void ClearConfig()
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            this.ThrowIfDisposed();
-
-            this.BuildConfig(config);
-
-            this.PluginManager.Raise(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config));
-            this.LoadConfig(config);
-            this.PluginManager.Raise(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config));
+            this.m_pluginManager.SafeDispose();
+            this.m_config.SafeDispose();
         }
 
         /// <inheritdoc/>
         public async Task SetupAsync(TouchSocketConfig config)
         {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
             this.ThrowIfDisposed();
+
+            this.ClearConfig();
 
             this.BuildConfig(config);
 
-            await this.PluginManager.RaiseAsync(nameof(ILoadingConfigPlugin.OnLoadingConfig), this, new ConfigEventArgs(config)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
             this.LoadConfig(config);
-            //return EasyTask.CompletedTask;
-            await this.PluginManager.RaiseAsync(nameof(ILoadedConfigPlugin.OnLoadedConfig), this, new ConfigEventArgs(config)).ConfigureFalseAwait();
+            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -71,8 +58,7 @@ namespace TouchSocket.Core
         {
             if (disposing)
             {
-                this.Config.SafeDispose();
-                this.PluginManager.SafeDispose();
+                this.ClearConfig();
             }
             base.Dispose(disposing);
         }
@@ -80,7 +66,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 加载配置
         /// </summary>
-        /// <param name="config"></param>
+        /// <param name="config">要加载的配置对象</param>
         protected virtual void LoadConfig(TouchSocketConfig config)
         {
         }
@@ -89,9 +75,9 @@ namespace TouchSocket.Core
         {
             this.m_config = config ?? throw new ArgumentNullException(nameof(config));
 
-            if (!config.TryGetValue(TouchSocketCoreConfigExtension.ResolverProperty, out var resolver))
+            if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.ResolverProperty, out var resolver))
             {
-                if (!config.TryGetValue(TouchSocketCoreConfigExtension.RegistratorProperty, out var registrator))
+                if (!this.m_config.TryGetValue(TouchSocketCoreConfigExtension.RegistratorProperty, out var registrator))
                 {
                     registrator = new Container();
                 }
@@ -100,7 +86,7 @@ namespace TouchSocket.Core
                     registrator.RegisterSingleton<ILog>(new LoggerGroup());
                 }
 
-                if (config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
+                if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty) is Action<IRegistrator> actionContainer)
                 {
                     actionContainer.Invoke(registrator);
                 }
@@ -110,7 +96,7 @@ namespace TouchSocket.Core
 
             var pluginManager = new PluginManager(resolver);
 
-            if (this.Config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
+            if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
             {
                 pluginManager.Enable = true;
                 actionPluginManager.Invoke(pluginManager);
@@ -118,8 +104,8 @@ namespace TouchSocket.Core
 
             this.Logger ??= resolver.Resolve<ILog>();
 
-            this.PluginManager = pluginManager;
-            this.Resolver = resolver;
+            this.m_pluginManager = pluginManager;
+            this.m_resolver = resolver;
         }
     }
 }

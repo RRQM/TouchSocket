@@ -22,7 +22,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 一个简单的内存缓存
     /// </summary>
-    public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>, ICache<TKey, TValue>
+    public class MemoryCache<TKey, TValue> : IEnumerable<ICacheEntry<TKey, TValue>>, ICache<TKey, TValue>, ICacheAsync<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, ICacheEntry<TKey, TValue>> m_pairs = new ConcurrentDictionary<TKey, ICacheEntry<TKey, TValue>>();
         private readonly Timer m_timer;
@@ -37,7 +37,7 @@ namespace TouchSocket.Core
                 var list = new List<TKey>();
                 foreach (var item in this.m_pairs)
                 {
-                    if (DateTime.Now - item.Value.UpdateTime > item.Value.Duration)
+                    if (DateTime.UtcNow - item.Value.UpdateTime > item.Value.Duration)
                     {
                         list.Add(item.Key);
                     }
@@ -111,7 +111,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    if (DateTime.Now - cache.UpdateTime > cache.Duration)
+                    if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
                     {
                         this.OnRemove(key, out _);
                         return false;
@@ -153,7 +153,7 @@ namespace TouchSocket.Core
                 }
                 else
                 {
-                    if (DateTime.Now - cache.UpdateTime > cache.Duration)
+                    if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
                     {
                         this.OnRemove(key, out _);
                         return default;
@@ -270,14 +270,14 @@ namespace TouchSocket.Core
                 {
                     if (update)
                     {
-                        cache.UpdateTime = DateTime.Now;
+                        cache.UpdateTime = DateTime.UtcNow;
                     }
                     value = cache.Value;
                     return true;
                 }
                 else
                 {
-                    if (DateTime.Now - cache.UpdateTime > cache.Duration)
+                    if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
                     {
                         this.RemoveCache(key);
                         value = default;
@@ -287,7 +287,7 @@ namespace TouchSocket.Core
                     {
                         if (update)
                         {
-                            cache.UpdateTime = DateTime.Now;
+                            cache.UpdateTime = DateTime.UtcNow;
                         }
                         value = cache.Value;
                         return true;

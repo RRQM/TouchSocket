@@ -17,20 +17,14 @@ namespace TouchSocket.Core
     /// <summary>
     /// 当正在配置Config时触发。
     /// </summary>
-    public interface ILoadingConfigPlugin<in TSender> : IPlugin where TSender : IConfigObject
+    public interface ILoadingConfigPlugin : IPlugin
     {
         /// <summary>
         /// 当载入配置时
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        Task OnLoadingConfig(TSender sender, ConfigEventArgs e);
-    }
-
-    /// <summary>
-    /// ILoadingConfigPlugin
-    /// </summary>
-    public interface ILoadingConfigPlugin : ILoadingConfigPlugin<IConfigObject>
-    {
+        /// <param name="sender">发送事件的对象</param>
+        /// <param name="e">事件参数，包含配置信息</param>
+        /// <returns>一个异步任务</returns>
+        Task OnLoadingConfig(IConfigObject sender, ConfigEventArgs e);
     }
 }

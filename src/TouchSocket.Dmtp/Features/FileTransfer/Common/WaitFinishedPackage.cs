@@ -20,17 +20,17 @@ namespace TouchSocket.Dmtp.FileTransfer
         public Metadata Metadata { get; set; }
         public int ResourceHandle { get; set; }
 
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
-            byteBlock.Write(this.ResourceHandle);
+            base.PackageBody(ref byteBlock);
+            byteBlock.WriteInt32(this.ResourceHandle);
             byteBlock.WritePackage(this.Metadata);
-            byteBlock.Write((byte)this.Code);
+            byteBlock.WriteByte((byte)this.Code);
         }
 
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.ResourceHandle = byteBlock.ReadInt32();
             this.Metadata = byteBlock.ReadPackage<Metadata>();
             this.Code = (ResultCode)byteBlock.ReadByte();

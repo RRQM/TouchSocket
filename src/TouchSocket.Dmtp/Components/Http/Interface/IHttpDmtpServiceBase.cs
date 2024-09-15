@@ -14,8 +14,9 @@ using TouchSocket.Http;
 
 namespace TouchSocket.Dmtp
 {
+
     /// <summary>
-    /// IHttpDmtpServiceBase
+    /// 定义了一个接口，用于合并HTTP服务和DMTP服务的基本功能。
     /// </summary>
     public interface IHttpDmtpServiceBase : IHttpServiceBase, IDmtpService
     {

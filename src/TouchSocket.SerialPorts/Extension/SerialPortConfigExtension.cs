@@ -11,9 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
@@ -26,13 +24,13 @@ namespace TouchSocket.SerialPorts
         /// 设置串口适配器
         /// </summary>
         public static readonly DependencyProperty<Func<SingleStreamDataHandlingAdapter>> SerialDataHandlingAdapterProperty =
-            DependencyProperty<Func<SingleStreamDataHandlingAdapter>>.Register("SerialDataHandlingAdapter", () => new NormalDataHandlingAdapter());
+            new("SerialDataHandlingAdapter", null);
 
         /// <summary>
         /// 串口属性。
         /// </summary>
         public static readonly DependencyProperty<SerialPortOption> SerialPortOptionProperty =
-            DependencyProperty<SerialPortOption>.Register("SerialPortOption", new SerialPortOption());
+            new("SerialPortOption", new SerialPortOption());
 
         /// <summary>
         /// 设置(串口系)数据处理适配器。
@@ -57,113 +55,5 @@ namespace TouchSocket.SerialPorts
             config.SetValue(SerialPortOptionProperty, value);
             return config;
         }
-
-        #region 连接
-
-        /// <inheritdoc cref="IConnectObject.Connect(int, System.Threading.CancellationToken)"/>
-        public static TClient Connect<TClient>(this TClient client, string portName, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
-        {
-            TouchSocketConfig config;
-            if (client.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetSerialPortOption(new SerialPortOption()
-                {
-                    PortName = portName
-                });
-                client.Setup(config);
-            }
-            else
-            {
-                config = client.Config;
-                if (config.TryGetValue(SerialPortOptionProperty, out var serialPortOption))
-                {
-                    serialPortOption.PortName = portName;
-                }
-                else
-                {
-                    config.SetSerialPortOption(new SerialPortOption()
-                    {
-                        PortName = portName
-                    });
-                }
-            }
-            client.Connect(millisecondsTimeout);
-            return client;
-        }
-
-        /// <inheritdoc cref="IConnectObject.ConnectAsync(int, System.Threading.CancellationToken)"/>
-        public static async Task<TClient> ConnectAsync<TClient>(this TClient client, string portName, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
-        {
-            TouchSocketConfig config;
-            if (client.Config == null)
-            {
-                config = new TouchSocketConfig();
-                config.SetSerialPortOption(new SerialPortOption()
-                {
-                    PortName = portName
-                });
-                client.Setup(config);
-            }
-            else
-            {
-                config = client.Config;
-                if (config.TryGetValue(SerialPortOptionProperty, out var serialPortOption))
-                {
-                    serialPortOption.PortName = portName;
-                }
-                else
-                {
-                    config.SetSerialPortOption(new SerialPortOption()
-                    {
-                        PortName = portName
-                    });
-                }
-            }
-            await client.ConnectAsync(millisecondsTimeout);
-            return client;
-        }
-
-        /// <summary>
-        /// 尝试连接。不会抛出异常。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns></returns>
-        public static Result TryConnect<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
-        {
-            try
-            {
-                client.Connect(millisecondsTimeout);
-                return new Result(ResultCode.Success);
-            }
-            catch (Exception ex)
-            {
-                return new Result(ResultCode.Exception, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// 尝试连接。不会抛出异常。
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="client"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns></returns>
-        public static async Task<Result> TryConnectAsync<TClient>(this TClient client, int millisecondsTimeout = 5000) where TClient : ISerialPortClient
-        {
-            try
-            {
-                await client.ConnectAsync(millisecondsTimeout);
-                return new Result(ResultCode.Success);
-            }
-            catch (Exception ex)
-            {
-                return new Result(ResultCode.Exception, ex.Message);
-            }
-        }
-
-        #endregion 连接
     }
 }

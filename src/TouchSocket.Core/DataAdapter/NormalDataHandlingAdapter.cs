@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -19,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 普通Tcp数据处理器，该适配器不对数据做任何处理。
     /// </summary>
-    public class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
+    public sealed class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
     {
         /// <summary>
         /// <inheritdoc/>
@@ -35,56 +34,26 @@ namespace TouchSocket.Core
         /// 当接收到数据时处理数据
         /// </summary>
         /// <param name="byteBlock">数据流</param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            this.GoReceived(byteBlock, null);
+            await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="buffer">数据</param>
-        /// <param name="offset">偏移</param>
-        /// <param name="length">长度</param>
-        protected override void PreviewSend(byte[] buffer, int offset, int length)
-        {
-            this.GoSend(buffer, offset, length);
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="transferBytes"></param>
-        protected override void PreviewSend(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new System.NotImplementedException();//因为设置了不支持拼接发送，所以该方法可以不实现。
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="requestInfo"></param>
-        protected override void PreviewSend(IRequestInfo requestInfo)
-        {
-            throw new System.NotImplementedException();
-        }
+        ///// <summary>
+        ///// <inheritdoc/>
+        ///// </summary>
+        ///// <param name="buffer">数据</param>
+        ///// <param name="offset">偏移</param>
+        ///// <param name="length">长度</param>
+        //protected override void PreviewSend(byte[] buffer, int offset, int length)
+        //{
+        //    this.GoSend(buffer, offset, length);
+        //}
 
         /// <inheritdoc/>
-        protected override Task PreviewSendAsync(IRequestInfo requestInfo)
+        protected override Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
         {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        protected override Task PreviewSendAsync(byte[] buffer, int offset, int length)
-        {
-            return this.GoSendAsync(buffer, offset, length);
-        }
-
-        /// <inheritdoc/>
-        protected override Task PreviewSendAsync(IList<ArraySegment<byte>> transferBytes)
-        {
-            throw new NotImplementedException();
+            return this.GoSendAsync(memory);
         }
 
         /// <summary>

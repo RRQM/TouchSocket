@@ -1,11 +1,23 @@
-﻿using TouchSocket.Core;
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TcpCommandLineConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var service = new TcpService();
 
@@ -30,10 +42,10 @@ namespace TcpCommandLineConsoleApp
                   });
 
             //载入配置
-            service.Setup(config);
+            await service.SetupAsync(config);
 
             //启动
-            service.Start();
+            await service.StartAsync();
 
             service.Logger.Info("服务器成功启动。");
             service.Logger.Info("使用：“Add 10 20”测试");
@@ -75,7 +87,7 @@ namespace TcpCommandLineConsoleApp
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public int MULCommand(ISocketClient socketClient, int a, int b)
+        public int MULCommand(ITcpSessionClient socketClient, int a, int b)
         {
             this.m_logger.Info($"{socketClient.IP}:{socketClient.Port}执行{nameof(MULCommand)}");
             return a * b;

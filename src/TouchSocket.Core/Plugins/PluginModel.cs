@@ -16,10 +16,7 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
-    internal class PluginModel
+    internal class PluginModel : List<Func<object, PluginEventArgs, Task>>
     {
-        public List<Func<object, PluginEventArgs, Task>> Funcs = new List<Func<object, PluginEventArgs, Task>>();
-
-        //public List<PluginEntity> PluginEntities = new List<PluginEntity>();
     }
 }

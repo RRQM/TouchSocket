@@ -18,21 +18,14 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketReceivedPlugin
     /// </summary>
-    public interface IWebSocketReceivedPlugin<in TClient> : IPlugin where TClient : IWebSocket
+    public interface IWebSocketReceivedPlugin : IPlugin
     {
         /// <summary>
         /// 当收到WS数据时。
         /// </summary>
-        /// <param name="client"></param>
+        /// <param name="webSocket"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        Task OnWebSocketReceived(TClient client, WSDataFrameEventArgs e);
-    }
-
-    /// <summary>
-    /// IWebSocketReceivedPlugin
-    /// </summary>
-    public interface IWebSocketReceivedPlugin : IWebSocketReceivedPlugin<IWebSocket>
-    {
+        Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e);
     }
 }

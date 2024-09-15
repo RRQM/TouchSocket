@@ -1,3 +1,15 @@
+//------------------------------------------------------------------------------
+//  此代码版权（除特别声明或在XREF结尾的命名空间的代码）归作者本人若汝棋茗所有
+//  源代码使用协议遵循本仓库的开源协议及附加协议，若本仓库没有设置，则按MIT开源协议授权
+//  CSDN博客：https://blog.csdn.net/qq_40374647
+//  哔哩哔哩视频：https://space.bilibili.com/94253567
+//  Gitee源代码仓库：https://gitee.com/RRQM_Home
+//  Github源代码仓库：https://github.com/RRQM
+//  API首页：https://touchsocket.net/
+//  交流QQ群：234762506
+//  感谢您的下载和使用
+//------------------------------------------------------------------------------
+
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -38,7 +50,7 @@ namespace JsonRpcConsoleApp
         {
             var service = new HttpService();
 
-            service.Setup(new TouchSocketConfig()
+            service.SetupAsync(new TouchSocketConfig()
                  .SetListenIPHosts(7706)
                  .ConfigureContainer(a =>
                  {
@@ -52,7 +64,7 @@ namespace JsonRpcConsoleApp
                      a.UseHttpJsonRpc()
                      .SetJsonRpcUrl("/jsonRpc");
                  }));
-            service.Start();
+            service.StartAsync();
 
             ConsoleLogger.Default.Info($"Http服务器已启动");
         }
@@ -61,7 +73,7 @@ namespace JsonRpcConsoleApp
         {
             var service = new HttpService();
 
-            service.Setup(new TouchSocketConfig()
+            service.SetupAsync(new TouchSocketConfig()
                  .SetListenIPHosts(7707)
                  .ConfigureContainer(a =>
                  {
@@ -83,7 +95,7 @@ namespace JsonRpcConsoleApp
                          return true;
                      });
                  }));
-            service.Start();
+            service.StartAsync();
 
             ConsoleLogger.Default.Info($"WebSocket服务器已启动");
         }
@@ -91,7 +103,7 @@ namespace JsonRpcConsoleApp
         private static void CreateTcpJsonRpcService()
         {
             var service = new TcpService();
-            service.Setup(new TouchSocketConfig()
+            service.SetupAsync(new TouchSocketConfig()
                 .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
                 .SetListenIPHosts(7705)
                 .ConfigureContainer(a =>
@@ -110,7 +122,7 @@ namespace JsonRpcConsoleApp
                      */
                     a.UseTcpJsonRpc();
                 }));
-            service.Start();
+            service.StartAsync();
         }
     }
 
@@ -118,7 +130,7 @@ namespace JsonRpcConsoleApp
     {
         /// <summary>
         /// 使用调用上下文。
-        /// 可以从上下文获取调用的SocketClient。从而获得IP和Port等相关信息。
+        /// 可以从上下文获取调用的SessionClient。从而获得IP和Port等相关信息。
         /// </summary>
         /// <param name="callContext"></param>
         /// <param name="str"></param>
@@ -126,12 +138,12 @@ namespace JsonRpcConsoleApp
         [JsonRpc(MethodInvoke = true)]
         public string TestGetContext(ICallContext callContext, string str)
         {
-            if (callContext.Caller is IHttpSocketClient socketClient)
+            if (callContext.Caller is IHttpSessionClient socketClient)
             {
                 if (socketClient.Protocol == Protocol.WebSocket)
                 {
                     Console.WriteLine("WebSocket请求");
-                    var client = callContext.Caller as IHttpSocketClient;
+                    var client = callContext.Caller as IHttpSessionClient;
                     var ip = client.IP;
                     var port = client.Port;
                     Console.WriteLine($"WebSocket请求{ip}:{port}");
@@ -139,18 +151,17 @@ namespace JsonRpcConsoleApp
                 else
                 {
                     Console.WriteLine("HTTP请求");
-                    var client = callContext.Caller as IHttpSocketClient;
+                    var client = callContext.Caller as IHttpSessionClient;
                     var ip = client.IP;
                     var port = client.Port;
                     Console.WriteLine($"HTTP请求{ip}:{port}");
                 }
             }
-            else if (callContext.Caller is ISocketClient)
+            else if (callContext.Caller is ITcpSessionClient sessionClient)
             {
                 Console.WriteLine("Tcp请求");
-                var client = callContext.Caller as ISocketClient;
-                var ip = client.IP;
-                var port = client.Port;
+                var ip = sessionClient.IP;
+                var port = sessionClient.Port;
                 Console.WriteLine($"Tcp请求{ip}:{port}");
             }
             return "RRQM" + str;

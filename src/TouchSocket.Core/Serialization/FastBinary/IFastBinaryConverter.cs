@@ -10,51 +10,78 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// FastBinary转换器
+    /// 定义了快速二进制转换器的接口，用于将对象转换为字节块，反之亦然。
     /// </summary>
     public interface IFastBinaryConverter
     {
         /// <summary>
-        /// 读取对象，不需要考虑为null的情况。
+        /// 从字节块中读取对象。
         /// </summary>
-        /// <param name="buffer">读取的内存</param>
-        /// <param name="offset">内存偏移</param>
-        /// <param name="len">该数据对象应该占用的长度</param>
-        /// <returns>返回实际对象</returns>
-        object Read(byte[] buffer, int offset, int len);
+        /// <param name="byteBlock">包含对象数据的字节块。</param>
+        /// <param name="type">要读取的对象的类型。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        /// <returns>从字节块中读取的对象实例。</returns>
+        object Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
 
         /// <summary>
-        /// 写入对象，不需要考虑为null的情况。
+        /// 将对象写入字节块。
         /// </summary>
-        /// <param name="byteBlock">存储内存块</param>
-        /// <param name="obj">需要序列化的对象</param>
-        /// <returns>返回该对象实际占用的字节长度。</returns>
-        int Write(ByteBlock byteBlock, object obj);
+        /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+        /// <param name="obj">要写入的对象实例。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        void Write<TByteBlock>(ref TByteBlock byteBlock, in object obj) where TByteBlock : IByteBlock;
     }
 
     /// <summary>
-    /// FastBinary转换器
+    /// 提供了一个抽象类，实现了IFastBinaryConverter接口，用于快速二进制转换。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">具体实现类的类型参数。</typeparam>
     public abstract class FastBinaryConverter<T> : IFastBinaryConverter
     {
-        object IFastBinaryConverter.Read(byte[] buffer, int offset, int len)
+        /// <summary>
+        /// 通过此实现从字节块中读取对象。
+        /// </summary>
+        /// <param name="byteBlock">包含对象数据的字节块。</param>
+        /// <param name="type">要读取的对象的类型。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        /// <returns>从字节块中读取的对象实例。</returns>
+        object IFastBinaryConverter.Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            return this.Read(buffer, offset, len);
+            return this.Read(ref byteBlock, type);
         }
 
-        int IFastBinaryConverter.Write(ByteBlock byteBlock, object obj)
+        /// <summary>
+        /// 通过此实现将对象写入字节块。
+        /// </summary>
+        /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+        /// <param name="obj">要写入的对象实例。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock, in object obj)
         {
-            return this.Write(byteBlock, (T)obj);
+            this.Write(ref byteBlock, (T)obj);
         }
 
-        /// <inheritdoc cref="IFastBinaryConverter.Read(byte[], int, int)"/>
-        protected abstract T Read(byte[] buffer, int offset, int len);
+        /// <summary>
+        /// 从字节块中读取对象。必须由具体实现类实现。
+        /// </summary>
+        /// <param name="byteBlock">包含对象数据的字节块。</param>
+        /// <param name="type">要读取的对象的类型。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        /// <returns>从字节块中读取的对象实例。</returns>
+        protected abstract T Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock;
 
-        /// <inheritdoc cref="IFastBinaryConverter.Write(ByteBlock, object)"/>
-        protected abstract int Write(ByteBlock byteBlock, T obj);
+        /// <summary>
+        /// 将对象写入字节块。必须由具体实现类实现。
+        /// </summary>
+        /// <param name="byteBlock">将要包含对象数据的字节块。</param>
+        /// <param name="obj">要写入的对象实例。</param>
+        /// <typeparam name="TByteBlock">字节块的类型，实现了IByteBlock接口。</typeparam>
+        protected abstract void Write<TByteBlock>(ref TByteBlock byteBlock, in T obj) where TByteBlock : IByteBlock;
     }
 }

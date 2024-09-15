@@ -26,27 +26,33 @@ namespace Microsoft.Extensions.DependencyInjection
 
         /// <summary>
         /// 添加TcpDmtpService服务。
+        /// 此方法用于通过依赖注入将TcpDmtpService服务及其实现类注册到服务集合中。
+        /// 它允许指定服务接口TService和该服务的具体实现类TImpService，
+        /// 并通过提供的配置操作委托对相关配置进行定制。
         /// </summary>
-        /// <typeparam name="TService"></typeparam>
-        /// <typeparam name="TImpService"></typeparam>
-        /// <param name="services"></param>
-        /// <param name="actionConfig"></param>
-        /// <returns></returns>
+        /// <typeparam name="TService">服务的接口类型。</typeparam>
+        /// <typeparam name="TImpService">服务的具体实现类。</typeparam>
+        /// <param name="services">服务集合，用于存储应用程序中所有注册的服务。</param>
+        /// <param name="actionConfig">配置操作委托，用于定制TouchSocket的配置。</param>
+        /// <returns>返回扩展后的服务集合，允许方法链式调用。</returns>
         public static IServiceCollection AddTcpDmtpService<TService, TImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
             where TService : class, ITcpDmtpServiceBase
             where TImpService : class, TService
         {
+            // 调用AddTcpService方法来注册TcpDmtpService服务，
+            // 该方法是实际执行服务添加的地方。
             return services.AddTcpService<TService, TImpService>(actionConfig);
         }
 
         /// <summary>
         /// 添加TcpDmtpService服务。并使用<see cref="ITcpDmtpService"/>注册服务。
         /// </summary>
-        /// <param name="services"></param>
-        /// <param name="actionConfig"></param>
-        /// <returns></returns>
+        /// <param name="services">服务集合</param>
+        /// <param name="actionConfig">配置操作委托</param>
+        /// <returns>返回服务集合</returns>
         public static IServiceCollection AddTcpDmtpService(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
         {
+            // 使用泛型方法AddTcpDmtpService，注册TcpDmtpService服务，实现ITcpDmtpService接口
             return services.AddTcpDmtpService<ITcpDmtpService, TcpDmtpService>(actionConfig);
         }
 
@@ -66,7 +72,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, ITcpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -92,7 +98,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, ITcpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddSingletonSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -118,7 +124,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, ITcpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddTransientSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -178,7 +184,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpClient
             where TImpClient : class, TClient
         {
-            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -204,7 +210,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpClient
             where TImpClient : class, TClient
         {
-            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddSingletonSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -230,7 +236,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpClient
             where TImpClient : class, TClient
         {
-            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddTransientSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -290,7 +296,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddScopedTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddScopedSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -316,7 +322,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddSingletonTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddSingletonSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>
@@ -342,7 +348,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TClient : class, IHttpDmtpClient
             where TImpClient : class, TClient
         {
-            return services.AddTransientTcpClient<TClient, TImpClient>(actionConfig);
+            return services.AddTransientSetupConfigObject<TClient, TImpClient>(actionConfig);
         }
 
         /// <summary>

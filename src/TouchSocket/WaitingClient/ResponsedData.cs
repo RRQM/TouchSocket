@@ -17,13 +17,13 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 响应数据。
     /// </summary>
-    public struct ResponsedData
+    public readonly struct ResponsedData
     {
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="requestInfo"></param>
+        /// <param name="data">响应的数据</param>
+        /// <param name="requestInfo">请求信息</param>
         public ResponsedData(byte[] data, IRequestInfo requestInfo)
         {
             this.Data = data;
@@ -33,11 +33,11 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 数据
         /// </summary>
-        public byte[] Data { get; private set; }
+        public byte[] Data { get; }
 
         /// <summary>
         /// RequestInfo
         /// </summary>
-        public IRequestInfo RequestInfo { get; private set; }
+        public IRequestInfo RequestInfo { get; }
     }
 }

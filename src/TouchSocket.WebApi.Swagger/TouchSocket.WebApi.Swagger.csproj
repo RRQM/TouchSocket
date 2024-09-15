@@ -9,11 +9,6 @@
 		<Title>TouchSocket.WebApi.Swagger</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi.Swagger</PackageOutputPath>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
   <ItemGroup>
     <None Remove="api\favicon-16x16.png" />
     <None Remove="api\favicon-32x32.png" />

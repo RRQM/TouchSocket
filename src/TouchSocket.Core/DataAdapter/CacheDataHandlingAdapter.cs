@@ -33,10 +33,10 @@ namespace TouchSocket.Core
         protected void Cache(byte[] buffer, int offset, int length)
         {
             this.m_cacheByteBlock ??= new ByteBlock(length);
-            this.m_cacheByteBlock.Write(buffer, offset, length);
+            this.m_cacheByteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, length));
             if (this.UpdateCacheTimeWhenRev)
             {
-                this.LastCacheTime = DateTime.Now;
+                this.LastCacheTime = DateTime.UtcNow;
             }
         }
 
@@ -63,7 +63,7 @@ namespace TouchSocket.Core
                 buffer = null;
                 return false;
             }
-            if (DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.m_cacheByteBlock.SafeDispose();
                 this.m_cacheByteBlock = null;
@@ -88,7 +88,7 @@ namespace TouchSocket.Core
                 byteBlock = null;
                 return false;
             }
-            if (DateTime.Now - this.LastCacheTime > this.CacheTimeout)
+            if (DateTime.UtcNow - this.LastCacheTime > this.CacheTimeout)
             {
                 this.m_cacheByteBlock.SafeDispose();
                 this.m_cacheByteBlock = null;

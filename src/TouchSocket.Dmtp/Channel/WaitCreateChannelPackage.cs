@@ -34,17 +34,17 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public bool Random { get; set; }
 
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
-            byteBlock.Write(this.Random);
-            byteBlock.Write(this.ChannelId);
+            base.PackageBody(ref byteBlock);
+            byteBlock.WriteBoolean(this.Random);
+            byteBlock.WriteInt32(this.ChannelId);
             byteBlock.WritePackage(this.Metadata);
         }
 
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.Random = byteBlock.ReadBoolean();
             this.ChannelId = byteBlock.ReadInt32();
             this.Metadata = byteBlock.ReadPackage<Metadata>();

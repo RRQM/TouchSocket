@@ -8,18 +8,22 @@
 		<Title>TouchSocket.JsonRpc</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.JsonRpc</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="InternalVisible.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Rpc\ThrowHelperRpc.cs" Link="Exceptions\ThrowHelperRpc.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="Exceptions\ThrowHelperSockets.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.WebApi\TouchSocket.WebApi.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<DebugSymbols>True</DebugSymbols>
-		<DebugType>Embedded</DebugType>
-		<EmbedAllSources>True</EmbedAllSources>
-	</PropertyGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
 		<PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 </Project>

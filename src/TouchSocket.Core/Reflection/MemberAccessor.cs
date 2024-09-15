@@ -101,14 +101,9 @@ namespace TouchSocket.Core
             {
                 return (obj, key) =>
                 {
-                    if (this.m_dicFieldInfes.TryGetValue(key, out var value1))
-                    {
-                        return value1.GetValue(obj);
-                    }
-                    else
-                    {
-                        return this.m_dicProperties.TryGetValue(key, out var value2) ? value2.GetValue(obj) : default;
-                    }
+                    return this.m_dicFieldInfes.TryGetValue(key, out var value1)
+                        ? value1.GetValue(obj)
+                        : this.m_dicProperties.TryGetValue(key, out var value2) ? value2.GetValue(obj) : default;
                 };
             }
 

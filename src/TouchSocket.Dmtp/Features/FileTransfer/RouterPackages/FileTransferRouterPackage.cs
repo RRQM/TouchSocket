@@ -53,21 +53,21 @@ namespace TouchSocket.Dmtp.FileTransfer
         protected override bool IncludedRouter => true;
 
         /// <inheritdoc/>
-        public override void PackageBody(in ByteBlock byteBlock)
+        public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.PackageBody(byteBlock);
-            byteBlock.Write(this.ContinuationIndex);
-            byteBlock.Write(this.Path);
-            byteBlock.Write(this.ResourceHandle);
-            byteBlock.Write(this.FileSectionSize);
+            base.PackageBody(ref byteBlock);
+            byteBlock.WriteInt32(this.ContinuationIndex);
+            byteBlock.WriteString(this.Path);
+            byteBlock.WriteInt32(this.ResourceHandle);
+            byteBlock.WriteInt32(this.FileSectionSize);
             byteBlock.WritePackage(this.FileInfo);
             byteBlock.WritePackage(this.Metadata);
         }
 
         /// <inheritdoc/>
-        public override void UnpackageBody(in ByteBlock byteBlock)
+        public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
-            base.UnpackageBody(byteBlock);
+            base.UnpackageBody(ref byteBlock);
             this.ContinuationIndex = byteBlock.ReadInt32();
             this.Path = byteBlock.ReadString();
             this.ResourceHandle = byteBlock.ReadInt32();

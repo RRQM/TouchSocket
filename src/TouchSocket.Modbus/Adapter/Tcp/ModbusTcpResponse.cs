@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Linq;
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
@@ -23,48 +23,48 @@ namespace TouchSocket.Modbus
 
         public ModbusErrorCode ErrorCode { get; private set; }
 
-        long IWaitHandle.Sign { get => this.TransactionId; set => this.TransactionId = (ushort)value; }
+        int IWaitHandle.Sign { get => this.TransactionId; set => this.TransactionId = (ushort)value; }
 
-        bool IFixedHeaderRequestInfo.OnParsingBody(byte[] body)
+        bool IFixedHeaderRequestInfo.OnParsingBody(ReadOnlySpan<byte> body)
         {
             if (this.m_isError)
             {
-                this.ErrorCode = (ModbusErrorCode)body.First();
+                this.ErrorCode = (ModbusErrorCode)body[0];
                 return true;
             }
             if ((byte)this.FunctionCode <= 4 || this.FunctionCode == FunctionCode.ReadWriteMultipleRegisters)
             {
-                var len = body.First();
+                var len = body[0];
 
                 if (body.Length - 1 == len)
                 {
-                    this.Data = body.Skip(1).ToArray();
+                    this.Data = body.Slice(1).ToArray();
                     return true;
                 }
             }
             else if (this.FunctionCode == FunctionCode.WriteSingleCoil || this.FunctionCode == FunctionCode.WriteSingleRegister)
             {
-                this.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(body, 0);
-                this.Data = body.Skip(2).ToArray();
+                this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+                this.Data = body.Slice(2).ToArray();
                 return true;
             }
             else if (this.FunctionCode == FunctionCode.WriteMultipleCoils || this.FunctionCode == FunctionCode.WriteMultipleRegisters)
             {
-                this.StartingAddress = TouchSocketBitConverter.BigEndian.ToUInt16(body, 0);
-                this.Quantity = TouchSocketBitConverter.BigEndian.ToUInt16(body, 2);
+                this.StartingAddress = TouchSocketBitConverter.BigEndian.To<ushort>(body);
+                this.Quantity = TouchSocketBitConverter.BigEndian.To<ushort>(body.Slice(2));
                 this.Data = new byte[0];
                 return true;
             }
             return false;
         }
 
-        bool IFixedHeaderRequestInfo.OnParsingHeader(byte[] header)
+        bool IFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
         {
             if (header.Length == 8)
             {
-                this.TransactionId = TouchSocketBitConverter.BigEndian.ToUInt16(header, 0);
-                this.ProtocolId = TouchSocketBitConverter.BigEndian.ToUInt16(header, 2);
-                this.m_bodyLength = TouchSocketBitConverter.BigEndian.ToUInt16(header, 4) - 2;
+                this.TransactionId = TouchSocketBitConverter.BigEndian.To<ushort>(header);
+                this.ProtocolId = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(2));
+                this.m_bodyLength = TouchSocketBitConverter.BigEndian.To<ushort>(header.Slice(4)) - 2;
                 this.SlaveId = header[6];
 
                 var code = header[7];
@@ -74,7 +74,7 @@ namespace TouchSocket.Modbus
                 }
                 else
                 {
-                    code = code.SetBit(7, 0);
+                    code = code.SetBit(7, false);
                     this.FunctionCode = (FunctionCode)code;
                     this.m_isError = true;
                 }

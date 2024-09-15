@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using TouchSocket.Core;
@@ -24,22 +25,25 @@ namespace TouchSocket.XmlRpc
     /// </summary>
     public class XmlRpcClient : HttpClientBase, IXmlRpcClient
     {
-        private readonly object m_invokeLocker = new object();
+        /// <inheritdoc/>
+        public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
+        {
+            return this.TcpConnectAsync(millisecondsTimeout, token);
+        }
 
         /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
+        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            lock (this.m_invokeLocker)
-            {
-                if (invokeOption == default)
-                {
-                    invokeOption = InvokeOption.WaitInvoke;
-                }
-                using (var byteBlock = new ByteBlock())
-                {
-                    var request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.PathAndQuery, method, parameters);
+            invokeOption  ??= InvokeOption.WaitInvoke;
 
-                    var response = this.RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
+            using (var byteBlock = new ByteBlock())
+            {
+                var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
+
+                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
+                {
+                    var response = responseResult.Response;
+
                     if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                     {
                         return default;
@@ -51,69 +55,19 @@ namespace TouchSocket.XmlRpc
                     }
                     else
                     {
-                        var xml = new XmlDocument();
-                        xml.LoadXml(response.GetBody());
-                        var paramNode = xml.SelectSingleNode("methodResponse/params/param");
-                        return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
+                       
+                        if (returnType!=null)
+                        {
+                            var xml = new XmlDocument();
+                            xml.LoadXml(response.GetBody());
+                            var paramNode = xml.SelectSingleNode("methodResponse/params/param");
+                            return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
+                        }
+
+                        return default;
                     }
                 }
             }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, ref object[] parameters, Type[] types)
-        {
-            lock (this.m_invokeLocker)
-            {
-                if (invokeOption == default)
-                {
-                    invokeOption = InvokeOption.WaitInvoke;
-                }
-
-                using (var byteBlock = new ByteBlock())
-                {
-                    var request = XmlDataTool.CreateRequest(this.RemoteIPHost.Host, this.RemoteIPHost.PathAndQuery, method, parameters);
-                    var response = this.RequestContent(request, invokeOption.FeedbackType == FeedbackType.OnlySend, invokeOption.Timeout, invokeOption.Token);
-                    if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
-                    {
-                        return;
-                    }
-                    if (response.StatusCode != 200)
-                    {
-                        throw new Exception(response.StatusMessage);
-                    }
-                }
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Invoke(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            this.Invoke(method, invokeOption, ref parameters, null);
-        }
-
-        /// <inheritdoc/>
-        public object Invoke(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return this.Invoke(returnType, method, invokeOption, ref parameters, null);
-        }
-
-        /// <inheritdoc/>
-        public Task InvokeAsync(string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                this.Invoke(method, invokeOption, parameters);
-            });
-        }
-
-        /// <inheritdoc/>
-        public Task<object> InvokeAsync(Type returnType, string method, IInvokeOption invokeOption, params object[] parameters)
-        {
-            return Task.Run(() =>
-            {
-                return this.Invoke(returnType, method, invokeOption, parameters);
-            });
         }
     }
 }

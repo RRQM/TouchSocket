@@ -59,7 +59,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
                 aspNetCoreContainer.BuildResolver(privoder);
                 config.SetResolver(aspNetCoreContainer);
-                imp.Setup(config);
+                imp.SetupAsync(config).GetFalseAwaitResult();
                 return imp;
             });
             return services;
@@ -92,7 +92,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
                 aspNetCoreContainer.BuildResolver(privoder);
                 config.SetResolver(aspNetCoreContainer);
-                imp.Setup(config.Clone());
+                imp.SetupAsync(config.Clone()).GetFalseAwaitResult();
                 return imp;
             });
             return services;
@@ -125,7 +125,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 config.RemoveValue(TouchSocketCoreConfigExtension.ConfigureContainerProperty);
                 aspNetCoreContainer.BuildResolver(privoder);
                 config.SetResolver(aspNetCoreContainer);
-                imp.Setup(config.Clone());
+                imp.SetupAsync(config.Clone()).GetFalseAwaitResult();
                 return imp;
             });
             return services;
@@ -136,7 +136,7 @@ namespace Microsoft.Extensions.DependencyInjection
         #region HostedService
 
         /// <summary>
-        /// 添加Service类型的HostedService服务。这类服务必须实现<see cref="ISetupConfigObject"/>与<see cref="IService"/>
+        /// 添加Service类型的HostedService服务。这类服务必须实现<see cref="ISetupConfigObject"/>与<see cref="IServiceBase"/>
         /// </summary>
         /// <typeparam name="TObjectService"></typeparam>
         /// <typeparam name="TObjectImpService"></typeparam>
@@ -144,7 +144,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="actionConfig"></param>
         /// <returns></returns>
         public static IServiceCollection AddServiceHostedService<TObjectService, [DynamicallyAccessedMembers(DynamicallyAccessed)] TObjectImpService>(this IServiceCollection services, Action<TouchSocketConfig> actionConfig)
-                 where TObjectService : class, ISetupConfigObject, IService
+                 where TObjectService : class, ISetupConfigObject, IServiceBase
          where TObjectImpService : class, TObjectService
         {
             return AddSetupConfigObjectHostedService<ServiceHost<TObjectService>, TObjectService, TObjectImpService>(services, actionConfig);

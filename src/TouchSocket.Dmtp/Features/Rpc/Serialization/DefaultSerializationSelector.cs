@@ -10,50 +10,83 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json;
 using System;
-using System.Text;
+using System.Runtime.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.Dmtp.Rpc
 {
     /// <summary>
-    /// 默认序列化选择器
+    /// 默认序列化选择器，实现了ISerializationSelector接口
     /// </summary>
-    public class DefaultSerializationSelector : SerializationSelector
+    public sealed class DefaultSerializationSelector : ISerializationSelector
     {
         /// <summary>
-        /// 反序列化
+        /// 默认序列化选择器的构造函数。
         /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameterBytes"></param>
-        /// <param name="parameterType"></param>
-        /// <returns></returns>
-        public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+        /// <remarks>
+        /// 初始化默认的序列化选择器，并设置快速序列化上下文为默认上下文。
+        /// </remarks>
+        public DefaultSerializationSelector()
         {
-            if (parameterBytes == null)
-            {
-                return parameterType.GetDefault();
-            }
+            // 初始化快速序列化上下文为默认的上下文
+            this.FastSerializerContext = FastBinaryFormatter.DefaultFastSerializerContext;
+        }
+
+        /// <summary>
+        /// 快速序列化上下文属性
+        /// </summary>
+        public FastSerializerContext FastSerializerContext { get; set; }
+
+        /// <summary>
+        /// 序列化绑定器属性
+        /// </summary>
+        public SerializationBinder SerializationBinder { get; set; }
+
+        /// <summary>
+        /// 根据指定的序列化类型反序列化字节块中的数据。
+        /// </summary>
+        /// <param name="byteBlock">包含序列化数据的字节块。</param>
+        /// <param name="serializationType">指定的序列化类型。</param>
+        /// <param name="parameterType">预期反序列化出的对象类型。</param>
+        /// <returns>反序列化后的对象。</returns>
+        /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
+        public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+        {
+            // 根据序列化类型选择不同的反序列化方式
             switch (serializationType)
             {
                 case SerializationType.FastBinary:
-                    {
-                        return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
-                    }
+                    // 使用FastBinary格式进行反序列化
+                    return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType, this.FastSerializerContext);
                 case SerializationType.SystemBinary:
+                    // 检查字节块是否为null
+                    if (byteBlock.ReadIsNull())
                     {
-                        return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                        // 如果为null，则返回该类型的默认值
+                        return parameterType.GetDefault();
+                    }
+
+                    // 使用SystemBinary格式进行反序列化
+                    using (var block = byteBlock.ReadByteBlock())
+                    {
+                        // 将字节块转换为流并进行反序列化
+                        return SerializeConvert.BinaryDeserialize(block.AsStream(), SerializationBinder);
                     }
                 case SerializationType.Json:
+                    // 检查字节块是否为null
+                    if (byteBlock.ReadIsNull())
                     {
-                        return SerializeConvert.FromJsonString(Encoding.UTF8.GetString(parameterBytes), parameterType);
+                        // 如果为null，则返回该类型的默认值
+                        return parameterType.GetDefault();
                     }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
-                    }
+
+                    // 使用Json格式进行反序列化
+                    return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType);
                 default:
+                    // 如果序列化类型未识别，则抛出异常
                     throw new RpcException("未指定的反序列化方式");
             }
         }
@@ -61,34 +94,59 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 序列化参数
         /// </summary>
-        /// <param name="serializationType"></param>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+        /// <param name="byteBlock">字节块引用，用于存储序列化后的数据</param>
+        /// <param name="serializationType">序列化类型，决定了使用哪种方式序列化</param>
+        /// <param name="parameter">待序列化的参数对象</param>
+        /// <typeparam name="TByteBlock">字节块类型，必须实现IByteBlock接口</typeparam>
+        public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
         {
-            if (parameter == null)
-            {
-                return null;
-            }
+            // 根据序列化类型选择不同的序列化方法
             switch (serializationType)
             {
                 case SerializationType.FastBinary:
                     {
-                        return SerializeConvert.FastBinarySerialize(parameter);
+                        // 使用FastBinaryFormatter进行序列化
+                        FastBinaryFormatter.Serialize(ref byteBlock, parameter);
+                        break;
                     }
                 case SerializationType.SystemBinary:
                     {
-                        return SerializeConvert.BinarySerialize(parameter);
+                        // 参数为null时，写入空值标记
+                        if (parameter is null)
+                        {
+                            byteBlock.WriteNull();
+                        }
+                        else
+                        {
+                            // 参数不为null时，标记并序列化参数
+                            byteBlock.WriteNotNull();
+                            using (var block = new ByteBlock(1024 * 64))
+                            {
+                                // 使用System.Runtime.Serialization.BinaryFormatter进行序列化
+                                SerializeConvert.BinarySerialize(block.AsStream(), parameter);
+                                // 将序列化后的字节块写入byteBlock
+                                byteBlock.WriteByteBlock(block);
+                            }
+                        }
+                        break;
                     }
                 case SerializationType.Json:
                     {
-                        return SerializeConvert.JsonSerializeToBytes(parameter);
-                    }
-                case SerializationType.Xml:
-                    {
-                        return SerializeConvert.XmlSerializeToBytes(parameter);
+                        // 参数为null时，写入空值标记
+                        if (parameter is null)
+                        {
+                            byteBlock.WriteNull();
+                        }
+                        else
+                        {
+                            // 参数不为null时，标记并转换为JSON字符串
+                            byteBlock.WriteNotNull();
+                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter));
+                        }
+                        break;
                     }
                 default:
+                    // 抛出异常，提示未指定的序列化方式
                     throw new RpcException("未指定的序列化方式");
             }
         }

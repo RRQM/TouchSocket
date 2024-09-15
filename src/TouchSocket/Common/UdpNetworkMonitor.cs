@@ -12,33 +12,35 @@
 
 using System;
 using System.Net.Sockets;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+        /// <summary>
     /// Udp监听器
     /// </summary>
     public class UdpNetworkMonitor
     {
         /// <summary>
-        /// Udp监听器
+        /// 初始化Udp监听器
         /// </summary>
-        /// <param name="iPHost"></param>
-        /// <param name="socket"></param>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="iPHost">IP主机信息</param>
+        /// <param name="socket">Socket对象，用于网络通信</param>
+        /// <exception cref="ArgumentNullException">如果socket为null，则抛出此异常</exception>
         public UdpNetworkMonitor(IPHost iPHost, Socket socket)
         {
             this.IPHost = iPHost;
-            this.Socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            // 检查socket参数是否为空，为空则抛出ArgumentNullException
+            this.Socket = ThrowHelper.ThrowArgumentNullExceptionIf(socket, nameof(socket));
         }
 
         /// <summary>
-        /// IPHost
+        /// 获取IP主机信息
         /// </summary>
         public IPHost IPHost { get; }
 
         /// <summary>
-        /// Socket组件
+        /// 获取或设置Socket组件
         /// </summary>
         public Socket Socket { get; private set; }
     }

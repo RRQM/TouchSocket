@@ -39,21 +39,7 @@ namespace TouchSocket.Core
         {
             void localAction(LogLevel logLevel, object source, string message, Exception exception)
             {
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff"));
-                stringBuilder.Append(" | ");
-                stringBuilder.Append(logLevel.ToString());
-                stringBuilder.Append(" | ");
-                stringBuilder.Append(message);
-
-                if (exception != null)
-                {
-                    stringBuilder.Append(" | ");
-                    stringBuilder.Append($"【异常消息】：{exception.Message}");
-                    stringBuilder.Append($"【堆栈】：{exception.StackTrace ?? "未知"}");
-                }
-                stringBuilder.AppendLine();
-                action.Invoke(stringBuilder.ToString());
+                action.Invoke(this.CreateLogString(logLevel,source,message,exception));
             }
             this.m_action = localAction;
         }

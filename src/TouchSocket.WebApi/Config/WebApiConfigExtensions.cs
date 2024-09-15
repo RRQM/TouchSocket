@@ -10,10 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using TouchSocket.Core;
-using TouchSocket.WebApi;
-
 namespace TouchSocket.Sockets
 {
     /// <summary>
@@ -21,28 +17,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public static class WebApiConfigExtensions
     {
-        /// <summary>
-        /// 构建WebApiClient类客户端，并连接
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TClient BuildWithWebApiClient<TClient>(this TouchSocketConfig config) where TClient : IWebApiClient
-        {
-            var client = Activator.CreateInstance<TClient>();
-            client.Setup(config);
-            client.Connect();
-            return client;
-        }
-
-        /// <summary>
-        ///  构建WebApiClient类客户端，并连接
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static WebApiClient BuildWithWebApiClient(this TouchSocketConfig config)
-        {
-            return BuildWithWebApiClient<WebApiClient>(config);
-        }
+       
     }
 }

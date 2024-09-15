@@ -14,8 +14,9 @@ using System;
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// TouchSocketEventArgs
+    /// 定义TouchSocketEventArgs类，继承自EventArgs，用于处理TouchSocket相关的事件
     /// </summary>
     public class TouchSocketEventArgs : EventArgs
     {

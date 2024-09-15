@@ -13,40 +13,19 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
-using TouchSocket.Sockets;
 
 namespace TouchSocket.Http
 {
     /// <summary>
     /// Http服务器数据处理适配器
     /// </summary>
-    public class HttpServerDataHandlingAdapter : NormalDataHandlingAdapter
+    public sealed class HttpServerDataHandlingAdapter : SingleStreamDataHandlingAdapter
     {
-        /// <summary>
-        /// 缓存数据，如果需要手动释放，请先判断，然后到调用<see cref="IDisposable.Dispose"/>后，再置空；
-        /// </summary>
-        protected ByteBlock tempByteBlock;
-
-        private ITcpClientBase m_client;
-
         private HttpRequest m_request;
-
-        private long m_surLen;
-
-        private Task m_task;
-
         private HttpRequest m_requestRoot;
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                this.m_requestRoot.SafeDispose();
-                this.tempByteBlock.SafeDispose();
-            }
-            base.Dispose(disposing);
-        }
+        private long m_surLen;
+        private Task m_task;
+        private ByteBlock m_tempByteBlock;
 
         /// <inheritdoc/>
         public override bool CanSplicingSend => false;
@@ -54,67 +33,75 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override void OnLoaded(object owner)
         {
-            if (!(owner is ITcpClientBase clientBase))
+            if (owner is not HttpSessionClient httpSessionClient)
             {
-                throw new Exception($"此适配器必须适用于{nameof(ITcpClientBase)}");
+                throw new Exception($"此适配器必须适用于{nameof(IHttpService)}");
             }
-            this.m_client = clientBase;
+
+            this.m_requestRoot = new HttpRequest(httpSessionClient);
             base.OnLoaded(owner);
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                //this.m_requestRoot.SafeDispose();
+                this.m_tempByteBlock.SafeDispose();
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="byteBlock"></param>
-        protected override void PreviewReceived(ByteBlock byteBlock)
+        protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
-            this.m_requestRoot ??= new HttpRequest(this.m_client);
-
-            if (this.tempByteBlock == null)
+            if (this.m_tempByteBlock == null)
             {
-                byteBlock.Pos = 0;
-                this.Single(byteBlock, false);
+                byteBlock.Position = 0;
+                await this.Single(byteBlock, false).ConfigureAwait(false);
             }
             else
             {
-                this.tempByteBlock.Write(byteBlock.Buffer, 0, byteBlock.Len);
-                var block = this.tempByteBlock;
-                this.tempByteBlock = null;
-                block.Pos = 0;
-                this.Single(block, true);
+                this.m_tempByteBlock.Write(byteBlock.Span);
+                var block = this.m_tempByteBlock;
+                this.m_tempByteBlock = null;
+                block.Position = 0;
+                await this.Single(block, true).ConfigureAwait(false);
             }
         }
 
         private void Cache(ByteBlock byteBlock)
         {
-            if (byteBlock.CanReadLen > 0)
+            if (byteBlock.CanReadLength > 0)
             {
-                this.tempByteBlock = new ByteBlock();
-                this.tempByteBlock.Write(byteBlock.Buffer, byteBlock.Pos, byteBlock.CanReadLen);
-                if (this.tempByteBlock.Len > this.MaxPackageSize)
+                this.m_tempByteBlock = new ByteBlock();
+                this.m_tempByteBlock.Write(byteBlock.Span.Slice(byteBlock.Position, byteBlock.CanReadLength));
+                if (this.m_tempByteBlock.Length > this.MaxPackageSize)
                 {
                     this.OnError(default, "缓存的数据长度大于设定值的情况下未收到解析信号", true, true);
                 }
             }
         }
 
-        private void DestoryRequest()
+        private async Task DestoryRequest()
         {
             this.m_request = null;
             if (this.m_task != null)
             {
-                this.m_task.Wait();
+                await this.m_task.ConfigureAwait(false);
                 this.m_task = null;
             }
-
-            this.m_requestRoot.Reset();
         }
 
-        private void Single(ByteBlock byteBlock, bool dis)
+        private async Task Single(ByteBlock byteBlock, bool dis)
         {
             try
             {
-                while (byteBlock.CanReadLen > 0)
+                while (byteBlock.CanReadLength > 0)
                 {
                     if (this.DisposedValue)
                     {
@@ -122,11 +109,12 @@ namespace TouchSocket.Http
                     }
                     if (this.m_request == null)
                     {
+                        this.m_requestRoot.ResetHttp();
                         this.m_request = this.m_requestRoot;
-                        if (this.m_request.ParsingHeader(byteBlock, byteBlock.CanReadLen))
+                        if (this.m_request.ParsingHeader(ref byteBlock))
                         {
-                            byteBlock.Pos++;
-                            if (this.m_request.ContentLength > byteBlock.CanReadLen)
+                            //byteBlock.Position++;
+                            if (this.m_request.ContentLength > byteBlock.CanReadLength)
                             {
                                 this.m_surLen = this.m_request.ContentLength;
 
@@ -134,10 +122,9 @@ namespace TouchSocket.Http
                             }
                             else
                             {
-                                byteBlock.Read(out var buffer, (int)this.m_request.ContentLength);
-                                this.m_request.SetContent(buffer);
-                                this.GoReceived(null, this.m_request);
-                                this.DestoryRequest();
+                                this.m_request.SetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
+                                await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(false);
+                                await this.DestoryRequest().ConfigureAwait(false);
                             }
                         }
                         else
@@ -152,20 +139,21 @@ namespace TouchSocket.Http
                     {
                         if (byteBlock.CanRead)
                         {
-                            var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLen);
-                            this.m_request.InternalInput(byteBlock.Buffer, byteBlock.Pos, len);
+                            var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
+
+                            await this.m_request.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(false);
                             this.m_surLen -= len;
-                            byteBlock.Pos += len;
+                            byteBlock.Position += len;
                             if (this.m_surLen == 0)
                             {
-                                this.m_request.InternalInput(new byte[0], 0, 0);
-                                this.DestoryRequest();
+                                await this.m_request.CompleteInput().ConfigureAwait(false);
+                                await this.DestoryRequest().ConfigureAwait(false);
                             }
                         }
                     }
                     else
                     {
-                        this.DestoryRequest();
+                        await this.DestoryRequest().ConfigureAwait(false);
                     }
                 }
             }
@@ -180,18 +168,9 @@ namespace TouchSocket.Http
 
         private Task TaskRunGoReceived(HttpRequest request)
         {
-            var task = Task.Run(() => { this.GoReceived(null, request); });
-            task.ConfigureFalseAwait();
+            var task = Task.Run(async () => await this.GoReceivedAsync(null, request).ConfigureAwait(false));
+            task.ConfigureAwait(false);
             return task;
         }
-
-        //private void RunGoReceived(HttpRequest request)
-        //{
-        //    try
-        //    {
-        //        this.GoReceived(null, request);
-        //    }
-        //    catch
-        //    {
     }
 }

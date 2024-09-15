@@ -10,9 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-using TouchSocket.JsonRpc;
-
 namespace TouchSocket.Sockets
 {
     /// <summary>
@@ -20,67 +17,67 @@ namespace TouchSocket.Sockets
     /// </summary>
     public static class JsonRpcConfigExtension
     {
-        /// <summary>
-        /// 构建WebSocketJsonRpc类客户端，并连接
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TClient BuildWithWebSocketJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : IWebSocketJsonRpcClient, new()
-        {
-            return config.BuildClient<TClient>();
-        }
+        ///// <summary>
+        ///// 构建WebSocketJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <typeparam name="TClient"></typeparam>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static TClient BuildWithWebSocketJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : IWebSocketJsonRpcClient, new()
+        //{
+        //    return config.BuildClientAsync<TClient>();
+        //}
 
-        /// <summary>
-        /// 构建WebSocketJsonRpc类客户端，并连接
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static WebSocketJsonRpcClient BuildWithWebSocketJsonRpcClient(this TouchSocketConfig config)
-        {
-            return BuildWithWebSocketJsonRpcClient<WebSocketJsonRpcClient>(config);
-        }
+        ///// <summary>
+        ///// 构建WebSocketJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static WebSocketJsonRpcClient BuildWithWebSocketJsonRpcClient(this TouchSocketConfig config)
+        //{
+        //    return BuildWithWebSocketJsonRpcClient<WebSocketJsonRpcClient>(config);
+        //}
 
-        /// <summary>
-        /// 构建HttpJsonRpc类客户端，并连接
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TClient BuildWithHttpJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : IHttpJsonRpcClient, new()
-        {
-            return config.BuildClient<TClient>();
-        }
+        ///// <summary>
+        ///// 构建HttpJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <typeparam name="TClient"></typeparam>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static TClient BuildWithHttpJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : IHttpJsonRpcClient, new()
+        //{
+        //    return config.BuildClientAsync<TClient>();
+        //}
 
-        /// <summary>
-        /// 构建HttpJsonRpc类客户端，并连接
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static HttpJsonRpcClient BuildWithHttpJsonRpcClient(this TouchSocketConfig config)
-        {
-            return BuildWithHttpJsonRpcClient<HttpJsonRpcClient>(config);
-        }
+        ///// <summary>
+        ///// 构建HttpJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static HttpJsonRpcClient BuildWithHttpJsonRpcClient(this TouchSocketConfig config)
+        //{
+        //    return BuildWithHttpJsonRpcClient<HttpJsonRpcClient>(config);
+        //}
 
-        /// <summary>
-        /// 构建TcpJsonRpc类客户端，并连接
-        /// </summary>
-        /// <typeparam name="TClient"></typeparam>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TClient BuildWithTcpJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : ITcpJsonRpcClient, new()
-        {
-            return config.BuildClient<TClient>();
-        }
+        ///// <summary>
+        ///// 构建TcpJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <typeparam name="TClient"></typeparam>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static TClient BuildWithTcpJsonRpcClient<TClient>(this TouchSocketConfig config) where TClient : ITcpJsonRpcClient, new()
+        //{
+        //    return config.BuildClientAsync<TClient>();
+        //}
 
-        /// <summary>
-        /// 构建TcpJsonRpc类客户端，并连接
-        /// </summary>
-        /// <param name="config"></param>
-        /// <returns></returns>
-        public static TcpJsonRpcClient BuildWithTcpJsonRpcClient(this TouchSocketConfig config)
-        {
-            return BuildWithTcpJsonRpcClient<TcpJsonRpcClient>(config);
-        }
+        ///// <summary>
+        ///// 构建TcpJsonRpc类客户端，并连接
+        ///// </summary>
+        ///// <param name="config"></param>
+        ///// <returns></returns>
+        //public static TcpJsonRpcClient BuildWithTcpJsonRpcClient(this TouchSocketConfig config)
+        //{
+        //    return BuildWithTcpJsonRpcClient<TcpJsonRpcClient>(config);
+        //}
     }
 }

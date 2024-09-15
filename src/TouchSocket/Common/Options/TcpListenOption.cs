@@ -15,7 +15,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    /// <summary>
+       /// <summary>
     /// 监听配置
     /// </summary>
     public class TcpListenOption
@@ -63,7 +63,6 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 配置Tcp适配器
         /// </summary>
-        public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; } =
-            () => new NormalDataHandlingAdapter();
+        public Func<SingleStreamDataHandlingAdapter> Adapter { get; set; }
     }
 }

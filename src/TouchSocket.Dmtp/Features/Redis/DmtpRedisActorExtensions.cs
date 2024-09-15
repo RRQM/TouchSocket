@@ -17,7 +17,7 @@ using TouchSocket.Resources;
 namespace TouchSocket.Dmtp.Redis
 {
     /// <summary>
-    /// DmtpRedisActorExtensions
+    /// 定义一个静态类，用于扩展DmtpRedisActor的功能
     /// </summary>
     public static class DmtpRedisActorExtensions
     {
@@ -25,31 +25,34 @@ namespace TouchSocket.Dmtp.Redis
         /// 获取或设置RedisActor的注入键。
         /// </summary>
         public static readonly DependencyProperty<IDmtpRedisActor> DmtpRedisActorProperty =
-            DependencyProperty<IDmtpRedisActor>.Register("DmtpRedisActor", null);
+            new("DmtpRedisActor", null);
 
         /// <summary>
         /// 获取<see cref="IDmtpRedisActor"/>
         /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
+        /// <param name="client">要获取<see cref="IDmtpRedisActor"/>的<see cref="IDmtpActorObject"/>实例</param>
+        /// <returns><see cref="IDmtpRedisActor"/>实例</returns>
+        /// <exception cref="Exception">当<see cref="IDmtpRedisActor"/>为null时抛出<see cref="ArgumentException"/></exception>
         public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActorObject client)
         {
+            // 从client的DmtpActor属性中获取存储的IDmtpRedisActor实例
             var redisClient = client.DmtpActor.GetValue(DmtpRedisActorProperty);
-            return redisClient ?? throw new ArgumentException(TouchSocketDmtpResource.RedisActorNull.GetDescription());
+            // 如果redisClient为null，则抛出ArgumentException，提示RedisActor未设置
+            return redisClient ?? throw new ArgumentException(TouchSocketDmtpResource.RedisActorNull);
         }
 
         /// <summary>
         /// 从<see cref="DmtpActor"/>中获得<see cref="IDmtpRedisActor"/>
         /// </summary>
-        /// <param name="dmtpActor"></param>
-        /// <returns></returns>
+        /// <param name="dmtpActor">要从中获取<see cref="IDmtpRedisActor"/>的<see cref="DmtpActor"/>实例</param>
+        /// <returns>返回从<see cref="DmtpActor"/>中获取的<see cref="IDmtpRedisActor"/>实例</returns>
         public static IDmtpRedisActor GetDmtpRedisActor(this IDmtpActor dmtpActor)
         {
+            // 调用GetValue方法从dmtpActor中获取DmtpRedisActorProperty属性值
             return dmtpActor.GetValue(DmtpRedisActorProperty);
         }
 
-        internal static void SetStmpRedisActor(this IDmtpActor dmtpActor, DmtpRedisActor redisClient)
+        internal static void SetDmtpRedisActor(this IDmtpActor dmtpActor, DmtpRedisActor redisClient)
         {
             dmtpActor.SetValue(DmtpRedisActorProperty, redisClient);
         }
@@ -57,10 +60,11 @@ namespace TouchSocket.Dmtp.Redis
         /// <summary>
         /// 使用Redis插件。仅：Dmtp端会生效。
         /// </summary>
-        /// <param name="pluginManager"></param>
-        /// <returns></returns>
+        /// <param name="pluginManager">插件管理器，用于管理插件。</param>
+        /// <returns>返回Redis功能插件。</returns>
         public static RedisFeature UseDmtpRedis(this IPluginManager pluginManager)
         {
+            // 添加RedisFeature到插件管理器，使Dmtp端能够使用Redis插件。
             return pluginManager.Add<RedisFeature>();
         }
     }

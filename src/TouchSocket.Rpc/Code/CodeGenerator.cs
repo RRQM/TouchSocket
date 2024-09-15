@@ -29,7 +29,7 @@ namespace TouchSocket.Rpc
         internal static readonly List<Type> m_ignoreTypes = new List<Type>();
         internal static readonly Dictionary<Type, string> m_proxyType = new Dictionary<Type, string>();
 
-        private const BindingFlags m_methodFlags = BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public;
+        private const BindingFlags MethodFlags = BindingFlags.Default | BindingFlags.Instance | BindingFlags.Public;
 
         /// <summary>
         /// 添加不需要代理的程序集
@@ -277,8 +277,6 @@ namespace TouchSocket.Rpc
 
             foreach (var item in m_proxyType.Keys)
             {
-                var deep = 0;
-                //classCodeGenerator.AddTypeString(item, ref deep);
                 classCodeGenerator.AddTypeString(item);
             }
 
@@ -290,14 +288,12 @@ namespace TouchSocket.Rpc
                     {
                         if (rpcMethod.ReturnType != null)
                         {
-                            var deep = 0;
                             classCodeGenerator.AddTypeString(rpcMethod.ReturnType);
                         }
 
                         var psTypes = rpcMethod.GetNormalParameters().Select(a => a.Type);
                         foreach (var itemType in psTypes)
                         {
-                            var deep = 0;
                             classCodeGenerator.AddTypeString(itemType);
                         }
                         instances.Add(rpcMethod);
@@ -393,7 +389,7 @@ namespace TouchSocket.Rpc
             {
                 GetMethodInfos(item, ref methods);
             }
-            foreach (var method in type.GetMethods(m_methodFlags))
+            foreach (var method in type.GetMethods(MethodFlags))
             {
                 if (method.IsGenericMethod)
                 {

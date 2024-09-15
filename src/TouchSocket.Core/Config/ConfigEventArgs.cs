@@ -12,15 +12,17 @@
 
 namespace TouchSocket.Core
 {
+
     /// <summary>
-    /// ConfigEventArgs
+    /// 配置事件参数类，继承自PluginEventArgs
+    /// 该类用于封装配置相关的事件参数，主要携带了TouchSocket配置信息
     /// </summary>
     public class ConfigEventArgs : PluginEventArgs
     {
         /// <summary>
-        /// ConfigEventArgs
+        /// 初始化ConfigEventArgs类的实例
         /// </summary>
-        /// <param name="config"></param>
+        /// <param name="config">TouchSocket配置对象</param>
         public ConfigEventArgs(TouchSocketConfig config)
         {
             this.Config = config;
