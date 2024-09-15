@@ -1,0 +1,118 @@
+---
+id: tlvdatahandlingadapter
+title: 三元组编码（TLV）适配器
+---
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、说明 <Tag>Pro</Tag>
+
+TLV适配器，定义了一种简单高效的三元组编码，简称TLV编码。它是由数据的类型Tag（T），数据的长度Length（L），数据的值Value（V）构成的一组数据报文。TLV是基于二进制编码的，将数据以（T -L- V）的形式编码为字节数组，即TLV是字节流的数据传输协议。它规定了一帧数据的首个字节或几个字节来表示数据类型，紧接着一个或几个字节表示数据长度，最后是数据的内容。
+
+数据协议如下：
+
+**Tag**
+
+- 标识数据的类型。
+- 占2字节
+- 大端序无符号整型。
+- 0-9保留系统使用。\[10,65535]客户端自行定义。
+- 已用Tag：0表示Close，载荷Value为关闭消息。
+- 已用Tag：1表示Ping，无载荷，对方收到后必须无条件返回Pong。
+- 已用Tag：2表示Pong，无载荷。
+
+**Length**
+
+- 标识后续Value的长度。
+- 按LengtType的指定，可以用1字节、2字节、4字节来表示长度，分别对应255、65535、2147483647字节的对应值。
+- 1字节时，不区分端序。
+- 2字节时，大端序无符号整型。
+- 4字节时，大端序有符号整型。
+- 默认使用2字节的Ushort类型。
+
+**Value**
+
+载荷数据。可以为任意类型。
+
+## 二、使用
+
+【适配器使用】
+设置的FixedHeaderType类型后，实际的支持最大数据还受SetMaxPackageSize影响。默认为1024*1024*10字节。
+
+```csharp showLineNumbers
+.SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//如果使用TLVPlugin插件，此步骤可省略。
+```
+
+【插件】
+
+只需要添加TLVPlugin插件即可。客户端亦然。
+
+使用插件，相当于自动设置适配器，并且主动回应Ping。
+
+```csharp showLineNumbers
+var config = new TouchSocketConfig();
+
+config.UsePlugin()
+.SetMaxPackageSize(1024 * 1024 * 10)
+//.SetDataHandlingAdapter(() => new TLVDataHandlingAdapter(FixedHeaderType.Int, verifyFunc: null))//如果使用TLVPlugin插件，此步骤可省略。
+.ConfigurePlugins(a =>
+{
+    a.Add<TLVPlugin>()//使用插件，相当于自动设置适配器，并且主动回应Ping。
+    .SetLengthType(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
+});
+```
+
+
+## 三、保活机制
+
+- TLV数据协议中，定义了Tag=1时为ping，Tag=2时为Pong。所以可以依靠这套机制，进行保活。
+- 实际上，在插件中，已经做了Ping，Pong的处理。客户端可以直接调用。
+- 该操作，服务器也可以直接ping客户端。
+
+```csharp showLineNumbers
+bool result=this.m_client.Ping();//返回值为true时，对端一定在线。此方法服务器也可以主动ping客户端。
+```
+
+
+### 自动ping
+
+利用PollingKeepAlivePlugin插件自动Ping。
+
+
+## 四、构建数据
+
+如果对方是其他语言，请使用约定的方式发送数据。
+如果是CSharp的话，构建数据非常简单。
+构建数据时，可用TLVDataFrame构建。或者其值类型构建，此处推荐**ValueTLVDataFrame**
+【直接构造】
+
+```csharp showLineNumbers
+ValueTLVDataFrame requestInfo = new ValueTLVDataFrame(10, new byte[] { 0, 1, 2, 3 });
+```
+
+【追加型构建】
+
+```csharp showLineNumbers
+ ValueTLVDataFrame requestInfo = new ValueTLVDataFrame();
+ requestInfo.AppendValue(new byte[] { 0, 1, 2, 3 });
+ requestInfo.AppendValue(new byte[] { 4, 5, 6, 7 });
+```
+
+
+## 五、发送数据
+
+构建完数据后，直接发送。
+
+```csharp showLineNumbers
+client.Send(new ValueTLVDataFrame(10,Encoding.UTF8.GetBytes("rrqm")));//推荐写法，如果使用自己Build，则需要明确指出FixedHeaderType的值。
+```
+
+:::tip 提示
+
+上述创建的适配器客户端与服务器均适用。
+
+:::  

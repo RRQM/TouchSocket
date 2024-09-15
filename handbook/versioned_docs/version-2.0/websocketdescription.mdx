@@ -1,0 +1,31 @@
+---
+id: websocketdescription
+title: 产品及架构介绍
+---
+
+### 定义
+
+命名空间：TouchSocket.Http.WebSockets <br/>
+程序集：[TouchSocket.Http.dll](https://www.nuget.org/packages/TouchSocket.Http)
+
+## 产品介绍
+
+- WebSocket是一种在单个TCP连接上进行全双工通信的协议。WebSocket通信协议于2011年被IETF定为标准RFC 6455，并由RFC7936补充规范。WebSocket API也被W3C定为标准。WebSocket使得客户端和服务器之间的数据交换变得更加简单，允许服务端主动向客户端推送数据。在WebSocket API中，浏览器和服务器只需要完成一次握手，两者之间就直接可以创建持久性的连接，并进行双向数据传输。 <a name="Sdw1r"></a>
+
+## 产品特点
+
+- 简单易用。
+- 多线程。
+- 内存池
+- 高性能
+- **多种数据接收模式**（IOCP，BIO，Select）。
+- **多地址监听**（可以一次性监听多个IP及端口） <a name="h6l2a"></a>
+
+## 产品应用场景
+
+- WebSocket基础使用场景：可跨平台、跨语言使用。
+- 自定义协议解析场景：可解析任意数据格式的WebSocket数据报文。
+
+## 服务器架构
+
+服务器运行挂载在HttpService上，所以架构和HttpService一致。
