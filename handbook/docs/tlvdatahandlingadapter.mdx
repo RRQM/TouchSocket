@@ -108,7 +108,7 @@ ValueTLVDataFrame requestInfo = new ValueTLVDataFrame(10, new byte[] { 0, 1, 2, 
 构建完数据后，直接发送。
 
 ```csharp showLineNumbers
-client.Send(new ValueTLVDataFrame(10,Encoding.UTF8.GetBytes("rrqm")));//推荐写法，如果使用自己Build，则需要明确指出FixedHeaderType的值。
+client.SendAsync(new ValueTLVDataFrame(10,Encoding.UTF8.GetBytes("rrqm")));//推荐写法，如果使用自己Build，则需要明确指出FixedHeaderType的值。
 ```
 
 :::tip 提示

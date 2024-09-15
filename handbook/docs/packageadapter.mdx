@@ -77,47 +77,47 @@ title: 内置包适配器
 1. TouchSocketConfig配置中设置（可以同时指定HeaderType等属性）
 2. 通过Received（事件、方法、插件）中的ByteBlock读取数据。
 
-```csharp {7,30}
-static TcpClient CreateClient()
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
     service.Received = (client, e) =>
     {
         //从客户端收到信息
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-    
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
@@ -125,15 +125,9 @@ static TcpService CreateService()
 
 :::caution 注意
 
-使用该适配器时，最好服务器与客户端均使用TouchSocket，这样更好维护。
+1. 使用该适配器时，最好服务器与客户端均使用TouchSocket，这样更好维护。
 
-同时在发送（Send、SendAsync）数据时，会自动封装数据头，所以不需要手动封装。如果想要发送手动组装的数据，请使用DefaultSend。
-
-:::  
-
-:::caution 注意
-
-接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
+2. 同时在发送（SendAsync）数据时，会自动封装数据头，所以不需要手动封装。
 
 :::  
 
@@ -150,47 +144,47 @@ static TcpService CreateService()
 1. TouchSocketConfig配置中设置，同时指定数据的长度。
 2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
 
-```csharp {7,30}
-static TcpClient CreateClient()
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(5))
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
     service.Received = (client, e) =>
     {
         //从客户端收到信息
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(5))
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
@@ -198,22 +192,16 @@ static TcpService CreateService()
 
 :::caution 注意
 
-该适配器，在发送数据时，如果数据小于设定长度，会自动使用0进行填补。所以使用该适配器时，应该事前约定固定的长度，并在发送数据时严格遵守。
+该适配器，在发送数据时，应该事前约定固定的长度，并在发送数据时严格遵守。
 
 :::  
 
 :::caution 注意
 
-该适配器，在发送（Send、SendAsync）数据时，会自动封装数据头，所以不需要手动封装。如果想要发送手动组装的数据，请使用DefaultSend。
+该适配器，在发送（SendAsync）数据时，会自动封装数据头，所以不需要手动封装。
 
 :::  
 
-
-:::caution 注意
-
-接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
-
-:::  
 
 :::tip 提示
 
@@ -230,47 +218,47 @@ static TcpService CreateService()
 1. TouchSocketConfig配置中设置，同时指定数据的长度。
 2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
 
-```csharp {7,30}
-static TcpClient CreateClient()
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
     service.Received = (client, e) =>
     {
         //从客户端收到信息
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
@@ -278,20 +266,14 @@ static TcpService CreateService()
 
 :::caution 注意
 
-该适配器，在发送（Send、SendAsync）数据时，会自动追加分割符，所以不需要手动封装。如果想要发送手动组装的数据，请使用DefaultSend。
+该适配器，在发送（SendAsync）数据时，会自动追加分割符。
 
 :::  
 
 
 :::tip 提示
 
-默认情况下终止因子不会保留在数据中，用户可通过ReserveTerminatorCode属性，设为true，来保留终止因子。
-
-:::  
-
-:::caution 注意
-
-接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
+默认情况下终止因子不会保留在数据中，用户可通过`ReserveTerminatorCode`属性，设为true，来保留终止因子。
 
 :::  
 
@@ -310,57 +292,51 @@ static TcpService CreateService()
 1. TouchSocketConfig配置中设置，同时指定数据的长度。
 2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
 
-```csharp {7,30}
-static TcpClient CreateClient()
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
     var client = new TcpClient();
     //载入配置
-    client.Setup(new TouchSocketConfig()
-        .SetRemoteIPHost("127.0.0.1:7789")
-        .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) })
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个日志注入
-        }));
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
 
-    client.Connect();//调用连接，当连接不成功时，会抛出异常。
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
     client.Logger.Info("客户端成功连接");
     return client;
 }
 
-static TcpService CreateService()
+private static async Task<TcpService> CreateService()
 {
     var service = new TcpService();
     service.Received = (client, e) =>
     {
         //从客户端收到信息
-        string mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);//注意：数据长度是byteBlock.Len
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
     };
 
-    service.Setup(new TouchSocketConfig()//载入配置
-        .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
-        .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromMilliseconds(100) })
-        .ConfigureContainer(a =>
-        {
-            a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-        })
-        .ConfigurePlugins(a =>
-        {
-            //a.Add();//此处可以添加插件
-        }));
-
-    service.Start();//启动
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
     service.Logger.Info("服务器已启动");
     return service;
 }
 ```
-
-:::caution 注意
-
-接收的数据长度是byteBlock.Len，而不是byteBlock.Buffer.Length。
-
-:::  
 
 :::tip 提示
 

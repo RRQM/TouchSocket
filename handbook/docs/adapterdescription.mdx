@@ -130,7 +130,7 @@ m_udpSession.Start();
 限制使用的场景应用于自定义封装。例如：自己封装一个服务器，然后适配器仅**特定使用**，不允许外部随意赋值，那么可以如下实现：
 
 ```csharp showLineNumbers
-public class MySocketClient : SocketClient
+public class MySessionClient : SessionClient
 {
     /// <summary>
     /// <inheritdoc/>

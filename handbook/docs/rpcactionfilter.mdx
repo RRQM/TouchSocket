@@ -36,7 +36,7 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
         //    Message = "不允许执行",
         //    Result = default
         //};
-        if (callContext.Caller is ISocketClient client)
+        if (callContext.Caller is ITcpSessionClient client)
         {
             client.Logger.Info($"即将执行Rpc-{callContext.RpcMethod.Name}");
         }
@@ -45,7 +45,7 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
 
     public override Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
     {
-        if (callContext.Caller is ISocketClient client)
+        if (callContext.Caller is ITcpSessionClient client)
         {
             client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}完成，状态={invokeResult.Status}");
         }
@@ -54,7 +54,7 @@ public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
 
     public override Task<InvokeResult> ExecutExceptionAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
     {
-        if (callContext.Caller is ISocketClient client)
+        if (callContext.Caller is ITcpSessionClient client)
         {
             client.Logger.Info($"执行RPC-{callContext.RpcMethod.Name}异常，信息={invokeResult.Message}");
         }

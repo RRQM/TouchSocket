@@ -48,84 +48,60 @@ import Tag from "@site/src/components/Tag.js";
 #### 6.1 创建ModbusTcpMaster
 
 ```csharp showLineNumbers
-public IModbusTcpMaster GetMaster()
-{
-    var master = new ModbusTcpMaster();
-
-    master.Connect("127.0.0.1:502");
-    return master;
-}
+var client = new ModbusTcpMaster();
+await client.ConnectAsync("127.0.0.1:502");
 ```
 
 #### 6.2 创建ModbusUdpMaster
 
 ```csharp showLineNumbers
-public IModbusMaster GetMaster()
-{
-    var master = new ModbusUdpMaster();
-    master.Setup(new TouchSocketConfig()
-        .UseUdpReceive()
-        .SetRemoteIPHost("127.0.0.1:502"));
-    master.Start();
-    return master;
-}
+var client = new ModbusUdpMaster();
+await client.SetupAsync(new TouchSocketConfig()
+     .UseUdpReceive()
+     .SetRemoteIPHost("127.0.0.1:502"));
+await client.StartAsync();
 ```
 
 #### 6.3 创建ModbusRtuMaster
 
 ```csharp showLineNumbers
-public IModbusMaster GetMaster()
-{
-    var master = new ModbusRtuMaster();
-    master.Setup(new TouchSocketConfig()
-        .SetSerialPortOption(new SerialPortOption()
-        {
-            BaudRate = 9600,
-            DataBits = 8,
-            Parity = System.IO.Ports.Parity.Even,
-            PortName = "COM2",
-            StopBits = System.IO.Ports.StopBits.One
-        }));
-    master.Connect();
-    return master;
-}
+var client = new ModbusRtuMaster();
+await client.SetupAsync(new TouchSocketConfig()
+     .SetSerialPortOption(new SerialPortOption()
+     {
+         BaudRate = 9600,
+         DataBits = 8,
+         Parity = System.IO.Ports.Parity.Even,
+         PortName = "COM2",
+         StopBits = System.IO.Ports.StopBits.One
+     }));
+await client.ConnectAsync();
 ```
 
 #### 6.4 创建ModbusRtuOverTcpMaster
 
 ```csharp showLineNumbers
-public IModbusMaster GetMaster()
-{
-    var master = new ModbusRtuOverTcpMaster();
-    master.Connect("127.0.0.1:502");
-    return master;
-}
+var client = new ModbusRtuOverTcpMaster();
+await client.ConnectAsync("127.0.0.1:502");
 ```
 
 #### 6.5 创建ModbusRtuOverUdpMaster
 
 ```csharp showLineNumbers
-public IModbusMaster GetMaster()
-{
-    var master = new ModbusRtuOverUdpMaster();
-    master.Setup(new TouchSocketConfig()
-        .UseUdpReceive()
-        .SetRemoteIPHost("127.0.0.1:502"));
-    master.Start();
-    return master;
-}
+var client = new ModbusRtuOverUdpMaster();
+await client.SetupAsync(new TouchSocketConfig()
+     .UseUdpReceive()
+     .SetRemoteIPHost("127.0.0.1:502"));
+await client.StartAsync();
 ```
 
 ## 七、读写操作
 
 ### 7.1 原生接口操作 
 
-所有的Modbus主站都支持以下两种原生接口操作：
+所有的`Modbus`主站都支持以下原生接口操作：
 
 ```csharp showLineNumbers
-//同步发送Modbus请求，并等待响应
-IModbusResponse SendModbusRequest(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
-
 //异步发送Modbus请求，并等待响应
 Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token);
 ```
@@ -139,7 +115,7 @@ modbusRequest.SetStartingAddress(0);//设置起始
 modbusRequest.SetQuantity(1);//设置数量
 //modbusRequest.SetValue(false);//如果是写入类操作，可以直接设定值
 
-var response = master.SendModbusRequest(modbusRequest, 1000, CancellationToken.None);
+var response =await master.SendModbusRequestAsync(modbusRequest, 1000, CancellationToken.None);
 
 bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
 ```
@@ -151,19 +127,19 @@ bool[] bools = response.CreateReader().ToBoolensFromBit().ToArray();
 读取线圈（FC1）。
 
 ```csharp showLineNumbers
-bool[] bools = master.ReadCoils(0, 1);
+bool[] bools =await master.ReadCoilsAsync(0, 1);
 ```
 
 读取离散输入（FC2）。
 
 ```csharp showLineNumbers
-bool[] bools = master.ReadDiscreteInputs(0, 1);
+bool[] bools =await master.ReadDiscreteInputsAsync(0, 1);
 ```
 
 读取保持寄存器（FC3）。
 
 ```csharp showLineNumbers
-var response = master.ReadHoldingRegisters(0, 1);
+var response =await master.ReadHoldingRegistersAsync(0, 1);
 var reader = response.CreateReader();
 var value=reader.ReadInt16();
 ```
@@ -171,7 +147,7 @@ var value=reader.ReadInt16();
 读取输入寄存器（FC4）。
 
 ```csharp showLineNumbers
-var response = master.ReadInputRegisters(0, 1);
+var response =await master.ReadInputRegistersAsync(0, 1);
 var reader = response.CreateReader();
 var value=reader.ReadInt16();
 ```
@@ -179,19 +155,19 @@ var value=reader.ReadInt16();
 写入单个线圈（FC5）。
 
 ```csharp showLineNumbers
-master.WriteSingleCoil(0, true);
+await master.WriteSingleCoilAsync(0, true);
 ```
 
 写入单个寄存器（FC6）。
 
 ```csharp showLineNumbers
-master.WriteSingleRegister(0, (short)100);
+await master.WriteSingleRegisterAsync(0, (short)100);
 ```
 
 写入多个线圈（FC15）。
 
 ```csharp showLineNumbers
-master.WriteMultipleCoils(0, new bool[] { true, false, true });
+await master.WriteMultipleCoilsAsync(0, new bool[] { true, false, true });
 ```
 
 写入多个寄存器（FC16）。
@@ -204,7 +180,7 @@ using (var writer = new ValueByteBlock(1024))
     writer.Write(long.MaxValue, EndianType.BigSwap);//BADC端序 8字节
     writer.Write(double.MaxValue, EndianType.LittleSwap);//CDAB端序 8字节
     
-    master.WriteMultipleRegisters(0, writer.ToArray());
+   await master.WriteMultipleRegistersAsync(0, writer.ToArray());
 }
 ```
 
@@ -223,7 +199,7 @@ using (var writer = new ValueByteBlock(1024))
 
 ```csharp showLineNumbers
 //读取寄存器
-var response = master.ReadHoldingRegisters(1, 0, 10);//站点1，从0开始读取10个寄存器
+var response =await master.ReadHoldingRegistersAsync(1, 0, 10);//站点1，从0开始读取10个寄存器
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -251,7 +227,7 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
     //写入到寄存器
-    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
 }
 ```
 
@@ -259,7 +235,7 @@ using (var valueByteBlock = new ValueByteBlock(1024))
 
 ```csharp showLineNumbers
 //读取寄存器
-var response = master.ReadHoldingRegisters(1, 0, 1 + 1 + 2 + 4);
+var response =await master.ReadHoldingRegistersAsync(1, 0, 1 + 1 + 2 + 4);
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -280,11 +256,11 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.Write("Hello");
 
     //写入到寄存器
-    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
 }
 
 //读取寄存器
-var response = master.ReadHoldingRegisters(1, 0, 5);//5个长度，10字节
+var response =await master.ReadHoldingRegistersAsync(1, 0, 5);//5个长度，10字节
 
 //创建一个读取器
 var reader = response.CreateReader();
@@ -300,11 +276,11 @@ using (var valueByteBlock = new ValueByteBlock(1024))
     valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
 
     //写入到寄存器
-    master.WriteMultipleRegisters(1, 0, valueByteBlock.ToArray());
+    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
 }
 
 //读取寄存器
-var response = master.ReadHoldingRegisters(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
+var response =await master.ReadHoldingRegistersAsync(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
 
 //创建一个读取器
 var reader = response.CreateReader();

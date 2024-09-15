@@ -39,7 +39,7 @@ public partial class MyContainer : ManualContainer
 ```csharp showLineNumbers
 internal partial class MyServicePluginClass : PluginBase
 {
-    [GeneratorPlugin(nameof(IServerStartedPlugin.OnServerStarted))]
+    [GeneratorPlugin(typeof(IServerStartedPlugin))]
     public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
     {
         if (sender is ITcpService service)
@@ -60,7 +60,7 @@ internal partial class MyServicePluginClass : PluginBase
         return e.InvokeNext();
     }
 
-    [GeneratorPlugin(nameof(IServerStopedPlugin.OnServerStoped))]
+    [GeneratorPlugin(typeof(IServerStopedPlugin))]
     public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
     {
         Console.WriteLine("服务已停止");
@@ -70,20 +70,20 @@ internal partial class MyServicePluginClass : PluginBase
 
 partial class TcpServiceReceivedPlugin : PluginBase
 {
-    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
-        var mes = Encoding.UTF8.GetString(e.ByteBlock.Buffer, 0, e.ByteBlock.Len);
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         if (mes == "close")
         {
             throw new CloseException(mes);
         }
         client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
 
-        client.Send(mes);//将收到的信息直接返回给发送方
+        client.SendAsync(mes);//将收到的信息直接返回给发送方
 
-        //client.Send("id",mes);//将收到的信息返回给特定ID的客户端
+        //client.SendAsync("id",mes);//将收到的信息返回给特定ID的客户端
 
         //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
         var ids = client.Service.GetIds();
@@ -111,8 +111,8 @@ partial class ClosePlugin : PluginBase
         this.m_logger = logger;
     }
 
-    [GeneratorPlugin(nameof(ITcpReceivedPlugin.OnTcpReceived))]
-    public async Task OnTcpReceived(ISocketClient client, ReceivedDataEventArgs e)
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         try
         {
@@ -156,7 +156,7 @@ class CloseException : Exception
 
 ```csharp {3}
 var service = new TcpService();
-service.Setup(new TouchSocketConfig()//载入配置
+await service.SetupAsync(new TouchSocketConfig()//载入配置
     .SetContainer(new MyContainer())
     .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
     .ConfigureContainer(a =>//容器的配置顺序应该在最前面
@@ -172,7 +172,7 @@ service.Setup(new TouchSocketConfig()//载入配置
         //a.Add();//此处可以添加插件
     }));
 
-service.Start();//启动
+await service.StartAsync();//启动
 ```
 
 :::info 提示

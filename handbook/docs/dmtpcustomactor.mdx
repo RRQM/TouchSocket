@@ -71,7 +71,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                     {
                         if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                         {
-                            actor.Send(this.m_invoke_Request, byteBlock);
+                            actor.SendAsync(this.m_invoke_Request, byteBlock);
                             return true;
                         }
                         else
@@ -88,7 +88,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                     rpcPackage.SwitchId();
 
                     rpcPackage.Package(byteBlock);
-                    this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                    this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock);
                 }
                 else
                 {
@@ -112,7 +112,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 {
                     if (await this.DmtpActor.TryFindDmtpActor(rpcPackage.TargetId) is DmtpActor actor)
                     {
-                        actor.Send(this.m_invoke_Response, byteBlock);
+                        actor.SendAsync(this.m_invoke_Response, byteBlock);
                     }
                 }
                 else
@@ -142,7 +142,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 package.Status = 4;
                 package.SwitchId();
                 package.Package(byteBlock);
-                this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock);
                 return;
             }
         }
@@ -155,7 +155,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 package.Status = 1;
                 package.SwitchId();
                 package.Package(byteBlock);
-                this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock);
                 return;
             }
         }
@@ -167,7 +167,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
                 package.Message = ex.Message;
                 package.SwitchId();
                 package.Package(byteBlock);
-                this.DmtpActor.Send(this.m_invoke_Response, byteBlock);
+                this.DmtpActor.SendAsync(this.m_invoke_Response, byteBlock);
                 return;
             }
         }
@@ -231,7 +231,7 @@ class SimpleDmtpRpcActor : ISimpleDmtpRpcActor
             using (var byteBlock = new ByteBlock())
             {
                 package.Package(byteBlock);
-                this.DmtpActor.Send(this.m_invoke_Request, byteBlock);
+                this.DmtpActor.SendAsync(this.m_invoke_Request, byteBlock);
             }
             switch (waitData.Wait(5000))
             {
@@ -464,8 +464,8 @@ private static TcpDmtpService GetTcpDmtpService()
                 VerifyToken = "Dmtp"//连接验证口令。
            });
 
-    service.Setup(config);
-    service.Start();
+    await service.SetupAsync(config);
+    await service.StartAsync();
     service.Logger.Info("服务器成功启动");
     return service;
 }

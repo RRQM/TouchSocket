@@ -122,11 +122,11 @@ internal static class DependencyExtensions
     public static readonly DependencyProperty<Timer> HeartbeatTimerProperty =
         DependencyProperty<Timer>.Register("HeartbeatTimer", null);
 
-    public static bool Ping<TClient>(this TClient client) where TClient : ITcpClientBase
+    public static bool Ping<TClient>(this TClient client) where TClient : ITcpSession
     {
         try
         {
-            client.Send(new MyRequestInfo() { DataType = DataType.Ping }.PackageAsBytes());
+            client.SendAsync(new MyRequestInfo() { DataType = DataType.Ping }.PackageAsBytes());
             return true;
         }
         catch (Exception ex)
@@ -137,11 +137,11 @@ internal static class DependencyExtensions
         return false;
     }
 
-    public static bool Pong<TClient>(this TClient client) where TClient : ITcpClientBase
+    public static bool Pong<TClient>(this TClient client) where TClient : ITcpSession
     {
         try
         {
-            client.Send(new MyRequestInfo() { DataType = DataType.Pong }.PackageAsBytes());
+            client.SendAsync(new MyRequestInfo() { DataType = DataType.Pong }.PackageAsBytes());
             return true;
         }
         catch (Exception ex)
@@ -159,7 +159,7 @@ internal static class DependencyExtensions
 下列代码主要实现心跳插件的功能。默认每五秒自动触发一次。且接收方收到Ping后，直接会回复Pong。
 
 ```csharp showLineNumbers
-internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpClientBase>, ITcpDisconnectedPlugin<ITcpClientBase>, ITcpReceivedPlugin<ITcpClientBase>
+internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpSession>, ITcpDisconnectedPlugin<ITcpSession>, ITcpReceivedPlugin<ITcpSession>
 {
     private readonly int m_timeTick;
     private readonly ILog logger;
@@ -172,9 +172,9 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
     }
 
 
-    public async Task OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
     {
-        if (client is ISocketClient)
+        if (client is ITcpSessionClient)
         {
             return;//此处可判断，如果为服务器，则不用使用心跳。
         }
@@ -191,7 +191,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
         await e.InvokeNext();
     }
 
-    public async Task OnTcpDisconnected(ITcpClientBase client, DisconnectEventArgs e)
+    public async Task OnTcpDisconnected(ITcpSession client, DisconnectEventArgs e)
     {
         if (client.GetValue(DependencyExtensions.HeartbeatTimerProperty) is Timer timer)
         {
@@ -202,7 +202,7 @@ internal class HeartbeatAndReceivePlugin : PluginBase, ITcpConnectedPlugin<ITcpC
         await e.InvokeNext();
     }
 
-    public async Task OnTcpReceived(ITcpClientBase client, ReceivedDataEventArgs e)
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
     {
         if (e.RequestInfo is MyRequestInfo myRequest)
         {
@@ -231,7 +231,7 @@ private static void Main(string[] args)
 
     //服务器
     var service = new TcpService();
-    service.Setup(new TouchSocketConfig()//载入配置
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
             .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
             .SetTcpDataHandlingAdapter(() => new MyFixedHeaderDataHandlingAdapter())
             .ConfigureContainer(a =>
@@ -243,7 +243,7 @@ private static void Main(string[] args)
                 a.Add<HeartbeatAndReceivePlugin>();
             }));
     
-    service.Start();//启动
+    await service.StartAsync();//启动
     service.Logger.Info("服务器成功启动");
 
     //客户端
@@ -269,7 +269,7 @@ private static void Main(string[] args)
       });
     consoleAction.Add("2", "发送数据", () =>
       {
-          tcpClient.Send(new MyRequestInfo()
+          tcpClient.SendAsync(new MyRequestInfo()
           {
               DataType = DataType.Data,
               Data = Encoding.UTF8.GetBytes(Console.ReadLine())

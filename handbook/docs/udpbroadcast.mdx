@@ -49,7 +49,7 @@ udpClient.Setup(new TouchSocketConfig()
     .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
 udpClient.Start();
 
-udpClient.Send(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
+udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("224.5.6.7"), 7789), Encoding.UTF8.GetBytes("我是组播"));
 ```
 
 ## 三、广播
@@ -87,7 +87,7 @@ udpClient.Setup(new TouchSocketConfig()
     .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter()));
 udpClient.Start();
 
-udpClient.Send(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
+udpClient.SendAsync(new IPEndPoint(IPAddress.Parse("255.255.255.255"), 7789), Encoding.UTF8.GetBytes("我是广播"));
 ```
 :::caution 注意
 

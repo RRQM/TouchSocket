@@ -36,7 +36,7 @@ public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
         return a + b;
     }
 
-    //当第一个参数，直接或间接实现ITcpClientBase接口时，会收集到当前请求的客户端，从而可以获取IP等。
+    //当第一个参数，直接或间接实现ITcpSession接口时，会收集到当前请求的客户端，从而可以获取IP等。
     public SumClass SumCommand(IHttpClientBase client, SumClass sumClass)
     {
         sumClass.Sum = sumClass.A + sumClass.B;
@@ -51,7 +51,7 @@ public class MyWSCommandLinePlugin : WebSocketCommandLinePlugin
 
 ```csharp {14}
 var service = new HttpService();
-service.Setup(new TouchSocketConfig()//加载配置
+await service.SetupAsync(new TouchSocketConfig()//加载配置
     .SetListenIPHosts(7789)
     .ConfigureContainer(a =>
     {
@@ -66,7 +66,7 @@ service.Setup(new TouchSocketConfig()//加载配置
         a.Add<MyWSCommandLinePlugin>();
     }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 ### 3.2 调用
@@ -77,21 +77,21 @@ service.Start();
 
 ```csharp {18} 
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketReceivedPlugin.OnWebSocketReceived), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
+        a.Add(typeof(IWebSocketReceivedPlugin), async (IHttpClientBase c, WSDataFrameEventArgs e) =>
         {
             client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
             await e.InvokeNext();
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.SendWithWS("Add 10 20");
 ```

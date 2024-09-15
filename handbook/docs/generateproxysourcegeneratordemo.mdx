@@ -11,7 +11,7 @@ title: 源生成代理推荐写法
 
 ## 一、声明接口
 
-在TouchSocket中，关于Rpc，我们有更为推荐的写法。详细步骤如下：
+在`TouchSocket`中，关于`Rpc`，我们有更为推荐的写法。详细步骤如下：
 
 （1）新建类库项目，命名为`RpcClassLibrary`。然后在该程序集中，定义服务接口，和接口参数实体类。
 
@@ -64,7 +64,7 @@ public class UserServer : IUserServer
 }
 ```
 
-然后新建类文件，命名为AssemblyInfo.cs，用于存放程序集相关配置。此处的目的是设置Rpc服务自动注册。
+然后新建类文件，命名为`AssemblyInfo.cs`，用于存放程序集相关配置。此处的目的是设置`Rpc`服务自动注册。
 
 所以类文件中，需要添加如下代码：
 
@@ -81,26 +81,32 @@ using TouchSocket.Rpc;
 如果作为服务器，需要按接口注册服务
 
 ```csharp showLineNumbers
-var service = new TcpTouchRpcService();
+var service = new TcpDmtpService();
 var config = new TouchSocketConfig()//配置
        .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
        .ConfigureContainer(a =>
        {
            a.AddConsoleLogger();
-           a.AddFileLogger();
+           a.AddRpcStore(store =>
+           {
+               ////此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+               //store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+
+               //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
+               store.RegisterAllFromRpcImplementationClassLibrary();
+           });
        })
-       .ConfigureRpcStore(a => 
+       .ConfigurePlugins(a =>
        {
-           //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
-           store.RegisterAllFromRpcImplementationClassLibrary();
+           a.UseDmtpRpc();
        })
        .SetDmtpOption(new DmtpOption()
        {
-            VerifyToken = "Rpc"//连接验证口令。
-       });
-service.Setup(config);
+           VerifyToken = "Dmtp"
+       });//设定连接口令，作用类似账号密码
 
-service.Start();
+await service.SetupAsync(config);
+await service.StartAsync();
 
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
@@ -109,18 +115,22 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 作为客户端仅引用`RpcClassLibrary`即可。直接调用即可。
 
-```csharp {8}
-TcpTouchRpcClient client = new TcpTouchRpcClient();
-client.Setup(new TouchSocketConfig()
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-client.Connect();
+```csharp {15}
+var client = new TcpDmtpClient();
+await client.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7789")
+     .ConfigurePlugins(a =>
+     {
+         a.UseDmtpRpc();
+     })
+     .SetDmtpOption(new DmtpOption()
+     {
+         VerifyToken = "Dmtp"
+     }));
+await client.ConnectAsync();
 
-//Loging即为在RpcClassLibrary中自动生成的项目
-var response = client.Login(new RpcClassLibrary.Models.LoginRequest() { Account= "Account",Password= "Account" });
+//Login即为在RpcClassLibrary中自动生成的项目
+var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
 Console.WriteLine(response.Result);
 ```
 

@@ -37,7 +37,7 @@ public partial class JsonRpcServer : RpcServer
 {
     /// <summary>
     /// 使用调用上下文。
-    /// 可以从上下文获取调用的SocketClient。从而获得IP和Port等相关信息。
+    /// 可以从上下文获取调用的SessionClient。从而获得IP和Port等相关信息。
     /// </summary>
     /// <param name="callContext"></param>
     /// <param name="str"></param>
@@ -45,12 +45,12 @@ public partial class JsonRpcServer : RpcServer
     [JsonRpc(MethodInvoke =true)]
     public string TestGetContext(ICallContext callContext, string str)
     {
-        if (callContext.Caller is IHttpSocketClient socketClient)
+        if (callContext.Caller is IHttpSessionClient SessionClient)
         {
-            if (socketClient.Protocol == Protocol.WebSocket)
+            if (SessionClient.Protocol == Protocol.WebSocket)
             {
                 Console.WriteLine("WebSocket请求");
-                var client = callContext.Caller as IHttpSocketClient;
+                var client = callContext.Caller as IHttpSessionClient;
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"WebSocket请求{ip}:{port}");
@@ -58,16 +58,16 @@ public partial class JsonRpcServer : RpcServer
             else
             {
                 Console.WriteLine("HTTP请求");
-                var client = callContext.Caller as IHttpSocketClient;
+                var client = callContext.Caller as IHttpSessionClient;
                 var ip = client.IP;
                 var port = client.Port;
                 Console.WriteLine($"HTTP请求{ip}:{port}");
             }
         }
-        else if (callContext.Caller is ISocketClient)
+        else if (callContext.Caller is ITcpSessionClient)
         {
             Console.WriteLine("Tcp请求");
-            var client = callContext.Caller as ISocketClient;
+            var client = callContext.Caller as ITcpSessionClient;
             var ip = client.IP;
             var port = client.Port;
             Console.WriteLine($"Tcp请求{ip}:{port}");
@@ -110,7 +110,7 @@ JsonRpc支持多个基本协议的服务器，所以下面将一一介绍。
 
 ```csharp showLineNumbers
 var service = new TcpService();
-service.Setup(new TouchSocketConfig()
+await service.SetupAsync(new TouchSocketConfig()
     .SetListenIPHosts(7705)
     .ConfigureContainer(a => 
     {
@@ -129,7 +129,7 @@ service.Setup(new TouchSocketConfig()
         a.UseTcpJsonRpc();
     }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 :::caution 注意
@@ -146,7 +146,7 @@ service.Start();
 ```csharp showLineNumbers
 var service = new HttpService();
 
-service.Setup(new TouchSocketConfig()
+await service.SetupAsync(new TouchSocketConfig()
      .SetListenIPHosts(7706)
      .ConfigureContainer(a => 
      {
@@ -161,7 +161,7 @@ service.Setup(new TouchSocketConfig()
          .SetJsonRpcUrl("/jsonRpc");
      }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 ### 4.3 使用WebSocket协议服务器
@@ -171,7 +171,7 @@ service.Start();
 ```csharp showLineNumbers
 var service = new HttpService();
 
-service.Setup(new TouchSocketConfig()
+await service.SetupAsync(new TouchSocketConfig()
      .SetListenIPHosts(7707)
      .ConfigureContainer(a => 
      {
@@ -186,15 +186,15 @@ service.Setup(new TouchSocketConfig()
          .SetWSUrl("/ws");
 
          a.UseWebSocketJsonRpc()
-         .SetAllowJsonRpc((socketClient, context) =>
+         .SetAllowJsonRpc((SessionClient, context) =>
          {
              //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-             //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+             //当然除了此处可以设置外，也可以通过SessionClient.SetJsonRpc(true)直接设置。
              return true;
          });
      }));
 
-service.Start();
+await service.StartAsync();
 ```
 
 :::tip 提示
@@ -241,34 +241,34 @@ service.Start();
 ### 6.1 Tcp协议
 
 ```csharp showLineNumbers
-var jsonRpcClient = new TcpJsonRpcClient();
-jsonRpcClient.Setup(new TouchSocketConfig()
+var client = new TcpJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7705"));
-jsonRpcClient.Connect();
+await client.ConnectAsync();
 
-string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
 ```
 
 ### 6.2 Http协议
 
 ```csharp showLineNumbers
-var jsonRpcClient = new HttpJsonRpcClient();
-jsonRpcClient.Setup(new TouchSocketConfig()
+var client = new HttpJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("http://127.0.0.1:7706/jsonrpc"));
-jsonRpcClient.Connect();
+await client.ConnectAsync();
 
-string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
 ```
 
 ### 6.3 Websocket协议
 
 ```csharp showLineNumbers
-var jsonRpcClient = new WebSocketJsonRpcClient();
-jsonRpcClient.Setup(new TouchSocketConfig()
+var client = new WebSocketJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
-jsonRpcClient.Connect();
+await client.ConnectAsync();
 
-string result = jsonRpcClient.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
+string result = client.InvokeT<string>("TestJsonRpc", InvokeOption.WaitInvoke, "RRQM");
 ```
 
 ### 6.4 生成代理调用
@@ -304,28 +304,27 @@ var sum3 = client.TestJsonRpc("RRQM");
 /// 新建一个类，继承JsonRpcDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
 /// </summary>
-class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
+internal class MyJsonRpcDispatchProxy : JsonRpcDispatchProxy
 {
     private readonly IJsonRpcClient m_client;
 
     public MyJsonRpcDispatchProxy()
     {
-        this.m_client = CreateJsonRpcClientByTcp();
+        this.m_client = CreateJsonRpcClientByTcp().GetFalseAwaitResult();
     }
+
     public override IJsonRpcClient GetClient()
     {
         return this.m_client;
     }
 
-    private static IJsonRpcClient CreateJsonRpcClientByTcp()
+    private static async Task<IJsonRpcClient> CreateJsonRpcClientByTcp()
     {
         var client = new TcpJsonRpcClient();
-        client.Setup(new TouchSocketConfig()
-            .SetRemoteIPHost("127.0.0.1:7705")
-            .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
-        client.Connect();
-
-        Console.WriteLine("连接成功");
+        await client.SetupAsync(new TouchSocketConfig()
+             .SetRemoteIPHost("127.0.0.1:7705")
+             .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n")));
+        await client.ConnectAsync();
         return client;
     }
 }
@@ -380,8 +379,8 @@ public partial class ReverseJsonRpcServer : RpcServer
 然后在插件注册全局`RpcStore`。并注册服务。
 
 ```csharp showLineNumbers
-var jsonRpcClient = new WebSocketJsonRpcClient();
-jsonRpcClient.Setup(new TouchSocketConfig()
+var client = new WebSocketJsonRpcClient();
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigurePlugins(a =>
     {
         a.UseGlobalRpcStore()
@@ -391,24 +390,24 @@ jsonRpcClient.Setup(new TouchSocketConfig()
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
-jsonRpcClient.Connect();
+await client.ConnectAsync();
 ```
 
-在服务器端中，拿到IHttpSocketClient对象。然后调用GetJsonRpcActionClient扩展方法获取到jsonRpcClient。然后调用Invoke等。
+在服务器端中，拿到IHttpSessionClient对象。然后调用GetJsonRpcActionClient扩展方法获取到jsonRpcClient。然后调用Invoke等。
 
 下列示例演示的是，当WebSocket连接上时，服务器主动调用客户端。
 
 ```csharp showLineNumbers
-class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IHttpSocketClient>
+class MyPluginClass : PluginBase, IWebSocketHandshakedPlugin<IHttpSessionClient>
 {
-    public async Task OnWebSocketHandshaked(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnWebSocketHandshaked(IHttpSessionClient client, HttpContextEventArgs e)
     {
         try
         {
             //获取JsonRpcActionClient，用于执行反向Rpc
-            var jsonRpcClient = client.GetJsonRpcActionClient();
+            var client = client.GetJsonRpcActionClient();
 
-            var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
+            var result = await client.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
             Console.WriteLine(result);
         }
         catch (Exception ex)
