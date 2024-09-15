@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,11 +8,9 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BeetleX.XRPC" Version="1.2.0.1802" />
-		<PackageReference Include="BeetleX.XRPC.Hosting" Version="1.2.0.1802" />
-		<PackageReference Include="NewLife.Remoting" Version="3.1.2024.914-beta0002" />
-		<PackageReference Include="TouchSocket.Dmtp" Version="2.1.0-rc.37" />
-		<PackageReference Include="TouchSocket.Hosting" Version="2.1.0-rc.37" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="2.1.0" />
+		<PackageReference Include="TouchSocket.Hosting" Version="2.1.0" />
 	</ItemGroup>
 
 	<!--<ItemGroup>

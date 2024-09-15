@@ -18,20 +18,7 @@ namespace HttpPerformanceConsoleApp
             StartAspnetHttp();
             StartTouchSokcetHttp();
             StartFastEndpoints();
-            StartBeetleXFastApiHttp();
             Console.ReadKey();
-        }
-        static void StartBeetleXFastApiHttp()
-        {
-            var mApiServer = new BeetleX.FastHttpApi.HttpApiServer();
-            mApiServer.Options.LogLevel = BeetleX.EventArgs.LogType.Off;
-            mApiServer.Options.LogToConsole = false;
-            
-            mApiServer.Register(typeof(Program).Assembly);
-            mApiServer.Options.Port=7792;
-            mApiServer.Open();
-
-            ConsoleLogger.Default.Info($"BeetleXFastApi已启动，请求连接：http://127.0.0.1:7792/ApiServer/Add?a=10&b=20");
         }
 
         static void StartTouchSokcetHttp()

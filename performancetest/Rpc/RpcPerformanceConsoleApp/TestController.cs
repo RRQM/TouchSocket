@@ -1,5 +1,4 @@
-﻿using EventNext;
-using System.Text;
+﻿using System.Text;
 using TouchSocket.Dmtp.Rpc;
 using TouchSocket.Rpc;
 
@@ -14,12 +13,6 @@ namespace RpcPerformanceConsoleApp
         Task<string> GetBigString();
     }
 
-    /// <summary>
-    /// BeetleXRPC仅支持Task返回。
-    /// NewLifeRPC仅支持常规参数返回。
-    /// 只有RRQM全兼容。哎！！还得写两个服务类。
-    /// </summary>
-    [Service(typeof(ITestTaskController))]
     public class TestTaskController : ITestTaskController
     {
         [DmtpRpc(true)]
