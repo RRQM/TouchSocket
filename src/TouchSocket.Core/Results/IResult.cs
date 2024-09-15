@@ -10,6 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
+using System.Diagnostics.CodeAnalysis;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -30,6 +33,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 是否成功。一般的当<see cref="ResultCode"/>为<see cref="ResultCode.Success"/>时会返回<see langword="true"/>。其余情况返回<see langword="false"/>
         /// </summary>
+        [MemberNotNullWhen(true, nameof(IResult<int>.Value))]
         bool IsSuccess { get; }
     }
 }

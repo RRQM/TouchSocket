@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TouchSocket.Core
 {
@@ -62,6 +63,7 @@ namespace TouchSocket.Core
         public Result(T value) : this(value, ResultCode.Success, ResultCode.Success.GetDescription()) { }
 
         /// <inheritdoc/>
+        [MemberNotNullWhen(true,nameof(Value))]
         public bool IsSuccess => this.ResultCode == ResultCode.Success;
 
         /// <inheritdoc/>

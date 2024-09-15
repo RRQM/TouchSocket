@@ -40,14 +40,7 @@ namespace TouchSocket.Core
         /// <param name="value"></param>
         public new Metadata Add(string name, string value)
         {
-            if (base.ContainsKey(name))
-            {
-                base[name] = value;
-            }
-            else
-            {
-                base.Add(name, value);
-            }
+            base.Add(name, value);
             return this;
         }
 

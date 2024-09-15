@@ -111,5 +111,26 @@ namespace System.Diagnostics.CodeAnalysis
         /// </summary>
         public DynamicallyAccessedMemberTypes MemberTypes { get; }
     }
+
+
+    public sealed class MemberNotNullWhenAttribute : Attribute
+    {
+
+        public MemberNotNullWhenAttribute(bool returnValue, string member) : this(returnValue, new string[] { member })
+        {
+
+        }
+
+        public MemberNotNullWhenAttribute(bool returnValue, params string[] members)
+        {
+            this.ReturnValue = returnValue;
+            this.Members = members;
+        }
+
+
+        public string[] Members { get; }
+
+        public bool ReturnValue { get; }
+    }
 }
 #endif
