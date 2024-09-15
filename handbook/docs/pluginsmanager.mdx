@@ -153,12 +153,12 @@ pluginsManager.Add<SayHiPlugin>();
 pluginsManager.Add<LastSayPlugin>();
 
 //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
-pluginsManager.Add(nameof(ISayPlugin.Say), () => 
+pluginsManager.Add(typeof(ISayPlugin), () => 
 {
     Console.WriteLine("在Action1中获得");
 });
 
-pluginsManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
+pluginsManager.Add(typeof(ISayPlugin), async (MyPluginEventArgs e) =>
 {
     Console.WriteLine("在Action2中获得");
     await e.InvokeNext();
@@ -167,7 +167,7 @@ pluginsManager.Add(nameof(ISayPlugin.Say), async (MyPluginEventArgs e) =>
 while (true)
 {
     Console.WriteLine("请输入hello，或者hi");
-    pluginsManager.Raise(nameof(ISayPlugin.Say), new object(), new MyPluginEventArgs()
+    pluginsManager.Raise(typeof(ISayPlugin), new object(), new MyPluginEventArgs()
     {
         Words = Console.ReadLine()
     });
@@ -249,7 +249,7 @@ SayHelloPlugin------Leave
 
 ```csharp showLineNumbers
 //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
-pluginsManager.Add(nameof(ISayPlugin.Say), () => 
+pluginsManager.Add(typeof(ISayPlugin), () => 
 {
     Console.WriteLine("在Action1中获得");
 });
@@ -265,7 +265,7 @@ public class SayHelloAction: PluginBase
         base.Loaded(pluginsManager);
 
         //注册本地方法为委托
-        pluginsManager.Add<object,MyPluginEventArgs>(nameof(ISayPlugin.Say),this.Say);
+        pluginsManager.Add<object,MyPluginEventArgs>(typeof(ISayPlugin),this.Say);
     }
 
     public async Task Say(object sender, MyPluginEventArgs e)
@@ -316,7 +316,7 @@ public partial class SayHelloGenerator : PluginBase
     /// <param name="sender"></param>
     /// <param name="e"></param>
     /// <returns></returns>
-    [GeneratorPlugin(nameof(ISayPlugin.Say))]
+    [GeneratorPlugin(typeof(ISayPlugin))]
     public async Task Say(object sender, MyPluginEventArgs e)
     {
         Console.WriteLine($"{this.GetType().Name}------Enter");

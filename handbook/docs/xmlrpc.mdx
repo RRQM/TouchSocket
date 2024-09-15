@@ -57,7 +57,7 @@ public class MyClass
 ```csharp showLineNumbers
 var service = new HttpService();
 
-service.Setup(new TouchSocketConfig()
+await service.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -77,7 +77,7 @@ service.Setup(new TouchSocketConfig()
         .SetXmlRpcUrl("/xmlRpc");
     })
     .SetListenIPHosts(7789));
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器已启动");
 ```
@@ -118,9 +118,9 @@ service.Logger.Info("服务器已启动");
 使用客户端调用，则是使用RPC的范式进行调用，使用比较简单。
 
 ```csharp showLineNumbers
-private static void Main(string[] args)
+private static async Task Main(string[] args)
 {
-    var client = GetXmlRpcClient();
+    var client =await GetXmlRpcClientAsync();
 
     //直接调用
     var result1 = client.InvokeT<int>("Sum", InvokeOption.WaitInvoke, 10, 20);
@@ -132,10 +132,10 @@ private static void Main(string[] args)
     Console.ReadKey();
 }
 
-private static XmlRpcClient GetXmlRpcClient()
+private static async Task<XmlRpcClient> GetXmlRpcClientAsync()
 {
     var jsonRpcClient = new XmlRpcClient();
-    jsonRpcClient.Connect("http://127.0.0.1:7789/xmlRpc");
+    await jsonRpcClient.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
     Console.WriteLine("连接成功");
     return jsonRpcClient;
 }
@@ -145,7 +145,7 @@ private static XmlRpcClient GetXmlRpcClient()
 
 在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
 
-```csharp {8-9}
+```csharp {6-7}
 a.AddRpcStore(store =>
 {
     store.RegisterServer<XmlServer>();
@@ -174,23 +174,24 @@ var sum3 = client.Sum(10,20);
 /// 新建一个类，继承XmlRpcDispatchProxy，亦或者RpcDispatchProxy基类。
 /// 然后实现抽象方法，主要是能获取到调用的IRpcClient派生接口。
 /// </summary>
-class MyXmlRpcDispatchProxy : XmlRpcDispatchProxy
+internal class MyXmlRpcDispatchProxy : XmlRpcDispatchProxy
 {
     private readonly IXmlRpcClient m_client;
 
     public MyXmlRpcDispatchProxy()
     {
-        this.m_client = GetXmlRpcClient();
+        this.m_client = GetXmlRpcClientAsync().GetFalseAwaitResult();
     }
+
     public override IXmlRpcClient GetClient()
     {
         return this.m_client;
     }
 
-    private static XmlRpcClient GetXmlRpcClient()
+    private static async Task<XmlRpcClient> GetXmlRpcClientAsync()
     {
         var jsonRpcClient = new XmlRpcClient();
-        jsonRpcClient.Connect("http://127.0.0.1:7789/xmlRpc");
+        await jsonRpcClient.ConnectAsync("http://127.0.0.1:7789/xmlRpc");
         Console.WriteLine("连接成功");
         return jsonRpcClient;
     }
@@ -207,7 +208,7 @@ interface IXmlRpcServer
 }
 ```
 
-最后生成代理，并按照接口调用。 
+最后生成代理，并按照接口调用。
 
 ```csharp {1}
 var rpc = MyXmlRpcDispatchProxy.Create<IXmlRpcServer, MyXmlRpcDispatchProxy>();

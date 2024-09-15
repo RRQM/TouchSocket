@@ -23,7 +23,7 @@ title: 同步请求
 
 ```csharp showLineNumbers
 var client = new TcpClient();
-client.Connect("tcp://127.0.0.1:7789");
+await client.ConnectAsync("tcp://127.0.0.1:7789");
 
 //调用CreateWaitingClient获取到IWaitingClient的对象。
 var waitClient = client.CreateWaitingClient(new WaitingOptions()
@@ -41,11 +41,11 @@ var waitClient = client.CreateWaitingClient(new WaitingOptions()
 });
 
 //然后使用SendThenReturn。
-byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
-m_tcpClient.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
 IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
 ```
 
@@ -53,15 +53,18 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 ```csharp showLineNumbers
 var service = new TcpService();
-service.Received = async (client, e) =>
+await service.StartAsync(7789);//启动服务器
+
+//在服务器中，找到指定Id的会话客户端
+if (service.TryGetClient("targetId", out var tcpSessionClient))
 {
     //调用CreateWaitingClient获取到IWaitingClient的对象。
-    var waitClient = client.CreateWaitingClient(new WaitingOptions()
+    var waitClient = tcpSessionClient.CreateWaitingClient(new WaitingOptions()
     {
-        FilterFunc =response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+        FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
         {
             return true;
-        
+
             //if (response.Data.Length == 1)
             //{
             //    return true;
@@ -71,39 +74,34 @@ service.Received = async (client, e) =>
     });
 
     //然后使用SendThenReturn。
-    byte[] returnData =await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
-    client.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+    byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+    Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
     //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-    ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+    ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
     IRequestInfo responseRequestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
-};
-
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost("tcp://127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
-    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
-    {
-        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
-    })
-    .ConfigurePlugins(a =>
-    {
-        //a.Add();//此处可以添加插件
-    }));
-
-service.Start();//启动
+}
 ```
 
 :::tip 提示
 
-在SendThenReturn时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+在SendThenReturnAsync时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
 
 :::  
+
+:::caution 注意
+
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
+
+:::  
+
 
 :::danger 注意事项
 
 1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
 2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
-3. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步。
+3. waitClient的使用**不可以**直接在`Received`相关触发中使用，因为必然会导致死锁，详见：[#I9GCGT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GCGT) 。
+4. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步（这可能是.net bug）。
 
 :::
 

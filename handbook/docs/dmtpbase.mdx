@@ -106,7 +106,7 @@ using (var byteBlock = new ByteBlock())
     byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
     byteBlock.Write(jsonBytes);
 
-    tcpClient.Send(byteBlock);
+    tcpClient.SendAsync(byteBlock);
 }
 await Task.Delay(2000);
 ```
@@ -162,7 +162,7 @@ DMTP基础功能是比较容易跨语言的，但这并不意味着DMTP所有的
 
 ## 二、Id同步
 
-在Dmtp中，存在于服务器的辅助客户端（SocketClient），与远程客户端（Client）是一一对应关系，其Id也**完全一致**。所以在任意一方修改Id（调用ResetId），都会同时修改远程Id。所以合理使用该操作，可以完成复用Id（重置Id）的需求。
+在Dmtp中，存在于服务器的辅助客户端（SessionClient），与远程客户端（Client）是一一对应关系，其Id也**完全一致**。所以在任意一方修改Id（调用ResetId），都会同时修改远程Id。所以合理使用该操作，可以完成复用Id（重置Id）的需求。
 
 
 ## 三、发送数据
@@ -174,7 +174,7 @@ Dmtp提供协议发送数据，又叫协议扩展功能，就是对现有的Dmtp
 第一个参数为ushort类型，使用者可以**约定任意大于20数值**。
 
 ```csharp showLineNumbers
-client.Send(1000,Encoding.UTF8.GetBytes("RRQM"));
+client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
 ```
 
 :::caution 注意
@@ -271,8 +271,8 @@ private static TcpDmtpService GetTcpDmtpService()
                VerifyToken = "Channel"//连接验证口令。
            });
 
-    service.Setup(config);
-    service.Start();
+    await service.SetupAsync(config);
+    await service.StartAsync();
     service.Logger.Info("服务器成功启动");
     return service;
 }

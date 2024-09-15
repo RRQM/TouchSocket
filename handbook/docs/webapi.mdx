@@ -14,7 +14,7 @@ WebApi是**通用**的Rpc调用，与**编程语言无关**，与**操作系统�
 
 ## 二、特点
 
-- 高性能，100个客户端，每个客户端10w次调用，仅用时17s。
+- 高性能，100个客户端，10w次调用，仅用时17s。
 - **全异常反馈** 。
 - 支持大部分路由规则。
 - 支持js、Android等调用。
@@ -34,60 +34,11 @@ public partial class ApiServer : RpcServer
         this.m_logger = logger;
     }
 
-    [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
-    [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
     [WebApi(HttpMethodType.GET)]
     public int Sum(int a, int b)
     {
         return a + b;
     }
-
-    [WebApi(HttpMethodType.POST)]
-    public int TestPost(MyClass myClass)
-    {
-        return myClass.A + myClass.B;
-    }
-
-    /// <summary>
-    /// 使用调用上下文，响应文件下载。
-    /// </summary>
-    /// <param name="callContext"></param>
-    [WebApi(HttpMethodType.GET)]
-    public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
-    {
-        if (id == "rrqm")
-        {
-            callContext.HttpContext.Response.FromFile(@"D:\System\Windows.iso", callContext.HttpContext.Request);
-            return Task.FromResult("ok");
-        }
-        return Task.FromResult("id不正确。");
-    }
-
-    /// <summary>
-    /// 使用调用上下文，获取实际请求体。
-    /// </summary>
-    /// <param name="callContext"></param>
-    [WebApi(HttpMethodType.POST)]
-    [Router("[api]/[action]")]
-    public Task<string> PostContent(IWebApiCallContext callContext)
-    {
-        if (callContext.Caller is ISocketClient socketClient)
-        {
-            this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
-        }
-        if (callContext.HttpContext.Request.TryGetContent(out var content))
-        {
-            this.m_logger.Info($"共计：{content.Length}");
-        }
-
-        return Task.FromResult("ok");
-    }
-}
-
-public class MyClass
-{
-    public int A { get; set; }
-    public int B { get; set; }
 }
 ```
 
@@ -96,36 +47,30 @@ public class MyClass
 更多注册Rpc的方法请看[注册Rpc服务](./rpcregister.mdx)
 
 ```csharp showLineNumbers
-            var service = new HttpService();
-            service.Setup(new TouchSocketConfig()
-               .SetListenIPHosts(7789)
-               .ConfigureContainer(a => 
-               {
-                   a.AddConsoleLogger();
-                   a.AddRpcStore(store =>
-                   {
-                       store.RegisterServer<ApiServer>();//注册服务
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()
+    .SetListenIPHosts(7789)
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+        a.AddRpcStore(store =>
+        {
+            store.RegisterServer<ApiServer>();//注册服务
+        });
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseCheckClear();
 
-#if DEBUG
-                       //下列代码，会生成客户端的调用代码。
-                       var codeString = store.GetProxyCodes("WebApiProxy", typeof(WebApiAttribute));
-                       File.WriteAllText("../../../WebApiProxy.cs", codeString);
-#endif
-                   });
-               })
-               .ConfigurePlugins(a =>
-               {
-                   a.UseCheckClear();
+        a.UseWebApi();
 
-                   a.UseWebApi();
+        //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
+        a.UseDefaultHttpServicePlugin();
+    }));
+await service.StartAsync();
 
-                   //此插件是http的兜底插件，应该最后添加。作用是当所有路由不匹配时返回404.且内部也会处理Option请求。可以更好的处理来自浏览器的跨域探测。
-                   a.UseDefaultHttpServicePlugin();
-               }));
-            service.Start();
-
-            Console.WriteLine("以下连接用于测试webApi");
-            Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
+Console.WriteLine("以下连接用于测试webApi");
+Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 ```
 
 
@@ -133,7 +78,7 @@ public class MyClass
 
 ### 5.1 Get规则
 
-使用Get进行请求时，服务方法可以声明多个参数，但是每个参数都必须是基础类型或者字符串类型。
+使用Get进行请求时，服务方法可以声明多个参数，但是每个参数都必须是**简单类型**（包括字符串、DateTime等）。
 
 ```csharp showLineNumbers
 [WebApi(HttpMethodType.GET)]
@@ -257,7 +202,7 @@ http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20
 private static WebApiClient CreateWebApiClient()
 {
     var client = new WebApiClient();
-    client.Connect("127.0.0.1:7789");
+    await client.ConnectAsync("127.0.0.1:7789");
     Console.WriteLine("连接成功");
     return client;
 }
@@ -281,7 +226,7 @@ Dotnet自带HttpClient则是通过连接池的方式访问。详情看[HttpClien
 private static WebApiClientSlim CreateWebApiClientSlim()
 {
     var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
-    client.Setup(new TouchSocketConfig()
+    await client.SetupAsync(new TouchSocketConfig()
         .SetRemoteIPHost("http://127.0.0.1:7789")
         .ConfigurePlugins(a =>
         {
@@ -358,13 +303,13 @@ class MyWebApiDispatchProxy : WebApiDispatchProxy
     private static WebApiClient CreateWebApiClient()
     {
         var client = new WebApiClient();
-        client.Setup(new TouchSocketConfig()
+        await client.SetupAsync(new TouchSocketConfig()
             .SetRemoteIPHost("127.0.0.1:7789")
             .ConfigurePlugins(a =>
             {
                 a.UseReconnection();
             }));
-        client.Connect();
+        await client.ConnectAsync();
         Console.WriteLine("连接成功");
         return client;
     }
@@ -493,7 +438,7 @@ class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
 /// </summary>
 class AuthenticationPlugin : PluginBase, IHttpPlugin
 {
-    public async Task OnHttpRequest(IHttpSocketClient client, HttpContextEventArgs e)
+    public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
     {
         string aut = e.Context.Request.Headers["Authorization"];
         if (aut.IsNullOrEmpty())//授权header为空

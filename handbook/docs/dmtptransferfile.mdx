@@ -45,21 +45,21 @@ import Tag from "@site/src/components/Tag.js";
 ### 4.1 响应流程
 
 1. 请求端（可能是客户端，也可能是服务器）调用Pull(请求)或Push（推送）。
-2. 响应方（可能是服务器，也可能是客户端）触发**FileTransfering**。
+2. 响应方（可能是服务器，也可能是客户端）触发**FileTransferring**。
 3. 返回文件信息，然后检验是否续传等，然后开始传输。
 4. 传输完成或异常。
-5. 响应方**可能**触发**FileTransfered**。
+5. 响应方**可能**触发**FileTransferred**。
 6. 请求端函数返回，`FileOperator`控制器状态改变。
 
 :::caution 注意
 
-响应方必须在订阅的**OnDmtpFileTransfering**函数中，同意每一个传输（e.IsPermitOperation = true），不然会直接拒绝请求。当然如果是有意拒绝，则可以通过e.Message返回拒绝的信息。
+响应方必须在订阅的**OnFileTransferring**函数中，同意每一个传输（e.IsPermitOperation = true），不然会直接拒绝请求。当然如果是有意拒绝，则可以通过e.Message返回拒绝的信息。
 
 :::  
 
 :::caution 注意
 
-响应方订阅的**OnFileTransfered**事件的触发并**不意味着完成传输**，具体结果还要通过**Result**属性值进行判断。
+响应方订阅的**OnFileTransferred**事件的触发并**不意味着完成传输**，具体结果还要通过**Result**属性值进行判断。
 
 :::  
 
@@ -82,13 +82,13 @@ import Tag from "@site/src/components/Tag.js";
 
 :::tip 提示
 
-如果是下载行为，响应方可在在订阅的**OnDmtpFileTransfering**函数中，随意重定向请求的文件路径（e.ResourcePath）。
+如果是下载行为，响应方可在在订阅的**OnFileTransferring**函数中，随意重定向请求的文件路径（e.ResourcePath）。
 
 :::  
 
 :::danger 危险
 
-当以绝对路径访问时，对方可能会请求到服务器电脑的**所有文件**，所以最好在**OnDmtpFileTransfering**里面进行安全的判断后再放行（e.IsPermitOperation = true;）。
+当以绝对路径访问时，对方可能会请求到服务器电脑的**所有文件**，所以最好在**OnFileTransferring**里面进行安全的判断后再放行（e.IsPermitOperation = true;）。
 
 :::  
 
@@ -98,7 +98,7 @@ import Tag from "@site/src/components/Tag.js";
 
 :::tip 提示
 
-如果是上传行为，响应方可在在订阅的**OnDmtpFileTransfering**函数中，随意重定向文件的保存路径（e.SavePath）。
+如果是上传行为，响应方可在在订阅的**OnFileTransferring**函数中，随意重定向文件的保存路径（e.SavePath）。
 
 :::  
 
@@ -151,10 +151,10 @@ config.ConfigurePlugins(a =>
 })
 ```
 
-声明`MyPlugin`插件，是为了方便处理`OnDmtpFileTransfering`和`OnDmtpFileTransfered`函数。
+声明`MyPlugin`插件，是为了方便处理`OnDmtpFileTransferring`和`OnDmtpFileTransferred`函数。
 
 ```csharp showLineNumbers
-internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTransferedPlugin
+internal class MyPlugin : PluginBase, IDmtpFileTransferringPlugin, IDmtpFileTransferredPlugin
 {
     private readonly ILog m_logger;
 
@@ -170,7 +170,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTrans
     /// <param name="client"></param>
     /// <param name="e"></param>
     /// <returns></returns>
-    public async Task OnDmtpFileTransfered(IDmtpActorObject client, FileTransferedEventArgs e)
+    public async Task OnDmtpFileTransferred(IDmtpActorObject client, FileTransferredEventArgs e)
     {
         //传输结束，但是不一定成功，甚至该方法都不一定会被触发，具体信息需要从e.Result判断状态。
         this.m_logger.Info($"传输文件结束，请求类型={e.TransferType}，文件名={e.ResourcePath}，请求状态={e.Result}");
@@ -188,7 +188,7 @@ internal class MyPlugin : PluginBase, IDmtpFileTransferingPlugin, IDmtpFileTrans
     /// <param name="client"></param>
     /// <param name="e"></param>
     /// <returns></returns>
-    public  async Task OnDmtpFileTransfering(IDmtpActorObject client, FileTransferingEventArgs e)
+    public  async Task OnDmtpFileTransferring(IDmtpActorObject client, FileTransferringEventArgs e)
     {
         foreach (var item in e.Metadata.Keys)
         {
@@ -283,11 +283,11 @@ IResult result = client.GetDmtpFileTransferActor().PushFile(fileOperator);
 
 ### 5.3 服务器向客户端请求文件
 
-服务器主动向客户端请求文件，必须通过Id，找到其`SocketClient`的派生类。
+服务器主动向客户端请求文件，必须通过Id，找到其`SessionClient`的派生类。
 
 ```csharp showLineNumbers
 string targetId="targetId";
-if (!service.TryGetSocketClient(targetId, out var socketClient))
+if (!service.TryGetClient(targetId, out var SessionClient))
 {
     throw new Exception($"没有找到Id={targetId}的客户端");
 }
@@ -318,21 +318,21 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
     {
         loop.Dispose();
     }
-    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+    SessionClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
 });
 
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PullFileAsync
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 ### 5.4 服务器向客户端推送文件
 
-服务器主动向客户端推送文件，必须通过Id，找到其`SocketClient`的派生类。
+服务器主动向客户端推送文件，必须通过Id，找到其`SessionClient`的派生类。
 
 ```csharp showLineNumbers
-if (!service.TryGetSocketClient(targetId, out var socketClient))
+if (!service.TryGetClient(targetId, out var SessionClient))
 {
     throw new Exception($"没有找到Id={targetId}的客户端");
 }
@@ -363,13 +363,13 @@ var loopAction = LoopAction.CreateLoopAction(-1, 1000, (loop) =>
     {
         loop.Dispose();
     }
-    socketClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
+    SessionClient.Logger.Info($"进度：{fileOperator.Progress}，速度：{fileOperator.Speed()}");
 });
 
 loopAction.RunAsync();
 
 //此方法会阻塞，直到传输结束，也可以使用PushFileAsync
-IResult result = socketClient.GetDmtpFileTransferActor().PushFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PushFile(fileOperator);
 ```
 
 ### 5.5 客户端之间传输文件
@@ -486,7 +486,7 @@ var fileOperator = new FileOperator()//实例化本次传输的控制器，用�
     Token = tokenSource.Token
 };
 
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 ### 7.1 使用CancellationFileOperator 
@@ -502,7 +502,7 @@ var fileOperator = new CancellationFileOperator()//实例化本次传输的控�
 //模拟五秒后自动取消传输，或者直接Cancel
 fileOperator.CancelAfter(TimeSpan.FromSeconds(5));
 
-IResult result = socketClient.GetDmtpFileTransferActor().PullFile(fileOperator);
+IResult result = SessionClient.GetDmtpFileTransferActor().PullFile(fileOperator);
 ```
 
 :::tip 提示

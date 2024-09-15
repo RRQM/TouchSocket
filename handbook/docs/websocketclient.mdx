@@ -21,7 +21,8 @@ import Tag from "@site/src/components/Tag.js";
 | IWebSocketHandshakingPlugin | 当收到握手请求之前，可以进行连接验证等 |
 | IWebSocketHandshakedPlugin | 当成功握手响应之后 |
 | IWebSocketReceivedPlugin | 当收到Websocket的数据报文 |
-| IWebSocketClosingPlugin | 当收到关闭请求时，如果对方直接断开连接，此方法则不会触发，届时可以考虑使用ITcpDisconnectedPlugin |
+| IWebSocketClosingPlugin | 当收到关闭请求时，如果对方直接断开连接，此方法则不会触发。 |
+| IWebSocketClosedPlugin | 当WebSocket连接断开时触发，无论是否正常断开。但如果是断网等操作，可能不会立即执行，需要结合心跳操作和CheckClear插件来进行清理。 |
 
 ## 三、创建客户端
 
@@ -29,13 +30,13 @@ import Tag from "@site/src/components/Tag.js";
 
 ```csharp showLineNumbers
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     }));
-client.Connect();
+await client.ConnectAsync();
 client.Logger.Info("连接成功");
 ```
 
@@ -52,7 +53,7 @@ wss://127.0.0.1:7789/ws
 ```csharp showLineNumbers
 var client = new WebSocketClient();
 
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost(new IPHost("wss://127.0.0.1:7789/ws"))
     .SetClientSslOption(
     new ClientSslOption()
@@ -63,7 +64,7 @@ client.Setup(new TouchSocketConfig()
         CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
     }));
 
-client.Connect();
+await client.ConnectAsync();
 
 Console.WriteLine("连接成功");
 ```
@@ -76,7 +77,7 @@ Console.WriteLine("连接成功");
 
 ## 四、连接服务器
 
-WebSocketClient可以使用默认配置直接连接到服务器，同时也支持使用多种方法定义连接。
+WebSessionClient可以使用默认配置直接连接到服务器，同时也支持使用多种方法定义连接。
 
 ### 4.1 直接连接
 
@@ -84,13 +85,13 @@ WebSocketClient可以使用默认配置直接连接到服务器，同时也支�
 
 ```csharp showLineNumbers
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 ```
@@ -101,13 +102,13 @@ client.Logger.Info("通过ws://127.0.0.1:7789/ws连接成功");
 
 ```csharp showLineNumbers
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/wsquery?token=123456"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功");
 
@@ -119,21 +120,21 @@ client.Logger.Info("通过ws://127.0.0.1:7789/wsquery?token=123456连接成功")
 
 ```csharp showLineNumbers
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
+        a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Headers.Add("token", "123456");
             await e.InvokeNext();
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/wsheader"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/wsheader连接成功");
 ```
@@ -150,21 +151,21 @@ WebSocket默认情况下是基于GET方式连接的，但是在一些更特殊�
 
 ```csharp showLineNumbers
 using var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
     })
     .ConfigurePlugins(a =>
     {
-        a.Add(nameof(IWebSocketHandshakingPlugin.OnWebSocketHandshaking), async (IWebSocket client, HttpContextEventArgs e) =>
+        a.Add(typeof(IWebSocketHandshakingPlugin), async (IWebSocket client, HttpContextEventArgs e) =>
         {
             e.Context.Request.Method = HttpMethod.Post;//将请求方法改为Post
             await e.InvokeNext();
         });
     })
     .SetRemoteIPHost("ws://127.0.0.1:7789/postws"));
-client.Connect();
+await client.ConnectAsync();
 
 client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ```
@@ -183,13 +184,13 @@ client.Logger.Info("通过ws://127.0.0.1:7789/postws连接成功");
 ### 5.1 发送文本类消息
 
 ```csharp showLineNumbers
-client.Send("Text");
+client.SendAsync("Text");
 ```
 
 ### 5.2 发送二进制消息
 
 ```csharp showLineNumbers
-client.Send(new byte[10]);
+client.SendAsync(new byte[10]);
 ```
 
 ### 5.3 直接发送自定义构建的数据帧
@@ -204,11 +205,11 @@ frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
 
-client.Send(frame);
+client.SendAsync(frame);
 ```
 :::info 备注
 
-此部分功能就需要你对Websocket有充分了解才可以操作。
+此部分功能就需要你对`WebSocket`有充分了解才可以操作。
 
 :::  
 
@@ -265,7 +266,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
                 if (!client.Client.IsClient)
                 {
-                    client.Send("我已收到");
+                    client.SendAsync("我已收到");
                 }
                 return;
 
@@ -306,7 +307,7 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
 ```csharp {10}
 var client = new WebSocketClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("ws://127.0.0.1:7789/ws")
     .ConfigureContainer(a =>
     {
@@ -316,7 +317,7 @@ client.Setup(new TouchSocketConfig()
     {
         a.Add<MyWebSocketPlugin>();
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ### 6.3 使用WebSocket显式ReadAsync
@@ -362,6 +363,250 @@ using (var client = GetClient())
 使用该方式，会阻塞`IWebSocketHandshakedPlugin`的插件传递。在收到`WebSocket`消息的时候，不会再触发插件。
 
 ::: 
+
+
+### 6.4 接收中继数据
+
+`WebSocket`协议本身是支持超大数据包的，但是这些包不会一次性接收，而是分多次接收的，同时会通过`Opcode`来表明其为中继数据。
+
+下面将演示接收文本数据。
+
+【方法1】
+
+```csharp {22-49} showLineNumbers
+//当WebSocket想要使用ReadAsync时，需要设置此值为true
+client.AllowAsyncRead = true;
+
+//此处即表明websocket已连接
+
+MemoryStream stream = default;//中继包缓存
+var isText = false;//标识是否为文本
+while (true)
+{
+    using (var receiveResult = await client.ReadAsync(CancellationToken.None))
+    {
+        if (receiveResult.IsCompleted)
+        {
+            break;
+        }
+
+        var dataFrame = receiveResult.DataFrame;
+        var data = receiveResult.DataFrame.PayloadData;
+
+        switch (dataFrame.Opcode)
+        {
+            case WSDataType.Cont:
+                {
+                    //收到的是中继包
+                    if (dataFrame.FIN)//判断是否为最终包
+                    {
+                        //是
+
+                        if (isText)//判断是否为文本
+                        {
+                            this.m_logger.Info($"WebSocket文本：{Encoding.UTF8.GetString(stream.ToArray())}");
+                        }
+                        else
+                        {
+                            this.m_logger.Info($"WebSocket二进制：{stream.Length}长度");
+                        }
+                    }
+                    else
+                    {
+                        //否，继续缓存
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Text:
+                {
+                    if (dataFrame.FIN)//判断是不是最后的包
+                    {
+                        //是，则直接输出
+                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                        this.m_logger.Info($"WebSocket文本：{dataFrame.ToText()}");
+                    }
+                    else
+                    {
+                        isText = true;
+
+                        //否，则说明数据太大了，分中继包了。
+                        //则，初始化缓存容器
+                        stream ??= new MemoryStream();
+
+                        //下面则是缓存逻辑
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Binary:
+                {
+                    if (dataFrame.FIN)//判断是不是最后的包
+                    {
+                        //是，则直接输出
+                        //说明上次并没有中继数据缓存，直接输出本次内容即可
+                        this.m_logger.Info($"WebSocket二进制：{data.Length}长度");
+                    }
+                    else
+                    {
+                        isText = false;
+
+                        //否，则说明数据太大了，分中继包了。
+                        //则，初始化缓存容器
+                        stream ??= new MemoryStream();
+
+                        //下面则是缓存逻辑
+
+                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                        //var segment = data.AsSegment();
+                        //stream.Write(segment.Array, segment.Offset, segment.Count);
+
+                        //如果是net6.0以上，直接写入span即可
+                        stream.Write(data.Span);
+                    }
+                }
+                break;
+            case WSDataType.Close:
+                break;
+            case WSDataType.Ping:
+                break;
+            case WSDataType.Pong:
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+或者可以使用内置的扩展方法来进行一次性接收。
+
+例如一次性接收文本：
+
+```csharp showLineNumbers
+ var str = await client.ReadStringAsync();
+```
+
+一次性接收二进制数据：
+
+```csharp showLineNumbers
+using (MemoryStream stream=new MemoryStream())
+{
+    var str = await client.ReadBinaryAsync(stream);
+}
+```
+
+:::caution 注意
+
+`ReadStringAsync`或者`ReadBinaryAsync`，都只接收对应的数据类型，如果收到非匹配数据则会抛出异常。
+
+:::  
+
+【方法2】
+
+使用消息组合器。如果想在`OnWebSocketReceived`进行合并消息，则可以使用该方法。
+
+```csharp {30-74} showLineNumbers
+public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
+{
+    public MyWebSocketPlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    private readonly ILog m_logger;
+
+    public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
+    {
+        switch (e.DataFrame.Opcode)
+        {
+            case WSDataType.Close:
+                {
+                    this.m_logger.Info("远程请求断开");
+                    await client.CloseAsync("断开");
+                }
+                return;
+
+            case WSDataType.Ping:
+                this.m_logger.Info("Ping");
+                await client.PongAsync();//收到ping时，一般需要响应pong
+                break;
+
+            case WSDataType.Pong:
+                this.m_logger.Info("Pong");
+                break;
+
+            default:
+                {
+
+                    //其他报文，需要考虑中继包的情况。所以需要手动合并 WSDataType.Cont类型的包。
+                    //或者使用消息合并器
+
+                    //获取消息组合器
+                    var messageCombinator = client.GetMessageCombinator();
+
+                    try
+                    {
+                        //尝试组合
+                        if (messageCombinator.TryCombine(e.DataFrame, out var webSocketMessage))
+                        {
+                            //组合成功，必须using释放模式
+                            using (webSocketMessage)
+                            {
+                                //合并后的消息
+                                var dataType = webSocketMessage.Opcode;
+
+                                //合并后的完整消息
+                                var data = webSocketMessage.PayloadData;
+
+                                if (dataType == WSDataType.Text)
+                                {
+                                    //按文本处理
+                                }
+                                else if (dataType == WSDataType.Binary)
+                                {
+                                    //按字节处理
+                                }
+                                else
+                                {
+                                    //可能是其他自定义协议
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        this.m_logger.Exception(ex);
+                        messageCombinator.Clear();//当组合发生异常时，应该清空组合器数据
+                    }
+                    
+                }
+                break;
+        }
+
+        await e.InvokeNext();
+    }
+}
+```
+
+:::caution 注意
+
+使用消息组合器，实际上是由框架缓存了数据，所以，整体数据不要太大，不然可能会有爆内存的风险。
+
+:::  
+
 
 ## 七、其他操作
 

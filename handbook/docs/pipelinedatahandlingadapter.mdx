@@ -41,10 +41,10 @@ config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(
     .SetDataHandlingAdapter(() => new PipelineDataHandlingAdapter());//配置适配器为Pipeline
 
 //载入配置
-service.Setup(config);
+await service.SetupAsync(config);
 
 //启动
-service.Start();
+await service.StartAsync();
 
 ```
 

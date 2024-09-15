@@ -57,13 +57,13 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 
 ```csharp showLineNumbers
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
     .SetDmtpOption(new DmtpOption()
     {
         VerifyToken = "Dmtp"
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ### 4.2 UdpDmtp
@@ -73,7 +73,7 @@ client.Connect();
 ```csharp {1,4-6,11} showLineNumbers
 var client = new UdpDmtp();
 
- client.Setup(new TouchSocketConfig()
+ await client.SetupAsync(new TouchSocketConfig()
      .SetRemoteIPHost("127.0.0.1:7797")
      .UseUdpReceive()
      .SetDmtpOption(new DmtpOption()
@@ -101,13 +101,13 @@ var client = new UdpDmtp();
 
 ```csharp showLineNumbers
 var client = new HttpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
    .SetRemoteIPHost("127.0.0.1:7789")
    .SetDmtpOption(new DmtpOption()
    {
        VerifyToken = "Dmtp"
    }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 ### 4.4 WebSocketDmtpClient
@@ -184,13 +184,13 @@ finally
 
 ```csharp showLineNumbers
 var client = new NamedPipeDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
       .SetPipeName("TouchSocketPipe")//设置管道名称
       .SetDmtpOption(new DmtpOption()
       {
            VerifyToken = "Dmtp"
       }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 [基于NamedPipe的Dmtp示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/NamedPipeDmtpConsoleApp)

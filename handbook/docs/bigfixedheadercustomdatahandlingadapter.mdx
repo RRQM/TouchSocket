@@ -1,4 +1,4 @@
----
+--- 
 id: bigfixedheadercustomdatahandlingadapter
 title: 模板解析“大数据固定包头”数据适配器
 ---
@@ -15,65 +15,85 @@ title: 模板解析“大数据固定包头”数据适配器
 
 ## 二、特点
 
-1. 可以自由适配**99%**的数据协议。
-2. 可以随意定制数据协议。
-3. 可以与**任意语言、框架**对接数据。
-4. 可以接收**理论无限大**的数据。
+1. 可以随意定制数据协议。
+2. 可以与**任意语言、框架**对接数据。
+3. 可以接收**理论无限大**的数据。
 
 
-## 三、使用
+## 三、创建适配器
 
 客户端与服务器均适用。下列以服务器为例。
 
 步骤
 
-1. 声明新建类，实现IBigFixedHeaderRequestInfo接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
-2. 声明新建类，继承BigFixedHeaderCustomDataHandlingAdapter，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
-3. TouchSocketConfig配置中设置。
-4. 通过Received（事件、方法、插件）中的RequestInfo对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
+1. 声明新建类，实现`IBigFixedHeaderRequestInfo`接口，此对象即为存储数据的实体类，可在此类中声明一些属性，以备使用。
+2. 声明新建类，继承`CustomBigFixedHeaderDataHandlingAdapter`，并且以步骤1声明的类作为泛型。并实现对应抽象方法。
+3. `TouchSocketConfig`配置中设置。
+4. 通过`Received`（事件、方法、插件）中的`RequestInfo`对象，强转为步骤1声明的类型，然后读取其属性值，以备使用。
 
 【MyBigFixedHeaderRequestInfo】
-首先，新建MyBigFixedHeaderRequestInfo类，然后实现IBigFixedHeaderRequestInfo用户自定义固定包头接口。
-然后在**OnParsingHeader**函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为Body 。
+首先，新建`MyBigFixedHeaderRequestInfo`类，然后实现`IBigFixedHeaderRequestInfo`用户自定义固定包头接口。
+然后在`OnParsingHeader`函数执行结束时，对实现的`BodyLength`属性作出赋值，以此来决定，后续还应该接收多少数据作为`Body` 。
 
-```csharp
-/// <summary>
-/// 下列示例，没有实现逻辑，仅解释思路。
-/// </summary>
+```csharp showLineNumbers
 class MyBigFixedHeaderRequestInfo : IBigFixedHeaderRequestInfo
 {
-    public long BodyLength => throw new NotImplementedException();//此处请使用字段实现。
+    /// <summary>
+    /// 自定义属性，标识数据类型
+    /// </summary>
+    public byte DataType { get; set; }
 
-    public void OnAppendBody(byte[] buffer, int offset, int length)
+    /// <summary>
+    /// 自定义属性，标识指令类型
+    /// </summary>
+    public byte OrderType { get; set; }
+
+    /// <summary>
+    /// 自定义属性，标识实际数据
+    /// </summary>
+    public byte[] Body { get; set; }
+
+    private long m_bodyLength;
+
+    List<byte> m_bytes=new List<byte>();
+
+    #region 接口成员
+    long IBigFixedHeaderRequestInfo.BodyLength => m_bodyLength;
+
+    void IBigFixedHeaderRequestInfo.OnAppendBody(ReadOnlySpan<byte> buffer)
     {
-        //在这里会一直追加数据体，用户自行实现数据的保存。
-        //注意，buffer可能为内存块的成员，所以，一定一定不要直接引用。
+        //每次追加数据
+        m_bytes.AddRange(buffer.ToArray());
     }
 
-    public bool OnFinished()
+    bool IBigFixedHeaderRequestInfo.OnFinished()
     {
-        //触发该方法时，说明数据体接收完毕，返回true时，会触发Receive相关事件，否则不会。
+        if (m_bytes.Count == this.m_bodyLength)
+        {
+            this.Body = m_bytes.ToArray();
+            return true;
+        }
+        return false;
+    }
+
+    bool IBigFixedHeaderRequestInfo.OnParsingHeader(ReadOnlySpan<byte> header)
+    {
+        //在该示例中，第一个字节表示后续的所有数据长度，但是header设置的是3，所以后续还应当接收length-2个长度。
+        this.m_bodyLength = header[0] - 2;
+        this.DataType = header[1];
+        this.OrderType = header[2];
         return true;
     }
-
-    public bool OnParsingHeader(byte[] header)
-    {
-        //解析头部。赋值BodyLength
-        return true;
-    }
+    #endregion
 }
-
 ```
 
-新建MyBigFixedHeaderCustomDataHandlingAdapter继承**CustomBigFixedHeaderDataHandlingAdapter**，然后对HeaderLength作出赋值，以此表明固定包头的长度是多少。
+新建`MyCustomBigFixedHeaderDataHandlingAdapter`继承`CustomBigFixedHeaderDataHandlingAdapter`，然后对`HeaderLength`作出赋值，以此表明**固定包头**的长度是多少。
 
-```csharp
-/// <summary>
-/// 模板解析“大数据固定包头”数据适配器
-/// </summary>
-class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
+```csharp showLineNumbers
+class MyCustomBigFixedHeaderDataHandlingAdapter : CustomBigFixedHeaderDataHandlingAdapter<MyBigFixedHeaderRequestInfo>
 {
-    public override int HeaderLength =>8;
+    public override int HeaderLength => 3;
 
     protected override MyBigFixedHeaderRequestInfo GetInstance()
     {
@@ -82,27 +102,56 @@ class MyBigFixedHeaderCustomDataHandlingAdapter : CustomBigFixedHeaderDataHandli
 }
 ```
 
-【接收】
+## 四、使用
 
-```csharp
-TcpService service = new TcpService();
-service.Received = (client, e) =>
+```csharp {7,34} showLineNumbers
+private static async Task<TcpClient> CreateClient()
 {
-    //接收信息，在CustomDataHandlingAdapter派生的适配器中，byteBlock将为null，requestInfo将为适配器定义的泛型
-    if (e.RequestInfo is MyBigFixedHeaderRequestInfo myRequestInfo)
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
+
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
     {
-        //此处可以处理MyBigFixedHeaderRequestInfo的相关信息了。
-        string body = Encoding.UTF8.GetString(myRequestInfo.Body, 0, myRequestInfo.Body.Length);
-    }
-  
-};
+        //从客户端收到信息
 
-service.Setup(new TouchSocketConfig()//载入配置     
-    .SetListenIPHosts(new IPHost[] { new IPHost(7790) })
-    .SetDataHandlingAdapter(() => { return new MyBigFixedHeaderCustomDataHandlingAdapter(); }));//配置适配器
-service.Start();//启动
+        if (e.RequestInfo is MyBigFixedHeaderRequestInfo myRequest)
+        {
+            client.Logger.Info($"已从{client.Id}接收到：DataType={myRequest.DataType},OrderType={myRequest.OrderType},消息={Encoding.UTF8.GetString(myRequest.Body)}");
+        }
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new MyCustomBigFixedHeaderDataHandlingAdapter())
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
 ```
-
 
 :::tip 提示
 

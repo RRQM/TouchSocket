@@ -18,7 +18,7 @@ Dmtp的服务器有多种形式的host，每种服务器的创建都大同小异
 
 ## 二、服务器架构
 
-Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基于tcp协议时，其架构就和tcp服务器一致。在收到**新客户端连接**时，会创建一个**TcpDmtpSocketClient**的类实例，与**客户端TcpDmtpClient**一一对应，后续的数据通信均由此实例负责。
+Dmtp服务器的架构与其所属的基础协议架构一致，例如，在基于tcp协议时，其架构就和tcp服务器一致。在收到**新客户端连接**时，会创建一个**TcpDmtpSessionClient**的类实例，与**客户端TcpDmtpClient**一一对应，后续的数据通信均由此实例负责。
 
 
 ## 三、可配置项
@@ -74,9 +74,9 @@ var config = new TouchSocketConfig()//配置
            VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
        });
 
-service.Setup(config);
+await service.SetupAsync(config);
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
@@ -95,9 +95,9 @@ config.SetBindIPHost(new IPHost(7789))
          a.AddConsoleLogger();
      });
 
-udpDmtp.Setup(config);
+await udpDmtp.SetupAsync(config);
 
-udpDmtp.Start();
+await udpDmtp.StartAsync();
 ```
 
 :::info 备注
@@ -123,9 +123,9 @@ var config = new TouchSocketConfig()//配置
            VerifyToken = "Dmtp"
        });
 
-service.Setup(config);
+await service.SetupAsync(config);
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
@@ -239,9 +239,9 @@ var config = new TouchSocketConfig()//配置
             VerifyToken = "Dmtp"//设定连接口令，作用类似账号密码
         });
 
-service.Setup(config);
+await service.SetupAsync(config);
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```

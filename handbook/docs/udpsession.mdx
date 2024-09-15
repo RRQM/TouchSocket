@@ -77,7 +77,7 @@ udpClient.Start();
 带`EndPoint`，即表示可以发送到任意终结点。
 
 ```csharp showLineNumbers
-public virtual void Send(EndPoint remoteEP, byte[] buffer, int offset, int length)
+public virtual void SendAsync(EndPoint remoteEP, byte[] buffer, int offset, int length)
 ```
 
 ### 6.2 发送到接收数据的地址
@@ -102,7 +102,7 @@ class MyPluginClass : PluginBase, IUdpReceivedPlugin
 不带`EndPoint`，即表示直接发送到默认（通过`SetRemoteIPHost`设置）的终结点。这一般在Udp作为客户端时是有用的。
 
 ```csharp showLineNumbers
-public virtual void Send(byte[] buffer, int offset, int length)
+public virtual void SendAsync(byte[] buffer, int offset, int length)
 ```
 
 

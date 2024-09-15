@@ -47,9 +47,9 @@ class MyCommandLinePlugin : TcpCommandLinePlugin
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public int MULCommand(ISocketClient socketClient,int a, int b)
+    public int MULCommand(ITcpSessionClient SessionClient,int a, int b)
     {
-        this.logger.Info($"{socketClient.IP}:{socketClient.Port}执行{nameof(MULCommand)}");
+        this.logger.Info($"{SessionClient.IP}:{SessionClient.Port}执行{nameof(MULCommand)}");
         return a * b;
     }
 
@@ -86,10 +86,10 @@ config.SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(
       });
 
 //载入配置
-service.Setup(config);
+await service.SetupAsync(config);
 
 //启动
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info("服务器成功启动。");
 service.Logger.Info("使用：“Add 10 20”测试");

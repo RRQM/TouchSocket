@@ -97,9 +97,9 @@ var config = new TouchSocketConfig()//配置
            VerifyToken = "Rpc"//连接验证口令。
        });
 
-service.Setup(config);
+await service.SetupAsync(config);
 
-service.Start();
+await service.StartAsync();
 
 service.Logger.Info($"{service.GetType().Name}已启动");
 ```
@@ -114,7 +114,7 @@ service.Logger.Info($"{service.GetType().Name}已启动");
 
 ```csharp showLineNumbers
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
     .ConfigurePlugins(a =>
     {
@@ -124,7 +124,7 @@ client.Setup(new TouchSocketConfig()
     {
         VerifyToken = "Rpc"//连接验证口令。
     }));
-client.Connect();
+await client.ConnectAsync();
 
 bool result =(bool) client.GetDmtpRpcActor().Invoke(typeof(bool),"Login", InvokeOption.WaitInvoke, "123", "abc");
 ```
@@ -255,7 +255,7 @@ namespace RpcProxy
 
 ```csharp showLineNumbers
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .SetRemoteIPHost("127.0.0.1:7789")
     .ConfigurePlugins(a =>
     {
@@ -265,7 +265,7 @@ client.Setup(new TouchSocketConfig()
     {
         VerifyToken = "Rpc"//连接验证口令。
     }));
-client.Connect();
+await client.ConnectAsync();
 
 bool result = client.GetDmtpRpcActor().Login("123", "abc", InvokeOption.WaitInvoke);//Login是生成的代理扩展方法。可能需要额外添加命名空间。
 ```
@@ -306,7 +306,7 @@ public partial class ReverseCallbackServer : RpcServer
 
 ```csharp showLineNumbers
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -327,20 +327,20 @@ client.Setup(new TouchSocketConfig()
     {
         VerifyToken = "Rpc"//连接验证口令。
     }));
-client.Connect();
+await client.ConnectAsync();
 client.Logger.Info($"连接成功，Id={client.Id}");
 ```
 
 ### 3.2 调用反向Rpc
 
-服务器回调客户端，最终必须通过**服务器辅助类客户端**（`ISocketClient`的派生类），以`TcpDmtpService`为例，其辅助客户端为`TcpDmtpSocketClient`（或其接口：`ITcpDmtpSocketClient`）。
+服务器回调客户端，最终必须通过**服务器辅助类客户端**（`ITcpSessionClient`的派生类），以`TcpDmtpService`为例，其辅助客户端为`TcpDmtpSessionClient`（或其接口：`ITcpDmtpSessionClient`）。
 
-下列示例以TcpDmtpSocketClient为例，其余一致。
+下列示例以TcpDmtpSessionClient为例，其余一致。
 
 
 #### 3.2.1 通过服务器直接获取
 
-可以获取所有`TcpDmtpSocketClient`，进行广播式调用。
+可以获取所有`TcpDmtpSessionClient`，进行广播式调用。
 
 ```csharp showLineNumbers
 foreach (var item in service.GetClients())
@@ -353,9 +353,9 @@ foreach (var item in service.GetClients())
 
 ```csharp showLineNumbers
 var id = service.GetIds().FirstOrDefault(a => a.Equals("特定id"));
-if (service.TryGetSocketClient(id, out var socketClient))
+if (service.TryGetClient(id, out var SessionClient))
 {
-    socketClient.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
+    SessionClient.GetDmtpRpcActor().InvokeT<string>("SayHello", InvokeOption.WaitInvoke, "张三");
 }
 ```
 
@@ -373,9 +373,9 @@ partial class MyRpcServer : TransientRpcServer
     [DmtpRpc(true)]//使用函数名直接调用
     public int Add(int a, int b)
     {
-        if (this.CallContext.Caller is ITcpDmtpSocketClient socketClient)
+        if (this.CallContext.Caller is ITcpDmtpSessionClient SessionClient)
         {
-            socketClient.GetDmtpRpcActor().InvokeT<string>("SayHello",InvokeOption.WaitInvoke,"张三");
+            SessionClient.GetDmtpRpcActor().InvokeT<string>("SayHello",InvokeOption.WaitInvoke,"张三");
         }
         int sum = a + b;
         return sum;
@@ -572,7 +572,7 @@ public class MySerializationSelector : SerializationSelector
 
 ```csharp {10}
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigureContainer(a =>
     {
         a.AddConsoleLogger();
@@ -591,7 +591,7 @@ client.Setup(new TouchSocketConfig()
     {
         VerifyToken = "Rpc"//连接验证口令。
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 :::caution 注意
@@ -724,9 +724,9 @@ public int RpcPullChannel(ICallContext callContext, int channelID)
 {
     var size = 0;
     var package = 1024 * 64;
-    if (callContext.Caller is TcpDmtpSocketClient socketClient)
+    if (callContext.Caller is TcpDmtpSessionClient SessionClient)
     {
-        if (socketClient.TrySubscribeChannel(channelID, out var channel))
+        if (SessionClient.TrySubscribeChannel(channelID, out var channel))
         {
             for (var i = 0; i < 10; i++)
             {
@@ -781,9 +781,9 @@ public int RpcPushChannel(ICallContext callContext, int channelID)
 {
     int size = 0;
 
-    if (callContext.Caller is TcpDmtpSocketClient socketClient)
+    if (callContext.Caller is TcpDmtpSessionClient SessionClient)
     {
-        if (socketClient.TrySubscribeChannel(channelID, out var channel))
+        if (SessionClient.TrySubscribeChannel(channelID, out var channel))
         {
             foreach (var item in channel)
             {
@@ -856,7 +856,7 @@ class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
 
 ```csharp {6}
 var client = new TcpDmtpClient();
-client.Setup(new TouchSocketConfig()
+await client.SetupAsync(new TouchSocketConfig()
     .ConfigurePlugins(a =>
     {
         a.UseDmtpRpc()
@@ -867,7 +867,7 @@ client.Setup(new TouchSocketConfig()
     {
         VerifyToken = "Rpc"//连接验证口令。
     }));
-client.Connect();
+await client.ConnectAsync();
 ```
 
 最后在获得RpcActor时，就可以按接口获取。然后配合服务器代码接口约束，就可以实现我们所期望的功能。

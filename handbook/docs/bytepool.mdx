@@ -1,7 +1,7 @@
----
+--- 
 id: bytepool
 title: 内存池
----
+--- 
 
 ### 定义
 
@@ -15,15 +15,26 @@ title: 内存池
 
 ## 二、功能
 
-内存池（BytePool）是解决创建大量字节数组消耗的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
+内存池（`BytePool`）是解决创建、销毁大字节数组的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
 
-内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。`ByteBlock`是继承自`Stream`的类，拥有和`MemoryStream`一样的功能和内存回收管理的增强功能。所以如果有`MemoryStream`的使用需求的话，就可以完全让`ByteBlock`替代。而`ValueByteBlock`是`ByteBlock`的值类型（ref struct），其功能除了不继承Stream以外，和`ByteBlock`一模一样。且为值类型，创建开销更小。
+内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了`IBufferWriter<byte>`接口，可以更好的使用`GetMemory`、`GetSpan`与`Advance`等功能。
 
-## 三、使用
+## 三、创建与回收
 
-### 3.1 创建、回收
+### 3.1 内存池
 
-`BytePool`在默认情况提供了一个`Default`的默认实例，当然您可以新建只属于自己的`BytePool`。
+`BytePool`在默认情况提供了一个`BytePool.Default`的默认静态实例。这是整个**进程**可以共享使用的。
+
+当然您可以创建只属于自己的`BytePool`。
+
+```csharp showLineNumbers
+BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
+{
+    AutoZero = false,//在回收内存时，是否清空内存
+    MaxBucketsToTry = 5//最大梯度跨度
+};
+```
+
 
 其中：
 
@@ -32,15 +43,6 @@ title: 内存池
 - AutoZero属性，在回收内存时，是否清空内存。
 - MaxBucketsToTry是最大梯度跨度。例如：当梯度为16、32、64、128、512、1024时，MaxBucketsToTry为2，则当请求的长度是16时，且16的内存块均已派出，则会请求32，最大会请求到64，如果均已派出，则直接新建。
 
-```csharp showLineNumbers
-BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
-{
-    AutoZero = false,//在回收内存时，是否清空内存
-    MaxBucketsToTry = 5//最大梯度跨度
-};
-
-BytePool defaultBytePool = BytePool.Default;//使用默认的
-```
 
 在内存池创建以后，可以直观的查看它的各个属性。包括：
 
@@ -49,39 +51,89 @@ Console.WriteLine($"内存池容量={bytePool.Capacity}");
 Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
 ```
 
-使用内存块
+### 3.2 创建、释放内存块
 
-`ByteBlock`可通过BytePool实例创建，也可以直接new对象，后者使用的是默认内存池实例提供支持。
+内存块就是可以使用的字节数组。框架提供了`ByteBlock`和`ValueByteBlock`两种内存块。`ValueByteBlock`是值类型的，其余特点完全一致。
 
-- byteSize：用于申请的最小字节尺寸。例如：当申请100长度时，可能会得到100，1000，甚至更大尺寸的内存，但绝不会小于100.
+【创建ByteBlock】
 
 ```csharp showLineNumbers
-ByteBlock byteBlock1 = new ByteBlock(byteSize: 1024 * 1024);//从默认内存池获得
-byteBlock1.Dispose();
+var byteBlock = new ByteBlock(1024 * 64);
+byteBlock.Dispose();
+```
 
-BytePool bytePool = new BytePool();
-ByteBlock byteBlock2 = bytePool.GetByteBlock(byteSize: 1024 * 1024);//从指定内存池获得
 
-using (ByteBlock byteBlock3 = new ByteBlock())//通过using创建及释放时，均在默认内存池
+【创建ValueByteBlock】
+
+```csharp showLineNumbers
+var byteBlock = new ValueByteBlock(1024 * 64);
+byteBlock.Dispose();
+```
+
+以上的创建方式，都是从默认内存池创建。如果想要自定义内存池，可以在new的时候指定内存池。
+
+```csharp showLineNumbers
+var byteBlock = new ByteBlock(1024 * 64,BytePool.Default);
+byteBlock.Dispose();
+```
+
+释放过程也完全可以使用`using`。
+
+```csharp showLineNumbers
+using (var byteBlock = new ByteBlock(1024 * 64))
 {
+    //使用ByteBlock
 }
 ```
 
+:::tip 提示
+
+`byteSize`用于申请的最小字节尺寸。例如：当申请100长度时，可能会得到100，1000，甚至更大尺寸的内存，但绝不会小于100
+
+:::  
+
 :::caution 注意
 
-创建的**ByteBlock（ValueByteBlock）**必须显示释放（Dispose），可用using，如果不释放，虽然不会内存泄露，但是会影响性能。
+创建的`ByteBlock`（`ValueByteBlock`）必须显示释放（`Dispose`），可用`using`，如果不释放，虽然不会内存泄露，但是会影响性能。
 
 :::  
 
-:::danger 危险
+## 四、内存块使用
 
-无论何时何地，都不要直接引用ByteBlock.Buffer，可以直接使用。如果需要引用实际数据，请使用Read、ToArray等方法可复制导出新的数据内存。
+内存块就是可以使用的字节数组。只不过他具备*借用*与*归还*的功能。
+
+我们可以使用`TotalMemory`，获取到整个内存块原始数据。
+
+```csharp showLineNumbers
+Memory<byte> memory = byteBlock.TotalMemory;
+```
+
+但一般情况下，我们不会直接使用内存块的`TotalMemory`，而是使用`Span`、`Memory`、甚至是`ToArray()`等**有效数据**。
+
+:::info 信息
+
+**有效数据** 是指在内存块中已经被有效写入，或者可以被有效读取的数据。因为当一个内存块被申请的时候，无论它的容量多大，它的有效数据长度总是为0(`Length`)。我们必须通过`Write`、`Advance`、`SetLength`等方法，来完成数据的有效化。
 
 :::  
 
-### 3.2 基本数组的写入和读取
+:::tip 趣味理解
 
-基本使用和`MemoryStream`一致。
+`ByteBlock`的工作模式，就像是你向商店（`BytePool`）租借了一个杯子（`ByteBlock`），`TotalMemory`就是这个杯子本身。
+
+于我们而言，只在乎杯中实际有多少水（`Span`、`Memory`），所以`ByteBlock.Len`就是水位线。所以无论何时，我们都不可以喝超过水位线的水。因为超过水位线的水，可能是上个租客留下的口水。
+
+同时，喝水的时候，还可以接力喝。比如先让张三（方法A）喝1口，那么我们可以把已喝的水做个标记（`Position`赋值为1），然后把杯子（`ByteBlock`）传递给李四（方法B），那么这时候，李四就只能按张三喝过的水继续喝，当然如果李四不嫌弃的话，也是可以从头再喝的。
+
+最后就是杯子的归还（`Dispose`），以及杯中水的处理。在杯子未归还至前，杯子的所有属性（例如：`Len`、`Position`、`Span`、`Memory`）都代表的是当前的状态。而当杯子被归还时，这些属性将变得没有意义，尤其是`Memory`。因为`Memory`可以被其他对象引用，但是杯子归还后，`Memory`指向的内存块可能已经是新的申请人，这杯中的水，终究是变成了“前人的口水”。
+
+但是如果我们确实需要保存杯中水的话，可以使用`ToArray()`方法。其返回值是一个数组，它可以以新引用的方式保存，且与内存池没有任何关系了，所有的生命周期归`GC`管理。
+
+:::  
+
+
+### 4.1 读写数组
+
+使用比较简单，支持Byte[]，Span、Memory等数据的直接写入。
 
 ```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
@@ -95,116 +147,49 @@ using (var byteBlock = new ByteBlock())
 }
 ```
 
-### 3.3 基础类型的写入和读取
+### 4.2 基础类型的写入和读取
 
 ```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
-    byteBlock.Write(byte.MaxValue);//写入byte类型
-    byteBlock.Write(int.MaxValue);//写入int类型
-    byteBlock.Write(long.MaxValue);//写入long类型
-    byteBlock.Write("RRQM");//写入字符串类型
-    
+    byteBlock.WriteByte(byte.MaxValue);//写入byte类型
+    byteBlock.WriteInt32(int.MaxValue);//写入int类型
+    byteBlock.WriteInt64(long.MaxValue);//写入long类型
+    byteBlock.WriteString("RRQM");//写入字符串类型
+
     byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
 
-    byte byteValue = (byte)byteBlock.ReadByte();
-    int intValue = byteBlock.ReadInt32();
-    long longValue = byteBlock.ReadInt64();
-    string stringValue = byteBlock.ReadString();
+    var byteValue = byteBlock.ReadByte();
+    var intValue = byteBlock.ReadInt32();
+    var longValue = byteBlock.ReadInt64();
+    var stringValue = byteBlock.ReadString();
 }
 ```
 
-:::caution 注意
-
-在写入字符串时，如果想要按序写入并读取，应该使用`byteBlock.Write`，而非`byteBlock.WriteString`。因为`byteBlock.WriteString`是直接把字符串转为utf-8编码，然后写入。
-
-:::  
-
-### 3.4 数据对象的写入的读取
-
-数据对象的写入和读取，需要指定序列化类型。因为他的实质是序列化和反序列化。
+### 4.3 按照BufferWriter方式写入
 
 ```csharp showLineNumbers
 using (var byteBlock = new ByteBlock())
 {
-    //将实例写入，实际上是序列化
-    byteBlock.WriteObject(new MyClass(), SerializationType.FastBinary);
+    var span = byteBlock.GetSpan(4);
+    span[0] = 0;
+    span[1] = 1;
+    span[2] = 2;
+    span[3] = 3;
+    byteBlock.Advance(4);
 
-    byteBlock.SeekToStart();
+    var memory = byteBlock.GetMemory(4);
+    memory.Span[0] = 4;
+    memory.Span[1] = 5;
+    memory.Span[2] = 6;
+    memory.Span[3] = 7;
+    byteBlock.Advance(4);
 
-    //读取实例，实际上是反序列化
-    var myClass = byteBlock.ReadObject<MyClass>();
+    //byteBlock.Length 应该是8
 }
 ```
 
-### 3.5 数组包的写入和读取
-
-数组包的写入和读取，也是可以按序排入的。
-
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
-{
-    byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
-
-    byteBlock.SeekToStart();
-
-    byte[] bytes = byteBlock.ReadBytesPackage();
-}
-```
-
-不过，在性能极致要求的情况下，使用`ReadBytesPackage`，实际上会创建额外的内存，所以可以使用下面用法：
-
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
-{
-    byteBlock.WriteBytesPackage(Encoding.UTF8.GetBytes("TouchSocket"));
-
-    byteBlock.SeekToStart();
-
-    //使用下列方式即可高效完成读取
-    if (byteBlock.TryReadBytesPackageInfo(out int pos,out int len))
-    {
-        var str=Encoding.UTF8.GetString(byteBlock.Buffer,pos,len);
-    }
-}
-```
-
-### 3.6 包类型的写入和读取
-
-[包类型](./ipackage.mdx)是最高效的数据结构转换方案。所以内存池也支持按序排入。
-
-```csharp showLineNumbers
-using (var byteBlock = new ByteBlock())
-{
-    byteBlock.WritePackage(new MyPackage()
-    {
-        Property = 10
-    });
-
-    byteBlock.SeekToStart();
-
-    var myPackage = byteBlock.ReadPackage<MyPackage>();
-}
-```
-
-```csharp showLineNumbers
-class MyPackage : PackageBase
-{
-    public int Property { get; set; }
-
-    public override void Package(in ByteBlock byteBlock)
-    {
-       byteBlock.Write(this.Property);
-    }
-
-    public override void Unpackage(in ByteBlock byteBlock)
-    {
-       this.Property=byteBlock.ReadInt32();
-    }
-}
-```
-
-### 3.7 多线程同步协作（Hold）
+## 五、多线程同步协作（Hold）
 
 在多线程异步时，设计架构应当遵守谁（Thread）创建的ByteBlock，由谁释放，这样就能很好的避免未释放的情况发生。实际上TouchSocket中，就是秉承这样的设计，任何非用户创建的ByteBlock，都会由创建的线程最后释放。但是在使用中，经常出现异步多线程的操作。
 
@@ -219,7 +204,7 @@ public class MyTClient : TcpClient
     {
         Task.Run(()=> 
         {
-            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
             Console.WriteLine($"已接收到信息：{mes}");
         });
         return true;
@@ -237,7 +222,7 @@ public class MyTClient : TcpClient
         byteBlock.SetHolding(true);//异步前锁定
         Task.Run(()=> 
         {
-            string mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
             byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
             Console.WriteLine($"已接收到信息：{mes}");
         });
@@ -249,21 +234,6 @@ public class MyTClient : TcpClient
 :::caution 注意
 
 ByteBlock在设置SetHolding(false)后，不需要再调用Dispose。
-
-:::  
-
-
-### 3.8 其他用法
-
-:::tip 提示
-
-**ByteBlock（ValueByteBlock）**的实际数据有效长度应该是`ByteBlock.Length`属性，而不是`ByteBlock.Buffer.Length`。
-
-:::  
-
-:::tip 提示
-
-由于**ByteBlock（ValueByteBlock）**的部分属性是long类型，但是在使用时有时候需要int类型，所以也提供了int的封装转换，例如：`ByteBlock.Length`和`ByteBlock.Len`。
 
 :::  
 
