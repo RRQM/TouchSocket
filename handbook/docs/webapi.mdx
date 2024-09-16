@@ -99,17 +99,17 @@ public int Sum(int a, int b)
 ```csharp showLineNumbers
 /// <summary>
 /// 使用调用上下文，响应文件下载。
-// </summary>
+/// </summary>
 /// <param name="callContext"></param>
 [WebApi(HttpMethodType.GET)]
-public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
+public async Task<string> DownloadFile(IWebApiCallContext callContext, string id)
 {
     if (id == "rrqm")
     {
-        callContext.HttpContext.Response.FromFile(@"D:\System\Windows.iso", callContext.HttpContext.Request);
-        return Task.FromResult("ok");
+        await callContext.HttpContext.Response.FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), callContext.HttpContext.Request);
+        return "ok";
     }
-    return Task.FromResult("id不正确。");
+    return "id不正确。";
 }
 ```
 
