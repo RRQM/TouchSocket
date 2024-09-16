@@ -13,6 +13,7 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 using TouchSocket.WebApi;
@@ -22,8 +23,10 @@ namespace WebApiClientApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
+            await TestHttpClient();
+
             //此处预设一个30秒超时的请求设定。
             var invokeOption_30s = new InvokeOption()
             {
@@ -32,7 +35,7 @@ namespace WebApiClientApp
             };
 
             {
-                var client = CreateWebApiClient();
+                var client = await CreateWebApiClient();
 
                 var sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
@@ -45,7 +48,7 @@ namespace WebApiClientApp
             }
 
             {
-                var client = CreateWebApiClientSlim();
+                var client =await CreateWebApiClientSlim();
 
                 var sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
@@ -60,36 +63,47 @@ namespace WebApiClientApp
             Console.ReadKey();
         }
 
-        private static WebApiClient CreateWebApiClient()
+        private static async Task<HttpClient> TestHttpClient()
+        {
+            var client = new HttpClient();
+            await client.ConnectAsync("127.0.0.1:7789");
+            Console.WriteLine("连接成功");
+
+            string responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20");
+            return client;
+        }
+
+        private static async Task<WebApiClient> CreateWebApiClient()
         {
             var client = new WebApiClient();
-            client.SetupAsync(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyWebApiPlugin>();
-                }));
-            client.ConnectAsync();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .ConfigurePlugins(a =>
+                 {
+                     a.Add<MyWebApiPlugin>();
+                 }));
+            await client.ConnectAsync();
             Console.WriteLine("连接成功");
             return client;
         }
 
-        private static WebApiClientSlim CreateWebApiClientSlim()
+        private static async Task<WebApiClientSlim> CreateWebApiClientSlim()
         {
             var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
-            client.SetupAsync(new TouchSocketConfig()
-                .SetRemoteIPHost("http://127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyWebApiPlugin>();
-                }));
+            await client.SetupAsync(new TouchSocketConfig()
+                 .SetRemoteIPHost("http://127.0.0.1:7789")
+                 .ConfigurePlugins(a =>
+                 {
+                     a.Add<MyWebApiPlugin>();
+                 }));
+
             return client;
         }
 
         /// <summary>
         /// 此处可以做WebApi的请求之前和之后的拦截。
         /// </summary>
-        private class MyWebApiPlugin : PluginBase, IWebApiRequestPlugin,IWebApiResponsePlugin
+        private class MyWebApiPlugin : PluginBase, IWebApiRequestPlugin, IWebApiResponsePlugin
         {
 
             public async Task OnWebApiRequest(IWebApiClientBase client, WebApiEventArgs e)
