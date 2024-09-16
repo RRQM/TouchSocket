@@ -78,7 +78,7 @@ Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 
 ### 5.1 Get规则
 
-使用Get进行请求时，服务方法可以声明多个参数，但是每个参数都必须是**简单类型**（包括字符串、DateTime等）。
+使用`Get`进行请求时，服务方法可以声明多个参数，但是每个参数都必须是**简单类型**（例如：int、string、DateTime等）。
 
 ```csharp showLineNumbers
 [WebApi(HttpMethodType.GET)]
@@ -94,31 +94,15 @@ public int Sum(int a, int b)
 }
 ```
 
-如果想要获取实际请求的调用上下文（在上下文中可以获取IP，端口等信息），可以将第一个参数声明为`IWebApiCallContext`类型。
-
-```csharp showLineNumbers
-/// <summary>
-/// 使用调用上下文，响应文件下载。
-/// </summary>
-/// <param name="callContext"></param>
-[WebApi(HttpMethodType.GET)]
-public async Task<string> DownloadFile(IWebApiCallContext callContext, string id)
-{
-    if (id == "rrqm")
-    {
-        await callContext.HttpContext.Response.FromFileAsync(new FileInfo(@"D:\System\Windows.iso"), callContext.HttpContext.Request);
-        return "ok";
-    }
-    return "id不正确。";
-}
-```
-
 ### 5.2 Post规则
 
-使用`Post`进行请求时，服务方法可以声明多个参数，但是当参数是基础类型或者字符串类型时，它也会来源于`Query`参数，同时，有且只有当最后一个参数为其他类型时，才会从`Body`解析。
+使用`Post`进行请求时，服务方法可以声明多个参数，但是当参数是基础类型或者字符串类型时，它也会来源于`Query`参数。
+同时，有且只有当最后一个参数为**其他类型**时，才会从`Body`解析。
 
+例如：
 
-以下参数依然来自Query，Body为空也可以。
+以下参数依然来自`Query`，`Body`为空也可以。
+
 ```csharp showLineNumbers
 [WebApi(HttpMethodType.Post)]
 public int Sum(int a, int b)
@@ -127,7 +111,12 @@ public int Sum(int a, int b)
 }
 ```
 
-以下参数，前两个来自Query，MyClass将从Body解析。
+当最后一个参数为**其他类型**时，它将会从`Body`解析。
+
+例如：
+
+以下参数，前两个来自`Query`，`MyClass`将从`Body`解析。
+
 ```csharp showLineNumbers
 [WebApi(HttpMethodType.Post)]
 public int Sum(int a, int b, MyClass myClass)
@@ -135,8 +124,6 @@ public int Sum(int a, int b, MyClass myClass)
     return a + b;
 }
 ```
-
-如果想要获取实际请求的调用上下文（在上下文中可以获取IP，端口等信息），可以将第一个参数声明为`IWebApiCallContext`类型。
 
 ### 5.3 路由规则
 
@@ -181,12 +168,71 @@ public class ApiServer : RpcServer
 
 :::  
 
+## 六、调用上下文
 
-## 六、调用服务
+框架中，每个请求都会产生一个**调用上下文（ICallContext）**，这个上下文可以获取到当前请求的**客户端**、**服务**、**方法**、**参数**等。
 
-### 6.1 直接调用
+通用调用上下文可以参阅[通用Rpc调用上下文](./rpcallcontext.mdx)。
 
-直接调用，则是不使用**任何代理**，直接Call RPC，使用比较简单，**浏览器**也能直接调用实现。
+下列将介绍`WebApi`的专用调用上下文。
+
+首先，在服务方法中，只要有参数类型为`IWebApiCallContext`（或者`ICallContext`），框架会自动注入当前调用上下文。
+
+例如：
+
+```csharp {2} showLineNumbers
+[WebApi(HttpMethodType.GET)]
+public int SumCallContext(IWebApiCallContext callContext, int a, int b)
+{
+    return a + b;
+}
+```
+
+:::tip 提示
+
+调用上下文的位置没有限制，但是建议在方法参数的**最前面**，这样即使对`Post`，也不会有额外的判断压力。
+
+:::  
+
+
+### 6.1 获取当前客户端信息
+
+一般来说，调用上下文的`Caller`就是实际通信的客户端，也就是`HttpSessionClient`。
+
+```csharp showLineNumbers
+if (callContext.Caller is IHttpSessionClient httpSessionClient)
+{
+    Console.WriteLine($"IP:{httpSessionClient.IP}");
+    Console.WriteLine($"Port:{httpSessionClient.Port}");
+    Console.WriteLine($"Id:{httpSessionClient.Id}");
+}
+```
+
+### 6.2 获取HttpContext
+
+`WebApi`的调用上下文，除了`Caller`，还有`HttpContext`。
+
+```csharp showLineNumbers
+//http内容
+var httpContext = callContext.HttpContext;
+
+//http请求
+var request = httpContext.Request;
+//http响应
+var response = httpContext.Response;
+```
+
+:::tip 提示
+
+当获取到`HttpContext`后，就可以做`HttpService`的所有功能。例如：读取请求头，修改响应头，修改响应内容，修改响应状态码、响应WebSocket连接等。具体可以参考[创建HttpService](./httpservice.mdx)和[WebSocketService](./websocketservice.mdx)。
+
+:::  
+
+## 七、调用服务
+
+### 7.1 直接调用
+
+直接调用，则是不使用**任何代理**，直接Call Rpc，使用比较简单，**浏览器**也能直接调用实现。
 
 【Url请求】
 
@@ -194,49 +240,80 @@ public class ApiServer : RpcServer
 http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20
 ```
 
-### 6.2 内置HttpClient调用
+### 7.2 框架HttpClient调用
 
-内置WebApi的客户端和大家所**熟识**的有一些差距，TouchSocket的WebApi使用的是**先连接**，**后请求**的逻辑。请求时，先标记**GET/POST**的函数。如果是**GET**，则必须**留空URL**，如果是**POST**，则只写URL即可。
+框架内置的`HttpClient`，可以参考[HttpClient](./httpclient.mdx)的使用，此处做一个简单使用示例。
 
-```csharp showLineNumbers
-private static WebApiClient CreateWebApiClient()
-{
-    var client = new WebApiClient();
-    await client.ConnectAsync("127.0.0.1:7789");
-    Console.WriteLine("连接成功");
-    return client;
-}
+```csharp {4} showLineNumbers
+var client = new HttpClient();
+await client.ConnectAsync("127.0.0.1:7789");
+
+string responseString = await client.GetStringAsync("/ApiServer/Sum?a=10&b=20");
 ```
 
-```csharp showLineNumbers
-var client = CreateWebApiClient();
+### 7.3 内置WebApiClient调用
 
+内置`WebApi`的客户端和`HttpClient`基本一致，但是封装了一些`Rpc`的调用接口，可以更加方便的执行一些操作。
+
+【创建WebApi客户端】
+
+```csharp {8} showLineNumbers
+var client = new WebApiClient();
+await client.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7789")
+     .ConfigurePlugins(a =>
+     {
+         a.Add<MyWebApiPlugin>();
+     }));
+await client.ConnectAsync();
+```
+
+【GET调用】
+
+在使用`GET`进行调用时，其`InvokeKey`的规则是：
+
+1. 使用`GET`开头。
+2. `:`之后追加`url`路由。
+3. 其余参数按照字符串填充规则，依次排序。
+
+例如：
+
+```csharp showLineNumbers
 int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
 Console.WriteLine($"Get调用成功，结果：{sum1}");
+```
 
+【POST调用】
+
+在使用`POST`进行调用时，其`InvokeKey`的规则是：
+
+1. 使用`POST`开头。
+2. `:`之后追加`url`路由。
+3. 其余参数按照字符串填充规则，依次排序。
+4. 最后一个参数，如果为`Body`，则使用`类`填充。
+
+例如：
+
+```csharp showLineNumbers
 int sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", null, new MyClass() { A = 10, B = 20 });
 Console.WriteLine($"Post调用成功，结果：{sum2}");
 ```
 
-### 6.3 Dotnet自带HttpClient调用
+### 7.4 Dotnet自带HttpClient调用
 
 Dotnet自带HttpClient则是通过连接池的方式访问。详情看[HttpClient](https://learn.microsoft.com/zh-cn/dotnet/api/system.net.http.httpclient)
 
-```csharp showLineNumbers
-private static WebApiClientSlim CreateWebApiClientSlim()
-{
-    var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
-    await client.SetupAsync(new TouchSocketConfig()
-        .SetRemoteIPHost("http://127.0.0.1:7789")
-        .ConfigurePlugins(a =>
-        {
-        }));
-    return client;
-}
-```
-```csharp showLineNumbers
-var client = CreateWebApiClientSlim();
+【创建客户端】
 
+```csharp showLineNumbers
+var client = new WebApiClientSlim(new System.Net.Http.HttpClient());
+await client.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("http://127.0.0.1:7789"));
+```
+
+【调用】
+
+```csharp showLineNumbers
 int sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", null, 10, 20);
 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
@@ -246,7 +323,7 @@ Console.WriteLine($"Post调用成功，结果：{sum2}");
 
 :::info 备注
 
-按照微软建议，HttpClient应该保证整个程序中单实例使用，所以可以在`WebApiClientSlim`构造函数中传入已存在的对象。
+按照微软建议，`HttpClient`应该保证整个程序中单实例使用，所以可以在`WebApiClientSlim`构造函数中传入已存在的对象。
 
 :::  
 
@@ -256,7 +333,10 @@ Console.WriteLine($"Post调用成功，结果：{sum2}");
 
 :::  
 
-### 6.4 生成代理调用
+
+### 7.5 生成代理调用
+
+使用WebApi客户端进行调用时，其使用规则相较比较复杂的。但是在实际使用时，基本上是不需要手动书写调用代码的。下面将介绍代理生成调用。
 
 在服务器端，注册完服务后，就可以生成客户端调用代码了。详细的操作可以查看[服务端代理生成](./rpcgenerateproxy.mdx)
 
@@ -280,7 +360,7 @@ a.UseWebApi()
 var sum3 = client.Sum(10,20);
 ```
 
-### 6.5 使用DispatchProxy代理调用
+### 7.6 使用DispatchProxy代理调用
 
 使用DispatchProxy代理调用，可以实现动态代理，详情请看[DispatchProxy代理生成](./rpcgenerateproxy.mdx)
 
@@ -355,7 +435,7 @@ while (true)
 }
 ```
 
-## 七、数据格式化
+## 八、数据格式化
 
 数据格式化，就是对`WebApi`执行前后的数据进行序列化和反序列化。一般来说，常用的格式化类型有两种，一种是`JSON`，另一种是`XML`。具体的，应该根据`Accept`请求头中的数据格式来选择。默认情况下：
 
@@ -363,7 +443,7 @@ while (true)
 - 如果Accept请求头中包含`application/xml`、`text/xml`，则使用XML格式化。
 - 如果Accept请求头中包含`text/plain`，则使用文本格式化(如果是复杂类型，则依然会按照Json或则Xml)。
 
-### 7.1 格式化配置
+### 8.1 格式化配置
 
 在添加`WebApi`插件时，可以通过`ConfigureConverter`方法来配置数据格式化。
 
@@ -386,7 +466,7 @@ while (true)
 })
 ```
 
-### 7.2 自定义格式化器
+### 8.2 自定义格式化器
 
 TouchSocket的`WebApi`插件支持自定义格式化器。
 
@@ -424,9 +504,9 @@ class MySerializerFormatter : ISerializerFormatter<string, HttpContext>
 })
 ```
 
-## 八、鉴权、授权
+## 九、鉴权、授权
 
-### 8.1 请求插件实现
+### 9.1 请求插件实现
 
 在Aspnetcore中，鉴权与授权是通过中间件实现的。而TouchSocket的WebApi（HttpService）在设计时也可以使用类似方式实现该功能。下列就以伪代码jwt鉴权示例。
 
@@ -481,12 +561,12 @@ class AuthenticationPlugin : PluginBase, IHttpPlugin
 :::  
 
 
-### 8.2 Rpc Aop实现
+### 9.2 Rpc Aop实现
 
 WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实现鉴权。具体请看[Rpc服务AOP](./rpcactionfilter.mdx)
 
 
-## 九、跨域
+## 十、跨域
 
 在`WebApi`中的跨域，除了[Cors跨域](./cors.mdx)全局设置之外，还支持特性设置，进行更细粒度的控制。
 
