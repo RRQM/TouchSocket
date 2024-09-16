@@ -137,6 +137,26 @@ namespace WebApiServerApp
         }
 
         [WebApi(HttpMethodType.GET)]
+        public int SumCallContext(IWebApiCallContext callContext, int a, int b)
+        {
+            if (callContext.Caller is IHttpSessionClient httpSessionClient)
+            {
+                Console.WriteLine($"IP:{httpSessionClient.IP}");
+                Console.WriteLine($"Port:{httpSessionClient.Port}");
+                Console.WriteLine($"Id:{httpSessionClient.Id}");
+            }
+
+            //http内容
+            var httpContext = callContext.HttpContext;
+
+            //http请求
+            var request = httpContext.Request;
+            //http响应
+            var response = httpContext.Response;
+            return a + b;
+        }
+
+        [WebApi(HttpMethodType.GET)]
         public MyClass GetMyClass()
         {
             return new MyClass()
