@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Buffers;
 using TouchSocket.Core;
 
 namespace PackageConsoleApp
@@ -18,6 +19,8 @@ namespace PackageConsoleApp
     {
         private static void Main(string[] args)
         {
+            TestMyClassFromByteBlock();
+
             {
                 //测试手动打包和解包
                 var myClass = new MyPackage();
@@ -82,6 +85,67 @@ namespace PackageConsoleApp
                     byteBlock.Dispose();
                 }
             }
+        }
+
+
+        public static void TestMyClassFromByteBlock()
+        {
+            //声明内存大小。
+            //在打包时，一般会先估算一下包的最大尺寸，避免内存块扩张带来的性能损失。
+            using (var byteBlock = new ByteBlock(1024 * 64))
+            {
+                //初始化对象
+                var myClass = new MyClass()
+                {
+                    P1 = 10,
+                    P2 = "RRQM"
+                };
+
+                myClass.Package(byteBlock);
+                Console.WriteLine($"打包完成，长度={byteBlock.Length}");
+
+                //在解包时，需要把游标移动至正确位置，此处为0.
+                byteBlock.SeekToStart();
+
+                //先新建对象
+                var newMyClass = new MyClass();
+                newMyClass.Unpackage(byteBlock);
+                Console.WriteLine($"解包完成，{newMyClass.ToJsonString()}");
+            }
+        }
+
+        public static void TestMyClassFromValueByteBlock()
+        {
+            //声明内存大小。
+            //在打包时，一般会先估算一下包的最大尺寸，避免内存块扩张带来的性能损失。
+
+            var byteBlock = new ValueByteBlock(1024 * 64);
+
+            try
+            {
+                //初始化对象
+                var myClass = new MyClass()
+                {
+                    P1 = 10,
+                    P2 = "RRQM"
+                };
+
+                myClass.Package(ref byteBlock);
+                Console.WriteLine($"打包完成，长度={byteBlock.Length}");
+
+                //在解包时，需要把游标移动至正确位置，此处为0.
+                byteBlock.SeekToStart();
+
+                //先新建对象
+                var newMyClass = new MyClass();
+                newMyClass.Unpackage(ref byteBlock);
+                Console.WriteLine($"解包完成，{newMyClass.ToJsonString()}");
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+
         }
     }
 
@@ -181,7 +245,7 @@ namespace PackageConsoleApp
         public Dictionary<int, MyClassModel> P6 { get; set; }
     }
 
-    internal class MyClassModel : PackageBase
+    public class MyClassModel : PackageBase
     {
         public DateTime P1 { get; set; }
 
@@ -193,6 +257,104 @@ namespace PackageConsoleApp
         public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
         {
             this.P1 = byteBlock.ReadDateTime();
+        }
+    }
+
+    public class MyClass : PackageBase
+    {
+        public int P1 { get; set; }
+        public string P2 { get; set; }
+
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            //将P1与P2属性按类型依次写入
+            byteBlock.WriteInt32(this.P1);
+            byteBlock.WriteString(this.P2);
+        }
+
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            //将P1与P2属性按类型依次读取
+            this.P1 = byteBlock.ReadInt32();
+            this.P2 = byteBlock.ReadString();
+        }
+    }
+
+    public class MyArrayClass : PackageBase
+    {
+        public int[] P5 { get; set; }
+
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            //集合类型，可以先判断集合是否为null
+            byteBlock.WriteIsNull(P5);
+            if (P5 != null)
+            {
+                //如果不为null
+                //就先写入集合长度
+                //然后遍历将每个项写入
+                byteBlock.WriteInt32(P5.Length);
+                foreach (var item in P5)
+                {
+                    byteBlock.WriteInt32(item);
+                }
+            }
+        }
+
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            var isNull_P5 = byteBlock.ReadIsNull();
+            if (!isNull_P5)
+            {
+                //有值
+                var count = byteBlock.ReadInt32();
+                var array = new int[count];
+                for (int i = 0; i < count; i++)
+                {
+                    array[i] = byteBlock.ReadInt32();
+                }
+
+                //赋值
+                this.P5 = array;
+            }
+        }
+    }
+
+    public class MyDictionaryClass : PackageBase
+    {
+        public Dictionary<int, MyClassModel> P6 { get; set; }
+
+        public override void Package<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            //字典类型，可以先判断是否为null
+            byteBlock.WriteIsNull(P6);
+            if (P6 != null)
+            {
+                //如果不为null
+                //就先写入字典长度
+                //然后遍历将每个项，按键、值写入
+                byteBlock.WriteInt32(P6.Count);
+                foreach (var item in P6)
+                {
+                    byteBlock.WriteInt32(item.Key);
+                    byteBlock.WritePackage(item.Value);//因为值MyClassModel实现了IPackage，所以可以直接写入
+                }
+            }
+        }
+
+        public override void Unpackage<TByteBlock>(ref TByteBlock byteBlock)
+        {
+            var isNull_6 = byteBlock.ReadIsNull();
+            if (!isNull_6)
+            {
+                int count = byteBlock.ReadInt32();
+                var dic = new Dictionary<int, MyClassModel>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    dic.Add(byteBlock.ReadInt32(), byteBlock.ReadPackage<MyClassModel>());
+                }
+                this.P6 = dic;
+            }
         }
     }
 }
