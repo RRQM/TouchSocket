@@ -19,6 +19,25 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+
+## v2.1.1
+
+**更新日期：** 2024.9.18
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>新增</Tag> 在`MemoryCache`中实现新的`TryGetValue`方法。
+- &nbsp;<Tag>优化</Tag> 密封`CacheEntry`类并优化缓存管理逻辑。
+- &nbsp;<Tag>优化</Tag> 扩展`PackageExtensions`类，增加泛型方法以提高可读性和可重用性。
+- &nbsp;<Tag>优化</Tag> 优化`HttpStaticPagePlugin`构造函数和`StaticPageOptions`类以简化静态页面配置。
+- &nbsp;<Tag>修复</Tag> 在`FastBinaryFormatter`中改进序列化逻辑，特别是对于**多维数组**的处理。 [#IARKE1](https://gitee.com/RRQM_Home/TouchSocket/issues/IARKE1)
+- &nbsp;<Tag>修复</Tag> 在`IPackage`中改进打包、解包逻辑，特别是对于**多维数组**的处理。
+
+
 ## v2.1.0
 
 **更新日期：** 2024.9.15
