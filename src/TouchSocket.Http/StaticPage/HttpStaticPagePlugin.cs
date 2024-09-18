@@ -28,45 +28,12 @@ namespace TouchSocket.Http
         /// <summary>
         /// 构造函数
         /// </summary>
-        public HttpStaticPagePlugin()
+        public HttpStaticPagePlugin(StaticPageOptions options)
         {
-            this.m_filesPool = new StaticFilesPool();
-            this.SetNavigateAction(request =>
-            {
-                var relativeURL = request.RelativeURL;
-                var url = relativeURL;
-
-                if (this.m_filesPool.ContainsEntry(url))
-                {
-                    return url;
-                }
-
-                if (relativeURL.EndsWith("/"))
-                {
-                    url = relativeURL + "index.html";
-                    if (this.m_filesPool.ContainsEntry(url))
-                    {
-                        return url;
-                    }
-                }
-                else if (relativeURL.EndsWith("index"))
-                {
-                    url = relativeURL + ".html";
-                    if (this.m_filesPool.ContainsEntry(url))
-                    {
-                        return url;
-                    }
-                }
-                else
-                {
-                    url = relativeURL + "/index.html";
-                    if (this.m_filesPool.ContainsEntry(url))
-                    {
-                        return url;
-                    }
-                }
-                return relativeURL;
-            });
+            this.m_filesPool = options.FilesPool;
+            this.NavigateAction = options.NavigateAction;
+            this.ResponseAction = options.ResponseAction;
+            this.ContentTypeProvider = options.ContentTypeProvider;
         }
 
         /// <summary>

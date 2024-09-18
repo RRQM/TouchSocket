@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 
 namespace TouchSocket.Core
@@ -57,5 +58,43 @@ namespace TouchSocket.Core
         }
         #endregion
 
+
+        public static bool TryGetValue<TKey, TValue>(this ICache<TKey, TValue> cacheClient, TKey key, out TValue value, bool update = false)
+        {
+            var cacheEntry=cacheClient.GetCache(key);
+            if (cacheEntry==default)
+            {
+                value = default;
+                return false;
+            }
+
+            if (cacheEntry.Duration == TimeSpan.Zero)
+            {
+                if (update)
+                {
+                    cacheEntry.UpdateTime = DateTime.UtcNow;
+                }
+                value = cacheEntry.Value;
+                return true;
+            }
+            else
+            {
+                if (DateTime.UtcNow - cacheEntry.UpdateTime > cacheEntry.Duration)
+                {
+                    cacheClient.RemoveCache(key);
+                    value = default;
+                    return false;
+                }
+                else
+                {
+                    if (update)
+                    {
+                        cacheEntry.UpdateTime = DateTime.UtcNow;
+                    }
+                    value = cacheEntry.Value;
+                    return true;
+                }
+            }
+        }
     }
 }

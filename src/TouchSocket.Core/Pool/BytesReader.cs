@@ -27,21 +27,21 @@ namespace TouchSocket.Core
         private readonly ReadOnlySpan<byte> m_span;
         private int m_position;
 
-       /// <summary>
-/// 初始化 BytesReader 类的新实例。
-/// </summary>
-/// <param name="span">一个只读字节跨度，用于初始化 BytesReader。</param>
-public BytesReader(ReadOnlySpan<byte> span)
-{
-    this.m_span = span;
-}
+        /// <summary>
+        /// 初始化 BytesReader 类的新实例。
+        /// </summary>
+        /// <param name="span">一个只读字节跨度，用于初始化 BytesReader。</param>
+        public BytesReader(ReadOnlySpan<byte> span)
+        {
+            this.m_span = span;
+        }
 
         /// <summary>
         /// 还能读取的长度，计算为<see cref="Length"/>与<see cref="Position"/>的差值。
         /// </summary>
         public readonly int CanReadLength => this.m_span.Length - this.Position;
 
-               /// <summary>
+        /// <summary>
         /// 获取当前实例的长度。
         /// </summary>
         /// <value>实例的长度。</value>
@@ -56,7 +56,7 @@ public BytesReader(ReadOnlySpan<byte> span)
             set => this.m_position = value;
         }
 
-               /// <summary>
+        /// <summary>
         /// 获取当前实例的只读字节序列视图。
         /// </summary>
         /// <remarks>
@@ -70,8 +70,7 @@ public BytesReader(ReadOnlySpan<byte> span)
 
         #region Read
 
-        
-                /// <summary>
+        /// <summary>
         /// 从当前流中读取数据到指定的字节 span 中。
         /// </summary>
         /// <param name="span">要写入数据的字节 span。</param>
@@ -164,7 +163,8 @@ public BytesReader(ReadOnlySpan<byte> span)
         #endregion ToArray
 
         #region VarUInt32
-                /// <summary>
+
+        /// <summary>
         /// 从当前的字节序列位置开始读取一个使用可变长度编码的无符号32位整数。
         /// </summary>
         /// <returns>解码后的无符号32位整数。</returns>
@@ -197,7 +197,8 @@ public BytesReader(ReadOnlySpan<byte> span)
             // 返回解码后的无符号32位整数
             return value;
         }
-        #endregion
+
+        #endregion VarUInt32
 
         #region ByteBlock
 
@@ -294,7 +295,7 @@ public BytesReader(ReadOnlySpan<byte> span)
             return memory == null ? memory.ToArray() : null;
         }
 
-                /// <summary>
+        /// <summary>
         /// 从当前的字节流中读取一个长度确定的字节包。
         /// </summary>
         /// <returns>一个只读的字节跨度，表示读取的字节包，如果读取失败则返回null。</returns>
@@ -315,6 +316,7 @@ public BytesReader(ReadOnlySpan<byte> span)
             // 返回截取的内存块作为只读跨度。
             return memory;
         }
+
         #endregion BytesPackage
 
         #region Byte
@@ -382,7 +384,7 @@ public BytesReader(ReadOnlySpan<byte> span)
 
         #region Int32
 
-               /// <summary>
+        /// <summary>
         /// 从当前的输入流中读取一个32位整数。
         /// </summary>
         /// <returns>读取到的32位整数。</returns>
