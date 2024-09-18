@@ -21,6 +21,8 @@ namespace TouchSocket.Http
     /// </summary>
     public class StaticPageOptions
     {
+        private readonly StaticFilesPool m_filesPool = new StaticFilesPool();
+
         /// <summary>
         /// 构造函数：初始化StaticPageOptions实例
         /// </summary>
@@ -29,63 +31,51 @@ namespace TouchSocket.Http
             // 设置导航动作，用于处理静态页面的访问逻辑
             this.SetNavigateAction(request =>
             {
-                // 获取请求的相对URL
                 var relativeURL = request.RelativeURL;
-                // 初始化URL变量为相对URL
                 var url = relativeURL;
 
-                // 检查文件池中是否包含直接对应的URL
                 if (this.m_filesPool.ContainsEntry(url))
                 {
-                    // 如果存在直接返回该URL
                     return url;
                 }
 
-                // 检查相对URL是否以"/"结尾
                 if (relativeURL.EndsWith("/"))
                 {
-                    // 尝试拼接成index.html的URL
                     url = relativeURL + "index.html";
-                    // 检查文件池中是否存在该URL
                     if (this.m_filesPool.ContainsEntry(url))
                     {
-                        // 如果存在返回该URL
                         return url;
                     }
                 }
-                // 检查相对URL是否以"index"结尾
                 else if (relativeURL.EndsWith("index"))
                 {
-                    // 尝试拼接成".html"的URL
                     url = relativeURL + ".html";
-                    // 检查文件池中是否存在该URL
                     if (this.m_filesPool.ContainsEntry(url))
                     {
-                        // 如果存在返回该URL
                         return url;
                     }
                 }
-                // 如果以上条件都不满足
                 else
                 {
-                    // 尝试拼接成"/index.html"的URL
                     url = relativeURL + "/index.html";
-                    // 检查文件池中是否存在该URL
                     if (this.m_filesPool.ContainsEntry(url))
                     {
-                        // 如果存在返回该URL
                         return url;
                     }
                 }
-                // 如果所有尝试都未能找到对应的文件，则返回原始的相对URL
                 return relativeURL;
             });
         }
-        private readonly StaticFilesPool m_filesPool = new StaticFilesPool();
+
         /// <summary>
         /// 提供文件扩展名和MIME类型之间的映射。
         /// </summary>
         public IContentTypeProvider ContentTypeProvider { get; set; }
+
+        /// <summary>
+        /// 获取静态文件池对象
+        /// </summary>
+        public StaticFilesPool FilesPool => this.m_filesPool;
 
         /// <summary>
         /// 重新导航
@@ -96,11 +86,6 @@ namespace TouchSocket.Http
         /// 在响应之前调用。
         /// </summary>
         public Func<HttpContext, Task> ResponseAction { get; set; }
-
-        /// <summary>
-        /// 获取静态文件池对象
-        /// </summary>
-        public StaticFilesPool FilesPool => this.m_filesPool;
 
         /// <summary>
         /// 添加静态文件目录
@@ -134,6 +119,7 @@ namespace TouchSocket.Http
         {
             this.NavigateAction = func;
         }
+
         /// <summary>
         /// 设定重新导航
         /// </summary>

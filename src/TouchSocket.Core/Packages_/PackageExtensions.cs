@@ -17,12 +17,7 @@ namespace TouchSocket.Core
     /// </summary>
     public static class PackageExtensions
     {
-        /// <summary>
-        /// 打包为字节
-        /// </summary>
-        /// <param name="package"></param>
-        /// <returns></returns>
-        public static byte[] PackageAsBytes(this IPackage package)
+        public static byte[] PackageAsBytes<TPackage>(this TPackage package) where TPackage : IPackage
         {
             var byteBlock = new ByteBlock();
             try
@@ -34,6 +29,16 @@ namespace TouchSocket.Core
             {
                 byteBlock.Dispose();
             }
+        }
+
+        public static void Package<TPackage>(this TPackage package,ByteBlock byteBlock) where TPackage : IPackage
+        {
+            package.Package(ref byteBlock);
+        }
+
+        public static void Unpackage<TPackage>(this TPackage package, ByteBlock byteBlock) where TPackage : IPackage
+        {
+            package.Unpackage(ref byteBlock);
         }
     }
 }

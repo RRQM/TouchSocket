@@ -54,53 +54,32 @@ namespace TouchSocket.Core
         /// </summary>
         public Action<ICacheEntry<TKey, TValue>> Remove { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="entity"></param>
         public bool AddCache(ICacheEntry<TKey, TValue> entity)
         {
             return this.m_pairs.TryAdd(entity.Key, entity);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
         public Task<bool> AddCacheAsync(ICacheEntry<TKey, TValue> entity)
         {
-            return Task.Run(() =>
-            {
-                return this.AddCache(entity);
-            });
+            return Task.FromResult(this.AddCache(entity));
         }
 
-        /// <summary>
-        /// 清空所有缓存
-        /// </summary>
+        /// <inheritdoc/>
         public void ClearCache()
         {
             this.m_pairs.Clear();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
         public Task ClearCacheAsync()
         {
-            return Task.Run(() =>
-            {
-                this.ClearCache();
-            });
+            this.ClearCache();
+            return EasyTask.CompletedTask;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public bool ContainsCache(TKey key)
         {
             if (this.m_pairs.TryGetValue(key, out var cache))
@@ -125,24 +104,13 @@ namespace TouchSocket.Core
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public Task<bool> ContainsCacheAsync(TKey key)
         {
-            return Task.Run(() =>
-            {
-                return this.ContainsCache(key);
-            });
+            return Task.FromResult(this.ContainsCache(key));
         }
 
-        /// <summary>
-        /// 获取缓存实体。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public ICacheEntry<TKey, TValue> GetCache(TKey key)
         {
             if (this.m_pairs.TryGetValue(key, out var cache))
@@ -167,23 +135,13 @@ namespace TouchSocket.Core
             return default;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public Task<ICacheEntry<TKey, TValue>> GetCacheAsync(TKey key)
         {
-            return Task.Run(() =>
-            {
-                return this.GetCache(key);
-            });
+            return Task.FromResult(this.GetCache(key));
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
         public IEnumerator<ICacheEntry<TKey, TValue>> GetEnumerator()
         {
             return this.m_pairs.Values.GetEnumerator();
@@ -194,45 +152,25 @@ namespace TouchSocket.Core
             return this.GetEnumerator();
         }
 
-        /// <summary>
-        /// 移除缓存
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public bool RemoveCache(TKey key, out ICacheEntry<TKey, TValue> entity)
         {
             return this.OnRemove(key, out entity);
         }
 
-        /// <summary>
-        /// 移除缓存
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public bool RemoveCache(TKey key)
         {
             return this.OnRemove(key, out _);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
         public Task<bool> RemoveCacheAsync(TKey key)
         {
-            return Task.Run(() =>
-            {
-                return this.RemoveCache(key);
-            });
+            return Task.FromResult(this.RemoveCache(key));
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
         public bool SetCache(ICacheEntry<TKey, TValue> entity)
         {
             this.m_pairs.AddOrUpdate(entity.Key, entity, (k, v) =>
@@ -242,62 +180,13 @@ namespace TouchSocket.Core
             return true;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
         public Task<bool> SetCacheAsync(ICacheEntry<TKey, TValue> entity)
         {
-            return Task.Run(() =>
-            {
-                return this.SetCache(entity);
-            });
+            return Task.FromResult(this.SetCache(entity));
         }
 
-        /// <summary>
-        /// 获取对应的值。
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="update"></param>
-        /// <returns></returns>
-        public bool TryGetValue(TKey key, out TValue value, bool update = false)
-        {
-            if (this.m_pairs.TryGetValue(key, out var cache))
-            {
-                if (cache.Duration == TimeSpan.Zero)
-                {
-                    if (update)
-                    {
-                        cache.UpdateTime = DateTime.UtcNow;
-                    }
-                    value = cache.Value;
-                    return true;
-                }
-                else
-                {
-                    if (DateTime.UtcNow - cache.UpdateTime > cache.Duration)
-                    {
-                        this.RemoveCache(key);
-                        value = default;
-                        return false;
-                    }
-                    else
-                    {
-                        if (update)
-                        {
-                            cache.UpdateTime = DateTime.UtcNow;
-                        }
-                        value = cache.Value;
-                        return true;
-                    }
-                }
-            }
-            value = default;
-            return false;
-        }
-
+        
         private bool OnRemove(TKey key, out ICacheEntry<TKey, TValue> cache)
         {
             if (this.m_pairs.TryRemove(key, out cache))

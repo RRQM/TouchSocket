@@ -17,19 +17,12 @@ namespace TouchSocket.Core
     /// <summary>
     /// 缓存实体
     /// </summary>
-    public class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
+    public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
     {
-        /// <summary>
-        /// 缓存实体
-        /// </summary>
-        /// <param name="key"></param>
         public CacheEntry(TKey key) : this(key, default)
         {
         }
 
-        /// <summary>
-        /// 缓存实体
-        /// </summary>
         public CacheEntry(TKey key, TValue value)
         {
             this.UpdateTime = DateTime.UtcNow;
