@@ -18,7 +18,6 @@ body:
         - NamedPipe
         - WebSocket
         - Http
-        - Redis
         - Dmtp-Tcp
         - Dmtp-Udp
         - Dmtp-WebSocket
@@ -47,6 +46,7 @@ body:
         - .NET6
         - .NET7
         - .NET8
+        - .NET9
     validations:
       required: true
   - type: dropdown
