@@ -63,7 +63,7 @@ namespace TouchSocket.Core
         public Result(T value) : this(value, ResultCode.Success, ResultCode.Success.GetDescription()) { }
 
         /// <inheritdoc/>
-        [MemberNotNullWhen(true,nameof(Value))]
+        [MemberNotNullWhen(true, nameof(Value))]
         public bool IsSuccess => this.ResultCode == ResultCode.Success;
 
         /// <inheritdoc/>
@@ -96,6 +96,17 @@ namespace TouchSocket.Core
         {
             // 使用传入的Result对象的ResultCode和Message属性值创建一个新的Result<T>对象
             return new Result<T>(result.ResultCode, result.Message);
+        }
+
+        /// <summary>
+        /// 显式转换运算符，将ResultT类型的对象转换为Result类型的对象。
+        /// </summary>
+        /// <param name="result">要转换的ResultT对象。</param>
+        /// <returns>转换后的Result对象，包含了原ResultT对象的结果码和消息。</returns>
+        public static explicit operator Result(Result<T> result)
+        {
+            // 使用Result<T>对象的结果码和消息创建一个新的Result对象并返回
+            return new Result(result.ResultCode, result.Message);
         }
     }
 }

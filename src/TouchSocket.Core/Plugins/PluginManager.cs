@@ -191,14 +191,17 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            lock (this.m_locker)
+            if (disposing)
             {
-                foreach (var item in this.Plugins)
+                lock (this.m_locker)
                 {
-                    item.SafeDispose();
+                    foreach (var item in this.m_plugins)
+                    {
+                        item.SafeDispose();
+                    }
+                    this.m_pluginMethods.Clear();
+                    this.m_plugins.Clear();
                 }
-                this.m_pluginMethods.Clear();
-                this.m_plugins.Clear();
             }
             base.Dispose(disposing);
         }

@@ -68,6 +68,10 @@ namespace TouchSocket.NamedPipe
 
                 while (true)
                 {
+                    if (this.DisposedValue)
+                    {
+                        return;
+                    }
                     if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;

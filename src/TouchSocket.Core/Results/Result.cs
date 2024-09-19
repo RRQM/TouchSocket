@@ -126,6 +126,17 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
+        /// 根据异常生成结果对象
+        /// </summary>
+        /// <param name="ex">异常对象</param>
+        /// <returns>包含异常信息的结果对象</returns>
+        public static Result FromException(Exception ex)
+        {
+            // 返回一个新的Result实例，包含异常错误代码和异常消息
+            return new Result(ResultCode.Exception, ex.Message);
+        }
+
+        /// <summary>
         /// 创建来自<see cref="ResultCode.Fail"/>的<see cref="Result"/>
         /// </summary>
         /// <param name="msg">关联的消息</param>

@@ -19,15 +19,28 @@ namespace TouchSocket.Core
     /// </summary>
     public sealed class CacheEntry<TKey, TValue> : ICacheEntry<TKey, TValue>
     {
+        /// <summary>
+        /// 初始化缓存项对象。
+        /// </summary>
+        /// <param name="key">缓存项的键。</param>
         public CacheEntry(TKey key) : this(key, default)
         {
         }
 
+        /// <summary>
+        /// 构造函数：初始化缓存条目。
+        /// </summary>
+        /// <param name="key">缓存条目的键。</param>
+        /// <param name="value">缓存条目的值。</param>
         public CacheEntry(TKey key, TValue value)
         {
+            // 初始化更新时间为当前UTC时间。
             this.UpdateTime = DateTime.UtcNow;
+            // 设置默认缓存持续时间为1分钟。
             this.Duration = TimeSpan.FromSeconds(60);
+            // 设置缓存条目的键。
             this.Key = key;
+            // 设置缓存条目的值。
             this.Value = value;
         }
 
