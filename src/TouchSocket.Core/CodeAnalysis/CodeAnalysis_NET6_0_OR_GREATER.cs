@@ -113,14 +113,27 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
 
+    /// <summary>
+    /// 表示当指定成员不为 null 时，方法返回特定值的属性。
+    /// </summary>
     public sealed class MemberNotNullWhenAttribute : Attribute
     {
 
+        /// <summary>
+        /// 初始化 <see cref="MemberNotNullWhenAttribute"/> 类的新实例，适用于单个成员。
+        /// </summary>
+        /// <param name="returnValue">预期的方法返回值。</param>
+        /// <param name="member">表示成员的字符串。</param>
         public MemberNotNullWhenAttribute(bool returnValue, string member) : this(returnValue, new string[] { member })
         {
 
         }
 
+        /// <summary>
+        /// 初始化 <see cref="MemberNotNullWhenAttribute"/> 类的新实例，适用于多个成员。
+        /// </summary>
+        /// <param name="returnValue">预期的方法返回值。</param>
+        /// <param name="members">表示成员的字符串数组。</param>
         public MemberNotNullWhenAttribute(bool returnValue, params string[] members)
         {
             this.ReturnValue = returnValue;
@@ -128,8 +141,14 @@ namespace System.Diagnostics.CodeAnalysis
         }
 
 
+        /// <summary>
+        /// 获取成员的数组，这些成员在方法返回特定值时不应为 null。
+        /// </summary>
         public string[] Members { get; }
 
+        /// <summary>
+        /// 获取当指定成员不为 null 时，方法预期返回的值。
+        /// </summary>
         public bool ReturnValue { get; }
     }
 }

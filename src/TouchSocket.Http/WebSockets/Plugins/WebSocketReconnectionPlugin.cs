@@ -53,6 +53,10 @@ namespace TouchSocket.Http.WebSockets
 
                 while (true)
                 {
+                    if (this.DisposedValue)
+                    {
+                        return;
+                    }
                     if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
                     {
                         return;

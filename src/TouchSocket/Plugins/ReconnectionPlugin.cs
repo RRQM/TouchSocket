@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 重连插件
     /// </summary>
-    public abstract class ReconnectionPlugin<TClient> : PluginBase where TClient : IConnectableClient, IOnlineClient, ILoggerObject
+    public abstract class ReconnectionPlugin<TClient> : PluginBase where TClient :IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
     {
         private bool m_polling;
         private TimeSpan m_tick = TimeSpan.FromSeconds(1);
