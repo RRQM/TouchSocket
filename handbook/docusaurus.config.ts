@@ -117,7 +117,7 @@ const config = {
           {
             label: "API手册",
             position: "left",
-            to: "https://touchsocketapidoc.netlify.app"
+            to: "api/index"
           },
           {
             label: "版本",
@@ -163,7 +163,7 @@ const config = {
               },
               {
                 label: "手册",
-                to: "docs/current",
+                to: "api/index",
               },
             ],
           },
