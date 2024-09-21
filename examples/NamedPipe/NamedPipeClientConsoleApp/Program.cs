@@ -21,7 +21,7 @@ namespace NamedPipeClientConsoleApp
     {
         private static async Task Main(string[] args)
         {
-            var client = await CreateClient();
+            var client = await CreateClientAsync();
 
             while (true)
             {
@@ -29,7 +29,7 @@ namespace NamedPipeClientConsoleApp
             }
         }
 
-        private static async Task<NamedPipeClient> CreateClient()
+        private static async Task<NamedPipeClient> CreateClientAsync()
         {
             var client = new NamedPipeClient();
 
