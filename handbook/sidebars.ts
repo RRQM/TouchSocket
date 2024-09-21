@@ -1,4 +1,4 @@
-import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 
 /**
  * Creating a sidebar enables you to:
@@ -11,8 +11,8 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
  Create as many sidebars as you want. 
  */
 
- module.exports = 
- {
+module.exports =
+{
   "docs": [
     {
       "type": "doc",
@@ -606,4 +606,4 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
     }
   ]
 }
-;
+  ;

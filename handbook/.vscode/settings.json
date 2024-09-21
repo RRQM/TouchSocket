@@ -7,7 +7,10 @@
         "endregion",
         "modbus",
         "Multifile",
+        "netstandard",
+        "Newtonsoft",
         "RRQM",
+        "touchsocket",
         "Unpackage",
         "winform"
     ]
