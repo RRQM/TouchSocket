@@ -59,17 +59,14 @@ namespace NamedPipeStressTestingConsoleApp
             service.Connected = (client, e) => { return EasyTask.CompletedTask; };//有客户端成功连接
             service.Closed = (client, e) => { return EasyTask.CompletedTask; };//有客户端断开连接\
 
-            long count = 0;
-            var dateTime = DateTime.Now;
+            var counter = new ValueCounter()
+            {
+                OnPeriod = (l) => Console.WriteLine((l / (1048576.0)).ToString("0.00")),
+                Period = TimeSpan.FromSeconds(1)
+            };
             service.Received = (client, e) =>
             {
-                if (DateTime.Now - dateTime > TimeSpan.FromSeconds(1))
-                {
-                    Console.WriteLine((count / (1048576.0)).ToString("0.00"));
-                    count = 0;
-                    dateTime = DateTime.Now;
-                }
-                count += e.ByteBlock.Length;
+                counter.Increment(e.ByteBlock.Length);
                 return EasyTask.CompletedTask;
             };
             await service.SetupAsync(new TouchSocketConfig()//载入配置
