@@ -13,7 +13,6 @@
 using System.Text;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
-using TouchSocket.NamedPipe;
 using TouchSocket.Sockets;
 
 namespace DmtpConsoleApp
@@ -33,6 +32,13 @@ namespace DmtpConsoleApp
 
             await action.RunCommandLineAsync();
         }
+
+        async Task Test()
+        {
+            
+        }
+
+
 
         private static void Action_OnException(Exception obj)
         {
@@ -99,6 +105,8 @@ namespace DmtpConsoleApp
                 var json = e.ByteBlock.Span.ToString(Encoding.UTF8);
 
                 ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
+
+
                 return Task.CompletedTask;
             };
 
