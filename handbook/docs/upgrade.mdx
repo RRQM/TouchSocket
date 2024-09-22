@@ -19,6 +19,24 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v2.1.3
+
+**更新日期：** 2024.9.22
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>优化</Tag> 部分类，方法注释。
+- &nbsp;<Tag>优化</Tag> 多数英文字符串资源。
+- &nbsp;<Tag>修复</Tag> Tcp、NamedPipe、SerialPort等组件在主动调用Close时，ClosedEventArgs参数属性Manual为false的bug，导致重连插件偶发性再次连接。[#IASH1A](https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A)
+- &nbsp;<Tag>修复</Tag> `ByteBlock`类部分bug。
+- &nbsp;<Tag>移除</Tag> `DecimalConver`类，该类功能已完全由`TouchSocketBitConverter`代替，属于无用类。
+- &nbsp;<Tag>调整</Tag> 受保护方法`ProtectedResetId`方法，名称更改为`ProtectedResetIdAsync`。
+
+
 ## v2.1.2
 
 **更新日期：** 2024.9.19
