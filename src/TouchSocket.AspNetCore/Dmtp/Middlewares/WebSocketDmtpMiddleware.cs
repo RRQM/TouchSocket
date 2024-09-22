@@ -47,9 +47,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             set => this.m_url = string.IsNullOrEmpty(value) ? "/websocketdmtp" : value;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         public async Task Invoke(HttpContext context)

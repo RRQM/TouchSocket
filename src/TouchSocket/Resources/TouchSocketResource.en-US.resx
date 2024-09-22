@@ -103,4 +103,40 @@
   <data name="ClientNotConnected" xml:space="preserve">
     <value>The client is not connected.</value>
   </data>
+  <data name="UnableToObtainEndpoint" xml:space="preserve">
+    <value>Unable to obtain endpoint.</value>
+  </data>
+  <data name="SocketHaveToConnected" xml:space="preserve">
+    <value>The new socket must be in a connected state.</value>
+  </data>
+  <data name="IncompleteDataTransmission" xml:space="preserve">
+    <value>Incomplete data transmission.</value>
+  </data>
+  <data name="DisposeClose" xml:space="preserve">
+    <value>Call Dispose to actively disconnect.</value>
+  </data>
+  <data name="RemoteDisconnects" xml:space="preserve">
+    <value>The remote terminal actively disconnects.</value>
+  </data>
+  <data name="CannotSendRequestInfo" xml:space="preserve">
+    <value>The current adapter is empty or does not support sending objects (IRequestInfo).</value>
+  </data>
+  <data name="ConnectedMaximum" xml:space="preserve">
+    <value>The number of connected clients has reached the maximum set value ({0}).</value>
+  </data>
+  <data name="IdAlreadyExists" xml:space="preserve">
+    <value>The client with ID '{0}' already exists.</value>
+  </data>
+  <data name="UdpStopped" xml:space="preserve">
+    <value>Udp is not running.</value>
+  </data>
+  <data name="TimedoutWithoutReceiving" xml:space="preserve">
+    <value>No data received interaction due to timeout, actively disconnected.</value>
+  </data>
+  <data name="TimedoutWithoutSending" xml:space="preserve">
+    <value>Send interaction with no data due to timeout, actively disconnect.</value>
+  </data>
+  <data name="TimedoutWithoutAll" xml:space="preserve">
+    <value>No data interaction due to timeout, actively disconnect.</value>
+  </data>
 </root>

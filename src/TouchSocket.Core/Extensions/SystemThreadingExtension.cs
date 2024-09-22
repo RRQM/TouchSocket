@@ -134,23 +134,31 @@ namespace TouchSocket.Core
         /// <summary>
         /// 异步等待指定最大时间
         /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="task"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns></returns>
-        /// <exception cref="TimeoutException"></exception>
+        /// <typeparam name="TResult">任务完成后的结果类型</typeparam>
+        /// <param name="task">需要等待完成的任务</param>
+        /// <param name="millisecondsTimeout">最大等待时间（毫秒）</param>
+        /// <returns>如果在指定时间内完成，则返回任务结果；否则返回默认值</returns>
+        /// <exception cref="TimeoutException">如果任务超时未完成，则抛出超时异常</exception>
         public static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan millisecondsTimeout)
         {
+            // 使用using语句确保CancellationTokenSource在使用后正确释放资源
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
+                // 创建一个延迟任务，用于等待指定的最大时间
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
+                // 配置延迟任务不使用上下文继续，避免阻塞调用线程
                 _ = delayTask.ConfigureAwait(false);
+                // 使用Task.WhenAny等待task和delayTask中第一个完成的任务
                 if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
                 {
+                    // 如果task先完成，则取消延迟任务
                     timeoutCancellationTokenSource.Cancel();
+                    // 返回task的结果
                     return await task.ConfigureAwait(false);
                 }
+                // 如果延迟任务先完成，说明task超时，抛出超时异常
                 ThrowHelper.ThrowTimeoutException();
+                // 返回默认值
                 return default;
             }
         }
@@ -158,22 +166,31 @@ namespace TouchSocket.Core
         /// <summary>
         /// 异步等待指定最大时间
         /// </summary>
-        /// <param name="task"></param>
-        /// <param name="millisecondsTimeout"></param>
-        /// <returns></returns>
-        /// <exception cref="TimeoutException"></exception>
+        /// <param name="task">要等待完成的任务</param>
+        /// <param name="millisecondsTimeout">最大等待时间，以毫秒为单位</param>
+        /// <exception cref="TimeoutException">当等待超时时抛出</exception>
+        /// <remarks>
+        /// 此方法允许调用者指定一个最大等待时间，如果指定时间内任务未能完成，将抛出超时异常。
+        /// </remarks>
         public static async Task WaitAsync(this Task task, TimeSpan millisecondsTimeout)
         {
+            // 使用using语句自动释放取消令牌源资源
             using (var timeoutCancellationTokenSource = new CancellationTokenSource())
             {
+                // 创建一个延迟任务，用于计时
                 var delayTask = Task.Delay(millisecondsTimeout, timeoutCancellationTokenSource.Token);
+                // 配置延迟任务不使用上下文等待
                 _ = delayTask.ConfigureAwait(false);
+                // 等待任务或延迟任务完成
                 if (await Task.WhenAny(task, delayTask).ConfigureAwait(false) == task)
                 {
+                    // 如果任务先完成，取消延迟任务
                     timeoutCancellationTokenSource.Cancel();
+                    // 继续等待任务完成
                     await task.ConfigureAwait(false);
                     return;
                 }
+                // 如果延迟任务先完成，抛出超时异常
                 ThrowHelper.ThrowTimeoutException();
                 return;
             }

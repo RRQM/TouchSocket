@@ -50,7 +50,7 @@ namespace TouchSocket.Sockets
 
         #region 变量
 
-        private readonly object m_lock = new object();
+        private readonly object m_lockForAbort = new object();
         private Task m_beginReceiveTask;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private string m_id;
@@ -230,16 +230,15 @@ namespace TouchSocket.Sockets
         /// <param name="msg">中止的消息。</param>
         protected void Abort(bool manual, string msg)
         {
-            // 如果当前实例没有有效的ID，则无需执行中止操作
-            if (this.m_id == null)
+            lock (this.m_lockForAbort)
             {
-                return;
-            }
-            // 尝试移除与ID关联的操作
-            if (this.m_tryRemoveAction(this.m_id, out _))
-            {
-                // 如果当前实例处于在线状态
-                if (this.m_online)
+                // 如果当前实例没有有效的ID，则无需执行中止操作
+                if (this.m_id == null)
+                {
+                    return;
+                }
+                // 尝试移除与ID关联的操作
+                if (this.m_tryRemoveAction(this.m_id, out _) && this.m_online)
                 {
                     // 将实例状态设置为离线
                     this.m_online = false;
@@ -439,15 +438,19 @@ namespace TouchSocket.Sockets
             if (this.m_online)
             {
                 await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
-                this.MainSocket.TryClose();
-                this.Abort(true, msg);
+                lock (this.m_lockForAbort)
+                {
+                    //https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A
+                    this.MainSocket.TryClose();
+                    this.Abort(true, msg);
+                }
             }
         }
 
         /// <inheritdoc/>
         public virtual Task ResetIdAsync(string newId)
         {
-            return this.ProtectedResetId(newId);
+            return this.ProtectedResetIdAsync(newId);
         }
 
         /// <inheritdoc/>
@@ -517,7 +520,7 @@ namespace TouchSocket.Sockets
         /// 直接重置内部Id。
         /// </summary>
         /// <param name="targetId">目标Id，用于重置内部Id。</param>
-        protected async Task ProtectedResetId(string targetId)
+        protected async Task ProtectedResetIdAsync(string targetId)
         {
             // 检查当前对象是否已被回收，如果是，则抛出异常。
             this.ThrowIfDisposed();
@@ -633,7 +636,6 @@ namespace TouchSocket.Sockets
         #endregion Throw
 
         #region 直接发送
-
 
         /// <summary>
         /// 异步发送数据，保护方法。

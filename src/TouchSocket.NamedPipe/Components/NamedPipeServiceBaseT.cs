@@ -30,7 +30,6 @@ namespace TouchSocket.NamedPipe
 
         private readonly InternalClientCollection<TClient> m_clients = new InternalClientCollection<TClient>();
         private readonly List<NamedPipeMonitor> m_monitors = new List<NamedPipeMonitor>();
-        private int m_maxCount;
         private ServerState m_serverState;
 
         #endregion 字段
@@ -51,11 +50,8 @@ namespace TouchSocket.NamedPipe
 
         #endregion 属性
 
-        /// <summary>
+
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="option"></param>
-        /// <exception cref="ArgumentNullException"></exception>
         public void AddListen(NamedPipeListenOption option)
         {
             if (option is null)
@@ -91,8 +87,6 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
         public bool RemoveListen(NamedPipeMonitor monitor)
         {
             if (monitor is null)
@@ -107,13 +101,7 @@ namespace TouchSocket.NamedPipe
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="sourceId"></param>
-        /// <param name="targetId"></param>
-        /// <exception cref="ClientNotFindException"></exception>
-        /// <exception cref="Exception"></exception>
         public override async Task ResetIdAsync(string sourceId, string targetId)
         {
             if (string.IsNullOrEmpty(sourceId))
@@ -130,7 +118,7 @@ namespace TouchSocket.NamedPipe
             {
                 return;
             }
-            if (this.m_clients.TryGetClient(sourceId, out TClient sessionClient))
+            if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
             {
                 await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
             }
@@ -140,11 +128,7 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        /// <summary>
-        ///<inheritdoc/>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public override bool ClientExists(string id)
         {
             return this.m_clients.ClientExist(id);
@@ -222,13 +206,6 @@ namespace TouchSocket.NamedPipe
             throw new NotImplementedException();
         }
 
-        /// <inheritdoc/>
-        protected override void LoadConfig(TouchSocketConfig config)
-        {
-            this.m_maxCount = config.GetValue(TouchSocketConfigExtension.MaxCountProperty);
-            base.LoadConfig(config);
-        }
-
         private void BeginListen(List<NamedPipeListenOption> optionList)
         {
             foreach (var item in optionList)
@@ -263,11 +240,11 @@ namespace TouchSocket.NamedPipe
                 client.InternalSetId(args.Id);
                 if (this.m_clients.TryAdd(client))
                 {
-                    _ = client.InternalNamedPipeConnected(new ConnectedEventArgs());
+                    await client.InternalNamedPipeConnected(new ConnectedEventArgs()).ConfigureAwait(false);
                 }
                 else
                 {
-                    throw new Exception($"Id={client.Id}重复");
+                    ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(args.Id));
                 }
             }
             else

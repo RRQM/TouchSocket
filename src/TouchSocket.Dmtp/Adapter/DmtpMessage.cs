@@ -163,9 +163,7 @@ namespace TouchSocket.Dmtp
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {

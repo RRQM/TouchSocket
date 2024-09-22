@@ -93,9 +93,7 @@ namespace TouchSocket.Core
             return dp;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
         public bool Equals(DependencyProperty<TValue> other)
@@ -103,9 +101,7 @@ namespace TouchSocket.Core
             return this.Id == other.Id;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
         public override bool Equals(object obj)
@@ -120,9 +116,7 @@ namespace TouchSocket.Core
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <returns></returns>
         public override int GetHashCode()
         {

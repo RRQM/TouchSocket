@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         #region ISend
 
         /// <summary>
-        /// 异步发送数据。
+        /// 同步发送数据。
         /// </summary>
         /// <typeparam name="TClient">发送器类型参数，必须实现ISender接口。</typeparam>
         /// <param name="client">发送器实例。</param>
@@ -69,7 +69,7 @@ namespace TouchSocket.Sockets
         #region IClientSender
 
         /// <summary>
-        /// 异步发送数据。
+        /// 同步发送数据。
         /// </summary>
         /// <param name="client">发送数据的客户端对象。</param>
         /// <param name="bytesList">待发送的字节数据列表。</param>
@@ -85,7 +85,7 @@ namespace TouchSocket.Sockets
         #region IRequestInfoSender
 
         /// <summary>
-        /// 异步发送请求信息。
+        /// 同步发送请求信息。
         /// </summary>
         /// <param name="client">发起请求的客户端对象。</param>
         /// <param name="requestInfo">要发送的请求信息。</param>
@@ -129,7 +129,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 异步发送数据。
+        /// 同步发送数据。
         /// </summary>
         /// <typeparam name="TClient">发送器类型参数，必须实现IIdSender接口。</typeparam>
         /// <param name="client">发送器实例。</param>
@@ -173,7 +173,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <summary>
-        /// 异步发送数据到指定的端点。
+        /// 同步发送数据到指定的端点。
         /// </summary>
         /// <typeparam name="TClient">发送客户端的类型，必须实现<see cref="IUdpClientSender"/>接口。</typeparam>
         /// <param name="client">发送客户端实例。</param>

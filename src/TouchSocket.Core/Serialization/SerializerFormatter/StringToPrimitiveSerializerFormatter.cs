@@ -19,14 +19,10 @@ namespace TouchSocket.Core
     /// </summary>
     public class StringToPrimitiveSerializerFormatter<TState> : ISerializerFormatter<string, TState>
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public int Order { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="state"></param>
         /// <param name="source"></param>
         /// <param name="targetType"></param>
@@ -42,9 +38,7 @@ namespace TouchSocket.Core
             return false;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="state"></param>
         /// <param name="target"></param>
         /// <param name="source"></param>

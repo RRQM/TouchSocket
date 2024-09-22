@@ -36,14 +36,10 @@ namespace TouchSocket.Sockets
             this.m_revStore = new ConcurrentDictionary<long, UdpPackage>();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => true;
 
         /// <summary>
@@ -145,7 +141,7 @@ namespace TouchSocket.Sockets
                     else//结束但不能容纳Crc
                     {
                         byteBlock.WriteByte((byte)0);
-                        byteBlock.Write(memory.Span.Slice(off,surLen));
+                        byteBlock.Write(memory.Span.Slice(off, surLen));
                         //Buffer.BlockCopy(buffer, off, data, 11, surLen);
                         await this.GoSendAsync(endPoint, byteBlock.Memory);
 

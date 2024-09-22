@@ -64,7 +64,7 @@ namespace TouchSocket.Core
         /// <returns>从指定偏移量到字节块末尾的【新】字节数组。</returns>
         public static byte[] ToArray<TByteBlock>(this TByteBlock byteBlock, int offset) where TByteBlock : IByteBlock
         {
-            return ToArray(byteBlock, offset, byteBlock.CanReadLength);
+            return ToArray(byteBlock, offset, byteBlock.Length - offset);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace TouchSocket.Core
         /// <returns>一个从指定偏移量开始，长度为可读长度的数组段。</returns>
         public static ArraySegment<byte> AsSegment<TByteBlock>(this TByteBlock byteBlock, int offset) where TByteBlock : IByteBlock
         {
-            return AsSegment(byteBlock, offset, byteBlock.CanReadLength);
+            return AsSegment(byteBlock, offset, byteBlock.Length-offset);
         }
 
         /// <summary>

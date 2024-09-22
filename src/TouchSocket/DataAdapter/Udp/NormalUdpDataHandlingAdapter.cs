@@ -23,19 +23,13 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class NormalUdpDataHandlingAdapter : UdpDataHandlingAdapter
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => true;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="remoteEndPoint"></param>
         /// <param name="byteBlock"></param>
         protected override Task PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)

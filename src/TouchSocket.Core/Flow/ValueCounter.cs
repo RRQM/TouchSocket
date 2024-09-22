@@ -53,33 +53,49 @@ namespace TouchSocket.Core
         /// <summary>
         /// 累计增加计数
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns>返回值表示当前递增的是否在一个周期内。</returns>
+        /// <param name="value">要增加的值</param>
+        /// <returns>返回值表示当前递增的是否在一个新的周期内。</returns>
         public bool Increment(long value)
         {
+            // 用于判断是否在一个新的周期内
             bool isPeriod;
+
+            // 获取当前时间
             var dateTime = DateTime.UtcNow;
+
+            // 判断自上次递增以来是否超过了设定的周期时间
             if (dateTime - this.LastIncrement > this.Period)
             {
+                // 当周期结束时，调用周期结束的回调函数，并重置计数器
                 this.OnPeriod?.Invoke(this.m_count);
                 Interlocked.Exchange(ref this.m_count, 0);
+
+                // 设置标志，表示不在周期内
                 isPeriod = false;
+
+                // 更新上次递增的时间为当前时间
                 this.m_lastIncrement = dateTime;
             }
             else
             {
+                // 设置标志，表示在周期内
                 isPeriod = true;
             }
+
+            // 原子性地增加计数器的值
             Interlocked.Add(ref this.m_count, value);
+
+            // 返回是否在周期内的标志
             return isPeriod;
         }
 
         /// <summary>
         /// 累计增加一个计数
         /// </summary>
-        /// <returns></returns>
+        /// <returns>返回是否成功增加计数</returns>
         public bool Increment()
         {
+            // 调用重载的Increment方法，增量为1
             return this.Increment(1);
         }
 

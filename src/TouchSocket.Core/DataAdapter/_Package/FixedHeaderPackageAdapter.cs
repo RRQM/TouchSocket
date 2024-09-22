@@ -29,14 +29,10 @@ namespace TouchSocket.Core
         //包剩余长度
         private ByteBlock m_tempByteBlock;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => true;
 
         /// <summary>
@@ -220,9 +216,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             this.m_agreementTempBytes = null;

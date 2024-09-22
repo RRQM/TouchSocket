@@ -45,7 +45,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         public StringSerializerConverter Converter { get; }
 
-
+        /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var strs = invokeKey.Split(':');

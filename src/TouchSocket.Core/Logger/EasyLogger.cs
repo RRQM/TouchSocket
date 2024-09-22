@@ -39,14 +39,12 @@ namespace TouchSocket.Core
         {
             void localAction(LogLevel logLevel, object source, string message, Exception exception)
             {
-                action.Invoke(this.CreateLogString(logLevel,source,message,exception));
+                action.Invoke(this.CreateLogString(logLevel, source, message, exception));
             }
             this.m_action = localAction;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="logLevel"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>

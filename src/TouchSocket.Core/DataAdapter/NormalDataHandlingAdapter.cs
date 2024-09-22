@@ -20,14 +20,10 @@ namespace TouchSocket.Core
     /// </summary>
     public sealed class NormalDataHandlingAdapter : SingleStreamDataHandlingAdapter
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => false;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
         /// <summary>
@@ -56,9 +52,7 @@ namespace TouchSocket.Core
             return this.GoSendAsync(memory);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             base.Reset();

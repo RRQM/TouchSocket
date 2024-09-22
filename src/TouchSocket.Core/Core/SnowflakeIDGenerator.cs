@@ -46,19 +46,23 @@ namespace TouchSocket.Core
         {
         }
 
-        //一微秒内可以产生计数，如果达到该值则等到下一微妙在进行生成
+
         /// <summary>
-        /// 机器码
+        /// 初始化 SnowflakeIdGenerator 类的新实例。
         /// </summary>
-        /// <param name="workerId"></param>
+        /// <param name="workerId">工作机器的唯一标识符，用于区分不同的工作机器。</param>
+        /// <exception cref="Exception">如果 workerId 大于最大工作机器ID或小于0，则抛出异常。</exception>
         public SnowflakeIdGenerator(long workerId)
         {
+            // 检查 workerId 是否在有效范围内，如果不在，则抛出异常
             if (workerId > MaxWorkerId || workerId < 0)
             {
                 throw new Exception(string.Format("worker Id can't be greater than {0} or less than 0 ", MaxWorkerId));
             }
 
+            // 设置工作机器ID
             s_workerId = workerId;
+            // 设置时间戳基准值，这是Snowflake算法中用到的一个重要参数
             this.m_twepoch = DateTime.UtcNow.Ticks - 10000;
         }
 

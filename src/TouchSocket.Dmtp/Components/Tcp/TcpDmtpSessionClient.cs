@@ -275,7 +275,7 @@ namespace TouchSocket.Dmtp
 
         private async Task ThisOnResetId(DmtpActor rpcActor, IdChangedEventArgs e)
         {
-            await this.ProtectedResetId(e.NewId).ConfigureAwait(false);
+            await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(false);
         }
 
         #region Override

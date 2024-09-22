@@ -26,24 +26,33 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取资源字符
         /// </summary>
-        /// <param name="enum"></param>
-        /// <param name="objs"></param>
-        /// <returns></returns>
+        /// <param name="enum">枚举值</param>
+        /// <param name="objs">格式化字符串的参数</param>
+        /// <returns>资源字符</returns>
         public static string GetDescription(this Enum @enum, params object[] objs)
         {
+            // 尝试从缓存中获取枚举的描述
             if (s_cache.TryGetValue(@enum, out var str))
             {
+                // 如果缓存中的描述为空字符串，则返回枚举的字符串表示形式，否则返回格式化后的描述
                 return string.IsNullOrEmpty(str) ? @enum.ToString() : str.Format(objs);
             }
+
+            // 尝试获取枚举值的DescriptionAttribute属性
             if (@enum.GetAttribute<DescriptionAttribute>() is DescriptionAttribute description)
             {
+                // 获取DescriptionAttribute属性中的描述
                 var res = description.Description;
+                // 将枚举值和其描述添加到缓存中
                 s_cache.TryAdd(@enum, res);
+                // 如果描述不为空字符串，则返回格式化后的描述，否则返回枚举的字符串表示形式
                 if (!string.IsNullOrEmpty(res))
                 {
                     return objs.Length > 0 ? res.Format(objs) : res;
                 }
             }
+
+            // 如果无法获取描述，则返回枚举的字符串表示形式
             return @enum.ToString();
         }
     }

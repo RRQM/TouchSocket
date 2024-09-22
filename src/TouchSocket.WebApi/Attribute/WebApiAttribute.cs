@@ -18,15 +18,21 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
 {
+    /// <summary>
+    /// 该自定义属性用于标记 Web API 方法。
+    /// 继承自 <see cref="RpcAttribute"/>，用于实现远程过程调用的功能。
+    /// 通过该属性，可以更便捷地将方法暴露为 Web API 服务。
+    /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WebApiAttribute : RpcAttribute
     {
         /// <summary>
-        /// 使用指定函数的WebApi特性。
+        /// 构造函数，用于初始化WebApiAttribute对象并设置HTTP方法类型。
         /// </summary>
-        /// <param name="method"></param>
+        /// <param name="method">指定HTTP请求的方法类型，如GET、POST等。</param>
         public WebApiAttribute(HttpMethodType method)
         {
+            // 设置HTTP方法类型
             this.Method = method;
         }
 
@@ -42,10 +48,7 @@ namespace TouchSocket.WebApi
         /// </summary>
         public HttpMethodType Method { get; set; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
         public override Type[] GetGenericConstraintTypes()
         {
             return new Type[] { typeof(IWebApiClientBase) };

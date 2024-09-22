@@ -22,9 +22,7 @@ namespace TouchSocket.Http
     {
         private UnfixedHeaderHttpResponse m_httpResponseRoot;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => false;
 
         /// <inheritdoc/>
