@@ -25,134 +25,157 @@ namespace TouchSocket.Core
     /// </summary>
     public static class StringExtension
     {
+
         /// <summary>
-        /// IsNullOrEmpty
+        /// 检查字符串是否为空或只包含空格。
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool IsNullOrEmpty([NotNullWhen(false)]this string str)
+        /// <param name="str">要检查的字符串。</param>
+        /// <returns>如果字符串为空或只包含空格，则返回 true；否则返回 false。</returns>
+        public static bool IsNullOrEmpty([NotNullWhen(false)] this string str)
         {
             return string.IsNullOrEmpty(str);
         }
 
+
         /// <summary>
-        /// IsNullOrWhiteSpace
+        /// 检查字符串是否为 null 或仅包含空白字符。
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        /// <param name="str">要检查的字符串。</param>
+        /// <returns>如果字符串为 null 或仅包含空白字符，则返回 true；否则返回 false。</returns>
         public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string str)
         {
             return string.IsNullOrWhiteSpace(str);
         }
 
         /// <summary>
-        /// 当不为null，且不为空。
+        /// 检查字符串是否具有有效值。
         /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
+        /// <param name="str">要检查的字符串。</param>
+        /// <returns>如果字符串不是null且非空格或制表符等，则返回true；否则返回false。</returns>
         public static bool HasValue([NotNullWhen(true)] this string str)
         {
+            // 使用string.IsNullOrWhiteSpace方法检查字符串是否为null或包含仅空格或制表符等
+            // 返回相反的结果以确定字符串是否具有有效值
             return !string.IsNullOrWhiteSpace(str);
         }
 
         ///<summary>
         /// 将字符串格式化成指定的基本数据类型
         ///</summary>
-        ///<param name="value"></param>
-        ///<param name="destinationType"></param>
-        /// <param name="returnValue"></param>
-        ///   <returns></returns>
+        ///<param name="value">待解析的字符串</param>
+        ///<param name="destinationType">目标数据类型</param>
+        /// <param name="returnValue">解析后的值，输出参数</param>
+        ///   <returns>如果解析成功返回true，否则返回false</returns>
         public static bool TryParseToType(string value, Type destinationType, out object returnValue)
         {
+            // 如果字符串为空或只含空格，将returnValue设为默认值并返回true
             if (string.IsNullOrEmpty(value))
             {
                 returnValue = default;
                 return true;
             }
 
+            // 如果目标类型为枚举类型，使用Enum.Parse方法进行解析
             if (destinationType.IsEnum)
             {
                 returnValue = Enum.Parse(destinationType, value);
                 return true;
             }
 
+            // 根据目标类型的TypeCode进行switch-case解析
             switch (Type.GetTypeCode(destinationType))
             {
+                // 解析为布尔型
                 case TypeCode.Boolean:
                     {
                         returnValue = bool.Parse(value);
                         return true;
                     }
+                // 解析为字符型
                 case TypeCode.Char:
                     {
                         returnValue = char.Parse(value);
                         return true;
                     }
+                // 解析为带符号的字节型
                 case TypeCode.SByte:
                     {
                         returnValue = sbyte.Parse(value);
                         return true;
                     }
+                // 解析为无符号的字节型
                 case TypeCode.Byte:
                     {
                         returnValue = byte.Parse(value); ;
                         return true;
                     }
+                // 解析为短整型
                 case TypeCode.Int16:
                     {
                         returnValue = short.Parse(value);
                         return true;
                     }
+                // 解析为无符号短整型
                 case TypeCode.UInt16:
                     {
                         returnValue = ushort.Parse(value);
                         return true;
                     }
+                // 解析为整型
                 case TypeCode.Int32:
                     {
                         returnValue = int.Parse(value); ;
                         return true;
                     }
+                // 解析为无符号整型
                 case TypeCode.UInt32:
                     {
                         returnValue = uint.Parse(value);
                         return true;
                     }
+                // 解析为长整型
                 case TypeCode.Int64:
                     {
                         returnValue = long.Parse(value);
                         return true;
                     }
+                // 解析为无符号长整型
                 case TypeCode.UInt64:
                     {
                         returnValue = ulong.Parse(value); ;
                         return true;
                     }
+                // 解析为单精度浮点型
                 case TypeCode.Single:
                     {
                         returnValue = float.Parse(value);
                         return true;
                     }
+                // 解析为双精度浮点型
                 case TypeCode.Double:
                     {
                         returnValue = double.Parse(value);
                         return true;
                     }
+                // 解析为十进制小数类型
                 case TypeCode.Decimal:
                     {
                         returnValue = decimal.Parse(value);
                         return true;
                     }
+                // 解析为日期时间类型
                 case TypeCode.DateTime:
                     {
                         returnValue = DateTime.Parse(value);
                         return true;
                     }
+                // 解析为字符串类型
                 case TypeCode.String:
                     {
                         returnValue = value;
                         return true;
                     }
+                // 对空类型、对象类型或数据库空值类型，将returnValue设为默认值并返回false
                 case TypeCode.Empty:
                 case TypeCode.Object:
                 case TypeCode.DBNull:
@@ -278,13 +301,13 @@ namespace TouchSocket.Core
         /// 将16进制的字符转换为数组。
         /// </summary>
         /// <param name="hexString"></param>
-        /// <param name="splite"></param>
+        /// <param name="split"></param>
         /// <returns></returns>
-        public static byte[] ByHexStringToBytes(this string hexString, string splite = default)
+        public static byte[] ByHexStringToBytes(this string hexString, string split = default)
         {
-            if (!string.IsNullOrEmpty(splite))
+            if (!string.IsNullOrEmpty(split))
             {
-                hexString = hexString.Replace(splite, string.Empty);
+                hexString = hexString.Replace(split, string.Empty);
             }
 
             if ((hexString.Length % 2) != 0)

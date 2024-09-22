@@ -237,9 +237,7 @@ namespace TouchSocket.Core
             this.m_byteBlock.Write(new ReadOnlySpan<byte>(buffer, offset, count));
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {

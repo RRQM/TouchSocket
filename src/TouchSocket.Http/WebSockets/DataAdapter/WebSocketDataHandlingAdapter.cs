@@ -163,9 +163,7 @@ namespace TouchSocket.Http.WebSockets
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             this.m_tempByteBlock.SafeDispose();

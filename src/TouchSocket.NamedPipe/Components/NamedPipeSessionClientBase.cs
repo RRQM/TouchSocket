@@ -32,9 +32,10 @@ namespace TouchSocket.NamedPipe
         #region 字段
 
         private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
-        private readonly object m_syncRoot = new object();
+        private readonly object m_lockForAbort = new object();
         private TouchSocketConfig m_config;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
+        private NamedPipeListenOption m_listenOption;
         private bool m_online;
         private NamedPipeServerStream m_pipeStream;
         private IPluginManager m_pluginManager;
@@ -47,7 +48,6 @@ namespace TouchSocket.NamedPipe
         private Func<NamedPipeSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryGet;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryRemoveAction;
-        private NamedPipeListenOption m_listenOption;
 
         #endregion 字段
 
@@ -74,13 +74,13 @@ namespace TouchSocket.NamedPipe
         public bool IsClient => false;
 
         /// <inheritdoc/>
-        public NamedPipeListenOption ListenOption => this.m_listenOption;
-
-        /// <inheritdoc/>
         public DateTime LastReceivedTime => this.m_receiveCounter.LastIncrement;
 
         /// <inheritdoc/>
         public DateTime LastSentTime { get; private set; }
+
+        /// <inheritdoc/>
+        public NamedPipeListenOption ListenOption => this.m_listenOption;
 
         /// <inheritdoc/>
         public virtual bool Online => this.m_online;
@@ -157,6 +157,11 @@ namespace TouchSocket.NamedPipe
             this.Id = id;
         }
 
+        internal void InternalSetListenOption(NamedPipeListenOption option)
+        {
+            this.m_listenOption = option;
+        }
+
         internal void InternalSetNamedPipe(NamedPipeServerStream namedPipe)
         {
             this.m_pipeStream = namedPipe;
@@ -172,10 +177,6 @@ namespace TouchSocket.NamedPipe
             this.m_service = serviceBase;
         }
 
-        internal void InternalSetListenOption(NamedPipeListenOption option)
-        {
-            this.m_listenOption = option;
-        }
         #endregion Internal
 
         /// <inheritdoc/>
@@ -184,27 +185,27 @@ namespace TouchSocket.NamedPipe
             if (this.m_online)
             {
                 await this.PrivateOnNamedPipeClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
-                this.m_pipeStream.Close();
-                this.Abort(true, msg);
+
+                lock (this.m_lockForAbort)
+                {
+                    this.m_pipeStream.Close();
+                    this.Abort(true, msg);
+                }
             }
         }
 
         /// <inheritdoc/>
         public virtual Task ResetIdAsync(string newId)
         {
-            return this.ProtectedResetId(newId);
+            return this.ProtectedResetIdAsync(newId);
         }
 
-        /// <summary>
-        /// 中断连接
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="manual"></param>
+        
         protected void Abort(bool manual, string msg)
         {
-            if (this.m_tryRemoveAction(this.Id, out _))
+            lock (this.m_lockForAbort)
             {
-                if (this.m_online)
+                if (this.m_tryRemoveAction(this.Id, out _)&& this.m_online)
                 {
                     this.m_online = false;
                     this.m_pipeStream.SafeDispose();
@@ -213,15 +214,18 @@ namespace TouchSocket.NamedPipe
                     Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
-            base.Dispose(true);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
+            if (this.DisposedValue)
+            {
+                return;
+            }
             if (disposing)
             {
-                this.Abort(true, $"{nameof(Dispose)}主动断开");
+                this.Abort(true, TouchSocketResource.DisposeClose);
             }
             base.Dispose(disposing);
         }
@@ -245,7 +249,6 @@ namespace TouchSocket.NamedPipe
             return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
-
         /// <summary>
         /// 触发命名管道发送事件的异步方法。
         /// </summary>
@@ -261,7 +264,7 @@ namespace TouchSocket.NamedPipe
         /// 直接重置内部Id。
         /// </summary>
         /// <param name="newId">新的Id值。</param>
-        protected async Task ProtectedResetId(string newId)
+        protected async Task ProtectedResetIdAsync(string newId)
         {
             // 检查新Id是否为空或null
             if (string.IsNullOrEmpty(newId))
@@ -363,6 +366,7 @@ namespace TouchSocket.NamedPipe
             // 将适配器实例设置为当前实例的数据处理适配器
             this.m_dataHandlingAdapter = adapter;
         }
+
         private async Task BeginReceive()
         {
             while (true)
@@ -557,12 +561,7 @@ namespace TouchSocket.NamedPipe
             try
             {
                 await this.m_semaphoreSlimForSend.WaitAsync();
-#if NET6_0_OR_GREATER
                 await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
-#else
-                var segment = memory.GetArray();
-                await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
-#endif
                 this.LastSentTime = DateTime.UtcNow;
             }
             finally
@@ -574,7 +573,6 @@ namespace TouchSocket.NamedPipe
         #endregion 直接发送
 
         #region 异步发送
-
 
         /// <summary>
         /// 异步发送数据，通过适配器模式灵活处理数据发送。
@@ -594,7 +592,6 @@ namespace TouchSocket.NamedPipe
                 return this.m_dataHandlingAdapter.SendInputAsync(memory);
             }
         }
-
 
         /// <summary>
         /// 异步安全发送请求信息。

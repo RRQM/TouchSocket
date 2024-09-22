@@ -31,43 +31,29 @@ namespace TouchSocket.Core
             this.m_stream = stream;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanRead => this.m_stream.CanRead;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSeek => this.m_stream.CanSeek;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanWrite => this.m_stream.CanWrite;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override long Length => this.m_stream.Length;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override long Position { get => this.m_stream.Position; set => this.m_stream.Position = value; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
 
         public override void Flush()
         {
             this.m_stream.Flush();
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
@@ -77,9 +63,7 @@ namespace TouchSocket.Core
             return this.m_stream.Read(buffer, offset, count);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="offset"></param>
         /// <param name="origin"></param>
         /// <returns></returns>
@@ -88,18 +72,14 @@ namespace TouchSocket.Core
             return this.m_stream.Seek(offset, origin);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="value"></param>
         public override void SetLength(long value)
         {
             this.m_stream.SetLength(value);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>

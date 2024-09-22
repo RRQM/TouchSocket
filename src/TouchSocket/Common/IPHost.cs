@@ -18,7 +18,7 @@ using TouchSocket.Resources;
 
 namespace TouchSocket.Sockets
 {
-       /// <summary>
+    /// <summary>
     /// IP解析映射
     /// </summary>
     public class IPHost : Uri

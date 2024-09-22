@@ -39,9 +39,7 @@ namespace TouchSocket.Core
         /// </summary>
         public static ConsoleLogger Default { get; }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="logLevel"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>

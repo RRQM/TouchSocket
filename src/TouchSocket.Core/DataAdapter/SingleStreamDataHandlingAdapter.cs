@@ -148,9 +148,7 @@ namespace TouchSocket.Core
 
         #endregion SendInput
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {

@@ -53,9 +53,7 @@ namespace TouchSocket.Http
             base.Dispose(disposing);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {

@@ -162,9 +162,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {

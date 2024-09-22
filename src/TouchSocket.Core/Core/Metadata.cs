@@ -20,34 +20,24 @@ namespace TouchSocket.Core
     [FastConverter(typeof(MetadataFastBinaryConverter))]
     public class Metadata : Dictionary<string, string>, IPackage
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public new string this[string key]
-        {
-            get
-            {
-                return this.TryGetValue(key, out var value) ? value : null;
-            }
-        }
+        public new string this[string key] => this.TryGetValue(key, out var value) ? value : null;
 
         /// <summary>
-        /// 添加。如果键存在，将被覆盖。
+        /// 向元数据集合添加一个键值对。如果键已经存在，则覆盖其值。
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
+        /// <param name="name">要添加的键。</param>
+        /// <param name="value">与键关联的值。</param>
+        /// <returns>返回当前元数据对象，以支持链式调用。</returns>
         public new Metadata Add(string name, string value)
         {
-            base.Add(name, value);
-            return this;
+            base.Add(name, value); // 调用基类方法添加键值对，如果键存在则覆盖值。
+            return this; // 返回当前元数据对象，允许进行链式调用。
         }
 
-        /// <summary>
-        /// 打包
-        /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <inheritdoc/>
         public void Package<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             byteBlock.WriteInt32(this.Count);
@@ -58,10 +48,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
-        /// 解包
-        /// </summary>
-        /// <param name="byteBlock"></param>
+        /// <inheritdoc/>
         public void Unpackage<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
             var count = byteBlock.ReadInt32();

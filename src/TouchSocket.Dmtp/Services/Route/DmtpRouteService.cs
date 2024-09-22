@@ -20,9 +20,7 @@ namespace TouchSocket.Dmtp
     /// </summary>
     public class DmtpRouteService : IDmtpRouteService
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public Func<string, Task<IDmtpActor>> FindDmtpActor { get; set; }
     }
 }

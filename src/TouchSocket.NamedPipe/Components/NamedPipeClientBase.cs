@@ -18,6 +18,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Resources;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.NamedPipe
@@ -51,7 +52,7 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private InternalReceiver m_receiver;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
-
+        private readonly object m_lockForAbort = new object();
         #endregion 变量
 
         #region 事件
@@ -113,8 +114,10 @@ namespace TouchSocket.NamedPipe
             }
         }
 
-        private async Task PrivateOnNamedPipeClosed(ClosedEventArgs e)
+        private async Task PrivateOnNamedPipeClosed(object o)
         {
+            var e = (ClosedEventArgs)o;
+
             await this.receiveTask.ConfigureAwait(false);
             var receiver = this.m_receiver;
             if (receiver != null)
@@ -166,7 +169,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="msg"></param>
         protected void Abort(bool manual, string msg)
         {
-            lock (this.m_semaphoreSlimForConnect)
+            lock (this.m_lockForAbort)
             {
                 if (this.m_online)
                 {
@@ -174,18 +177,25 @@ namespace TouchSocket.NamedPipe
                     this.m_pipeStream.SafeDispose();
                     this.ProtectedDataHandlingAdapter.SafeDispose();
 
-                    _ = this.PrivateOnNamedPipeClosed(new ClosedEventArgs(manual, msg));
+                    Task.Factory.StartNew(this.PrivateOnNamedPipeClosed,new ClosedEventArgs(manual, msg));
                 }
             }
         }
 
-        /// <summary>
+
         /// <inheritdoc/>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-            this.Abort(true, $"{nameof(Dispose)}主动断开");
+            if (this.DisposedValue)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.Abort(true, TouchSocketResource.DisposeClose);
+            }
+            
             base.Dispose(disposing);
         }
 
@@ -195,8 +205,12 @@ namespace TouchSocket.NamedPipe
             if (this.m_online)
             {
                 await this.PrivateOnNamedPipeClosing(new ClosedEventArgs(true, msg)).ConfigureAwait(false);
-                this.m_pipeStream.Close();
-                this.Abort(true, msg);
+
+                lock (this.m_lockForAbort)
+                {
+                    this.m_pipeStream.Close();
+                    this.Abort(true, msg);
+                }
             }
         }
 
@@ -464,12 +478,7 @@ namespace TouchSocket.NamedPipe
             try
             {
                 await this.m_semaphoreSlimForSend.WaitAsync().ConfigureAwait(false);
-#if NET6_0_OR_GREATER
-                    await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
-#else
-                var segment = memory.GetArray();
-                await this.m_pipeStream.WriteAsync(segment.Array, segment.Offset, segment.Count).ConfigureAwait(false);
-#endif
+                await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
                 this.LastSentTime = DateTime.UtcNow;
             }
             finally
@@ -479,80 +488,6 @@ namespace TouchSocket.NamedPipe
         }
 
         #endregion 直接发送
-
-        //#region 同步发送
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="requestInfo"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected void ProtectedSend(IRequestInfo requestInfo)
-        //{
-        //    this.ThrowIfCannotSendRequestInfo();
-        //    this.ProtectedDataHandlingAdapter.SendInput(requestInfo);
-        //}
-
-        ///// <summary>
-        ///// 发送字节流
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="offset"></param>
-        ///// <param name="length"></param>
-        ///// <exception cref="ClientNotConnectedException"></exception>
-        ///// <exception cref="OverlengthException"></exception>
-        ///// <exception cref="Exception"></exception>
-        //protected void ProtectedSend(byte[] buffer, int offset, int length)
-        //{
-        //    if (this.ProtectedDataHandlingAdapter == null)
-        //    {
-        //        this.ProtectedDefaultSend(buffer, offset, length);
-        //    }
-        //    else
-        //    {
-        //        this.ProtectedDataHandlingAdapter.SendInput(buffer, offset, length);
-        //    }
-        //}
-
-        ///// <summary>
-        ///// <inheritdoc/>
-        ///// </summary>
-        ///// <param name="transferBytes"></param>
-        //protected void ProtectedSend(IList<ArraySegment<byte>> transferBytes)
-        //{
-        //    if (this.ProtectedDataHandlingAdapter == null || !this.ProtectedDataHandlingAdapter.CanSplicingSend)
-        //    {
-        //        var length = 0;
-        //        foreach (var item in transferBytes)
-        //        {
-        //            length += item.Count;
-        //        }
-        //        using (var byteBlock = new ByteBlock(length))
-        //        {
-        //            foreach (var item in transferBytes)
-        //            {
-        //                byteBlock.Write(item.Array, item.Offset, item.Count);
-        //            }
-
-        //            if (this.ProtectedDataHandlingAdapter == null)
-        //            {
-        //                this.ProtectedDefaultSend(byteBlock.Buffer, 0, byteBlock.Length);
-        //            }
-        //            else
-        //            {
-        //                this.ProtectedDataHandlingAdapter.SendInput(byteBlock.Buffer, 0, byteBlock.Length);
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        this.ProtectedDataHandlingAdapter.SendInput(transferBytes);
-        //    }
-        //}
-
-        //#endregion 同步发送
 
         #region 异步发送
 

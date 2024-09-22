@@ -40,9 +40,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             this.m_cacheByteBlock.SafeDispose();

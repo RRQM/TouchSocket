@@ -21,9 +21,9 @@ namespace TouchSocket.Core
     public class MessageNotFoundException : Exception
     {
         /// <summary>
-        ///构造函数
+        /// 构造函数
         /// </summary>
-        /// <param name="mes"></param>
+        /// <param name="mes">异常消息</param>
         public MessageNotFoundException(string mes) : base(mes)
         {
         }

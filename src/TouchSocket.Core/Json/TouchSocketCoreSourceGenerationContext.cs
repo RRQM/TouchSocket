@@ -16,11 +16,11 @@ using System.Text.Json.Serialization;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// TouchSokcetCoreSourceGenerationContext
+    /// TouchSocketCoreSourceGenerationContext
     /// </summary>
     [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(Metadata))]
-    internal partial class TouchSokcetCoreSourceGenerationContext : JsonSerializerContext
+    internal partial class TouchSocketCoreSourceGenerationContext : JsonSerializerContext
     {
 
     }

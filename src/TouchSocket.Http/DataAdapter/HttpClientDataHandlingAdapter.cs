@@ -30,9 +30,7 @@ namespace TouchSocket.Http
         private ByteBlock m_tempByteBlock;
         private string s;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => false;
 
         public SingleStreamDataHandlingAdapter WarpAdapter { get; set; }
@@ -63,9 +61,7 @@ namespace TouchSocket.Http
             base.Dispose(disposing);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {

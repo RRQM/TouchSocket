@@ -36,6 +36,7 @@ namespace TouchSocket.SerialPorts
 
         #region 变量
 
+        private readonly object m_lockForAbort = new object();
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private bool m_online;
@@ -190,8 +191,11 @@ namespace TouchSocket.SerialPorts
             if (this.m_online)
             {
                 await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
-                this.m_serialCore.TryClose();
-                this.Abort(true, msg);
+                lock (this.m_lockForAbort)
+                {
+                    this.m_serialCore.TryClose();
+                    this.Abort(true, msg);
+                }
             }
         }
 
@@ -239,7 +243,7 @@ namespace TouchSocket.SerialPorts
 
                 this.m_serialCore = serialCore;
 
-                this.m_taskReceive = Task.Run(this.BeginReceive);
+                this.m_taskReceive = Task.Factory.StartNew(this.BeginReceive).Unwrap();
                 this.m_taskReceive.FireAndForget();
 
                 _ = Task.Factory.StartNew(this.PrivateOnSerialConnected, new ConnectedEventArgs());
@@ -260,7 +264,7 @@ namespace TouchSocket.SerialPorts
         protected void Abort(bool manual, string msg)
         {
             // 锁定连接操作，确保线程安全
-            lock (this.m_semaphoreForConnect)
+            lock (this.m_lockForAbort)
             {
                 // 检查是否当前处于在线状态
                 if (this.m_online)
@@ -276,7 +280,6 @@ namespace TouchSocket.SerialPorts
                 }
             }
         }
-
 
         /// <summary>
         /// 设置数据处理适配器。
@@ -309,6 +312,7 @@ namespace TouchSocket.SerialPorts
             // 将提供的适配器实例设置为当前实例的数据处理适配器。
             this.m_dataHandlingAdapter = adapter;
         }
+
         private static SerialCore CreateSerial(SerialPortOption option)
         {
             var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits)
@@ -341,7 +345,6 @@ namespace TouchSocket.SerialPorts
                 catch (Exception ex)
                 {
                     this.Abort(false, ex.Message);
-                    return;
                 }
             }
         }
@@ -377,7 +380,6 @@ namespace TouchSocket.SerialPorts
 
         #region Receiver
 
-
         /// <summary>
         /// 清除接收器对象
         /// </summary>
@@ -388,7 +390,6 @@ namespace TouchSocket.SerialPorts
         {
             this.m_receiver = null;
         }
-
 
         /// <summary>
         /// 创建或获取一个接收器对象。
@@ -442,7 +443,6 @@ namespace TouchSocket.SerialPorts
 
         #region 发送
 
-
         /// <summary>
         /// 异步发送数据，保护方法。
         /// </summary>
@@ -463,7 +463,6 @@ namespace TouchSocket.SerialPorts
         #endregion 发送
 
         #region 异步发送
-
 
         /// <summary>
         /// 异步发送数据，通过适配器模式灵活处理数据发送。
@@ -486,7 +485,7 @@ namespace TouchSocket.SerialPorts
 
         /// <summary>
         /// 异步发送请求信息的受保护方法。
-        /// 
+        ///
         /// 此方法首先检查当前对象是否能够发送请求信息，如果不能，则抛出异常。
         /// 如果可以发送，它将使用数据处理适配器来异步发送输入请求。
         /// </summary>

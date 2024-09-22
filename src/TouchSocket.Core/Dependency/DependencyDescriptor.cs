@@ -35,9 +35,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 初始化一个完整的服务注册
         /// </summary>
-        /// <param name="fromType"></param>
-        /// <param name="toType"></param>
-        /// <param name="lifetime"></param>
+        /// <param name="fromType">要注册的服务的类型</param>
+        /// <param name="toType">服务在容器中实际使用的类型</param>
+        /// <param name="lifetime">服务的生命周期</param>
         public DependencyDescriptor(Type fromType, Type toType, Lifetime lifetime)
         {
             this.FromType = fromType;
@@ -46,9 +46,9 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 初始化一个简单的的服务描述
+        /// 初始化一个简单的服务描述
         /// </summary>
-        /// <param name="fromType"></param>
+        /// <param name="fromType">指定服务的类型</param>
         public DependencyDescriptor(Type fromType)
         {
             this.FromType = fromType;

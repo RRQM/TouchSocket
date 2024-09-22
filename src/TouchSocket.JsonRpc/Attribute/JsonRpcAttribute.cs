@@ -47,9 +47,7 @@ namespace TouchSocket.JsonRpc
             this.InvokeKey = invokenKey;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <returns></returns>
         public override Type[] GetGenericConstraintTypes()
         {

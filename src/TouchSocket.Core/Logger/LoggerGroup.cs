@@ -103,9 +103,7 @@ namespace TouchSocket.Core
             return this.m_logs.RemoveAll(a => a.GetType() == loggerType);
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="logLevel"></param>
         /// <param name="source"></param>
         /// <param name="message"></param>

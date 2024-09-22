@@ -41,14 +41,10 @@ namespace TouchSocket.Core
             this.FixedSize = fixedSize;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSplicingSend => true;
 
         /// <summary>
@@ -157,9 +153,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             this.m_tempByteBlock.SafeDispose();

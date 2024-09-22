@@ -377,7 +377,6 @@ namespace TouchSocket.Core
             this.ExtendSize(sizeHint);
             return new Span<byte>(this.m_buffer, this.m_position, this.m_buffer.Length - this.m_position);
         }
-
         #endregion
     }
 }

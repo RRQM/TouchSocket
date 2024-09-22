@@ -69,19 +69,13 @@ namespace TouchSocket.Http
 
         #region 属性
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanRead => this.m_canRead;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanWrite => this.m_canWrite;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
 
         /// <summary>
@@ -182,9 +176,7 @@ namespace TouchSocket.Http
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <returns></returns>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
         {

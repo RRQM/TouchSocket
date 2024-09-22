@@ -20,9 +20,7 @@ namespace TouchSocket.Core
     /// </summary>
     public class JsonStringToClassSerializerFormatter<TState> : ISerializerFormatter<string, TState>
     {
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public int Order { get; set; }
 
         /// <summary>
@@ -30,9 +28,7 @@ namespace TouchSocket.Core
         /// </summary>
         public JsonSerializerSettings JsonSettings { get; set; } = new JsonSerializerSettings();
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="state"></param>
         /// <param name="source"></param>
         /// <param name="targetType"></param>
@@ -52,9 +48,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="state"></param>
         /// <param name="target"></param>
         /// <param name="source"></param>

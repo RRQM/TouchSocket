@@ -40,9 +40,7 @@ namespace TouchSocket.Core
 
         private TRequest m_tempRequest;
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         public override bool CanSendRequestInfo => false;
 
         /// <summary>
@@ -171,9 +169,7 @@ namespace TouchSocket.Core
             return true;
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         /// <param name="byteBlock"></param>
         protected override async Task PreviewReceivedAsync(ByteBlock byteBlock)
         {
@@ -194,9 +190,7 @@ namespace TouchSocket.Core
             }
         }
 
-        /// <summary>
         /// <inheritdoc/>
-        /// </summary>
         protected override void Reset()
         {
             this.m_tempByteBlock.SafeDispose();

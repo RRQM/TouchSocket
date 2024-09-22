@@ -19,7 +19,6 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-
     /// <summary>
     /// 客户端工厂的基类，用于创建特定类型的客户端对象。
     /// </summary>
@@ -140,6 +139,7 @@ namespace TouchSocket.Sockets
             // 从已创建的客户端列表中移除该客户端
             this.m_createdClients.Remove(client);
         }
+
         #region GetClient
 
         /// <summary>

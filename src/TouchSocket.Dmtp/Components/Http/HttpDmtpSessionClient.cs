@@ -89,7 +89,7 @@ namespace TouchSocket.Dmtp
 
         private async Task OnDmtpIdChanged(DmtpActor actor, IdChangedEventArgs e)
         {
-            await this.ProtectedResetId(e.NewId).ConfigureAwait(false);
+            await this.ProtectedResetIdAsync(e.NewId).ConfigureAwait(false);
         }
 
         private void SetRpcActor(DmtpActor actor)
