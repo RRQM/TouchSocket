@@ -33,7 +33,7 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 
 ## 三、支持插件接口
 
-声明自定义实例类，然后实现所需插件接口，即可实现事务的触发。
+声明自定义插件类，实现`IPlugin`接口，或者继承`PluginBase`，然后实现所需插件接口，即可实现事务的触发。
 
 |  插件方法 | 功能 |
 | --- | --- |
@@ -41,13 +41,10 @@ Dmtp客户端对应的，也有不同协议的版本。各个版本之间功能�
 | IDmtpHandshakedPlugin | 客户端完成握手连接验证 |
 | IDmtpReceivedPlugin | 在收到Dmtp格式的数据包时触发 |
 | IDmtpRoutingPlugin | 当需要路由数据时触发，并且必须返回e.IsPermitOperation=true时，才允许路由 |
-| IDmtpCreateChannelPlugin | 在收到创建通道的请求时候触发。 |
+| IDmtpCreatedChannelPlugin | 在收到创建通道的请求时候触发。 |
+| IDmtpClosingPlugin | 即将断开连接时触发（仅主动断开时、或收到了Close报文时有效）。 |
+| IDmtpClosedPlugin | 在Dmtp连接断开时触发。 |
 
-:::tip 提示
-
-一般情况下，如果声明的类没有基类型，则可以考虑继承`PluginBase`，这样可以简化实现接口的一些工作。
-
-:::  
 
 ## 四、创建
 
