@@ -10,12 +10,13 @@ title: Dmtp基础功能
 
 ## 一、连接
 
-连接验证可以初步保证连接客户端的安全性。框架内部默认使用一个string类型的Token作为验证凭证。当然也允许服务器进行其他验证。具体如下：
+连接验证可以初步保证连接客户端的安全性。框架内部默认使用一个`string`类型的`Token`作为验证凭证。当然也允许服务器进行其他验证。具体如下：
 
 ### 1.1 Token验证
-在服务器或客户端的配置上，设置VerifyToken，即可实现字符串Token验证。
 
-```csharp showLineNumbers
+在服务器或客户端的配置上，设置`VerifyToken`，即可实现字符串`Token`验证。
+
+```csharp {4} showLineNumbers
 var config = new TouchSocketConfig()
     .SetDmtpOption(new DmtpOption()
     {
@@ -25,23 +26,25 @@ var config = new TouchSocketConfig()
 
 ### 1.2 动态验证
 
-使用插件，实现**IDmtpHandshakingPlugin**插件。然后可以自行判断一些信息，比如：IP地址、元数据等。
+使用插件，实现**IDmtpHandshakingPlugin**插件。然后可以自行判断一些信息，例如元数据等。
 
-设置元数据。
+如果是特定协议的`Dmtp`，还可以判断一些特定信息，例如，在`TcpDmtp`中，可以判断`IP`地址等。
 
-```csharp showLineNumbers
+客户端，在连接时，可以设置元数据。
+
+```csharp {4} showLineNumbers
 var config = new TouchSocketConfig()
     .SetDmtpOption(new DmtpOption()
     {
-        VerifyToken = "Dmtp",
         Metadata=new Metadata().Add("a","a")
     });
 ```
 
-```csharp showLineNumbers
-internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
-{
+服务端使用插件验证连接信息。
 
+```csharp showLineNumbers
+internal class MyVerifyPlugin : PluginBase, IDmtpHandshakingPlugin
+{
     public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
     {
         if (e.Metadata["a"] != "a")
@@ -51,6 +54,13 @@ internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
             e.Handled = true;//表示该消息已在此处处理。
             return;
         }
+
+        if (client is ITcpDmtpSessionClient sessionClient)
+        {
+            //在特定协议的情况下，可以获取特定信息
+            var ip = sessionClient.IP;
+        }
+
         if (e.Token == "Dmtp")
         {
             e.IsPermitOperation = true;
@@ -65,7 +75,7 @@ internal class MyVerifyPlugin : PluginBase,IDmtpHandshakingPlugin
 
 ### 1.4 跨语言
 
-为使Dmtp服务器支持跨语言，Dmtp在设计之初就预留了跨语言连接的便利性。诚如[Dmtp描述](./dmtpdescription.mdx)所示，其基础数据报文为`Flags+Length+Data`。而框架内部的Handshake、Ping、Pong、Close等指令均是采用Json数据格式。但是及时如此，连接时的真正数据，还与其基础协议有关。具体如下：
+为使`Dmtp`支持跨语言，`Dmtp`在设计之初就预留了跨语言连接的便利性。诚如[Dmtp描述](./dmtpdescription.mdx)所示，其基础数据报文为`Head+Flags+Length+Data`。而框架内部的`Handshake`、`Ping`、`Pong`、`Close`等指令均是采用`Json`数据格式。但是即使如此，连接时的真正数据，还与其基础协议有关。具体如下：
 
 以连接、操作`TcpDmtpService`为例。其基础协议即为`tcp`，则使用常规的`tcp`客户端即可模拟链接。
 
@@ -75,19 +85,21 @@ tcpClient.Received = (client, e) =>
 {
     //此处接收服务器返回的消息
 
-    var head = e.ByteBlock.ToArray(0,2);
+    var head = e.ByteBlock.ToArray(0, 2);
     e.ByteBlock.Seek(2, SeekOrigin.Begin);
-    var flags = e.ByteBlock.ReadUInt16(bigEndian: true);
-    var length = e.ByteBlock.ReadInt32(bigEndian: true);
+    var flags = e.ByteBlock.ReadUInt16(EndianType.Big);
+    var length = e.ByteBlock.ReadInt32(EndianType.Big);
 
-    var json = Encoding.UTF8.GetString(e.ByteBlock.Buffer, e.ByteBlock.Pos, e.ByteBlock.CanReadLen);
+    var json = e.ByteBlock.Span.ToString(Encoding.UTF8);
 
-    ConsoleLogger.Default.Info($"收到响应：flags={flags}，length={length}，json={json}");
+    ConsoleLogger.Default.Info($"收到响应：flags={flags},length={length},json={json.Replace("\r\n", string.Empty).Replace(" ", string.Empty)}");
+
+
     return Task.CompletedTask;
 };
 
 //开始链接服务器
-tcpClient.Connect("127.0.0.1:7789");
+await tcpClient.ConnectAsync("127.0.0.1:7789");
 
 //以json的数据方式。
 //其中Token、Metadata为连接的验证数据，分别为字符串、字符串字典类型。
@@ -106,20 +118,21 @@ using (var byteBlock = new ByteBlock())
     byteBlock.Write(TouchSocketBitConverter.BigEndian.GetBytes((int)jsonBytes.Length));
     byteBlock.Write(jsonBytes);
 
-    tcpClient.SendAsync(byteBlock);
+    await tcpClient.SendAsync(byteBlock.Memory);
 }
+
 await Task.Delay(2000);
 ```
 
 接收输出：
 
-收到的Json字符串，会返回服务器最终修改的Token、Metadata。同时还包括分配或指定的Id。Sign会与请求时一致，表示这是同一组请求。Status等于1即为连接成功。其他值则可能在Message表明连接失败的原因。
+收到的`Json`字符串，会返回服务器最终修改的`Token`、`Metadata`。同时还包括分配或指定的`Id`。`Sign`会与请求时一致，表示这是同一组请求。`Status`等于`1`即为连接成功。其他值则可能在`Message`表明连接失败的原因。
 
 ```
 收到响应：flags=2,length=124,json={"Token":"Dmtp","Metadata":{"a":"a"},"Id":"1","Message":null,"Sign":1,"Status":1}
 ```
 
-其他Json请求，包括：
+其他`Json`请求，包括：
 
 【请求连接】
 
@@ -149,7 +162,7 @@ await Task.Delay(2000);
 
 【Close】
 
-Close报文直接采用utf8编码的字符串。
+`Close`报文直接采用utf8编码的字符串。
 ```
 "close"
 ```
@@ -171,7 +184,7 @@ Dmtp提供协议发送数据，又叫协议扩展功能，就是对现有的Dmtp
 
 使用起来是非常简单的，每个DmtpActor，都实现了Send方法接口。
 
-第一个参数为ushort类型，使用者可以**约定任意大于20数值**。
+第一个参数为`ushort`类型，使用者可以**约定任意大于20数值**。
 
 ```csharp showLineNumbers
 client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
@@ -179,7 +192,7 @@ client.SendAsync(1000,Encoding.UTF8.GetBytes("RRQM"));
 
 :::caution 注意
 
-Flags不要使用小于20的，因为框架内部在使用。并且小于100的也最好不要使用，因为可能其他组件也在使用。
+`Flags`不要使用小于20的，因为框架内部在使用。并且小于100的也最好不要使用，因为可能其他组件也在使用。
 
 :::  
 
@@ -206,128 +219,76 @@ internal class MyFlagsPlugin : PluginBase, IDmtpReceivedPlugin
 
 ## 四、使用Channel发送数据
 
-Channel是DmtpActor的一个传输通道。一般来说，DmtpActor是一个逻辑连接（例如：一个Tcp、Udp、NamedPipe等）。而Channel则是更加细分DmtpActor的一个传输通道。
+`Channel`是`DmtpActor`的一个传输通道。一般来说，`DmtpActor`是一个逻辑连接（例如：一个`Tcp`、`Udp`、`NamedPipe`等）。而`Channel`则是更加细分`DmtpActor`的一个传输通道。
 
-换言之，一个DmtpActor可以有多个Channel。多个Channel可以同时进行传输。并且数据互不干扰。
+换言之，一个`DmtpActor`可以有**多个Channel**。多个`Channel`可以**同时进行传输**。并且数据互不干扰。
 
 ### 4.1 特点
 
-1. 每个Channel都有独立的Id，所以多个Channel可以同时工作。
-2. 每个Channel在被创建后，都支持双向读写。
-3. 每个Channel都支持自定义限速和读写超时设定。
+1. 每个`Channel`都有独立的Id，所以多个`Channel`可以同时工作。
+2. 每个`Channel`在被创建后，都支持双向读写。
+3. 每个`Channel`都支持自定义限速和读写超时设定。
 
 ### 4.2 使用步骤
 
-1. 由一方DmtpActor创建一个Channel，并记住Id。
-2. 另一方DmtpActor使用这个Id订阅Channel。默认情况下，Channel在被创建时，接收端会触发IDmtpCreateChannelPlugin插件。此时可以直接订阅。
-3. 发送方使用Channel发送（Write）数据
-4. 接收方通过订阅的Channel，接收（Read）数据
+1. 由一方`DmtpActor`创建一个`Channel`，并记住Id。
+2. 另一方`DmtpActor`使用这个Id订阅`Channel`。默认情况下，`Channel`在被创建时，接收端会触发`IDmtpCreatedChannelPlugin`插件。此时可以直接订阅。
+3. 发送方使用`Channel`发送（`WriteAsync`）数据
+4. 接收方通过订阅的`Channel`，接收（Read）数据
 
-下列以TcpDmtpClient发送、TcpDmtpService接收为例：
+下列以`TcpDmtpClient`发送、`TcpDmtpService`接收为例：
 
-【创建客户端与服务器】
-
-```csharp showLineNumbers
-private static TcpDmtpClient GetTcpDmtpClient()
-{
-    var client = new TouchSocketConfig()
-           .SetRemoteIPHost("127.0.0.1:7789")
-           .SetDmtpOption(new DmtpOption()
-           {
-               VerifyToken = "Channel"
-           })
-           .SetSendTimeout(0)
-           .ConfigureContainer(a =>
-           {
-               a.AddConsoleLogger();
-           })
-           .ConfigurePlugins(a =>
-           {
-               a.Add<MyPlugin>();
-           })
-           .BuildWithTcpDmtpClient();
-
-    client.Logger.Info("连接成功");
-    return client;
-}
-
-private static TcpDmtpService GetTcpDmtpService()
-{
-    var service = new TcpDmtpService();
-
-    var config = new TouchSocketConfig()//配置
-           .SetListenIPHosts(7789)
-           .SetSendTimeout(0)
-           .ConfigureContainer(a =>
-           {
-               a.AddConsoleLogger();
-           })
-           .ConfigurePlugins(a =>
-           {
-               a.Add<MyPlugin>();
-           })
-           .SetDmtpOption(new DmtpOption()
-           {
-               VerifyToken = "Channel"//连接验证口令。
-           });
-
-    await service.SetupAsync(config);
-    await service.StartAsync();
-    service.Logger.Info("服务器成功启动");
-    return service;
-}
-```
-
-【客户端创建Channel并写入数据】
-
-Channel支持持续写入，且无长度限制。但是需要注意的是，在写入结束时，应该调用**终止语句**（下文详解），以结束写入并通知接收端。
-
-```csharp {9,19,23} showLineNumbers
-static void Main(string[] args)
-{
-    var service = GetTcpDmtpService();
-    var client = GetTcpDmtpClient();
-
-    var count = 1024 * 1;//测试1Gb数据
-
-    //1.创建通道，同时支持通道路由和元数据传递
-    using (var channel = client.CreateChannel())
-    {
-        //设置限速
-        //channel.MaxSpeed = 1024 * 1024;
-
-        ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
-        var bytes = new byte[1024 * 1024];
-        for (var i = 0; i < count; i++)
-        {
-            //2.持续写入数据
-            channel.Write(bytes);
-        }
-
-        //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-        channel.Complete();
-        ConsoleLogger.Default.Info("通道写入结束");
-    }
-
-    while (true)
-    {
-        BytePool.Default.Clear();
-        GC.Collect();
-        Console.ReadKey();
-    }
-
-}
-```
-
-
-【服务器使用插件订阅Channel】
-
-插件的主要作用是处理DmtpCreateChannel事件。在插件中，我们需要订阅Channel，然后接收Channel的数据，最后执行相应的操作。
-
-不过这并不是必须的，如果你有其他逻辑能处理**订阅**，那么也可以不使用插件。例如：[DmtpRpc大数据传输](./dmtprpc.mdx)示例中，就使用了Rpc将创建的Channel的Id传递到响应端，然后响应端再处理订阅和读写。
+【创建服务器】
 
 ```csharp showLineNumbers
-internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
+var service = new TcpDmtpService();
+
+var config = new TouchSocketConfig()//配置
+       .SetListenIPHosts(7789)
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+       })
+       .ConfigurePlugins(a =>
+       {
+           a.Add<MyPlugin>();
+       })
+       .SetDmtpOption(new DmtpOption()
+       {
+           VerifyToken = "Channel"//连接验证口令。
+       });
+
+await service.SetupAsync(config);
+await service.StartAsync();
+service.Logger.Info("服务器成功启动");
+```
+
+【创建客户端】
+
+```csharp showLineNumbers
+var client = await new TouchSocketConfig()
+       .SetRemoteIPHost("127.0.0.1:7789")
+       .SetDmtpOption(new DmtpOption()
+       {
+           VerifyToken = "Channel"
+       })
+       .SetSendTimeout(0)
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+       })
+       .ConfigurePlugins(a =>
+       {
+       })
+       .BuildClientAsync<TcpDmtpClient>();//相当于创建客户端并配置，连接
+
+client.Logger.Info("连接成功");
+```
+
+【MyPlugin插件】
+
+```csharp showLineNumbers
+internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
 {
     private readonly ILog m_logger;
 
@@ -335,89 +296,13 @@ internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
     {
         this.m_logger = logger;
     }
-    public async Task OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
+
+    public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
     {
         if (client.TrySubscribeChannel(e.ChannelId, out var channel))
         {
-            //接收端也可以限速
-            //channel.MaxSpeed = 1024 * 1024;
-            using (channel)
-            {
-                long count = 0;
-                this.m_logger.Info("通道开始接收");
-                foreach (var byteBlock in channel)
-                {
-                    //这里处理数据
-                    count += byteBlock.Len;
-                    this.m_logger.Info($"通道已接收：{count}字节");
-                }
-
-                this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count / (1048576.0):0.00}Mb字节");
-            }
-        }
-
-        await e.InvokeNext();
-    }
-}
-```
-
-### 4.3 终止语句
-
-Channel的终止语句总共有4个：
-
-- Complete：完成，表示写入结束，接收端会收到完成的状态。
-- Cancel：取消，表示写入被取消，接收端会收到取消的状态。
-- HoldOn：等待继续，表示写入被中断，但是可以恢复传输，接收端会跳出接收，但是可以重新进入接收。
-- Dispose：释放，表示写入被释放，接收端会收到释放的状态。
-
-其中Complete、Cancel、Dispose均为一次性终止语句，即调用以后，Channel将不可再被使用。如果想再使用Channel，则必须重新创建，重新订阅。
-
-HoldOn为可恢复的终止语句，调用以后，Channel会进入等待状态，接收端会跳出接收，但是可以重新进入接收。这在多段数据传输传输时是有用的。
-
-例如：
-
-下列示例中，我们使用HoldOn来模拟多段数据传输。每次发送10段1024字节的数据，然后调用HoldOn，循环100次。
-
-```csharp {10-19} showLineNumbers
-//1.创建通道，同时支持通道路由和元数据传递
-using (var channel = client.CreateChannel())
-{
-    //设置限速
-    //channel.MaxSpeed = 1024 * 1024;
-
-    ConsoleLogger.Default.Info($"通道创建成功，即将写入");
-    var bytes = new byte[1024];
-
-    for (var i = 0; i < 100; i++)//循环100次
-    {
-        for (int j = 0; j < 10; j++)
-        {
-            //2.持续写入数据
-            channel.Write(bytes);
-        }
-        //3.在某个阶段完成数据传输时，可以调用HoldOn
-        channel.HoldOn();
-    }
-    //4.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
-    channel.Complete();
-
-    ConsoleLogger.Default.Info("通道写入结束");
-}
-```
-
-这样接收端会收到100次10段1024字节的数据。
-
-```csharp {16-27} showLineNumbers
-internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
-{
-    ...
-
-    public async Task OnCreateChannel(IDmtpActorObject client, CreateChannelEventArgs e)
-    {
-        if (client.TrySubscribeChannel(e.ChannelId, out var channel))
-        {
-            //接收端也可以限速
-            //channel.MaxSpeed = 1024 * 1024;
+            //设定读取超时时间
+            //channel.Timeout = TimeSpan.FromSeconds(30);
             using (channel)
             {
                 this.m_logger.Info("通道开始接收");
@@ -429,13 +314,163 @@ internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
                     foreach (var byteBlock in channel)
                     {
                         //这里处理数据
-                        count += byteBlock.Len;
+                        count += byteBlock.Length;
                         this.m_logger.Info($"通道已接收：{count}字节");
                     }
 
-                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，共接收{count / (1048576.0):0.00}Mb字节");
+                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
                 }
-                
+            }
+        }
+
+        await e.InvokeNext();
+    }
+}
+```
+
+【客户端创建Channel并写入数据】
+
+`Channel`支持持续写入，且无长度限制。但是需要注意的是，在写入结束时，应该调用**终止语句**（下文详解），以结束写入并通知接收端。
+
+```csharp {14,18} showLineNumbers
+var count = 1024 * 1;//测试1Gb数据
+
+//1.创建通道，同时支持通道路由和元数据传递
+using (var channel = client.CreateChannel())
+{
+    //设置限速
+    //channel.MaxSpeed = 1024 * 1024;
+
+    ConsoleLogger.Default.Info($"通道创建成功，即将写入{count}Mb数据");
+    var bytes = new byte[1024 * 1024];
+    for (var i = 0; i < count; i++)
+    {
+        //2.持续写入数据
+        await channel.WriteAsync(bytes);
+    }
+
+    //3.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+    await channel.CompleteAsync("我完成了");
+    ConsoleLogger.Default.Info("通道写入结束");
+}
+```
+
+
+【服务器使用插件订阅Channel】
+
+插件的主要作用是处理`OnDmtpCreatedChannel`事件。
+
+在插件中，我们需要**订阅Channel**，然后**接收Channel的数据**，最后执行相应的操作。
+
+不过这并不是必须的，如果你有其他逻辑能处理**订阅**，那么也可以不使用插件。例如：[DmtpRpc大数据传输](./dmtprpc.mdx)示例中，就使用了`Rpc`将创建的`Channel`的`Id`传递到响应端，然后响应端再处理订阅和读写。
+
+```csharp {3,15-20} showLineNumbers
+public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
+{
+    if (client.TrySubscribeChannel(e.ChannelId, out var channel))
+    {
+        //设定读取超时时间
+        //channel.Timeout = TimeSpan.FromSeconds(30);
+        using (channel)
+        {
+            this.m_logger.Info("通道开始接收");
+
+            //此判断主要是探测是否有Hold操作
+            while (channel.CanMoveNext)
+            {
+                long count = 0;
+                foreach (var byteBlock in channel)
+                {
+                    //这里处理数据
+                    count += byteBlock.Length;
+                    this.m_logger.Info($"通道已接收：{count}字节");
+                }
+
+                this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+            }
+        }
+    }
+
+    await e.InvokeNext();
+}
+```
+
+### 4.3 终止语句
+
+Channel的终止语句总共有4个：
+
+- **Complete**：完成，表示写入结束，接收端会收到完成的状态。
+- **Cancel**：取消，表示写入被取消，接收端会收到取消的状态。
+- **HoldOn**：等待继续，表示写入被中断，但是可以恢复传输，接收端会跳出接收，但是可以重新进入接收。
+- **Dispose**：释放，表示写入被释放，接收端会收到释放的状态。
+
+其中`Complete`、`Cancel`、`Dispose`均为一次性终止语句，即调用以后，`Channel`将不可再被使用。如果想再使用`Channel`，则必须重新创建，重新订阅。
+
+`HoldOn`为可恢复的终止语句，调用以后，`Channel`会进入等待状态，接收端会跳出接收，但是可以重新进入接收。这在多段数据传输传输时是有用的。
+
+例如：
+
+下列示例中，我们使用`HoldOn`来模拟多段数据传输。每次发送10段1024字节的数据，然后调用`HoldOn`，循环100次。
+
+```csharp {12-21} showLineNumbers
+//HoldOn的使用，主要是解决同一个通道中，多个数据流传输的情况。
+
+//1.创建通道，同时支持通道路由和元数据传递
+using (var channel = client.CreateChannel())
+{
+    //设置限速
+    //channel.MaxSpeed = 1024 * 1024;
+
+    ConsoleLogger.Default.Info($"通道创建成功，即将写入");
+    var bytes = new byte[1024];
+
+    for (var i = 0; i < 100; i++)//循环100次
+    {
+        for (var j = 0; j < 10; j++)
+        {
+            //2.持续写入数据
+            await channel.WriteAsync(bytes);
+        }
+        //3.在某个阶段完成数据传输时，可以调用HoldOn
+        await channel.HoldOnAsync("等一下下");
+    }
+    //4.在写入完成后调用终止指令。例如：Complete、Cancel、HoldOn、Dispose等
+    await channel.CompleteAsync("我完成了");
+
+    ConsoleLogger.Default.Info("通道写入结束");
+}
+```
+
+这样接收端会收到100次10段1024字节的数据。
+
+```csharp {16-27} showLineNumbers
+internal class MyPlugin : PluginBase, IDmtpCreatedChannelPlugin
+{
+    ...
+
+    public async Task OnDmtpCreatedChannel(IDmtpActorObject client, CreateChannelEventArgs e)
+    {
+        if (client.TrySubscribeChannel(e.ChannelId, out var channel))
+        {
+            //设定读取超时时间
+            //channel.Timeout = TimeSpan.FromSeconds(30);
+            using (channel)
+            {
+                this.m_logger.Info("通道开始接收");
+
+                //此判断主要是探测是否有Hold操作
+                while (channel.CanMoveNext)
+                {
+                    long count = 0;
+                    foreach (var byteBlock in channel)
+                    {
+                        //这里处理数据
+                        count += byteBlock.Length;
+                        this.m_logger.Info($"通道已接收：{count}字节");
+                    }
+
+                    this.m_logger.Info($"通道接收结束，状态={channel.Status}，短语={channel.LastOperationMes}，共接收{count / (1048576.0):0.00}Mb字节");
+                }
             }
         }
 
@@ -451,14 +486,14 @@ internal class MyPlugin : PluginBase, IDmtpCreateChannelPlugin
 例如：
 
 ```csharp showLineNumbers
-channel.Complete("我完成了");
+await channel.CompleteAsync("我完成了");
 ```
 
 ### 4.4 传输限速
 
-传输限速，可以限制Channel的传输速度。
+传输限速，可以限制`Channel`的传输速度。
 
-限速操作不仅可以在发送端设置，还可以在接收端设置。但是一般建议在发送端设置。因为在接收端设置的话，可能会有一些不稳定因素。
+限速操作仅可以在发送端设置。
 
 ```csharp showLineNumbers
 //设置限速
@@ -467,7 +502,7 @@ channel.MaxSpeed = 1024 * 1024;
 
 ### 4.5 传输超时
 
-Channel是基于写入和读取的异步机制。如果写入方迟迟没有数据写入，那读取方可能在一段时间的等待后超时。
+`Channel`是基于写入和读取的异步机制。如果写入方迟迟没有数据写入，那读取方可能在一段时间的等待后超时。
 
 或者如果读取方迟迟没有数据读取，那写入方在写入一部分数据后，会发生拥塞，如果时间较长，也会发生等待超时。
 
@@ -480,16 +515,16 @@ channel.Timeout = TimeSpan.FromSeconds(30);
 
 ### 4.6 注意事项
 
-1. Channel的传输是有序的。
-2. Channel支持所有的Dmtp组件，但要求是该组件必须基于可靠协议，例如：UdpDmtp则不支持。
-3. Channel拥有自己的拥塞控制，当发生拥塞的时候，不会阻塞底层协议。但是应该也要避免发生拥塞。
-4. Channel在使用完成后，必须**显示释放**，所以建议使用using关键字。
+1. `Channel`的传输是有序的。
+2. `Channel`支持所有的`Dmtp`组件，但要求是该组件必须基于可靠协议，例如：`UdpDmtp`则不支持。
+3. `Channel`拥有自己的拥塞控制，当发生拥塞的时候，不会阻塞底层协议。但是应该也要避免发生拥塞。
+4. `Channel`在使用完成后，必须**显示释放**，所以建议使用using关键字。
 
 [Channel示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpChannelConsoleApp)
 
 ## 五、使用心跳
 
-Dmtp组件自带了`Ping`（或者`PingAsync`）方法。这个方法强制要求被`Ping`的一方无条件响应的。
+`Dmtp`组件自带了`Ping`（或者`PingAsync`）方法。这个方法强制要求被`Ping`的一方无条件响应的。
 
 所以，如果`Ping`返回`true`，则说明对方**必在线**。但是如果返回`false`，则**不一定代表对方不在线**。因为有可能是`Ping`超时，或者当前传输链路正在忙。
 
@@ -519,14 +554,16 @@ Dmtp组件自带了`Ping`（或者`PingAsync`）方法。这个方法强制要�
 ```csharp showLineNumbers
 .ConfigurePlugins(a =>
 {
+    a.Add<MyPlugin>();
+
     //使用重连
-    a.UseReconnection<TcpDmtpClient>()
-    .UsePolling()//使用轮询
+    a.UseDmtpReconnection<TcpDmtpClient>()
+    .UsePolling(TimeSpan.FromSeconds(3))//使用轮询，每3秒检测一次
     .SetActionForCheck(async (c, i) =>//重新定义检活策略
     {
         //方法1，直接判断是否在握手状态。使用该方式，最好和心跳插件配合使用。因为如果直接断网，则检测不出来
         //await Task.CompletedTask;//消除Task
-        //return c.IsHandshaked;//判断是否在握手状态
+        //return c.Online;//判断是否在握手状态
 
         //方法2，直接ping，如果true，则客户端必在线。如果false，则客户端不一定不在线，原因是可能当前传输正在忙
         if (await c.PingAsync())
@@ -543,7 +580,11 @@ Dmtp组件自带了`Ping`（或者`PingAsync`）方法。这个方法强制要�
         {
             return false;
         }
-    })
-    .SetTick(TimeSpan.FromSeconds(3));//每3秒检测一次
+    });
 })
 ```
+
+
+[Dmtp基础功能示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpConsoleApp)
+
+[DmtpChannel示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp/DmtpChannelConsoleApp)

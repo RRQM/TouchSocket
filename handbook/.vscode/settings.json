@@ -12,6 +12,9 @@
         "RRQM",
         "touchsocket",
         "Unpackage",
+        "ushort",
         "winform"
-    ]
+    ],
+    "editor.wordWrap": "on",
+    // "editor.wordWrapColumn": 80
 }
