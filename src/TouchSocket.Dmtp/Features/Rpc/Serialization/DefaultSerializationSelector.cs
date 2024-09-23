@@ -19,7 +19,7 @@ using TouchSocket.Rpc;
 namespace TouchSocket.Dmtp.Rpc
 {
     /// <summary>
-    /// 默认序列化选择器，实现了ISerializationSelector接口
+    /// 默认序列化选择器，实现了<see cref="ISerializationSelector"/>接口
     /// </summary>
     public sealed class DefaultSerializationSelector : ISerializationSelector
     {
@@ -39,6 +39,11 @@ namespace TouchSocket.Dmtp.Rpc
         /// 快速序列化上下文属性
         /// </summary>
         public FastSerializerContext FastSerializerContext { get; set; }
+
+        /// <summary>
+        /// Json序列化配置
+        /// </summary>
+        public JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings();
 
         /// <summary>
         /// 序列化绑定器属性
@@ -84,7 +89,17 @@ namespace TouchSocket.Dmtp.Rpc
                     }
 
                     // 使用Json格式进行反序列化
-                    return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType);
+                    return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType, this.JsonSerializerSettings);
+
+                case SerializationType.Xml:
+                    // 检查字节块是否为null
+                    if (byteBlock.ReadIsNull())
+                    {
+                        // 如果为null，则返回该类型的默认值
+                        return parameterType.GetDefault();
+                    }
+                    // 使用Xml格式进行反序列化
+                    return SerializeConvert.XmlDeserializeFromBytes(byteBlock.ReadBytesPackage(), parameterType);
                 default:
                     // 如果序列化类型未识别，则抛出异常
                     throw new RpcException("未指定的反序列化方式");
@@ -106,7 +121,7 @@ namespace TouchSocket.Dmtp.Rpc
                 case SerializationType.FastBinary:
                     {
                         // 使用FastBinaryFormatter进行序列化
-                        FastBinaryFormatter.Serialize(ref byteBlock, parameter);
+                        FastBinaryFormatter.Serialize(ref byteBlock, parameter, this.FastSerializerContext);
                         break;
                     }
                 case SerializationType.SystemBinary:
@@ -141,7 +156,22 @@ namespace TouchSocket.Dmtp.Rpc
                         {
                             // 参数不为null时，标记并转换为JSON字符串
                             byteBlock.WriteNotNull();
-                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter));
+                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter, JsonSerializerSettings));
+                        }
+                        break;
+                    }
+                case SerializationType.Xml:
+                    {
+                        // 参数为null时，写入空值标记
+                        if (parameter is null)
+                        {
+                            byteBlock.WriteNull();
+                        }
+                        else
+                        {
+                            // 参数不为null时，标记并转换为Xml字节
+                            byteBlock.WriteNotNull();
+                            byteBlock.WriteBytesPackage(SerializeConvert.XmlSerializeToBytes(parameter));
                         }
                         break;
                     }
