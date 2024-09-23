@@ -474,59 +474,160 @@ FeedbackType是调用反馈类型，其枚举值分别有OnlySend、WaitSend、W
 
 ### 5.2 SerializationType
 
-SerializationType是序列化类型，其枚举值有`FastBinary`、`Json`、`Xml`、`SystemBinary`。其特点如下：
+`SerializationType`是序列化类型，其枚举值有`FastBinary`、`Json`、`Xml`、`SystemBinary`。其特点如下：
 
 | FastBinary  |Json  |Xml  |SystemBinary  |
 | ----  | ----  | ----  | ----  |
  | 序列化方式速度快，数据量小，但是兼容的数据格式也比较有限。仅支持基础类型、自定义实体类、数组、List、字典 | 兼容性好，可读性强，但是受字符串影响，性能不出众，且数据量受限制 | 兼容性一般，可读性强，同样受字符串影响，性能不出众，且数据量受限制 | 序列化速度快。但是兼容性低。且要求类必须一致，不然需要重新指定图根。 |
+
+ #### 5.2.1 配置默认序列化选择器
+
+ 默认序列化选择器在初始化时，可以配置相关属性。例如：
+
+ - FastSerializerContext：快速序列化上下文属性
+ - JsonSerializerSettings：Json序列化设置属性
+ - SerializationBinder：系统二进制序列化绑定器
+
+ 例如：
+
+ ```csharp {4-10} showLineNumbers
+ .ConfigurePlugins(a =>
+{
+    a.UseDmtpRpc()
+        .SetSerializationSelector(new DefaultSerializationSelector()
+        {
+            //仅示例，实际使用时，请赋值有效值
+            FastSerializerContext = default,
+            JsonSerializerSettings = default,
+            SerializationBinder = default,
+        });
+})
+ ```
+
+ #### 5.2.2 自定义序列化
 
 <details>
 <summary>自定义序列化</summary>
 <div>
 
 
-Dmtp除了上述的4中内置序列化，还支持自定义序列化。
+`Dmtp`除了上述的4中内置序列化，还支持自定义序列化。
 
-首先，需要实现序列化转换器。
+首先，新建一个类，实现`ISerializationConverter`接口，然后实现相关方法。
 
-```csharp showLineNumbers
-/// <summary>
-/// 序列化选择器
-/// </summary>
-public class MySerializationSelector : SerializationSelector
+下列将使用[MemoryPack](https://www.nuget.org/packages/MemoryPack) 序列化为例。
+
+```csharp {3,10} showLineNumbers
+public class MemoryPackSerializationSelector : ISerializationSelector
+{
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
+    {
+        var len = byteBlock.ReadInt32();
+        var span = byteBlock.ReadToSpan(len);
+        return MemoryPackSerializer.Deserialize(parameterType, span);
+    }
+
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
+    {
+        var pos = byteBlock.Position;
+        byteBlock.Seek(4, SeekOrigin.Current);
+        var memoryPackWriter = new MemoryPackWriter<TByteBlock>(ref byteBlock, null);
+
+        MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
+
+        var newPos = byteBlock.Position;
+        byteBlock.Position = pos;
+        byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
+        byteBlock.Position = newPos;
+    }
+}
+```
+
+然后配置序列化器
+
+```csharp {4}
+.ConfigurePlugins(a =>
+{
+    a.UseDmtpRpc()
+    .SetSerializationSelector(new MemoryPackSerializationSelector());
+})
+```
+
+:::caution 注意
+
+序列化器的配置，必须是调用端和响应端**相同的配置**。不然序列化不统一，则无法进行反序列化。
+
+:::  
+
+最后就是使用序列化。
+
+在上述代码中，我们并没有判断SerializationType，所以在调用时无需特指，它都会以MemoryPack序列化工作。
+
+但有时候我们希望能保留内置序列化类型，所以可以参考[内置序列化选择器](https://gitee.com/RRQM_Home/TouchSocket/blob/master/src/TouchSocket.Dmtp/Features/Rpc/Serialization/DefaultSerializationSelector.cs)，然后把新加的序列化再做一次判断。
+
+例如：
+
+```csharp {53-58,135-148} showLineNumbers
+internal sealed class DefaultSerializationSelector : ISerializationSelector
 {
     /// <summary>
-    /// 反序列化
+    /// 根据指定的序列化类型反序列化字节块中的数据。
     /// </summary>
-    /// <param name="serializationType"></param>
-    /// <param name="parameterBytes"></param>
-    /// <param name="parameterType"></param>
-    /// <returns></returns>
-    public override object DeserializeParameter(SerializationType serializationType, byte[] parameterBytes, Type parameterType)
+    /// <param name="byteBlock">包含序列化数据的字节块。</param>
+    /// <param name="serializationType">指定的序列化类型。</param>
+    /// <param name="parameterType">预期反序列化出的对象类型。</param>
+    /// <returns>反序列化后的对象。</returns>
+    /// <exception cref="RpcException">抛出当未识别序列化类型时。</exception>
+    public object DeserializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, Type parameterType) where TByteBlock : IByteBlock
     {
-        if (parameterBytes == null)
-        {
-            return parameterType.GetDefault();
-        }
+        // 根据序列化类型选择不同的反序列化方式
         switch (serializationType)
         {
             case SerializationType.FastBinary:
-                {
-                    return SerializeConvert.FastBinaryDeserialize(parameterBytes, 0, parameterType);
-                }
+                // 使用FastBinary格式进行反序列化
+                return FastBinaryFormatter.Deserialize(ref byteBlock, parameterType);
             case SerializationType.SystemBinary:
+                // 检查字节块是否为null
+                if (byteBlock.ReadIsNull())
                 {
-                    return SerializeConvert.BinaryDeserialize(parameterBytes, 0, parameterBytes.Length);
+                    // 如果为null，则返回该类型的默认值
+                    return parameterType.GetDefault();
+                }
+
+                // 使用SystemBinary格式进行反序列化
+                using (var block = byteBlock.ReadByteBlock())
+                {
+                    // 将字节块转换为流并进行反序列化
+                    return SerializeConvert.BinaryDeserialize(block.AsStream());
                 }
             case SerializationType.Json:
+                // 检查字节块是否为null
+                if (byteBlock.ReadIsNull())
                 {
-                    return Encoding.UTF8.GetString(parameterBytes).FromJsonString(parameterType);
+                    // 如果为null，则返回该类型的默认值
+                    return parameterType.GetDefault();
                 }
+
+                // 使用Json格式进行反序列化
+                return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType);
+
             case SerializationType.Xml:
+                // 检查字节块是否为null
+                if (byteBlock.ReadIsNull())
                 {
-                    return SerializeConvert.XmlDeserializeFromBytes(parameterBytes, parameterType);
+                    // 如果为null，则返回该类型的默认值
+                    return parameterType.GetDefault();
+                }
+                // 使用Xml格式进行反序列化
+                return SerializeConvert.XmlDeserializeFromBytes(byteBlock.ReadBytesPackage(), parameterType);
+            case (SerializationType)4:
+                {
+                    var len = byteBlock.ReadInt32();
+                    var span = byteBlock.ReadToSpan(len);
+                    return MemoryPackSerializer.Deserialize(parameterType, span);
                 }
             default:
+                // 如果序列化类型未识别，则抛出异常
                 throw new RpcException("未指定的反序列化方式");
         }
     }
@@ -534,79 +635,102 @@ public class MySerializationSelector : SerializationSelector
     /// <summary>
     /// 序列化参数
     /// </summary>
-    /// <param name="serializationType"></param>
-    /// <param name="parameter"></param>
-    /// <returns></returns>
-    public override byte[] SerializeParameter(SerializationType serializationType, object parameter)
+    /// <param name="byteBlock">字节块引用，用于存储序列化后的数据</param>
+    /// <param name="serializationType">序列化类型，决定了使用哪种方式序列化</param>
+    /// <param name="parameter">待序列化的参数对象</param>
+    /// <typeparam name="TByteBlock">字节块类型，必须实现IByteBlock接口</typeparam>
+    public void SerializeParameter<TByteBlock>(ref TByteBlock byteBlock, SerializationType serializationType, in object parameter) where TByteBlock : IByteBlock
     {
-        if (parameter == null)
-        {
-            return null;
-        }
+        // 根据序列化类型选择不同的序列化方法
         switch (serializationType)
         {
             case SerializationType.FastBinary:
                 {
-                    return SerializeConvert.FastBinarySerialize(parameter);
+                    // 使用FastBinaryFormatter进行序列化
+                    FastBinaryFormatter.Serialize(ref byteBlock, parameter);
+                    break;
                 }
             case SerializationType.SystemBinary:
                 {
-                    return SerializeConvert.BinarySerialize(parameter);
+                    // 参数为null时，写入空值标记
+                    if (parameter is null)
+                    {
+                        byteBlock.WriteNull();
+                    }
+                    else
+                    {
+                        // 参数不为null时，标记并序列化参数
+                        byteBlock.WriteNotNull();
+                        using (var block = new ByteBlock(1024 * 64))
+                        {
+                            // 使用System.Runtime.Serialization.BinaryFormatter进行序列化
+                            SerializeConvert.BinarySerialize(block.AsStream(), parameter);
+                            // 将序列化后的字节块写入byteBlock
+                            byteBlock.WriteByteBlock(block);
+                        }
+                    }
+                    break;
                 }
             case SerializationType.Json:
                 {
-                    return SerializeConvert.JsonSerializeToBytes(parameter);
+                    // 参数为null时，写入空值标记
+                    if (parameter is null)
+                    {
+                        byteBlock.WriteNull();
+                    }
+                    else
+                    {
+                        // 参数不为null时，标记并转换为JSON字符串
+                        byteBlock.WriteNotNull();
+                        byteBlock.WriteString(JsonConvert.SerializeObject(parameter));
+                    }
+                    break;
                 }
             case SerializationType.Xml:
                 {
-                    return SerializeConvert.XmlSerializeToBytes(parameter);
+                    // 参数为null时，写入空值标记
+                    if (parameter is null)
+                    {
+                        byteBlock.WriteNull();
+                    }
+                    else
+                    {
+                        // 参数不为null时，标记并转换为Xml字节
+                        byteBlock.WriteNotNull();
+                        byteBlock.WriteBytesPackage(SerializeConvert.XmlSerializeToBytes(parameter));
+                    }
+                    break;
+                }
+            case (SerializationType)4:
+                {
+                    var pos = byteBlock.Position;
+                    byteBlock.Seek(4, SeekOrigin.Current);
+                    var memoryPackWriter = new MemoryPackWriter<TByteBlock>(ref byteBlock, null);
+
+                    MemoryPackSerializer.Serialize(parameter.GetType(), ref memoryPackWriter, parameter);
+
+                    var newPos = byteBlock.Position;
+                    byteBlock.Position = pos;
+                    byteBlock.WriteInt32(memoryPackWriter.WrittenCount);
+                    byteBlock.Position = newPos;
+
+                    break;
                 }
             default:
+                // 抛出异常，提示未指定的序列化方式
                 throw new RpcException("未指定的序列化方式");
         }
     }
 }
 ```
 
-然后配置序列化器
-
-```csharp {10}
-var client = new TcpDmtpClient();
-await client.SetupAsync(new TouchSocketConfig()
-    .ConfigureContainer(a =>
-    {
-        a.AddConsoleLogger();
-    })
-    .ConfigurePlugins(a =>
-    {
-        a.UseDmtpRpc()
-        .SetSerializationSelector(new MySerializationSelector())
-        .ConfigureRpcStore(store =>
-        {
-            store.RegisterServer<MyClientRpcServer>();
-        });
-    })
-    .SetRemoteIPHost("127.0.0.1:7789")
-    .SetDmtpOption(new DmtpOption()
-    {
-        VerifyToken = "Rpc"//连接验证口令。
-    }));
-await client.ConnectAsync();
-```
-
-:::caution 注意
-
-序列化器的配置，必须是调用端和响应端相同的配置。不然序列化不统一，则无法进行反序列化。
-
-:::  
-
-最后就是使用序列化。因为序列化类型是枚举值，所以使用时需要强制转换一下。
+最后在使用时，因为序列化类型是枚举值，所以使用时需要强制转换一下。
 
 ```csharp {4}
 var invokeOption = new DmtpInvokeOption()//调用配置
 {
     FeedbackType = FeedbackType.WaitInvoke,//调用反馈类型
-    SerializationType = (SerializationType)5,//序列化类型
+    SerializationType = (SerializationType)4,//序列化类型
     Timeout = 5000,//调用超时设置
     Token = tokenSource.Token//配置可取消令箭
 };
@@ -616,7 +740,6 @@ var invokeOption = new DmtpInvokeOption()//调用配置
 
 </div>
 </details>
-
 
 ### 5.3 Timeout
 
