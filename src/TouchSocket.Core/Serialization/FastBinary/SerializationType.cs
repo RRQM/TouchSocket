@@ -30,6 +30,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 系统二进制。微软认为这是不安全的，所以谨慎使用。
         /// </summary>
-        SystemBinary
+        SystemBinary,
+
+        /// <summary>
+        /// 使用Xml进行序列化
+        /// </summary>
+        Xml
     }
 }
