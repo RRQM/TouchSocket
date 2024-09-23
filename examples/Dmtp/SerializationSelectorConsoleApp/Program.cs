@@ -23,11 +23,11 @@ namespace SerializationSelectorConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            StartServer();
+            await StartServer();
 
-            var client = CreateClient();
+            var client = await CreateClient();
 
             InvokeOption invokeOption = new DmtpInvokeOption()
             {
@@ -41,25 +41,34 @@ namespace SerializationSelectorConsoleApp
             Console.ReadKey();
         }
 
-        private static TcpDmtpClient CreateClient()
+        private static async Task<TcpDmtpClient> CreateClient()
         {
             var client = new TcpDmtpClient();
-            client.SetupAsync(new TouchSocketConfig()
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc()
-                        .SetSerializationSelector(new MemoryPackSerializationSelector());
-                })
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                }));
-            client.ConnectAsync();
+            await client.SetupAsync(new TouchSocketConfig()
+                  .SetRemoteIPHost("127.0.0.1:7789")
+                  .ConfigurePlugins(a =>
+                  {
+                      a.UseDmtpRpc()
+                          .SetSerializationSelector(new MemoryPackSerializationSelector());
+
+                      //a.UseDmtpRpc()
+                      //    .SetSerializationSelector(new DefaultSerializationSelector()
+                      //    {
+                      //        //仅示例，实际使用时，请赋值有效值
+                      //        FastSerializerContext = default,
+                      //        JsonSerializerSettings = default,
+                      //        SerializationBinder = default,
+                      //    });
+                  })
+                  .SetDmtpOption(new DmtpOption()
+                  {
+                      VerifyToken = "Dmtp"
+                  }));
+            await client.ConnectAsync();
             return client;
         }
 
-        private static void StartServer()
+        private static async Task StartServer()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
@@ -82,8 +91,8 @@ namespace SerializationSelectorConsoleApp
                        VerifyToken = "Dmtp"
                    });
 
-            service.SetupAsync(config);
-            service.StartAsync();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
         }

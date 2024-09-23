@@ -52,17 +52,23 @@ namespace SerialPortClientConsoleApp
             //{
             //    while (true)
             //    {
-            //        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
+            //        using (CancellationTokenSource tokenSource=new CancellationTokenSource(TimeSpan.FromSeconds(10)))
             //        {
-            //            if (receiverResult.IsClosed)
+            //            using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
             //            {
-            //                //断开
+            //                if (receiverResult.IsCompleted)
+            //                {
+            //                    //断开
+            //                }
+
+            //                //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
+            //                await Console.Out.WriteLineAsync(receiverResult.ByteBlock.Span.ToString(Encoding.UTF8));
             //            }
-            //            //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
-            //            await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(receiverResult.ByteBlock, 0, receiverResult.ByteBlock.Length));
             //        }
             //    }
             //}
+
+            
 
             Console.WriteLine("连接成功");
 
@@ -95,4 +101,6 @@ namespace SerialPortClientConsoleApp
             await e.InvokeNext();
         }
     }
+
+    
 }
