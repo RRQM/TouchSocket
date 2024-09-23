@@ -13,7 +13,7 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 一、说明
 
-SerialPortClient是串口系客户端，他直接参与串口的连接、发送、接收、处理、断开等。
+`SerialPortClient`是串口系客户端，他直接参与串口的连接、发送、接收、处理、断开等。
 
 ## 二、特点
 
@@ -43,14 +43,6 @@ SerialPortClient是串口系客户端，他直接参与串口的连接、发送�
 
 配置串口相关。例如：端口、波特率、数据位、校验位、停止位等。
 
-#### UseDelaySender
-使用延迟发送。众所周知，串口数据报文为了发送效率，会默认启用延迟算法。但是这种设置，只能一定程度的缓解小数据发送效率低的问题，因为它为了保证多线程发送的有序性，在send函数中设置了线程同步，所以说，每调用一次send，实际上都是巨大的性能消耗（此处用iocp发送亦然）。所以，要解决该问题， 最终还是要将小数据，组合成大数据，这样才能更高效率的发送。所以，DelaySender正是负责此类工作的。
-
-使用DelaySender，会一定程度的降低发送的及时性，但是降低程度并不高，简单来说：
-
-如果一个包大于512kb，则不会延迟，直接发送。
-如果发送第一个包，与第二个包的时间间隔小于一个线程池线程调度的时间（这个时间极短，一般来说会在10微秒左右），则会将这两个包压缩为一个包发送。
-
 </div>
 </details>
 
@@ -60,10 +52,10 @@ SerialPortClient是串口系客户端，他直接参与串口的连接、发送�
 | --- | --- |
 | ISerialConnectingPlugin | 在串口连接之前触发。 |
 | ISerialConnectedPlugin | 同意连接，且成功启动接收后触发 |
-| ISerialDisconnectingPlugin | 当客户端主动调用Close时触发 |
-| ISerialDisconnectedPlugin | 当客户端断开连接后触发 |
-| ISerialReceivingPlugin | 在收到原始数据时触发，所有的数据均在ByteBlock里面。 |
-| ISerialReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在ByteBlock或者IRequestInfo里面。 |
+| ISerialClosingPlugin | 当客户端主动调用`Close`时触发 |
+| ISerialClosedPlugin | 当客户端断开连接后触发 |
+| ISerialReceivingPlugin | 在收到原始数据时触发，所有的数据均在`ByteBlock`里面。 |
+| ISerialReceivedPlugin | 在收到适配器数据时触发，根据适配器类型，数据可能在`ByteBlock`或者`IRequestInfo`里面。 |
 | ISerialSendingPlugin | 当即将发送数据时，调用该方法在适配器之后，接下来即会发送数据。 |
 
 ## 六、创建SerialPortClient
@@ -78,22 +70,27 @@ SerialPortClient是串口系客户端，他直接参与串口的连接、发送�
 var client = new SerialPortClient();
 client.Connecting = (client, e) => { return EasyTask.CompletedTask; };//即将连接到端口
 client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到端口
-client.Disconnecting = (client, e) => { return EasyTask.CompletedTask; };//即将从端口断开连接。此处仅主动断开才有效。
-client.Disconnected = (client, e) => { return EasyTask.CompletedTask; };//从端口断开连接，当连接不成功时不会触发。
+client.Closing = (client, e) => { return EasyTask.CompletedTask; };//即将从端口断开连接。此处仅主动断开才有效。
+client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从端口断开连接，当连接不成功时不会触发。
 client.Received = async (c, e) =>
 {
-    await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(e.ByteBlock,0,e.ByteBlock.Len));
+    await Console.Out.WriteLineAsync(e.ByteBlock.Span.ToString(Encoding.UTF8));
 };
 
-await client.SetupAsync(new TouchSocket.Core.TouchSocketConfig()
-    .SetSerialPortOption(new SerialPortOption()
-    {
-        BaudRate = 9600,//波特率
-        DataBits = 8,//数据位
-        Parity = System.IO.Ports.Parity.None,//校验位
-        PortName = "COM1",//COM
-        StopBits = System.IO.Ports.StopBits.One//停止位
-    }));
+await client.SetupAsync(new TouchSocketConfig()
+     .SetSerialPortOption(new SerialPortOption()
+     {
+         BaudRate = 9600,//波特率
+         DataBits = 8,//数据位
+         Parity = System.IO.Ports.Parity.None,//校验位
+         PortName = "COM1",//COM
+         StopBits = System.IO.Ports.StopBits.One//停止位
+     })
+     .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter())
+     .ConfigurePlugins(a =>
+     {
+         a.Add<MyPlugin>();
+     }));
 
 await client.ConnectAsync();
 Console.WriteLine("连接成功");
@@ -106,14 +103,15 @@ Console.WriteLine("连接成功");
 ```csharp showLineNumbers
 class MySerialClient : SerialPortClientBase
 {
-    protected override async Task ReceivedData(ReceivedDataEventArgs e)
+    protected override async Task OnSerialReceived(ReceivedDataEventArgs e)
     {
         //此处逻辑单线程处理。
 
         //此处处理数据，功能相当于Received委托。
         string mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
         Console.WriteLine($"已接收到信息：{mes}");
-        await base.ReceivedData(e);
+
+        await base.OnSerialReceived(e);
     }
 }
 ```
@@ -154,7 +152,7 @@ client.Received = (client, e) =>
 
 ### 7.2 ReadAsync异步读取
 
-在使用串口时，可能更需要同步Read的情况。所以此处提供了异步读取方法。
+在使用串口时，可能更需要在当前代码上下文读取的情况。所以此处提供了异步读取方法。
 
 ```csharp showLineNumbers
 await client.ConnectAsync();
@@ -163,53 +161,32 @@ using (var receiver = client.CreateReceiver())
 {
     while (true)
     {
-        using (var receiverResult = await receiver.ReadAsync(CancellationToken.None))
-        {
-            if (receiverResult.IsClosed)
-            {
-                //断开
-            }
-            //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
-            await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(receiverResult.ByteBlock, 0, receiverResult.ByteBlock.Len));
-        }
-    }
-}
-```
-
-带有接收超时的情况：
-
-```csharp {6} showLineNumbers
-await client.ConnectAsync();
-using (var receiver = client.CreateReceiver())
-{
-    while (true)
-    {
-        using (var tokenSource=new CancellationTokenSource(5000))
+        using (CancellationTokenSource tokenSource=new CancellationTokenSource(TimeSpan.FromSeconds(10)))
         {
             using (var receiverResult = await receiver.ReadAsync(tokenSource.Token))
             {
-                if (receiverResult.IsClosed)
+                if (receiverResult.IsCompleted)
                 {
                     //断开
                 }
+
                 //按照适配器类型。此处可以获取receiverResult.ByteBlock或者receiverResult.RequestInfo
-                await Console.Out.WriteLineAsync(Encoding.UTF8.GetString(receiverResult.ByteBlock, 0, receiverResult.ByteBlock.Len));
+                await Console.Out.WriteLineAsync(receiverResult.ByteBlock.Span.ToString(Encoding.UTF8));
             }
         }
-        
     }
 }
 ```
 
 :::tip 提示
 
-`receiver`在被`Create`之后，其优先级最高，即：Received委托和插件都不再被调用。
+`receiver`在被`Create`之后，其优先级最高，即：`Received`委托和插件都不再被调用。
 
 :::  
 
 ### 7.3 插件处理 <Tag>推荐</Tag>
 
-按照TouchSocket的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
+按照`TouchSocket`的设计理念，使用插件处理数据，是一项非常简单，且高度解耦的方式。步骤如下：
 
 （1）声明插件
 
@@ -218,14 +195,14 @@ using (var receiver = client.CreateReceiver())
 如果已经有继承类，直接实现`IPlugin`接口即可。
 
 ```csharp showLineNumbers
-public class MyPlugin : PluginBase, ISerialReceivedPlugin<ISerialPortClient>
+public class MyPlugin : PluginBase, ISerialReceivedPlugin
 {
-    public async Task OnSerialReceived(ISerialPortClient client, ReceivedDataEventArgs e)
+    public async Task OnSerialReceived(ISerialPortSession client, ReceivedDataEventArgs e)
     {
         //这里处理数据接收
         //根据适配器类型，e.ByteBlock与e.RequestInfo会呈现不同的值，具体看文档=》适配器部分。
-        ByteBlock byteBlock = e.ByteBlock;
-        IRequestInfo requestInfo = e.RequestInfo;
+        var byteBlock = e.ByteBlock;
+        var requestInfo = e.RequestInfo;
 
         //e.Handled = true;//表示该数据已经被本插件处理，无需再投递到其他插件。
 
@@ -257,23 +234,14 @@ await client.ConnectAsync();
 
 ## 八、发送数据
 
-### 8.1 同步发送
+### 8.1 发送
 
-SerialPortClient已经内置了三种同步发送方法，直接调用就可以发送，但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请使用**DefaultSend**。如果发送失败，则会立即抛出异常。
+`SerialPortClient`已经内置了多种发送方法，直接调用就可以发送。
 
-```csharp showLineNumbers
-public virtual void SendAsync(byte[] buffer);
-public virtual void SendAsync(ByteBlock byteBlock);
-public virtual void SendAsync(byte[] buffer, int offset, int length);
-```
-
-### 8.2 异步发送
-
-SerialPortClient已经内置了三种异步发送方法，直接调用就可以发送。如果发送失败，await就会触发异常。
+但需要注意的是，通过该方法发送的数据，会经过**适配器**，如果想要直接发送，请继承以后，使用**DefaultSendAsync**。如果发送失败，则会立即抛出异常。
 
 ```csharp showLineNumbers
-public virtual Task SendAsync(byte[] buffer);
-public virtual Task SendAsync(byte[] buffer, int offset, int length);
+Task SendAsync(ReadOnlyMemory<byte> memory);
 ```
 
 :::tip 提示
@@ -282,9 +250,9 @@ public virtual Task SendAsync(byte[] buffer, int offset, int length);
 
 ::: 
 
-### 8.3 同步发送等待
+### 8.2 同步发送等待
 
-WaitingClient是TouchSocket提供的一个等待客户端发送数据的客户端。例如：串口客户端发送一个Hello，等待对方回信Hi，此时即可使用WaitingClient。
+`WaitingClient`是`TouchSocket`提供的一个等待客户端发送数据的客户端。例如：串口客户端发送一个"Hello"，等待对方回信"Hi"，此时即可使用`WaitingClient`。
 
 ```csharp showLineNumbers
 await client.ConnectAsync();
@@ -305,17 +273,17 @@ var waitClient = client.CreateWaitingClient(new WaitingOptions()
 });
 
 //然后使用SendThenReturn。
-byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("RRQM"));
+byte[] returnData = waitClient.SendThenReturn(Encoding.UTF8.GetBytes("Hello"));
 client.Logger.Info($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
 
 //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
-ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("RRQM"));
+ResponsedData responsedData = waitClient.SendThenResponse(Encoding.UTF8.GetBytes("Hello"));
 IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
 ```
 
 :::tip 提示
 
-在SendThenReturn时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+在`SendThenReturn`时，通过其他参数，还可以设置`Timeout`，以及可取消的等待`Token`。
 
 :::  
 
@@ -323,7 +291,7 @@ IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInf
 
 1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
 2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
-3. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步。
+3. 在**Net461及以下**版本中，`SendThenReturn`与`SendThenReturnAsync`不能混合使用。即：要么全同步，要么全异步。
 
 :::
 
