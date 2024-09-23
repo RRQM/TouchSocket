@@ -84,6 +84,10 @@ namespace TouchSocket.Core
         /// <returns>一个新的<see cref="Result{T}"/>实例，值为提供的值，结果代码和消息为成功。</returns>
         public static implicit operator Result<T>(T value)
         {
+            if (value is null)
+            {
+                return new Result<T>(ResultCode.Fail, "value is null.");
+            }
             return new Result<T>(value);
         }
 
@@ -99,11 +103,11 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 显式转换运算符，将ResultT类型的对象转换为Result类型的对象。
+        /// 隐式转换运算符，将ResultT类型的对象转换为Result类型的对象。
         /// </summary>
         /// <param name="result">要转换的ResultT对象。</param>
         /// <returns>转换后的Result对象，包含了原ResultT对象的结果码和消息。</returns>
-        public static explicit operator Result(Result<T> result)
+        public static implicit operator Result(Result<T> result)
         {
             // 使用Result<T>对象的结果码和消息创建一个新的Result对象并返回
             return new Result(result.ResultCode, result.Message);
