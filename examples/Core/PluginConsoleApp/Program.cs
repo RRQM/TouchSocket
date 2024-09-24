@@ -25,21 +25,40 @@ namespace PluginConsoleApp
                 Enable = true//必须启用
             };
 
+            //添加插件
             pluginManager.Add<SayHelloPlugin>();
             pluginManager.Add<SayHelloAction>();
             pluginManager.Add<SayHelloGenerator>();
             pluginManager.Add<SayHiPlugin>();
             pluginManager.Add<LastSayPlugin>();
 
+            
+
             //订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
             pluginManager.Add(typeof(ISayPlugin), () =>
             {
+                //无参委托，一般做通知
                 Console.WriteLine("在Action1中获得");
             });
 
             pluginManager.Add(typeof(ISayPlugin), async (MyPluginEventArgs e) =>
             {
+                //只1个指定参数，当参数是事件参数时，需要主动InvokeNext
                 Console.WriteLine("在Action2中获得");
+                await e.InvokeNext();
+            });
+
+            pluginManager.Add(typeof(ISayPlugin), async (client, e) =>
+            {
+                //2个不指定参数，需要主动InvokeNext
+                Console.WriteLine("在Action3中获得");
+                await e.InvokeNext();
+            });
+
+            pluginManager.Add(typeof(ISayPlugin), async (object client, MyPluginEventArgs e) =>
+            {
+                //2个指定参数，需要主动InvokeNext
+                Console.WriteLine("在Action3中获得");
                 await e.InvokeNext();
             });
 
@@ -69,8 +88,8 @@ namespace PluginConsoleApp
         /// 1.必须是两个参数，第一个参数可以是任意类型，一般表示触发源。第二个参数必须继承<see cref="PluginEventArgs"/>
         /// 2.返回值必须是Task。
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">触发主体</param>
+        /// <param name="e">传递参数</param>
         /// <returns></returns>
         Task Say(object sender, MyPluginEventArgs e);
     }
