@@ -1,6 +1,6 @@
 {
     "profiles": {
-    "AvaloniaApplication2.Browser": {
+    "AvaloniaApplication.Browser": {
         "commandName": "Project",
         "launchBrowser": true,
         "environmentVariables": {

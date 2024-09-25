@@ -1,7 +1,6 @@
 ﻿using System;
 
 using Avalonia;
-using AvaloniaApplication;
 
 namespace AvaloniaApplication.Desktop;
 
