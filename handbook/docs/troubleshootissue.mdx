@@ -38,21 +38,30 @@ Issue实际上是一系列与仓库有关的讨论集合，它可以用来记录
 
 在Issue中，我们强烈建议提供可运行的demo，这样可以帮助我们更快的定位问题。
 
-提供的方式并没有限制，但是我们还是希望你可以使用git仓库，这样也方便追溯问题。
-
-不建议网盘，一来下载缓慢，二来由于时间，可能无法访问。
-
-所以我们建议大家统一使用以下仓库Fork提交：
+提供的方式**仅限下列git仓库**，其余途径均不受理。
 
 - [TouchSocket Demo](https://gitee.com/RRQM_Home/publicworkbook)
 
-首先，点击Fork，将仓库克隆到自己的仓库。
+### 4.1 Fork仓库
 
-然后，在仓库中，新建一个文件夹，并在此文件夹中新建一个demo。
+首先，点击Fork，将仓库克隆到自己的名下。
+
+然后，在仓库中，新建一个文件夹，名称按照序号，依次递增，要求不重复。然后在此文件夹中新建一个demo解决方案，就是能直接编译运行的。
 
 <img src={require('@site/static/img/docs/troubleshootissue-2.png').default} />
 
-最后，在Issue中，提供此demo的链接。
+### 4.2 提交
 
+当建立好demo后，将demo提交到自己的仓库中。请确定此Demo可以脱离环境编译并运行。
 
+### 4.3 合并PR
 
+在提交以后，在gitee上，点开自己Fork的仓库，然后点击`Pull Request`，`新建Pull Request`。
+
+<img src={require('@site/static/img/docs/troubleshootissue-3.png').default} />
+
+然后注意，选择目标分支为`RRQM_Home/publicworkbook=>master`。同时，请填写相关信息。
+
+<img src={require('@site/static/img/docs/troubleshootissue-4.png').default} />
+
+最后，所提的Issue中，提供此demo的链接。
