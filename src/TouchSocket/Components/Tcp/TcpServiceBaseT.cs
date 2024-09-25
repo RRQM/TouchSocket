@@ -215,12 +215,10 @@ namespace TouchSocket.Sockets
         public override async Task StopAsync()
         {
             this.ThrowIfDisposed();
-
-            this.m_serverState = ServerState.Stopped;
-            await this.ReleaseAll().ConfigureAwait(false);
-
             if (this.m_serverState == ServerState.Running)
             {
+                this.m_serverState = ServerState.Stopped;
+                await this.ReleaseAll().ConfigureAwait(false);
                 await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
         }
