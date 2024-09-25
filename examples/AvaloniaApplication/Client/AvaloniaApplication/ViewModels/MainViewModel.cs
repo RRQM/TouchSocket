@@ -31,17 +31,17 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
-            var websocketDmtpClient = new WebSocketDmtpClient();
-            websocketDmtpClient.Setup(new TouchSocketConfig()
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Dmtp"
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc();
-                })
-                .SetRemoteIPHost("ws://localhost:5043/WebSocketDmtp"));
+            using var websocketDmtpClient = new WebSocketDmtpClient();
+            await websocketDmtpClient.SetupAsync(new TouchSocketConfig()
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Dmtp"
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc();
+                 })
+                 .SetRemoteIPHost("ws://localhost:5043/WebSocketDmtp"));
             await websocketDmtpClient.ConnectAsync();
 
             this.Message = "login success";

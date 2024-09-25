@@ -16,14 +16,28 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <StackPanel VerticalAlignment="Center">
-        <Button HorizontalAlignment="Center"
-                Command="{Binding LoginCommand}"
-                Content="Login" />
-
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Background="Red"
-                   Text="{Binding Message}" />
-    </StackPanel>
-
-
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0">
+            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+				<Grid.RowDefinitions>
+					<RowDefinition/>
+					<RowDefinition/>
+					<RowDefinition/>
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition/>
+					<ColumnDefinition/>
+				</Grid.ColumnDefinitions>
+				<TextBlock Text="Account:"/>
+				<TextBox Text="Account:"/>
+				
+                <Button Command="{Binding LoginCommand}" Content="Login" />
+            </Grid>
+        </Border>
+        <TextBox Grid.Row="1" Text="{Binding Message}" />
+    </Grid>
 </UserControl>
