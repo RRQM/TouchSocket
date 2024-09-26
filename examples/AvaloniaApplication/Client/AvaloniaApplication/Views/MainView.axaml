@@ -32,10 +32,17 @@
 					<ColumnDefinition/>
 					<ColumnDefinition/>
 				</Grid.ColumnDefinitions>
-				<TextBlock Text="Account:"/>
-				<TextBox Text="Account:"/>
-				
-                <Button Command="{Binding LoginCommand}" Content="Login" />
+				<TextBlock VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" Text="Account:"/>
+				<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Account}" Width="100" Margin="3"/>
+
+				<TextBlock VerticalAlignment="Center"  Grid.Row="1" Grid.Column="0" Text="Password:"/>
+				<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Password}" Width="100" Margin="3"/>
+				<StackPanel Grid.Row="2" Grid.ColumnSpan="2" >
+					<Button Grid.Row="2" Command="{Binding LoginCommand}" Margin="3" Width="100" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Content="Login" />
+
+					<Button Grid.Row="2" Command="{Binding Login1wCommand}" Margin="3" Width="100" HorizontalContentAlignment="Center" HorizontalAlignment="Center" Content="Login 1w" />
+				</StackPanel>
+                
             </Grid>
         </Border>
         <TextBox Grid.Row="1" Text="{Binding Message}" />

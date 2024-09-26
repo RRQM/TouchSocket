@@ -43,7 +43,7 @@ namespace WebServerApplication
             app.UseWebSockets();
             app.UseWebSocketDmtp("/WebSocketDmtp");//WebSocketDmtp必须在UseWebSockets之后使用。
 
-            app.Run();
+            app.Run("http://localhost:5043");
         }
     }
 }
