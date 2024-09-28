@@ -116,7 +116,7 @@ using (var responseResult = await client.RequestAsync(request, 1000 * 10))
 
 ```csharp showLineNumbers
 //创建一个请求
-var request = new HttpRequest();
+var request = new HttpRequest(client);
 request.InitHeaders()
     .SetUrl("/WeatherForecast")
     .SetHost(client.RemoteIPHost.Host)
@@ -149,7 +149,7 @@ using (var responseResult = await client.RequestAsync(request, 1000 * 10))
 
 ```csharp showLineNumbers
 //创建一个请求
-var request = new HttpRequest();
+var request = new HttpRequest(client);
 request.InitHeaders()
     .SetUrl("/post")
     .SetHost(client.RemoteIPHost.Host)
