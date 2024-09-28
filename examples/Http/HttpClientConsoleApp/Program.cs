@@ -25,107 +25,134 @@ namespace ClientConsoleApp
     {
         private static async Task Main(string[] args)
         {
+            ConsoleAction consoleAction = new ConsoleAction();
+
+            consoleAction.Add("1", "Get字符串", GetString);
+            consoleAction.Add("2", "Get数组", GetBytesArray);
+            consoleAction.Add("3", "Get文件", GetFile);
+            consoleAction.Add("4", "自定义请求", Request1);
+            consoleAction.Add("5", "自定义请求，并持续读取", Request2);
+            consoleAction.Add("6", "自定义请求，并持续写入", BigWrite);
+
+            consoleAction.ShowAll();
+
+            await consoleAction.RunCommandLineAsync();
+        }
+
+        private static async Task BigWrite()
+        {
+            var client = await GetHttpClient();
+
+            //创建一个请求
+            var request = new HttpRequest(client);
+            request.InitHeaders()
+                .SetContentLength(100 * 1000)
+                .SetUrl("/bigwrite")
+                .SetHost(client.RemoteIPHost.Host)
+                .AsPost();
+
+            var task = client.RequestAsync(request, 1000 * 10);
+
+            for (int i = 0; i < 100; i++)
+            {
+                await request.WriteAsync(new byte[1000]);
+            }
+
+            using (var responseResult = await task)
+            {
+                var response = responseResult.Response;
+            }
+            Console.WriteLine("完成");
+        }
+
+        private static async Task Request2()
+        {
+            var client = await GetHttpClient();
+            //创建一个请求
+            var request = new HttpRequest(client);
+            request.InitHeaders()
+                .SetUrl("/WeatherForecast")
+                .SetHost(client.RemoteIPHost.Host)
+                .AsGet();
+
+
+            using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            {
+                var response = responseResult.Response;
+
+                while (true)
+                {
+                    using (var blockResult = await response.ReadAsync())
+                    {
+                        if (blockResult.IsCompleted)
+                        {
+                            //数据读完成
+                            break;
+                        }
+
+                        //每次读到的数据
+                        var memory = blockResult.Memory;
+                        Console.WriteLine(memory.Length);
+                    }
+                }
+            }
+        }
+
+        private static async Task Request1()
+        {
+            var client = await GetHttpClient();
+            //创建一个请求
+            var request = new HttpRequest();
+            request.InitHeaders()
+                .SetUrl("/WeatherForecast")
+                .SetHost(client.RemoteIPHost.Host)
+                .AsGet();
+
+
+            using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            {
+                var response = responseResult.Response;
+                Console.WriteLine(await response.GetBodyAsync());//将接收的数据，一次性转为utf8编码的字符串
+            }
+        }
+
+        private static async Task GetString()
+        {
+            var client = await GetHttpClient();
+            //直接发起一个Get请求，然后返回Body字符串。
+            var body = await client.GetStringAsync("/WeatherForecast");
+        }
+
+        private static async Task GetFile()
+        {
+            var client = await GetHttpClient();
+            //直接发起一个Get请求文件，然后写入到流中。
+            using (var stream = File.Create("1.txt"))
+            {
+                await client.GetFileAsync("/WeatherForecast", stream);
+            }
+        }
+
+        private static async Task GetBytesArray()
+        {
+            var client = await GetHttpClient();
+
+            //直接发起一个Get请求，然后返回Body数组。
+            var bodyBytes = await client.GetByteArrayAsync("/WeatherForecast");
+        }
+
+        private static async Task<HttpClient> GetHttpClient()
+        {
             var client = new HttpClient();
 
             var config = new TouchSocketConfig();
-            config.SetRemoteIPHost("https://localhost:7219")
-                .SetClientSslOption(new ClientSslOption()
-                {
-                    ClientCertificates = new X509CertificateCollection() { new X509Certificate2("Socket.pfx", "Socket") },
-                    SslProtocols = SslProtocols.Tls12,
-                    TargetHost = "localhost",
-                    CertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => { return true; }
-                }); ;
+            config.SetRemoteIPHost("http://localhost:7789");
 
             //配置config
             await client.SetupAsync(config);
             await client.ConnectAsync();//先做连接
 
-            {
-                //直接发起一个Get请求，然后返回Body字符串。
-                var body = await client.GetStringAsync("/WeatherForecast");
-            }
-
-            {
-                //直接发起一个Get请求，然后返回Body数组。
-                var bodyBytes = await client.GetByteArrayAsync("/WeatherForecast");
-            }
-
-            {
-                //直接发起一个Get请求文件，然后写入到流中。
-                using (var stream = File.Create("1.txt"))
-                {
-                    await client.GetFileAsync("/WeatherForecast", stream);
-                }
-
-            }
-
-            {
-                //创建一个请求
-                var request = new HttpRequest();
-                request.InitHeaders()
-                    .SetUrl("/WeatherForecast")
-                    .SetHost(client.RemoteIPHost.Host)
-                    .AsGet();
-
-
-                using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-                {
-                    var response = responseResult.Response;
-                    Console.WriteLine(await response.GetBodyAsync());//将接收的数据，一次性转为utf8编码的字符串
-                }
-            }
-
-            {
-                //创建一个请求
-                var request = new HttpRequest();
-                request.InitHeaders()
-                    .SetUrl("/WeatherForecast")
-                    .SetHost(client.RemoteIPHost.Host)
-                    .AsGet();
-
-
-                using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-                {
-                    var response = responseResult.Response;
-
-                    while (true)
-                    {
-                        using (var blockResult = await response.ReadAsync())
-                        {
-                            if (blockResult.IsCompleted)
-                            {
-                                //数据读完成
-                                break;
-                            }
-
-                            //每次读到的数据
-                            var memory = blockResult.Memory;
-                            Console.WriteLine(memory.Length);
-                        }
-                    }
-                }
-            }
-
-            {
-                //创建一个请求
-                var request = new HttpRequest();
-                request.InitHeaders()
-                    .SetUrl("/post")
-                    .SetHost(client.RemoteIPHost.Host)
-                    .AsPost();
-
-
-                using (var responseResult = await client.RequestAsync(request, 1000 * 10))
-                {
-                    var response = responseResult.Response;
-
-                    for (int i = 0; i < 100; i++)
-                    {
-                        await response.WriteAsync(new byte[1024]);
-                    }
-                }
-            }
+            return client;
         }
     }
 }

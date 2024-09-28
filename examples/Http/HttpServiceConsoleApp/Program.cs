@@ -38,10 +38,12 @@ namespace ConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    a.Add<MyHttpPlug1>();
-                    a.Add<MyHttpPlug2>();
-                    a.Add<MyHttpPlug3>();
-                    a.Add<MyHttpPlug4>();
+                    //a.Add<MyHttpPlug1>();
+                    //a.Add<MyHttpPlug2>();
+                    //a.Add<MyHttpPlug3>();
+                    //a.Add<MyHttpPlug4>();
+                    //a.Add<MyBigFileHttpPlug>();
+                    a.Add<MyBigWriteHttpPlug>();
 
                     a.UseHttpStaticPage()
                     .SetNavigateAction(request =>
@@ -69,6 +71,94 @@ namespace ConsoleApp
             Console.WriteLine("访问 http://127.0.0.1:7789/html 返回html");
             Console.WriteLine("Post访问 http://127.0.0.1:7789/uploadfile 上传文件");
             Console.ReadKey();
+        }
+    }
+
+    public class MyBigWriteHttpPlug : PluginBase, IHttpPlugin
+    {
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.IsPost())
+            {
+                if (e.Context.Request.UrlEquals("/bigwrite"))
+                {
+                    try
+                    {
+                        var count = 0;
+                        while (true)
+                        {
+                            var buffer = new byte[1024 * 64];
+
+                            using (var blockResult = await e.Context.Request.ReadAsync())
+                            {
+                                if (blockResult.IsCompleted)
+                                {
+                                    break;
+                                }
+                                count += blockResult.Memory.Length;
+                               
+                                //这里可以一直处理读到的数据。
+                                blockResult.Memory.CopyTo(buffer);
+                            }
+                        }
+
+                        Console.WriteLine($"读取数据，长度={count}");
+
+                        await Task.Delay(2000);
+
+                        await e.Context.Response
+                                 .SetStatus()
+                                 .FromText("Ok")
+                                 .AnswerAsync();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        client.Logger.Exception(ex);
+                    }
+                }
+            }
+            await e.InvokeNext();
+        }
+    }
+
+    public class MyBigFileHttpPlug : PluginBase, IHttpPlugin
+    {
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            if (e.Context.Request.IsPost())
+            {
+                if (e.Context.Request.UrlEquals("/uploadbigfile"))
+                {
+                    try
+                    {
+                        var fileName = e.Context.Request.Headers["FileName"];
+                        if (fileName.IsNullOrEmpty())
+                        {
+                            await e.Context.Response
+                                 .SetStatus(502,"fileName is null")
+                                 .FromText("fileName is null")
+                                 .AnswerAsync();
+                            return;
+                        }
+                        using (var stream = File.OpenWrite(fileName))
+                        {
+                            await e.Context.Request.ReadCopyToAsync(stream);
+                        }
+
+                        client.Logger.Info("大文件上传成功");
+                        await e.Context.Response
+                                 .SetStatus()
+                                 .FromText("Ok")
+                                 .AnswerAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        client.Logger.Exception(ex);
+                    }
+                }
+            }
+            await e.InvokeNext();
         }
     }
 
