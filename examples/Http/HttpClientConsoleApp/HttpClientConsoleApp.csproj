@@ -1,12 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<!--<ItemGroup>
+		<PackageReference Include="TouchSocket.Http" Version="2.1.5" />
+	</ItemGroup>-->
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket.Http" Version="2.1.5" />
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="TouchSocket">
+			<HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
+		</Reference>
+		<Reference Include="TouchSocket.Core">
+			<HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
+		</Reference>
+		<Reference Include="TouchSocket.Http">
+			<HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Http.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 </Project>

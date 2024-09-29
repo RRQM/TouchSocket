@@ -84,10 +84,10 @@ namespace ConsoleApp
                 {
                     try
                     {
-                        var count = 0;
+                        var count = 0L;
                         while (true)
                         {
-                            var buffer = new byte[1024 * 64];
+                            //var buffer = new byte[1024 * 64];
 
                             using (var blockResult = await e.Context.Request.ReadAsync())
                             {
@@ -96,9 +96,9 @@ namespace ConsoleApp
                                     break;
                                 }
                                 count += blockResult.Memory.Length;
-                               
+                                Console.WriteLine(blockResult.Memory.Length);
                                 //这里可以一直处理读到的数据。
-                                blockResult.Memory.CopyTo(buffer);
+                                //blockResult.Memory.CopyTo(buffer);
                             }
                         }
 
