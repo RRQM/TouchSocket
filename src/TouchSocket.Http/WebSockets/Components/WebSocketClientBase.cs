@@ -133,9 +133,15 @@ namespace TouchSocket.Http.WebSockets
             return EasyTask.CompletedTask;
         }
 
-        private Task PrivateOnHandshaked(object obj)
+        private async Task PrivateOnHandshaked(object obj)
         {
-            return this.OnWebSocketHandshaked((HttpContextEventArgs)obj);
+            try
+            {
+                await this.OnWebSocketHandshaked((HttpContextEventArgs)obj);
+            }
+            catch
+            {
+            }
         }
 
         private async Task PrivateWebSocketClosed(ClosedEventArgs e)

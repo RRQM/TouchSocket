@@ -102,42 +102,48 @@ namespace TouchSocket.JsonRpc
 
         private async Task ThisInvoke(object obj)
         {
-            var callContext = (JsonRpcCallContextBase)obj;
-            var invokeResult = new InvokeResult();
-
             try
             {
-                JsonRpcUtility.BuildRequestContext(this.Resolver, this.ActionMap, ref callContext);
-            }
-            catch (Exception ex)
-            {
-                invokeResult.Status = InvokeStatus.Exception;
-                invokeResult.Message = ex.Message;
-            }
+                var callContext = (JsonRpcCallContextBase)obj;
+                var invokeResult = new InvokeResult();
 
-            if (callContext.RpcMethod != null)
-            {
-                if (!callContext.RpcMethod.IsEnable)
+                try
                 {
-                    invokeResult.Status = InvokeStatus.UnEnable;
+                    JsonRpcUtility.BuildRequestContext(this.Resolver, this.ActionMap, ref callContext);
                 }
-            }
-            else
-            {
-                invokeResult.Status = InvokeStatus.UnFound;
-            }
+                catch (Exception ex)
+                {
+                    invokeResult.Status = InvokeStatus.Exception;
+                    invokeResult.Message = ex.Message;
+                }
 
-            if (invokeResult.Status == InvokeStatus.Ready)
-            {
-                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
-            }
+                if (callContext.RpcMethod != null)
+                {
+                    if (!callContext.RpcMethod.IsEnable)
+                    {
+                        invokeResult.Status = InvokeStatus.UnEnable;
+                    }
+                }
+                else
+                {
+                    invokeResult.Status = InvokeStatus.UnFound;
+                }
 
-            if (!callContext.JsonRpcContext.Id.HasValue)
-            {
-                return;
+                if (invokeResult.Status == InvokeStatus.Ready)
+                {
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
+                }
+
+                if (!callContext.JsonRpcContext.Id.HasValue)
+                {
+                    return;
+                }
+                var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
+                await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
             }
-            var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-            await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
+            catch
+            {
+            }
         }
 
         /// <inheritdoc/>

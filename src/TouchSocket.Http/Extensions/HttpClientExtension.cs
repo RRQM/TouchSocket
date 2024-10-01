@@ -38,6 +38,8 @@ namespace TouchSocket.Http
             var request = new HttpRequest();
             // 设置请求方法为GET
             request.Method = HttpMethod.Get;
+            request.InitHeaders();
+            request.SetHost(httpClient.RemoteIPHost.Host);
             // 设置请求URL
             request.SetUrl(url);
 
@@ -111,7 +113,7 @@ namespace TouchSocket.Http
             var request = new HttpRequest();
             request.InitHeaders(); // 初始化请求头
             request.SetUrl(url); // 设置请求的URL
-
+            request.SetHost(httpClient.RemoteIPHost.Host);
             // 调用重载的GetFileAsync方法，传入封装好的请求对象
             return GetFileAsync(httpClient, request, stream, millisecondsTimeout, token);
         }

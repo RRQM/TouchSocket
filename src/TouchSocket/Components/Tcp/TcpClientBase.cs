@@ -108,16 +108,22 @@ namespace TouchSocket.Sockets
 
         private async Task PrivateOnTcpClosed(object obj)
         {
-            await this.m_beginReceiveTask.ConfigureAwait(false);
-
-            var e = (ClosedEventArgs)obj;
-
-            var receiver = this.m_receiver;
-            if (receiver != null)
+            try
             {
-                await receiver.Complete(e.Message).ConfigureAwait(false);
+                await this.m_beginReceiveTask.ConfigureAwait(false);
+
+                var e = (ClosedEventArgs)obj;
+
+                var receiver = this.m_receiver;
+                if (receiver != null)
+                {
+                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                }
+                await this.OnTcpClosed(e).ConfigureAwait(false);
             }
-            await this.OnTcpClosed(e).ConfigureAwait(false);
+            catch
+            {
+            }
         }
 
         private Task PrivateOnTcpClosing(ClosingEventArgs e)
@@ -127,10 +133,16 @@ namespace TouchSocket.Sockets
 
         private async Task PrivateOnTcpConnected(object o)
         {
-            this.m_beginReceiveTask = Task.Run(this.BeginReceive);
+            try
+            {
+                this.m_beginReceiveTask = Task.Run(this.BeginReceive);
 
-            this.m_beginReceiveTask.FireAndForget();
-            await this.OnTcpConnected((ConnectedEventArgs)o).ConfigureAwait(false);
+                this.m_beginReceiveTask.FireAndForget();
+                await this.OnTcpConnected((ConnectedEventArgs)o).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
         }
 
         private async Task PrivateOnTcpConnecting(ConnectingEventArgs e)
@@ -305,12 +317,13 @@ namespace TouchSocket.Sockets
             this.m_dataHandlingAdapter = adapter;
         }
 
-        private async Task AuthenticateAsync()
+        private Task AuthenticateAsync()
         {
             if (this.Config.GetValue(TouchSocketConfigExtension.SslOptionProperty) is ClientSslOption sslOption)
             {
-                await this.m_tcpCore.AuthenticateAsync(sslOption);
+                return this.m_tcpCore.AuthenticateAsync(sslOption);
             }
+            return EasyTask.CompletedTask;
         }
 
         private async Task BeginReceive()

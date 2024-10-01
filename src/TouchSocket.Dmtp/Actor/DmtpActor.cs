@@ -282,14 +282,26 @@ namespace TouchSocket.Dmtp
             return EasyTask.CompletedTask;
         }
 
-        private void PrivateOnHandshaked(object obj)
+        private async Task PrivateOnHandshaked(object obj)
         {
-            this.OnHandshaked((DmtpVerifyEventArgs)obj);
+            try
+            {
+                await this.OnHandshaked((DmtpVerifyEventArgs)obj);
+            }
+            catch
+            {
+            }
         }
 
-        private void PrivateOnCreatedChannel(object obj)
+        private async Task PrivateOnCreatedChannel(object obj)
         {
-            this.OnCreatedChannel((CreateChannelEventArgs)obj);
+            try
+            {
+                await this.OnCreatedChannel((CreateChannelEventArgs)obj);
+            }
+            catch
+            {
+            }
         }
 
         #endregion 委托触发

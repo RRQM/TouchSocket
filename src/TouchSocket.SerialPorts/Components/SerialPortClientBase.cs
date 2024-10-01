@@ -24,7 +24,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 串口客户端基类
     /// </summary>
-    public class SerialPortClientBase : SetupConfigObject, ISerialPortSession
+    public abstract class SerialPortClientBase : SetupConfigObject, ISerialPortSession
     {
         /// <summary>
         /// 串口客户端基类
@@ -129,18 +129,30 @@ namespace TouchSocket.SerialPorts
 
         private async Task PrivateOnSerialClosed(object obj)
         {
-            var e = (ClosedEventArgs)obj;
-            var receiver = this.m_receiver;
-            if (receiver != null)
+            try
             {
-                await receiver.Complete(e.Message).ConfigureAwait(false);
+                var e = (ClosedEventArgs)obj;
+                var receiver = this.m_receiver;
+                if (receiver != null)
+                {
+                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                }
+                await this.OnSerialClosed(e).ConfigureAwait(false);
             }
-            await this.OnSerialClosed(e).ConfigureAwait(false);
+            catch
+            {
+            }
         }
 
         private async Task PrivateOnSerialConnected(object o)
         {
-            await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(false);
+            try
+            {
+                await this.OnSerialConnected((ConnectedEventArgs)o).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
         }
 
         private async Task PrivateOnSerialConnecting(ConnectingEventArgs e)

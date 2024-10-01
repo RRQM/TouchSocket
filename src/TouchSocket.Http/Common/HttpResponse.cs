@@ -72,8 +72,10 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override bool CanRead => this.m_canRead;
 
-        /// <inheritdoc/>
-        public override bool CanWrite => this.m_canWrite;
+       /// <summary>
+       /// 是否支持持续写入。
+       /// </summary>
+        public bool CanWrite => this.m_canWrite;
 
         /// <inheritdoc/>
         public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
@@ -278,8 +280,7 @@ namespace TouchSocket.Http
 
         #region Write
 
-        /// <inheritdoc/>
-        public override async Task WriteAsync(ReadOnlyMemory<byte> memory)
+        public async Task WriteAsync(ReadOnlyMemory<byte> memory)
         {
             if (this.Responsed)
             {

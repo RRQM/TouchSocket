@@ -8,6 +8,9 @@
 		<Title>TouchSocket.WebApi</Title>
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi</PackageOutputPath>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\TouchSocket.Http\TouchSocket.Http.csproj" />
@@ -16,5 +19,9 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
 		<PackageReference Include="System.Reflection.DispatchProxy" Version="4.7.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 </Project>

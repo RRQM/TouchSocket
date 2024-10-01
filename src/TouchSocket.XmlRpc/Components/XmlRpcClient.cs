@@ -59,7 +59,7 @@ namespace TouchSocket.XmlRpc
                         if (returnType!=null)
                         {
                             var xml = new XmlDocument();
-                            xml.LoadXml(response.GetBody());
+                            xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(false));
                             var paramNode = xml.SelectSingleNode("methodResponse/params/param");
                             return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
                         }

@@ -107,7 +107,7 @@ namespace TouchSocket.JsonRpc
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client, e.Context.Request.GetBody(), e.Context)).ConfigureAwait(false);
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client,await e.Context.Request.GetBodyAsync().ConfigureAwait(false), e.Context)).ConfigureAwait(false);
                     return;
                 }
             }

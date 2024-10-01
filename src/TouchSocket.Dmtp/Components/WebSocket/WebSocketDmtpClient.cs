@@ -327,10 +327,17 @@ namespace TouchSocket.Dmtp
 
         private async Task PrivateOnDmtpClosed(object obj)
         {
-            var e = (ClosedEventArgs)obj;
-            await this.m_receiveTask.ConfigureAwait(false);
+            try
+            {
+                var e = (ClosedEventArgs)obj;
+                await this.m_receiveTask.ConfigureAwait(false);
 
-            await this.OnDmtpClosed(e);
+                await this.OnDmtpClosed(e).ConfigureAwait(false);
+            }
+            catch
+            {
+
+            }
         }
 
         /// <summary>

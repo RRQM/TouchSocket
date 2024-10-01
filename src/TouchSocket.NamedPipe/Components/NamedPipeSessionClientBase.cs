@@ -448,13 +448,19 @@ namespace TouchSocket.NamedPipe
 
         private async Task PrivateOnNamedPipeClosed(object obj)
         {
-            var e = (ClosedEventArgs)obj;
-            var receiver = this.m_receiver;
-            if (receiver != null)
+            try
             {
-                await receiver.Complete(e.Message).ConfigureAwait(false);
+                var e = (ClosedEventArgs)obj;
+                var receiver = this.m_receiver;
+                if (receiver != null)
+                {
+                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                }
+                await this.OnNamedPipeClosed(e).ConfigureAwait(false);
             }
-            await this.OnNamedPipeClosed(e).ConfigureAwait(false);
+            catch
+            {
+            }
         }
 
         private Task PrivateOnNamedPipeClosing(ClosingEventArgs e)

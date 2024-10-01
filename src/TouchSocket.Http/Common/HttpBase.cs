@@ -68,10 +68,10 @@ namespace TouchSocket.Http
         /// </summary>
         public abstract bool CanRead { get; }
 
-        /// <summary>
-        /// 能否写入。
-        /// </summary>
-        public abstract bool CanWrite { get; }
+        ///// <summary>
+        ///// 能否写入。
+        ///// </summary>
+        //public abstract bool CanWrite { get; }
 
         /// <summary>
         /// 客户端
@@ -305,16 +305,16 @@ namespace TouchSocket.Http
 
         #endregion Read
 
-        #region Write
+        //#region Write
 
-        /// <summary>
-        /// 异步写入字节序列到流中。
-        /// </summary>
-        /// <param name="memory">待写入的字节序列，使用<see cref="ReadOnlyMemory{T}"/>类型以提高性能并支持不可变性。</param>
-        /// <returns>返回一个Task对象，表示异步写入操作的完成。</returns>
-        public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
+        ///// <summary>
+        ///// 异步写入字节序列到流中。
+        ///// </summary>
+        ///// <param name="memory">待写入的字节序列，使用<see cref="ReadOnlyMemory{T}"/>类型以提高性能并支持不可变性。</param>
+        ///// <returns>返回一个Task对象，表示异步写入操作的完成。</returns>
+        //public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
 
-        #endregion Write
+        //#endregion Write
 
         #region Class
 
