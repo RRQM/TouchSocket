@@ -19,6 +19,23 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v2.1.6
+
+**更新日期：** 2024.10.1
+
+**更新描述：**
+
+兼容性修复升级。
+
+**更新详情：**
+
+- &nbsp;<Tag>新增</Tag> HttpContent机制，能上传超大数据。
+- &nbsp;<Tag>新增</Tag> StreamHttpContent，能上传流数据，例如：文件流。
+- &nbsp;<Tag>修复</Tag> Task内部异常时没有及时try，导致全局捕获时有无用捕获。
+- &nbsp;<Tag>修复</Tag> TcpServiceBase在调用StopAsync时，IServerStopedPlugin插件无法触发的bug。
+- &nbsp;<Tag>移除</Tag> TriggerQueue无用类。
+- &nbsp;<Tag>优化</Tag> HttpRequest，使其能上传超大数据。
+
 ## v2.1.4(5)
 
 **更新日期：** 2024.9.23
