@@ -196,7 +196,6 @@ namespace TouchSocket.Http
         #endregion HttpBase
 
         #region HttpRequest
-
         /// <summary>
         /// 添加Query参数
         /// </summary>

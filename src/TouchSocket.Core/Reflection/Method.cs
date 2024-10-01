@@ -80,7 +80,7 @@ namespace TouchSocket.Core
             {
                 if (build)
                 {
-                    this.m_invoker = this.CreateILInvoker(method);
+                    this.m_invoker = CreateILInvoker(method);
                 }
             }
             else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
@@ -123,7 +123,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 方法信息
         /// </summary>
-        public MethodInfo Info { get => this.m_info; }
+        public MethodInfo Info => this.m_info;
 
         /// <summary>
         /// 是否有引用类型
@@ -329,7 +329,7 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="methodInfo"></param>
         /// <returns></returns>
-        protected Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
+        protected static Func<object, object[], object> CreateILInvoker(MethodInfo methodInfo)
         {
             var dynamicMethod = new DynamicMethod(string.Empty, typeof(object), new Type[] { typeof(object), typeof(object[])
     }, methodInfo.DeclaringType.Module);

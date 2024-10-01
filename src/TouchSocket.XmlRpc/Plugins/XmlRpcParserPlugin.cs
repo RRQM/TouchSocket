@@ -71,7 +71,7 @@ namespace TouchSocket.XmlRpc
                     e.Handled = true;
 
                     var xml = new XmlDocument();
-                    var xmlstring = e.Context.Request.GetBody();
+                    var xmlstring =await e.Context.Request.GetBodyAsync().ConfigureAwait(false);
                     xml.LoadXml(xmlstring);
                     var methodName = xml.SelectSingleNode("methodCall/methodName");
                     var actionKey = methodName.InnerText;

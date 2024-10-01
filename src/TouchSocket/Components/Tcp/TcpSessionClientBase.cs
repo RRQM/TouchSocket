@@ -400,25 +400,25 @@ namespace TouchSocket.Sockets
 
         private async Task PrivateOnTcpClosed(object obj)
         {
-            var beginReceiveTask = this.m_beginReceiveTask;
-            if (beginReceiveTask != null)
-            {
-                await beginReceiveTask.ConfigureAwait(false);
-            }
-
-            var e = (ClosedEventArgs)obj;
-
-            var receiver = this.m_receiver;
-            if (receiver != null)
-            {
-                await receiver.Complete(e.Message).ConfigureAwait(false);
-            }
-
             try
             {
+                var beginReceiveTask = this.m_beginReceiveTask;
+                if (beginReceiveTask != null)
+                {
+                    await beginReceiveTask.ConfigureAwait(false);
+                }
+
+                var e = (ClosedEventArgs)obj;
+
+                var receiver = this.m_receiver;
+                if (receiver != null)
+                {
+                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                }
+
                 await this.OnTcpClosed(e).ConfigureAwait(false);
             }
-            catch (Exception)
+            catch
             {
             }
             finally

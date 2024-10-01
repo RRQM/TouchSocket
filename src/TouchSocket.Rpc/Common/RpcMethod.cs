@@ -55,7 +55,7 @@ namespace TouchSocket.Rpc
             {
                 if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
                 {
-                    this.m_invoker = this.CreateILInvoker(method);
+                    this.m_invoker = CreateILInvoker(method);
                 }
                 else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
                 {

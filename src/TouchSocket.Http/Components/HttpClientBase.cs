@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,33 +82,25 @@ namespace TouchSocket.Http
         protected async Task<HttpResponseResult> ProtectedRequestAsync(HttpRequest request, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             // 等待信号量，以控制并发请求的数量，超时和取消策略
-            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token);
+            await this.m_semaphoreForRequest.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
             try
             {
                 // 标记不获取响应内容
                 this.m_getContent = false;
+                // 重置状态，为发送请求做准备
+                this.Reset(token);
 
-                // 使用ByteBlock来构建请求数据
-                using (var byteBlock = new ByteBlock())
-                {
-                    // 构建请求数据
-                    request.Build(byteBlock);
+                await this.BuildAndSend(request, token).ConfigureAwait(false);
 
-                    // 重置等待状态，并使用取消令牌
-                    this.Reset(token);
+                // 等待响应状态，超时设定
+                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
-                    // 异步发送请求
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                // 如果响应状态不是运行中，抛出异常
+                status.ThrowIfNotRunning();
 
-                    // 等待响应状态，超时设定
-                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                // 返回响应结果对象
+                return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
 
-                    // 如果响应状态不是运行中，抛出异常
-                    status.ThrowIfNotRunning();
-
-                    // 返回响应结果对象
-                    return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
-                }
             }
             catch
             {
@@ -116,6 +109,45 @@ namespace TouchSocket.Http
                 throw;
             }
         }
+
+        private async Task BuildAndSend(HttpRequest request, CancellationToken token)
+        {
+            var content = request.Content;
+            if (content == null)
+            {
+                using (var byteBlock = new ByteBlock())
+                {
+                    request.BuildHeader(byteBlock);
+                    request.BuildContent(byteBlock);
+                    // 异步发送请求
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                content.InternalBuildingHeader(request.Headers);
+                var byteBlock = new ByteBlock();
+                try
+                {
+                    request.BuildHeader(byteBlock);
+
+                   var result = content.InternalBuildingContent(ref byteBlock);
+
+                    // 异步发送请求
+                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+
+                    if (!result)
+                    {
+                        await content.InternalWriteContent(this.ProtectedDefaultSendAsync, token).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+        }
+
 
         /// <summary>
         /// 异步发送Http请求，并等待全部响应
@@ -135,27 +167,23 @@ namespace TouchSocket.Http
             {
                 // 标记为获取内容状态
                 this.m_getContent = true;
-                // 使用ByteBlock来构建请求数据
-                using (var byteBlock = new ByteBlock())
-                {
-                    // 构建请求数据
-                    request.Build(byteBlock);
+                // 重置状态，为发送请求做准备
+                this.Reset(token);
 
-                    // 重置状态，为发送请求做准备
-                    this.Reset(token);
+                // 重置状态，为发送请求做准备
+                this.Reset(token);
 
-                    // 异步发送请求数据
-                    await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                await this.BuildAndSend(request, token).ConfigureAwait(false);
 
-                    // 等待响应数据，超时时间为millisecondsTimeout
-                    var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+                // 等待响应状态，超时设定
+                var status = await this.m_waitResponseDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
 
-                    // 如果状态不是运行中，则抛出异常
-                    status.ThrowIfNotRunning();
+                // 如果响应状态不是运行中，抛出异常
+                status.ThrowIfNotRunning();
 
-                    // 返回响应结果
-                    return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
-                }
+                // 返回响应结果对象
+                return new HttpResponseResult(this.m_waitResponseDataAsync.WaitResult, this.ReleaseLock);
+
             }
             catch
             {

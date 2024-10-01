@@ -93,10 +93,17 @@ namespace TouchSocket.NamedPipe
             await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
         }
 
-        private Task PrivateOnNamedPipeConnected(object o)
+        private async Task PrivateOnNamedPipeConnected(object o)
         {
-            var e = (ConnectedEventArgs)o;
-            return this.OnNamedPipeConnected(e);
+            try
+            {
+                var e = (ConnectedEventArgs)o;
+                await this.OnNamedPipeConnected(e).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+           
         }
 
         private async Task PrivateOnNamedPipeConnecting(object obj)
@@ -116,16 +123,22 @@ namespace TouchSocket.NamedPipe
 
         private async Task PrivateOnNamedPipeClosed(object o)
         {
-            var e = (ClosedEventArgs)o;
-
-            await this.receiveTask.ConfigureAwait(false);
-            var receiver = this.m_receiver;
-            if (receiver != null)
+            try
             {
-                await receiver.Complete(e.Message).ConfigureAwait(false);
-            }
+                var e = (ClosedEventArgs)o;
 
-            await this.OnNamedPipeClosed(e).ConfigureAwait(false);
+                await this.receiveTask.ConfigureAwait(false);
+                var receiver = this.m_receiver;
+                if (receiver != null)
+                {
+                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                }
+
+                await this.OnNamedPipeClosed(e).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
         }
 
         private async Task PrivateOnNamedPipeClosing(ClosingEventArgs e)

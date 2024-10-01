@@ -97,8 +97,6 @@ namespace TouchSocket.Core
             }
         }
 
-
-
         /// <inheritdoc/>
         protected override async Task PreviewSendAsync(ReadOnlyMemory<byte> memory)
         {

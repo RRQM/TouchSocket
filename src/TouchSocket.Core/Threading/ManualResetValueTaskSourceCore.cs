@@ -59,44 +59,44 @@ namespace TouchSocket.Core
         public void Reset()
         {
             // Reset/update state for the next use/await of this instance.
-            _version++;
-            _completed = false;
-            _result = default;
-            _error = null;
-            _executionContext = null;
-            _capturedContext = null;
-            _continuation = null;
-            _continuationState = null;
+            this._version++;
+            this._completed = false;
+            this._result = default;
+            this._error = null;
+            this._executionContext = null;
+            this._capturedContext = null;
+            this._continuation = null;
+            this._continuationState = null;
         }
 
         /// <summary>Completes with a successful result.</summary>
         /// <param name="result">The result.</param>
         public void SetResult(TResult result)
         {
-            _result = result;
-            SignalCompletion();
+            this._result = result;
+            this.SignalCompletion();
         }
 
         /// <summary>Complets with an error.</summary>
         /// <param name="error"></param>
         public void SetException(Exception error)
         {
-            _error = ExceptionDispatchInfo.Capture(error);
-            SignalCompletion();
+            this._error = ExceptionDispatchInfo.Capture(error);
+            this.SignalCompletion();
         }
 
         /// <summary>Gets the operation version.</summary>
-        public short Version => _version;
+        public short Version => this._version;
 
         /// <summary>Gets the status of the operation.</summary>
         /// <param name="token">Opaque value that was provided to the <see cref="ValueTask"/>'s constructor.</param>
         public ValueTaskSourceStatus GetStatus(short token)
         {
-            ValidateToken(token);
+            this.ValidateToken(token);
             return
-                _continuation == null || !_completed ? ValueTaskSourceStatus.Pending :
-                _error == null ? ValueTaskSourceStatus.Succeeded :
-                _error.SourceException is OperationCanceledException ? ValueTaskSourceStatus.Canceled :
+                this._continuation == null || !this._completed ? ValueTaskSourceStatus.Pending :
+                this._error == null ? ValueTaskSourceStatus.Succeeded :
+                this._error.SourceException is OperationCanceledException ? ValueTaskSourceStatus.Canceled :
                 ValueTaskSourceStatus.Faulted;
         }
 
@@ -104,14 +104,14 @@ namespace TouchSocket.Core
         /// <param name="token">Opaque value that was provided to the <see cref="ValueTask"/>'s constructor.</param>
         public TResult GetResult(short token)
         {
-            ValidateToken(token);
-            if (!_completed)
+            this.ValidateToken(token);
+            if (!this._completed)
             {
                 throw new InvalidOperationException();
             }
 
-            _error?.Throw();
-            return _result;
+            this._error?.Throw();
+            return this._result;
         }
 
         /// <summary>Schedules the continuation action for this operation.</summary>
@@ -125,26 +125,26 @@ namespace TouchSocket.Core
             {
                 throw new ArgumentNullException(nameof(continuation));
             }
-            ValidateToken(token);
+            this.ValidateToken(token);
 
             if ((flags & ValueTaskSourceOnCompletedFlags.FlowExecutionContext) != 0)
             {
-                _executionContext = ExecutionContext.Capture();
+                this._executionContext = ExecutionContext.Capture();
             }
 
             if ((flags & ValueTaskSourceOnCompletedFlags.UseSchedulingContext) != 0)
             {
-                SynchronizationContext sc = SynchronizationContext.Current;
+                var sc = SynchronizationContext.Current;
                 if (sc != null && sc.GetType() != typeof(SynchronizationContext))
                 {
-                    _capturedContext = sc;
+                    this._capturedContext = sc;
                 }
                 else
                 {
-                    TaskScheduler ts = TaskScheduler.Current;
+                    var ts = TaskScheduler.Current;
                     if (ts != TaskScheduler.Default)
                     {
-                        _capturedContext = ts;
+                        this._capturedContext = ts;
                     }
                 }
             }
@@ -157,11 +157,11 @@ namespace TouchSocket.Core
             // To minimize the chances of that, we check preemptively whether _continuation
             // is already set to something other than the completion sentinel.
 
-            object oldContinuation = _continuation;
+            object oldContinuation = this._continuation;
             if (oldContinuation == null)
             {
-                _continuationState = state;
-                oldContinuation = Interlocked.CompareExchange(ref _continuation, continuation, null);
+                this._continuationState = state;
+                oldContinuation = Interlocked.CompareExchange(ref this._continuation, continuation, null);
             }
 
             if (oldContinuation != null)
@@ -172,7 +172,7 @@ namespace TouchSocket.Core
                     throw new InvalidOperationException();
                 }
 
-                switch (_capturedContext)
+                switch (this._capturedContext)
                 {
                     case null:
                         Task.Factory.StartNew(continuation, state, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
@@ -197,7 +197,7 @@ namespace TouchSocket.Core
         /// <param name="token">The token supplied by <see cref="ValueTask"/>.</param>
         private void ValidateToken(short token)
         {
-            if (token != _version)
+            if (token != this._version)
             {
                 throw new InvalidOperationException();
             }
@@ -206,24 +206,24 @@ namespace TouchSocket.Core
         /// <summary>Signals that the operation has completed.  Invoked after the result or error has been set.</summary>
         private void SignalCompletion()
         {
-            if (_completed)
+            if (this._completed)
             {
                 throw new InvalidOperationException();
             }
-            _completed = true;
+            this._completed = true;
 
-            if (_continuation != null || Interlocked.CompareExchange(ref _continuation, ManualResetValueTaskSourceCoreShared.s_sentinel, null) != null)
+            if (this._continuation != null || Interlocked.CompareExchange(ref this._continuation, ManualResetValueTaskSourceCoreShared.s_sentinel, null) != null)
             {
-                if (_executionContext != null)
+                if (this._executionContext != null)
                 {
                     ExecutionContext.Run(
-                        _executionContext,
+                        this._executionContext,
                         s => ((ManualResetValueTaskSourceCore<TResult>)s).InvokeContinuation(),
                         this);
                 }
                 else
                 {
-                    InvokeContinuation();
+                    this.InvokeContinuation();
                 }
             }
         }
@@ -235,18 +235,18 @@ namespace TouchSocket.Core
         /// </summary>
         private void InvokeContinuation()
         {
-            Debug.Assert(_continuation != null);
+            Debug.Assert(this._continuation != null);
 
-            switch (_capturedContext)
+            switch (this._capturedContext)
             {
                 case null:
-                    if (RunContinuationsAsynchronously)
+                    if (this.RunContinuationsAsynchronously)
                     {
-                        Task.Factory.StartNew(_continuation, _continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+                        Task.Factory.StartNew(this._continuation, this._continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                     }
                     else
                     {
-                        _continuation(_continuationState);
+                        this._continuation(this._continuationState);
                     }
                     break;
 
@@ -255,11 +255,11 @@ namespace TouchSocket.Core
                     {
                         var state = (Tuple<Action<object>, object>)s;
                         state.Item1(state.Item2);
-                    }, Tuple.Create(_continuation, _continuationState));
+                    }, Tuple.Create(this._continuation, this._continuationState));
                     break;
 
                 case TaskScheduler ts:
-                    Task.Factory.StartNew(_continuation, _continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, ts);
+                    Task.Factory.StartNew(this._continuation, this._continuationState, CancellationToken.None, TaskCreationOptions.DenyChildAttach, ts);
                     break;
             }
         }

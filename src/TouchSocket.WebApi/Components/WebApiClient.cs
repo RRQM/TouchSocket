@@ -115,7 +115,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (response.StatusCode == 422)
                 {
-                    throw new RpcException(JsonConvert.DeserializeObject<ActionResult>(response.GetBody()).Message);
+                    throw new RpcException(JsonConvert.DeserializeObject<ActionResult>(await response.GetBodyAsync().ConfigureAwait(false)).Message);
                 }
                 else
                 {
