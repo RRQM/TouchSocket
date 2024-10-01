@@ -46,7 +46,7 @@ namespace ClientConsoleApp
 
             //创建一个请求
             var request = new HttpRequest(client);
-            request.SetContent(new ActionHttpContent());
+            request.SetContent(new BigDataHttpContent());
             request.InitHeaders()
                 .SetUrl("/bigwrite")
                 .SetHost(client.RemoteIPHost.Host)
@@ -150,20 +150,27 @@ namespace ClientConsoleApp
         }
     }
 
-    class ActionHttpContent : HttpContent
+    class BigDataHttpContent : HttpContent
     {
-        int count = 1000000;
-        int bufferLength = 10000;
-        protected override void OnBuildHeader(HttpRequest request)
+        long count = 10000;
+        long bufferLength = 1000000;
+
+        protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
         {
-            request.ContentLength = count * bufferLength;
+            return false;
+        }
+
+        protected override void OnBuildingHeader(IHttpHeader header)
+        {
+            header.Add(HttpHeaders.ContentLength, (count * bufferLength).ToString());
         }
 
         protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
         {
+            var buffer=new byte[bufferLength];
             for (int i = 0; i < count; i++)
             {
-                await writeFunc.Invoke(new byte[bufferLength]);
+                await writeFunc.Invoke(buffer);
                 //Console.WriteLine(i);
             }
         }
