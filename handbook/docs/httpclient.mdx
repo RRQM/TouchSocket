@@ -145,26 +145,31 @@ using (var responseResult = await client.RequestAsync(request, 1000 * 10))
 }
 ```
 
-### 5.6 构建自定义请求，持续写入大数据
+### 5.6 构建自定义Post请求，持续写入流
 
-```csharp showLineNumbers
-//创建一个请求
-var request = new HttpRequest(client);
-request.InitHeaders()
-    .SetUrl("/post")
-    .SetHost(client.RemoteIPHost.Host)
-    .AsPost();
-
-
-using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+```csharp {5} showLineNumbers
+using (var stream=File.OpenRead("TouchSocket.dll"))
 {
-    var response = responseResult.Response;
+    //创建一个请求
+    var request = new HttpRequest(client);
+    request.SetContent(new StreamHttpContent(stream));//设置流内容
+    request.InitHeaders()
+        .SetUrl("/bigwrite")
+        .SetHost(client.RemoteIPHost.Host)
+        .AsPost();
 
-    for (int i = 0; i < 100; i++)
+    using (var responseResult = await client.RequestAsync(request, 1000 * 10))
     {
-        await response.WriteAsync(new byte[1024]);
+        var response = responseResult.Response;
     }
+    Console.WriteLine("完成");
 }
 ```
+
+:::tip 提示
+
+在构建自定义请求时，如果使用`AsGet`、`AsPost`等方法可以直接设置当前请求为`Get`、`Post`等。如果没有扩展方法可以使用时，可以使用`AsMethod`来实现，例如：`AsMethod("GET")`。
+
+:::  
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Http)
