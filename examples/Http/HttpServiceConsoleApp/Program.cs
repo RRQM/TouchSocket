@@ -38,11 +38,11 @@ namespace ConsoleApp
                 })
                 .ConfigurePlugins(a =>
                 {
-                    //a.Add<MyHttpPlug1>();
-                    //a.Add<MyHttpPlug2>();
-                    //a.Add<MyHttpPlug3>();
-                    //a.Add<MyHttpPlug4>();
-                    //a.Add<MyBigFileHttpPlug>();
+                    a.Add<MyHttpPlug1>();
+                    a.Add<MyHttpPlug2>();
+                    a.Add<MyHttpPlug3>();
+                    a.Add<MyHttpPlug4>();
+                    a.Add<MyBigFileHttpPlug>();
                     a.Add<MyBigWriteHttpPlug>();
 
                     a.UseHttpStaticPage()
@@ -103,8 +103,6 @@ namespace ConsoleApp
                         }
 
                         Console.WriteLine($"读取数据，长度={count}");
-
-                        await Task.Delay(2000);
 
                         await e.Context.Response
                                  .SetStatus()

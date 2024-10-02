@@ -34,10 +34,33 @@ namespace ClientConsoleApp
             consoleAction.Add("4", "自定义请求", Request1);
             consoleAction.Add("5", "自定义请求，并持续读取", Request2);
             consoleAction.Add("6", "自定义请求，并持续写入", BigWrite);
+            consoleAction.Add("7", "自定义Post请求，并上传流数据", UploadStream);
 
             consoleAction.ShowAll();
 
             await consoleAction.RunCommandLineAsync();
+        }
+
+        private static async Task UploadStream()
+        {
+            var client = await GetHttpClient();
+
+            using (var stream=File.OpenRead("TouchSocket.dll"))
+            {
+                //创建一个请求
+                var request = new HttpRequest(client);
+                request.SetContent(new StreamHttpContent(stream));//设置流内容
+                request.InitHeaders()
+                    .SetUrl("/bigwrite")
+                    .SetHost(client.RemoteIPHost.Host)
+                    .AsPost();
+
+                using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+                {
+                    var response = responseResult.Response;
+                }
+                Console.WriteLine("完成");
+            }
         }
 
         private static async Task BigWrite()
