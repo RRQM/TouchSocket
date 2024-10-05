@@ -178,18 +178,14 @@ namespace TouchSocket.Sockets
                 switch (this.m_serverState)
                 {
                     case ServerState.None:
+                    case ServerState.Stopped:
                         {
-                            this.BeginListen(optionList);
+                            this.AddListenList(optionList);
                             break;
                         }
                     case ServerState.Running:
                         {
                             return;
-                        }
-                    case ServerState.Stopped:
-                        {
-                            this.BeginListen(optionList);
-                            break;
                         }
                     default:
                         {
@@ -200,7 +196,6 @@ namespace TouchSocket.Sockets
                 this.m_serverState = ServerState.Running;
 
                 await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
-                return;
             }
             catch (Exception ex)
             {
@@ -216,11 +211,15 @@ namespace TouchSocket.Sockets
         {
             this.ThrowIfDisposed();
 
-            if (this.m_serverState == ServerState.Running)
-            {
-                await this.ReleaseAll().ConfigureAwait(false);
-                this.m_serverState = ServerState.Stopped;
+            var serverState= this.m_serverState;
 
+            //无条件释放
+            await this.ReleaseAll().ConfigureAwait(false);
+            this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
+
+            if (serverState == ServerState.Running)
+            {
+                //当且仅当服务器的状态是Running时才触发ServerStoped
                 await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
         }
@@ -290,7 +289,7 @@ namespace TouchSocket.Sockets
             this.OnAccepted(e);
         }
 
-        private void BeginListen(List<TcpListenOption> optionList)
+        private void AddListenList(List<TcpListenOption> optionList)
         {
             foreach (var item in optionList)
             {

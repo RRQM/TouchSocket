@@ -30,7 +30,7 @@ namespace TouchSocket.Core
 
         /// <summary>
         /// 判断当前对象是否已经被释放。
-        /// 如果已经被释放，则抛出ObjectDisposedException异常。
+        /// 如果已经被释放，则抛出<see cref="ObjectDisposedException"/>异常。
         /// </summary>
         /// <exception cref="ObjectDisposedException">当对象已经被释放时抛出此异常</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
