@@ -30,6 +30,19 @@ namespace BytePoolConsoleApp
             Console.ReadKey();
         }
 
+        private static void ExtensionWrite()
+        {
+            var byteBlock = new ValueByteBlock(1024);
+            try
+            {
+                MyByteBlockExtension.ExtensionWrite(ref byteBlock);
+            }
+            finally
+            {
+                byteBlock.Dispose();
+            }
+        }
+
         private static void IPackageWriteRead()
         {
             using (var byteBlock = new ByteBlock())
@@ -181,5 +194,14 @@ namespace BytePoolConsoleApp
     internal class MyClass
     {
         public int Property { get; set; }
+    }
+
+    static class MyByteBlockExtension
+    {
+        public static void ExtensionWrite<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.WriteInt16(10);
+            byteBlock.WriteInt32(10);
+        }
     }
 }
