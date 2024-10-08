@@ -27,8 +27,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(DebugMode)'!='DebugProSources'">
-		<PackageReference Include="TouchSocket.Http" Version="2.1.6" />
-		<PackageReference Include="TouchSocket.WebApi" Version="2.1.6" />
+		<PackageReference Include="TouchSocket.Http" Version="2.1.7" />
+		<PackageReference Include="TouchSocket.WebApi" Version="2.1.7" />
 	</ItemGroup>
 
 </Project>
