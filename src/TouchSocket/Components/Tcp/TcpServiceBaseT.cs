@@ -213,10 +213,12 @@ namespace TouchSocket.Sockets
 
             var serverState= this.m_serverState;
 
+            //调整这行语句顺序，修复Stop时可能会抛出异常的bug
+            //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
+            this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
             //无条件释放
             await this.ReleaseAll().ConfigureAwait(false);
-            this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
-
+           
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
