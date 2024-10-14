@@ -30,6 +30,11 @@ namespace TouchSocket.Dmtp
             registrator.RegisterSingleton<IDmtpRouteService, DmtpRouteService>();
         }
 
+        public static void AddDmtpRouteService<TDmtpRouteService>(this IRegistrator registrator)where TDmtpRouteService :class, IDmtpRouteService
+        {
+            registrator.RegisterSingleton<IDmtpRouteService, TDmtpRouteService>();
+        }
+
         /// <summary>
         /// 添加基于设定委托的Dmtp路由服务。
         /// </summary>
