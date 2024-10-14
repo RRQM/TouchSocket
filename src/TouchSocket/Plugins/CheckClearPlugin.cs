@@ -33,19 +33,19 @@ namespace TouchSocket.Sockets
         /// </summary>
         public CheckClearPlugin(ILog logger)
         {
-            this.OnClose = (client, type) =>
+            this.OnClose = async (client, type) =>
             {
                 if (this.CheckClearType == CheckClearType.OnlyReceive)
                 {
-                    client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutReceiving).ConfigureAwait(false);
                 }
                 else if (this.CheckClearType == CheckClearType.OnlySend)
                 {
-                    client.CloseAsync(TouchSocketResource.TimedoutWithoutSending);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutSending).ConfigureAwait(false);
                 }
                 else
                 {
-                    client.CloseAsync(TouchSocketResource.TimedoutWithoutAll);
+                    await client.CloseAsync(TouchSocketResource.TimedoutWithoutAll).ConfigureAwait(false);
                 }
             };
             this.m_logger = logger;
@@ -60,7 +60,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 当因为超出时间限定而关闭。
         /// </summary>
-        public Action<TClient, CheckClearType> OnClose { get; set; }
+        public Func<TClient, CheckClearType, Task> OnClose { get; set; }
 
         /// <summary>
         /// 获取或设置清理无数据交互的Client，默认60秒。
@@ -88,7 +88,18 @@ namespace TouchSocket.Sockets
         /// <returns>返回当前的CheckClearPlugin实例，以支持链式调用。</returns>
         public CheckClearPlugin<TClient> SetOnClose(Action<TClient, CheckClearType> action)
         {
-            this.OnClose = action;
+            Task Func(TClient client, CheckClearType checkClearType)
+            {
+                action.Invoke(client,checkClearType);
+                return EasyTask.CompletedTask;
+            }
+            this.SetOnClose(Func);
+            return this;
+        }
+
+        public CheckClearPlugin<TClient> SetOnClose(Func<TClient, CheckClearType,Task> func)
+        {
+            this.OnClose = func;
             return this;
         }
 
@@ -170,7 +181,7 @@ namespace TouchSocket.Sockets
 
         private Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
-            Task.Factory.StartNew(this.Polling, sender);
+            Task.Factory.StartNew(this.Polling, sender,TaskCreationOptions.LongRunning);
             return EasyTask.CompletedTask;
         }
 
@@ -180,6 +191,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
+                    this.m_logger.Debug($"{this.GetType()} Polling");
                     await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
                     if (sender is IConnectableService connectableService)
                     {
