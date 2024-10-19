@@ -1,0 +1,135 @@
+---
+slug: tcplimiting
+title: Tcp实现接收数据限流
+authors: [rrqm]
+tags: [TcpClient, TcpService]
+---
+
+import CardLink from '@site/src/components/CardLink.js';
+
+## 一、引言
+
+使用[TouchSocket](https://gitee.com/dotnetchina/TouchSocket)创建服务器后，想实现一个限流功能，应该如何实现呢？
+
+## 二、技术细节
+
+## 三、实践应用
+
+## 四、代码实现
+
+## 五、性能分析
+
+## 六、总结
+
+## 七、参考资料
+
+## 八、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/BlogsDemos/ThrottlingConsoleApp" isPro="true"/>
+
+***
+## 二、程序集源码
+
+#### 2.1 源码位置
+- [Gitee](https://gitee.com/RRQM_Home)
+- [Github](https://github.com/RRQM)
+
+#### 2.2 说明文档
+[文档首页](https://touchsocket.net/)
+
+## 三、安装
+Nuget安装`TouchSocket`即可，具体步骤详看链接博客。
+
+[VS、Unity安装和使用Nuget包](https://blog.csdn.net/qq_40374647/article/details/121464929)
+
+## 四、创建插件
+
+```csharp
+public class MyThrottlingPlugin : PluginBase, ITcpConnectedPlugin, ITcpReceivingPlugin
+{
+    private readonly int m_max;
+
+    [DependencyInject(10)]
+    public MyThrottlingPlugin(int max)
+    {
+        this.m_max = max;
+        this.Order = int.MaxValue;//提升优先级
+    }
+
+    Task ITcpConnectedPlugin<ITcpClientBase>.OnTcpConnected(ITcpClientBase client, ConnectedEventArgs e)
+    {
+        client.InitFlowGate(this.m_max);//初始化流量计数器。
+        return e.InvokeNext();
+    }
+
+    async Task ITcpReceivingPlugin<ITcpClientBase>.OnTcpReceiving(ITcpClientBase client, ByteBlockEventArgs e)
+    {
+        await client.GetFlowGate().AddCheckWaitAsync(e.ByteBlock.Len);
+        await e.InvokeNext();
+    }
+}
+```
+
+## 五、创建扩展类
+
+```csharp
+/// <summary>
+/// 一个流量计数器扩展。
+/// </summary>
+internal static class DependencyExtensions
+{
+    public static readonly DependencyProperty<FlowGate> FlowGateProperty =
+        DependencyProperty<FlowGate>.Register("FlowGate", null);
+
+    public static void InitFlowGate(this IDependencyObject dependencyObject, int max)
+    {
+        dependencyObject.SetValue(FlowGateProperty, new FlowGate() { Maximum = max });
+    }
+
+    public static FlowGate GetFlowGate(this IDependencyObject dependencyObject)
+    {
+        return dependencyObject.GetValue(FlowGateProperty);
+    }
+}
+```
+
+## 六、启动服务器
+
+```csharp
+/// <summary>
+/// 限制单个客户端的访问流量
+/// 博客连接<see href="https://blog.csdn.net/qq_40374647/article/details/125496769"/>
+/// </summary>
+/// <param name="args"></param>
+private static void Main(string[] args)
+{
+    var service = new TcpService();
+    service.Received = (client, byteBlock, requestInfo) =>
+    {
+        //从客户端收到信息
+        var mes = Encoding.UTF8.GetString(byteBlock.Buffer, 0, byteBlock.Len);
+        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+    };
+
+    service.Setup(new TouchSocketConfig()//载入配置
+        .SetListenIPHosts(new IPHost[] { new IPHost("127.0.0.1:7789"), new IPHost(7790) })//同时监听两个地址
+        .ConfigureContainer(a =>
+        {
+            a.AddConsoleLogger();
+        })
+        .ConfigurePlugins(a =>
+        {
+            a.Add<MyThrottlingPlugin>();
+        }))
+        .Start();//启动
+    service.Logger.Info("服务器已启动");
+    Console.ReadLine();
+}
+```
+
+## 七、效果
+![在这里插入图片描述](https://i-blog.csdnimg.cn/blog_migrate/c8f957d58769b7cc5770f59d0494f558.gif)
+
+本文[示例demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/BlogsDemos/ThrottlingConsoleApp)
+
+实际上，该插件也能用于**客户端**。同时，也能限制**发送**流量限制。
