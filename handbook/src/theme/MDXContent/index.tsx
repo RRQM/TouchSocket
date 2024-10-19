@@ -5,11 +5,10 @@ import type { Props } from '@theme/MDXContent';
 import GiscusCard from '@site/src/components/GiscusCard.js';
 import LikeButton from '@site/src/components/LikeButton.js';
 
-export default function MDXContent({ children }: Props): JSX.Element
-{
-  return<MDXProvider components={MDXComponents}>
-      {children}
-      {/* <GiscusCard/> */}
-      <LikeButton/>
-    </MDXProvider>;
+export default function MDXContent({ children }: Props): JSX.Element {
+  return <MDXProvider components={MDXComponents}>
+    {children}
+    {/* <GiscusCard/> */}
+    <LikeButton />
+  </MDXProvider>;
 }
