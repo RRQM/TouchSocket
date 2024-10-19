@@ -55,13 +55,20 @@ const config = {
             // }
           },
         },
-        // blog: {
-        //   showReadingTime: true,
-        //   // Please change this to your repo.
-        //   // Remove this to remove the "edit this page" links.
-        //   editUrl:
-        //     'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-        // },
+        blog: {
+          showReadingTime: true,
+          feedOptions: {
+            type: ['rss', 'atom'],
+            xslt: true,
+          },
+          onInlineTags: 'warn',
+          onInlineAuthors: 'warn',
+          onUntruncatedBlogPosts: 'warn',
+          // Please change this to your repo.
+          // Remove this to remove the "edit this page" links.
+          editUrl:
+            'https://gitee.com/rrqm_home/touchsocket/tree/master/handbook/',
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -107,7 +114,7 @@ const config = {
           {
             label: "博客",
             position: "left",
-            to: "docs/current/blog"
+            to: "/blog"
           },
           {
             label: "视频",

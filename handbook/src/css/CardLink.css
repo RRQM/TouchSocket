@@ -1,0 +1,66 @@
+/* CardLink.css */
+.card-link {
+    display: block;
+    width: 100%;
+    /* 设置宽度为100%，占据父容器全宽 */
+    position: relative;
+    text-align: left;
+    /* 左对齐文本 */
+    padding: 20px;
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.card-link:hover {
+    background-color: #f0f0f0;
+}
+
+.card-content {
+    display: flex;
+    /* 使用Flex布局 */
+    align-items: center;
+    /* 垂直居中对齐 */
+}
+
+.card-content img {
+    margin-right: 10px;
+    /* 图片与文本之间的间距 */
+}
+
+.card-content h3 {
+    margin: 5px;
+    margin-left: 10px;
+    /* 设置左边距 */
+    /* 标题与描述之间的间距 */
+    flex: 1;
+    /* 让标题占据剩余空间 */
+}
+
+.card-content p {
+    flex: 1;
+    /* 让描述占据剩余空间 */
+}
+
+.pro-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 1;
+}
+
+.pro-badge a {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.pro-badge a:hover {
+    background-color: #0056b3;
+}

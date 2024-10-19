@@ -1,0 +1,23 @@
+rrqm:
+  name: 若汝棋茗
+  title: Software Engineer Ⅱ
+  url: https://github.com/rrqm
+  image_url: https://github.com/rrqm.png
+  page: true
+  socials:
+    github: rrqm
+    newsletter: QQ:505554090
+
+# slorber:
+#   name: Sébastien Lorber
+#   title: Docusaurus maintainer
+#   url: https://sebastienlorber.com
+#   image_url: https://github.com/slorber.png
+#   page:
+#     # customize the url of the author page at /blog/authors/<permalink>
+#     permalink: '/all-sebastien-lorber-articles'
+#   socials:
+#     x: sebastienlorber
+#     linkedin: sebastienlorber
+#     github: slorber
+#     newsletter: https://thisweekinreact.com
