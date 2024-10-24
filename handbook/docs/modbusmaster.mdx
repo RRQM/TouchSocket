@@ -43,7 +43,7 @@ import Tag from "@site/src/components/Tag.js";
 
 ## 六、创建
 
-目前`TouchSokcet.Modbus`支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
+目前`TouchSocket.Modbus`支持`Tcp`、`Udp`、`Rtu`、`RtuOverTcp`、`RtuOverUdp`等协议。下面会一一介绍创建过程。
 
 #### 6.1 创建ModbusTcpMaster
 
@@ -173,14 +173,15 @@ await master.WriteMultipleCoilsAsync(0, new bool[] { true, false, true });
 写入多个寄存器（FC16）。
 
 ```csharp showLineNumbers
-using (var writer = new ValueByteBlock(1024))
+using (var valueByteBlock = new ValueByteBlock(1024))
 {
-    writer.Write(short.MaxValue, EndianType.Big);//ABCD端序 2字节
-    writer.Write(int.MaxValue, EndianType.Little);//DCBA端序 4字节
-    writer.Write(long.MaxValue, EndianType.BigSwap);//BADC端序 8字节
-    writer.Write(double.MaxValue, EndianType.LittleSwap);//CDAB端序 8字节
-    
-   await master.WriteMultipleRegistersAsync(0, writer.ToArray());
+    valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
+    valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
+    valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
+    valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+
+    //写入到寄存器
+    await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
 }
 ```
 
@@ -210,7 +211,7 @@ uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
 
 :::tip 提示
 
-该集合支持全部基础数据类型，以及DataTiem和TimeSpan。
+该集合支持全部基础数据类型，以及DataTime和TimeSpan。
 
 :::  
 
@@ -221,13 +222,13 @@ uint[] values=reader.ToUInt32s(EndianType.Big).ToArray();
 ```csharp showLineNumbers
 using (var valueByteBlock = new ValueByteBlock(1024))
 {
-    valueByteBlock.Write((ushort)2, EndianType.Big);//ABCD端序
-    valueByteBlock.Write((ushort)2000, EndianType.Little);//DCBA端序
-    valueByteBlock.Write(int.MaxValue, EndianType.BigSwap);//BADC端序
-    valueByteBlock.Write(long.MaxValue, EndianType.LittleSwap);//CDAB端序
+    valueByteBlock.WriteUInt16((ushort)2, EndianType.Big);//ABCD端序
+    valueByteBlock.WriteUInt16((ushort)2000, EndianType.Little);//DCBA端序
+    valueByteBlock.WriteInt32(int.MaxValue, EndianType.BigSwap);//BADC端序
+    valueByteBlock.WriteInt64(long.MaxValue, EndianType.LittleSwap);//CDAB端序
 
     //写入到寄存器
-    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
+    await master.WriteMultipleRegistersAsync(1, 2, valueByteBlock.ToArray());
 }
 ```
 
@@ -253,7 +254,7 @@ Console.WriteLine(reader.ReadInt64(EndianType.LittleSwap));
 using (var valueByteBlock = new ValueByteBlock(1024))
 {
     //写入字符串，会先用4字节表示字符串长度，然后按utf8编码写入字符串
-    valueByteBlock.Write("Hello");
+    valueByteBlock.WriteString("Hello");
 
     //写入到寄存器
     await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
@@ -269,24 +270,8 @@ Console.WriteLine(reader.ReadString());
 
 读写任意类型：
 
-```csharp showLineNumbers
-using (var valueByteBlock = new ValueByteBlock(1024))
-{
-    //写入任意类型，使用Json序列化
-    valueByteBlock.WriteObject(new MyClass() { P1 = 1, P2 = 2 }, SerializationType.Json);
+配合序列化模块，可以任意读写任意类型。
 
-    //写入到寄存器
-    await master.WriteMultipleRegistersAsync(1, 0, valueByteBlock.ToArray());
-}
-
-//读取寄存器
-var response =await master.ReadHoldingRegistersAsync(1, 0, 10);//无法确定长度的话，可以估算一下，尽可能大即可
-
-//创建一个读取器
-var reader = response.CreateReader();
-
-Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonString());
-```
 
 :::tip 提示
 
@@ -296,7 +281,7 @@ Console.WriteLine(reader.ReadObject<MyClass>(SerializationType.Json).ToJsonStrin
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Modbus/ModbusMasterConsoleApp)
 
-## 九、ModbusObject操作
+## 九、ModbusObject操作 <Tag>Pro</Tag>
 
 ### 9.1 基本使用
 
