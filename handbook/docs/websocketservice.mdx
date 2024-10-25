@@ -662,23 +662,82 @@ public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
 
 ## 六、回复、响应数据
 
-要回复`Websocket`消息，必须使用**HttpSessionClient**对象。
+要回复`Websocket`消息，必须使用**HttpSessionClient**对象。如果要获取到所有的`HttpSessionClient`对象，则必须通过`HttpService`对象获取。
 
-### 6.1 如何获取SessionClient？
+所以，首先，得确保能访问到`HttpService`对象。
+
+如果是在`HttpService`的创建过程中，你可以直接访问到`HttpService`对象。
+
+但是如果在插件中，或者其他地方，你需要使用其他方法来实现。
+
+### 6.1 在插件中获取`HttpService`对象
+
+插件是支持依赖注入的，所以可以直接注入`HttpService`对象。然后在插件中获取。
+
+例如：
+
+【注册服务】
+
+```csharp {6} showLineNumbers
+var service = new HttpService();
+await service.SetupAsync(new TouchSocketConfig()//加载配置
+     ...
+     .ConfigureContainer(a =>
+     {
+         a.RegisterSingleton<IHttpService>(service);
+         ...
+     }));
+await service.StartAsync();
+```
+
+【获取服务】
+
+```csharp {3,5,8} showLineNumbers
+public class MyWebSocketPlugin : PluginBase,...
+{
+    private readonly IHttpService m_httpService;
+
+    public MyWebSocketPlugin(ILog logger,IHttpService httpService)
+    {
+        this.m_logger = logger;
+        this.m_httpService = httpService;
+    }
+}
+```
+
+除了使用容器，还可以在插件触发时，通过`WebSocket`获取`HttpService`对象。
+
+```csharp {6-9} showLineNumbers
+public class MyWebSocketPlugin : PluginBase, IWebSocketReceivedPlugin
+{
+    ...
+    public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
+    {
+        if (client.Client is IHttpSessionClient httpSessionClient)
+        {
+            var service = httpSessionClient.Service as IHttpService
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+
+### 6.2 获取SessionClient
 
 #### （1）直接获取所有在线客户端
 
-通过`service.GetClients`方法，获取当前在线的所有客户端。
+通过`service.Clients`属性，获取当前在线的所有客户端。
 
 ```csharp showLineNumbers
-HttpSessionClient[] SessionClients = service.GetClients();
-foreach (var item in SessionClients)
+var clients = service.Clients;
+foreach (var item in clients)
 {
     if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
     {
         if (item.Id == "id")//再按指定id发送，或者直接广播发送
         {
-
+            await item.WebSocket.SendAsync("hello");
         }
     }
 }
@@ -701,20 +760,20 @@ if (service.TryGetClient(ids[0], out HttpSessionClient SessionClient))
 }
 ```
 
-### 6.2 发送文本类消息
+### 6.3 发送文本类消息
 
 ```csharp showLineNumbers
-SessionClient.WebSocket.SendAsync("Text");
+await webSocket.SendAsync("Text");
 ```
 
-### 6.3 发送二进制消息
+### 6.4 发送二进制消息
 
 ```csharp showLineNumbers
-SessionClient.WebSocket.SendAsync(new byte[10]);
+await webSocket.SendAsync(new byte[10]);
 ```
 
+### 6.5 直接发送自定义构建的数据帧
 
-### 6.4 直接发送自定义构建的数据帧
 ```csharp showLineNumbers
 WSDataFrame frame=new WSDataFrame();
 frame.Opcode= WSDataType.Text;
@@ -726,34 +785,50 @@ frame.AppendText("I");
 frame.AppendText("Love");
 frame.AppendText("U");
 
-SessionClient.WebSocket.SendAsync(frame);
+await webSocket.SendAsync(frame);
 ```
-
-
 :::info 备注
 
 此部分功能就需要你对`WebSocket`有充分了解才可以操作。
 
 :::  
 
-
-## 七、服务器广播发送
+### 6.6 发送Ping
 
 ```csharp showLineNumbers
-//广播给所有人
-foreach (var item in service.GetClients())
+await webSocket.PingAsync();
+```
+
+### 6.7 发送Pong
+
+```csharp showLineNumbers
+await webSocket.PongAsync();
+```
+
+### 6.8 发送大数据
+
+发送大数据时，需要分包发送，可以使用`SendAsync`的重载方法，设置`FIN`标志。
+
+```csharp showLineNumbers
+// 发送 "hello" 消息 100 次，最后一次设置 FIN 标志  
+var i = 0;
+while (true)
 {
-    if (item.Protocol== Protocol.WebSocket)
+    if (i++ == 100)
     {
-        item.WebSocket.SendAsync("广播");
+        await sessionClient.WebSocket.SendAsync("hello", true);
+        break;
     }
+    await sessionClient.WebSocket.SendAsync("hello", false);
 }
 ```
 
-:::tip 提示
+### 6.9 关闭连接
 
-在发送时，还可以自己过滤Id。
+```csharp showLineNumbers
+await webSocket.CloseAsync("关闭");
+```
 
-:::  
+
 
 [本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket/WebSocketConsoleApp)
