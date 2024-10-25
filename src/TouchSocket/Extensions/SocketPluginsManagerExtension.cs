@@ -40,7 +40,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         /// <param name="pluginManager">插件管理器</param>
         /// <returns>返回一个用于检查和清理不活跃客户端的插件实例</returns>
-        public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager) where TClient : IClient, IClosableClient
+        public static CheckClearPlugin<TClient> UseCheckClear<TClient>(this IPluginManager pluginManager) where TClient : class, IClient, IClosableClient
         {
             // 添加并返回一个新的检查和清理插件实例
             return pluginManager.Add<CheckClearPlugin<TClient>>();
