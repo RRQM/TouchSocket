@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// 检查清理连接插件。服务器与客户端均适用。
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : IClient, IClosableClient
+    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : class, IClient, IClosableClient
     {
         private static readonly DependencyProperty<bool> s_checkClearProperty =
             new("CheckClear", false);
@@ -90,14 +90,14 @@ namespace TouchSocket.Sockets
         {
             Task Func(TClient client, CheckClearType checkClearType)
             {
-                action.Invoke(client,checkClearType);
+                action.Invoke(client, checkClearType);
                 return EasyTask.CompletedTask;
             }
             this.SetOnClose(Func);
             return this;
         }
 
-        public CheckClearPlugin<TClient> SetOnClose(Func<TClient, CheckClearType,Task> func)
+        public CheckClearPlugin<TClient> SetOnClose(Func<TClient, CheckClearType, Task> func)
         {
             this.OnClose = func;
             return this;
@@ -123,6 +123,10 @@ namespace TouchSocket.Sockets
 
         private void CheckClient(TClient client)
         {
+            if (client is null)
+            {
+                return;
+            }
             if (client.GetValue(s_checkClearProperty))
             {
                 return;
@@ -149,11 +153,7 @@ namespace TouchSocket.Sockets
                     {
                         return;
                     }
-                    //else if (client is IOnlineClient handshakeObject && !handshakeObject.Online)
-                    //{
-                    //    return;
-                    //}
-
+                 
                     if (this.CheckClearType == CheckClearType.OnlyReceive)
                     {
                         if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
@@ -179,36 +179,51 @@ namespace TouchSocket.Sockets
             });
         }
 
-        private Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        private async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
-            Task.Factory.StartNew(this.Polling, sender,TaskCreationOptions.LongRunning);
-            return EasyTask.CompletedTask;
+            _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private async Task Polling(object sender)
         {
-            while (true)
+            try
             {
-                try
+                this.m_logger.Info($"{this.GetType()} begin polling");
+                while (true)
                 {
-                    this.m_logger.Debug($"{this.GetType()} Polling");
-                    await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
-                    if (sender is IConnectableService connectableService)
+                    if (this.DisposedValue)
                     {
-                        foreach (var client in connectableService.GetClients())
+                        return;
+                    }
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(this.Tick.TotalMilliseconds / 10.0)).ConfigureAwait(false);
+                        if (sender is IConnectableService connectableService)
                         {
-                            this.CheckClient((TClient)client);
+                            foreach (var client in connectableService.GetClients())
+                            {
+                                this.CheckClient(client as TClient);
+                            }
+                        }
+                        else if (sender is IClient client)
+                        {
+                            this.CheckClient(client as TClient);
                         }
                     }
-                    else if (sender is IClient client)
+                    catch (Exception ex)
                     {
-                        this.CheckClient((TClient)client);
+                        this.m_logger.Exception(ex);
                     }
                 }
-                catch (Exception ex)
-                {
-                    this.m_logger.Exception(ex);
-                }
+            }
+            catch (Exception ex)
+            {
+                this.m_logger.Exception(ex);
+            }
+            finally
+            {
+                this.m_logger.Info($"{this.GetType()} end polling");
             }
         }
     }

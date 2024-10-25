@@ -272,7 +272,7 @@ namespace TouchSocket.Sockets
         {
             this.m_beginReconnectTask = Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
 
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
 
