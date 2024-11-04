@@ -206,7 +206,7 @@ const config = {
       mermaid: {
         theme: { light: 'neutral', dark: 'forest' },
         options: {
-          maxTextSize: 500,
+          maxTextSize: 20000,
         },
       },
     }),
