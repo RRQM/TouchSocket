@@ -12,6 +12,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -250,6 +251,54 @@ namespace WebApiServerApp
         }
     }
 
+    public class MyApiServer : RpcServer
+    {
+        private readonly ILog m_logger;
+
+        public MyApiServer(ILog logger)
+        {
+            this.m_logger = logger;
+        }
+
+        [Router("/[api]/[action]")]
+        [WebApi(HttpMethodType.GET)]
+        public async Task ConnectWS(IWebApiCallContext callContext)
+        {
+            if (callContext.Caller is HttpSessionClient sessionClient)
+            {
+                if (await sessionClient.SwitchProtocolToWebSocketAsync(callContext.HttpContext))
+                {
+                    m_logger.Info("WS通过WebApi连接");
+                    var webSocket = sessionClient.WebSocket;
+
+                    webSocket.AllowAsyncRead = true;
+
+                    while (true)
+                    {
+                        using (var tokenSource=new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                        {
+                            using (var receiveResult = await webSocket.ReadAsync(tokenSource.Token))
+                            {
+                                if (receiveResult.IsCompleted)
+                                {
+                                    //webSocket已断开
+                                    return;
+                                }
+
+                                //webSocket数据帧
+                                var dataFrame =  receiveResult.DataFrame;
+
+                                //此处可以处理数据
+                            } 
+                        }
+                        
+                    }
+                }
+            }
+        }
+    }
+
+    
     //class CustomResponseAttribute:RpcActionFilterAttribute
     //{
     //    public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult)
