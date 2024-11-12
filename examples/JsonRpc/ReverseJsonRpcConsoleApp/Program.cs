@@ -21,53 +21,59 @@ namespace ReverseJsonRpcConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            var service = GetService();
-            var client = GetClient();
+            var service = await GetService();
+            var client = await GetClient();
 
             Console.ReadKey();
         }
 
-        private static WebSocketJsonRpcClient GetClient()
+        private static async Task<WebSocketJsonRpcClient> GetClient()
         {
             var jsonRpcClient = new WebSocketJsonRpcClient();
-            jsonRpcClient.SetupAsync(new TouchSocketConfig()
-                .ConfigureContainer(a =>
-                {
-                    a.AddRpcStore(store =>
-                    {
-                        store.RegisterServer<ReverseJsonRpcServer>();
-                    });
-                })
-                .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
-            jsonRpcClient.ConnectAsync();
+            await jsonRpcClient.SetupAsync(new TouchSocketConfig()
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddRpcStore(store =>
+                     {
+                         store.RegisterServer<ReverseJsonRpcServer>();
+                     });
+                 })
+                 .SetRemoteIPHost("ws://127.0.0.1:7707/ws"));//此url就是能连接到websocket的路径。
+            await jsonRpcClient.ConnectAsync();
 
             return jsonRpcClient;
         }
 
-        private static HttpService GetService()
+        private static async Task<HttpService> GetService()
         {
             var service = new HttpService();
 
-            service.SetupAsync(new TouchSocketConfig()
-                 .SetListenIPHosts(7707)
-                 .ConfigurePlugins(a =>
-                 {
-                     a.UseWebSocket()
-                     .SetWSUrl("/ws");
+            await service.SetupAsync(new TouchSocketConfig()
+                  .SetListenIPHosts(7707)
+                  .ConfigureContainer(a =>
+                  {
+                      a.AddRpcStore(store =>
+                      {
+                      });
+                  })
+                  .ConfigurePlugins(a =>
+                  {
+                      a.UseWebSocket()
+                      .SetWSUrl("/ws");
 
-                     a.UseWebSocketJsonRpc()
-                     .SetAllowJsonRpc((socketClient, context) =>
-                     {
-                         //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
-                         //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
-                         return true;
-                     });
+                      a.UseWebSocketJsonRpc()
+                      .SetAllowJsonRpc((socketClient, context) =>
+                      {
+                          //此处的作用是，通过连接的一些信息判断该ws是否执行JsonRpc。
+                          //当然除了此处可以设置外，也可以通过socketClient.SetJsonRpc(true)直接设置。
+                          return true;
+                      });
 
-                     a.Add<MyPluginClass>();
-                 }));
-            service.StartAsync();
+                      a.Add<MyPluginClass>();
+                  }));
+            await service.StartAsync();
             return service;
         }
     }
@@ -82,7 +88,7 @@ namespace ReverseJsonRpcConsoleApp
                 var jsonRpcClient = ((IHttpSessionClient)client.Client).GetJsonRpcActionClient();
 
                 var result = await jsonRpcClient.InvokeTAsync<int>("Add", InvokeOption.WaitInvoke, 10, 20);
-                Console.WriteLine(result);
+                Console.WriteLine($"反向调用成功，结果={result}");
 
                 //Stopwatch stopwatch = Stopwatch.StartNew();
                 //for (int i = 0; i < 10000; i++)
