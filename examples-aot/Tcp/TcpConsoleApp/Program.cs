@@ -22,7 +22,6 @@ namespace TcpConsoleApp
         {
             var service = new TcpService();
             service.Setup(new TouchSocketConfig()//载入配置
-                .SetRegistrator(new MyContainer())
                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
                 .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                 {
@@ -54,7 +53,6 @@ namespace TcpConsoleApp
 
             //载入配置
             tcpClient.Setup(new TouchSocketConfig()
-                .SetRegistrator(new MyContainer())
                 .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                 .ConfigurePlugins(a =>
                 {
@@ -71,20 +69,8 @@ namespace TcpConsoleApp
         }
     }
 
-    /// <summary>
-    /// IOC容器
-    /// </summary>
-    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
-    [GeneratorContainer]
-    public partial class MyContainer : ManualContainer
+    internal partial class MyServicePluginClass : PluginBase, IServerStartedPlugin, IServerStopedPlugin
     {
-    }
-
-    [AutoInjectForSingleton]
-    internal partial class MyServicePluginClass : PluginBase
-    {
-        [GeneratorPlugin(typeof(IServerStartedPlugin))]
         public Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
         {
             if (sender is ITcpService service)
@@ -105,7 +91,6 @@ namespace TcpConsoleApp
             return e.InvokeNext();
         }
 
-        [GeneratorPlugin(typeof(IServerStopedPlugin))]
         public Task OnServerStoped(IServiceBase sender, ServiceStateEventArgs e)
         {
             Console.WriteLine("服务已停止");
@@ -113,10 +98,8 @@ namespace TcpConsoleApp
         }
     }
 
-    [AutoInjectForSingleton]
-    partial class TcpServiceReceivedPlugin : PluginBase
+    partial class TcpServiceReceivedPlugin : PluginBase, ITcpReceivedPlugin
     {
-        [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             //从客户端收到信息
@@ -153,8 +136,7 @@ namespace TcpConsoleApp
     /// <summary>
     /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
     /// </summary>
-    [AutoInjectForSingleton]
-    partial class ClosePlugin : PluginBase
+    partial class ClosePlugin : PluginBase, ITcpReceivedPlugin
     {
         private readonly ILog m_logger;
 
@@ -163,7 +145,6 @@ namespace TcpConsoleApp
             this.m_logger = logger;
         }
 
-        [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             try
