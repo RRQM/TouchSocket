@@ -48,7 +48,7 @@ namespace ClientConsoleApp
             using (var stream=File.OpenRead("TouchSocket.dll"))
             {
                 //创建一个请求
-                var request = new HttpRequest(client);
+                var request = new HttpRequest();
                 request.SetContent(new StreamHttpContent(stream));//设置流内容
                 request.InitHeaders()
                     .SetUrl("/bigwrite")
@@ -68,7 +68,7 @@ namespace ClientConsoleApp
             var client = await GetHttpClient();
 
             //创建一个请求
-            var request = new HttpRequest(client);
+            var request = new HttpRequest();
             request.SetContent(new BigDataHttpContent());
             request.InitHeaders()
                 .SetUrl("/bigwrite")
@@ -86,7 +86,7 @@ namespace ClientConsoleApp
         {
             var client = await GetHttpClient();
             //创建一个请求
-            var request = new HttpRequest(client);
+            var request = new HttpRequest();
             request.InitHeaders()
                 .SetUrl("/WeatherForecast")
                 .SetHost(client.RemoteIPHost.Host)

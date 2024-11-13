@@ -128,24 +128,27 @@ namespace DmtpClientApp
         public int Id { get; set; }
     }
 
-    public class MyDmtpAttribute : DmtpRpcAttribute
-    {
-        private readonly string m_route;
+    /// <summary>
+    /// 3.1版本中已经不需要了
+    /// </summary>
+    //public class MyDmtpAttribute : DmtpRpcAttribute
+    //{
+    //    private readonly string m_route;
 
-        public MyDmtpAttribute(string route = default)
-        {
-            this.m_route = route;
-        }
+    //    public MyDmtpAttribute(string route = default)
+    //    {
+    //        this.m_route = route;
+    //    }
 
-        public override string GetInvokeKey(RpcMethod methodInstance)
-        {
-            if (this.m_route.IsNullOrEmpty())
-            {
-                return base.GetInvokeKey(methodInstance);
-            }
-            return this.m_route;
-        }
-    }
+    //    public override string GetInvokeKey(RpcMethod methodInstance)
+    //    {
+    //        if (this.m_route.IsNullOrEmpty())
+    //        {
+    //            return base.GetInvokeKey(methodInstance);
+    //        }
+    //        return this.m_route;
+    //    }
+    //}
 
     public class MyRpcActionFilterAttribute : RpcActionFilterAttribute
     {

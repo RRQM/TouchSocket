@@ -81,6 +81,7 @@ namespace PluginConsoleApp
     /// <summary>
     /// 定义一个插件接口，使其继承<see cref="IPlugin"/>
     /// </summary>
+    [DynamicMethod]
     public interface ISayPlugin : IPlugin
     {
         /// <summary>
@@ -171,24 +172,14 @@ namespace PluginConsoleApp
         }
     }
 
-    public partial class SayHelloGenerator : PluginBase
+    public partial class SayHelloGenerator : PluginBase, ISayPlugin
     {
-        //如果在代码里，继承了PluginBase，并且没有显示重写Loaded
-        //则在源生成时，会自己生成重写代码。
-        //如果显示重写了Loaded。就需要自己手动调用RegisterPlugins。不然插件不会生效的。
-        //protected override void Loaded(pluginManager pluginManager)
-        //{
-        //    base.Loaded(pluginManager);
-        //    this.RegisterPlugins(pluginManager);
-        //}
-
         /// <summary>
         /// 使用源生成插件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <returns></returns>
-        [GeneratorPlugin(typeof(ISayPlugin))]
         public async Task Say(object sender, MyPluginEventArgs e)
         {
             Console.WriteLine($"{this.GetType().Name}------Enter");

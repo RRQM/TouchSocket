@@ -84,7 +84,7 @@ namespace RealityProxyDmtpRpcConsoleApp
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        [DmtpRpc(true)]//使用函数名直接调用
+        [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
         int Add(int a, int b);
     }
 }

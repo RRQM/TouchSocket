@@ -210,7 +210,7 @@ namespace ConsoleApp
 
                         //此操作会先接收全部数据，然后再分割数据。
                         //所以上传文件不宜过大，不然会内存溢出。
-                        var multifileCollection = e.Context.Request.GetMultifileCollection();
+                        var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
 
                         //foreach (var item in multifileCollection)
                         //{
@@ -220,12 +220,12 @@ namespace ConsoleApp
                         //    client.Logger.Info(stringBuilder.ToString());
                         //}
 
-                        //一般强烈建议使用此处的异步迭代器，一般net5以上的都支持
-                        await foreach (var item in multifileCollection)
+                        
+                        foreach (var file in multifileCollection.Files)
                         {
                             var stringBuilder = new StringBuilder();
-                            stringBuilder.Append($"文件名={item.FileName}\t");
-                            stringBuilder.Append($"数据长度={item.Length}");
+                            stringBuilder.Append($"文件名={file.FileName}\t");
+                            stringBuilder.Append($"数据长度={file.Length}");
                             client.Logger.Info(stringBuilder.ToString());
                         }
 

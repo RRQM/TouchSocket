@@ -89,7 +89,7 @@ namespace ConsoleApp2
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        [DmtpRpc(true)]//使用函数名直接调用
+        [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
         [Description("将两个数相加")]//其作用是生成代理时，作为注释。
         [MyRpcActionFilter]
         public int Add(int a, int b)

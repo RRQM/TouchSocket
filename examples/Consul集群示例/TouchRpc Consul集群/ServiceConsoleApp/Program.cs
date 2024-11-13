@@ -110,7 +110,7 @@ namespace ServiceConsoleApp
 
     internal partial class MyServer : RpcServer
     {
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         [XmlRpc]
         [JsonRpc]
         [DmtpRpc]
@@ -124,7 +124,7 @@ namespace ServiceConsoleApp
         /// </summary>
         /// <returns></returns>
         [Router("/api/health")]
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public string Health()
         {
             return "ok";

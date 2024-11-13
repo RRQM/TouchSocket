@@ -161,7 +161,7 @@ namespace UnityServerConsoleApp
         private readonly ILog m_logger;
 
         [Description("登录")]
-        [DmtpRpc(true)]
+        [DmtpRpc(MethodInvoke = true)]
         public MyLoginModelResult Login(ICallContext callContext, MyLoginModel model)
         {
             if (model.Account == "123" && model.Password == "abc")
@@ -173,7 +173,7 @@ namespace UnityServerConsoleApp
         }
 
         [Description("性能测试")]
-        [DmtpRpc(true)]
+        [DmtpRpc(MethodInvoke = true)]
         public int Performance(int i)
         {
             Interlocked.Increment(ref this.count);
