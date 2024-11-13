@@ -172,7 +172,7 @@ public class MyApiServer : RpcServer
     }
 
     [Router("/[api]/[action]")]
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public async Task ConnectWS(IWebApiCallContext callContext)
     {
         if (callContext.Caller is HttpSessionClient sessionClient)
@@ -200,7 +200,7 @@ public class MyApiServer : RpcServer
     }
 
     [Router("/[api]/[action]")]
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public async Task ConnectWS(IWebApiCallContext callContext)
     {
         if (callContext.Caller is HttpSessionClient sessionClient)

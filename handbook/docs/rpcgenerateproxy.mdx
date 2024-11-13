@@ -458,7 +458,7 @@ public partial class MyRpcServer : RpcServer
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     [Description("将两个数相加")]//其作用是生成代理时，作为注释。
     public int Add(int a, int b)
     {
@@ -480,7 +480,7 @@ interface IMyRpcServer
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 ```
@@ -564,7 +564,7 @@ public partial class MyRpcServer : RpcServer
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     [Description("将两个数相加")]//其作用是生成代理时，作为注释。
     public int Add(int a, int b)
     {
@@ -586,7 +586,7 @@ interface IMyRpcServer
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 ```
