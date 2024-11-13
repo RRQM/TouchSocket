@@ -2,19 +2,19 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.0-beta.17" />
-    <PackageReference Include="TouchSocket.Rpc" Version="3.0.0-beta.17" />
-    <PackageReference Include="TouchSocket.WebApi" Version="3.0.0-beta.17" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.0-beta.17" />
-    <PackageReference Include="TouchSocketPro" Version="3.0.0-beta.17" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.0-beta.17" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.0" />
+    <PackageReference Include="TouchSocket.Rpc" Version="3.0.0" />
+    <PackageReference Include="TouchSocket.WebApi" Version="3.0.0" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.0" />
+    <PackageReference Include="TouchSocketPro" Version="3.0.0" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.0" />
   </ItemGroup>
 
 </Project>

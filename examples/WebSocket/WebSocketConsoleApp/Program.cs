@@ -345,11 +345,11 @@ namespace WebSocketConsoleApp
                         {
                             case WSDataType.Cont:
                                 {
-                                    //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                    //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                     //var segment = data.AsSegment();
                                     //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                    //如果是net6.0以上，直接写入span即可
+                                    //如果是net8.0以上，直接写入span即可
                                     stream.Write(data.Span);
 
                                     //收到的是中继包
@@ -390,11 +390,11 @@ namespace WebSocketConsoleApp
 
                                         //下面则是缓存逻辑
 
-                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                        //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                         //var segment = data.AsSegment();
                                         //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                        //如果是net6.0以上，直接写入span即可
+                                        //如果是net8.0以上，直接写入span即可
                                         stream.Write(data.Span);
                                     }
                                 }
@@ -417,11 +417,11 @@ namespace WebSocketConsoleApp
 
                                         //下面则是缓存逻辑
 
-                                        //如果是非net6.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
+                                        //如果是非net8.0即以上，即：NetFramework平台使用。原因是stream不支持span写入
                                         //var segment = data.AsSegment();
                                         //stream.Write(segment.Array, segment.Offset, segment.Count);
 
-                                        //如果是net6.0以上，直接写入span即可
+                                        //如果是net8.0以上，直接写入span即可
                                         stream.Write(data.Span);
                                     }
                                 }

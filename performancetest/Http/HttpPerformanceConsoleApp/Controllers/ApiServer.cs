@@ -3,14 +3,13 @@ using TouchSocket.WebApi;
 
 namespace HttpPerformanceConsoleApp.Controllers
 {
-    [GeneratorRpcServer]
     public partial class ApiServer : RpcServer
     {
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public int Add(int a, int b)
         {
             return a + b;
         }
-      
+
     }
 }

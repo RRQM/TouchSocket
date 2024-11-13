@@ -52,7 +52,6 @@ namespace WebApiConsoleApp
         }
     }
 
-    [GeneratorRpcServer]
     public partial class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
@@ -64,14 +63,14 @@ namespace WebApiConsoleApp
 
         [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
         [Router("[api]/[action]")]//此路由会以"/Server/Sum"实现
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public int Sum(int a, int b)
         {
             //m_logger.Info("Sum");
             return a + b;
         }
 
-        [WebApi(HttpMethodType.POST)]
+        [WebApi(Method = HttpMethodType.Post)]
         public int TestPost(MyClass myClass)
         {
             m_logger.Info("TestPost");
