@@ -1,0 +1,387 @@
+---
+id: pluginsmanager
+title: 插件系统
+---
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+
+## 一、说明
+
+插件系统是一组能实现多播订阅的，可中断的触发器，其主要功能就是实现类似事件、委托的通知消息。其设计核心来自于`AspNetCore`的中间件，它有着和中间件一样的使用体验，同时也有着更高的灵活性和自由度。
+
+## 二、产品特点
+
+- 简单易用。
+- 易扩展。
+
+## 三、产品应用场景
+
+- 所有可以使用事件。委托的场景。
+
+## 四、与事件、委托相比
+
+1. 订阅的时候可以不用知道被订阅方是谁，只需要知道要订阅什么通知即可。
+2. 订阅可以随时中断。例如：当事件多播的时候，即使其中一个订阅方已经处理，触发也不会停止，这样会造成资源浪费。
+3. 订阅回调。例如：第一个订阅方，想知道本次触发的最终结果是否已被处理时，委托则做不到。而插件则可以。
+4. 插件可以被继承，可以被扩展。
+5. 插件可以被注入。
+6. 插件可以独立负责相关功能，实现功能独立。可模块化功能。
+
+
+## 五、创建插件
+
+#### 5.1 新建插件接口及事件类
+
+```csharp showLineNumbers
+public class MyPluginEventArgs : PluginEventArgs
+{
+    public string Words { get; set; }
+}
+
+/// <summary>
+/// 定义一个插件接口，使其继承<see cref="IPlugin"/>
+/// </summary>
+public interface ISayPlugin : IPlugin
+{
+    /// <summary>
+    /// Say。定义一个插件方法，必须遵循：
+    /// 1.必须是两个参数，第一个参数可以是任意类型，一般表示触发源。第二个参数必须继承<see cref="PluginEventArgs"/>
+    /// 2.返回值必须是Task。
+    /// </summary>
+    /// <param name="sender">触发主体</param>
+    /// <param name="e">传递参数</param>
+    /// <returns></returns>
+    Task Say(object sender, MyPluginEventArgs e);
+}
+```
+
+:::caution 注意事项
+
+确定插件唯一的是插件中的`类型`，所以要求一个插件中只允许有一个插件方法。
+
+:::  
+
+#### 5.2 实现插件接口
+
+新建一个类，实现`ISayPlugin`接口即可。不过为了方便，也可先继承`PluginBase`基类，然后实现所需的插件接口。
+
+```csharp showLineNumbers 
+public class SayHelloPlugin : PluginBase, ISayPlugin
+{
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hello")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+
+public class SayHiPlugin : PluginBase, ISayPlugin
+{
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hi")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+
+internal class LastSayPlugin : PluginBase, ISayPlugin
+{
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        Console.WriteLine($"您输入的{e.Words}似乎不被任何插件处理");
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::tip 提示
+
+实现的插件，建议继承`PluginBase`，然后实现所需的插件接口，这样能简化实现过程。但是如果该类型已经拥有基类，则直接实现所需插件接口的全部内容即可。
+
+:::  
+
+## 六、订阅插件
+
+在插件触发前，需要先订阅插件。这样才知道哪些插件可以处理该数据。
+
+### 6.1 创建插件管理器
+
+```csharp showLineNumbers
+IPluginManager pluginManager = new PluginManager(new Container())
+{
+    Enable = true//必须启用
+};
+```
+
+### 6.2 添加订阅插件
+
+#### 6.2.1 按类型添加
+
+```csharp showLineNumbers
+//添加订阅插件
+pluginManager.Add<SayHelloPlugin>();
+pluginManager.Add<SayHiPlugin>();
+pluginManager.Add<LastSayPlugin>();
+```
+
+#### 6.2.2 按实例添加
+
+```csharp  showLineNumbers
+pluginManager.Add(new SayHelloPlugin());
+pluginManager.Add(new SayHiPlugin());
+pluginManager.Add(new LastSayPlugin());
+```
+
+#### 6.2.3 按委托添加
+
+委托添加插件有多个重载，下面一一为例：
+
+```csharp showLineNumbers
+pluginManager.Add(typeof(ISayPlugin), () =>
+{
+    //无参委托，一般做通知
+    Console.WriteLine("在Action1中获得");
+});
+
+pluginManager.Add(typeof(ISayPlugin), async (MyPluginEventArgs e) =>
+{
+    //只1个指定参数，当参数是事件参数时，需要主动InvokeNext
+    Console.WriteLine("在Action2中获得");
+    await e.InvokeNext();
+});
+
+pluginManager.Add(typeof(ISayPlugin), async (client, e) =>
+{
+    //2个不指定参数，需要主动InvokeNext
+    Console.WriteLine("在Action3中获得");
+    await e.InvokeNext();
+});
+
+pluginManager.Add(typeof(ISayPlugin), async (object client, MyPluginEventArgs e) =>
+{
+    //2个指定参数，需要主动InvokeNext
+    Console.WriteLine("在Action3中获得");
+    await e.InvokeNext();
+});
+```
+
+:::tip 提示
+
+需不需要`InvokeNext`，只需要记住一点，委托中是否接收了`PluginEventArgs`派生的事件参数，如果是，则需要主动调用。
+
+:::  
+
+## 七、触发插件
+
+直接使用`RaiseAsync`方法即可触发插件。
+
+在触发时，`sender`参数和`PluginEventArgs`参数必须和插件中定义的方法参数一致，不然会抛出异常。
+
+```csharp {1}
+await pluginManager.RaiseAsync(typeof(ISayPlugin), new object(), new MyPluginEventArgs()
+{
+    Words = Console.ReadLine()
+});
+```
+
+### 7.1 执行结果
+
+按照上述代码代码逻辑，我们声明了一个名为`ISayPlugin`的插件接口，里面包含一个`Say`的方法。然后分别创建了`SayHelloPlugin`、`SayHiPlugin`、`LastSayPlugin`三个类去实现`ISayPlugin`接口。然后将该三个类都添加至插件管理器中，然后触发`Say`方法。同时传入不同的参数。
+
+当Words=test时，`SayHelloPlugin`和`SayHiPlugin`均不满足处理条件，所以会将数据转至下一个插件，直到`LastSayPlugin`插件。然后当`LastSayPlugin`处理结束以后，处理结果又按照`LastSayPlugin`、`SayHiPlugin`、`SayHelloPlugin`的顺序退出插件。这样，即使`SayHelloPlugin`无法处理该数据，也能得知该数据最终有没有被处理。
+
+当Words=hello时，`SayHelloPlugin`满足处理条件，并且终止插件的继续传递。
+
+```
+请输入hello，或者hi
+test
+SayHelloPlugin------Enter
+SayHiPlugin------Enter
+LastSayPlugin------Enter
+您输入的test似乎不被任何插件处理
+LastSayPlugin------Leave
+SayHiPlugin------Leave
+SayHelloPlugin------Leave
+
+请输入hello，或者hi
+hello
+SayHelloPlugin------Enter
+SayHelloPlugin------Say
+
+请输入hello，或者hi
+hi
+SayHelloPlugin------Enter
+SayHiPlugin------Enter
+SayHiPlugin------Say
+SayHelloPlugin------Leave
+请输入hello，或者hi
+```
+
+## 八、插件特性
+
+### 8.1 中断传递
+
+当某个插件在响应时，如果设置`e.Handled=true`，或者没有调用下一个插件`e.InvokeNext`，则该数据将**不会**再触发后续的插件。
+
+
+## 九、提升插件性能
+
+### 9.1 插件性能测试
+
+如下图所示，添加10个插件，并且调用10000次。即：单个插件方法被调用10w次。
+
+分别在net6.0，netcore3.1，net4.6.1上进行测试。测试项依次为：
+
+1. DirectRun（直接调用）
+2. ActionRun（委托调用）
+3. MethodInfoRun（反射调用）
+4. ExpressionRun（表达式树调用）
+5. PluginRun（插件调用）
+6. PluginActionRun（插件委托调用）
+
+实际上插件内部使用的是IL调用，所以即使调用上有迭代，性能上也和直接调用的表达式树差不多（这里插件是采用递归的方式迭代，而表达式树测试则是直接for迭代）。但是总体而言性能上是有缺失的。
+
+但是当使用插件委托调用时，性能上会有所提升。和直接调用相比，虽然性能降低了20%。但是这已经是委托调用的极限，且没有任何动态代码的生成。这意味着在unity调用也是完全可行的。
+
+<img src={require('@site/static/img/docs/pluginsmanager-1.png').default} />
+
+### 9.2 注册委托
+
+注册委托，使用委托，可以提升插件性能。
+
+```csharp showLineNumbers
+//订阅插件，不仅可以使用声明插件的方式，还可以使用委托。
+pluginsManager.Add(typeof(ISayPlugin), () => 
+{
+    Console.WriteLine("在Action1中获得");
+});
+```
+
+其次，不仅可以直接使用委托，还可以在插件里面注册方法为委托。
+
+```csharp showLineNumbers 
+public class SayHelloAction: PluginBase
+{
+    protected override void Loaded(IPluginsManager pluginsManager)
+    {
+        base.Loaded(pluginsManager);
+
+        //注册本地方法为委托
+        pluginsManager.Add<object,MyPluginEventArgs>(typeof(ISayPlugin),this.Say);
+    }
+
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "helloaction")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::caution 注意事项
+
+注册方法为委托时，不要再实现接口，避免重复调用。
+
+:::  
+
+### 9.3 源生成插件委托
+
+使用源生成器，直接可以生成委托调用，但是这要求你的编译器支持，一般（vs2022以上、或者Rider等）。
+
+然后使用`GeneratorPlugin`特性标记所需方法即可。
+
+```csharp showLineNumbers
+public partial class SayHelloGenerator : PluginBase
+{
+    //如果在代码里，继承了PluginBase，并且没有显示重写Loaded
+    //则在源生成时，会自己生成重写代码。
+    //如果显示重写了Loaded。就需要自己手动调用RegisterPlugins。不然插件不会生效的。
+    //protected override void Loaded(IPluginsManager pluginsManager)
+    //{
+    //    base.Loaded(pluginsManager);
+    //    this.RegisterPlugins(pluginsManager);
+    //}
+
+    /// <summary>
+    /// 使用源生成插件
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    /// <returns></returns>
+    [GeneratorPlugin(typeof(ISayPlugin))]
+    public async Task Say(object sender, MyPluginEventArgs e)
+    {
+        Console.WriteLine($"{this.GetType().Name}------Enter");
+        if (e.Words == "hellogenerator")
+        {
+            Console.WriteLine($"{this.GetType().Name}------Say");
+            //当满足的时候输出，且不在调用下一个插件。
+
+            //亦或者设置e.Handled = true，即使调用下一个插件，也会无效
+            e.Handled = true;
+            return;
+        }
+        await e.InvokeNext();
+        Console.WriteLine($"{this.GetType().Name}------Leave");
+    }
+}
+```
+
+:::caution 注意事项
+
+1. 使用源生成器时，插件类必须声明为部分类（`partial`），且不能是类中类。
+2. 使用源生成器时，不要再实现接口，避免重复调用。
+3. 使用源生成器时，如果在代码里，继承了`PluginBase`，并且没有显式重写`Loaded`，那生成的代码会自动重写`Loaded`。如果显式重写了`Loaded`，就需要自己手动调用`RegisterPlugins`。不然插件不会生效的。
+
+:::  
+
+:::tip 提示
+
+使用源生成器时，可以先使用插件接口的方式，实现所需的方法。然后再删除接口，添加`GeneratorPlugin`特性，可以简化很多书写。
+
+:::  
+
+:::tip 建议
+
+如果您在性能与易用性之间做权衡的话，我们建议可以使用插件委托实现（或者源生成器）。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/PluginConsoleApp)

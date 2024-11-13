@@ -1,0 +1,185 @@
+---
+id: tcpaot
+title: Tcp使用AOT模式
+---
+
+import Tag from "@site/src/components/Tag.js";
+
+## 一、说明
+
+Tcp使用AOT模式，即在编译时将Tcp的代码全部编译到程序中，而不是在运行时动态加载。
+
+## 二、使用方法
+
+实际上，Tcp是完全支持AOT模式，只不过在`TouchSocket`中，引入了容器、插件等需要反射或运行时构建的功能，所以需要对这些进行配置。
+
+### 2.1 配置容器
+
+配置容器，即“手动”解决容器反射实例的问题。目前这部分使用源生成IOC完成。详情请看[源生成IOC](./ioc.mdx)
+
+```csharp showLineNumbers
+/// <summary>
+/// IOC容器
+/// </summary>
+[AddSingletonInject(typeof(IPluginsManager),typeof(PluginsManager))]
+[AddSingletonInject(typeof(ILog),typeof(LoggerGroup))]
+[GeneratorContainer]
+public partial class MyContainer : ManualContainer
+{
+  
+}
+```
+
+### 2.2 配置插件
+
+插件的运行分为两个方式，其一是动态构建IL，其二是委托注册，IL在AOT模式下是不支持的，所以需要将插件使用委托注册。这里使用源生成方式实现，详情请看[插件使用](./pluginsmanager.mdx)。
+
+同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
+
+```csharp showLineNumbers
+internal partial class MyServicePluginClass : PluginBase
+{
+    [GeneratorPlugin(typeof(IServerStartedPlugin))]
+    public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
+    {
+        if (sender is ITcpService service)
+        {
+            foreach (var item in service.Monitors)
+            {
+                ConsoleLogger.Default.Info($"iphost={item.Option.IpHost}");
+            }
+        }
+        if (e.ServerState == ServerState.Running)
+        {
+            ConsoleLogger.Default.Info($"服务器成功启动");
+        }
+        else
+        {
+            ConsoleLogger.Default.Info($"服务器启动失败，状态：{e.ServerState}，异常：{e.Exception}");
+        }
+        return e.InvokeNext();
+    }
+
+    [GeneratorPlugin(typeof(IServerStopedPlugin))]
+    public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
+    {
+        Console.WriteLine("服务已停止");
+        return e.InvokeNext();
+    }
+}
+
+partial class TcpServiceReceivedPlugin : PluginBase
+{
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
+    {
+        //从客户端收到信息
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        if (mes == "close")
+        {
+            throw new CloseException(mes);
+        }
+        client.Logger.Info($"已从{client.GetIPPort()}接收到信息：{mes}");
+
+        client.SendAsync(mes);//将收到的信息直接返回给发送方
+
+        //client.SendAsync("id",mes);//将收到的信息返回给特定ID的客户端
+
+        //注意，此处是使用的当前客户端的接收线程做发送，实际使用中不可以这样做。不然一个客户端阻塞，将导致本客户端无法接收数据。
+        var ids = client.Service.GetIds();
+        foreach (var clientId in ids)//将收到的信息返回给在线的所有客户端。
+        {
+            if (clientId != client.Id)//不给自己发
+            {
+                await client.Service.SendAsync(clientId, mes);
+            }
+        }
+
+        //await Task.Delay(1000);
+    }
+}
+
+/// <summary>
+/// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
+/// </summary>
+partial class ClosePlugin : PluginBase
+{
+    private readonly ILog m_logger;
+
+    public ClosePlugin(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
+    public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
+    {
+        try
+        {
+            await e.InvokeNext();
+        }
+        catch (CloseException ex)
+        {
+            m_logger.Info("拦截到CloseException");
+            client.Close(ex.Message);
+        }
+        catch (Exception exx)
+        {
+
+        }
+        finally
+        {
+
+        }
+    }
+}
+
+class CloseException : Exception
+{
+    public CloseException(string msg) : base(msg) { }
+}
+```
+
+### 2.3 项目配置
+
+.Net8对AOT支持比较好，所以最好使用.Net8。然后对项目配置一般如下：
+
+```xml {3,4}
+<PropertyGroup>
+  ...
+  <PublishAot>true</PublishAot>
+  <InvariantGlobalization>true</InvariantGlobalization>
+</PropertyGroup>
+```
+
+## 三、启动服务器
+
+```csharp {3}
+var service = new TcpService();
+await service.SetupAsync(new TouchSocketConfig()//载入配置
+    .SetContainer(new MyContainer())
+    .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+    .ConfigureContainer(a =>//容器的配置顺序应该在最前面
+    {
+        a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+        a.RegisterSingleton(service);//将服务器以单例注入。便于插件或其他地方获取。
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.Add<ClosePlugin>();
+        a.Add<TcpServiceReceivedPlugin>();
+        a.Add<MyServicePluginClass>();
+        //a.Add();//此处可以添加插件
+    }));
+
+await service.StartAsync();//启动
+```
+
+:::info 提示
+
+需要替换默认容器为我们新建的容器。如果创建客户端的话配置也一样。
+
+:::  
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples_aot/Tcp/TcpConsoleApp)
+

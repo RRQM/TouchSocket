@@ -1,0 +1,108 @@
+---
+id: tcpwaitingclient
+title: 同步请求
+---
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、说明
+
+有很多小伙伴一直有一些需求：
+
+1. 客户端发送一个数据，然后等待服务器回应。
+2. 服务器向客户端发送一个数据，然后等待客户端回应。
+
+那针对这些需求，可以使用**WaitingClient。**其内部实现了**IWaitSender**接口，能够在发送完成后，等待返回。
+
+## 二、创建及使用
+
+### 2.1 以TcpClient为例
+
+```csharp showLineNumbers
+var client = new TcpClient();
+await client.ConnectAsync("tcp://127.0.0.1:7789");
+
+//调用CreateWaitingClient获取到IWaitingClient的对象。
+var waitClient = client.CreateWaitingClient(new WaitingOptions()
+{
+    FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+    {
+        return true;
+
+        //if (response.Data.Length == 1)
+        //{
+        //    return true;
+        //}
+        //return false;
+    }
+});
+
+//然后使用SendThenReturn。
+byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+//同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+IRequestInfo requestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+```
+
+### 2.2 以TcpService为例
+
+```csharp showLineNumbers
+var service = new TcpService();
+await service.StartAsync(7789);//启动服务器
+
+//在服务器中，找到指定Id的会话客户端
+if (service.TryGetClient("targetId", out var tcpSessionClient))
+{
+    //调用CreateWaitingClient获取到IWaitingClient的对象。
+    var waitClient = tcpSessionClient.CreateWaitingClient(new WaitingOptions()
+    {
+        FilterFunc = response => //设置用于筛选的fun委托，当返回为true时，才会响应返回
+        {
+            return true;
+
+            //if (response.Data.Length == 1)
+            //{
+            //    return true;
+            //}
+            //return false;
+        }
+    });
+
+    //然后使用SendThenReturn。
+    byte[] returnData = await waitClient.SendThenReturnAsync(Encoding.UTF8.GetBytes("RRQM"));
+    Console.WriteLine($"收到回应消息：{Encoding.UTF8.GetString(returnData)}");
+
+    //同时，如果适配器收到数据后，返回的并不是字节，而是IRequestInfo对象时，可以使用SendThenResponse.
+    ResponsedData responsedData = await waitClient.SendThenResponseAsync(Encoding.UTF8.GetBytes("RRQM"));
+    IRequestInfo responseRequestInfo = responsedData.RequestInfo;//同步收到的RequestInfo
+}
+```
+
+:::tip 提示
+
+在SendThenReturnAsync时，通过其他参数，还可以设置Timeout，以及可取消的等待Token。
+
+:::  
+
+:::caution 注意
+
+所有的发送，框架内部实际上**只实现了异步发送**，但是为了兼容性，仍然保留了同步发送的扩展。但是强烈建议如有可能，请**务必使用异步发送来提高效率**。
+
+:::  
+
+
+:::danger 注意事项
+
+1. 发送完数据，在等待时，如果收到其他返回数据，则可能得到错误结果。
+2. 发送采用同步锁，一个事务没结束，另一个请求也发不出去。
+3. waitClient的使用**不可以**直接在`Received`相关触发中使用，因为必然会导致死锁，详见：[#I9GCGT](https://gitee.com/RRQM_Home/TouchSocket/issues/I9GCGT) 。
+4. 在**Net461及以下**版本中，SendThenReturn与SendThenReturnAsync不能混合使用。即：要么全同步，要么全异步（这可能是.net bug）。
+
+:::
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Tcp/TcpWaitingClientWinFormsApp)
