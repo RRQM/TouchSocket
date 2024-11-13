@@ -19,17 +19,7 @@ namespace TouchSocket.XmlRpc
     /// XmlRpcDispatchProxy
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TAttribute"></typeparam>
-    public abstract class XmlRpcDispatchProxy<TClient, TAttribute> : RpcDispatchProxy<TClient, TAttribute> where TClient : IXmlRpcClient where TAttribute : XmlRpcAttribute
-    {
-
-    }
-
-    /// <summary>
-    /// XmlRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class XmlRpcDispatchProxy<TClient> : XmlRpcDispatchProxy<TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
+    public abstract class XmlRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, XmlRpcAttribute> where TClient : IXmlRpcClient
     {
 
     }

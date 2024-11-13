@@ -21,6 +21,7 @@ namespace TouchSocket.SerialPorts
     /// 定义了串行接收插件的接口。
     /// 继承自通用插件接口IPlugin，专门用于处理串行端口接收操作。
     /// </summary>
+    [DynamicMethod]
     public interface ISerialReceivingPlugin : IPlugin
     {
         /// <summary>

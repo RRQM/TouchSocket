@@ -20,6 +20,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 定义了一个接口，用于标识和处理服务器停止时的插件行为。
     /// </summary>
+    [DynamicMethod]
     public interface IServerStopedPlugin : IPlugin
     {
         /// <summary>

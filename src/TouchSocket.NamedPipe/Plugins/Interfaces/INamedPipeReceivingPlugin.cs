@@ -19,6 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 定义了一个命名管道接收插件接口，用于在收到数据时执行特定操作。
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeReceivingPlugin : IPlugin
     {
         /// <summary>

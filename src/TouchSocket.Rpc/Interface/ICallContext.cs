@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc调用上下文
     /// </summary>
-    public interface ICallContext : IResolverObject
+    public interface ICallContext : IResolverObject,IDependencyObject
     {
         /// <summary>
         /// 调用此服务的主体。

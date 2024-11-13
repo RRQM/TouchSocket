@@ -18,6 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义了一个插件接口，用于在成功创建频道后执行特定操作。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpCreatedChannelPlugin : IPlugin
     {
         /// <summary>

@@ -18,6 +18,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// IHttpPlugin
     /// </summary>
+    [DynamicMethod]
     public interface IHttpPlugin : IPlugin
     {
         /// <summary>

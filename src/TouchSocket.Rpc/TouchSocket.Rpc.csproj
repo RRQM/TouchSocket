@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
 		<PackageTags>Rpc;TouchSocket</PackageTags>
 		<Description>这是一个超轻量、高性能、可扩展的Rpc管理平台框架。您可以基于该框架，快速开发出Rpc执行。目前已扩展开发DmtpRpc、XmlRpc、JsonRpc、WebApi部分。
 
@@ -9,7 +9,7 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Include="..\TouchSocket.Rpc.SourceGenerator\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
+		<None Include="..\TouchSocket.SourceGenerator.SharedProject\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
 		<Compile Include="..\TouchSocket.Shared\Rpc\ThrowHelperRpc.cs" Link="Exceptions\ThrowHelperRpc.cs" />
 		<None Include="..\TouchSocket.Rpc.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.Rpc.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
 	</ItemGroup>

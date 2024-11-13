@@ -32,7 +32,6 @@ namespace TouchSocket.Http
         private readonly HttpClientBase m_httpClientBase;
         private readonly HttpSessionClient m_httpSessionClient;
         private readonly bool m_isServer;
-        private bool m_canRead;
         private bool m_canWrite;
         private ReadOnlyMemory<byte> m_content;
         private bool m_sentHeader;
@@ -47,39 +46,21 @@ namespace TouchSocket.Http
         internal HttpResponse(HttpClientBase httpClientBase)
         {
             this.m_isServer = false;
-            this.m_canRead = true;
             this.m_canWrite = false;
             this.m_httpClientBase = httpClientBase;
         }
 
-        /// <summary>
-        /// 从<see cref="HttpRequest"/>创建一个Http响应
-        /// </summary>
-        /// <param name="request"></param>
-        internal HttpResponse(HttpRequest request)
+        internal HttpResponse(HttpRequest request, HttpSessionClient httpSessionClient)
         {
-            this.m_canRead = false;
             this.m_canWrite = true;
             this.m_isServer = true;
-            this.m_httpSessionClient = (HttpSessionClient)request.Client;
+            this.m_httpSessionClient = httpSessionClient;
             this.ProtocolVersion = request.ProtocolVersion;
             this.Protocols = request.Protocols;
             this.KeepAlive = request.KeepAlive;
         }
 
         #region 属性
-
-        /// <inheritdoc/>
-        public override bool CanRead => this.m_canRead;
-
-       /// <summary>
-       /// 是否支持持续写入。
-       /// </summary>
-        public bool CanWrite => this.m_canWrite;
-
-        /// <inheritdoc/>
-        public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
-
         /// <summary>
         /// 是否分块
         /// </summary>
@@ -110,49 +91,58 @@ namespace TouchSocket.Http
         /// </summary>
         public string StatusMessage { get; set; } = "Success";
 
+        /// <inheritdoc/>
+        public override bool IsServer => this.m_isServer;
+
         #endregion 属性
 
         /// <summary>
         /// 构建数据并回应。
         /// <para>该方法仅在具有Client实例时有效。</para>
         /// </summary>
-        public async Task AnswerAsync()
+        public async Task AnswerAsync(CancellationToken token=default)
         {
             this.ThrowIfResponsed();
-            using (var byteBlock = new ByteBlock())
+
+            var content = this.Content;
+            if (content == null)
             {
-                this.Build(byteBlock);
-                await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
-                this.Responsed = true;
+                using (var byteBlock = new ByteBlock())
+                {
+                    this.BuildHeader(byteBlock);
+
+                    // 异步发送请求
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                }
             }
+            else
+            {
+                content.InternalBuildingHeader(this.Headers);
+                var byteBlock = new ByteBlock();
+                try
+                {
+                    this.BuildHeader(byteBlock);
+
+                    var result = content.InternalBuildingContent(ref byteBlock);
+
+                    // 异步发送请求
+                    await this.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
+
+                    if (!result)
+                    {
+                        await content.InternalWriteContent(this.InternalSendAsync, token).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    byteBlock.Dispose();
+                }
+            }
+
+            this.Responsed = true;
         }
 
-        /// <summary>
-        ///  构建响应数据。
-        /// <para>当数据较大时，不建议这样操作，可直接<see cref="WriteAsync(ReadOnlyMemory{byte})"/></para>
-        /// </summary>
-        /// <param name="byteBlock"></param>
-        /// <param name="responsed"></param>
-        public void Build(ByteBlock byteBlock, bool responsed = true)
-        {
-            this.ThrowIfResponsed();
-            this.BuildHeader(byteBlock);
-            this.BuildContent(byteBlock);
-            this.Responsed = responsed;
-        }
-
-        /// <summary>
-        /// 构建数据为字节数组。
-        /// </summary>
-        /// <returns></returns>
-        public byte[] BuildAsBytes()
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock);
-                return byteBlock.ToArray();
-            }
-        }
+        
 
         /// <summary>
         /// 当传输模式是Chunk时，用于结束传输。
@@ -186,7 +176,7 @@ namespace TouchSocket.Http
             {
                 if (!this.IsChunk && this.ContentLength == 0)
                 {
-                    this.m_content = new byte[0];
+                    this.m_content = ReadOnlyMemory<byte>.Empty;
                     return this.m_content;
                 }
 
@@ -201,7 +191,7 @@ namespace TouchSocket.Http
                     {
                         while (true)
                         {
-                            using (var blockResult = await this.ReadAsync(cancellationToken))
+                            using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
                             {
                                 var segment = blockResult.Memory.GetArray();
                                 if (blockResult.IsCompleted)
@@ -229,7 +219,7 @@ namespace TouchSocket.Http
                 }
                 finally
                 {
-                    this.m_canRead = false;
+                   
                 }
             }
             else
@@ -250,7 +240,7 @@ namespace TouchSocket.Http
             {
                 return new InternalBlockResult(this.m_content, true);
             }
-            var blockResult = await base.ReadAsync(cancellationToken);
+            var blockResult = await base.ReadAsync(cancellationToken).ConfigureAwait(false);
             if (blockResult == InternalBlockResult.Completed)
             {
                 this.ContentCompleted = true;
@@ -259,38 +249,18 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public override void SetContent(in ReadOnlyMemory<byte> content)
+        internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
         {
             this.m_content = content;
             this.ContentLength = content.Length;
             this.ContentCompleted = true;
         }
 
-        /// <summary>
-        /// 输出
-        /// </summary>
-        public override string ToString()
-        {
-            using (var byteBlock = new ByteBlock())
-            {
-                this.Build(byteBlock, false);
-                return byteBlock.ToString();
-            }
-        }
-
         #region Write
 
         public async Task WriteAsync(ReadOnlyMemory<byte> memory)
         {
-            if (this.Responsed)
-            {
-                throw new Exception("该对象已被响应。");
-            }
-
-            if (!this.CanWrite)
-            {
-                throw new NotSupportedException("该对象不支持持续写入内容。");
-            }
+            this.ThrowIfResponsed();
 
             if (!this.m_sentHeader)
             {
@@ -343,12 +313,10 @@ namespace TouchSocket.Http
             this.StatusMessage = "Success";
             if (this.m_isServer)
             {
-                this.m_canRead = false;
                 this.m_canWrite = true;
             }
             else
             {
-                this.m_canRead = true;
                 this.m_canWrite = false;
             }
         }
@@ -413,7 +381,7 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-        private Task InternalSendAsync(in ReadOnlyMemory<byte> memory)
+        private Task InternalSendAsync(ReadOnlyMemory<byte> memory)
         {
             return this.m_isServer ? this.m_httpSessionClient.InternalSendAsync(memory) : this.m_httpClientBase.InternalSendAsync(memory);
         }

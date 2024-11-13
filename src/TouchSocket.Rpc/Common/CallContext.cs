@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc调用上下文的基本实现
     /// </summary>
-    public abstract class CallContext : ICallContext
+    public abstract class CallContext : DependencyObject, ICallContext
     {
         private bool m_canceled;
         private readonly object m_locker = new object();

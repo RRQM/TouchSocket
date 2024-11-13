@@ -19,6 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 具有断开连接的插件接口
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeClosedPlugin : IPlugin
     {
         /// <summary>

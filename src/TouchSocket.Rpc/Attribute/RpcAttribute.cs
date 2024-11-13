@@ -22,7 +22,6 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc方法属性基类
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
     public abstract class RpcAttribute : Attribute
     {
         /// <summary>
@@ -73,13 +72,28 @@ namespace TouchSocket.Rpc
         public string MethodName { get; set; }
 
         /// <summary>
+        /// 生成代理时，额外的命名空间
+        /// </summary>
+        public List<string> Namespaces { get; } = new List<string>();
+
+        /// <summary>
+        /// 获取或设置属性名称的字典。
+        /// </summary>
+        public Dictionary<string, object> PropertyNames { get; private set; }
+
+        /// <summary>
         /// 获取注释信息
         /// </summary>
         /// <param name="rpcMethod"></param>
         /// <returns></returns>
         public virtual string GetDescription(RpcMethod rpcMethod)
         {
-            return string.IsNullOrEmpty(rpcMethod.GetDescription()) ? "无注释信息" : rpcMethod.GetDescription();
+            var description = rpcMethod.GetDescription();
+            if (description.HasValue())
+            {
+                return this.ReplacePatterns(description);
+            }
+            return "无注释信息";
         }
 
         /// <summary>
@@ -141,58 +155,7 @@ namespace TouchSocket.Rpc
                 }
 
                 codeString.AppendLine("{");//方法开始
-
-                var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
-
-
-                if (parametersStr.Count > 0)
-                {
-                    codeString.Append($"object[] @_parameters = new object[]");
-                    codeString.Append('{');
-
-                    foreach (var parameter in parameters)
-                    {
-                        codeString.Append(parameter.Name);
-                        if (parameter != parameters[parameters.Length - 1])
-                        {
-                            codeString.Append(',');
-                        }
-                    }
-                    codeString.AppendLine("};");
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("{0} returnData=({0})client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("client.Invoke"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, @_parameters);");
-                }
-                else
-                {
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("{0} returnData=({0})client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("client.Invoke"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, null);");
-                }
-
-                if (rpcMethod.HasReturn)
-                {
-                    codeString.AppendLine("return returnData;");
-                }
-
+                codeString.AppendLine(this.GetExtensionInstanceMethod(rpcMethod, parametersStr, parameters, false));
                 codeString.AppendLine("}");
             }
 
@@ -245,54 +208,7 @@ namespace TouchSocket.Rpc
 
                 codeString.AppendLine("{");//方法开始
 
-                var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
-
-                if (parametersStr.Count > 0)
-                {
-                    codeString.Append($"object[] parameters = new object[]");
-                    codeString.Append('{');
-
-                    foreach (var parameter in parameters)
-                    {
-                        codeString.Append(parameter.Name);
-                        if (parameter != parameters[parameters.Length - 1])
-                        {
-                            codeString.Append(',');
-                        }
-                    }
-                    codeString.AppendLine("};");
-
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("return ({0}) await client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("return client.InvokeAsync"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, parameters);");
-                }
-                else
-                {
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("return ({0}) await client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("return client.InvokeAsync"));
-                    }
-
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-
-                    codeString.AppendLine("invokeOption, null);");
-                }
-
+                codeString.AppendLine(this.GetExtensionInstanceMethod(rpcMethod, parametersStr, parameters, true));
 
                 codeString.AppendLine("}");
             }
@@ -352,61 +268,7 @@ namespace TouchSocket.Rpc
 
                 codeString.AppendLine("{");//方法开始
 
-                codeString.AppendLine("if(this.Client==null)");
-                codeString.AppendLine("{");
-                codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
-                codeString.AppendLine("}");
-
-                var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
-
-
-                if (parametersStr.Count > 0)
-                {
-                    codeString.Append($"object[] @_parameters = new object[]");
-                    codeString.Append('{');
-
-                    foreach (var parameter in parameters)
-                    {
-                        codeString.Append(parameter.Name);
-                        if (parameter != parameters[parameters.Length - 1])
-                        {
-                            codeString.Append(',');
-                        }
-                    }
-                    codeString.AppendLine("};");
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("{0} returnData=({0})this.Client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("this.Client.Invoke"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, @_parameters);");
-                }
-                else
-                {
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("{0} returnData=({0})this.Client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("this.Client.Invoke"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, null);");
-                }
-
-                if (rpcMethod.HasReturn)
-                {
-                    codeString.AppendLine("return returnData;");
-                }
+                codeString.AppendLine(this.GetInstanceMethod(rpcMethod, parametersStr, parameters, false));
 
                 codeString.AppendLine("}");
             }
@@ -447,58 +309,7 @@ namespace TouchSocket.Rpc
 
                 codeString.AppendLine("{");//方法开始
 
-                codeString.AppendLine("if(this.Client==null)");
-                codeString.AppendLine("{");
-                codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
-                codeString.AppendLine("}");
-
-                var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
-
-                if (parametersStr.Count > 0)
-                {
-                    codeString.Append($"object[] parameters = new object[]");
-                    codeString.Append('{');
-
-                    foreach (var parameter in parameters)
-                    {
-                        codeString.Append(parameter.Name);
-                        if (parameter != parameters[parameters.Length - 1])
-                        {
-                            codeString.Append(',');
-                        }
-                    }
-                    codeString.AppendLine("};");
-
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("return ({0}) await this.Client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("return this.Client.InvokeAsync"));
-                    }
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-                    codeString.AppendLine("invokeOption, parameters);");
-                }
-                else
-                {
-                    if (rpcMethod.HasReturn)
-                    {
-                        codeString.Append(string.Format("return ({0}) await this.Client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
-                    }
-                    else
-                    {
-                        codeString.Append(string.Format("return this.Client.InvokeAsync"));
-                    }
-
-                    codeString.Append('(');
-                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
-                    codeString.Append($"{returnTypeString},");
-
-                    codeString.AppendLine("invokeOption, null);");
-                }
+                codeString.AppendLine(this.GetInstanceMethod(rpcMethod, parametersStr, parameters, true));
 
                 codeString.AppendLine("}");
             }
@@ -614,8 +425,34 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public virtual string GetMethodName(RpcMethod rpcMethod, bool isAsync)
         {
-            var name = string.IsNullOrEmpty(this.MethodName) ? rpcMethod.Name : this.MethodName.Format(rpcMethod.Name);
-            return isAsync ? name + "Async" : name;
+            var name = this.MethodName;
+            if (name.HasValue())
+            {
+                name = this.ReplacePatterns(name).Format(rpcMethod.Name);
+            }
+            else
+            {
+                name = rpcMethod.Name;
+            }
+
+            if (isAsync)
+            {
+                if (name.EndsWith("Async"))
+                {
+                    return name;
+                }
+
+                return $"{name}Async";
+            }
+            else
+            {
+                if (name.EndsWith("Async"))
+                {
+                    return name.RemoveLastChars(5);
+                }
+
+                return name;
+            }
         }
 
         /// <summary>
@@ -624,20 +461,20 @@ namespace TouchSocket.Rpc
         /// <param name="rpcMethod">RPC方法的枚举值，用于指定需要获取参数信息的RPC方法。</param>
         /// <param name="parameters">输出参数，包含RPC方法所有参数的信息。</param>
         /// <returns>返回一个字符串列表，包含RPC方法的参数。</returns>
-        public virtual List<string> GetParameters(RpcMethod rpcMethod, out ParameterInfo[] parameters)
+        public virtual List<string> GetParameters(RpcMethod rpcMethod, out RpcParameter[] parameters)
         {
             var list = new List<string>();
 
-            parameters = rpcMethod.GetNormalParameters().Select(a => a.ParameterInfo).ToArray();
+            parameters = rpcMethod.GetNormalParameters().ToArray();
 
             for (var i = 0; i < parameters.Length; i++)
             {
                 var codeString = new StringBuilder();
-                codeString.Append(string.Format("{0} {1}", this.GetProxyParameterName(parameters[i]), parameters[i].Name));
+                codeString.Append(string.Format("{0} {1}", this.GetProxyParameterName(parameters[i].ParameterInfo), parameters[i].Name));
 
-                if (parameters[i].HasDefaultValue)
+                if (parameters[i].ParameterInfo.HasDefaultValue)
                 {
-                    var defaultValue = parameters[i].DefaultValue;
+                    var defaultValue = parameters[i].ParameterInfo.DefaultValue;
                     if (defaultValue == null)
                     {
                         codeString.Append(string.Format("=null"));
@@ -701,6 +538,301 @@ namespace TouchSocket.Rpc
         internal void SetClassCodeGenerator(ClassCodeGenerator classCodeGenerator)
         {
             this.ClassCodeGenerator = classCodeGenerator;
+
+            this.PropertyNames = this.GetPublicPropertiesAsDictionary();
+        }
+
+        /// <summary>
+        /// 生成扩展函数的内容
+        /// </summary>
+        /// <param name="rpcMethod"></param>
+        /// <param name="parametersStr"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isAsync"></param>
+        /// <returns></returns>
+        protected virtual string GetExtensionInstanceMethod(RpcMethod rpcMethod, List<string> parametersStr, RpcParameter[] parameters, bool isAsync)
+        {
+            var codeString = new StringBuilder();
+            var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
+
+            if (isAsync)
+            {
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append('{');
+
+                    foreach (var parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(',');
+                        }
+                    }
+                    codeString.AppendLine("};");
+
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("return ({0}) await client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return client.InvokeAsync"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, parameters);");
+                }
+                else
+                {
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("return ({0}) await client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return client.InvokeAsync"));
+                    }
+
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+
+                    codeString.AppendLine("invokeOption, null);");
+                }
+            }
+            else
+            {
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] @_parameters = new object[]");
+                    codeString.Append('{');
+
+                    foreach (var parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(',');
+                        }
+                    }
+                    codeString.AppendLine("};");
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("{0} returnData=({0})client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("client.Invoke"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, @_parameters);");
+                }
+                else
+                {
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("{0} returnData=({0})client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("client.Invoke"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, null);");
+                }
+
+                if (rpcMethod.HasReturn)
+                {
+                    codeString.AppendLine("return returnData;");
+                }
+            }
+
+            return codeString.ToString();
+        }
+
+        /// <summary>
+        /// 生成实现函数的内容
+        /// </summary>
+        /// <param name="rpcMethod"></param>
+        /// <param name="parametersStr"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isAsync"></param>
+        /// <returns></returns>
+        protected virtual string GetInstanceMethod(RpcMethod rpcMethod, List<string> parametersStr, RpcParameter[] parameters, bool isAsync)
+        {
+            var codeString = new StringBuilder();
+            codeString.AppendLine("if(this.Client==null)");
+            codeString.AppendLine("{");
+            codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
+            codeString.AppendLine("}");
+
+            var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
+
+            if (isAsync)
+            {
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] parameters = new object[]");
+                    codeString.Append('{');
+
+                    foreach (var parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(',');
+                        }
+                    }
+                    codeString.AppendLine("};");
+
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("return ({0}) await this.Client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return this.Client.InvokeAsync"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, parameters);");
+                }
+                else
+                {
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("return ({0}) await this.Client.InvokeAsync", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("return this.Client.InvokeAsync"));
+                    }
+
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+
+                    codeString.AppendLine("invokeOption, null);");
+                }
+            }
+            else
+            {
+                if (parametersStr.Count > 0)
+                {
+                    codeString.Append($"object[] @_parameters = new object[]");
+                    codeString.Append('{');
+
+                    foreach (var parameter in parameters)
+                    {
+                        codeString.Append(parameter.Name);
+                        if (parameter != parameters[parameters.Length - 1])
+                        {
+                            codeString.Append(',');
+                        }
+                    }
+                    codeString.AppendLine("};");
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("{0} returnData=({0})this.Client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("this.Client.Invoke"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, @_parameters);");
+                }
+                else
+                {
+                    if (rpcMethod.HasReturn)
+                    {
+                        codeString.Append(string.Format("{0} returnData=({0})this.Client.Invoke", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)));
+                    }
+                    else
+                    {
+                        codeString.Append(string.Format("this.Client.Invoke"));
+                    }
+                    codeString.Append('(');
+                    codeString.Append($"\"{this.GetInvokeKey(rpcMethod)}\",");
+                    codeString.Append($"{returnTypeString},");
+                    codeString.AppendLine("invokeOption, null);");
+                }
+
+                if (rpcMethod.HasReturn)
+                {
+                    codeString.AppendLine("return returnData;");
+                }
+            }
+
+            return codeString.ToString();
+        }
+
+        private Dictionary<string, object> GetPublicPropertiesAsDictionary()
+        {
+            var propertiesDict = new Dictionary<string, object>();
+            var type = this.GetType();
+
+            // 获取当前类的所有公共实例属性
+            var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            // 遍历这些属性并将它们的值存储到字典中
+            foreach (var propertyInfo in publicProperties)
+            {
+                if (propertyInfo.CanRead)
+                {
+                    var value = propertyInfo.GetValue(this);
+                    propertiesDict.Add(propertyInfo.Name, value);
+                }
+            }
+
+            return propertiesDict;
+        }
+
+        private string ReplacePatterns(string input)
+        {
+            var pairs = this.PropertyNames;
+
+            var sb = new StringBuilder();
+
+            for (var i = 0; i < input.Length; i++)
+            {
+                if (i < input.Length - 1 && input[i] == '{' && char.IsLetter(input[i + 1]))
+                {
+                    // 检查是否存在下一个字符并且是字母，处理多字符键的情况
+                    var end = i + 2;
+                    while (end < input.Length && char.IsLetter(input[end - 1]))
+                    {
+                        end++;
+                    }
+                    var key = input.Substring(i + 1, end - i - 2);
+
+                    if (pairs.TryGetValue(key, out var value))
+                    {
+                        sb.Append(value?.ToString());
+                        i = end - 1; // 跳过"{key}"
+                    }
+                    else
+                    {
+                        sb.Append(input[i]); // 保留原始字符
+                    }
+                }
+                else
+                {
+                    sb.Append(input[i]);
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }

@@ -18,6 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义了IDmtpRoutingPlugin接口，它是IPlugin接口的子接口，用于处理DMTP路由插件的转发逻辑。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpRoutingPlugin : IPlugin
     {
         /// <summary>

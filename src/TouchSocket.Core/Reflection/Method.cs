@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.CodeDom.Compiler;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -20,76 +21,24 @@ using System.Threading.Tasks;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// Task类型
-    /// </summary>
-    public enum TaskReturnType
-    {
-        /// <summary>
-        /// 没有Task
-        /// </summary>
-        None,
-
-        /// <summary>
-        /// 仅返回Task
-        /// </summary>
-        Task,
-
-        /// <summary>
-        /// 返回Task的值
-        /// </summary>
-        TaskObject
-    }
-
-    /// <summary>
     /// 一个动态调用方法
     /// </summary>
     public class Method
     {
-        /// <summary>
-        /// 方法执行委托
-        /// </summary>
-        protected Func<object, object[], object> m_invoker;
-
         private readonly MethodInfo m_info;
+        private Func<object, object[], object> m_invoker;
 
-        /// <summary>
-        /// 初始化一个动态调用方法
-        /// </summary>
-        /// <param name="method"></param>
-        public Method(MethodInfo method) : this(method, true)
-        {
-        }
+        private readonly string m_generatorTypeNamespace = "TouchSocket.Core.__Internals";
 
         /// <summary>
         /// 初始化一个动态调用方法
         /// </summary>
         /// <param name="method">方法信息</param>
-        /// <param name="build">是否直接使用IL构建调用</param>
-        public Method(MethodInfo method, bool build)
+        /// <param name="dynamicBuilderType">指定构建的类型</param>
+        public Method(MethodInfo method, DynamicBuilderType? dynamicBuilderType = default)
         {
-            this.m_info = method ?? throw new ArgumentNullException(nameof(method));
+            this.m_info = ThrowHelper.ThrowArgumentNullExceptionIf(method, nameof(method));
             this.Name = method.Name;
-            foreach (var item in method.GetParameters())
-            {
-                if (item.ParameterType.IsByRef)
-                {
-                    this.HasByRef = true;
-                }
-            }
-            if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
-            {
-                if (build)
-                {
-                    this.m_invoker = CreateILInvoker(method);
-                }
-            }
-            else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
-            {
-                if (build)
-                {
-                    this.m_invoker = this.CreateExpressionInvoker(method);
-                }
-            }
 
             if (method.ReturnType == typeof(Task))
             {
@@ -113,7 +62,116 @@ namespace TouchSocket.Core
                 this.TaskType = TaskReturnType.None;
                 this.ReturnType = method.ReturnType;
             }
+
+            if (dynamicBuilderType.HasValue)
+            {
+                switch (dynamicBuilderType.Value)
+                {
+                    case DynamicBuilderType.IL:
+                        if (!CreateInvokeFromIL())
+                        {
+                            ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
+                        }
+                        break;
+                    case DynamicBuilderType.Expression:
+                        if (!CreateInvokeFromExpression())
+                        {
+                            ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
+                        }
+                        break;
+                    case DynamicBuilderType.SourceGenerator:
+                        if (!CreateInvokeFromSG())
+                        {
+                            ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                this.CreateInvokeFromSG();
+                this.CreateInvokeFromIL();
+                this.CreateInvokeFromExpression();
+            }
+
+            if (this.m_invoker == null)
+            {
+                this.DynamicBuilderType = DynamicBuilderType.Reflect;
+            }
         }
+        private bool CreateInvokeFromIL()
+        {
+            if (this.m_invoker != null)
+            {
+                return false;
+            }
+            try
+            {
+                this.m_invoker = CreateILInvoker(this.Info);
+                this.DynamicBuilderType = DynamicBuilderType.IL;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
+        private bool CreateInvokeFromExpression()
+        {
+            if (this.m_invoker != null)
+            {
+                return false;
+            }
+            try
+            {
+                this.m_invoker = this.CreateExpressionInvoker(this.Info);
+                this.DynamicBuilderType = DynamicBuilderType.Expression;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool CreateInvokeFromSG()
+        {
+            if (this.m_invoker!=null)
+            {
+                return false;
+            }
+
+            var typeName = $"{this.m_generatorTypeNamespace}.__{StringExtension.MakeIdentifier(this.Info.DeclaringType.FullName)}MethodExtension";
+
+            var type = this.Info.DeclaringType.Assembly.GetType(typeName);
+            if (type == null)
+            {
+                return false;
+            }
+
+            var methodName = $"{this.Info.GetDeterminantName()}Func";
+            var property = type.GetProperty(methodName, BindingFlags.Public | BindingFlags.Static);
+            if (property == null)
+            {
+                return false;
+            }
+
+            this.m_invoker = (Func<object, object[], object>)property.GetValue(null);
+            if (this.m_invoker == null)
+            {
+                return false;
+            }
+
+            this.DynamicBuilderType = DynamicBuilderType.SourceGenerator;
+            return true;
+        }
+
+        /// <summary>
+        /// 获取调用器的构建类型。
+        /// </summary>
+        public DynamicBuilderType DynamicBuilderType { get; private set; }
 
         /// <summary>
         /// 是否具有返回值。当返回值为Task时，也会认为没有返回值。
@@ -124,11 +182,6 @@ namespace TouchSocket.Core
         /// 方法信息
         /// </summary>
         public MethodInfo Info => this.m_info;
-
-        /// <summary>
-        /// 是否有引用类型
-        /// </summary>
-        public bool HasByRef { get; private set; }
 
         /// <summary>
         /// 获取方法名
@@ -147,38 +200,31 @@ namespace TouchSocket.Core
         /// </summary>
         public TaskReturnType TaskType { get; private set; }
 
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
-        {
-            return this.m_info.Equals(obj);
-        }
-
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return this.m_info.GetHashCode();
-        }
-
         /// <summary>
         /// 执行方法。
         /// </summary>
         /// <param name="instance">实例</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public virtual object Invoke(object instance, params object[] parameters)
+        public object Invoke(object instance, params object[] parameters)
         {
-            return GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
-                ? this.Info.Invoke(instance, parameters)
-                : this.m_invoker.Invoke(instance, parameters);
+            if (this.m_invoker == null)
+            {
+                return this.Info.Invoke(instance, parameters);
+            }
+            else
+            {
+                return this.m_invoker.Invoke(instance, parameters);
+            }
         }
 
         /// <summary>
-        /// 异步调用
+        /// 异步执行方法。
         /// </summary>
-        /// <param name="instance"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public virtual Task InvokeAsync(object instance, params object[] parameters)
+        /// <param name="instance">实例</param>
+        /// <param name="parameters">参数</param>
+        /// <returns>返回一个表示异步操作的任务。</returns>
+        public Task InvokeAsync(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -188,16 +234,29 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.Task:
                     {
-                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
-                            ? this.Info.Invoke(instance, parameters)
-                            : this.m_invoker.Invoke(instance, parameters);
+                        object re;
+                        if (this.m_invoker == null)
+                        {
+                            re = this.Info.Invoke(instance, parameters);
+                        }
+                        else
+                        {
+                            re = this.m_invoker.Invoke(instance, parameters);
+                        }
+
                         return (Task)re;
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
-                            ? this.Info.Invoke(instance, parameters)
-                            : this.m_invoker.Invoke(instance, parameters);
+                        object re;
+                        if (this.m_invoker == null)
+                        {
+                            re = this.Info.Invoke(instance, parameters);
+                        }
+                        else
+                        {
+                            re = this.m_invoker.Invoke(instance, parameters);
+                        }
                         return (Task)re;
                     }
                 default:
@@ -211,7 +270,7 @@ namespace TouchSocket.Core
         /// <param name="instance"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public virtual Task<TResult> InvokeAsync<TResult>(object instance, params object[] parameters)
+        public Task<TResult> InvokeAsync<TResult>(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -225,9 +284,15 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        var re = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
-                            ? this.Info.Invoke(instance, parameters)
-                            : this.m_invoker.Invoke(instance, parameters);
+                        object re;
+                        if (this.m_invoker == null)
+                        {
+                            re = this.Info.Invoke(instance, parameters);
+                        }
+                        else
+                        {
+                            re = this.m_invoker.Invoke(instance, parameters);
+                        }
                         return (Task<TResult>)re;
                     }
                 default:
@@ -244,7 +309,7 @@ namespace TouchSocket.Core
         /// <param name="instance">实例</param>
         /// <param name="parameters">参数</param>
         /// <returns></returns>
-        public virtual async Task<object> InvokeObjectAsync(object instance, params object[] parameters)
+        public async Task<object> InvokeObjectAsync(object instance, params object[] parameters)
         {
             switch (this.TaskType)
             {
@@ -258,69 +323,21 @@ namespace TouchSocket.Core
                     }
                 case TaskReturnType.TaskObject:
                     {
-                        var task = GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Reflect
-                            ? (Task)this.Info.Invoke(instance, parameters)
-                            : (Task)this.m_invoker.Invoke(instance, parameters);
+                        Task task;
+                        if (this.m_invoker == null)
+                        {
+                            task = (Task)this.Info.Invoke(instance, parameters);
+                        }
+                        else
+                        {
+                            task = (Task)this.m_invoker.Invoke(instance, parameters);
+                        }
+
                         await task.ConfigureAwait(false);
                         return DynamicMethodMemberAccessor.Default.GetValue(task, "Result");
                     }
                 default:
                     return default;
-            }
-        }
-
-        /// <summary>
-        /// 构建表达式树调用
-        /// </summary>
-        /// <param name="method"></param>
-        /// <returns></returns>
-        protected Func<object, object[], object> CreateExpressionInvoker(MethodInfo method)
-        {
-            var instance = Expression.Parameter(typeof(object), "instance");
-            var parameters = Expression.Parameter(typeof(object[]), "parameters");
-
-            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
-            var parametersCast = method.GetParameters().Select((p, i) =>
-            {
-                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
-                return Expression.Convert(parameter, p.ParameterType);
-            });
-
-            var body = Expression.Call(instanceCast, method, parametersCast);
-
-            if (method.ReturnType == typeof(Task))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.Task;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
-            {
-                this.TaskType = TaskReturnType.TaskObject;
-                this.HasReturn = true;
-                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
-            }
-            else if (method.ReturnType == typeof(void))
-            {
-                this.HasReturn = false;
-                this.TaskType = TaskReturnType.None;
-                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
-                return (_instance, _parameters) =>
-                {
-                    action.Invoke(_instance, _parameters);
-                    return null;
-                };
-            }
-            else
-            {
-                this.HasReturn = true;
-                this.TaskType = TaskReturnType.None;
-                this.ReturnType = method.ReturnType;
-                var bodyCast = Expression.Convert(body, typeof(object));
-                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
             }
         }
 
@@ -390,6 +407,61 @@ namespace TouchSocket.Core
             il.Emit(OpCodes.Ret);
             var invoder = (Func<object, object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object, object[], object>));
             return invoder;
+        }
+
+        /// <summary>
+        /// 构建表达式树调用
+        /// </summary>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        protected Func<object, object[], object> CreateExpressionInvoker(MethodInfo method)
+        {
+            var instance = Expression.Parameter(typeof(object), "instance");
+            var parameters = Expression.Parameter(typeof(object[]), "parameters");
+
+            var instanceCast = method.IsStatic ? null : Expression.Convert(instance, method.DeclaringType);
+            var parametersCast = method.GetParameters().Select((p, i) =>
+            {
+                var parameter = Expression.ArrayIndex(parameters, Expression.Constant(i));
+                return Expression.Convert(parameter, p.ParameterType);
+            });
+
+            var body = Expression.Call(instanceCast, method, parametersCast);
+
+            if (method.ReturnType == typeof(Task))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.Task;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                this.TaskType = TaskReturnType.TaskObject;
+                this.HasReturn = true;
+                this.ReturnType = method.ReturnType.GetGenericArguments()[0];
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
+            else if (method.ReturnType == typeof(void))
+            {
+                this.HasReturn = false;
+                this.TaskType = TaskReturnType.None;
+                var action = Expression.Lambda<Action<object, object[]>>(body, instance, parameters).Compile();
+                return (_instance, _parameters) =>
+                {
+                    action.Invoke(_instance, _parameters);
+                    return null;
+                };
+            }
+            else
+            {
+                this.HasReturn = true;
+                this.TaskType = TaskReturnType.None;
+                this.ReturnType = method.ReturnType;
+                var bodyCast = Expression.Convert(body, typeof(object));
+                return Expression.Lambda<Func<object, object[], object>>(bodyCast, instance, parameters).Compile();
+            }
         }
 
         private static void EmitBoxIfNeeded(ILGenerator il, System.Type type)

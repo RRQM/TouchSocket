@@ -20,6 +20,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 串行发送插件接口，继承自通用插件接口IPlugin
     /// </summary>
+    [DynamicMethod]
     public interface ISerialSendingPlugin : IPlugin
     {
         /// <summary>

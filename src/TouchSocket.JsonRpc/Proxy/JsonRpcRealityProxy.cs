@@ -25,18 +25,7 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TAttribute"></typeparam>
-    public abstract class JsonRpcRealityProxy<T, TClient, TAttribute> : RpcRealityProxy<T, TClient, TAttribute> where TClient : IJsonRpcClient where TAttribute : JsonRpcAttribute
-    {
-
-    }
-
-    /// <summary>
-    /// JsonRpcRealityProxy
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class JsonRpcRealityProxy<T, TClient> : JsonRpcRealityProxy<T, TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
+    public abstract class JsonRpcRealityProxy<T, TClient> : RpcRealityProxy<T, TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
     {
 
     }

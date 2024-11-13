@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
 		<PackageTags>Swagger;TouchSocket</PackageTags>
 		<Description>这是适用于TouchSocket.WebApi的Swagger页面，可以直接在浏览器调试WebApi。
 

@@ -20,6 +20,7 @@ namespace TouchSocket.Sockets
     /// 定义了基于TCP连接前的插件接口，继承自IPlugin接口。
     /// 该接口提供了特定于TCP连接操作的额外功能和要求。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpConnectingPlugin : IPlugin
     {
         /// <summary>

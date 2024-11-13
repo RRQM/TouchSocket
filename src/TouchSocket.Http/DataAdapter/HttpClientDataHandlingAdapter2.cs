@@ -62,7 +62,7 @@ namespace TouchSocket.Http
 
         public bool OnParsingBody(ReadOnlySpan<byte> body)
         {
-            this.SetContent(body.ToArray());
+            this.InternalSetContent(body.ToArray());
             return true;
         }
 

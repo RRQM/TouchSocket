@@ -24,13 +24,17 @@ namespace TouchSocket.Dmtp
     public class DmtpHeartbeatPlugin : HeartbeatPlugin, IDmtpHandshakedPlugin
     {
         /// <inheritdoc/>
-        public Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            Task.Run(async () =>
+            _=Task.Factory.StartNew(async () =>
             {
                 var failedCount = 0;
                 while (true)
                 {
+                    if (this.DisposedValue)
+                    {
+                        return;
+                    }
                     await Task.Delay(this.Tick);
                     if (client.DmtpActor == null || !client.DmtpActor.Online)
                     {
@@ -54,9 +58,9 @@ namespace TouchSocket.Dmtp
                         }
                     }
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
     }
 }

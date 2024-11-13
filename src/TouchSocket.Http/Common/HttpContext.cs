@@ -19,26 +19,15 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpContext
     {
-        private HttpResponse m_response;
-
         /// <summary>
-        /// 构造函数
+        /// 初始化 <see cref="HttpContext"/> 类的新实例。
         /// </summary>
-        /// <param name="request"></param>
-        public HttpContext(HttpRequest request)
-        {
-            this.Request = request ?? throw new ArgumentNullException(nameof(request));
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="request"></param>
-        /// <param name="response"></param>
+        /// <param name="request">Http请求</param>
+        /// <param name="response">Http响应</param>
         public HttpContext(HttpRequest request, HttpResponse response)
         {
             this.Request = request ?? throw new ArgumentNullException(nameof(request));
-            this.m_response = response ?? throw new ArgumentNullException(nameof(response));
+            this.Response = response ?? throw new ArgumentNullException(nameof(response));
         }
 
         /// <summary>
@@ -49,13 +38,6 @@ namespace TouchSocket.Http
         /// <summary>
         /// Http响应
         /// </summary>
-        public HttpResponse Response
-        {
-            get
-            {
-                this.m_response ??= new HttpResponse(this.Request);
-                return this.m_response;
-            }
-        }
+        public HttpResponse Response { get; }
     }
 }

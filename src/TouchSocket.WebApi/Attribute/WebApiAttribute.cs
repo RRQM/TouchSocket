@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.WebApi
@@ -23,14 +24,16 @@ namespace TouchSocket.WebApi
     /// 继承自 <see cref="RpcAttribute"/>，用于实现远程过程调用的功能。
     /// 通过该属性，可以更便捷地将方法暴露为 Web API 服务。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class WebApiAttribute : RpcAttribute
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    [DynamicMethod]
+    public sealed class WebApiAttribute : RpcAttribute
     {
         /// <summary>
         /// 构造函数，用于初始化WebApiAttribute对象并设置HTTP方法类型。
         /// </summary>
         /// <param name="method">指定HTTP请求的方法类型，如GET、POST等。</param>
-        public WebApiAttribute(HttpMethodType method)
+        [Obsolete("由于构造函数直接设置参数在源生成时效果不一致，所以取消该方式，如果想要设置参数，请使用属性直接设置，例如：MethodInvoke=true", true)]
+        public WebApiAttribute(HttpMethodType method) : this()
         {
             // 设置HTTP方法类型
             this.Method = method;
@@ -41,6 +44,8 @@ namespace TouchSocket.WebApi
         /// </summary>
         public WebApiAttribute()
         {
+            this.Namespaces.Add("using TouchSocket.Http;");
+            this.Namespaces.Add("using TouchSocket.WebApi;");
         }
 
         /// <summary>
@@ -55,59 +60,282 @@ namespace TouchSocket.WebApi
         }
 
         /// <inheritdoc/>
-        public override string GetInvokeKey(RpcMethod rpcMethod)
+        protected override string GetExtensionInstanceMethod(RpcMethod rpcMethod, List<string> parametersStr, RpcParameter[] parameters, bool isAsync)
         {
-            var parameters = rpcMethod.GetNormalParameters().ToList();
-            if (this.Method == HttpMethodType.GET)
+            if (rpcMethod.GetAttribute<WebApiAttribute>() is not WebApiAttribute webApiAttribute)
             {
-                var actionUrl = this.GetRouteUrls(rpcMethod)[0];
-                if (parameters.Count > 0)
-                {
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.Append(actionUrl);
-                    stringBuilder.Append('?');
-                    for (var i = 0; i < parameters.Count; i++)
-                    {
-                        stringBuilder.Append(parameters[i].Name + "={&}".Replace("&", i.ToString()));
-                        if (i != parameters.Count - 1)
-                        {
-                            stringBuilder.Append('&');
-                        }
-                    }
-                    actionUrl = stringBuilder.ToString();
-                }
-                return $"GET:{actionUrl}";
+                return string.Empty;
             }
-            else if (this.Method == HttpMethodType.POST)
-            {
-                var actionUrl = this.GetRouteUrls(rpcMethod)[0];
-                if (parameters.Count > 0)
-                {
-                    var stringBuilder = new StringBuilder();
-                    stringBuilder.Append(actionUrl);
-                    stringBuilder.Append('?');
+            var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
+            var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
 
-                    var last = parameters.LastOrDefault();
-                    if (!(last.Type.IsPrimitive || last.Type == typeof(string)))
+            var codeString = new StringBuilder();
+            
+            codeString.AppendLine("var _request=new WebApiRequest();");
+            codeString.AppendLine($"_request.Method = HttpMethodType.{webApiAttribute.Method};");
+            codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod,webApiParameterInfos)};");
+            codeString.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
+            codeString.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
+
+            var url = this.GetRouteUrls(rpcMethod).First();
+            string bodyName = default;
+
+            foreach (var webApiParameterInfo in webApiParameterInfos)
+            {
+                if (webApiParameterInfo.Parameter.Type.IsPrimitive())
+                {
+                    if (webApiParameterInfo.IsFromBody)
                     {
-                        parameters.Remove(last);
+                        bodyName = webApiParameterInfo.Parameter.Name;
                     }
-                    for (var i = 0; i < parameters.Count; i++)
-                    {
-                        stringBuilder.Append(parameters[i].Name + "={&}".Replace("&", i.ToString()));
-                        if (i != parameters.Count - 1)
-                        {
-                            stringBuilder.Append('&');
-                        }
-                    }
-                    actionUrl = stringBuilder.ToString();
                 }
-                return $"POST:{actionUrl}";
+                else
+                {
+                    bodyName = webApiParameterInfo.Parameter.Name;
+                }
+            }
+
+            if (bodyName != null)
+            {
+                codeString.AppendLine($"_request.Body = {bodyName};");
+            }
+
+            if (isAsync)
+            {
+                if (rpcMethod.HasReturn)
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) await client.InvokeAsync(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) await client.InvokeAsync(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                }
+                else
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return client.InvokeAsync(\"{url}\", default, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return client.InvokeAsync(\"{url}\", default, invokeOption, _request);");
+                    }
+                }
             }
             else
             {
-                return base.GetInvokeKey(rpcMethod);
+                if (rpcMethod.HasReturn)
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) client.Invoke(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) client.Invoke(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                }
+                else
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"client.Invoke(\"{url}\", default, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"client.Invoke(\"{url}\", default, invokeOption, _request);");
+                    }
+                }
             }
+
+            return codeString.ToString();
+        }
+
+        private string GetParameterToString(RpcParameter parameter)
+        {
+            if (parameter.ParameterInfo.ParameterType.IsValueType)
+            {
+                return $"{parameter.Name}.ToString()";
+            }
+
+            return $"{parameter.Name}?.ToString()";
+        }
+
+        private string GetFromHeaderString(RpcMethod rpcMethod,IEnumerable<WebApiParameterInfo> webApiParameterInfos)
+        {
+            var parameterInfos = webApiParameterInfos.Where(a => a.IsFromHeader);
+           var list= parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{GetParameterToString(a.Parameter)})").ToList();
+
+            if (rpcMethod.HasReturn&&rpcMethod.ReturnType==typeof(string))
+            {
+                list.Add($"new KeyValuePair<string, string>(\"Accept\",\"text/plain\")");
+            }
+
+            if (list.Count>0)
+            {
+                var codeString = new StringBuilder();
+                codeString.Append("new KeyValuePair<string, string>[] {");
+                codeString.Append(string.Join(",", list));
+                codeString.Append("}");
+                return codeString.ToString();
+            }
+            return "null";
+        }
+
+        private string GetFromFormString(IEnumerable<WebApiParameterInfo> webApiParameterInfos)
+        {
+            var parameterInfos = webApiParameterInfos.Where(a => a.IsFromForm);
+            if (!parameterInfos.Any())
+            {
+                return "null";
+            }
+
+            var codeString = new StringBuilder();
+            codeString.Append("new KeyValuePair<string, string>[] {");
+            codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromFormName}\",{this.GetParameterToString(a.Parameter)})")));
+            codeString.Append("}");
+
+            return codeString.ToString();
+        }
+
+        private string GetFromQueryString(IEnumerable<WebApiParameterInfo> webApiParameterInfos)
+        {
+            var parameterInfos = webApiParameterInfos.Where(a =>
+            {
+                if (a.Parameter.Type.IsPrimitive())
+                {
+                    if (a.IsFromBody)
+                    {
+                        return false;
+                    }
+                    else if (a.IsFromHeader)
+                    {
+                        return false;
+                    }
+                    else if (a.IsFromForm)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (!parameterInfos.Any())
+            {
+                return "null";
+            }
+
+            var codeString = new StringBuilder();
+            codeString.Append("new KeyValuePair<string, string>[] {");
+            codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromQueryName?? a.Parameter.Name}\",{this.GetParameterToString(a.Parameter)})")));
+            codeString.Append("}");
+
+            return codeString.ToString();
+        }
+
+        /// <inheritdoc/>
+        protected override string GetInstanceMethod(RpcMethod rpcMethod, List<string> parametersStr, RpcParameter[] parameters, bool isAsync)
+        {
+            if (rpcMethod.GetAttribute<WebApiAttribute>() is not WebApiAttribute webApiAttribute)
+            {
+                return string.Empty;
+            }
+            var webApiParameterInfos = parameters.Select(p => new WebApiParameterInfo(p));
+            var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
+
+            var codeString = new StringBuilder();
+            codeString.AppendLine("if(this.Client==null)");
+            codeString.AppendLine("{");
+            codeString.AppendLine("throw new RpcException(\"IRpcClient为空，请先初始化或者进行赋值\");");
+            codeString.AppendLine("}");
+
+            codeString.AppendLine("var _request=new WebApiRequest();");
+            codeString.AppendLine($"_request.Method = HttpMethodType.{webApiAttribute.Method};");
+            codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod, webApiParameterInfos)};");
+            codeString.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
+            codeString.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
+
+            var url = this.GetRouteUrls(rpcMethod).First();
+            string bodyName = default;
+
+            foreach (var webApiParameterInfo in webApiParameterInfos)
+            {
+                if (webApiParameterInfo.Parameter.Type.IsPrimitive())
+                {
+                    if (webApiParameterInfo.IsFromBody)
+                    {
+                        bodyName = webApiParameterInfo.Parameter.Name;
+                    }
+                }
+                else
+                {
+                    bodyName = webApiParameterInfo.Parameter.Name;
+                }
+            }
+
+            if (bodyName != null)
+            {
+                codeString.AppendLine($"_request.Body = {bodyName};");
+            }
+
+            if (isAsync)
+            {
+                if (rpcMethod.HasReturn)
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) await this.Client.InvokeAsync(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) await this.Client.InvokeAsync(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                }
+                else
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return this.Client.InvokeAsync(\"{url}\", default, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return this.Client.InvokeAsync(\"{url}\", default, invokeOption, _request);");
+                    }
+                }
+            }
+            else
+            {
+                if (rpcMethod.HasReturn)
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) this.Client.Invoke(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"return ({this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)}) this.Client.Invoke(\"{url}\", {returnTypeString}, invokeOption, _request);");
+                    }
+                }
+                else
+                {
+                    if (bodyName == null)
+                    {
+                        codeString.AppendLine($"this.Client.Invoke(\"{url}\", default, invokeOption, _request);");
+                    }
+                    else
+                    {
+                        codeString.AppendLine($"this.Client.Invoke(\"{url}\", default, invokeOption, _request);");
+                    }
+                }
+            }
+
+            return codeString.ToString();
         }
 
         /// <summary>
@@ -116,13 +344,13 @@ namespace TouchSocket.WebApi
         /// </summary>
         /// <param name="rpcMethod"></param>
         /// <returns></returns>
-        public virtual string[] GetRouteUrls(RpcMethod rpcMethod)
+        public string[] GetRouteUrls(RpcMethod rpcMethod)
         {
             if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
             {
                 var urls = new List<string>();
-
-                var attrs = rpcMethod.Info.GetCustomAttributes(typeof(RouterAttribute), true);
+                //如果方法有特性，则会覆盖类的特性
+                var attrs = rpcMethod.Info.GetCustomAttributes(typeof(RouterAttribute), false);
                 if (attrs.Length > 0)
                 {
                     foreach (var item in attrs.Cast<RouterAttribute>())
@@ -139,7 +367,7 @@ namespace TouchSocket.WebApi
                 }
                 else
                 {
-                    attrs = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RouterAttribute), true);
+                    attrs = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RouterAttribute), false);
                     if (attrs.Length > 0)
                     {
                         foreach (var item in attrs.Cast<RouterAttribute>())

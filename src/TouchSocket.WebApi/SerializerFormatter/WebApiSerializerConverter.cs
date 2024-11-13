@@ -25,9 +25,16 @@ namespace TouchSocket.WebApi
         public override string Serialize(HttpContext state, in object target)
         {
             var accept = state.Request.Accept;
-            if (accept != null && accept.Equals("text/plain") && (target.GetType().IsPrimitive || target.GetType() == TouchSocketCoreUtility.stringType))
+            if (accept != null&& accept.Equals("text/plain"))
             {
-                return target.ToString();
+                if (target == null)
+                {
+                    return string.Empty;
+                }
+                if ((target.GetType().IsPrimitive || target.GetType() == typeof(string)))
+                {
+                    return target.ToString();
+                }
             }
             return base.Serialize(state, target);
         }

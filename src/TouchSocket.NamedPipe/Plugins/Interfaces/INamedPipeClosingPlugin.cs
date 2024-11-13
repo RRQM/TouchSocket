@@ -19,6 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 即将断开连接(仅主动断开时有效)。
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeClosingPlugin : IPlugin
     {
         /// <summary>

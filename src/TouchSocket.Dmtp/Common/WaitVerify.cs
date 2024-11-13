@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp
         /// </summary>
         public string Token { get; set; }
 
-        internal volatile bool Handle;
+        //internal volatile bool Handle;
 
         /// <summary>
         /// 元数据

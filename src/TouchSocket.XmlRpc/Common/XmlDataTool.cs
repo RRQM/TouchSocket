@@ -129,7 +129,7 @@ namespace TouchSocket.XmlRpc
                 }
             }
 
-            var request = new HttpRequest(httpClientBase);
+            var request = new HttpRequest();
             request.FromXML(xml.OuterXml)
                 .InitHeaders()
                 .SetUrl(httpClientBase.RemoteIPHost.PathAndQuery)

@@ -21,6 +21,7 @@ namespace TouchSocket.NamedPipe
     /// 定义了一个接口，用于在命名管道中发送数据的插件。
     /// 继承自IPlugin接口。
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeSendingPlugin : IPlugin
     {
         /// <summary>

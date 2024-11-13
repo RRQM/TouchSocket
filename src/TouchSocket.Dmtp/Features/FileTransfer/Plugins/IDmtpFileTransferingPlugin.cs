@@ -20,6 +20,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// 定义了一个接口，用于处理文件传输过程中的插件操作。
     /// 该接口继承自通用插件接口IPlugin，专门用于文件传输过程中的操作。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpFileTransferringPlugin : IPlugin
     {
 

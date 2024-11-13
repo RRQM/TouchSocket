@@ -18,6 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义了一个插件接口，该插件用于处理接收到的Dmtp消息。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpReceivedPlugin : IPlugin
     {
         /// <summary>

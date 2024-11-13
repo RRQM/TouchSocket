@@ -17,6 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 注册为消息
     /// </summary>
+    [DynamicMethod]
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
     public sealed class AppMessageAttribute : Attribute
     {

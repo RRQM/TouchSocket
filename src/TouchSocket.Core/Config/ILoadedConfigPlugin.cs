@@ -17,6 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 定义了一个插件接口，用于在配置加载完成后执行特定操作。
     /// </summary>
+    [DynamicMethod]
     public interface ILoadedConfigPlugin : IPlugin
     {
         /// <summary>

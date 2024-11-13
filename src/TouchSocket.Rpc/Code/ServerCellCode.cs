@@ -49,6 +49,11 @@ namespace TouchSocket.Rpc
         public string Name { get; set; }
 
         /// <summary>
+        /// 生成代理时，额外的命名空间
+        /// </summary>
+        public List<string> Namespaces { get;} = new List<string>();
+
+        /// <summary>
         /// 方法集合
         /// </summary>
         public Dictionary<string, MethodCellCode> Methods { get; set; }

@@ -25,7 +25,7 @@ namespace TouchSocket.Core
     {
         private static readonly Lazy<AppMessenger> s_instanceLazy;
 
-        private readonly ConcurrentDictionary<string, List<MessageInstance>> m_tokenAndInstance = new ConcurrentDictionary<string, List<MessageInstance>>();
+        private readonly ConcurrentDictionary<string, ConcurrentList<MessageInstance>> m_tokenAndInstance = new ConcurrentDictionary<string, ConcurrentList<MessageInstance>>();
 
         static AppMessenger()
         {
@@ -67,10 +67,10 @@ namespace TouchSocket.Core
             }
             else
             {
-                this.m_tokenAndInstance.TryAdd(token, new List<MessageInstance>()
-                    {
-                     messageInstance
-                    });
+                if (!this.m_tokenAndInstance.TryAdd(token, new ConcurrentList<MessageInstance>() { messageInstance }))
+                {
+                    this.Add(token, messageInstance);
+                }
             }
         }
 
@@ -118,16 +118,16 @@ namespace TouchSocket.Core
         {
             var key = new List<string>();
 
-            foreach (var item in this.m_tokenAndInstance.Keys)
+            foreach (var item in this.m_tokenAndInstance)
             {
-                foreach (var item2 in this.m_tokenAndInstance[item].ToArray())
+                foreach (var messageInstance in item.Value)
                 {
-                    if (messageObject == item2.MessageObject)
+                    if (messageObject == messageInstance.MessageObject)
                     {
-                        this.m_tokenAndInstance[item].Remove(item2);
-                        if (this.m_tokenAndInstance[item].Count == 0)
+                        item.Value.Remove(messageInstance);
+                        if (item.Value.Count == 0)
                         {
-                            key.Add(item);
+                            key.Add(item.Key);
                         }
                     }
                 }

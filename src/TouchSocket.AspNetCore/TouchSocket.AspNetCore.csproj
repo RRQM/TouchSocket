@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net9.0;net8.0</TargetFrameworks>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
 		<PackageTags>Tcp;Udp;Ssl;Socket;Saea;AspNetCore;TouchSocket</PackageTags>
 		<Description>TouchSocket.AspNetCore是适用于AspNetCore的专属版本。
@@ -10,6 +10,7 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.AspNetCore</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
 	  <Compile Include="..\TouchSocket.Shared\Sockets\InternalClientCollection.cs" Link="Dmtp\Common\InternalClientCollection.cs" />
 	</ItemGroup>
 
@@ -24,5 +25,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Dmtp\Common\" />
+	  <Folder Include="Exceptions\" />
 	</ItemGroup>
 </Project>

@@ -30,6 +30,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 使用反射
         /// </summary>
-        Reflect
+        Reflect,
+
+        /// <summary>
+        /// 使用源生成
+        /// </summary>
+        SourceGenerator
     }
 }

@@ -118,7 +118,6 @@ namespace TouchSocket.Http
                 using (var byteBlock = new ByteBlock())
                 {
                     request.BuildHeader(byteBlock);
-                    request.BuildContent(byteBlock);
                     // 异步发送请求
                     await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
                 }

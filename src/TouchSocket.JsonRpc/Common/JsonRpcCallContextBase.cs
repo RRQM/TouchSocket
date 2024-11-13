@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc
@@ -40,9 +41,10 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public string JsonString { get; }
 
-        internal void SetRpcMethod(RpcMethod rpcMethod)
+        internal void Init(RpcMethod rpcMethod,IResolver resolver)
         {
             this.RpcMethod = rpcMethod;
+            this.Resolver = resolver;
         }
     }
 }

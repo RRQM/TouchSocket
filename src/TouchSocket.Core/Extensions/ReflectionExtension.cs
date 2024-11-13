@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace TouchSocket.Core
 {
@@ -27,25 +28,26 @@ namespace TouchSocket.Core
 
         /// <summary>
         /// 获取方法的确定性名称，即使在重载时，也能区分。
-        /// <para>计算规则是：命名空间.类名.方法名(参数：全名)</para>
+        /// <para>计算规则是：方法名_参数类型名称</para>
         /// </summary>
         /// <param name="methodInfo"></param>
         /// <returns></returns>
         public static string GetDeterminantName(this MethodInfo methodInfo)
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append($"{methodInfo.DeclaringType?.Namespace}.{methodInfo.DeclaringType?.Name}.{methodInfo.GetName()}(");
+            return GenerateKey(methodInfo);
+        }
 
-            foreach (var item in methodInfo.GetParameters())
-            {
-                stringBuilder.Append(item.ParameterType.FullName);
-                if (item != methodInfo.GetParameters().Last())
-                {
-                    stringBuilder.Append('.');
-                }
-            }
-            stringBuilder.Append(')');
-            return stringBuilder.ToString();
+        private static string GenerateKey(MethodInfo method)
+        {
+            var parameterTypes = method.GetParameters().Select(p => p.ParameterType).ToArray(); // 使用类型名称
+            return GenerateKey(method.Name, parameterTypes);
+        }
+
+        private static string GenerateKey(string methodName, Type[] parameterTypes)
+        {
+            // 将参数类型名称转换为合法的标识符
+            var parameterTypeNames = string.Join("_", parameterTypes.Select(t => StringExtension.MakeIdentifier(t.Name)));
+            return $"{StringExtension.MakeIdentifier(methodName)}_{parameterTypeNames}";
         }
 
         /// <summary>

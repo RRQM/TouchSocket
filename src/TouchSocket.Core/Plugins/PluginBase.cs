@@ -10,6 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Core
 {
     /// <summary>
@@ -19,20 +21,30 @@ namespace TouchSocket.Core
     {
         private IPluginManager m_pluginManager;
 
-        /// <inheritdoc cref="IPlugin.Loaded(IPluginManager)"/>
-        protected virtual void Loaded(IPluginManager pluginManager)
-        {
-        }
-
         /// <summary>
         /// 插件管理器
         /// </summary>
         public IPluginManager PluginManager => this.m_pluginManager;
 
+        void IPlugin.Unloaded(IPluginManager pluginManager)
+        {
+            this.Unloaded(pluginManager);
+        }
+
         void IPlugin.Loaded(IPluginManager pluginManager)
         {
             this.m_pluginManager = pluginManager;
             this.Loaded(pluginManager);
+        }
+
+        /// <inheritdoc cref="IPlugin.Loaded(IPluginManager)"/>
+        protected virtual void Loaded(IPluginManager pluginManager)
+        {
+        }
+
+        /// <inheritdoc cref="IPlugin.Unloaded(IPluginManager)"/>
+        protected virtual void Unloaded(IPluginManager pluginManager)
+        {
         }
     }
 }

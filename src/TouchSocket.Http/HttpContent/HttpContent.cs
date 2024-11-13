@@ -15,9 +15,9 @@ namespace TouchSocket.Http
     public abstract class HttpContent
     {
         /// <summary>
-        /// 内部方法，用于构建HTTP响应头
+        /// 内部方法，用于构建HTTP头
         /// </summary>
-        /// <param name="header">HTTP响应头的接口实现</param>
+        /// <param name="header">HTTP头的接口实现</param>
         internal void InternalBuildingHeader(IHttpHeader header)
         {
             this.OnBuildingHeader(header);
@@ -46,9 +46,9 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 抽象方法，由子类实现，用于构建HTTP响应头
+        /// 抽象方法，由子类实现，用于构建HTTP头
         /// </summary>
-        /// <param name="header">HTTP响应头的接口实现</param>
+        /// <param name="header">HTTP头的接口实现</param>
         protected abstract void OnBuildingHeader(IHttpHeader header);
 
         /// <summary>
@@ -66,5 +66,23 @@ namespace TouchSocket.Http
         /// <param name="token">用于取消操作的令牌</param>
         /// <returns>返回一个任务对象，代表异步写入操作</returns>
         protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token);
+
+        public static implicit operator HttpContent(string content)
+        {
+            return new StringHttpContent(content,Encoding.UTF8);
+        }
+
+        public static implicit operator HttpContent(ReadOnlyMemory<byte> content)
+        {
+            return new ReadonlyMemoryHttpContent(content);
+        }
+        public static implicit operator HttpContent(byte[] content)
+        {
+            return new ReadonlyMemoryHttpContent(content);
+        }
+        public static implicit operator HttpContent(Stream content)
+        {
+            return new StreamHttpContent(content);
+        }
     }
 }

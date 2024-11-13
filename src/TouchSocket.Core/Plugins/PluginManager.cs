@@ -12,8 +12,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -21,13 +23,13 @@ namespace TouchSocket.Core
     /// <summary>
     /// 表示插件管理器。
     /// </summary>
-    public class PluginManager : DisposableObject, IPluginManager
+    public sealed class PluginManager : DisposableObject, IPluginManager
     {
         private readonly object m_locker = new object();
-        private readonly Dictionary<Type, PluginModel> m_pluginMethods = new Dictionary<Type, PluginModel>();
-
-        private readonly List<IPlugin> m_plugins = new List<IPlugin>();
         private readonly IResolver m_resolver;
+        private Dictionary<Type, PluginInvokeLine> m_pluginMethods = new Dictionary<Type, PluginInvokeLine>();
+
+        private List<IPlugin> m_plugins = new List<IPlugin>();
 
         /// <summary>
         /// 表示插件管理器
@@ -36,6 +38,7 @@ namespace TouchSocket.Core
         public PluginManager(IResolver resolver)
         {
             this.m_resolver = resolver;
+            this.Enable = true;
         }
 
         /// <inheritdoc/>
@@ -44,148 +47,136 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public IEnumerable<IPlugin> Plugins => this.m_plugins;
 
-        IResolver IResolverObject.Resolver => this.m_resolver;
+        /// <inheritdoc/>
+        public IResolver Resolver => this.m_resolver;
 
-        void IPluginManager.Add(IPlugin plugin)
+        /// <inheritdoc/>
+        public void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin
         {
-            ThrowHelper.ThrowArgumentNullExceptionIf(plugin,nameof(plugin));
+            ThrowHelper.ThrowArgumentNullExceptionIf(plugin, nameof(plugin));
 
             this.ThrowIfDisposed();
 
             lock (this.m_locker)
             {
-                if (plugin.GetType().GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
+                var pluginType = plugin.GetType();
+
+                if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
                 {
                     if (optionAttribute.Singleton)
                     {
                         foreach (var item in this.Plugins)
                         {
-                            if (item.GetType() == plugin.GetType())
+                            if (item.GetType() == pluginType)
                             {
-                                //throw new Exception($"{plugin.GetType().FullName}类型的插件为单例类型，且已经注册。");
-
                                 return;
                             }
                         }
                     }
                 }
 
-                var list = PluginManager.SearchPluginMethod(plugin);
-
-                foreach (var item in list)
+                foreach (var pluginInterface in pluginType.GetInterfaces())
                 {
-                    var pluginModel = this.GetPluginModel(item);
-
-                    var methodInfo = item.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
-                        .Where(a =>
-                        {
-                            return a.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(a.GetParameters()[1].ParameterType) && a.ReturnType == typeof(Task);
-                        })
-                        .FirstOrDefault();
-
-                    if (methodInfo != null)
+                    if (!IsPluginInterface(pluginInterface))
                     {
-                        var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
-                        pluginModel.Add(pluginEntity.Run);
+                        continue;
                     }
-                }
-                plugin.Loaded(this);
-                this.m_plugins.Add(plugin);
+                    var pluginInvokeLine = this.GetPluginInvokeLine(pluginInterface);
 
-                //var pairs = new List<string>();
-                //var methodInfos = plugin.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                //foreach (var methodInfo in methodInfos)
-                //{
-                //    if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-                //    {
-                //        var name = methodInfo.GetName();
-
-                //        if (pairs.Contains(name))
-                //        {
-                //            throw new Exception("插件的接口方法不允许重载");
-                //        }
-                //        if (list.Contains(name))
-                //        {
-                //            var pluginModel = this.GetPluginModel(name);
-                //            var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
-                //            pluginModel.Add(pluginEntity.Run);
-                //        }
-                //        pairs.Add(name);
-                //    }
-                //}
-                //plugin.Loaded(this);
-                //this.m_plugins.Add(plugin);
-            }
-        }
-
-        object IPluginManager.Add(Type pluginType)
-        {
-            if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
-            {
-                if (optionAttribute.Singleton)
-                {
-                    foreach (var item in this.Plugins)
+                    foreach (var methodInfo in pluginInterface.GetMethods())
                     {
-                        if (item.GetType() == pluginType)
+                        if (IsPluginMethod(methodInfo))
                         {
-                            return item;
+                            var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
+                            pluginInvokeLine.Add(pluginEntity);
                         }
                     }
                 }
+
+                plugin.Loaded(this);
+                this.m_plugins.Add(plugin);
             }
-            var plugin = this.m_resolver.IsRegistered(pluginType)
-                ? (IPlugin)this.m_resolver.Resolve(pluginType)
-                : (IPlugin)this.m_resolver.ResolveWithoutRoot(pluginType);
-            ((IPluginManager)this).Add(plugin);
-            return plugin;
         }
 
-        void IPluginManager.Add(Type interfeceType, Func<object, PluginEventArgs, Task> func)
+        /// <inheritdoc/>
+        public void Add(Type interfeceType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default)
         {
             lock (this.m_locker)
             {
-                var pluginModel = this.GetPluginModel(interfeceType);
-                pluginModel.Add(func);
+                var pluginInvokeLine = this.GetPluginInvokeLine(interfeceType);
+                pluginInvokeLine.Add(new PluginEntity(pluginInvokeHandler, sourceDelegate ?? pluginInvokeHandler));
             }
-        }
-
-        TPlugin IPluginManager.Add<TPlugin>(Func<IResolver, TPlugin> func)
-        {
-            if (func is null)
-            {
-                throw new ArgumentNullException(nameof(func));
-            }
-
-            var plugin = func.Invoke(this.m_resolver);
-
-            ((IPluginManager)this).Add(plugin);
-            return plugin;
         }
 
         /// <inheritdoc/>
         public int GetPluginCount(Type interfeceType)
         {
-            return this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel) ? pluginModel.Count : 0;
+            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+            {
+                return pluginModel.GetPluginEntities().Count;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
-        ValueTask<bool> IPluginManager.RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
+        /// <inheritdoc/>
+        public ValueTask<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
                 return new ValueTask<bool>(false);
             }
-            return e.Handled
-                ? new ValueTask<bool>(true)
-                : !this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel)
-                ? new ValueTask<bool>(false)
-                : new ValueTask<bool>(RaisePluginAsync(pluginModel, sender, e));
+
+            if (e.Handled)
+            {
+                return new ValueTask<bool>(true);
+            }
+
+            if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+            {
+                return new ValueTask<bool>(false);
+            }
+
+            return new ValueTask<bool>(RaisePluginAsync(pluginModel, sender, e));
         }
 
-        private static async Task<bool> RaisePluginAsync(PluginModel pluginModel, object sender, PluginEventArgs e)
+        /// <inheritdoc/>
+        public void Remove(IPlugin plugin)
         {
-            e.LoadModel(pluginModel, sender);
-            await e.InvokeNext().ConfigureAwait(false);
-            return e.Handled;
+            lock (this.m_locker)
+            {
+                var dic = new Dictionary<Type, PluginInvokeLine>(this.m_pluginMethods);
+
+                foreach (var item in dic)
+                {
+                    var pluginInvokeLine = item.Value;
+                    pluginInvokeLine.Remove(plugin);
+                }
+                this.m_pluginMethods = dic;
+
+                var list = new List<IPlugin>(this.m_plugins);
+                var result = list.Remove(plugin);
+
+                this.m_plugins = list;
+
+                if (result)
+                {
+                    plugin.Unloaded(this);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Remove(Type interfeceType, Delegate func)
+        {
+            lock (this.m_locker)
+            {
+                var pluginInvokeLine = this.GetPluginInvokeLine(interfeceType);
+
+                pluginInvokeLine.Remove(func);
+            }
         }
 
         /// <inheritdoc/>
@@ -206,43 +197,32 @@ namespace TouchSocket.Core
             base.Dispose(disposing);
         }
 
-        private static List<Type> SearchPluginMethod(IPlugin plugin)
+        private static bool IsPluginInterface(Type type)
         {
-            var pluginMethodNames = new List<string>();
-            var pluginInterfacetypes = plugin.GetType().GetInterfaces().Where(a => typeof(IPlugin).IsAssignableFrom(a)).ToList();
-
-            return pluginInterfacetypes;
-            //foreach (var type in pluginInterfacetypes)
-            //{
-            //    var pairs = new List<string>();
-
-            //    var methodInfos = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-            //    foreach (var methodInfo in methodInfos)
-            //    {
-            //        if (methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task))
-            //        {
-            //            var name = methodInfo.GetName();
-            //            if (pairs.Contains(name))
-            //            {
-            //                throw new Exception("插件的接口方法不允许重载");
-            //            }
-            //            if (!pluginMethodNames.Contains(name))
-            //            {
-            //                pluginMethodNames.Add(name);
-            //            }
-
-            //            pairs.Add(name);
-            //        }
-            //    }
-            //}
-            //return pluginMethodNames;
+            if (type == typeof(IPlugin))
+            {
+                return false;
+            }
+            return typeof(IPlugin).IsAssignableFrom(type);
         }
 
-        private PluginModel GetPluginModel(Type interfeceType)
+        private static bool IsPluginMethod(MethodInfo methodInfo)
+        {
+            return methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task);
+        }
+
+        private static async Task<bool> RaisePluginAsync(PluginInvokeLine pluginModel, object sender, PluginEventArgs e)
+        {
+            e.LoadModel(pluginModel.GetPluginEntities(), sender);
+            await e.InvokeNext().ConfigureAwait(false);
+            return e.Handled;
+        }
+
+        private PluginInvokeLine GetPluginInvokeLine([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type interfeceType)
         {
             if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
             {
-                pluginModel = new PluginModel();
+                pluginModel = new PluginInvokeLine();
                 this.m_pluginMethods.Add(interfeceType, pluginModel);
             }
             return pluginModel;

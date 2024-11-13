@@ -27,17 +27,9 @@ namespace TouchSocket.Http
     /// </summary>
     public class HttpRequest : HttpBase
     {
-        private readonly HttpSessionClient m_httpSessionClient;
         private readonly bool m_isServer;
         private readonly InternalHttpParams m_query = new InternalHttpParams();
-        private bool m_canRead;
         private ReadOnlyMemory<byte> m_contentMemory;
-        private HttpContent m_content;
-        private InternalHttpParams m_forms;
-        private HttpClientBase m_httpClientBase;
-        private InternalHttpParams m_params;
-        //private bool m_sentHeader;
-        //private int m_sentLength;
 
         /// <summary>
         /// HttpRequest类的构造函数。
@@ -50,83 +42,26 @@ namespace TouchSocket.Http
             // 初始化时，设置m_isServer为false，表示当前请求不是由服务器发起的。
             this.m_isServer = false;
             // 初始化时，设置m_canRead为false，表示当前请求不能读取数据。
-            this.m_canRead = false;
-            //// 初始化时，设置CanWrite为false，表示当前请求不能写入数据。
-            //this.CanWrite = false;
         }
 
         /// <summary>
         /// 初始化 HttpRequest 实例。
         /// </summary>
         /// <param name="httpClientBase">提供底层 HTTP 通信功能的 HttpClientBase 实例。</param>
+        [Obsolete("此构造函数已被弃用，请使用无参构造函数代替",true)]
         public HttpRequest(HttpClientBase httpClientBase)
         {
-            // 初始化标志，表示当前请求不是服务器端请求
-            this.m_isServer = false;
-            // 初始化标志，表示当前请求默认不允许读取
-            this.m_canRead = false;
-            //// 设置标志，表示当前请求允许写入
-            //this.CanWrite = true;
-            // 保存传入的 HttpClientBase 实例，用于后续的 HTTP 请求操作
-            this.m_httpClientBase = httpClientBase;
         }
 
         internal HttpRequest(HttpSessionClient httpSessionClient)
         {
             this.m_isServer = true;
-            this.m_canRead = true;
-            //this.CanWrite = false;
-            this.m_httpSessionClient = httpSessionClient;
-        }
-
-        /// <inheritdoc/>
-        public override bool CanRead => this.m_canRead;
-
-        ///// <inheritdoc/>
-        //public override bool CanWrite { get; }
-
-        /// <inheritdoc/>
-        public override IClient Client => this.m_isServer ? this.m_httpSessionClient : this.m_httpClientBase;
-
-        /// <summary>
-        /// 表单数据
-        /// </summary>
-        public IHttpParams Forms
-        {
-            get
-            {
-                if (this.m_isServer)
-                {
-                    this.m_forms ??= new InternalHttpParams();
-                    if (this.ContentType == @"application/x-www-form-urlencoded")
-                    {
-                        GetParameters(this.GetBody(), this.m_forms);
-                    }
-                    return this.m_forms;
-                }
-                else
-                {
-                    return this.m_forms ??= new InternalHttpParams();
-                }
-            }
         }
 
         /// <summary>
         /// HTTP请求方式。
         /// </summary>
         public HttpMethod Method { get; set; } = HttpMethod.Get;
-
-        /// <summary>
-        /// Body参数
-        /// </summary>
-        public IHttpParams Params
-        {
-            get
-            {
-                this.m_params ??= new InternalHttpParams();
-                return this.m_params;
-            }
-        }
 
         /// <summary>
         /// url参数
@@ -142,7 +77,9 @@ namespace TouchSocket.Http
         /// Url全地址，包含参数
         /// </summary>
         public string URL { get; private set; } = "/";
-        internal HttpContent Content { get => this.m_content;}
+
+        /// <inheritdoc/>
+        public override bool IsServer =>this.m_isServer;
 
         /// <inheritdoc/>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
@@ -189,7 +126,6 @@ namespace TouchSocket.Http
                 }
                 finally
                 {
-                    this.m_canRead = false;
                 }
             }
             else
@@ -220,18 +156,10 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        public override void SetContent(in ReadOnlyMemory<byte> content)
+        internal override void InternalSetContent(in ReadOnlyMemory<byte> content)
         {
-            this.m_content = default;
-
             this.m_contentMemory = content;
             this.ContentLength = content.Length;
-            this.ContentCompleted = true;
-        }
-
-        public void SetContent(HttpContent content)
-        {
-            this.m_content = content;
             this.ContentCompleted = true;
         }
 
@@ -267,23 +195,14 @@ namespace TouchSocket.Http
         internal override void ResetHttp()
         {
             base.ResetHttp();
-            this.m_canRead = true;
             this.m_contentMemory = null;
             //this.m_sentHeader = false;
             this.RelativeURL = "/";
             this.URL = "/";
             //this.m_sentLength = 0;
-            this.m_params?.Clear();
             this.m_query.Clear();
-            this.m_forms?.Clear();
         }
 
-        internal void SetHttpClientBase(HttpClientBase httpClientBase)
-        {
-            this.m_httpClientBase = httpClientBase;
-        }
-
-        
         /// <inheritdoc/>
         protected override void LoadHeaderProperties()
         {
@@ -331,15 +250,6 @@ namespace TouchSocket.Http
             }
         }
 
-        internal void BuildContent(ByteBlock byteBlock)
-        {
-            if (this.ContentLength > 0)
-            {
-                byteBlock.Write(this.m_contentMemory.Span);
-            }
-        }
-
-       
         internal void BuildHeader(ByteBlock byteBlock)
         {
             var stringBuilder = new StringBuilder();

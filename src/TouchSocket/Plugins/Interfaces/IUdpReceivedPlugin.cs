@@ -18,6 +18,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 定义了一个UDP接收插件接口，该接口继承自IPlugin。
     /// </summary>
+    [DynamicMethod]
     public interface IUdpReceivedPlugin : IPlugin
     {
         /// <summary>

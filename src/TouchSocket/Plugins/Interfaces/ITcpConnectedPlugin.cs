@@ -19,6 +19,7 @@ namespace TouchSocket.Sockets
     /// 定义了ITcpConnectedPlugin接口，它是通过TCP连接的插件应实现的接口。
     /// 这个接口扩展了IPlugin接口，增加了与TCP连接相关的功能和要求。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpConnectedPlugin : IPlugin
     {
         /// <summary>

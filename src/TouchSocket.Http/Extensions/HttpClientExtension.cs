@@ -119,5 +119,33 @@ namespace TouchSocket.Http
         }
 
         #endregion Download
+
+        #region Upload
+        public static async Task UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+            where TClient : HttpClientBase,IHttpClient
+        {
+            //创建一个请求
+            var request = new HttpRequest();
+            request.InitHeaders();
+            request.AddHeader("FileName", fileInfo.Name);
+            request.SetUrl(url);
+            request.SetHost(client.RemoteIPHost.Host);
+            request.AsPost();
+
+
+            using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            {
+                var response = responseResult.Response;
+                using (var stream = fileInfo.OpenRead())
+                {
+
+                }
+                for (int i = 0; i < 100; i++)
+                {
+                    await response.WriteAsync(new byte[1024]);
+                }
+            }
+        }
+        #endregion
     }
 }

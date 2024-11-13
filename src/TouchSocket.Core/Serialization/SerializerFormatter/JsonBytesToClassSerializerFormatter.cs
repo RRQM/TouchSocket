@@ -29,12 +29,8 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public int Order { get; set; }
 
+
         /// <inheritdoc/>
-        /// <param name="state"></param>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <param name="target"></param>
-        /// <returns></returns>
         public virtual bool TryDeserialize(TState state, in byte[] source, Type targetType, out object target)
         {
             try

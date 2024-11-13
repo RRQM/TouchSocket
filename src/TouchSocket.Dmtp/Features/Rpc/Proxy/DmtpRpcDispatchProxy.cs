@@ -25,17 +25,7 @@ namespace TouchSocket.Dmtp.Rpc
     /// DmtpRpcDispatchProxy
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TAttribute"></typeparam>
-    public abstract class DmtpRpcDispatchProxy<TClient, TAttribute> : RpcDispatchProxy<TClient, TAttribute> where TClient : IDmtpRpcActor where TAttribute : DmtpRpcAttribute
-    {
-
-    }
-
-    /// <summary>
-    /// DmtpRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class DmtpRpcDispatchProxy<TClient> : DmtpRpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
+    public abstract class DmtpRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, DmtpRpcAttribute> where TClient : IDmtpRpcActor
     {
 
     }

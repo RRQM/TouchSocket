@@ -20,6 +20,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 定义一个串口关闭插件接口，扩展了通用插件接口IPlugin
     /// </summary>
+    [DynamicMethod]
     public interface ISerialClosedPlugin : IPlugin
     {
         /// <summary>

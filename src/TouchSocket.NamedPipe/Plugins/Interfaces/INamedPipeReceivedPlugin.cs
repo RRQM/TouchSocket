@@ -20,6 +20,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 定义了一个接口，用于处理命名管道接收到的数据
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeReceivedPlugin : IPlugin
     {
         /// <summary>

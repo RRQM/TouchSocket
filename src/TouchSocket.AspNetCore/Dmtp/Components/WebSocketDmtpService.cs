@@ -55,16 +55,9 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <exception cref="ClientNotFindException">抛出异常，如果源客户端不存在。</exception>
         public override async Task ResetIdAsync(string sourceId, string targetId)
         {
-            if (string.IsNullOrEmpty(sourceId))
-            {
-                throw new ArgumentException($"“{nameof(sourceId)}”不能为 null 或空。", nameof(sourceId));
-            }
-
-            if (string.IsNullOrEmpty(targetId))
-            {
-                throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-            }
-
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
+            
             if (sourceId == targetId)
             {
                 return;
@@ -114,7 +107,8 @@ namespace TouchSocket.Dmtp.AspNetCore
                 var client = new WebSocketDmtpSessionClient();
                 if (!this.m_clients.TryAdd(id, client))
                 {
-                    throw new Exception("Id重复");
+                    // 如果添加失败，抛出异常，提示该Id已经存在。
+                    ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(id));
                 }
                 client.InternalSetService(this);
                 client.InternalSetConfig(this.Config);

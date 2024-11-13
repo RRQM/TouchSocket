@@ -19,17 +19,7 @@ namespace TouchSocket.JsonRpc
     /// JsonRpcDispatchProxy
     /// </summary>
     /// <typeparam name="TClient"></typeparam>
-    /// <typeparam name="TAttribute"></typeparam>
-    public abstract class JsonRpcDispatchProxy<TClient, TAttribute> : RpcDispatchProxy<TClient, TAttribute> where TClient : IJsonRpcClient where TAttribute : JsonRpcAttribute
-    {
-
-    }
-
-    /// <summary>
-    /// JsonRpcDispatchProxy
-    /// </summary>
-    /// <typeparam name="TClient"></typeparam>
-    public abstract class JsonRpcDispatchProxy<TClient> : JsonRpcDispatchProxy<TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
+    public abstract class JsonRpcDispatchProxy<TClient> : RpcDispatchProxy<TClient, JsonRpcAttribute> where TClient : IJsonRpcClient
     {
 
     }
@@ -42,6 +32,4 @@ namespace TouchSocket.JsonRpc
 
     }
 }
-
-
 #endif

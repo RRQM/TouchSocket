@@ -19,6 +19,7 @@ namespace TouchSocket.Sockets
     /// 定义了一个接口，用于通过TCP进行接收操作的插件。
     /// 继承自IPlugin接口，表示这是一个插件的一部分，专注于接收TCP数据。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpReceivingPlugin : IPlugin
     {
         /// <summary>

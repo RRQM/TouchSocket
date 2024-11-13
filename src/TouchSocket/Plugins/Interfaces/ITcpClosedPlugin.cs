@@ -20,6 +20,7 @@ namespace TouchSocket.Sockets
     /// 定义了一个ITcpClosedPlugin接口，该接口继承自IPlugin接口。
     /// 这个接口的目的是为插件提供一种标识，表明该插件支持处理TCP连接关闭时的操作。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpClosedPlugin : IPlugin
     {
         /// <summary>

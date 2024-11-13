@@ -19,6 +19,7 @@ namespace TouchSocket.Sockets
     /// 定义了即将断开TCP连接时的插件接口。
     /// 该接口仅在主动断开连接时有效。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpClosingPlugin : IPlugin
     {
         /// <summary>

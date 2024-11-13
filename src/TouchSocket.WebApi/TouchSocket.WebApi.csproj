@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
 		<PackageTags>WebApi;TouchSocket</PackageTags>
 		<Description>这是一个提供WebApi服务器和客户端的组件库。可以通过该组件创建WebApi服务解析器和客户端，让桌面端、Web端、移动端可以跨语言调用Rpc函数。功能支持自定义路由、Get传参、Post传参等。
 
@@ -10,6 +10,11 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\TouchSocket.SourceGenerator.SharedProject\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
+		<None Include="..\TouchSocket.WebApi.SourceGenerator\bin\$(Configuration)\netstandard2.0\TouchSocket.WebApi.SourceGenerator.dll" PackagePath="analyzers\dotnet\cs" Pack="true" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -17,6 +17,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 当正在配置Config时触发。
     /// </summary>
+    [DynamicMethod]
     public interface ILoadingConfigPlugin : IPlugin
     {
         /// <summary>

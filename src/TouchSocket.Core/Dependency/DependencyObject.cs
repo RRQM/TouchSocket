@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace TouchSocket.Core
@@ -22,13 +23,19 @@ namespace TouchSocket.Core
     /// </summary>
     public class DependencyObject : DisposableObject, IDependencyObject
     {
-        private readonly Dictionary<int, object> m_dp = new Dictionary<int, object>();
+        private Dictionary<int, object> m_dp;
         private SpinLock m_lock = new SpinLock(Debugger.IsAttached);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Dictionary<int, object> GetDp()
+        {
+            return this.m_dp ??= new Dictionary<int, object>() ;
+        }
 
         /// <inheritdoc/>
         public TValue GetValue<TValue>(DependencyProperty<TValue> dp)
         {
-            if (this.TryGetValue(dp, out TValue value))
+            if (this.TryGetValue(dp, out var value))
             {
                 return value;
             }
@@ -42,7 +49,7 @@ namespace TouchSocket.Core
             try
             {
                 this.m_lock.Enter(ref lockTaken);
-                return this.m_dp.ContainsKey(dp.Id);
+                return this.GetDp().ContainsKey(dp.Id);
             }
             finally
             {
@@ -60,7 +67,7 @@ namespace TouchSocket.Core
             try
             {
                 this.m_lock.Enter(ref lockTaken);
-                this.m_dp.Remove(dp.Id);
+                this.GetDp().Remove(dp.Id);
             }
             finally
             {
@@ -78,7 +85,7 @@ namespace TouchSocket.Core
             try
             {
                 this.m_lock.Enter(ref lockTaken);
-                this.m_dp.AddOrUpdate(dp.Id, value);
+                this.GetDp().AddOrUpdate(dp.Id, value);
             }
             finally
             {
@@ -96,7 +103,7 @@ namespace TouchSocket.Core
             try
             {
                 this.m_lock.Enter(ref lockTaken);
-                if (this.m_dp.TryGetValue(dp.Id, out var value1))
+                if (this.GetDp().TryGetValue(dp.Id, out var value1))
                 {
                     value = (TValue)value1;
                     return true;
@@ -123,10 +130,10 @@ namespace TouchSocket.Core
             try
             {
                 this.m_lock.Enter(ref lockTaken);
-                if (this.m_dp.TryGetValue(dp.Id, out var obj))
+                if (this.GetDp().TryGetValue(dp.Id, out var obj))
                 {
                     value = (TValue)obj;
-                    return this.m_dp.Remove(dp.Id);
+                    return this.GetDp().Remove(dp.Id);
                 }
                 value = default;
                 return false;
@@ -155,31 +162,26 @@ namespace TouchSocket.Core
             {
                 this.m_lock.Enter(ref lockTakenFotThis);
                 dependencyObject.m_lock.Enter(ref lockTakenFotOther);
-                if (dependencyObject is null)
-                {
-                    throw new ArgumentNullException(nameof(dependencyObject));
-                }
 
-                if (dependencyObject.DisposedValue)
-                {
-                    throw new ObjectDisposedException(nameof(dependencyObject));
-                }
+                ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject,nameof(dependencyObject));
+
+                ThrowHelper.ThrowObjectDisposedExceptionIf(dependencyObject);
 
                 this.ThrowIfDisposed();
 
-                foreach (var item in this.m_dp)
+                foreach (var item in this.  GetDp())
                 {
-                    if (dependencyObject.m_dp.ContainsKey(item.Key))
+                    if (dependencyObject.GetDp().ContainsKey(item.Key))
                     {
                         if (overwrite)
                         {
-                            dependencyObject.m_dp.Remove(item.Key);
-                            dependencyObject.m_dp.Add(item.Key, item.Value);
+                            dependencyObject.GetDp().Remove(item.Key);
+                            dependencyObject.GetDp().Add(item.Key, item.Value);
                         }
                     }
                     else
                     {
-                        dependencyObject.m_dp.Add(item.Key, item.Value);
+                        dependencyObject.GetDp().Add(item.Key, item.Value);
                     }
                 }
             }
@@ -206,7 +208,7 @@ namespace TouchSocket.Core
                 try
                 {
                     this.m_lock.Enter(ref lockTaken);
-                    this.m_dp.Clear();
+                    this.m_dp?.Clear();
                 }
                 finally
                 {

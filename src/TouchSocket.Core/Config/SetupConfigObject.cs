@@ -98,7 +98,6 @@ namespace TouchSocket.Core
 
             if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
             {
-                pluginManager.Enable = true;
                 actionPluginManager.Invoke(pluginManager);
             }
 

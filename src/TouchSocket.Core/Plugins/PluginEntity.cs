@@ -10,24 +10,49 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
-    internal class PluginEntity
+    internal sealed class PluginEntity
     {
-        public Method Method;
-        public IPlugin Plugin;
+        private readonly Func<object, PluginEventArgs, Task> m_invokeFunc;
+        private readonly bool m_isDelegate;
+        private readonly Method m_method;
+        private readonly IPlugin m_plugin;
+        private readonly Delegate m_sourceDelegate;
+
+        public PluginEntity(Func<object, PluginEventArgs, Task> invokeFunc, Delegate sourceDelegate)
+        {
+            this.m_isDelegate = true;
+            this.m_invokeFunc = invokeFunc;
+            this.m_sourceDelegate = sourceDelegate;
+        }
 
         public PluginEntity(Method method, IPlugin plugin)
         {
-            this.Method = method;
-            this.Plugin = plugin;
+            this.m_isDelegate = false;
+            this.m_method = method;
+            this.m_plugin = plugin;
         }
+
+        public bool IsDelegate => this.m_isDelegate;
+        public Method Method => this.m_method;
+        public IPlugin Plugin => this.m_plugin;
+
+        public Delegate SourceDelegate => this.m_sourceDelegate;
 
         public Task Run(object sender, PluginEventArgs e)
         {
-            return this.Method.InvokeAsync(this.Plugin, sender, e);
+            if (this.m_isDelegate)
+            {
+                return this.m_invokeFunc.Invoke(sender, e);
+            }
+            else
+            {
+                return this.m_method.InvokeAsync(this.m_plugin, sender, e);
+            }
         }
     }
 }

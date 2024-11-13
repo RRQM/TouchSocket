@@ -16,10 +16,29 @@ using System.Collections.Generic;
 namespace TouchSocket.Core
 {
     /// <summary>
-    /// 序列化转换器
+    /// TouchSocketSerializerConverter 类用于管理和使用多个 ISerializerFormatter 转换器。
     /// </summary>
+    /// <typeparam name="TSource">源数据类型。</typeparam>
+    /// <typeparam name="TState">状态类型。</typeparam>
     public class TouchSocketSerializerConverter<TSource, TState>
     {
+        /// <summary>
+        /// 初始化 TouchSocketSerializerConverter 类的新实例。
+        /// </summary>
+        /// <param name="converters">要添加的 ISerializerFormatter 转换器数组。</param>
+        public TouchSocketSerializerConverter(params ISerializerFormatter<TSource, TState>[] converters)
+        {
+            foreach (var converter in converters)
+            {
+                this.Add(converter);
+            }
+        }
+
+        /// <summary>
+        /// 初始化 TouchSocketSerializerConverter 类的新实例。
+        /// </summary>
+        public TouchSocketSerializerConverter() { }
+
         private readonly List<ISerializerFormatter<TSource, TState>> m_converters = new List<ISerializerFormatter<TSource, TState>>();
 
         /// <summary>
@@ -54,10 +73,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 将源数据转换目标类型对象
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
+        /// <param name="state">转换状态</param>
+        /// <param name="source">源数据</param>
+        /// <param name="targetType">目标类型</param>
+        /// <returns>转换后的目标类型对象</returns>
+        /// <exception cref="Exception">当无法转换时抛出异常</exception>
         public virtual object Deserialize(TState state, TSource source, Type targetType)
         {
             foreach (var item in this.m_converters)

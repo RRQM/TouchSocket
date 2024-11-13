@@ -18,6 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketReceivedPlugin
     /// </summary>
+    [DynamicMethod]
     public interface IWebSocketReceivedPlugin : IPlugin
     {
         /// <summary>

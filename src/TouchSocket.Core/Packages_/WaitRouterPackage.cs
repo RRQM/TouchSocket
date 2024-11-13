@@ -32,22 +32,26 @@ namespace TouchSocket.Core
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageBody(ref byteBlock);
-            if (!this.IncludedRouter)
+            if (this.IncludedRouter)
             {
-                byteBlock.WriteInt32(this.Sign);
-                byteBlock.WriteByte(this.Status);
+                return;
             }
+
+            byteBlock.WriteInt32(this.Sign);
+            byteBlock.WriteByte(this.Status);
         }
 
         /// <inheritdoc/>
         public override void PackageRouter<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.PackageRouter(ref byteBlock);
-            if (this.IncludedRouter)
+            if (!this.IncludedRouter)
             {
-                byteBlock.WriteInt32(this.Sign);
-                byteBlock.WriteByte(this.Status);
+                return;
             }
+
+            byteBlock.WriteInt32(this.Sign);
+            byteBlock.WriteByte(this.Status);
         }
 
         /// <inheritdoc/>

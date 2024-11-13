@@ -19,6 +19,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义了一个插件接口，用于处理会话关闭后的操作
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpClosedPlugin : IPlugin
     {
         /// <summary>
