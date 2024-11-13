@@ -1,0 +1,358 @@
+---
+id: packageadapter
+title: 内置包适配器
+---
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+
+## 一、说明
+
+内置包适配器，是框架内置的，用于解决粘、分包问题的现成适配器。它能一键式解决粘、分包问题。目前内置的包适配器有：
+
+|  适配器   | 名称  |功能特点|
+|  ----  | ----  |----  |
+| FixedHeaderPackageAdapter | 固定包头数据处理适配器 |固定包头数据处理适配器是处理粘包、分包问题的**最有力**、**最可靠**、**最高效**、**最稳定**的一种方案，它基本上适用于**所有场景**。即使**跨语言**使用，也只需要在其他语言中设计**相同算法**就可以。|
+| FixedSizePackageAdapter  | 固定长度数据处理适配器 |固定长度数据处理适配器是将发送的数据通过分割、填补的操作，以达到每次发送、接收的数据都是固定的长度来处理粘包、分包问题。这种方案一般适用于机械臂，机器人控制等场景。 |
+| TerminatorPackageAdapter  | 终止因子数据处理适配器 |终止因子数据处理适配器是通过**特殊字符或数值**的方式，来达到处理粘包、分包的目的。可随意设置分割因子的值，以及编码方式。不仅如此，还有异常数据设置，在达到设定值时，如果还没有发现分割因子，则抛弃数据。其稳定性仅次于固定包头，且使用场景也比较广泛。|
+| PeriodPackageAdapter  | 周期数据处理适配器 |周期数据处理适配器是通过**时间周期**的方式，来处理分包的目的（不包括粘包）。可处理任意数据。但是这也只是一定程度的处理。|
+
+
+## 二、特点
+
+### 2.1 固定包头数据处理适配器
+
+1. 最有力的解决粘包。分包问题。
+2. 是自定义协议的不二选择。
+3. 支持指定包头长度，Byte、Ushort、Int三种类型作为包头。
+4. 最好在客户端与服务器均使用TouchSocket组件时使用。不然就需要非TouchSocket的一方适配包头算法。
+
+### 2.2 固定长度数据处理适配器
+
+1. 无论何时，发送与接收的数据长度永远为设定值。
+2. 算法简单，可以比较轻松的实现跨语言、跨框架。
+3. 一般适用于业务数据固定场景，
+
+### 2.3 终止因子数据处理适配器
+
+1. 最适用于字符串类（Json，Xml等）的信息交互。
+2. 算法简单，非常容易实现跨语言、跨框架。
+3. 发送普通流数据时，有很小的概率发生提前终止的情况（可设置复杂终止因子来解决）。
+
+### 2.4 周期数据处理适配器
+
+1. 可处理任意数据。
+2. 只能解决分包问题，无法解决粘包问题。
+3. 处理效率会有一定延迟。
+
+## 三、算法解释
+
+### 3.1 固定包头算法
+
+- Byte包头算法：以第一个字节作为后续整个数据的长度，整个数据长度区间为[0,255]。
+- Ushort包头算法：前2个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)的排列，作为后续整个数据的长度，整个数据长度区间为[0,65535]。
+- Int包头算法（默认配置）：前4个字节，且为[默认端序（小端）](./touchsocketbitconverter.mdx)排列，作为后续整个数据的长度，整个数据长度区间为[0,2^31]。
+
+### 3.2 固定长度数据处理算法
+
+固定长度数据处理算法比较简单，就是事先约定发送数据的长度无论何时都是一致的。
+
+### 3.3 终止因子分割数据算法
+
+终止因子分割数据算法，就是通过事先约定，发送的数据是以特定数据的组合作为结束的。例如：redis协议，就是以\r\n作为结束。不过值得注意的是，框架内置的不仅可以用字符串作为终止字符，还能以16进制甚至二进制作为终止字符。
+
+### 3.4 周期数据算法
+
+周期数据处理适配器，就是通过判断收到数据的时间间隔，将极短时间内收到的数据进行合并。能够一定程度的解决分包问题。
+
+## 四、使用
+
+### 4.1 使用固定包头适配器
+
+步骤
+
+1. TouchSocketConfig配置中设置（可以同时指定HeaderType等属性）
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据。
+
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
+{
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
+
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter() { FixedHeaderType= FixedHeaderType.Int })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
+```
+
+:::caution 注意
+
+1. 使用该适配器时，最好服务器与客户端均使用TouchSocket，这样更好维护。
+
+2. 同时在发送（SendAsync）数据时，会自动封装数据头，所以不需要手动封装。
+
+:::  
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
+
+### 4.2 使用固定长度适配器
+
+步骤
+
+1. TouchSocketConfig配置中设置，同时指定数据的长度。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
+{
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
+
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new FixedSizePackageAdapter(10))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
+```
+
+:::caution 注意
+
+该适配器，在发送数据时，应该事前约定固定的长度，并在发送数据时严格遵守。
+
+:::  
+
+:::caution 注意
+
+该适配器，在发送（SendAsync）数据时，会自动封装数据头，所以不需要手动封装。
+
+:::  
+
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
+
+### 4.3 使用终止因子分割适配器
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. TouchSocketConfig配置中设置，同时指定数据的长度。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
+{
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
+
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new TerminatorPackageAdapter("\r\n"))
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
+```
+
+:::caution 注意
+
+该适配器，在发送（SendAsync）数据时，会自动追加分割符。
+
+:::  
+
+
+:::tip 提示
+
+默认情况下终止因子不会保留在数据中，用户可通过`ReserveTerminatorCode`属性，设为true，来保留终止因子。
+
+:::  
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
+
+### 4.4 使用周期适配器
+
+客户端与服务器均适用。下列以服务器为例。
+
+步骤
+
+1. TouchSocketConfig配置中设置，同时指定数据的长度。
+2. 通过Received（事件、方法、插件）中的ByteBlock读取数据（注意：数据长度是byteBlock.Len）。
+
+```csharp {7,31} showLineNumbers
+private static async Task<TcpClient> CreateClient()
+{
+    var client = new TcpClient();
+    //载入配置
+    await client.SetupAsync(new TouchSocketConfig()
+         .SetRemoteIPHost("127.0.0.1:7789")
+         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个日志注入
+         }));
+
+    await client.ConnectAsync();//调用连接，当连接不成功时，会抛出异常。
+    client.Logger.Info("客户端成功连接");
+    return client;
+}
+
+private static async Task<TcpService> CreateService()
+{
+    var service = new TcpService();
+    service.Received = (client, e) =>
+    {
+        //从客户端收到信息
+        var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+        client.Logger.Info($"已从{client.Id}接收到信息：{mes}");
+        return Task.CompletedTask;
+    };
+
+    await service.SetupAsync(new TouchSocketConfig()//载入配置
+         .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+         .SetTcpDataHandlingAdapter(() => new PeriodPackageAdapter() { CacheTimeout=TimeSpan.FromSeconds(1) })
+         .ConfigureContainer(a =>
+         {
+             a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
+         })
+         .ConfigurePlugins(a =>
+         {
+             //a.Add();//此处可以添加插件
+         }));
+    await service.StartAsync();//启动
+    service.Logger.Info("服务器已启动");
+    return service;
+}
+```
+
+:::tip 提示
+
+该适配器，客户端与服务器均适用。
+
+:::  
+
+## 五、可设置参数
+
+|  属性   | 描述  |默认值  |
+|  ----  | ----  |----  |
+| MaxPackageSize  | 适配器能接收的最大数据包长度 |1024\*1024\*1024字节|
+| CanSendRequestInfo  | 是否允许发送IRequestInfo对象 |false|
+| CanSplicingSend  | 拼接发送 |false|
+| CacheTimeoutEnable  | 是否启用缓存超时。 |true|
+| CacheTimeout  | 缓存超时时间。 |1秒|
+| UpdateCacheTimeWhenRev  | 是否在收到数据时，即刷新缓存时间。当设为true时，将弱化CacheTimeout的作用，只要一直有数据，则缓存不会过期。当设为false时，则在CacheTimeout的时效内。必须完成单个缓存的数据 |true|
+
+[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Adapter/PackageAdapterConsoleApp)

@@ -1,0 +1,217 @@
+---
+id: startguide
+title: 入门指南
+---
+
+
+## 一、说明
+
+**TouchSocket（Pro）**系是基于`.Net`发布的程序集系列，所以它可以被用于对应`.Net`版本的`C#`、`F#`、`VB.net`等语言项目。
+
+它支持您的项目是以下类型：
+- 控制台
+- Winform
+- Wpf
+- AspNetCore
+- Unity3d
+- 其他项目
+
+## 二、发布平台说明
+
+`TouchSocket（Pro）`系是基于`net45`、`net462`、`net472`、`net481`、`netstandard2.0`、`netstandard2.1`平台作为**长期发布**平台。
+
+`net6.0`作为`C#`稳定版支持平台。net8.0（目前）作为最新发布平台。
+
+其中细节如下：
+
+- net45、net462、net472：保证了在.Net Framework上的最低支持版本。基本上支持全系99%的功能。
+- net481：这是在net45的依赖基础之上，额外添加了一些微软官方库，以支持达到net6.0一样的功能（例如：System.Text.Json等）。
+- netstandard2.0：这是保证了在一些通用平台上的最低依赖。基本上支持全系99%的功能。
+- net6.0：这是目前最新的稳定版发布平台，它在最低依赖的前提下，还保证了全部功能。
+- net8.0：这是目前最新的发布平台，我们会在该平台上开发最能尝鲜的功能（例如：AOT等）。
+
+:::tip 提示
+
+一般来说，这些版本的发布平台，您不需要关心如何选择。因为如果你是使用`Nuget`包，那么它将自动选择最合适的版本。如果您是使用`dll`，或者源码编译，那么您需要根据您的项目选择对应的最低发布平台。
+
+对于Unity3d的用户朋友，我们建议您使用`net472`或者`netstandard2.0`作为发布平台。当然如果您能自行解决较高版本的依赖问题，那么您也可以使用`net481`或者`netstandard2.1`。
+
+:::  
+
+
+## 三、创建项目
+
+下面我们将以vs2022作为示例：
+
+以最简单的`C# 控制台`程序作为入门，让您最直观的感受`TouchSocket`的强大。
+
+:::info 说明
+
+如果您选择`vs code`等其他的编译工具，那么我相信您已不是新手。那么您只需要安装`TouchSocket（Pro）`的最新`nuget`包即可。
+
+:::  
+
+### 2.1 创建新项目
+
+<img src={require('@site/static/img/docs/startguide-1.png').default} />
+
+### 2.2 选择项目类型
+
+<img src={require('@site/static/img/docs/startguide-2.png').default} />
+
+### 2.3 配置项目名称和路径
+
+<img src={require('@site/static/img/docs/startguide-3.png').default} />
+
+### 2.4 选择Net版本
+
+<img src={require('@site/static/img/docs/startguide-4.png').default} />
+<img src={require('@site/static/img/docs/startguide-5.png').default} />
+
+## 四、安装依赖库
+
+### 4.1 使用Nuget安装
+
+右击项目=》点击“管理Nuget程序包”。
+
+<img src={require('@site/static/img/docs/startguide-6.png').default} />
+
+点击“浏览”，然后在搜索框输入`TouchSocket`，然后在搜索结果中选择。最后点击安装。
+
+<img src={require('@site/static/img/docs/startguide-7.png').default} />
+
+### 4.2 直接编辑PackageReference 
+
+直接编辑PackageReference，其原理等同于Nuget。只不过直接编辑较简单，并且新项目支持比较好。
+
+单击项目，打开项目编辑，然后在空白根内部引用。
+
+```xml
+<ItemGroup>
+	<PackageReference Include="TouchSocket" Version="1.2.3"/>
+</ItemGroup>
+```
+
+:::info 信息
+
+该操作仅适用于新项目模版，如果您使用的是vs2019以下的项目模版，则无法直接编辑且使用该方式。
+
+:::  
+
+:::tip 提示
+
+实际使用时，可能需要安装的是其他组件，例如`TouchSocket.Dmtp`。所以请直接安装所需组件库。同时Version="1.2.3"可能不是最新的版本，请前往[Nuget官网](https://www.nuget.org/packages?q=TouchSocket)查看。
+
+:::  
+
+<img src={require('@site/static/img/docs/startguide-8.png').default} />
+
+### 4.3 下载dll并直接引用
+
+在[Nuget官网](https://www.nuget.org/packages?q=TouchSocket)中，选择需要的，然后选择“Download package”，即可下载一个后缀为`.nupkg`文件。
+
+<img src={require('@site/static/img/docs/startguide-9.png').default} />
+
+:::tip 提示
+
+如果下载速度较慢，可以考虑使用迅雷等工具加速。同时不同的包可能有不同的依赖，所以依赖包也需要下载。
+
+:::  
+
+当然你可以通过`nuget.exe`直接下载，这样的好处就是依赖库它会一起下载。首先你需要到[nuget](https://www.nuget.org/downloads)下载可运行程序。一般选择`Windows x86 Commandline`的最新的即可。本示例使用`v6.7.0`.
+
+然后把下载好的`nuget.exe`放到任意目录下。
+
+然后使用`cmd`、或者`powershell`等工具进入该目录（比较简单的操作是，先打开该目录，然后按住`shift`键，然后右击鼠标，会有`在此处打开命令行`或`powershell`等选项）。然后执行下列命令。
+
+```bash
+ .\nuget.exe install TouchSocket -SolutionDirectory . -PackageSaveMode nupkg
+```
+
+:::tip 提示
+
+实际使用时，可能需要安装的是其他组件，例如`TouchSocket.Dmtp`。所以请直接安装所需组件库。同时Version="1.2.3"可能不是最新的版本，请前往[Nuget官网](https://www.nuget.org/packages?q=TouchSocket)查看。
+
+:::  
+
+然后会在当前目录下，生成一个名为“packages”的文件夹。在这个文件夹就有所有依赖的库。
+
+然后将下载的后缀为`.nupkg`的文件，通过压缩工具`解压`（如果是通过nuget.exe下载的话，不用解压）。得到如下目录结构。
+
+<img src={require('@site/static/img/docs/startguide-10.png').default} />
+
+然后进入“lib”的文件夹。选择对应平台。
+
+:::tip 提示
+
+一般来说，所有基于.NET Framework的项目，都最好引用net45的库。然后其他版本的，选择最近的，较低的库即可。在本示例中，选择netcoreapp3.1的库。
+
+:::  
+
+把下列文件引用到项目即可。
+
+<img src={require('@site/static/img/docs/startguide-11.png').default} />
+
+<img src={require('@site/static/img/docs/startguide-12.png').default} />
+
+## 五、在Unity3d中使用
+
+由于Unity默认不支持直接安装NuGet包，所以一般会选择使用`Dll`的方式。直接添加到资产中。
+
+下面我们将介绍2种比较常见的方式。
+
+### 5.1 下载Dll并导入
+
+首先，请按照4.3中，使用Nuget.exe下载dll。这样下载后的文件夹中，应该有`TouchSocket`运行所依赖的所有dll。
+
+以`TouchSocket-v2.1`为例，下载后，应该有如下目录结构。
+
+其中除了`TouchSocket`和`TouchSocket.Core`，其他都是依赖库。并且对于不同的平台，依赖库也有所不同。所以我们需要摘出我们需要的dll，并添加到Unity资源中。
+
+```csharp showLineNumbers
+|-- packages
+	|-- Microsoft.Bcl.AsyncInterfaces 8.0.0
+	|-- Newtonsoft.Json 13.0.3
+	|-- System.Buffers 4.5.1
+	|-- System.Memory 4.5.5
+	|-- System.Numerics.Vectors 4.5.0
+	|-- System.Runtime.CompilerServices.Unsafe 6.0.0
+	|-- System.Text.Encodings.Web 8.0.0
+	|-- System.Text.Json 8.0.4
+	|-- System.Threading.Tasks.Extensions 4.5.4
+	|-- System.ValueTuple 4.5.0
+	|-- TouchSocket 2.1.2
+	|-- TouchSocket.Core 2.1.2
+```
+
+然后，我们需要明确，在`Unity`中，我希望使用哪个平台的dll。
+
+一般来说`Unity`支持`.Net Framework 4.x`或者`.netstandard2.0`（高版本为：`.netstandard2.1`） 。
+
+这里推荐如果是`.Net Framework 4.x`，那么就选择`Net472`的dll。如果是`.netstandard2.0`或者`.netstandard2.1`，那么就选择`.netstandard2.0`的dll。
+
+因为`.netstandard2.1`的TouchSocket，会额外引入了`System.Text.Json`，所以如果不需要的话使用`.netstandard2.0`低依赖即可。
+
+### 5.2 使用Unity包导入
+
+我们在[TouchSocket-UnityPackage](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Unity3d/UnityPackage)中，已经提供了Unity包。
+
+其中包含一个测试场景和测试脚本。直接导入到Unity即可使用。
+
+如果已提供的包中，没有你需要的版本，那么可以到[适用于Unity3d的TouchSocket包Issue](https://gitee.com/RRQM_Home/TouchSocket/issues/IASO8P)中留言，我们会尽快添加。
+
+:::info 备注
+
+一般我们只会添加新版本，所以，如果你需要旧版本，请到自行下载解决。
+
+同时，我们打包使用的是Unity2022，如果是较低版本，也可能无法导入。
+
+:::  
+
+
+
+## 六、毕业
+
+恭喜你，到这里，你就完成了入门的教学，你可能会好奇，做了这么多，还是什么都没有做啊。这是因为TouchSocket并不是一个单功能的，而是一个多功能程序库。所以，你必须在其他模块中查看你所需要的内容。
+
+祝你好运！！！

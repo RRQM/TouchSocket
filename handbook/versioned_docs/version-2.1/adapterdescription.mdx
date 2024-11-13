@@ -1,0 +1,157 @@
+---
+id: adapterdescription
+title: 介绍及使用
+---
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+## 一、说明
+
+数据处理适配器，是TouchSocket的核心组件，其作用就是**解析数据**。
+
+而解析可以分为两种，第一种是解决数据的黏、分包问题，第二种是将收到的数据解析为数据对象。
+
+
+## 二、为什么需要适配器
+
+适配器的作用就是解析数据，在TouchSocket系中，数据可分为**流式单线程**和**非流式多线程**两种。其中**流式单线程**以`Tcp`，`Namedpipe`、`SerialPort`等为代表。**非流式多线程**则以`Udp`为代表。接下来，我们会对其进行详细介绍。
+
+### 2.1 流式单线程
+
+顾名思义，流式单线程的数据，就是只有一个线程访问的流式数据，它像水流一样，在传输时滔滔不绝。其特点是：
+
+1. 数据包是有序的。
+2. 数据包是偶发性**粘连**的，即数据包之间没有分界，且**粘连**的因素不确定。
+3. 在读取时，可能会读到多个数据包，或者多个半包。
+
+那么如何解决粘包、半包问题呢？
+
+实际上很好理解。既然数据是有序流式的，那么**标识**和**顺位**就是解决问题的关键。一般来说，通讯协议可分为`固定包头`、`不固定包头`、`固定长度`和`字符区间`四种。下面我们将以通俗易懂的方式来讲解。
+
+假如，我们把传输的过程比作是一条行进中的队伍。把一个字节，比作队伍中的一个人。从宏观的角度来说，我们很难分辨队伍中有多少个小队，每个小队具体是做什么工作的。
+
+但是我们可以在队伍中，每确定一个小队，就把小队第一个人任命为**队长**，并告诉他这支小队总共多少人。然后当队伍行进到终点时，只需要先问队长，小队有多少人，然后将这支小队归队。然后再问下一个队长，以此往复。鉴于队伍的连续性和有序性，只要队长不记错小队人数，那么我们必然能识别每个小队长，也能从他口中得知每个小队人数。
+
+**那么，这就是`固定包头`的思路。不过很多时候，都不是一个字节标识长度，甚至固定的字节中还会有其他数据，但这并不影响固定包头的识别。**
+
+或者，我们并不知到队长在哪里，只能通过某种约定逐个询问，直到先找到队长，然后询问队长队伍中有多少人。
+
+**那么，这就是`不固定包头`的思路。**
+
+或者，我们可以在队伍出发前，就和接收单位约定好，每个小队就是10个人，那么我们就可以在队伍到达终点时，每10个人归为一个小队。这样也能识别小队，也能知道小队人数。
+
+**那么，这就是`固定长度`的思路。**
+
+或者，我们可以在队伍出发前，就做好标识，比如，遇到戴红帽子的，即视为队长，直到遇到下一个红帽子，这中间的所有人都归为一队。或者遇到蓝帽子的，即视为小队最后的那个人，即蓝帽子之前的人都归为一队。亦或者，一个小队，必须由红帽子开头，蓝帽子结尾。那么无论那种，我们很好的分辨出小队。
+
+**那么，这就是`字符区间`的思路。**
+
+一般来说，99.5%的通讯协议，都是以上四种思路，或者其混合体。只要我们了解这些思路，那么就能很好的解决粘包、半包问题，**而适配器的时候，则会大大简化这个操作**。
+
+### 2.2 非流式多线程
+
+非流式多线程的数据，就是多个线程同时访问的数据。其特点是：
+
+1. 数据包是**独立**的。
+2. 数据包是**无序**的。
+
+对于非流式多线程的数据，它一般不需要解决粘、分包问题。所以适配器的使用仅仅是将接收的数据包，按照`IRequestInfo`的格式进行封装投递。
+
+
+## 三、设计架构
+
+### 3.1 工作逻辑
+
+<img src={require('@site/static/img/docs/adapterdescription-1.png').default}/>
+
+### 3.2 数据逻辑
+
+TouchSocket的适配器，在初始阶段（原始Tcp），会收到一个ByteBlock数据，然后经过适配器处理以后，可选择两个参数（`ByteBlock`和`IRequestInfo`）的**任意组合**投递数据。
+
+例如：**FixedHeaderPackageAdapter**，仅投递ByteBlock数据，届时IRequestInfo将为null。而如果是继承的**CustomDataHandlingAdapter**，则仅投递IRequestInfo，ByteBlock将为null。
+
+### 3.3 设计解释
+
+大家有时候可能会迷惑，为什么TouchSocket要设计两个参数投递，而不像其他的那样的，在会话里面，把适配器直接泛型规范了，直接抛出对应的类型。这是因为泛型约束太大，不够灵活。例如：
+
+- 第一，不能随时切换适配器，例如适配WebSocket，在握手阶段，要解析http数据，所以，此时应该选择http数据处理适配，而完成握手以后，就要解析ws数据格式了，所以此时应该切换适配器为ws数据处理适配器。
+- 第二，两个参数能提高性能。例如HTTP数据处理适配器，在高性能工作模式下，由`IRequestInfo`投递请求头，由`ByteBlock`投递Body，这样Body是从内存池获得，就不存在内存消耗了。
+
+## 四、Tcp使用
+
+在Tcp系中使用数据处理适配器是非常简单的一个过程。而且为了不同场景，TouchSocket支持多种方式的适配器使用。服务器和客户端使用一致
+
+### 4.1 在Config配置中使用
+
+在Config配置使用时，相当于初始化赋值。比较单一，但是很可靠。
+```csharp showLineNumbers
+var config = new TouchSocketConfig();
+config.SetTcpDataHandlingAdapter(() => new NormalDataHandlingAdapter());
+```
+
+### 4.2 直接设置适配器
+
+直接设置适配器，可以在任意时刻进行。
+
+```csharp showLineNumbers
+ client.SetDataHandlingAdapter(new NormalDataHandlingAdapter());
+```
+
+## 五、Udp使用插件
+
+Udp使用的插件，只能从Config配置。
+
+【**UdpSession**】
+```csharp showLineNumbers
+m_udpSession.Setup(new TouchSocketConfig()
+      .SetBindIPHost(new IPHost(this.textBox2.Text))
+      .SetUdpDataHandlingAdapter(()=> 
+      {
+          return new NormalUdpDataHandlingAdapter();
+      })
+      .ConfigureContainer(a =>
+      {
+         
+      }));
+m_udpSession.Start();
+```
+
+:::caution 注意
+
+同一个适配器实例，只可被赋值一次，不然会异常。
+
+:::  
+
+## 六、限制使用
+
+限制使用的场景应用于自定义封装。例如：自己封装一个服务器，然后适配器仅**特定使用**，不允许外部随意赋值，那么可以如下实现：
+
+```csharp showLineNumbers
+public class MySessionClient : SessionClient
+{
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public override sealed bool CanSetDataHandlingAdapter => false;//不允许随意赋值
+    
+    private void InternalSetAdapter(DataHandlingAdapter adapter)
+    {
+        this.SetAdapter(adapter);//仅继承内部赋值
+    }
+}
+```
+
+## 七、缓存超时（仅Tcp适配器）
+
+当适配器在工作时，如果一个数据包在设置的周期内（默认1000ms）没有完成接收，则会清空所有缓存数据，然后重新接收。
+这种设计是为了应对，当接收数据时，如果发送方发送了异常数据（也有可能在移动网时，由运营商发送的无效包）而导致整个接收队列数据无效的问题。
+现在加入缓存超时设置，则如果发送上述情况，也会在一个周期后，快速恢复接收。
+
+相关属性设置：
+
+- CacheTimeoutEnable：是否启用缓存超时。
+- CacheTimeout：缓存超时时间
+- UpdateCacheTimeWhenRev：是否每次接收就更新缓存时间。默认true，意味着只要有数据接收，则缓存永远不会过期。当为false时，则每个缓存包，必须在设置的周期内完成接收。
