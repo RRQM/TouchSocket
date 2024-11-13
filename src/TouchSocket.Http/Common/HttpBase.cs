@@ -36,6 +36,11 @@ namespace TouchSocket.Http
         public const int MaxCacheSize = 1024 * 1024 * 100;
 
         /// <summary>
+        /// 获取或设置HTTP内容。
+        /// </summary>
+        public HttpContent Content { get; set; }
+
+        /// <summary>
         /// 服务器版本
         /// </summary>
         public static readonly string ServerVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
@@ -55,6 +60,11 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 是否在Server端工作
+        /// </summary>
+        public abstract bool IsServer { get; }
+
+        /// <summary>
         /// 允许编码
         /// </summary>
         public string AcceptEncoding
@@ -62,21 +72,6 @@ namespace TouchSocket.Http
             get => this.m_headers.Get(HttpHeaders.AcceptEncoding);
             set => this.m_headers.Add(HttpHeaders.AcceptEncoding, value);
         }
-
-        /// <summary>
-        /// 能否读取。
-        /// </summary>
-        public abstract bool CanRead { get; }
-
-        ///// <summary>
-        ///// 能否写入。
-        ///// </summary>
-        //public abstract bool CanWrite { get; }
-
-        /// <summary>
-        /// 客户端
-        /// </summary>
-        public abstract IClient Client { get; }
 
         /// <summary>
         /// 内容填充完成
@@ -238,18 +233,7 @@ namespace TouchSocket.Http
 
         #region Content
 
-        /// <summary>
-        /// 获取一次性内容。
-        /// </summary>
-        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
-        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
-        public virtual ReadOnlyMemory<byte> GetContent(CancellationToken cancellationToken = default)
-        {
-            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
-            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
-            return Task.Run(async () => await this.GetContentAsync(cancellationToken).ConfigureAwait(false)).GetFalseAwaitResult();
-        }
-
+        
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
@@ -257,11 +241,7 @@ namespace TouchSocket.Http
         /// <param name="cancellationToken">用于取消异步操作的令牌。</param>
         public abstract ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// 设置一次性内容
-        /// </summary>
-        /// <param name="content">要设置的内容，作为只读内存块传入</param>
-        public abstract void SetContent(in ReadOnlyMemory<byte> content);
+        internal abstract void InternalSetContent(in ReadOnlyMemory<byte> content);
 
         #endregion Content
 

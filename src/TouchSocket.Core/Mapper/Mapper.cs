@@ -25,62 +25,31 @@ namespace TouchSocket.Core
     {
         private static readonly ConcurrentDictionary<Type, Dictionary<string, Property>> m_typeToProperty = new ConcurrentDictionary<Type, Dictionary<string, Property>>();
 
-        /// <summary>
-        /// 简单映射
-        /// </summary>
-        /// <typeparam name="TTarget"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+        
         public static TTarget Map<TTarget>(this object source, MapperOption option = default) where TTarget : class, new()
         {
             return (TTarget)Map(source, typeof(TTarget), option);
         }
 
-        /// <summary>
-        /// 简单映射
-        /// </summary>
-        /// <typeparam name="TTarget"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+       
         public static TTarget Map<TTarget>(this TTarget source, MapperOption option = default) where TTarget : class, new()
         {
             return (TTarget)Map(source, typeof(TTarget), option);
         }
 
-        /// <summary>
-        /// 简单映射
-        /// </summary>
-        /// <typeparam name="TSource"></typeparam>
-        /// <typeparam name="TTarget"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+       
         public static TTarget Map<TSource, TTarget>(this TSource source, MapperOption option = default) where TTarget : class, new()
         {
             return (TTarget)Map(source, typeof(TTarget), option);
         }
 
-        /// <summary>
-        /// 简单对象映射
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="targetType"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+       
         public static object Map(this object source, Type targetType, MapperOption option = default)
         {
             return Map(source, Activator.CreateInstance(targetType), option);
         }
 
-        /// <summary>
-        /// 简单对象映射
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="target"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+       
         public static object Map(this object source, object target, MapperOption option = default)
         {
             if (source is null)
@@ -140,14 +109,7 @@ namespace TouchSocket.Core
             return target;
         }
 
-        /// <summary>
-        /// 映射List
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="list"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
+       
         public static IEnumerable<T1> MapList<T, T1>(this IEnumerable<T> list, MapperOption option = default) where T : class where T1 : class, new()
         {
             if (list is null)
@@ -163,14 +125,7 @@ namespace TouchSocket.Core
             return result;
         }
 
-        /// <summary>
-        /// 映射List
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="list"></param>
-        /// <param name="option"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+       
         public static IEnumerable<T1> MapList<T1>(this IEnumerable<object> list, MapperOption option = default) where T1 : class, new()
         {
             if (list is null)

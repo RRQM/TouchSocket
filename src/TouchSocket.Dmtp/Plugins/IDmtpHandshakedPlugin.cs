@@ -18,6 +18,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义了一个插件接口，该插件在完成与Dmtp的握手连接后需要被调用。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpHandshakedPlugin : IPlugin
     {
         /// <summary>

@@ -377,7 +377,7 @@ namespace TouchSocket.Core
         /// <param name="length"></param>
         /// <param name="subByteArray"></param>
         /// <returns></returns>
-        public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, byte[] subByteArray)
+        public static List<int> IndexOfInclude(this ReadOnlySpan<byte> srcByteArray, int offset, int length, Span<byte> subByteArray)
         {
             var subByteArrayLen = subByteArray.Length;
             var indexes = new List<int>();
@@ -449,11 +449,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取默认值
         /// </summary>
-        /// <param name="targetType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static object GetDefault(this Type targetType)
+        public static object GetDefault(this Type type)
         {
-            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            return type.IsValueType ? Activator.CreateInstance(type) : null;
         }
 
         /// <summary>
@@ -567,11 +567,11 @@ namespace TouchSocket.Core
         /// <summary>
         /// 判断该类型是否为可空类型
         /// </summary>
-        /// <param name="theType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsNullableType(this Type theType)
+        public static bool IsNullableType(this Type type)
         {
-            return (theType.IsGenericType && theType.
+            return (type.IsGenericType && type.
               GetGenericTypeDefinition().Equals
               (TouchSocketCoreUtility.nullableType));
         }
@@ -589,33 +589,46 @@ namespace TouchSocket.Core
         /// <summary>
         /// 判断是否为静态类。
         /// </summary>
-        /// <param name="targetType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsStatic(this Type targetType)
+        public static bool IsStatic(this Type type)
         {
-            return targetType.IsAbstract && targetType.IsSealed;
+            return type.IsAbstract && type.IsSealed;
         }
 
         /// <summary>
         /// 判断为结构体
         /// </summary>
-        /// <param name="targetType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsStruct(this Type targetType)
+        public static bool IsStruct(this Type type)
         {
-            return !targetType.IsPrimitive && !targetType.IsClass && !targetType.IsEnum && targetType.IsValueType;
+            return !type.IsPrimitive && !type.IsClass && !type.IsEnum && type.IsValueType;
         }
 
         /// <summary>
         /// 判断该类型是否为值元组类型
         /// </summary>
-        /// <param name="theType"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsValueTuple(this Type theType)
+        public static bool IsValueTuple(this Type type)
         {
-            return theType.IsValueType &&
-                 theType.IsGenericType &&
-                 theType.FullName.StartsWith("System.ValueTuple");
+            return type.IsValueType &&
+                 type.IsGenericType &&
+                 type.FullName.StartsWith("System.ValueTuple");
+        }
+
+        /// <summary>
+        /// 判断类型是否为基础类型，此处认为除<see cref="Type.IsPrimitive"/>为<see langword="true"/>的类型以外，还包含下列类型：
+        /// <list type="bullet">
+        /// <item><see cref="string"/></item>
+        /// </list>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsPrimitive(this Type type)
+        {
+            return type.IsPrimitive||type==typeof(string);
         }
 
         #endregion Type

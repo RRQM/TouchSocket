@@ -18,7 +18,7 @@ namespace TouchSocket.Dmtp
        /// <summary>
     /// 定义WebSocketDmtp客户端接口，继承多个客户端和配置相关接口
     /// </summary>
-    public interface IWebSocketDmtpClient : IClient, IDmtpActorObject, IOnlineClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient,IIdClient
+    public interface IWebSocketDmtpClient :IDmtpClient, IClient, IDmtpActorObject, IOnlineClient, IClosableClient, ISetupConfigObject, ITcpConnectableClient,IIdClient
     {
     }
 }

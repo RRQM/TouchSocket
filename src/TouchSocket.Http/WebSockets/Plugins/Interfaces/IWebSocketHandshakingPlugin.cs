@@ -18,6 +18,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketHandshakingPlugin
     /// </summary>
+    [DynamicMethod]
     public interface IWebSocketHandshakingPlugin : IPlugin
     {
         /// <summary>

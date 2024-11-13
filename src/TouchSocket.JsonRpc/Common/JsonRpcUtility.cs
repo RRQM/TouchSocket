@@ -116,7 +116,7 @@ namespace TouchSocket.JsonRpc
 
             if (actionMap.TryGetRpcMethod(requestContext.Method, out var rpcMethod))
             {
-                callContext.SetRpcMethod(rpcMethod);
+                callContext.Init(rpcMethod,resolver);
                 var ps = new object[rpcMethod.Parameters.Length];
 
                 if (requestContext.Params == null)

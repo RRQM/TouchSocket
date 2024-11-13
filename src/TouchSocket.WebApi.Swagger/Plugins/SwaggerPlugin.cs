@@ -161,7 +161,7 @@ namespace TouchSocket.WebApi.Swagger
         private static bool IsFormFileCollection(Type type)
         {
             // 如果是 MultifileCollection 类型则直接返回
-            if (typeof(MultifileCollection).IsAssignableFrom(type))
+            if (typeof(IMultifileCollection).IsAssignableFrom(type))
             {
                 return true;
             }
@@ -310,11 +310,11 @@ namespace TouchSocket.WebApi.Swagger
                     {
                         foreach (var url in actionUrls)
                         {
-                            if (attribute.Method == HttpMethodType.GET)
+                            if (attribute.Method == HttpMethodType.Get)
                             {
                                 this.BuildGet(url, rpcMethod, schemaTypeList, paths);
                             }
-                            else if (attribute.Method == HttpMethodType.POST)
+                            else if (attribute.Method == HttpMethodType.Post)
                             {
                                 this.BuildPost(url, rpcMethod, schemaTypeList, paths);
                             }
@@ -633,7 +633,7 @@ namespace TouchSocket.WebApi.Swagger
         private IEnumerable<string> GetTags(RpcMethod rpcMethod)
         {
             var tags = new List<string>();
-            foreach (var item in rpcMethod.ServerFromType.GetCustomAttributes(true))
+            foreach (var item in rpcMethod.ServerFromType.GetCustomAttributes())
             {
                 if (item is SwaggerDescriptionAttribute descriptionAttribute)
                 {
@@ -644,7 +644,7 @@ namespace TouchSocket.WebApi.Swagger
                 }
             }
 
-            foreach (var item in rpcMethod.Info.GetCustomAttributes(true))
+            foreach (var item in rpcMethod.Info.GetCustomAttributes())
             {
                 if (item is SwaggerDescriptionAttribute descriptionAttribute)
                 {

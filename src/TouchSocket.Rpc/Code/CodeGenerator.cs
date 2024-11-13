@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using TouchSocket.Core;
 
@@ -171,6 +172,11 @@ namespace TouchSocket.Rpc
             codeString.AppendLine("using System.Diagnostics;");
             codeString.AppendLine("using System.Text;");
             codeString.AppendLine("using System.Threading.Tasks;");
+
+            foreach (var item in serverCodes.SelectMany(a => a.Namespaces).Distinct())
+            {
+                codeString.AppendLine(item);
+            }
             codeString.AppendLine(string.Format("namespace {0}", namesp));
             codeString.AppendLine("{");
 
@@ -356,6 +362,14 @@ namespace TouchSocket.Rpc
                 methodCellCode.ExtensionsTemple = rpcAttribute.GetExtensionsMethodProxyCode(item);
                 methodCellCode.Name = ((RpcAttribute)item.GetAttribute(attributeType)).GetMethodName(item, false);
                 serverCellCode.Methods.Add(methodCellCode.Name, methodCellCode);
+
+                foreach (var namespaceString in rpcAttribute.Namespaces)
+                {
+                    if (!serverCellCode.Namespaces.Contains(namespaceString))
+                    {
+                        serverCellCode.Namespaces.Add(namespaceString);
+                    }
+                }
             }
 
             return serverCellCode;
@@ -400,7 +414,7 @@ namespace TouchSocket.Rpc
                     continue;
                 }
 
-                var attributes = method.GetCustomAttributes<RpcAttribute>(true);
+                var attributes = method.GetCustomAttributes<RpcAttribute>();
                 if (attributes.Any())
                 {
                     methods.Add(GetMethodId(method), method);
@@ -447,7 +461,7 @@ namespace TouchSocket.Rpc
                 {
                     continue;
                 }
-                var attributes = method.GetCustomAttributes<RpcAttribute>(true);
+                var attributes = method.GetCustomAttributes<RpcAttribute>();
                 if (attributes.Any())
                 {
                     instances.Add(new RpcMethod(method, serverFromType, serverToType));

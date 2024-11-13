@@ -16,11 +16,10 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.SerialPorts
 {
-
-
     /// <summary>
     /// 定义一个接口，用于表示与串行端口连接的插件
     /// </summary>
+    [DynamicMethod]
     public interface ISerialConnectedPlugin : IPlugin
     {
         /// <summary>

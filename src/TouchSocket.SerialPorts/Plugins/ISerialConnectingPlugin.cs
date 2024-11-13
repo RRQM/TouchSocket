@@ -19,6 +19,7 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// 定义一个串行连接建立前的操作接口
     /// </summary>
+    [DynamicMethod]
     public interface ISerialConnectingPlugin : IPlugin
     {
         /// <summary>

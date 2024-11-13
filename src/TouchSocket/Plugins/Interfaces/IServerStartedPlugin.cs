@@ -15,11 +15,12 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-   
+
     /// <summary>
     /// 定义了一个插件接口IServerStartedPlugin，该接口继承自IPlugin。
     /// 该接口的目的是为那些需要在服务器启动时执行特定操作的插件提供一个标识。
     /// </summary>
+    [DynamicMethod]
     public interface IServerStartedPlugin: IPlugin
     {
         /// <summary>

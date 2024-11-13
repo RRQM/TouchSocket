@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,19 +24,20 @@ namespace TouchSocket.WebApi
     /// </summary>
     public class WebApiClient : HttpClientBase, IWebApiClient
     {
-        private readonly object[] m_empty = new object[0];
         /// <summary>
         /// 构造函数
         /// </summary>
         public WebApiClient()
         {
-            this.Converter = new StringSerializerConverter(new JsonStringToClassSerializerFormatter<object>());
+            this.Converter = new StringSerializerConverter<HttpRequest>(
+                new StringToPrimitiveSerializerFormatter<HttpRequest>(),
+                new JsonStringToClassSerializerFormatter<HttpRequest>());
         }
 
         /// <summary>
         /// 字符串转化器
         /// </summary>
-        public StringSerializerConverter Converter { get; }
+        public StringSerializerConverter<HttpRequest> Converter { get; }
 
         /// <inheritdoc/>
         public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
@@ -50,48 +50,61 @@ namespace TouchSocket.WebApi
         /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            var strs = invokeKey.Split(':');
-            if (strs.Length != 2)
+            if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
             {
-                throw new RpcException("不是有效的url请求。");
+                throw new Exception("参数不正确");
             }
-            if (invokeOption == default)
+            
+            var request = new HttpRequest();
+            request.SetUrl(invokeKey);
+            switch (webApiRequest.Method)
             {
-                invokeOption = InvokeOption.WaitInvoke;
-            }
-
-            parameters ??= m_empty;
-            var request = new HttpRequest(this);
-
-            switch (strs[0])
-            {
-                case "GET":
-                    {
-                        request.InitHeaders()
-                            .SetHost(this.RemoteIPHost.Host)
-                            .SetUrl(strs[1].Format(parameters))
-                            .AsGet();
-                        break;
-                    }
-                case "POST":
-                    {
-                        request.InitHeaders()
-                            .SetHost(this.RemoteIPHost.Host)
-                            .SetUrl(strs[1].Format(parameters))
-                            .AsPost();
-                        if (parameters.Length > 0)
-                        {
-                            request.FromJson(JsonConvert.SerializeObject(parameters[parameters.Length - 1]));
-                        }
-                        break;
-                    }
+                case HttpMethodType.Get:
+                    request.Method= HttpMethod.Get;
+                    break;
+                case HttpMethodType.Post:
+                    request.Method = HttpMethod.Post;
+                    break;
+                case HttpMethodType.Put:
+                    request.Method = HttpMethod.Put;
+                    break;
+                case HttpMethodType.Delete:
+                    request.Method = HttpMethod.Delete;
+                    break;
                 default:
                     break;
             }
+            request.InitHeaders();
+            if (webApiRequest.Headers!=null)
+            {
+                foreach (var item in webApiRequest.Headers)
+                {
+                    request.Headers.Add(item.Key,item.Value);
+                }
+            }
+            if (webApiRequest.Querys != null)
+            {
+                foreach (var item in webApiRequest.Querys)
+                {
+                    request.Query.Add(item.Key, item.Value);
+                }
+            }
+            request.SetHost(this.RemoteIPHost.Host);
+
+            if (webApiRequest.Body != null)
+            {
+                request.SetContent(this.Converter.Serialize(request, webApiRequest.Body));
+            }
+            else if (webApiRequest.Forms!=null)
+            {
+                request.SetFormUrlEncodedContent(webApiRequest.Forms);
+            }
+
+            invokeOption ??= InvokeOption.WaitInvoke;
 
             await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, default));
 
-            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token))
+            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
             {
                 var response = responseResult.Response;
                 await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this, new WebApiEventArgs(request, response));
@@ -105,7 +118,8 @@ namespace TouchSocket.WebApi
                 {
                     if (returnType != null)
                     {
-                        return this.Converter.Deserialize(null, await response.GetBodyAsync().ConfigureAwait(false), returnType);
+                        var body = await response.GetBodyAsync().ConfigureAwait(false);
+                        return this.Converter.Deserialize(request, body, returnType);
                     }
                     else
                     {
@@ -115,7 +129,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (response.StatusCode == 422)
                 {
-                    throw new RpcException(JsonConvert.DeserializeObject<ActionResult>(await response.GetBodyAsync().ConfigureAwait(false)).Message);
+                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request,await response.GetBodyAsync().ConfigureAwait(false),typeof(ActionResult))).Message);
                 }
                 else
                 {
@@ -123,7 +137,6 @@ namespace TouchSocket.WebApi
                 }
             }
         }
-
         #endregion Rpc调用
     }
 }

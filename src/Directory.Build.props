@@ -1,7 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<Version>2.1.10</Version>
+		<Version>3.0.0</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -19,6 +19,8 @@
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
+
+	<Import Project="Props\*.props" />
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
 		<EnableDynamicLoading>true</EnableDynamicLoading>
@@ -69,7 +71,7 @@
 	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)'=='net7.0'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='net9.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
@@ -86,5 +88,4 @@
 			<PackagePath></PackagePath>
 		</None>
 	</ItemGroup>
-
 </Project>

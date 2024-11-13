@@ -42,38 +42,20 @@ namespace TouchSocket.Rpc
         /// <param name="method"></param>
         /// <param name="serverFromType"></param>
         /// <param name="serverToType"></param>
-        public RpcMethod(MethodInfo method, Type serverFromType, Type serverToType) : base(method, false)
+        public RpcMethod(MethodInfo method, Type serverFromType, Type serverToType) : base(method)
         {
             this.ServerFromType = serverFromType;
             this.ServerToType = serverToType;
 
             this.Parameters = method.GetParameters().Select(a => new RpcParameter(a)).ToArray();
-
-            var name = $"{serverToType.Name}{method.Name}Func";
-            var property = serverToType.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Static);
-            if (property == null)
-            {
-                if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.IL)
-                {
-                    this.m_invoker = CreateILInvoker(method);
-                }
-                else if (GlobalEnvironment.DynamicBuilderType == DynamicBuilderType.Expression)
-                {
-                    this.m_invoker = this.CreateExpressionInvoker(method);
-                }
-            }
-            else
-            {
-                this.m_invoker = (Func<object, object[], object>)property.GetValue(null);
-            }
-
+           
             var fromMethodInfos = new Dictionary<string, MethodInfo>();
             CodeGenerator.GetMethodInfos(this.ServerFromType, ref fromMethodInfos);
 
             var toMethodInfos = new Dictionary<string, MethodInfo>();
             CodeGenerator.GetMethodInfos(this.ServerToType, ref toMethodInfos);
 
-            var attributes = method.GetCustomAttributes<RpcAttribute>(true);
+            var attributes = method.GetCustomAttributes<RpcAttribute>();
             if (attributes.Any())
             {
                 if (!toMethodInfos.TryGetValue(CodeGenerator.GetMethodId(method), out var toMethod))
@@ -157,7 +139,7 @@ namespace TouchSocket.Rpc
         {
             get
             {
-                this.m_rpcAttributes ??= this.Info.GetCustomAttributes<RpcAttribute>(true).ToArray();
+                this.m_rpcAttributes ??= this.Info.GetCustomAttributes<RpcAttribute>().ToArray();
                 return this.m_rpcAttributes;
             }
         }
@@ -174,7 +156,7 @@ namespace TouchSocket.Rpc
         {
             get
             {
-                this.m_serverRpcAttributes ??= this.ServerFromType.GetCustomAttributes<RpcAttribute>(true).ToArray();
+                this.m_serverRpcAttributes ??= this.ServerFromType.GetCustomAttributes<RpcAttribute>().ToArray();
                 return this.m_serverRpcAttributes;
             }
         }
@@ -207,6 +189,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public object GetAttribute(Type attributeType)
         {
+            attributeType.GetCustomAttributesData();
             object attribute = this.RpcAttributes.FirstOrDefault((a) => attributeType.IsAssignableFrom(a.GetType()));
             if (attribute != null)
             {

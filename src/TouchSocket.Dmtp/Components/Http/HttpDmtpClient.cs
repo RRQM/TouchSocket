@@ -72,7 +72,7 @@ namespace TouchSocket.Dmtp
                 }
 
                 // 创建并配置HttpRequest，为升级到Dmtp协议做准备
-                var request = new HttpRequest(this)
+                var request = new HttpRequest()
                     .SetHost(this.RemoteIPHost.Host);
                 request.Headers.Add(HttpHeaders.Connection, "upgrade");
                 request.Headers.Add(HttpHeaders.Upgrade, DmtpUtility.Dmtp.ToLower());

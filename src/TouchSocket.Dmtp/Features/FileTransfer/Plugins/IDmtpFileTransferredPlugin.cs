@@ -19,6 +19,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     /// <summary>
     /// 定义了一个插件接口，用于处理文件传输完成时的通知。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpFileTransferredPlugin : IPlugin
     {
         /// <summary>

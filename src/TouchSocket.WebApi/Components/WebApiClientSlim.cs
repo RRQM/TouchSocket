@@ -20,8 +20,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
+using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
+using HttpClient = System.Net.Http.HttpClient;
+using HttpMethod = System.Net.Http.HttpMethod;
 
 namespace TouchSocket.WebApi
 {
@@ -30,57 +33,76 @@ namespace TouchSocket.WebApi
     /// </summary>
     public class WebApiClientSlim : Http.HttpClientSlim, IWebApiClientBase
     {
-        private readonly object[] m_empty = new object[0];
         /// <summary>
         /// 使用<see cref="HttpClient"/>为基础的WebApi客户端。
         /// </summary>
         /// <param name="httpClient"></param>
         public WebApiClientSlim(HttpClient httpClient = default) : base(httpClient)
         {
-            this.Converter = new StringSerializerConverter(new JsonStringToClassSerializerFormatter<object>());
+            this.Converter = new StringSerializerConverter<HttpRequestMessage>(
+                new StringToPrimitiveSerializerFormatter<HttpRequestMessage>(),
+                new JsonStringToClassSerializerFormatter<HttpRequestMessage>());
         }
 
         /// <summary>
         /// 字符串转化器
         /// </summary>
-        public StringSerializerConverter Converter { get; }
+        public StringSerializerConverter<HttpRequestMessage> Converter { get; }
 
         /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            var strs = invokeKey.Split(':');
-            if (strs.Length != 2)
+            if (parameters.Length != 1 || parameters[0] is not WebApiRequest webApiRequest)
             {
-                throw new RpcException("不是有效的url请求。");
+                throw new Exception("参数不正确");
             }
 
-            invokeOption ??= InvokeOption.WaitInvoke;
-            parameters ??= m_empty;
-
-            using var request = new HttpRequestMessage();
-
-            switch (strs[0])
+            var request = new HttpRequestMessage();
+            
+            switch (webApiRequest.Method)
             {
-                case "GET":
-                    {
-                        request.RequestUri = new Uri(this.HttpClient.BaseAddress, strs[1].Format(parameters));
-                        request.Method = HttpMethod.Get;
-                        break;
-                    }
-                case "POST":
-                    {
-                        request.RequestUri = new Uri(this.HttpClient.BaseAddress, strs[1].Format(parameters));
-                        request.Method = HttpMethod.Post;
-
-                        if (parameters.Length > 0)
-                        {
-                            request.Content = new ByteArrayContent(JsonConvert.SerializeObject(parameters[parameters.Length - 1]).ToUTF8Bytes());
-                        }
-                        break;
-                    }
+                case HttpMethodType.Get:
+                    request.Method = HttpMethod.Get;
+                    break;
+                case HttpMethodType.Post:
+                    request.Method = HttpMethod.Post;
+                    break;
+                case HttpMethodType.Put:
+                    request.Method = HttpMethod.Put;
+                    break;
+                case HttpMethodType.Delete:
+                    request.Method = HttpMethod.Delete;
+                    break;
                 default:
                     break;
             }
+
+            if (webApiRequest.Headers != null)
+            {
+                foreach (var item in webApiRequest.Headers)
+                {
+                    request.Headers.Add(item.Key, item.Value);
+                }
+            }
+            if (webApiRequest.Querys != null)
+            {
+                invokeKey= invokeKey +"?"+ string.Join("&", webApiRequest.Querys.Select(a => $"{a.Key}={a.Value}"));
+            }
+
+            request.RequestUri = new Uri(this.HttpClient.BaseAddress, invokeKey);
+
+            if (webApiRequest.Body != null)
+            {
+                var body = this.Converter.Serialize(request, webApiRequest.Body);
+                request.Content = new StringContent(body);
+            }
+            else if (webApiRequest.Forms!=null)
+            {
+                var content = new FormUrlEncodedContent(webApiRequest.Forms);
+                request.Content = content;
+            }
+           
+            invokeOption ??= InvokeOption.WaitInvoke;
 
             await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, default)).ConfigureAwait(false);
 

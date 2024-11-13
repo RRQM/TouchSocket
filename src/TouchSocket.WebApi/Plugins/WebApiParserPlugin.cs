@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -27,9 +28,9 @@ namespace TouchSocket.WebApi
     [PluginOption(Singleton = true)]
     public class WebApiParserPlugin : PluginBase
     {
+        private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
         private readonly IResolver m_resolver;
         private readonly IRpcServerProvider m_rpcServerProvider;
-        private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
 
         /// <summary>
         /// 构造函数
@@ -77,7 +78,7 @@ namespace TouchSocket.WebApi
         /// <inheritdoc/>
         protected override void Loaded(IPluginManager pluginManager)
         {
-            pluginManager.Add(typeof(IHttpPlugin), this.OnHttpRequest);
+            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
             base.Loaded(pluginManager);
         }
 
@@ -90,6 +91,23 @@ namespace TouchSocket.WebApi
                 return target;
             }
             return default;
+        }
+
+        private WebApiParameterInfo GetParameterInfo(RpcParameter parameter)
+        {
+            if (this.m_pairsForParameterInfo.TryGetValue(parameter, out var webApiParameterInfo))
+            {
+                return webApiParameterInfo;
+            }
+
+            lock (this.m_pairsForParameterInfo)
+            {
+                if (!m_pairsForParameterInfo.ContainsKey(parameter))
+                {
+                    m_pairsForParameterInfo.Add(parameter, new WebApiParameterInfo(parameter));
+                }
+            }
+            return this.GetParameterInfo(parameter);
         }
 
         private async Task OnHttpGet(IHttpSessionClient client, HttpContextEventArgs e)
@@ -111,30 +129,7 @@ namespace TouchSocket.WebApi
                         for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                         {
                             var parameter = rpcMethod.Parameters[i];
-                            if (parameter.IsCallContext)
-                            {
-                                ps[i] = callContext;
-                            }
-                            else if (parameter.IsFromServices)
-                            {
-                                ps[i] = this.m_resolver.Resolve(parameter.Type);
-                            }
-                            else
-                            {
-                                var value = e.Context.Request.Query.Get(parameter.Name);
-                                if (value.HasValue())
-                                {
-                                    ps[i] = WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
-                                }
-                                else if (parameter.ParameterInfo.HasDefaultValue)
-                                {
-                                    ps[i] = parameter.ParameterInfo.DefaultValue;
-                                }
-                                else
-                                {
-                                    ps[i] = parameter.Type.GetDefault();
-                                }
-                            }
+                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
@@ -181,37 +176,7 @@ namespace TouchSocket.WebApi
                         for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                         {
                             var parameter = rpcMethod.Parameters[i];
-                            if (parameter.IsCallContext)
-                            {
-                                ps[i] = callContext;
-                            }
-                            else if (parameter.IsFromServices)
-                            {
-                                ps[i] = this.m_resolver.Resolve(parameter.Type);
-                            }
-                            else if (parameter.Type.IsPrimitive || parameter.Type == typeof(string))
-                            {
-                                var parameterInfo = this.GetParameterInfo(parameter);
-
-                                var value = e.Context.Request.Query.Get(parameter.Name);
-                                if (value.HasValue())
-                                {
-                                    ps[i] = WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
-                                }
-                                else if (parameter.ParameterInfo.HasDefaultValue)
-                                {
-                                    ps[i] = parameter.ParameterInfo.DefaultValue;
-                                }
-                                else
-                                {
-                                    ps[i] = parameter.Type.GetDefault();
-                                }
-                            }
-                            else
-                            {
-                                var str = await e.Context.Request.GetBodyAsync().ConfigureAwait(false);
-                                ps[i] = this.Converter.Deserialize(e.Context, str, parameter.Type);
-                            }
+                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
@@ -240,28 +205,8 @@ namespace TouchSocket.WebApi
             await e.InvokeNext().ConfigureAwait(false);
         }
 
-        private WebApiParameterInfo GetParameterInfo(RpcParameter parameter)
+        private Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
-            if (this.m_pairsForParameterInfo.TryGetValue(parameter, out var webApiParameterInfo))
-            {
-                return webApiParameterInfo;
-            }
-
-            lock (this.m_pairsForParameterInfo)
-            {
-                if (!m_pairsForParameterInfo.ContainsKey(parameter))
-                {
-                    m_pairsForParameterInfo.Add(parameter, new WebApiParameterInfo(parameter));
-                }
-            }
-            return this.GetParameterInfo(parameter);
-        }
-
-        private Task OnHttpRequest(object sender, PluginEventArgs args)
-        {
-            var client = (IHttpSessionClient)sender;
-            var e = (HttpContextEventArgs)args;
-
             if (e.Context.Request.Method == HttpMethod.Get)
             {
                 return this.OnHttpGet(client, e);
@@ -276,6 +221,93 @@ namespace TouchSocket.WebApi
             }
         }
 
+        private async Task<object> ParseParameterAsync(RpcParameter parameter, WebApiCallContext callContext)
+        {
+            var request = callContext.HttpContext.Request;
+
+            if (parameter.IsCallContext)
+            {
+                return callContext;
+            }
+            else if (parameter.IsFromServices)
+            {
+                return this.m_resolver.Resolve(parameter.Type);
+            }
+            else if (parameter.Type.IsPrimitive || parameter.Type == typeof(string))
+            {
+                var parameterInfo = this.GetParameterInfo(parameter);
+                if (parameterInfo.IsFromBody)
+                {
+                    var body = await request.GetBodyAsync().ConfigureAwait(false);
+                    if (body.HasValue())
+                    {
+                        return WebApiParserPlugin.PrimitiveParse(body, parameter.Type);
+                    }
+                    else if (parameter.ParameterInfo.HasDefaultValue)
+                    {
+                        return parameter.ParameterInfo.DefaultValue;
+                    }
+                    else
+                    {
+                        return parameter.Type.GetDefault();
+                    }
+                }
+                else if (parameterInfo.IsFromHeader)
+                {
+                    var value = request.Headers.Get(parameterInfo.FromHeaderName);
+                    if (value.HasValue())
+                    {
+                        return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    }
+                    else if (parameter.ParameterInfo.HasDefaultValue)
+                    {
+                        return parameter.ParameterInfo.DefaultValue;
+                    }
+                    else
+                    {
+                        return parameter.Type.GetDefault();
+                    }
+                }
+                else if (parameterInfo.IsFromForm)
+                {
+                    var value =(await request.GetFormCollectionAsync().ConfigureAwait(false)).Get(parameterInfo.FromFormName);
+                    if (value.HasValue())
+                    {
+                        return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    }
+                    else if (parameter.ParameterInfo.HasDefaultValue)
+                    {
+                        return parameter.ParameterInfo.DefaultValue;
+                    }
+                    else
+                    {
+                        return parameter.Type.GetDefault();
+                    }
+                }
+                else
+                {
+                    var value = request.Query.Get(parameterInfo.FromQueryName?? parameter.Name);
+                    if (value.HasValue())
+                    {
+                        return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
+                    }
+                    else if (parameter.ParameterInfo.HasDefaultValue)
+                    {
+                        return parameter.ParameterInfo.DefaultValue;
+                    }
+                    else
+                    {
+                        return parameter.Type.GetDefault();
+                    }
+                }
+            }
+            else
+            {
+                var str = await request.GetBodyAsync().ConfigureAwait(false);
+                return this.Converter.Deserialize(callContext.HttpContext, str, parameter.Type);
+            }
+        }
+
         private void RegisterServer(RpcMethod[] rpcMethods)
         {
             foreach (var rpcMethod in rpcMethods)
@@ -287,11 +319,11 @@ namespace TouchSocket.WebApi
                     {
                         foreach (var item in actionUrls)
                         {
-                            if (attribute.Method == HttpMethodType.GET)
+                            if (attribute.Method == HttpMethodType.Get)
                             {
                                 this.GetRouteMap.Add(item, rpcMethod);
                             }
-                            else if (attribute.Method == HttpMethodType.POST)
+                            else if (attribute.Method == HttpMethodType.Post)
                             {
                                 this.PostRouteMap.Add(item, rpcMethod);
                             }
@@ -361,17 +393,5 @@ namespace TouchSocket.WebApi
                 client.TryShutdown(SocketShutdown.Both);
             }
         }
-
-        #region Class
-        class WebApiParameterInfo
-        {
-            private readonly RpcParameter m_parameter;
-
-            public WebApiParameterInfo(RpcParameter parameter)
-            {
-                this.m_parameter = parameter;
-            }
-        }
-        #endregion
     }
 }

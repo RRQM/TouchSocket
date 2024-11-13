@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net462;net472;netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
 		<PackageTags>IOC;Autofac;DependencyInjection;TouchSocket</PackageTags>
 		<Description>这是一个为Core中扩展Ioc容器为Autofac的库。
 
@@ -9,7 +9,7 @@
 		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core.Autofac</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="Autofac" Version="8.0.0" />
+	  <PackageReference Include="Autofac" Version="8.1.1" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\TouchSocket.Core\TouchSocket.Core.csproj" />

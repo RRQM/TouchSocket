@@ -30,7 +30,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public virtual bool TryDeserialize(TState state, in string source, Type targetType, out object target)
         {
-            if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.stringType)
+            if (targetType.IsPrimitive())
             {
                 return StringExtension.TryParseToType(source, targetType, out target);
             }
@@ -48,7 +48,7 @@ namespace TouchSocket.Core
             if (target != null)
             {
                 var type = target.GetType();
-                if (type.IsPrimitive || type == TouchSocketCoreUtility.stringType)
+                if (type.IsPrimitive())
                 {
                     source = target.ToString();
                     return true;

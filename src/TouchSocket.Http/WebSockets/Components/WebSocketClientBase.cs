@@ -52,7 +52,7 @@ namespace TouchSocket.Http.WebSockets
 
                 var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
-                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request))).ConfigureAwait(false);
+                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request,default))).ConfigureAwait(false);
 
                 using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
                 {

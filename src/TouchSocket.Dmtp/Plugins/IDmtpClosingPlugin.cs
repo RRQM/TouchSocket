@@ -19,6 +19,7 @@ namespace TouchSocket.Dmtp
     /// <summary>
     /// 定义即将断开连接时的插件行为（仅主动断开时有效）。
     /// </summary>
+    [DynamicMethod]
     public interface IDmtpClosingPlugin : IPlugin
     {
         /// <summary>

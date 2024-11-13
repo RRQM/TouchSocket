@@ -91,12 +91,12 @@ namespace TouchSocket.Dmtp
                         Client = this,
                         FindDmtpActor = this.m_findDmtpActor,
                         CreatedChannel = this.OnDmtpActorCreateChannel
-                    }; ;
+                    };
 
                     this.m_dmtpAdapter = new DmtpAdapter();
                     this.m_dmtpAdapter.Config(this.Config);
 
-                    this.m_receiveTask = this.BeginReceive();
+                    this.m_receiveTask =Task.Factory.StartNew(this.BeginReceive).Unwrap();
                     this.m_receiveTask.FireAndForget();
                 }
 
@@ -196,8 +196,7 @@ namespace TouchSocket.Dmtp
                 {
                     this.m_online = false;
                     this.m_client.SafeDispose();
-                    this.DmtpActor.SafeDispose();
-                    this.m_dmtpAdapter.SafeDispose();
+                    this.m_dmtpActor.SafeDispose();
                     Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
@@ -245,6 +244,7 @@ namespace TouchSocket.Dmtp
                     catch (Exception ex)
                     {
                         this.Logger?.Exception(ex);
+                        break;
                     }
                     finally
                     {

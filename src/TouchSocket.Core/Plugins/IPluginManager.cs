@@ -44,29 +44,10 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="plugin">插件</param>
         /// <exception cref="ArgumentNullException"></exception>
-        void Add(IPlugin plugin);
+        void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)]TPlugin>(TPlugin plugin)where TPlugin:class,IPlugin;
 
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <param name="pluginType">插件类型</param>
-        object Add([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type pluginType);
-
-        /// <summary>
-        /// 添加插件
-        /// </summary>
-        /// <typeparam name="TPlugin"></typeparam>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        TPlugin Add<TPlugin>(Func<IResolver, TPlugin> func) where TPlugin : IPlugin;
-
-        /// <summary>
-        /// 添加插件异步执行委托
-        /// </summary>
-        /// <param name="interfeceType"></param>
-        /// <param name="func"></param>
-        /// <returns></returns>
-        void Add(Type interfeceType, Func<object, PluginEventArgs, Task> func);
+        
+        void Add(Type interfeceType, Func<object, PluginEventArgs, Task> pluginInvokeHandler,Delegate sourceDelegate=default);
 
         /// <summary>
         /// 触发对应插件
@@ -76,5 +57,11 @@ namespace TouchSocket.Core
         /// <param name="e"></param>
         /// <returns>表示在执行的插件中，是否处理<see cref="TouchSocketEventArgs.Handled"/>为<see langword="true"/>。</returns>
         ValueTask<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e);
+        void Remove(IPlugin plugin);
+        void Remove(Type interfeceType, Delegate func);
+
+        //void Add<TSender, TEventArgs>(Type interfeceType, Func<TSender, TEventArgs, Task> func) 
+        //    where TSender:class 
+        //    where TEventArgs : PluginEventArgs;
     }
 }

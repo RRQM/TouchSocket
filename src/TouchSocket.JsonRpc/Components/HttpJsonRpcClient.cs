@@ -46,7 +46,7 @@ namespace TouchSocket.JsonRpc
                 Params = parameters,
                 Id = id
             };
-            var request = new HttpRequest(this);
+            var request = new HttpRequest();
             request.Method = HttpMethod.Post;
             request.SetUrl(this.RemoteIPHost.PathAndQuery);
             request.FromJson(jsonRpcRequest.ToJsonString());

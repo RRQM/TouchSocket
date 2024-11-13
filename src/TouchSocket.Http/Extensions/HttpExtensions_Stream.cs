@@ -49,7 +49,7 @@ namespace TouchSocket.Http
 
             public override bool CanSeek => false;
 
-            public override bool CanWrite => this.m_httpResponse.CanWrite;
+            public override bool CanWrite => true;
 
             public override long Length => throw new NotImplementedException();
 

@@ -12,6 +12,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -21,16 +22,6 @@ namespace TouchSocket.Sockets
     /// <typeparam name="TClient">表示Tcp客户端的类型参数，必须实现ITcpClient接口。</typeparam>
     public abstract class TcpClientFactory<TClient> : ConnectableClientFactory<TClient> where TClient : class, ITcpClient
     {
-        /// <summary>
-        /// 判断给定的Tcp客户端是否处于活动状态。
-        /// </summary>
-        /// <param name="client">要判断状态的Tcp客户端。</param>
-        /// <returns>如果客户端在线则返回true，否则返回false。</returns>
-        public override bool IsAlive(TClient client)
-        {
-            return client.Online;
-        }
-
         /// <summary>
         /// 处理Tcp客户端的释放操作。
         /// </summary>
@@ -47,14 +38,11 @@ namespace TouchSocket.Sockets
     /// </summary>
     public sealed class TcpClientFactory : TcpClientFactory<TcpClient>
     {
-        /// <summary>
-        /// 创建并初始化一个新的TcpClient实例。
-        /// </summary>
-        /// <returns>配置并连接好的TcpClient实例。</returns>
-        protected override async Task<TcpClient> CreateClient()
+        /// <inheritdoc/>
+        protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
         {
             var client = new TcpClient();
-            await client.SetupAsync(this.OnGetConfig()).ConfigureAwait(false);
+            await client.SetupAsync(config).ConfigureAwait(false);
             await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(false);
             return client;
         }

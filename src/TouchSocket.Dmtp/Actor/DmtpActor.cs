@@ -107,6 +107,11 @@ namespace TouchSocket.Dmtp
 
         #endregion 属性
 
+        #region 字段
+        private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
+        private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
+        #endregion
+
         /// <summary>
         /// 创建一个Dmtp协议的最基础功能件
         /// </summary>
@@ -148,6 +153,8 @@ namespace TouchSocket.Dmtp
                 Metadata = metadata
             };
 
+            this.m_handshakeFinished.Reset();
+
             await this.OnHandshaking(args).ConfigureAwait(false);
 
             var waitVerify = new WaitVerify()
@@ -177,12 +184,14 @@ namespace TouchSocket.Dmtp
                                     Metadata = verifyResult.Metadata,
                                     Token = verifyResult.Token,
                                 });
-                                verifyResult.Handle = true;
+                                this.m_handshakeFinished.Set();
+                                //verifyResult.Handle = true;
                                 break;
                             }
                             else
                             {
-                                verifyResult.Handle = true;
+                                this.m_handshakeFinished.Set();
+                                //verifyResult.Handle = true;
                                 throw new TokenVerifyException(verifyResult.Message);
                             }
                         }
@@ -440,7 +449,7 @@ namespace TouchSocket.Dmtp
                         {
                             var waitVerify = ResolveJsonObject<WaitVerify>(message.GetBodyString());
                             this.WaitHandlePool.SetRun(waitVerify);
-                            SpinWait.SpinUntil(() => waitVerify.Handle, 5000);
+                            await this.m_handshakeFinished.WaitOneAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
@@ -956,8 +965,6 @@ namespace TouchSocket.Dmtp
                 throw new NotSupportedException("Channel不支持在不可靠协议使用。");
             }
         }
-
-        private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
 
         /// <inheritdoc/>
         public virtual bool ChannelExisted(int id)

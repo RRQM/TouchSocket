@@ -18,6 +18,7 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// 定义一个接口，用于处理Web API响应后的操作
     /// </summary>
+    [DynamicMethod]
     public interface IWebApiResponsePlugin : IPlugin
     {
         /// <summary>

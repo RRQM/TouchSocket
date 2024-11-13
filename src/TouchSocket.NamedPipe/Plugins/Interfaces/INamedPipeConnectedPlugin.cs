@@ -19,6 +19,7 @@ namespace TouchSocket.NamedPipe
     /// <summary>
     /// 具有完成连接动作的插件接口
     /// </summary>
+    [DynamicMethod]
     public interface INamedPipeConnectedPlugin : IPlugin
     {
         /// <summary>

@@ -19,6 +19,7 @@ namespace TouchSocket.Sockets
     /// 定义了一个ITcpSendingPlugin接口，该接口继承自IPlugin接口。
     /// 用于标识插件在系统中负责TCP发送功能。
     /// </summary>
+    [DynamicMethod]
     public interface ITcpSendingPlugin : IPlugin
     {
         /// <summary>

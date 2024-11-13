@@ -37,6 +37,19 @@ namespace TouchSocket.Core
         }
 
 
+        public static string MakeIdentifier(string input)
+        {
+            // 替换非法字符
+            string result = Regex.Replace(input, "[^a-zA-Z0-9_]", "_");
+            // 如果结果以数字开头，则添加前缀 _
+            if (char.IsDigit(result[0]))
+            {
+                result = "_" + result;
+            }
+            return result;
+        }
+
+
         /// <summary>
         /// 检查字符串是否为 null 或仅包含空白字符。
         /// </summary>
@@ -263,15 +276,47 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 按格式填充
+        /// 格式化字符串。
         /// </summary>
-        /// <param name="str"></param>
-        /// <param name="ps"></param>
-        /// <returns></returns>
+        /// <param name="str">要格式化的字符串。</param>
+        /// <param name="ps">格式化参数。</param>
+        /// <returns>格式化后的字符串。</returns>
         public static string Format(this string str, params object[] ps)
         {
+
             return string.Format(str, ps);
+
         }
+
+
+        /// <summary>
+        /// 移除字符串末尾指定数量的字符。
+        /// </summary>
+        /// <param name="str">要处理的字符串。</param>
+        /// <param name="count">要移除的字符数量。</param>
+        /// <returns>移除末尾指定数量字符后的字符串。</returns>
+        public static string RemoveLastChars(this string str, int count)
+        {
+            if (string.IsNullOrEmpty(str) || count <= 0)
+            {
+                return str;
+            }
+
+            // 计算需要保留的字符长度
+
+            var lengthToKeep = str.Length - count;
+
+            // 如果需要保留的长度小于0，则返回空字符串
+
+            if (lengthToKeep < 0)
+            {
+                return string.Empty;
+            }
+            // 返回去除末尾指定数量字符后的子串
+            return str.Substring(0, lengthToKeep);
+
+        }
+
 
         /// <summary>
         /// 转换为SHA1。

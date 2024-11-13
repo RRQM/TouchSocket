@@ -146,7 +146,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns></returns>
         public static HttpRequest GetWSRequest(HttpClientBase httpClientBase, string version, out string base64Key)
         {
-            var request = new HttpRequest(httpClientBase);
+            var request = new HttpRequest();
             request.SetUrl(httpClientBase.RemoteIPHost.PathAndQuery);
             request.Headers.Add(HttpHeaders.Host, httpClientBase.RemoteIPHost.Authority);
             request.Headers.Add(HttpHeaders.Connection, "upgrade");

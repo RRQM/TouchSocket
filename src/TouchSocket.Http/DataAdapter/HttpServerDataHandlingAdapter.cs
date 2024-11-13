@@ -120,7 +120,7 @@ namespace TouchSocket.Http
                             }
                             else
                             {
-                                this.m_request.SetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
+                                this.m_request.InternalSetContent(byteBlock.ReadToSpan((int)this.m_request.ContentLength).ToArray());
                                 await this.GoReceivedAsync(null, this.m_request).ConfigureAwait(false);
                                 await this.DestoryRequest().ConfigureAwait(false);
                             }

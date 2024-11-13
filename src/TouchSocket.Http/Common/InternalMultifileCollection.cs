@@ -11,12 +11,16 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Collections.Specialized;
+using System.Text;
+using System.Threading;
+using TouchSocket.Core;
 
-namespace TouchSocket.Core
+namespace TouchSocket.Http
 {
-    internal class PluginModel : List<Func<object, PluginEventArgs, Task>>
+    internal class InternalMultifileCollection :List<IFormFile> ,IMultifileCollection
     {
     }
 }

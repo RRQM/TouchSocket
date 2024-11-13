@@ -17,8 +17,8 @@ namespace TouchSocket.WebApi
     /// <summary>
     /// 表示WebApi路由。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-    public class RouterAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+    public sealed class RouterAttribute : Attribute
     {
         /// <summary>
         /// 表示WebApi路由。

@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.WebApi
 {
-    public class FromBodyAttribute:Attribute
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    public sealed class FromBodyAttribute:Attribute
     {
     }
 }

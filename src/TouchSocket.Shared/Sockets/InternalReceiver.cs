@@ -142,9 +142,16 @@ namespace TouchSocket.Sockets
 
         private void ComplateRead()
         {
-            if (this.m_cacheMode && this.m_cacheByteBlock.CanReadLength > this.m_maxCacheSize)
+            var byteBlock = this.m_cacheByteBlock;
+            if (this.m_cacheMode)
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.m_cacheByteBlock.CanReadLength), this.m_cacheByteBlock.CanReadLength,this.m_maxCacheSize);
+                if (byteBlock != null)
+                {
+                    if (byteBlock.CanReadLength > this.m_maxCacheSize)
+                    {
+                        ThrowHelper.ThrowArgumentOutOfRangeException_MoreThan(nameof(this.m_cacheByteBlock.CanReadLength), this.m_cacheByteBlock.CanReadLength, this.m_maxCacheSize);
+                    }
+                }
             }
             this.m_byteBlock = default;
             this.m_requestInfo = default;

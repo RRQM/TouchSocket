@@ -165,7 +165,7 @@ namespace TouchSocket.Http
                         }
                         else
                         {
-                            this.m_httpResponse.SetContent(byteBlock.ReadToSpan((int)this.m_httpResponse.ContentLength).ToArray());
+                            this.m_httpResponse.InternalSetContent(byteBlock.ReadToSpan((int)this.m_httpResponse.ContentLength).ToArray());
                             await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureAwait(false);
                             await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
                             this.m_httpResponse = null;

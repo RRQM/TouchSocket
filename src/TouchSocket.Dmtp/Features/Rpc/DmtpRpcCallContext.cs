@@ -21,12 +21,12 @@ namespace TouchSocket.Dmtp.Rpc
     public sealed class DmtpRpcCallContext : CallContext, IDmtpRpcCallContext
     {
         /// <summary>
-        /// DmtpRpcCallContext
+        /// 初始化 DmtpRpcCallContext 类的新实例。
         /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="rpcMethod"></param>
-        /// <param name="dmtpRpcPackage"></param>
-        /// <param name="resolver"></param>
+        /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
+        /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
+        /// <param name="dmtpRpcPackage">IDmtpRpcRequestPackage对象，表示RPC请求包。</param>
+        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
         public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, IDmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
         {
             this.DmtpRpcPackage = dmtpRpcPackage;

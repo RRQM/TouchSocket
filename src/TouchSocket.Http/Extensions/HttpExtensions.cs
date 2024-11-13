@@ -11,8 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +28,20 @@ namespace TouchSocket.Http
     public static partial class HttpExtensions
     {
         #region HttpBase
+
+        /// <summary>
+        /// 同步获取一次性内容。
+        /// </summary>
+        /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
+        /// <param name="httpBase"></param>
+        /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
+        public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase,CancellationToken cancellationToken = default)
+        {
+            // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
+            // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
+            return Task.Run(async () => await httpBase.GetContentAsync(cancellationToken).ConfigureAwait(false)).GetFalseAwaitResult();
+        }
+
 
         /// <summary>
         /// 添加Header参数
@@ -150,6 +166,13 @@ namespace TouchSocket.Http
             return string.Empty;
         }
 
+        public static T SetContent<T>(this T httpBase, HttpContent content) where T : HttpBase
+        {
+            httpBase.Content= content;
+            // 返回处理后的HttpBase对象
+            return httpBase;
+        }
+
         /// <summary>
         /// 设置内容
         /// </summary>
@@ -211,26 +234,46 @@ namespace TouchSocket.Http
             return request;
         }
 
+        public static void SetFormUrlEncodedContent<TRequest>(this TRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+            where TRequest : HttpRequest
+        {
+            request.SetContent(string.Join("&", nameValueCollection.Select(a => $"{a.Key}={a.Value}")));
+            request.ContentType = "application/x-www-form-urlencoded";
+        }
+
+        public static async Task<IFormCollection> GetFormCollectionAsync<TRequest>(this TRequest request) where TRequest : HttpRequest
+        {
+            // 检查请求中是否包含分隔符，这是判断是否存在多文件数据的依据。
+            // 如果分隔符为空或未指定，则认为请求中没有多文件数据。
+
+            var boundaryString = request.GetBoundary();
+
+            if (boundaryString.IsNullOrEmpty())
+            {
+                if (request.ContentType == @"application/x-www-form-urlencoded")
+                {
+                    return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(false));
+                }
+                return new InternalFormCollection();
+            }
+            else
+            {
+                var boundary = $"--{boundaryString}".ToUTF8Bytes();
+
+                return new InternalFormCollection(await request.GetContentAsync().ConfigureAwait(false), boundary);
+            }
+        }
+
         /// <summary>
         /// 获取多文件集合。如果不存在，则返回null。
         /// </summary>
         /// <typeparam name="TRequest">请求类型，必须继承自HttpRequest。</typeparam>
         /// <param name="request">请求对象，用于提取多文件集合。</param>
         /// <returns>多文件集合对象，如果请求中不存在多文件数据，则返回null。</returns>
-        public static MultifileCollection GetMultifileCollection<TRequest>(this TRequest request) where TRequest : HttpRequest
+        [Obsolete("此方法已被弃用，请使用GetFormCollectionAsync代替，然后使用获取Files属性", true)]
+        public static IMultifileCollection GetMultifileCollection<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
-            // 检查请求中是否包含分隔符，这是判断是否存在多文件数据的依据。
-            // 如果分隔符为空或未指定，则认为请求中没有多文件数据。
-            if (request.GetBoundary().IsNullOrEmpty())
-            {
-                return null;
-            }
-            else
-            {
-                // 如果请求中包含有效的分隔符，表明存在多文件数据，
-                // 则创建并返回一个包含这些数据的多文件集合对象。
-                return new MultifileCollection(request);
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -294,9 +337,9 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 将请求方法设置为GET
+        /// 将请求方法设置为Get
         /// </summary>
-        /// <param name="request">要转换为GET方法的请求对象</param>
+        /// <param name="request">要转换为Get方法的请求对象</param>
         /// <returns>修改过方法的请求对象</returns>
         public static TRequest AsGet<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
@@ -309,7 +352,7 @@ namespace TouchSocket.Http
         /// 该方法扩展了HttpRequest类，允许在调用时动态改变请求的方法类型。
         /// </summary>
         /// <param name="request">要修改的HttpRequest对象。</param>
-        /// <param name="method">要设置的HTTP方法，如"GET"、"POST"等。</param>
+        /// <param name="method">要设置的HTTP方法，如"Get"、"Post"等。</param>
         /// <returns>修改后的HttpRequest对象。</returns>
         public static TRequest AsMethod<TRequest>(this TRequest request, string method) where TRequest : HttpRequest
         {
@@ -320,9 +363,9 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 将请求对象设置为POST方法
+        /// 将请求对象设置为Post方法
         /// </summary>
-        /// <param name="request">要设置为POST方法的请求对象</param>
+        /// <param name="request">要设置为Post方法的请求对象</param>
         /// <returns>修改过方法类型的请求对象</returns>
         public static TRequest AsPost<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
@@ -356,10 +399,10 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 判断当前请求是否为GET请求
+        /// 判断当前请求是否为Get请求
         /// </summary>
         /// <param name="request">请求对象，用于检查其请求方法</param>
-        /// <returns>如果请求方法是GET，则返回true；否则返回false</returns>
+        /// <returns>如果请求方法是Get，则返回true；否则返回false</returns>
         public static bool IsGet<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
             return request.Method == HttpMethod.Get;
@@ -369,7 +412,7 @@ namespace TouchSocket.Http
         /// 判断指定的请求是否为指定的HTTP方法类型
         /// </summary>
         /// <param name="request">待检查的HTTP请求</param>
-        /// <param name="method">要判断的HTTP方法类型，如"GET"、"POST"</param>
+        /// <param name="method">要判断的HTTP方法类型，如"Get"、"Post"</param>
         /// <returns>如果请求的方法类型与指定的方法一致，则返回true；否则返回false</returns>
         public static bool IsMethod<TRequest>(this TRequest request, string method) where TRequest : HttpRequest
         {
@@ -377,13 +420,13 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
-        /// 判断当前请求是否为POST请求
+        /// 判断当前请求是否为Post请求
         /// </summary>
         /// <param name="request">请求对象，泛型参数，必须是HttpRequest的子类或实现</param>
-        /// <returns>如果当前请求方法是POST，则返回true；否则返回false</returns>
+        /// <returns>如果当前请求方法是Post，则返回true；否则返回false</returns>
         public static bool IsPost<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
-            // 直接比较请求对象的Method属性是否为HttpMethod.Post，以判断是否为POST请求
+            // 直接比较请求对象的Method属性是否为HttpMethod.Post，以判断是否为Post请求
             return request.Method == HttpMethod.Post;
         }
 
@@ -402,17 +445,6 @@ namespace TouchSocket.Http
         #region 判断属性
 
         /// <summary>
-        /// 判断请求头中是否包含升级连接
-        /// </summary>
-        /// <param name="request">请求对象，泛型参数，要求是HttpRequest的子类或实现</param>
-        /// <returns>如果请求头中包含升级连接，则返回true；否则返回false</returns>
-        public static bool IsUpgrade<TRequest>(this TRequest request) where TRequest : HttpRequest
-        {
-            // 比较请求头中的连接类型是否为升级类型，忽略大小写
-            return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade.GetDescription(), StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
         /// 判断请求是否接受Gzip压缩。
         /// </summary>
         /// <param name="request">请求对象，用于获取请求的接受编码。</param>
@@ -425,6 +457,18 @@ namespace TouchSocket.Http
             // 检查接受编码是否包含Gzip
             return !acceptEncoding.IsNullOrEmpty() && acceptEncoding.Contains("gzip");
         }
+
+        /// <summary>
+        /// 判断请求头中是否包含升级连接
+        /// </summary>
+        /// <param name="request">请求对象，泛型参数，要求是HttpRequest的子类或实现</param>
+        /// <returns>如果请求头中包含升级连接，则返回true；否则返回false</returns>
+        public static bool IsUpgrade<TRequest>(this TRequest request) where TRequest : HttpRequest
+        {
+            // 比较请求头中的连接类型是否为升级类型，忽略大小写
+            return string.Equals(request.Headers.Get(HttpHeaders.Connection), HttpHeaders.Upgrade.GetDescription(), StringComparison.OrdinalIgnoreCase);
+        }
+
         #endregion 判断属性
 
         #endregion HttpRequest
@@ -471,6 +515,22 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 为指定的HttpResponse对象设置Gzip压缩内容
+        /// </summary>
+        /// <typeparam name="TResponse">HttpResponse的类型</typeparam>
+        /// <param name="response">要设置内容的HttpResponse对象</param>
+        /// <param name="gzipContent">要设置的Gzip压缩内容</param>
+        /// <returns>返回设置了Gzip内容的HttpResponse对象</returns>
+        public static TResponse SetGzipContent<TResponse>(this TResponse response, byte[] gzipContent) where TResponse : HttpResponse
+        {
+            // 设置HttpResponse的内容为Gzip压缩内容
+            response.SetContent(gzipContent);
+            // 在HttpResponse的头信息中添加ContentEncoding为gzip，标识内容已经被gzip压缩
+            response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
+            return response;
+        }
+
+        /// <summary>
         /// 设置状态，并且附带时间戳。
         /// </summary>
         /// <param name="response">要设置状态的HttpResponse对象。</param>
@@ -497,21 +557,6 @@ namespace TouchSocket.Http
             // 调用重载的SetStatus方法，设置状态码为200，状态信息为"Success"。
             return SetStatus(response, 200, "Success");
         }
-        /// <summary>
-        /// 为指定的HttpResponse对象设置Gzip压缩内容
-        /// </summary>
-        /// <typeparam name="TResponse">HttpResponse的类型</typeparam>
-        /// <param name="response">要设置内容的HttpResponse对象</param>
-        /// <param name="gzipContent">要设置的Gzip压缩内容</param>
-        /// <returns>返回设置了Gzip内容的HttpResponse对象</returns>
-        public static TResponse SetGzipContent<TResponse>(this TResponse response, byte[] gzipContent) where TResponse : HttpResponse
-        {
-            // 设置HttpResponse的内容为Gzip压缩内容
-            response.SetContent(gzipContent);
-            // 在HttpResponse的头信息中添加ContentEncoding为gzip，标识内容已经被gzip压缩
-            response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
-            return response;
-        }
 
         /// <summary>
         /// 设置HTTP响应为404 Not Found
@@ -528,203 +573,5 @@ namespace TouchSocket.Http
         }
 
         #endregion HttpResponse
-
-        #region FromFileAsync
-
-        /// <summary>
-        /// 从文件响应。
-        /// <para>当response支持持续写入时，会直接回复响应。并阻塞执行，直到完成。所以在执行该方法之前，请确保已设置完成所有状态字</para>
-        /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
-        /// </summary>
-        /// <param name="response">响应</param>
-        /// <param name="request">请求头，用于尝试续传，为null时则不续传。</param>
-        /// <param name="fileInfo">文件信息</param>
-        /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度。</param>
-        /// <param name="bufferLen">读取长度。</param>
-        /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="Exception"></exception>
-        /// <returns></returns>
-        public static async Task FromFileAsync(this HttpResponse response, FileInfo fileInfo, HttpRequest request = default, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
-        {
-            var filePath = fileInfo.FullName;
-            using (var streamReader = File.OpenRead(filePath))
-            {
-                response.SetContentTypeByExtension(Path.GetExtension(filePath));
-                if (fileName.HasValue())
-                {
-                    var contentDisposition = "attachment;" + "filename=" + System.Web.HttpUtility.UrlEncode(fileName ?? Path.GetFileName(filePath));
-                    response.Headers.Add(HttpHeaders.ContentDisposition, contentDisposition);
-                }
-
-                response.Headers.Add(HttpHeaders.AcceptRanges, "bytes");
-
-                autoGzip = autoGzip && request.IsAcceptGzip();
-
-                if (response.CanWrite)
-                {
-                    HttpRange httpRange;
-                    var range = request?.Headers.Get(HttpHeaders.Range);
-                    if (string.IsNullOrEmpty(range))
-                    {
-                        response.SetStatus();
-                        if (!autoGzip)
-                        {
-                            response.ContentLength = fileInfo.Length;
-                        }
-                        httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
-                    }
-                    else
-                    {
-                        httpRange = HttpRange.GetRange(range, fileInfo.Length);
-                        if (httpRange == null)
-                        {
-                            if (!autoGzip)
-                            {
-                                response.ContentLength = fileInfo.Length;
-                            }
-                            httpRange = new HttpRange() { Start = 0, Length = fileInfo.Length };
-                        }
-                        else
-                        {
-                            if (!autoGzip)
-                            {
-                                response.ContentLength = httpRange.Length;
-                            }
-                            response.SetStatus(206, "Partial Content");
-                            response.Headers.Add(HttpHeaders.ContentRange, string.Format("bytes {0}-{1}/{2}", httpRange.Start, httpRange.Length + httpRange.Start - 1, fileInfo.Length));
-                        }
-                    }
-
-
-                    streamReader.Position = httpRange.Start;
-                    var flowGate = new FlowGate
-                    {
-                        Maximum = maxSpeed
-                    };
-
-                    if (autoGzip)
-                    {
-                        response.IsChunk = true;
-                        response.Headers.Add(HttpHeaders.ContentEncoding, "gzip");
-                    }
-
-                    var buffer = BytePool.Default.Rent(bufferLen);
-                    try
-                    {
-                        if (autoGzip)
-                        {
-                            using (var responseStream = response.CreateWriteStream())
-                            {
-                                using (var gzip = new GZipStream(responseStream, CompressionMode.Compress, true))
-                                {
-                                    while (true)
-                                    {
-                                        var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(false);
-                                        if (r == 0)
-                                        {
-                                            gzip.Close();
-                                            await response.CompleteChunkAsync().ConfigureAwait(false);
-                                            break;
-                                        }
-
-                                        await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
-
-                                        await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(false);
-                                    }
-                                }
-                            }
-
-                        }
-                        else
-                        {
-                            var surLen = httpRange.Length;
-                            while (surLen > 0)
-                            {
-                                var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(false);
-                                if (r == 0)
-                                {
-                                    break;
-                                }
-
-                                await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
-
-                                await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(false);
-                                surLen -= r;
-                            }
-
-                            if (response.IsChunk)
-                            {
-                                await response.CompleteChunkAsync().ConfigureAwait(false);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        BytePool.Default.Return(buffer);
-                    }
-                }
-                else
-                {
-                    if (fileInfo.Length > 1024 * 1024)
-                    {
-                        throw new OverlengthException("当该对象不支持写入时，仅支持1Mb以内的文件。");
-                    }
-
-                    using (var byteBlock = new ByteBlock((int)fileInfo.Length))
-                    {
-                        var buffer = BytePool.Default.Rent(bufferLen);
-                        try
-                        {
-                            while (true)
-                            {
-                                var r = streamReader.Read(buffer, 0, bufferLen);
-                                if (r == 0)
-                                {
-                                    break;
-                                }
-                                byteBlock.Write(new ReadOnlySpan<byte>(buffer, 0, r));
-                            }
-
-                            if (autoGzip)
-                            {
-                                response.SetGzipContent(GZip.Compress(byteBlock.ToArray()));
-                            }
-                            else
-                            {
-                                response.SetContent(byteBlock.ToArray());
-                            }
-
-                        }
-                        finally
-                        {
-                            BytePool.Default.Return(buffer);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 从文件响应。
-        /// <para>当response支持持续写入时，会直接回复响应。并阻塞执行，直到完成。所以在执行该方法之前，请确保已设置完成所有状态字</para>
-        /// <para>当response不支持持续写入时，会填充Content，且不会响应，需要自己执行Build，并发送。</para>
-        /// </summary>
-        /// <param name="context">上下文</param>
-        /// <param name="fileInfo">文件信息</param>
-        /// <param name="fileName">文件名，不设置时会获取路径文件名</param>
-        /// <param name="maxSpeed">最大速度。</param>
-        /// <param name="bufferLen">读取长度。</param>
-        /// <param name="autoGzip">是否自动<see cref="HttpRequest"/>请求，自动启用gzip</param>
-        /// <exception cref="Exception"></exception>
-        /// <exception cref="Exception"></exception>
-        /// <returns></returns>
-        public static async Task FromFileAsync(this HttpContext context, FileInfo fileInfo, string fileName = null, int maxSpeed = 0, int bufferLen = 1024 * 64, bool autoGzip = true)
-        {
-            await FromFileAsync(context.Response, fileInfo, context.Request, fileName, maxSpeed, bufferLen, autoGzip);
-        }
-
-        #endregion FromFileAsync
     }
 }

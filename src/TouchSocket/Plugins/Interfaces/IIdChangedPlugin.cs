@@ -15,11 +15,12 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    
+
     /// <summary>
     /// 定义了一个插件接口IIdChangedPlugin，继承自IPlugin。
     /// 该接口用于通知实现该接口的插件，某个ID发生了更改。
     /// </summary>
+    [DynamicMethod]
     public interface IIdChangedPlugin: IPlugin
     {
        

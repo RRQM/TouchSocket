@@ -23,10 +23,22 @@ namespace TouchSocket.Dmtp
 
         public DmtpReconnectionPlugin()
         {
-            this.ActionForCheck = (c, i) =>
+            this.ActionForCheck = OnActionForCheck;
+        }
+
+        private async Task<bool?> OnActionForCheck(TClient client, int i)
+        {
+            if (!client.Online)
             {
-                return Task.FromResult<bool?>(c.Online);
-            };
+                return false;
+            }
+
+            if (DateTime.UtcNow - client.GetLastActiveTime() < this.Tick)
+            {
+                return null;
+            }
+
+            return await client.PingAsync().ConfigureAwait(false);
         }
 
         protected override void Loaded(IPluginManager pluginManager)

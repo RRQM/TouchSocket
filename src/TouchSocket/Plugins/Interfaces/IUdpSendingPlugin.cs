@@ -7,6 +7,7 @@ namespace TouchSocket.Sockets
     /// 定义了一个UDP发送插件接口，继承自IPlugin接口。
     /// 该接口为实现UDP数据发送功能的插件提供了一套标准的方法和属性。
     /// </summary>
+    [DynamicMethod]
     public interface IUdpSendingPlugin : IPlugin
     {
         /// <summary>

@@ -20,10 +20,12 @@ namespace TouchSocket.Core.AspNetCore
     /// <summary>
     /// AspNetCoreContainer
     /// </summary>
-    public class AspNetCoreContainer : IRegistrator, IResolver
+    public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvider
     {
         private readonly IServiceCollection m_services;
         private IServiceProvider m_serviceProvider;
+
+        public IServiceProvider ServiceProvider { get => this.m_serviceProvider; }
 
         //private AspNetCoreResolver m_resolver;
 
@@ -34,6 +36,11 @@ namespace TouchSocket.Core.AspNetCore
         public AspNetCoreContainer(IServiceCollection services)
         {
             this.m_services = services ?? throw new ArgumentNullException(nameof(services));
+
+            if (services.IsReadOnly)
+            {
+                return;
+            }
             services.AddSingleton<IResolver>(privoder =>
             {
                 this.m_serviceProvider ??= privoder;
@@ -80,7 +87,22 @@ namespace TouchSocket.Core.AspNetCore
         /// <inheritdoc/>
         public bool IsRegistered(Type fromType, string key)
         {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+            if (typeof(IResolver) == fromType)
+            {
+                return true;
+            }
+            foreach (var item in this.m_services)
+            {
+                if (!item.IsKeyedService)
+                {
+                    continue;
+                }
+                if (item.ServiceType == fromType&&item.ServiceKey?.ToString()==key)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <inheritdoc/>
@@ -103,7 +125,24 @@ namespace TouchSocket.Core.AspNetCore
         /// <inheritdoc/>
         public void Register(DependencyDescriptor descriptor, string key)
         {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+            switch (descriptor.Lifetime)
+            {
+                case Lifetime.Singleton:
+                    if (descriptor.ToInstance != null)
+                    {
+                        this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToInstance);
+                    }
+                    else
+                    {
+                        this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToType);
+                    }
+                    break;
+
+                case Lifetime.Transient:
+                default:
+                    this.m_services.AddKeyedTransient(descriptor.FromType, key, descriptor.ToType);
+                    break;
+            }
         }
 
         /// <inheritdoc/>
@@ -132,7 +171,19 @@ namespace TouchSocket.Core.AspNetCore
         /// <inheritdoc/>
         public void Unregister(DependencyDescriptor descriptor, string key)
         {
-            throw new NotSupportedException($"{this.GetType().Name}不支持包含Key的设定");
+            var array = this.m_services.ToArray();
+            foreach (var item in array)
+            {
+                if (!item.IsKeyedService)
+                {
+                    continue;
+                }
+                if (item.ServiceType == descriptor.FromType && item.ServiceKey?.ToString() == key)
+                {
+                    this.m_services.Remove(item);
+                    return;
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -160,13 +211,25 @@ namespace TouchSocket.Core.AspNetCore
         /// <inheritdoc/>
         public object Resolve(Type fromType, string key)
         {
-            throw new NotImplementedException();
+            return this.m_serviceProvider.GetRequiredKeyedService(fromType, key);
         }
 
         /// <inheritdoc/>
         public object Resolve(Type fromType)
         {
             return this.m_serviceProvider.GetService(fromType);
+        }
+
+        /// <inheritdoc/>
+        public object GetKeyedService(Type fromType, object serviceKey)
+        {
+            return this.m_serviceProvider.GetRequiredKeyedService(fromType, serviceKey);
+        }
+
+        /// <inheritdoc/>
+        public object GetRequiredKeyedService(Type fromType, object serviceKey)
+        {
+            return this.m_serviceProvider.GetRequiredKeyedService(fromType, serviceKey);
         }
 
         #endregion Resolve

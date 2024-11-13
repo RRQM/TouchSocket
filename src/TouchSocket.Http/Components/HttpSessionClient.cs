@@ -92,7 +92,7 @@ namespace TouchSocket.Http
         {
             if (e.RequestInfo is HttpRequest request)
             {
-                this.m_httpContext ??= new HttpContext(request);
+                this.m_httpContext ??= new HttpContext(request,new HttpResponse(request,this));
                 await this.OnReceivedHttpRequest(this.m_httpContext).ConfigureAwait(false);
                 this.m_httpContext.Response.ResetHttp();
             }

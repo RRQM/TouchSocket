@@ -19,6 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// IWebSocketClosedPlugin
     /// </summary>
+    [DynamicMethod]
     public interface IWebSocketClosedPlugin : IPlugin
     {
         /// <summary>
