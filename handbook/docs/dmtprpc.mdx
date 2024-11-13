@@ -294,7 +294,7 @@ client.GetDmtpRpcActor()的操作，内部还需要执行字典的查询操作�
 ```csharp showLineNumbers
 public partial class ReverseCallbackServer : RpcServer
 {
-    [DmtpRpc(true)]//使用方法名作为调用键
+    [DmtpRpc(MethodInvoke = true)]//使用方法名作为调用键
     public string SayHello(string name)
     {
         return $"{name},hi";
@@ -370,7 +370,7 @@ if (service.TryGetClient(id, out var SessionClient))
 ```csharp showLineNumbers
 partial class MyRpcServer : TransientRpcServer
 {
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     public int Add(int a, int b)
     {
         if (this.CallContext.Caller is ITcpDmtpSessionClient SessionClient)
@@ -793,7 +793,7 @@ var metadata = client.GetDmtpRpcActor().InvokeT<Metadata>("CallContextMetadata",
 在接收可以通过IDmtpCallContext（调用上下文）获取到Metadata。
 
 ```csharp {4} showLineNumbers
-[DmtpRpc(true)]
+[DmtpRpc(MethodInvoke = true)]
 public Metadata CallContextMetadata(IDmtpRpcCallContext callContext)
 {
     return callContext.Metadata;

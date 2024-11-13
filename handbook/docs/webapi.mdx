@@ -34,7 +34,7 @@ public partial class ApiServer : RpcServer
         this.m_logger = logger;
     }
 
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
     {
         return a + b;
@@ -81,13 +81,13 @@ Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
 使用`Get`进行请求时，服务方法可以声明多个参数，但是每个参数都必须是**简单类型**（例如：int、string、DateTime等）。
 
 ```csharp showLineNumbers
-[WebApi(HttpMethodType.GET)]
+[WebApi(Method = HttpMethodType.Get)]
 public int Get(int a)
 {
     return a;
 }
 
-[WebApi(HttpMethodType.GET)]
+[WebApi(Method = HttpMethodType.Get)]
 public int Sum(int a, int b)
 {
     return a + b;
@@ -104,7 +104,7 @@ public int Sum(int a, int b)
 以下参数依然来自`Query`，`Body`为空也可以。
 
 ```csharp showLineNumbers
-[WebApi(HttpMethodType.Post)]
+[WebApi(Method = HttpMethodType.Post)]
 public int Sum(int a, int b)
 {
     return a + b;
@@ -118,7 +118,7 @@ public int Sum(int a, int b)
 以下参数，前两个来自`Query`，`MyClass`将从`Body`解析。
 
 ```csharp showLineNumbers
-[WebApi(HttpMethodType.Post)]
+[WebApi(Method = HttpMethodType.Post)]
 public int Sum(int a, int b, MyClass myClass)
 {
     return a + b;
@@ -136,7 +136,7 @@ public int Sum(int a, int b, MyClass myClass)
 ```csharp showLineNumbers
 public class ApiServer : RpcServer
 {
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
     {
         return a + b;
@@ -154,7 +154,7 @@ public class ApiServer : RpcServer
 [Router("/user/[api]/test/[action]")]
 public class ApiServer : RpcServer
 {
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
     {
         return a + b;
@@ -181,7 +181,7 @@ public class ApiServer : RpcServer
 例如：
 
 ```csharp {2} showLineNumbers
-[WebApi(HttpMethodType.GET)]
+[WebApi(Method = HttpMethodType.Get)]
 public int SumCallContext(IWebApiCallContext callContext, int a, int b)
 {
     return a + b;
@@ -407,7 +407,7 @@ class MyWebApiDispatchProxy : WebApiDispatchProxy
 interface IApiServer
 {
     [Router("ApiServer/[action]")]
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     int Sum(int a, int b);
 }
 ```
@@ -594,7 +594,7 @@ WebApi也属于Rpc的行列，所以在执行时，也可以在Rpc的Aop中实�
 public partial class ApiServer : RpcServer
 {
     [EnableCors("cors")]//使用跨域
-    [WebApi(HttpMethodType.GET)]
+    [WebApi(Method = HttpMethodType.Get)]
     public int Sum(int a, int b)
     {
         return a + b;

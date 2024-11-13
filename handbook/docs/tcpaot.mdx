@@ -37,9 +37,8 @@ public partial class MyContainer : ManualContainer
 同时，使用`AutoInjectForSingleton`特性，将其标识为自动注入到IOC。
 
 ```csharp showLineNumbers
-internal partial class MyServicePluginClass : PluginBase
+internal partial class MyServicePluginClass : PluginBase,IServerStartedPlugin,IServerStopedPlugin
 {
-    [GeneratorPlugin(typeof(IServerStartedPlugin))]
     public Task OnServerStarted(IService sender, ServiceStateEventArgs e)
     {
         if (sender is ITcpService service)
@@ -60,7 +59,7 @@ internal partial class MyServicePluginClass : PluginBase
         return e.InvokeNext();
     }
 
-    [GeneratorPlugin(typeof(IServerStopedPlugin))]
+
     public Task OnServerStoped(IService sender, ServiceStateEventArgs e)
     {
         Console.WriteLine("服务已停止");
@@ -68,9 +67,8 @@ internal partial class MyServicePluginClass : PluginBase
     }
 }
 
-partial class TcpServiceReceivedPlugin : PluginBase
+partial class TcpServiceReceivedPlugin : PluginBase,ITcpReceivedPlugin
 {
-    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         //从客户端收到信息
@@ -102,7 +100,7 @@ partial class TcpServiceReceivedPlugin : PluginBase
 /// <summary>
 /// 应一个网友要求，该插件主要实现，在接收数据时如果触发<see cref="CloseException"/>异常，则断开连接。
 /// </summary>
-partial class ClosePlugin : PluginBase
+partial class ClosePlugin : PluginBase,ITcpReceivedPlugin
 {
     private readonly ILog m_logger;
 
@@ -111,7 +109,6 @@ partial class ClosePlugin : PluginBase
         this.m_logger = logger;
     }
 
-    [GeneratorPlugin(typeof(ITcpReceivedPlugin))]
     public async Task OnTcpReceived(ITcpSessionClient client, ReceivedDataEventArgs e)
     {
         try

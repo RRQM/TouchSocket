@@ -29,13 +29,13 @@ XmlRpc是**通用**的工作在**Internet**上的RPC。一个[XML-RPC](https://b
 ```csharp showLineNumbers
 public partial class XmlServer : RpcServer
 {
-    [XmlRpc(true)]
+    [XmlRpc(MethodInvoke = true)]
     public int Sum(int a, int b)
     {
         return a + b;
     }
 
-    [XmlRpc(true)]
+    [XmlRpc(MethodInvoke = true)]
     public int TestClass(MyClass myClass)
     {
         return myClass.A + myClass.B;
@@ -203,7 +203,7 @@ internal class MyXmlRpcDispatchProxy : XmlRpcDispatchProxy
 ```csharp showLineNumbers
 interface IXmlRpcServer
 {
-    [XmlRpc(true)]
+    [XmlRpc(MethodInvoke = true)]
     int Sum(int a, int b);
 }
 ```

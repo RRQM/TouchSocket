@@ -26,7 +26,7 @@ public partial class MyRpcServer : RpcServer
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     [Description("将两个数相加")]//其作用是生成代理时，作为注释。
     public int Add(int a, int b)
     {
@@ -56,7 +56,7 @@ public partial class MyRpcServer : RpcServer
 ```csharp showLineNumbers
 public interface IMyRpcServer2 : IRpcServer
 {
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 
@@ -96,7 +96,7 @@ public partial class MyRpcServer2 : RpcServer, IMyRpcServer2
 ```csharp {7} showLineNumbers
 public partial class MyRpcServer : TransientRpcServer
 {
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     [Description("将两个数相加")]//其作用是生成代理时，作为注释。
     public int Add(int a, int b)
     {
@@ -112,7 +112,7 @@ public partial class MyRpcServer : TransientRpcServer
 ```csharp {1,7} showLineNumbers
 public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 {
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     [Description("将两个数相加")]//其作用是生成代理时，作为注释。
     public int Add(int a, int b)
     {
@@ -214,7 +214,7 @@ public partial class MyRpcServer : TransientRpcServer<IDmtpRpcCallContext>
 ```csharp showLineNumbers
 public interface IMyRpcServer : IRpcServer
 { 
-    [DmtpRpc(true)]//使用函数名直接调用
+    [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
     int Add(int a, int b);
 }
 
