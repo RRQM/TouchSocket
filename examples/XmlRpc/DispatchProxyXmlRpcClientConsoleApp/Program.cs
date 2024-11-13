@@ -64,7 +64,7 @@ namespace DispatchProxyXmlRpcClientConsoleApp
 
     internal interface IXmlRpcServer
     {
-        [XmlRpc(true)]
+        [XmlRpc(MethodInvoke = true)]
         int Sum(int a, int b);
     }
 }

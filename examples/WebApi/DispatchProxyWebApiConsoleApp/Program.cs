@@ -76,7 +76,7 @@ namespace DispatchProxyWebApiConsoleApp
     {
         [Router("ApiServer/[action]ab")]
         [Router("ApiServer/[action]")]
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         int Sum(int a, int b);
     }
 }

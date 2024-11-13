@@ -605,7 +605,7 @@ namespace WebSocketConsoleApp
 
             [Router("/[api]/ws")]
             [Router("/[api]/[action]")]
-            [WebApi(HttpMethodType.GET)]
+            [WebApi(Method = HttpMethodType.Get)]
             public async Task ConnectWS(IWebApiCallContext callContext)
             {
                 if (callContext.Caller is HttpSessionClient socketClient)

@@ -131,13 +131,13 @@ namespace WebApiServerApp
         [EnableCors("cors")]//使用跨域
         [Router("[api]/[action]ab")]//此路由会以"/ApiServer/Sumab"实现
         [Router("[api]/[action]")]//此路由会以"/ApiServer/Sum"实现
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public int Sum(int a, int b)
         {
             return a + b;
         }
 
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public int SumCallContext(IWebApiCallContext callContext, int a, int b)
         {
             if (callContext.Caller is IHttpSessionClient httpSessionClient)
@@ -157,7 +157,7 @@ namespace WebApiServerApp
             return a + b;
         }
 
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public MyClass GetMyClass()
         {
             return new MyClass()
@@ -167,7 +167,7 @@ namespace WebApiServerApp
             };
         }
 
-        [WebApi(HttpMethodType.POST)]
+        [WebApi(Method = HttpMethodType.Post)]
         public int TestPost(MyClass myClass)
         {
             return myClass.A + myClass.B;
@@ -177,7 +177,7 @@ namespace WebApiServerApp
         /// 使用调用上下文，响应文件下载。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public async Task<string> DownloadFile(IWebApiCallContext callContext, string id)
         {
             if (id == "rrqm")
@@ -192,7 +192,7 @@ namespace WebApiServerApp
         /// 使用调用上下文，获取实际请求体。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.POST)]
+        [WebApi(Method = HttpMethodType.Post)]
         [Router("[api]/[action]")]
         public async Task<string> PostContent(IWebApiCallContext callContext)
         {
@@ -211,13 +211,13 @@ namespace WebApiServerApp
         /// 使用调用上下文，上传多个小文件。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.POST)]
-        public Task<string> UploadMultiFile(IWebApiCallContext callContext, string id)
+        [WebApi(Method = HttpMethodType.Post)]
+        public async Task<string> UploadMultiFile(IWebApiCallContext callContext, string id)
         {
-            var formFiles = callContext.HttpContext.Request.GetMultifileCollection();
+            var formFiles =await callContext.HttpContext.Request.GetFormCollectionAsync();
             if (formFiles != null)
             {
-                foreach (var item in formFiles)
+                foreach (var item in formFiles.Files)
                 {
                     Console.WriteLine($"fileName={item.FileName},name={item.Name}");
 
@@ -225,14 +225,14 @@ namespace WebApiServerApp
                     File.WriteAllBytes(item.FileName, item.Data.ToArray());
                 }
             }
-            return Task.FromResult("ok");
+            return "ok";
         }
 
         /// <summary>
         /// 使用调用上下文，上传大文件。
         /// </summary>
         /// <param name="callContext"></param>
-        [WebApi(HttpMethodType.POST)]
+        [WebApi(Method = HttpMethodType.Post)]
         public async Task<string> UploadBigFile(IWebApiCallContext callContext)
         {
             using (var stream = File.Create("text.file"))
@@ -243,7 +243,7 @@ namespace WebApiServerApp
             return "ok";
         }
 
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public string GetString()
         {
             Console.WriteLine("GetString");
@@ -261,7 +261,7 @@ namespace WebApiServerApp
         }
 
         [Router("/[api]/[action]")]
-        [WebApi(HttpMethodType.GET)]
+        [WebApi(Method = HttpMethodType.Get)]
         public async Task ConnectWS(IWebApiCallContext callContext)
         {
             if (callContext.Caller is HttpSessionClient sessionClient)

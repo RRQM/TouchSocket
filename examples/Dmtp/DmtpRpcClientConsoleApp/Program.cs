@@ -214,7 +214,7 @@ namespace ClientConsoleApp
             this.m_logger = logger;
         }
 
-        [DmtpRpc(true)]//使用函数名直接调用
+        [DmtpRpc(MethodInvoke = true)]//使用函数名直接调用
         public bool Notice(string msg)
         {
             this.m_logger.Info(msg);

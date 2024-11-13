@@ -59,13 +59,13 @@ namespace XmlRpcServerApp
 
     public partial class XmlServer : RpcServer
     {
-        [XmlRpc(true)]
+        [XmlRpc(MethodInvoke =true)]
         public int Sum(int a, int b)
         {
             return a + b;
         }
 
-        [XmlRpc(true)]
+        [XmlRpc(MethodInvoke = true)]
         public int TestClass(MyClass myClass)
         {
             return myClass.A + myClass.B;

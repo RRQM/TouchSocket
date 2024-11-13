@@ -138,7 +138,7 @@ namespace RpcStreamConsoleApp
             /// <param name="callContext"></param>
             /// <param name="channelID"></param>
             [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
-            [DmtpRpc(true)]//此处设置直接使用方法名调用
+            [DmtpRpc(MethodInvoke = true)]//此处设置直接使用方法名调用
             public async Task<int> RpcPullChannel(ICallContext callContext, int channelID)
             {
                 var size = 0;
@@ -164,7 +164,7 @@ namespace RpcStreamConsoleApp
             /// <param name="callContext"></param>
             /// <param name="channelID"></param>
             [Description("测试ServiceToClient创建通道，从而实现流数据的传输")]
-            [DmtpRpc(true)]//此处设置直接使用方法名调用
+            [DmtpRpc(MethodInvoke = true)]//此处设置直接使用方法名调用
             public int RpcPushChannel(ICallContext callContext, int channelID)
             {
                 var size = 0;
