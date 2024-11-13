@@ -15,9 +15,82 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - 只要【确认】为框架 `bug`，则当天修复，当天发版，修订版本号 `加 1`。
 - 如果 `.csproj` 文件有变更，则当天发版，修订版本号 `加 1`。
-- 其余情况，每年发布一个 `主版本`。
+- 其余情况，每年发布一个 `主版本`，发布时间跟随Dotnet的发布时间。
 
 :::
+
+## v3.0.0
+
+**更新日期：** 2024.11.13
+
+**更新描述：**
+
+大版本升级，有部分不兼容性升级。所以请在升级前做好备份，同时在升级之后，请务必阅读[v3.0升级指南](https://gitee.com/RRQM_Home/TouchSocket/issues/IB45VJ)。
+
+**本次改动在运行时完全兼容`v2.1`，所以客户端和服务器可以差异版本更新。**
+
+**更新详情：**
+
+#### 【SDK】
+
+- &nbsp;<Tag>新增</Tag> 新增`net9.0`支持。
+- &nbsp;<Tag>移除</Tag> 移除`net7.0`支持，但是不影响`net7.0`使用，因为最低到`net6.0`的支持。
+
+
+#### 【TouchSocket.Core】
+
+- &nbsp;<Tag>优化</Tag> `Plugin`组件默认支持`AOT`，不再借助委托实现。 
+- &nbsp;<Tag>优化</Tag> `AppMessenger`组件默认支持`AOT`。 
+- &nbsp;<Tag>优化</Tag> `DependencyObject`类使用“懒汉式”加载内部成员，减少内存使用。 
+- &nbsp;<Tag>新增</Tag> `PluginManager`支持在运行时移除插件。 
+- &nbsp;<Tag>新增</Tag> `Method`类，在方法、或类添加`[DynamicMethod]`特性时，默认支持`AOT`，为动态调用提供极大方便。
+
+#### 【TouchSocket.Core.DependencyInjection】
+
+- &nbsp;<Tag>修复</Tag> `AspNetCoreContainer`不支持`KeysService`的bug。
+
+#### 【TouchSocket.Sockets】
+
+- &nbsp;<Tag>修复</Tag> `IReceiver`在启用缓存模式时，如果已经完成接收，则会抛出异常的bug。 [#IB44LL](https://gitee.com/RRQM_Home/TouchSocket/issues/IB44LL)
+
+#### 【TouchSocket.Http】
+
+- &nbsp;<Tag>调整</Tag> `HttpRequest`在请求时，不用传参，直接使用默认构造函数即可。
+- &nbsp;<Tag>移除</Tag> `GetMultifileCollection`相关扩展方法，使用`GetFormCollectionAsync`代替。
+
+#### 【TouchSocket.Rpc】
+
+- &nbsp;<Tag>新增</Tag> `ICallContext`继承`IDependencyObject`，支持**扩展属性**读写，可以更方便的开发。
+- &nbsp;<Tag>调整</Tag> `Rpc`特性取消构造函数入参，使用属性设置。受影响的有：`DmtpRpc`、`JsonRpc`、`XmlRpc`、`WebApi`。
+
+
+#### 【TouchSocket.Dmtp】
+
+- &nbsp;<Tag>修复</Tag> `DmtpRpc`在`Avalonia-Web`工作时，连接时间超长的bug。
+- &nbsp;<Tag>修复</Tag> `IWebSocketDmtpClient`不实现`IDmtpClient`的bug。
+- &nbsp;<Tag>修复</Tag> `DmtpHeartbeatPlugin`在长时间运行时，可能会失效的bug。
+- &nbsp;<Tag>调整</Tag> `[DmtpRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+#### 【TouchSocket.JsonRpc】
+
+- &nbsp;<Tag>调整</Tag> `[JsonRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+#### 【TouchSocket.WebApi】
+
+- &nbsp;<Tag>新增</Tag> `[FromBody]`特性，支持指定参数来源自Http的请求Body。
+- &nbsp;<Tag>新增</Tag> `[FromForm]`特性，支持指定参数来源自Http的请求Form表单。
+- &nbsp;<Tag>新增</Tag> `[FromHeader]`特性，支持指定参数来源自Http的请求Header。
+- &nbsp;<Tag>新增</Tag> `[FromQuery]`特性，支持指定参数来源自Http的请求Query。
+- &nbsp;<Tag>调整</Tag> `[WebApi]`特性不再允许继承，所有设置也是通过属性设置。
+- &nbsp;<Tag>调整</Tag> WebApi的请求方式，目前全部使用`WebApiRequest`类来表示全部入参，一般如果使用代理，或者源生成的话，只需要重新生成即可。
+- &nbsp;<Tag>移除</Tag> `HttpMethodType.GET`枚举，使用`HttpMethodType.Get`代替。
+- &nbsp;<Tag>移除</Tag> `HttpMethodType.POST`枚举，使用`HttpMethodType.Post`代替。
+
+#### 【TouchSocket.XmlRpc】
+
+- &nbsp;<Tag>调整</Tag> `[XmlRpc]`特性不再允许继承，所有设置也是通过属性设置。
+
+***
 
 ## v2.1.10
 
@@ -31,6 +104,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - &nbsp;<Tag>优化</Tag> `CheckClearPlugin`插件频繁输出poll日志的不合理设计。
 
+***
 
 ## v2.1.9
 
@@ -45,7 +119,7 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> CheckClearPlugin长时间工作时可能失效的bug。
 
 
-
+***
 
 ## v2.1.8
 
@@ -60,6 +134,8 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> TcpService在Stop的时候，有个内部异常打了log。 [#IAWD4N](https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N)
 
 
+***
+
 ## v2.1.7
 
 **更新日期：** 2024.10.5
@@ -72,6 +148,7 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - &nbsp;<Tag>修复</Tag> TcpService在启动时如果异常，则无法再重新启动的bug。
 
+***
 
 ## v2.1.6
 
@@ -90,6 +167,8 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>移除</Tag> TriggerQueue无用类。
 - &nbsp;<Tag>优化</Tag> HttpRequest，使其能上传超大数据。
 
+***
+
 ## v2.1.4(5)
 
 **更新日期：** 2024.9.23
@@ -104,6 +183,9 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> 使用源生成（IPackage）打包时报错。[#IASTWJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IASTWJ)
 - &nbsp;<Tag>修复</Tag> Result泛型类中隐式转换错写成显示转换的bug。
 - &nbsp;<Tag>修复</Tag> DmtpRpc序列化选择器没有预留Json序列化配置的bug。
+
+
+***
 
 
 ## v2.1.3
@@ -123,6 +205,8 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>移除</Tag> `DecimalConver`类，该类功能已完全由`TouchSocketBitConverter`代替，属于无用类。
 - &nbsp;<Tag>调整</Tag> 受保护方法`ProtectedResetId`方法，名称更改为`ProtectedResetIdAsync`。
 
+***
+
 
 ## v2.1.2
 
@@ -137,6 +221,7 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>优化</Tag> 部分类，方法注释。
 - &nbsp;<Tag>修复</Tag> TcpClient在释放时，重连插件会无限连接的bug，该bug会导致CPU占用过高。[#IAS9NG](https://gitee.com/RRQM_Home/TouchSocket/issues/IAS9NG)
 
+***
 
 ## v2.1.1
 
@@ -155,6 +240,7 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> 在`FastBinaryFormatter`中改进序列化逻辑，特别是对于**多维数组**的处理。 [#IARKE1](https://gitee.com/RRQM_Home/TouchSocket/issues/IARKE1)
 - &nbsp;<Tag>修复</Tag> 在`IPackage`中改进打包、解包逻辑，特别是对于**多维数组**的处理。
 
+***
 
 ## v2.1.0
 
@@ -201,6 +287,9 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>调整</Tag> SocketClient、ISocketClient等服务器辅助类，改名为TcpSessionClient和ITcpSessionClient。 
 
 
+***
+
+
 :::
 
 ## v2.0.18
@@ -216,6 +305,9 @@ import Highlight from '@site/src/components/Highlight.js';
 - &nbsp;<Tag>修复</Tag> 当Cancel延迟到Reset之后时，新获取的waitData会出现Status为Cancel异常bug [#IAQ2AI](https://gitee.com/RRQM_Home/TouchSocket/issues/IAQ2AI)。
 
 
+***
+
+
 ## v2.0.17
 
 **更新日期：** 2024.8.30
@@ -228,6 +320,9 @@ import Highlight from '@site/src/components/Highlight.js';
 
 - &nbsp;<Tag>修复</Tag> 使用AspNetCore容器时，默认没有注册ILog的bug。
 
+***
+
+
 ## v2.0.16
 
 **更新日期：** 2024.8.19
@@ -239,6 +334,9 @@ import Highlight from '@site/src/components/Highlight.js';
 **更新详情：**
 
 - &nbsp;<Tag>修复</Tag> tcp在winform中会使用主线程接收的bug，导致各种同步接收异常。
+
+
+***
 
 
 ## v2.0.15
