@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
@@ -13,28 +13,28 @@
 
 	<ItemGroup>
 	  <Reference Include="TouchSocket">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Core">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Core.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Core.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Dmtp">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Dmtp.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Dmtp.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Http">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Http.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Http.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocket.Rpc">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocket.Rpc.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Rpc.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocketPro">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocketPro.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocketPro.dll</HintPath>
 	  </Reference>
 	  <Reference Include="TouchSocketPro.Dmtp">
-	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net6.0\TouchSocketPro.Dmtp.dll</HintPath>
+	    <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocketPro.Dmtp.dll</HintPath>
 	  </Reference>
 	</ItemGroup>-->
 	<ItemGroup>
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.0-beta.17" />
+		<PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.0" />
 	</ItemGroup>
 </Project>

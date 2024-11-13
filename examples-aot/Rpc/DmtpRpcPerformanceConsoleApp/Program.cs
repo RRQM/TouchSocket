@@ -139,20 +139,19 @@ namespace RpcPerformanceConsoleApp
         }
     }
 
-    [GeneratorRpcServer]
     [AutoInjectForSingleton]
     public partial class TestController : RpcServer
     {
-        [DmtpRpc(true)]
+        [DmtpRpc(MethodInvoke =true)]
         public int Sum(int a, int b) => a + b;
 
-        [DmtpRpc(true)]
+        [DmtpRpc(MethodInvoke = true)]
         public byte[] GetBytes(int length)
         {
             return new byte[length];
         }
 
-        [DmtpRpc(true)]
+        [DmtpRpc(MethodInvoke = true)]
         public string GetBigString()
         {
             var stringBuilder = new StringBuilder();
