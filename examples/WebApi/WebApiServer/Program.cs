@@ -249,6 +249,24 @@ namespace WebApiServerApp
             Console.WriteLine("GetString");
             return "hello";
         }
+
+        [WebApi(Method = HttpMethodType.Get)]
+        public int SumFromForm([FromForm]int a, [FromForm] int b)
+        {
+            return a + b;
+        }
+
+        [WebApi(Method = HttpMethodType.Get)]
+        public int SumFromQuery([FromQuery] int a, [FromQuery] int b)
+        {
+            return a + b;
+        }
+
+        [WebApi(Method = HttpMethodType.Get)]
+        public int SumFromHeader([FromHeader] int a, [FromHeader] int b)
+        {
+            return a + b;
+        }
     }
 
     public class MyApiServer : RpcServer
