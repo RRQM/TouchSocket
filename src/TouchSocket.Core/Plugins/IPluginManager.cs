@@ -30,9 +30,9 @@ namespace TouchSocket.Core
         /// <summary>
         /// 获取已添加的指定名称的插件数量。
         /// </summary>
-        /// <param name="interfeceType"></param>
+        /// <param name="pluginType"></param>
         /// <returns></returns>
-        int GetPluginCount(Type interfeceType);
+        int GetPluginCount(Type pluginType);
 
         /// <summary>
         /// 所包含的所有插件。
@@ -44,24 +44,36 @@ namespace TouchSocket.Core
         /// </summary>
         /// <param name="plugin">插件</param>
         /// <exception cref="ArgumentNullException"></exception>
-        void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)]TPlugin>(TPlugin plugin)where TPlugin:class,IPlugin;
+        void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin;
 
-        
-        void Add(Type interfeceType, Func<object, PluginEventArgs, Task> pluginInvokeHandler,Delegate sourceDelegate=default);
+
+        /// <summary>
+        /// 添加一个插件类型及其对应的调用处理程序。
+        /// </summary>
+        /// <param name="pluginType">插件的类型。</param>
+        /// <param name="pluginInvokeHandler">插件调用处理程序，当插件被调用时执行。</param>
+        /// <param name="sourceDelegate">可选的源委托，用于标识插件的来源。</param>
+        void Add(Type pluginType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default);
 
         /// <summary>
         /// 触发对应插件
         /// </summary>
-        /// <param name="interfeceType"></param>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="pluginType">插件接口类型</param>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
         /// <returns>表示在执行的插件中，是否处理<see cref="TouchSocketEventArgs.Handled"/>为<see langword="true"/>。</returns>
-        ValueTask<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e);
+        ValueTask<bool> RaiseAsync(Type pluginType, object sender, PluginEventArgs e);
+        /// <summary>
+        /// 移除指定的插件实例
+        /// </summary>
+        /// <param name="plugin">要移除的插件实例</param>
         void Remove(IPlugin plugin);
-        void Remove(Type interfeceType, Delegate func);
 
-        //void Add<TSender, TEventArgs>(Type interfeceType, Func<TSender, TEventArgs, Task> func) 
-        //    where TSender:class 
-        //    where TEventArgs : PluginEventArgs;
+        /// <summary>
+        /// 根据插件类型和功能委托移除插件
+        /// </summary>
+        /// <param name="pluginType">要移除的插件类型</param>
+        /// <param name="func">代表要移除的功能的委托</param>
+        void Remove(Type pluginType, Delegate func);
     }
 }

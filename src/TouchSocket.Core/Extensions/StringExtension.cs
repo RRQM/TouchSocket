@@ -37,6 +37,11 @@ namespace TouchSocket.Core
         }
 
 
+        /// <summary>
+        /// 将输入字符串转换为有效的标识符。
+        /// </summary>
+        /// <param name="input">输入字符串。</param>
+        /// <returns>转换后的标识符字符串。</returns>
         public static string MakeIdentifier(string input)
         {
             // 替换非法字符

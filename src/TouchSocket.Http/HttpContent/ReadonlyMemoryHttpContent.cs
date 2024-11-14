@@ -14,6 +14,10 @@ namespace TouchSocket.Http
     {
         private readonly ReadOnlyMemory<byte> m_memory;
 
+        /// <summary>
+        /// 初始化 <see cref="ReadonlyMemoryHttpContent"/> 类的新实例。
+        /// </summary>
+        /// <param name="memory">要封装的只读内存。</param>
         public ReadonlyMemoryHttpContent(ReadOnlyMemory<byte> memory)
         {
             this.m_memory = memory;
@@ -26,7 +30,7 @@ namespace TouchSocket.Http
             {
                 return true;//直接构建成功，也不用调用后续的WriteContent
             }
-            if (byteBlock.FreeLength>this.m_memory.Length)
+            if (byteBlock.FreeLength > this.m_memory.Length)
             {
                 //如果空闲空间足够，构建成功，也不用调用后续的WriteContent
                 byteBlock.Write(this.m_memory.Span);
@@ -40,7 +44,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override void OnBuildingHeader(IHttpHeader header)
         {
-            header.Add(HttpHeaders.ContentLength,this.m_memory.Length.ToString());
+            header.Add(HttpHeaders.ContentLength, this.m_memory.Length.ToString());
         }
 
         /// <inheritdoc/>

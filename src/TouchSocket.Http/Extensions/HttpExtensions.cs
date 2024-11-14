@@ -35,7 +35,7 @@ namespace TouchSocket.Http
         /// <returns>返回一个只读内存块，该内存块包含具体的字节内容。</returns>
         /// <param name="httpBase"></param>
         /// <param name="cancellationToken">一个CancellationToken对象，用于取消异步操作。</param>
-        public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase,CancellationToken cancellationToken = default)
+        public static ReadOnlyMemory<byte> GetContent(this HttpBase httpBase, CancellationToken cancellationToken = default)
         {
             // 使用Task.Run来启动一个新的任务，该任务将异步地获取内容。
             // 这里使用GetFalseAwaitResult()方法来处理任务的结果，确保即使在同步上下文中也能正确处理异常。
@@ -166,9 +166,17 @@ namespace TouchSocket.Http
             return string.Empty;
         }
 
+        /// <summary>
+        /// 为HttpBase类型对象设置内容。
+        /// </summary>
+        /// <typeparam name="T">泛型参数T，表示HttpBase类型或其派生类型。</typeparam>
+        /// <param name="httpBase">需要设置内容的HttpBase类型对象。</param>
+        /// <param name="content">要设置的内容，类型为HttpContent。</param>
+        /// <returns>返回设置内容后的HttpBase对象。</returns>
         public static T SetContent<T>(this T httpBase, HttpContent content) where T : HttpBase
         {
-            httpBase.Content= content;
+            // 将传入的内容设置到HttpBase对象中
+            httpBase.Content = content;
             // 返回处理后的HttpBase对象
             return httpBase;
         }
@@ -234,13 +242,27 @@ namespace TouchSocket.Http
             return request;
         }
 
+        /// <summary>
+        /// 将一个键值对集合按照application/x-www-form-urlencoded格式设置到HttpRequest的内容中
+        /// </summary>
+        /// <param name="request">待设置内容的HttpRequest对象</param>
+        /// <param name="nameValueCollection">包含键值对的集合，将被转换为查询字符串格式</param>
+        /// <typeparam name="TRequest">HttpRequest的类型，使用泛型以支持所有HttpRequest的子类</typeparam>
         public static void SetFormUrlEncodedContent<TRequest>(this TRequest request, IEnumerable<KeyValuePair<string, string>> nameValueCollection)
             where TRequest : HttpRequest
         {
+            // 将键值对集合转换为查询字符串格式，并设置为请求的内容
             request.SetContent(string.Join("&", nameValueCollection.Select(a => $"{a.Key}={a.Value}")));
+            // 设置请求的内容类型为application/x-www-form-urlencoded
             request.ContentType = "application/x-www-form-urlencoded";
         }
 
+        /// <summary>
+        /// 异步获取HttpRequest的表单集合
+        /// </summary>
+        /// <param name="request">HttpRequest对象，用于提取表单数据</param>
+        /// <typeparam name="TRequest">泛型参数，限定为HttpRequest类型</typeparam>
+        /// <returns>返回一个任务，该任务的结果是IFormCollection类型的表单集合</returns>
         public static async Task<IFormCollection> GetFormCollectionAsync<TRequest>(this TRequest request) where TRequest : HttpRequest
         {
             // 检查请求中是否包含分隔符，这是判断是否存在多文件数据的依据。

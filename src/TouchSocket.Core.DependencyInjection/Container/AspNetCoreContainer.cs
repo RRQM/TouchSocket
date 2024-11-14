@@ -18,21 +18,25 @@ using System.Linq;
 namespace TouchSocket.Core.AspNetCore
 {
     /// <summary>
-    /// AspNetCoreContainer
+    /// AspNetCoreContainer 类实现了 IRegistrator、IResolver 和 IKeyedServiceProvider 接口，
+    /// 提供了一个容器解决方案，用于在 ASP.NET Core 应用中注册服务和解析服务。
+    /// 它旨在简化依赖注入过程，并支持 keyed 服务的获取。
     /// </summary>
     public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvider
     {
         private readonly IServiceCollection m_services;
         private IServiceProvider m_serviceProvider;
 
+        /// <summary>
+        /// 获取当前对象的IServiceProvider实例。
+        /// </summary>
         public IServiceProvider ServiceProvider { get => this.m_serviceProvider; }
 
-        //private AspNetCoreResolver m_resolver;
 
         /// <summary>
-        /// 初始化一个IServiceCollection的容器。
+        /// 初始化AspNetCoreContainer实例。
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">IServiceCollection实例，用于注册服务。</param>
         public AspNetCoreContainer(IServiceCollection services)
         {
             this.m_services = services ?? throw new ArgumentNullException(nameof(services));
@@ -41,9 +45,9 @@ namespace TouchSocket.Core.AspNetCore
             {
                 return;
             }
-            services.AddSingleton<IResolver>(privoder =>
+            services.AddSingleton<IResolver>(provider =>
             {
-                this.m_serviceProvider ??= privoder;
+                this.m_serviceProvider ??= provider;
                 return this;
             });
 
@@ -97,7 +101,7 @@ namespace TouchSocket.Core.AspNetCore
                 {
                     continue;
                 }
-                if (item.ServiceType == fromType&&item.ServiceKey?.ToString()==key)
+                if (item.ServiceType == fromType && item.ServiceKey?.ToString() == key)
                 {
                     return true;
                 }

@@ -200,17 +200,30 @@ namespace TouchSocket.NamedPipe
             return this.ProtectedResetIdAsync(newId);
         }
 
-        
+
+        /// <summary>
+        /// 中止当前操作，并安全地关闭相关资源。
+        /// </summary>
+        /// <param name="manual">指示中止操作是否是手动触发的。</param>
+        /// <param name="msg">中止操作的消息说明。</param>
         protected void Abort(bool manual, string msg)
         {
+            // 使用锁对象 m_lockForAbort 来防止并发访问，确保线程安全
             lock (this.m_lockForAbort)
             {
-                if (this.m_tryRemoveAction(this.Id, out _)&& this.m_online)
+                // 尝试从管理器中移除当前操作，如果成功且当前状态为在线，则进行中止操作
+                if (this.m_tryRemoveAction(this.Id, out _) && this.m_online)
                 {
+                    // 设置在线状态为 false，表示当前操作已离线
                     this.m_online = false;
+
+                    // 安全地释放管道流资源，避免资源泄露
                     this.m_pipeStream.SafeDispose();
+
+                    // 安全地释放保护数据处理适配器资源，避免资源泄露
                     this.ProtectedDataHandlingAdapter.SafeDispose();
 
+                    // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
                     Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
