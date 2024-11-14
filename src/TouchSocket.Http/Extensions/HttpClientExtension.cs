@@ -121,8 +121,18 @@ namespace TouchSocket.Http
         #endregion Download
 
         #region Upload
+
+        /// <summary>
+        /// 异步上传文件到指定URL。
+        /// </summary>
+        /// <param name="client">HttpClient实例，用于发送HTTP请求。</param>
+        /// <param name="url">文件上传的URL地址。</param>
+        /// <param name="fileInfo">包含文件信息的FileInfo对象，用于获取文件内容和属性。</param>
+        /// <param name="millisecondsTimeout">请求的超时时间，默认为10秒。如果在此时间内未完成上传，请求将被取消。</param>
+        /// <param name="token">用于取消操作的取消令牌。</param>
+        /// <typeparam name="TClient">客户端类型，必须继承自HttpClientBase并实现IHttpClient接口。</typeparam>
         public static async Task UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
-            where TClient : HttpClientBase,IHttpClient
+            where TClient : HttpClientBase, IHttpClient
         {
             //创建一个请求
             var request = new HttpRequest();

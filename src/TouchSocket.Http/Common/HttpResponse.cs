@@ -100,7 +100,7 @@ namespace TouchSocket.Http
         /// 构建数据并回应。
         /// <para>该方法仅在具有Client实例时有效。</para>
         /// </summary>
-        public async Task AnswerAsync(CancellationToken token=default)
+        public async Task AnswerAsync(CancellationToken token = default)
         {
             this.ThrowIfResponsed();
 
@@ -142,7 +142,7 @@ namespace TouchSocket.Http
             this.Responsed = true;
         }
 
-        
+
 
         /// <summary>
         /// 当传输模式是Chunk时，用于结束传输。
@@ -219,7 +219,7 @@ namespace TouchSocket.Http
                 }
                 finally
                 {
-                   
+
                 }
             }
             else
@@ -258,6 +258,11 @@ namespace TouchSocket.Http
 
         #region Write
 
+        /// <summary>
+        /// 异步写入指定的只读内存数据。
+        /// </summary>
+        /// <param name="memory">要写入的只读内存数据。</param>
+        /// <returns>一个任务，表示异步写入操作。</returns>
         public async Task WriteAsync(ReadOnlyMemory<byte> memory)
         {
             this.ThrowIfResponsed();
@@ -371,10 +376,10 @@ namespace TouchSocket.Http
             {
                 this.Headers.Add(HttpHeaders.TransferEncoding, "chunked");
             }
-            foreach (var headerkey in this.Headers.Keys)
+            foreach (var headerKey in this.Headers.Keys)
             {
-                stringBuilder.Append($"{headerkey}: ");
-                stringBuilder.Append(this.Headers[headerkey] + "\r\n");
+                stringBuilder.Append($"{headerKey}: ");
+                stringBuilder.Append(this.Headers[headerKey] + "\r\n");
             }
 
             stringBuilder.Append("\r\n");

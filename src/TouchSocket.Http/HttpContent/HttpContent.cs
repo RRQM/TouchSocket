@@ -67,19 +67,41 @@ namespace TouchSocket.Http
         /// <returns>返回一个任务对象，代表异步写入操作</returns>
         protected abstract Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token);
 
+        /// <summary>
+        /// 将字符串内容隐式转换为HttpContent对象，使用UTF-8编码。
+        /// </summary>
+        /// <param name="content">要转换的字符串内容。</param>
+        /// <returns>一个新的StringHttpContent对象。</returns>
         public static implicit operator HttpContent(string content)
         {
-            return new StringHttpContent(content,Encoding.UTF8);
+            return new StringHttpContent(content, Encoding.UTF8);
         }
 
+        /// <summary>
+        /// 将只读内存字节内容隐式转换为HttpContent对象。
+        /// </summary>
+        /// <param name="content">要转换的只读内存字节内容。</param>
+        /// <returns>一个新的ReadonlyMemoryHttpContent对象。</returns>
         public static implicit operator HttpContent(ReadOnlyMemory<byte> content)
         {
             return new ReadonlyMemoryHttpContent(content);
         }
+
+        /// <summary>
+        /// 将字节数组内容隐式转换为HttpContent对象。
+        /// </summary>
+        /// <param name="content">要转换的字节数组内容。</param>
+        /// <returns>一个新的ReadonlyMemoryHttpContent对象。</returns>
         public static implicit operator HttpContent(byte[] content)
         {
             return new ReadonlyMemoryHttpContent(content);
         }
+
+        /// <summary>
+        /// 将流内容隐式转换为HttpContent对象。
+        /// </summary>
+        /// <param name="content">要转换的流内容。</param>
+        /// <returns>一个新的StreamHttpContent对象。</returns>
         public static implicit operator HttpContent(Stream content)
         {
             return new StreamHttpContent(content);

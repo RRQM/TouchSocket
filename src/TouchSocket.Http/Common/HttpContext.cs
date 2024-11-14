@@ -26,8 +26,8 @@ namespace TouchSocket.Http
         /// <param name="response">Http响应</param>
         public HttpContext(HttpRequest request, HttpResponse response)
         {
-            this.Request = request ?? throw new ArgumentNullException(nameof(request));
-            this.Response = response ?? throw new ArgumentNullException(nameof(response));
+            this.Request = request;
+            this.Response = response;
         }
 
         /// <summary>
