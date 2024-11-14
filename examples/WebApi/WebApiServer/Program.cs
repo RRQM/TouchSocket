@@ -257,7 +257,7 @@ namespace WebApiServerApp
         }
 
         [WebApi(Method = HttpMethodType.Get)]
-        public int SumFromQuery([FromQuery] int a, [FromQuery] int b)
+        public int SumFromQuery([FromQuery(Name ="aa")] int a, [FromQuery] int b)
         {
             return a + b;
         }

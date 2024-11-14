@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -37,7 +38,11 @@ namespace WebApiClientApp
             {
                 var client = await CreateWebApiClient();
 
-                var sum1 = client.InvokeT<int>("GET:/ApiServer/Sum?a={0}&b={1}", invokeOption_30s, 10, 20);
+                var request = new WebApiRequest();
+                request.Method =  HttpMethodType.Get;
+                request.Querys = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("a", "10"), new KeyValuePair<string, string>("b", "20") };
+
+                var sum1 = client.InvokeT<int>("/ApiServer/Sum", invokeOption_30s, request);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
                 var sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });

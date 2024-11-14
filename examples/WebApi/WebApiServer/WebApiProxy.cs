@@ -601,7 +601,7 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 var _request=new WebApiRequest();
 _request.Method = HttpMethodType.Get;
 _request.Headers = null;
-_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("a",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
+_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("aa",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
 _request.Forms = null;
 return (System.Int32) this.Client.Invoke("/apiserver/sumfromquery", typeof(System.Int32), invokeOption, _request);
 
@@ -618,7 +618,7 @@ throw new RpcException("IRpcClient为空，请先初始化或者进行赋值");
 var _request=new WebApiRequest();
 _request.Method = HttpMethodType.Get;
 _request.Headers = null;
-_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("a",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
+_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("aa",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
 _request.Forms = null;
 return (System.Int32) await this.Client.InvokeAsync("/apiserver/sumfromquery", typeof(System.Int32), invokeOption, _request);
 
@@ -978,7 +978,7 @@ TouchSocket.WebApi.IWebApiClientBase{
 var _request=new WebApiRequest();
 _request.Method = HttpMethodType.Get;
 _request.Headers = null;
-_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("a",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
+_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("aa",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
 _request.Forms = null;
 return (System.Int32) client.Invoke("/apiserver/sumfromquery", typeof(System.Int32), invokeOption, _request);
 
@@ -991,7 +991,7 @@ TouchSocket.WebApi.IWebApiClientBase{
 var _request=new WebApiRequest();
 _request.Method = HttpMethodType.Get;
 _request.Headers = null;
-_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("a",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
+_request.Querys = new KeyValuePair<string, string>[] {new KeyValuePair<string, string>("aa",a.ToString()),new KeyValuePair<string, string>("b",b.ToString())};
 _request.Forms = null;
 return (System.Int32) await client.InvokeAsync("/apiserver/sumfromquery", typeof(System.Int32), invokeOption, _request);
 
