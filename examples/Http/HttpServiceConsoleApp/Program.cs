@@ -212,15 +212,6 @@ namespace ConsoleApp
                         //所以上传文件不宜过大，不然会内存溢出。
                         var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
 
-                        //foreach (var item in multifileCollection)
-                        //{
-                        //    var stringBuilder = new StringBuilder();
-                        //    stringBuilder.Append($"文件名={item.FileName}\t");
-                        //    stringBuilder.Append($"数据长度={item.Length}");
-                        //    client.Logger.Info(stringBuilder.ToString());
-                        //}
-
-                        
                         foreach (var file in multifileCollection.Files)
                         {
                             var stringBuilder = new StringBuilder();
