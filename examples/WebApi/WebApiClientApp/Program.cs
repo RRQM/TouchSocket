@@ -45,7 +45,12 @@ namespace WebApiClientApp
                 var sum1 = client.InvokeT<int>("/ApiServer/Sum", invokeOption_30s, request);
                 Console.WriteLine($"Get调用成功，结果：{sum1}");
 
-                var sum2 = client.InvokeT<int>("POST:/ApiServer/TestPost", invokeOption_30s, new MyClass() { A = 10, B = 20 });
+
+                var requestForPost = new WebApiRequest();
+                requestForPost.Method = HttpMethodType.Post;
+                requestForPost.Body = new MyClass() { A = 10, B = 20 };
+
+                var sum2 = client.InvokeT<int>("/ApiServer/TestPost", invokeOption_30s, requestForPost);
                 Console.WriteLine($"Post调用成功，结果：{sum2}");
 
                 var sum3 = client.TestPost(new MyClass() { A = 10, B = 20 }, invokeOption_30s);
