@@ -1,13 +1,14 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ApplicationIcon>logo.ico</ApplicationIcon>
-		<Version>3.0.1</Version>
+		<Version>3.0.2</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<Company>若汝棋茗</Company>
 		<Copyright>Copyright © 2024 若汝棋茗</Copyright>
 		<PackageProjectUrl>https://touchsocket.net/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/RRQM/TouchSocket</RepositoryUrl>
 		<PackageIconUrl></PackageIconUrl>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
