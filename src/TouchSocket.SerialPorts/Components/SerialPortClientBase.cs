@@ -104,8 +104,7 @@ namespace TouchSocket.SerialPorts
         /// </returns>
         protected virtual ValueTask<bool> OnSerialReceiving(ByteBlock byteBlock)
         {
-            // 默认实现，不对收到的数据进行处理
-            return EasyValueTask.FromResult(false);
+            return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -119,7 +118,7 @@ namespace TouchSocket.SerialPorts
         /// </remarks>
         protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
         {
-            return EasyValueTask.FromResult(true);
+            return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this, new SendingEventArgs(memory));
         }
 
         private async Task PrivateOnClosing(ClosingEventArgs e)
