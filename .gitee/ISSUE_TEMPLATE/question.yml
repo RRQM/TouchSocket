@@ -19,6 +19,10 @@ body:
         - Dmtp-WebSocket
         - Dmtp-Http
         - Dmtp-NamedPipe
+        - Rpc
+        - JsonRpc
+        - XmlRpc
+        - WebApi
         - 其他
     validations:
       required: true
@@ -93,7 +97,19 @@ body:
           required: true
   - type: checkboxes
     attributes:
-      label: 友好承诺
+      label: 承诺支持
+      options:
+        - label: 我确定我已经对TouchSocket项目进行了“Star”操作。
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 承诺规范
+      options:
+        - label: 我确定已完整阅读[Issue提问规范](https://touchsocket.net/docs/current/troubleshootissue)，并按照要求填写。
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 承诺友好
       options:
         - label: 我承诺将本着相互尊重、理解和友善的态度进行交流，共同维护好 TouchSocket 来之不易的良好的社区氛围。
           required: true
