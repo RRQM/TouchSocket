@@ -12,7 +12,7 @@
 - [ ] Udp
 - [ ] Http
 - [x] Websocket
-- [ ] TouchRpc（基于：tcp、udp、http、websocket协议）
+- [ ] Dmtp（基于：tcp、udp、http、websocket协议）
 - [ ] JsonRpc（基于：tcp、http、websocket）
 - [ ] XmlRpc
 - [ ] WebApi
@@ -25,9 +25,14 @@
 
 - [ ] .NET45
 - [ ] .NET461
+- [ ] .NET462
+- [ ] .NET472
+- [ ] .NET481
 - [ ] .NET5
 - [x] .NET6
 - [ ] .NET7
+- [ ] .NET8
+- [ ] .NET9
 
 ---
 
