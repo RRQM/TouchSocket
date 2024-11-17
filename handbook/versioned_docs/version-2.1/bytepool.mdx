@@ -1,0 +1,244 @@
+--- 
+id: bytepool
+title: 内存池
+--- 
+
+import CardLink from "@site/src/components/CardLink.js";
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+
+## 一、说明
+
+内存池是`TouchSocket`系列的最重要的组成部分，在`TouchSocket`产品中，`BytePool`贯穿始终。所以熟练使用`BytePool`，也是非常重要的。
+
+## 二、功能
+
+内存池（`BytePool`）是解决创建、销毁大字节数组的最有力手段，其实质完全借鉴了微软的`ArrayPool`。而且在此基础上做了更多的优化。
+
+内存池的最小实现单体是`内存块（ByteBlock）`和`值内存块（ValueByteBlock）`。它们均实现了`IBufferWriter<byte>`接口，可以更好的使用`GetMemory`、`GetSpan`与`Advance`等功能。
+
+## 三、创建与回收
+
+### 3.1 内存池
+
+`BytePool`在默认情况提供了一个`BytePool.Default`的默认静态实例。这是整个**进程**可以共享使用的。
+
+当然您可以创建只属于自己的`BytePool`。
+
+```csharp showLineNumbers
+BytePool bytePool = new BytePool(maxArrayLength: 1024 * 1024, maxArraysPerBucket: 50)
+{
+    AutoZero = false,//在回收内存时，是否清空内存
+    MaxBucketsToTry = 5//最大梯度跨度
+};
+```
+
+
+其中：
+
+- maxArrayLength，是内存池的最大字节数组尺寸。
+- maxArraysPerBucket是每个内存块桶的最大数组数量。
+- AutoZero属性，在回收内存时，是否清空内存。
+- MaxBucketsToTry是最大梯度跨度。例如：当梯度为16、32、64、128、512、1024时，MaxBucketsToTry为2，则当请求的长度是16时，且16的内存块均已派出，则会请求32，最大会请求到64，如果均已派出，则直接新建。
+
+
+在内存池创建以后，可以直观的查看它的各个属性。包括：
+
+```csharp showLineNumbers
+Console.WriteLine($"内存池容量={bytePool.Capacity}");
+Console.WriteLine($"内存池实际尺寸={bytePool.GetPoolSize()}");
+```
+
+### 3.2 创建、释放内存块
+
+内存块就是可以使用的字节数组。框架提供了`ByteBlock`和`ValueByteBlock`两种内存块。`ValueByteBlock`是值类型的，其余特点完全一致。
+
+【创建ByteBlock】
+
+```csharp showLineNumbers
+var byteBlock = new ByteBlock(1024 * 64);
+byteBlock.Dispose();
+```
+
+
+【创建ValueByteBlock】
+
+```csharp showLineNumbers
+var byteBlock = new ValueByteBlock(1024 * 64);
+byteBlock.Dispose();
+```
+
+以上的创建方式，都是从默认内存池创建。如果想要自定义内存池，可以在new的时候指定内存池。
+
+```csharp showLineNumbers
+var byteBlock = new ByteBlock(1024 * 64,BytePool.Default);
+byteBlock.Dispose();
+```
+
+释放过程也完全可以使用`using`。
+
+```csharp showLineNumbers
+using (var byteBlock = new ByteBlock(1024 * 64))
+{
+    //使用ByteBlock
+}
+```
+
+:::tip 提示
+
+`byteSize`用于申请的最小字节尺寸。例如：当申请100长度时，可能会得到100，1000，甚至更大尺寸的内存，但绝不会小于100
+
+:::  
+
+:::caution 注意
+
+创建的`ByteBlock`（`ValueByteBlock`）必须显示释放（`Dispose`），可用`using`，如果不释放，虽然不会内存泄露，但是会影响性能。
+
+:::  
+
+## 四、内存块使用
+
+内存块就是可以使用的字节数组。只不过他具备*借用*与*归还*的功能。
+
+我们可以使用`TotalMemory`，获取到整个内存块原始数据。
+
+```csharp showLineNumbers
+Memory<byte> memory = byteBlock.TotalMemory;
+```
+
+但一般情况下，我们不会直接使用内存块的`TotalMemory`，而是使用`Span`、`Memory`、甚至是`ToArray()`等**有效数据**。
+
+:::info 信息
+
+**有效数据** 是指在内存块中已经被有效写入，或者可以被有效读取的数据。因为当一个内存块被申请的时候，无论它的容量多大，它的有效数据长度总是为0(`Length`)。我们必须通过`Write`、`Advance`、`SetLength`等方法，来完成数据的有效化。
+
+:::  
+
+:::tip 趣味理解
+
+`ByteBlock`的工作模式，就像是你向商店（`BytePool`）租借了一个杯子（`ByteBlock`），`TotalMemory`就是这个杯子本身。
+
+于我们而言，只在乎杯中实际有多少水（`Span`、`Memory`），所以`ByteBlock.Len`就是水位线。所以无论何时，我们都不可以喝超过水位线的水。因为超过水位线的水，可能是上个租客留下的口水。
+
+同时，喝水的时候，还可以接力喝。比如先让张三（方法A）喝1口，那么我们可以把已喝的水做个标记（`Position`赋值为1），然后把杯子（`ByteBlock`）传递给李四（方法B），那么这时候，李四就只能按张三喝过的水继续喝，当然如果李四不嫌弃的话，也是可以从头再喝的。
+
+最后就是杯子的归还（`Dispose`），以及杯中水的处理。在杯子未归还至前，杯子的所有属性（例如：`Len`、`Position`、`Span`、`Memory`）都代表的是当前的状态。而当杯子被归还时，这些属性将变得没有意义，尤其是`Memory`。因为`Memory`可以被其他对象引用，但是杯子归还后，`Memory`指向的内存块可能已经是新的申请人，这杯中的水，终究是变成了“前人的口水”。
+
+但是如果我们确实需要保存杯中水的话，可以使用`ToArray()`方法。其返回值是一个数组，它可以以新引用的方式保存，且与内存池没有任何关系了，所有的生命周期归`GC`管理。
+
+:::  
+
+
+### 4.1 读写数组
+
+使用比较简单，支持Byte[]，Span、Memory等数据的直接写入。
+
+```csharp showLineNumbers
+using (var byteBlock = new ByteBlock())
+{
+    byteBlock.Write(new byte[] { 0, 1, 2, 3 });//将字节数组写入
+
+    byteBlock.SeekToStart();//将游标重置
+
+    var buffer = new byte[byteBlock.Len];//定义一个数组容器
+    var r = byteBlock.Read(buffer);//读取数据到容器，并返回读取的长度r
+}
+```
+
+### 4.2 基础类型的写入和读取
+
+```csharp showLineNumbers
+using (var byteBlock = new ByteBlock())
+{
+    byteBlock.WriteByte(byte.MaxValue);//写入byte类型
+    byteBlock.WriteInt32(int.MaxValue);//写入int类型
+    byteBlock.WriteInt64(long.MaxValue);//写入long类型
+    byteBlock.WriteString("RRQM");//写入字符串类型
+
+    byteBlock.SeekToStart();//读取时，先将游标移动到初始写入的位置，然后按写入顺序，依次读取
+
+    var byteValue = byteBlock.ReadByte();
+    var intValue = byteBlock.ReadInt32();
+    var longValue = byteBlock.ReadInt64();
+    var stringValue = byteBlock.ReadString();
+}
+```
+
+### 4.3 按照BufferWriter方式写入
+
+```csharp showLineNumbers
+using (var byteBlock = new ByteBlock())
+{
+    var span = byteBlock.GetSpan(4);
+    span[0] = 0;
+    span[1] = 1;
+    span[2] = 2;
+    span[3] = 3;
+    byteBlock.Advance(4);
+
+    var memory = byteBlock.GetMemory(4);
+    memory.Span[0] = 4;
+    memory.Span[1] = 5;
+    memory.Span[2] = 6;
+    memory.Span[3] = 7;
+    byteBlock.Advance(4);
+
+    //byteBlock.Length 应该是8
+}
+```
+
+## 五、多线程同步协作（Hold）
+
+在多线程异步时，设计架构应当遵守谁（Thread）创建的ByteBlock，由谁释放，这样就能很好的避免未释放的情况发生。实际上TouchSocket中，就是秉承这样的设计，任何非用户创建的ByteBlock，都会由创建的线程最后释放。但是在使用中，经常出现异步多线程的操作。
+
+以TouchSocket的TcpClient为例。如果直接在收到数据时，使用Task异步，则必定会发生关于ByteBlock的各种各样的异常。
+
+**原因非常简单，byteBlock对象在到达HandleReceivedData时，触发Task异步，此时触发线程会立即返回，并释放byteBlock，而Task异步线程会滞后，然后试图从已释放的byteBlock中获取数据，所以，必定发生异常。**
+
+```csharp showLineNumbers
+public class MyTClient : TcpClient
+{
+    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        Task.Run(()=> 
+        {
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
+            Console.WriteLine($"已接收到信息：{mes}");
+        });
+        return true;
+    }
+}
+```
+
+解决方法也非常简单，只需要在异步前锁定，然后使用完成后取消锁定，且不用再调用Dispose。
+
+```csharp showLineNumbers
+public class MyTClient : TcpClient
+{
+    protected override bool HandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
+    {
+        byteBlock.SetHolding(true);//异步前锁定
+        Task.Run(()=> 
+        {
+            string mes = byteBlock.Span.ToString(Encoding.UTF8);
+            byteBlock.SetHolding(false);//使用完成后取消锁定，且不用再调用Dispose
+            Console.WriteLine($"已接收到信息：{mes}");
+        });
+        return true;
+    }
+}
+```
+
+:::caution 注意
+
+ByteBlock在设置SetHolding(false)后，不需要再调用Dispose。
+
+:::  
+
+## 六、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Core/BytePoolConsoleApp"/>

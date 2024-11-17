@@ -1,0 +1,48 @@
+---
+id: udpdatahandlingadapter
+sidebar_position: 1
+title: 原始自定义适配器
+sidebar_label: a.原始自定义适配器
+---
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+
+## 说明
+
+Udp的适配器，主要承担组包和解析数据。其基本逻辑和Tcp相似。但是需要注意的是，Udp适配器是**多线程**操作。在解析数据时，应当充分考虑并发问题。
+
+```csharp showLineNumbers
+class MyUdpAdatper : UdpDataHandlingAdapter
+{
+    public override bool CanSplicingSend => false;
+
+    protected override void PreviewReceived(EndPoint remoteEndPoint, ByteBlock byteBlock)
+    {
+       
+    }
+
+    protected override void PreviewSend(EndPoint endPoint, byte[] buffer, int offset, int length, bool isAsync)
+    {
+       
+    }
+
+    protected override void PreviewSend(EndPoint endPoint, IList<TransferByte> transferBytes, bool isAsync)
+    {
+        
+    }
+
+    protected override void Reset()
+    {
+        
+    }
+}
+```
+
+
+## 单元测试
+
+使用**UdpDataAdapterTester**即可测试。

@@ -1,0 +1,63 @@
+---
+id: independentusedatahandlingadapter
+title: 独立使用适配器
+---
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、说明
+
+适配器的机制，是非常好的解封包机制，那这么好的机制，我们在设计的时候，也想到了单独使用适配器的情况。例如：
+
+1. 对于串口通信，可以使用适配器解包。
+
+## 二、使用
+
+```csharp showLineNumbers
+FixedHeaderPackageAdapter adapter = new FixedHeaderPackageAdapter();
+
+bool sendCallBack = false;
+bool receivedCallBack = false;
+
+byte[] sentData = null;
+adapter.SendCallBack = (buffer, offset, length) =>
+{
+    //此处会回调发送的最终调用。例如：此处使用固定包头，则发送的数据为4+n的封装。
+    sentData = new byte[length];
+    Array.Copy(buffer, offset, sentData, 0, length);
+    if (length == 4 + 4)
+    {
+        sendCallBack = true;
+    }
+};
+
+adapter.ReceivedCallBack = (byteBlock, requestInfo) =>
+{
+    //此处会回调接收的最终触发，例如：此处使用的固定包头，会解析4+n的数据为n。
+
+    if (byteBlock.Len == 4)
+    {
+        receivedCallBack = true;
+    }
+};
+
+byte[] data = Encoding.UTF8.GetBytes("RRQM");
+
+adapter.SendInput(data, 0, data.Length);//模拟输入，会在SendCallBack中输出最终要发送的数据。
+
+using (ByteBlock block = new ByteBlock())
+{
+    block.Write(sentData);
+    block.Pos = 0;
+    adapter.ReceivedInput(block);//模拟输出，会在ReceivedCallBack中输出最终收到的实际数据。
+}
+```
+
+:::tip 提示
+
+上述仅仅是以固定包头适配器示例的，实际上对于其他所有的适配器均可以使用。
+
+:::  

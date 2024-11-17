@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<PackageTags>Rpc;RateLimiting;TouchSocket</PackageTags>
+		<Description>这是一个扩展于Rpc管理平台的限流包。目前支持开发DmtpRpc、XmlRpc、JsonRpc、WebApi等所有Rpc部分。
+
+说明文档：https://touchsocket.net/</Description>
+		<Title>TouchSocket.Rpc.RateLimiting</Title>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="System.Threading.RateLimiting" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.Rpc\TouchSocket.Rpc.csproj" />
+	</ItemGroup>
+</Project>

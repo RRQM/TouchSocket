@@ -1,0 +1,40 @@
+---
+id: touchsocketbitconverter
+title: 大小端转换器
+---
+
+### 定义
+
+命名空间：TouchSocket.Core <br/>
+程序集：[TouchSocket.Core.dll](https://www.nuget.org/packages/TouchSocket.Core)
+
+
+## 一、说明
+
+大小端在计算机业界，**Endian**表示数据在存储器中的存放顺序。
+
+- **大端模式**，是指**数据的高字节保存在内存的低地址中，而数据的低字节保存在内存的高地址中**，这样的存储模式有点儿类似于把数据当作字符串顺序处理：地址由小向大增加，而数据从高位往低位放；
+- **小端模式**，是指**数据的高字节保存在内存的高地址中，而数据的低字节保存在内存的低地址中**，这种存储模式将地址的高低和数据位权有效地结合起来，高地址部分权值高，低地址部分权值低，和我们的逻辑方法一致。
+
+## 二、绝对大端
+
+```csharp showLineNumbers
+byte[] data= TouchSocketBitConverter.BigEndian.GetBytes(10);
+//结果 {0,0,0,10}
+```
+## 三、绝对小端
+
+```csharp showLineNumbers
+byte[] data= TouchSocketBitConverter.LittleEndian.GetBytes(10);
+//结果 {10,0,0,0}
+```
+
+## 四、默认端
+
+TouchSocket系全采用默认“小端”模式。可通过DefaultEndianType属性，修改为大端。
+
+```csharp showLineNumbers
+TouchSocketBitConverter.DefaultEndianType = EndianType.Big;
+byte[] data= TouchSocketBitConverter.Default.GetBytes(10);
+```
+

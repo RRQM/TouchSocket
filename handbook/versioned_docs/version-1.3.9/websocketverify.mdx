@@ -1,0 +1,163 @@
+---
+id: websocketverify
+title: 连接验证
+---
+
+## 一、说明
+
+一般情况下，为安全验证，websocket都会在连接时进行验证，可能通过账号、密码，也可能通过token等。
+
+## 二、服务端验证
+
+### 2.1 常规插件验证
+
+新建一个插件，用于处理连接验证。同时也处理收到的信息。
+
+```csharp
+class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
+{
+    protected override void OnHandshaking(HttpSocketClient client, HttpContextEventArgs e)
+    {
+        if (e.Context.Request.Query["token"]!="123")
+        {
+            e.IsPermitOperation = false; //参数不符合，直接拒绝
+            e.Handled = true;//表示该条消息已被本插件处理，不需要在向其他插件投递了。
+            return;
+
+            //或者直接回复，此处部分和http操作一致。
+            e.Context.Response
+                .SetStatus("400", "口令不正确")
+                .Answer();
+
+        }
+        base.OnHandshaking(client, e);
+    }
+
+    protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+    {
+        if (e.DataFrame.Opcode == WSDataType.Text)//文本数据
+        {
+            client.Logger.Info($"收到信息：{e.DataFrame.ToText()}");
+        }
+        else if (e.DataFrame.Opcode == WSDataType.Binary)//二进制
+        {
+            byte[] data = e.DataFrame.PayloadData.ToArray();
+        }
+    }
+}
+
+```
+
+创建服务器
+
+```csharp
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebSocket()//添加WebSocket功能
+               .SetWSUrl("/ws");
+        //.SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。下面会用插件，所以我们不使用这种方式
+        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+    }))
+    .Start();
+
+service.Logger.Info("Http服务器已启动");
+service.Logger.Info("连接url：ws://127.0.0.1:7789/ws?token=123");
+```
+
+### 2.2 WebApi连接验证
+
+创建一个WebApi服务
+
+```csharp
+public class MyServer : RpcServer
+{
+    private readonly ILog m_logger;
+
+    public MyServer(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
+    public void ConnectWS(IWebApiCallContext callContext, string token)
+    {
+        if (token != "123")
+        {
+            callContext.HttpContext.Response
+                .SetStatus("400", "口令不正确")
+                .Answer();
+            return;
+        }
+        //下面进行连接
+        if (callContext.Caller is HttpSocketClient socketClient)
+        {
+            if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
+            {
+                m_logger.Info("WS通过WebApi连接");
+            }
+        }
+    }
+}
+```
+
+启动服务
+
+```csharp
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigureRpcStore(a =>
+    {
+        a.RegisterServer<MyServer>();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebApi();
+        a.UseWebSocket();//不用设置连接url
+    }))
+    .Start();
+
+Console.WriteLine("服务器已启动，可使用下列地址连接");
+Console.WriteLine("ws://127.0.0.1:7789/MyServer/ConnectWS?token=123");
+```
+
+:::tip 提示
+
+使用WebApi进行Websocket连接验证时，是最灵活的，而且如果可能，Websocket也可以通过Post连接验证。
+
+:::  
+
+## 三、客户端请求验证
+
+### 3.1 Url包含请求参数
+
+请求验证时，请求的参数全部包含在
+
+```csharp
+WebSocketClient myWSClient = new WebSocketClient();
+myWSClient.Setup(new TouchSocketConfig()
+    .SetRemoteIPHost("ws://127.0.0.1:7789/ws?token=1232")
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    }));
+var result= myWSClient.TryConnect();
+
+myWSClient.Logger.Info(result.ToString());
+
+```
+
+[Websocket连接验证示例](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B/WS%E8%BF%9E%E6%8E%A5%E9%AA%8C%E8%AF%81/WSVerifyConsoleApp)

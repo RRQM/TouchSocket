@@ -1,0 +1,104 @@
+---
+id: natservice
+title: Tcp端口转发
+---
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、说明
+
+NATService是具有转发功能的TCP服务器。他的职能是将收到的TCP数据转发到多个目标服务器。也能将多个目标服务器的数据转发到连接客户端。
+
+## 二、常见使用场景
+
+- **调试场景：**在生产环境中，想要调试客户端，要么中断服务器，要么就将实际数据转发到NAT，然后在不影响实际场景的情况下进行调试。
+- **内网穿透场景：**一般tcp都会使用转发式的内网穿透。
+
+
+## 三、创建NATService
+
+```csharp showLineNumbers
+static void Main(string[] args)
+{
+    MyNATService service = new MyNATService();
+    var config = new TouchSocketConfig();
+    config.SetListenIPHosts(new IPHost[] { new IPHost(7788) });
+
+    service.Setup(config);
+    service.Start();
+
+    Console.WriteLine("转发服务器已启动。已将7788端口转发到127.0.0.1:7789与127.0.0.1:7790地址");
+}
+```
+
+:::tip 提示
+
+NATService支持客户端适配器和Ssl。也支持转发适配器和Ssl。
+
+:::  
+
+```csharp showLineNumbers
+ internal class MyNATService : NATService
+{
+    protected override async Task OnConnected(NATSocketClient socketClient, ConnectedEventArgs e)
+    {
+        await base.OnConnected(socketClient, e);
+        try
+        {
+            //此处模拟的是只要连接到NAT服务器，就转发。
+            //实际上，这个方法可以随时调用。
+            socketClient.AddTargetClient(new TouchSocketConfig()
+                .SetRemoteIPHost("127.0.0.1:7789")
+                .ConfigurePlugins(a =>
+                {
+                }));
+        }
+        catch (Exception ex)
+        {
+            socketClient.Logger.Exception(ex);
+        }
+    }
+
+    protected override void OnTargetClientDisconnected(NATSocketClient socketClient, ITcpClient tcpClient, DisconnectEventArgs e)
+    {
+        socketClient.Logger.Info($"{socketClient.IP}:{socketClient.Port}的转发客户端{tcpClient.IP}:{tcpClient.Port}已经断开连接。");
+        base.OnTargetClientDisconnected(socketClient, tcpClient, e);
+    }
+
+    protected override byte[] OnNATReceived(NATSocketClient socketClient, ReceivedDataEventArgs e)
+    {
+        //服务器收到的数据
+        return base.OnNATReceived(socketClient, e);
+    }
+
+    protected override byte[] OnTargetClientReceived(NATSocketClient socketClient, ITcpClient tcpClient, ReceivedDataEventArgs e)
+    {
+        //连接的客户端收到的数据
+        return base.OnTargetClientReceived(socketClient, tcpClient, e);
+    }
+}
+```
+
+## 四、转发断线重连 <Tag>Pro</Tag>
+
+```csharp showLineNumbers
+try
+{
+    //此处模拟的是只要连接到NAT服务器，就转发。
+    //实际上，这个方法可以随时调用。
+    socketClient.AddTargetClient(new TouchSocketConfig()
+        .SetRemoteIPHost("127.0.0.1:7789")
+        .ConfigurePlugins(a=> 
+        {
+            a.UseReconnection();
+        }));
+}
+catch (Exception ex)
+{
+    socketClient.Logger.Exception(ex);
+}
+```
