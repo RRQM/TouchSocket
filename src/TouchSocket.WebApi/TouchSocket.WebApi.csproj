@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.WebApi</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />

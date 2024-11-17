@@ -7,7 +7,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Dmtp</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Dmtp</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />

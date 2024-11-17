@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Core.Autofac</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Core.Autofac</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 	  <PackageReference Include="Autofac" Version="8.1.1" />

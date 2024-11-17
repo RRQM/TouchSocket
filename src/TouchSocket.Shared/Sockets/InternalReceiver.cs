@@ -64,7 +64,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        public async Task InputReceive(ByteBlock byteBlock, IRequestInfo requestInfo)
+        public async Task InputReceiveAsync(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
             if (this.DisposedValue)
             {
@@ -114,7 +114,7 @@ namespace TouchSocket.Sockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceive(default, default).ConfigureAwait(false);
+                await this.InputReceiveAsync(default, default).ConfigureAwait(false);
             }
             catch
             {

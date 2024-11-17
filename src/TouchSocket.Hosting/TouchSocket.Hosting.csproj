@@ -7,7 +7,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Hosting</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Hosting</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
