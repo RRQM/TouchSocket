@@ -1,9 +1,0 @@
-TcpClient:
-  label: TcpClient
-  permalink: /TcpClient
-  description: TcpClient
-
-TcpService:
-  label: TcpService
-  permalink: /TcpService
-  description: TcpService
