@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket.SerialPorts</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.SerialPorts</PackageOutputPath>
 		<Authors>若汝棋茗;Diego</Authors>
 	</PropertyGroup>
 

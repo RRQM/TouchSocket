@@ -30,7 +30,7 @@ namespace TouchSocket.Core.AspNetCore
         /// <summary>
         /// 获取当前对象的IServiceProvider实例。
         /// </summary>
-        public IServiceProvider ServiceProvider { get => this.m_serviceProvider; }
+        public IServiceProvider ServiceProvider => this.m_serviceProvider;
 
 
         /// <summary>

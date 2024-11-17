@@ -449,9 +449,10 @@ namespace TouchSocket.NamedPipe
 
         private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            if (this.m_receiver != null)
+            var receiver =this.m_receiver;
+            if (receiver != null)
             {
-                await this.m_receiver.InputReceive(byteBlock, requestInfo).ConfigureAwait(false);
+                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(false);
                 return;
             }
             await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);

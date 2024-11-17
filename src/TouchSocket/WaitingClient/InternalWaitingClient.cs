@@ -17,13 +17,13 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class WaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> 
+    internal sealed class InternalWaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> 
         where TClient : IReceiverClient<TResult>, ISender , IRequestInfoSender
         where TResult : IReceiverResult
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
 
-        public WaitingClient(TClient client, WaitingOptions waitingOptions)
+        public InternalWaitingClient(TClient client, WaitingOptions waitingOptions)
         {
             this.Client = client ?? throw new ArgumentNullException(nameof(client));
             this.WaitingOptions = waitingOptions;
@@ -51,15 +51,16 @@ namespace TouchSocket.Sockets
                         {
                             using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
 
-                                if (this.WaitingOptions.FilterFunc == null)
+                                var filterFunc = this.WaitingOptions.FilterFuncAsync;
+                                if (filterFunc == null)
                                 {
                                     return response;
                                 }
                                 else
                                 {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
                                     {
                                         return response;
                                     }
@@ -81,15 +82,16 @@ namespace TouchSocket.Sockets
                                 {
                                     ThrowHelper.ThrowClientNotConnectedException();
                                 }
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
 
-                                if (this.WaitingOptions.FilterFunc == null)
+                                var filterFunc = this.WaitingOptions.FilterFuncAsync;
+                                if (filterFunc == null)
                                 {
                                     return response;
                                 }
                                 else
                                 {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
                                     {
                                         return response;
                                     }
@@ -121,15 +123,16 @@ namespace TouchSocket.Sockets
                         {
                             using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
 
-                                if (this.WaitingOptions.FilterFunc == null)
+                                var filterFunc = this.WaitingOptions.FilterFuncAsync;
+                                if (filterFunc == null)
                                 {
                                     return response;
                                 }
                                 else
                                 {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
                                     {
                                         return response;
                                     }
@@ -151,15 +154,16 @@ namespace TouchSocket.Sockets
                                 {
                                     ThrowHelper.ThrowClientNotConnectedException();
                                 }
-                                var response = new ResponsedData(receiverResult.ByteBlock?.ToArray(), receiverResult.RequestInfo);
+                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
 
-                                if (this.WaitingOptions.FilterFunc == null)
+                                var filterFunc = this.WaitingOptions.FilterFuncAsync;
+                                if (filterFunc == null)
                                 {
                                     return response;
                                 }
                                 else
                                 {
-                                    if (this.WaitingOptions.FilterFunc.Invoke(response))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
                                     {
                                         return response;
                                     }

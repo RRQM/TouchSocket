@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
@@ -22,18 +23,24 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="data">响应的数据</param>
+        /// <param name="byteBlock">响应的数据</param>
         /// <param name="requestInfo">请求信息</param>
-        public ResponsedData(byte[] data, IRequestInfo requestInfo)
+        public ResponsedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            this.Data = data;
+            this.ByteBlock = byteBlock;
             this.RequestInfo = requestInfo;
         }
 
         /// <summary>
         /// 数据
         /// </summary>
-        public byte[] Data { get; }
+        [Obsolete($"使用此属性可能带来不必要的性能消耗，请使用{nameof(ByteBlock)}代替")]
+        public byte[] Data => this.ByteBlock?.ToArray();
+
+        /// <summary>
+        /// ByteBlock
+        /// </summary>
+        public ByteBlock ByteBlock { get; }
 
         /// <summary>
         /// RequestInfo

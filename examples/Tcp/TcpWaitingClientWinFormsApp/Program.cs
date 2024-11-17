@@ -34,7 +34,7 @@ namespace TcpWaitingClientWinFormsApp
         {
             var service = new TcpService();
 
-            await service.SetupAsync(new TouchSocketConfig()//��������
+            await service.SetupAsync(new TouchSocketConfig()
                  .SetListenIPHosts(7789)
                  .ConfigureContainer(a =>
                  {
@@ -42,11 +42,11 @@ namespace TcpWaitingClientWinFormsApp
                  })
                  .ConfigurePlugins(a =>
                  {
-                     a.Add<MyPlugin1>();//�˴��������Ӳ��
+                     a.Add<MyPlugin1>();
                  }));
-            await service.StartAsync();//����
+            await service.StartAsync();
 
-            service.Logger.Info("������������");
+            service.Logger.Info("Server started");
         }
 
         private class MyPlugin1 : PluginBase, ITcpReceivedPlugin
@@ -60,7 +60,7 @@ namespace TcpWaitingClientWinFormsApp
 
             public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
             {
-                this.m_logger.Info($"�յ����ݣ�{e.ByteBlock.ToString()}");
+                this.m_logger.Info($"Plugin:{e.ByteBlock.ToString()}");
 
                 if (client is ITcpSessionClient sessionClient)
                 {

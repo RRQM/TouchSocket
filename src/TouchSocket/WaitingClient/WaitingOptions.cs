@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
@@ -20,13 +21,38 @@ namespace TouchSocket.Sockets
     public class WaitingOptions
     {
         /// <summary>
+        /// 筛选函数
+        /// </summary>
+        public Func<ResponsedData, bool> FilterFunc
+        {
+            set
+            {
+                if (value == default)
+                {
+                    this.FilterFuncAsync = default;
+                }
+                else
+                {
+                    Task<bool> FilterFuncValue(ResponsedData data)
+                    {
+                        var task= Task.FromResult(value.Invoke(data));
+                        task.ConfigureAwait(false);
+                        return task;
+                    }
+
+                    this.FilterFuncAsync = FilterFuncValue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 异步筛选函数
+        /// </summary>
+        public Func<ResponsedData, Task<bool>> FilterFuncAsync { get; set; }
+
+        /// <summary>
         /// 远程地址(仅在Udp模式下生效)
         /// </summary>
         public IPHost RemoteIPHost { get; set; }
-
-        /// <summary>
-        /// 筛选函数
-        /// </summary>
-        public Func<ResponsedData, bool> FilterFunc { get; set; }
     }
 }
