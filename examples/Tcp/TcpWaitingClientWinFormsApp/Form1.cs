@@ -25,7 +25,7 @@ namespace TcpWaitingClientWinFormsApp
 
         private TcpClient m_tcpClient;
 
-        private void IsConnected()
+        private async Task IsConnected()
         {
             try
             {
@@ -36,11 +36,28 @@ namespace TcpWaitingClientWinFormsApp
                 this.m_tcpClient.SafeDispose();
                 this.m_tcpClient = new TcpClient();
 
-                //��������
-                this.m_tcpClient.SetupAsync(new TouchSocketConfig()
-                    .SetRemoteIPHost(this.textBox1.Text));
+                this.m_tcpClient.Received = async (client, e) =>
+                {
+                    //此处不能await，否则也会导致死锁
+                    _ = Task.Run(async () =>
+                    {
+                        var waitingClient = client.CreateWaitingClient(new WaitingOptions());
 
-                this.m_tcpClient.ConnectAsync();//�������ӣ������Ӳ��ɹ�ʱ�����׳��쳣��
+                        var bytes = await waitingClient.SendThenReturnAsync("hello");
+                    });
+                };
+
+                await this.m_tcpClient.SetupAsync(new TouchSocketConfig()
+                    .ConfigurePlugins(a =>
+                    {
+                        a.Add(typeof(ITcpReceivedPlugin), (ReceivedDataEventArgs e) =>
+                        {
+                            Console.WriteLine($"PluginReceivedData:{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
+                        });
+                    })
+                     .SetRemoteIPHost(this.textBox1.Text));
+
+                await this.m_tcpClient.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -48,17 +65,18 @@ namespace TcpWaitingClientWinFormsApp
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private async void button2_Click(object sender, EventArgs e)
         {
             try
             {
-                this.IsConnected();
+                await this.IsConnected();
                 var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions());
 
-                var bytes = waitingClient.SendThenReturn(this.textBox2.Text.ToUTF8Bytes());
+                cts = new CancellationTokenSource(5000);
+                var bytes = await waitingClient.SendThenReturnAsync(this.textBox2.Text.ToUTF8Bytes(), cts.Token);
                 if (bytes != null)
                 {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
+                    MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes)}");
                 }
             }
             catch (Exception ex)
@@ -67,31 +85,44 @@ namespace TcpWaitingClientWinFormsApp
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private async void button3_Click(object sender, EventArgs e)
         {
             try
             {
-                this.IsConnected();
+                await this.IsConnected();
                 var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
                 {
-                    FilterFunc = (response) =>
+                    FilterFuncAsync = async (response) =>
                     {
-                        if (response.Data != null)
+                        var byteBlock = response.ByteBlock;
+                        var requestInfo = response.RequestInfo;
+
+                        if (byteBlock != null)
                         {
-                            var str = Encoding.UTF8.GetString(response.Data);
+                            var str = byteBlock.Span.ToString(Encoding.UTF8);
                             if (str.Contains(this.textBox4.Text))
                             {
                                 return true;
+                            }
+                            else
+                            {
+                                //数据不符合要求，waitingClient继续等待
+
+                                //如果需要在插件中继续处理，在此处触发插件
+
+                                await this.m_tcpClient.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.m_tcpClient, new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
                             }
                         }
                         return false;
                     }
                 });
 
-                var bytes = waitingClient.SendThenReturn(this.textBox3.Text.ToUTF8Bytes());
+                cts = new CancellationTokenSource(500000);
+                var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUTF8Bytes(), cts.Token);
+
                 if (bytes != null)
                 {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
+                    MessageBox.Show($"message:{Encoding.UTF8.GetString(bytes)}");
                 }
             }
             catch (Exception ex)
@@ -105,37 +136,10 @@ namespace TcpWaitingClientWinFormsApp
             this.m_tcpClient?.Close();
         }
 
-        private async void button4_Click(object sender, EventArgs e)
+        CancellationTokenSource cts;
+        private void button5_Click(object sender, EventArgs e)
         {
-            try
-            {
-                this.IsConnected();
-                var waitingClient = this.m_tcpClient.CreateWaitingClient(new WaitingOptions()
-                {
-                    FilterFunc = (response) =>
-                    {
-                        if (response.Data != null)
-                        {
-                            var str = Encoding.UTF8.GetString(response.Data);
-                            if (str.Contains(this.textBox4.Text))
-                            {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                });
-
-                var bytes = await waitingClient.SendThenReturnAsync(this.textBox3.Text.ToUTF8Bytes());
-                if (bytes != null)
-                {
-                    MessageBox.Show($"�յ��ȴ����ݣ�{Encoding.UTF8.GetString(bytes)}");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            cts?.Cancel();
         }
     }
 }

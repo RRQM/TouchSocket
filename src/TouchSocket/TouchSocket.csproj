@@ -6,7 +6,7 @@
 
 TouchSocket is Net (including C #, VB An integrated socket network communication framework based on Net and F #. It includes a series of communication modules such as TCP, UDP, SSL, etc. One click solution to TCP packet sticking and UDP packet fragmentation and combination problems. By using protocol templates, a series of data message parsing techniques such as "fixed packet header", "fixed length", and "interval characters" can be quickly implemented.</Description>
 		<Title>TouchSocket</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket</PackageOutputPath>
+		
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />

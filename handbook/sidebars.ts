@@ -185,33 +185,28 @@ module.exports =
         },
         {
           "type": "doc",
-          "id": "tcpwaitingclient",
-          "label": "7.4 同步请求"
-        },
-        {
-          "type": "doc",
           "id": "natservice",
-          "label": "7.5 Tcp端口转发"
+          "label": "7.4 Tcp端口转发"
         },
         {
           "type": "doc",
           "id": "resetid",
-          "label": "7.6 服务器重置Id"
+          "label": "7.5 服务器重置Id"
         },
         {
           "type": "doc",
           "id": "tcpcommandlineplugin",
-          "label": "7.7 命令行执行插件"
+          "label": "7.6 命令行执行插件"
         },
         {
           "type": "doc",
           "id": "tcpcommonplugins",
-          "label": "7.8 其他常用插件"
+          "label": "7.7 其他常用插件"
         },
         {
           "type": "doc",
           "id": "tcpaot",
-          "label": "7.9 AOT模式"
+          "label": "7.8 AOT模式"
         }
       ]
     },
@@ -268,17 +263,22 @@ module.exports =
       "label": "10、串口组件"
     },
     {
+      "type": "doc",
+      "id": "waitingclient",
+      "label": "11、等待响应组件"
+    },
+    {
       "type": "category",
-      "label": "11、数据处理适配器",
+      "label": "12、数据处理适配器",
       "items": [
         {
           "type": "doc",
           "id": "adapterdescription",
-          "label": "11.1 介绍及使用"
+          "label": "12.1 介绍及使用"
         },
         {
           "type": "category",
-          "label": "11.2 单线程流式适配器",
+          "label": "12.2 单线程流式适配器",
           "items": [
             {
               "type": "doc",
@@ -334,7 +334,7 @@ module.exports =
         },
         {
           "type": "category",
-          "label": "11.3 多线程非流式适配器",
+          "label": "12.3 多线程非流式适配器",
           "items": [
             {
               "type": "doc",
@@ -345,7 +345,7 @@ module.exports =
         },
         {
           "type": "category",
-          "label": "11.4 适配器案例赏析",
+          "label": "12.4 适配器案例赏析",
           "items": [
             {
               "type": "doc",
@@ -367,145 +367,145 @@ module.exports =
         {
           "type": "doc",
           "id": "independentusedatahandlingadapter",
-          "label": "11.5 独立使用适配器"
+          "label": "12.5 独立使用适配器"
         },
         {
           "type": "doc",
           "id": "adaptererrorcorrection",
-          "label": "11.6 适配器纠错"
+          "label": "12.6 适配器纠错"
         },
         {
           "type": "doc",
           "id": "dataadaptertester",
-          "label": "11.7 适配器完整性、性能测试"
+          "label": "12.7 适配器完整性、性能测试"
         },
         {
           "type": "doc",
           "id": "adapterbuilder",
-          "label": "11.8 适配器消息构建器"
+          "label": "12.8 适配器消息构建器"
         }
       ]
     },
     {
       "type": "category",
-      "label": "12、Http组件",
+      "label": "13、Http组件",
       "items": [
         {
           "type": "doc",
           "id": "httpservice",
-          "label": "12.1 创建HttpService"
+          "label": "13.1 创建HttpService"
         },
         {
           "type": "doc",
           "id": "httpclient",
-          "label": "12.2 创建HttpClient"
+          "label": "13.2 创建HttpClient"
         },
         {
           "type": "doc",
           "id": "httpstaticpageplugin",
-          "label": "12.3 静态页面插件"
+          "label": "13.3 静态页面插件"
         },
         {
           "type": "doc",
           "id": "cors",
-          "label": "12.4 Cors跨域"
+          "label": "13.4 Cors跨域"
         }
       ]
     },
     {
       "type": "category",
-      "label": "13、WebSocket组件",
+      "label": "14、WebSocket组件",
       "items": [
         {
           "type": "doc",
           "id": "websocketdescription",
-          "label": "13.1 产品及架构介绍"
+          "label": "14.1 产品及架构介绍"
         },
         {
           "type": "doc",
           "id": "websocketservice",
-          "label": "13.2 创建WebSocket服务器"
+          "label": "14.2 创建WebSocket服务器"
         },
         {
           "type": "doc",
           "id": "websocketclient",
-          "label": "13.3 创建WebSocket客户端"
+          "label": "14.3 创建WebSocket客户端"
         },
         {
           "type": "doc",
           "id": "websocketheartbeat",
-          "label": "13.4 心跳设置"
+          "label": "14.4 心跳设置"
         },
         {
           "type": "doc",
           "id": "wscommandlineplugin",
-          "label": "13.5 快捷事务命令行"
+          "label": "14.5 快捷事务命令行"
         }
       ]
     },
     {
       "type": "category",
-      "label": "14、Rpc组件",
+      "label": "15、Rpc组件",
       "items": [
         {
           "type": "doc",
           "id": "rpcregister",
-          "label": "14.1 注册服务"
+          "label": "15.1 注册服务"
         },
         {
           "type": "doc",
           "id": "rpcgenerateproxy",
-          "label": "14.2 生成调用代理"
+          "label": "15.2 生成调用代理"
         },
         {
           "type": "doc",
           "id": "generateproxysourcegeneratordemo",
-          "label": "14.3 源生成代理推荐写法"
+          "label": "15.3 源生成代理推荐写法"
         },
         {
           "type": "doc",
           "id": "rpcactionfilter",
-          "label": "14.4 Rpc服务AOP"
+          "label": "15.4 Rpc服务AOP"
         },
         {
           "type": "doc",
           "id": "rpcallcontext",
-          "label": "14.5 调用上下文"
+          "label": "15.5 调用上下文"
         },
         {
           "type": "doc",
           "id": "rpcratelimiting",
-          "label": "14.6 Rpc访问速率限制"
+          "label": "15.6 Rpc访问速率限制"
         }
       ]
     },
     {
       "type": "category",
-      "label": "15、Dmtp组件",
+      "label": "16、Dmtp组件",
       "items": [
         {
           "type": "doc",
           "id": "dmtpdescription",
-          "label": "15.1 产品及架构介绍"
+          "label": "16.1 产品及架构介绍"
         },
         {
           "type": "doc",
           "id": "dmtpservice",
-          "label": "15.2 创建Dmtp服务器"
+          "label": "16.2 创建Dmtp服务器"
         },
         {
           "type": "doc",
           "id": "dmtplient",
-          "label": "15.3 创建Dmtp客户端"
+          "label": "16.3 创建Dmtp客户端"
         },
         {
           "type": "doc",
-          "label": "15.4 基础功能",
+          "label": "16.4 基础功能",
           "id": "dmtpbase"
         },
         {
           "type": "category",
-          "label": "15.5 进阶功能",
+          "label": "16.5 进阶功能",
           "items": [
             {
               "type": "doc",
@@ -516,90 +516,90 @@ module.exports =
         },
         {
           "type": "doc",
-          "label": "15.6 Rpc功能",
+          "label": "16.6 Rpc功能",
           "id": "dmtprpc"
         },
         {
           "type": "doc",
-          "label": "15.7 文件传输",
+          "label": "16.7 文件传输",
           "id": "dmtptransferfile"
         },
         {
           "type": "doc",
           "id": "dmtpremoteaccess",
-          "label": "15.8 远程文件系统"
+          "label": "16.8 远程文件系统"
         },
         {
           "type": "doc",
           "id": "dmtpremotestream",
-          "label": "15.9 远程流映射"
+          "label": "16.9 远程流映射"
         },
         {
           "type": "doc",
           "id": "dmtprouterpackage",
-          "label": "15.10 路由包传输"
+          "label": "16.10 路由包传输"
         },
         {
           "type": "doc",
           "id": "dmtpredis",
-          "label": "15.11 Redis缓存"
+          "label": "16.11 Redis缓存"
         }
       ]
     },
     {
       "type": "category",
-      "label": "16、WebApi组件",
+      "label": "17、WebApi组件",
       "items": [
         {
           "type": "doc",
-          "label": "16.1 WebApi",
+          "label": "17.1 WebApi",
           "id": "webapi"
         },
         {
           "type": "doc",
-          "label": "16.2 Swagger页面",
+          "label": "17.2 Swagger页面",
           "id": "swagger"
         }
       ]
     },
     {
       "type": "doc",
-      "label": "17、JsonRpc组件",
+      "label": "18、JsonRpc组件",
       "id": "jsonrpc"
     },
     {
       "type": "doc",
-      "label": "18、XmlRpc组件",
+      "label": "19、XmlRpc组件",
       "id": "xmlrpc"
     },
     {
       "type": "category",
-      "label": "19、Modbus组件",
+      "label": "20、Modbus组件",
       "items": [
         {
           "type": "doc",
-          "label": "19.1 Modbus主站",
+          "label": "20.1 Modbus主站",
           "id": "modbusmaster"
         },
         {
           "type": "doc",
-          "label": "19.2 Modbus从站",
+          "label": "20.2 Modbus从站",
           "id": "modbusslave"
         }
       ]
     },
     {
       "type": "doc",
-      "label": "20、通用主机(Hosting)",
+      "label": "21、通用主机(Hosting)",
       "id": "generichost"
     },
     {
       "type": "category",
-      "label": "21、SocketIO",
+      "label": "22、SocketIO",
       "items": [
         {
           "type": "doc",
-          "label": "21.1 SocketIo客户端",
+          "label": "22.1 SocketIo客户端",
           "id": "socketioclient"
         }
       ]

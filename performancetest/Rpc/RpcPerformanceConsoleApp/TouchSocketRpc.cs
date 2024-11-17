@@ -12,7 +12,7 @@ namespace RpcPerformanceConsoleApp
     {
         public static void StartServer()
         {
-            IHost host = Host.CreateDefaultBuilder()
+            var host = Host.CreateDefaultBuilder()
         .ConfigureServices(services =>
         {
             services.AddServiceHostedService<ITcpDmtpService, TcpDmtpService>(config =>

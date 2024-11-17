@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Rpc</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\TouchSocket.SourceGenerator.SharedProject\tools\*.ps1" PackagePath="tools" Pack="true" Visible="false" />
