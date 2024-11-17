@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="TouchSocket.Hosting" Version="3.0.3" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="3.0.3" />
+  </ItemGroup>
+
+  <!--<ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Core">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Core.DependencyInjection">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Core.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.Hosting">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.Hosting.dll</HintPath>
+    </Reference>
+    <Reference Include="TouchSocket.NamedPipe">
+      <HintPath>..\..\..\..\TouchSocketPro\Build\Debug\net8.0\TouchSocket.NamedPipe.dll</HintPath>
+    </Reference>
+  </ItemGroup>-->
+
+</Project>

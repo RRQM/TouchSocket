@@ -1,0 +1,193 @@
+---
+id: natservice
+title: Tcp端口转发
+---
+import Tag from "@site/src/components/Tag.js";
+
+### 定义
+
+命名空间：TouchSocket.Sockets <br/>
+程序集：[TouchSocket.dll](https://www.nuget.org/packages/TouchSocket)
+
+## 一、说明
+
+**NatService**是具有转发功能的TCP服务器。他的职能是将收到的TCP数据转发到多个目标服务器。也能将多个目标服务器的数据转发到连接客户端。
+
+## 二、常见使用场景
+
+- **调试场景**在生产环境中，想要调试客户端，要么中断服务器，要么就将实际数据转发到Nat，然后在不影响实际场景的情况下进行调试。
+- **内网穿透场景**一般tcp都会使用转发式的内网穿透。
+
+要使用`NatService`进行网络地址转换（NAT），您需要遵循以下步骤来设置和运行服务。此示例是基于C#语言，并使用了TouchSocket库来简化网络编程。
+
+
+## 三、创建服务
+
+### 3.1 创建服务类
+
+创建一个继承自`NatService`的类，并重写必要的方法。在这个例子中，我们创建了一个名为`MyNatService`的类。
+
+```csharp showLineNumbers
+internal class MyNatService : NatService<MyNatSessionClient>
+{
+    protected override MyNatSessionClient NewClient()
+    {
+        return new MyNatSessionClient();
+    }
+}
+```
+
+### 3.2 创建会话客户端类
+
+创建一个继承自`NatSessionClient`的类，并根据需要重写其中的方法。在这个例子中，我们创建了一个名为`MyNatSessionClient`的类。
+
+```csharp showLineNumbers
+class MyNatSessionClient : NatSessionClient
+{
+    #region 抽象类必须实现
+    protected override async Task OnNatConnected(ConnectedEventArgs e)
+    {
+        try
+        {
+            await this.AddTargetClientAsync(config =>
+            {
+                config.SetRemoteIPHost("127.0.0.1:7789");
+                //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+            });
+        }
+        catch (Exception ex)
+        {
+            //目标客户端无法连接，也就是无法转发
+            this.Logger.Exception(ex);
+        }
+    }
+
+    protected override async Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e)
+    {
+        //可以自己重连，或者其他操作
+
+        //或者直接移除
+        this.RemoveTargetClient(client);
+        await EasyTask.CompletedTask;
+    }
+    #endregion
+}
+```
+
+## 四、使用
+
+在主函数中初始化服务并开始监听指定端口。这里我们监听的是7788端口，并且设置了日志记录。
+
+```csharp showLineNumbers
+private static async Task Main(string[] args)
+{
+    var service = new MyNatService();
+    await service.SetupAsync(new TouchSocketConfig()
+         .SetListenIPHosts(7788)
+         .ConfigureContainer(a =>
+         {
+             a.AddLogger(logger =>
+             {
+                 logger.AddConsoleLogger();
+                 logger.AddFileLogger();
+             });
+         }));
+
+    await service.StartAsync();
+
+    service.Logger.Info("转发服务器已启动。已将7788端口转发到127.0.0.1:7789地址");
+
+    while (true)
+    {
+        Console.ReadKey();
+    }
+}
+```
+
+:::tip 提示
+
+`NatService`支持客户端适配器和`Ssl`。也支持**IRequestInfo转发**和**转发Ssl**。
+
+:::  
+
+## 五、实现一转多
+
+`NatService`支持将客户端数据转发到多个目标服务器。实现方法也比较简单，只需要使用`NatSessionClient`直接进行添加目标客户端即可。
+
+```csharp {7-18} showLineNumbers
+class MyNatSessionClient : NatSessionClient
+{
+    protected override async Task OnNatConnected(ConnectedEventArgs e)
+    {
+        try
+        {
+            await this.AddTargetClientAsync(config =>
+            {
+                config.SetRemoteIPHost("127.0.0.1:7789");
+                //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+            });
+
+            //也可以再添加个转发端，实现一对多转发
+            await this.AddTargetClientAsync(config =>
+            {
+                config.SetRemoteIPHost("127.0.0.1:7790");
+                //还可以配置其他，例如断线重连，具体可看文档tcpClient部分
+            });
+        }
+        catch (Exception ex)
+        {
+            //目标客户端无法连接，也就是无法转发
+            this.Logger.Exception(ex);
+        }
+    }
+}
+```
+
+## 六、实现多转一
+
+`NatService`支持将多个客户端数据转发到单个目标服务器。主要实现方式如下：
+
+首先，需要独立初始化目标客户端，然后自行管理其创建和释放。
+
+```csharp showLineNumbers
+static class MyClientClass
+{
+    public static NatTargetClient TargetClient { get; }
+
+    //初始化步骤可以在任意地方先调用
+    public static async Task InitAsync()
+    {
+        //使用独立模式初始化，这样当NatSessionClient断开时不会释放该资源
+        var client = new NatTargetClient(true);
+        await client.ConnectAsync("127.0.0.1:7789");
+    }
+}
+```
+
+然后在`NatSessionClient`中再添加。
+
+```csharp {5} showLineNumbers
+class MultipleToOneNatSessionClient : NatSessionClient
+{
+    protected override async Task OnNatConnected(ConnectedEventArgs e)
+    {
+        await this.AddTargetClientAsync(MyClientClass.TargetClient);
+    }
+
+    protected override async Task OnTargetClientClosed(NatTargetClient client, ClosedEventArgs e)
+    {
+        //不做任何处理
+        await e.InvokeNext();
+    }
+}
+```
+
+:::tip 提示
+
+使用静态类管理目标客户端，仅仅是演示目的。在实际使用时，可以考虑使用容器，更加方便的管理。
+
+:::  
+
+## 六、实现多转多
+
+`NatService`支持将多个客户端数据转发到多个目标服务器。实现方法与实现多对一转发类似，只需要使用`NatSessionClient`将多个固定的目标客户端直接进行添加即可。

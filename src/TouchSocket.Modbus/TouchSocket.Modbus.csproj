@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<PackageTags>Modbus;Master;TouchSocket</PackageTags>
+		<Description>这是一个Modbus功能库，目前包括ModbusTcpMaster、ModbusUdpMaster、ModbusRtuMaster、ModbusRtuOverTcpMaster、ModbusRtuOverUdpMaster。
+
+说明文档：https://touchsocket.net/</Description>
+		<Title>TouchSocket.Modbus</Title>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket.SerialPorts\TouchSocket.SerialPorts.csproj" />
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+</Project>

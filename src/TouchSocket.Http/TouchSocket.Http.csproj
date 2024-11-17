@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net481;net45;net462;net472;netstandard2.0;netstandard2.1;net6.0;net9.0;net8.0</TargetFrameworks>
+		<PackageTags>Http;Https;HttpServer;HttpClient;WebSocket;WebSocketServer;WebSocketClient;TouchSocket</PackageTags>
+		<Description>这是一个基于Http1.1协议的组件库。它能提供Http服务器、客户端、以及WebSocket组件。功能上支持大文件下载、上传、以及多线程下载和断点续传，小文件form上传，WebApi声明和执行。所提供的Http客户端是基于连接的，可以捕获连接和断开连接等消息。
+
+说明文档：https://touchsocket.net/	</Description>
+		<Title>TouchSocket.Http</Title>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net45'">
+		<Reference Include="System.Web" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
+		<Reference Include="System.Web" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
+		<Reference Include="System.Web" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
+		<Reference Include="System.Web" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="RefShared\ThrowHelperCore.cs" />
+	  <Compile Include="..\TouchSocket.Shared\InternalVisible.cs" Link="RefShared\InternalVisible.cs" />
+	  <Compile Include="..\TouchSocket.Shared\Sockets\ThrowHelperSockets.cs" Link="RefShared\ThrowHelperSockets.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TouchSocket\TouchSocket.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="RefShared\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\TouchSocketHttpResource.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TouchSocketHttpResource.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TouchSocketHttpResource.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TouchSocketHttpResource.Designer.cs</LastGenOutput>
+	    <CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
+	  </EmbeddedResource>
+	</ItemGroup>
+</Project>

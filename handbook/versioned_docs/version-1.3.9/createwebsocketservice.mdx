@@ -1,0 +1,429 @@
+---
+id: createwebsocketservice
+title: 创建WebSocket服务器
+---
+
+
+## 一、说明
+
+WebSocket是基于Http协议的升级协议，所以应当挂载在http服务器执行。
+
+
+## 二、可配置项
+
+继承[HttpService](.//createhttpservice.mdx)
+
+
+## 三、支持插件接口
+
+支持**ITcpPlugin、IHttpPlugin、IWebSocketPlugin**
+
+声明自定义实例类，然后实现**IWebSocketPlugin**接口，即可实现下列事务的触发。或者继承自**WebSocketPluginBase**类，重写相应方法即可。
+
+|  插件方法| 功能 |
+| --- | --- |
+| OnHandshaking | 当收到握手请求之前，可以进行连接验证等 |
+| OnHandshaked | 当成功握手响应之后 |
+| OnHandleWSDataFrame | 当收到Websocket的数据报文 |
+| OnClosing | 当收到关闭请求时 |
+
+## 四、创建WebSocket服务
+
+### 4.1 简单通过插件创建
+
+通过插件创建的话，只能指定一个特殊url路由。如果想获得连接前的Http请求，也必须再添加一个实现IWebSocketPlugin接口的插件，然后从OnHandshaking方法中捕获。
+
+```csharp
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebSocket()//添加WebSocket功能
+               .SetWSUrl("/ws");
+        //.SetCallback(WSCallback);//WSCallback回调函数是在WS收到数据时触发回调的。下面会用插件，所以我们不使用这种方式
+        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+    }))
+    .Start();
+
+service.Logger.Info("Http服务器已启动");
+service.Logger.Info("ws://127.0.0.1:7789/ws");
+
+```
+
+[插件]
+
+```csharp
+class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
+{
+    protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+    {
+        if (e.DataFrame.Opcode == WSDataType.Text)//文本数据
+        {
+            client.Logger.Info($"收到信息：{e.DataFrame.ToText()}");
+        }
+        else if (e.DataFrame.Opcode == WSDataType.Binary)//二进制
+        {
+            byte[] data = e.DataFrame.PayloadData.ToArray();
+        }
+    }
+}
+```
+
+
+### 4.2 通过WebApi创建
+
+通过WebApi的方式会更加灵活，也能很方便的获得Http相关参数。还能实现多个Url的连接路由。
+实现步骤：
+
+1. 必须启用插件
+2. 必须配置ConfigureRpcStore，和注册MyServer
+3. 必须添加WebApiParserPlugin
+
+```csharp
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+         a.AddConsoleLogger();
+    })
+    .ConfigureRpcStore(a=> 
+    {
+        a.RegisterServer<MyServer>();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebApi();
+        a.UseWebSocket();//不用设置连接url
+    }))
+    .Start();
+
+Console.WriteLine("服务器已启动，可使用下列地址连接");
+Console.WriteLine("ws://127.0.0.1:7789/MyServer/ConnectWS");
+```
+
+```csharp
+public class MyServer : RpcServer
+{
+    private readonly ILog m_logger;
+
+    public MyServer(ILog logger)
+    {
+        this.m_logger = logger;
+    }
+
+    [Router("/[api]/[action]")]
+    [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
+    public void ConnectWS(IWebApiCallContext callContext)
+    {
+        if (callContext.Caller is HttpSocketClient socketClient)
+        {
+            if (socketClient.SwitchProtocolToWebSocket(callContext.HttpContext))
+            {
+                m_logger.Info("WS通过WebApi连接");
+            }
+        }
+    }
+}
+```
+
+
+### 4.3 创建基于Ssl的WebSocket服务
+
+创建WSs服务器时，其他配置不变，只需要在config中配置SslOption代码即可。
+在[RRQMBox](https://gitee.com/RRQM_Home/RRQMBox/tree/master/Ssl%E8%AF%81%E4%B9%A6%E7%9B%B8%E5%85%B3)中，放置了一个自制Ssl证书，密码为“RRQMSocket”以供测试。使用配置非常方便。
+
+```csharp
+var config = new TouchSocketConfig();
+config.UsePlugin()
+    .SetReceiveType(ReceiveType.Auto)
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .SetServiceSslOption(new ServiceSslOption() //Ssl配置，当为null的时候，相当于创建了ws服务器，当赋值的时候，相当于wss服务器。
+    { 
+        Certificate = new X509Certificate2("RRQMSocket.pfx", "RRQMSocket"), 
+        SslProtocols = SslProtocols.Tls12 
+    });
+```
+
+
+## 五、接收消息
+
+### 5.1 回调接收
+
+在添加**WebSocketServerPlugin**插件后，可以调用**SetCallback**函数，然后设置一个回调函数（如下所示），然后该函数在服务器收到信息时，会触发（并发触发）。
+
+```csharp
+static void WSCallback(ITcpClientBase client, WSDataFrameEventArgs e)
+{
+    switch (e.DataFrame.Opcode)
+    {
+        case WSDataType.Cont:
+            Console.WriteLine($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+            break;
+        case WSDataType.Text:
+            Console.WriteLine(e.DataFrame.ToText());
+            break;
+        case WSDataType.Binary:
+            if (e.DataFrame.FIN)
+            {
+                Console.WriteLine($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+            }
+            else
+            {
+                Console.WriteLine($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+            }
+            break;
+        case WSDataType.Close:
+            {
+                Console.WriteLine("远程请求断开");
+                client.Close("断开");
+            }
+
+            break;
+        case WSDataType.Ping:
+            break;
+        case WSDataType.Pong:
+            break;
+        default:
+            break;
+    }
+}
+```
+:::tip 提示
+
+该函数，可能被并发执行的，所以应当做好线程安全。
+
+:::  
+
+### 5.2 插件接口接收
+
+WS服务器，虽然是Http的插件，但是也能触发插件接口。适用于WS的插件接口是**IWebSocketPlugin**（或者从**WebSocketPluginBase**继承），声明任意类，实现该接口即可。
+
+【定义插件】
+```csharp
+public class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
+{
+    protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+    {
+        switch (e.DataFrame.Opcode)
+        {
+            case WSDataType.Cont:
+                client.Logger.Info($"收到中间数据，长度为：{e.DataFrame.PayloadLength}");
+                break;
+
+            case WSDataType.Text:
+                client.Logger.Info(e.DataFrame.ToText());
+                break;
+
+            case WSDataType.Binary:
+                if (e.DataFrame.FIN)
+                {
+                    client.Logger.Info($"收到二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                }
+                else
+                {
+                    client.Logger.Info($"收到未结束的二进制数据，长度为：{e.DataFrame.PayloadLength}");
+                }
+                break;
+
+            case WSDataType.Close:
+                {
+                    client.Logger.Info("远程请求断开");
+                    client.Close("断开");
+                }
+
+                break;
+
+            case WSDataType.Ping:
+                break;
+
+            case WSDataType.Pong:
+                break;
+
+            default:
+                break;
+        }
+    }
+}
+```
+
+【使用】
+```csharp {13}
+var service = new HttpService();
+service.Setup(new TouchSocketConfig()//加载配置
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.AddConsoleLogger();
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseWebSocket()//添加WebSocket功能
+               .SetWSUrl("/ws");
+        a.Add<MyWebSocketPlugin>();//MyWebSocketPlugin是继承自WebSocketPluginBase的插件。
+    }))
+    .Start();
+```
+
+:::tip 提示
+
+插件的所有函数，都是可能被并发执行的，所以应当做好线程安全。
+
+:::  
+
+## 六、回复、响应数据
+
+要回复Websocket消息，必须使用**HttpSocketClient**对象。
+
+### 6.1 如何获取SocketClient？
+
+#### （1）直接获取所有在线客户端
+
+通过`service.GetClients`方法，获取当前在线的所有客户端。
+
+```csharp
+HttpSocketClient[] socketClients = service.GetClients();
+foreach (var item in socketClients)
+{
+    if (item.Protocol == Protocol.WebSocket)//先判断是不是websocket协议
+    {
+        if (item.ID == "id")//再按指定id发送，或者直接广播发送
+        {
+
+        }
+    }
+}
+```
+
+:::caution 注意
+
+由于HttpSocketClient的生命周期是由框架控制的，所以最好尽量不要直接引用该实例，可以引用HttpSocketClient.ID，然后再通过服务器查找。
+
+:::  
+
+#### （2）通过ID获取
+
+先调用`service.GetIDs`方法，获取当前在线的所有客户端的ID，然后选择需要的ID，通过TryGetSocketClient方法，获取到想要的客户端。
+
+```csharp
+string[] ids = service.GetIDs();
+if (service.TryGetSocketClient(ids[0], out HttpSocketClient socketClient))
+{
+}
+```
+
+### 6.2 发送文本类消息
+
+```csharp
+socketClient.SendWithWS("Text");
+```
+
+### 6.3 发送二进制消息
+
+```csharp
+socketClient.SendWithWS(new byte[10]);
+```
+
+### 6.4 发送分包的二进制
+
+例如：发送的数据为{0,1,2,3,4,5,6,7,8,9}，当设置packageSize为5时，会先发送{0,1,2,3,4}作为头包，然后发送{5,6,7,8,9}的后继包。
+
+```csharp
+byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+socketClient.SubSendWithWS(data, 5);
+```
+
+### 6.5 直接发送自定义构建的数据帧
+```csharp
+WSDataFrame frame=new WSDataFrame();
+frame.Opcode= WSDataType.Text;
+frame.FIN= true;
+frame.RSV1= true;
+frame.RSV2= true;
+frame.RSV3= true;
+frame.AppendText("I");
+frame.AppendText("Love");
+frame.AppendText("U");
+socketClient.SendWithWS(frame);
+```
+:::info 备注
+
+此部分功能就需要你对Websocket有充分了解才可以操作。
+
+:::  
+
+
+:::caution 注意
+
+Websocket的所有发送，都是形如**SendWithWS**的扩展方法。不可直接Send。
+
+:::  
+
+
+下面演示如何在插件直接响应
+
+```csharp {9}
+public class MyWebSocketPlugin : WebSocketPluginBase<HttpSocketClient>
+{
+    protected override void OnHandleWSDataFrame(HttpSocketClient client, WSDataFrameEventArgs e)
+    {
+        switch (e.DataFrame.Opcode)
+        {
+            case WSDataType.Text:
+                client.Logger.Info(e.DataFrame.ToText());
+                client.SendWithWS("我已收到");
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+:::caution 注意
+
+如果是使用的WSCallback回调接收，则需要将**ITcpClientBase**对象，强制转换为**HttpSocketClient**。
+
+```csharp {6}
+static void WSCallback(ITcpClientBase client, WSDataFrameEventArgs e)
+{
+    switch (e.DataFrame.Opcode)
+    {
+        case WSDataType.Text:
+            ((HttpSocketClient)client).SendWithWS("我已收到");
+            break;
+        default:
+            break;
+    }
+}
+```
+
+:::  
+
+
+## 七、服务器广播发送
+
+```csharp
+//广播给所有人
+foreach (var item in service.GetClients())
+{
+    if (item.Protocol== Protocol.WebSocket)
+    {
+        item.SendWithWS("广播");
+    }
+}
+```
+
+:::tip 提示
+
+在发送时，还可以自己过滤ID。
+
+:::  

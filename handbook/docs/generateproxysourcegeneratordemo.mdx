@@ -1,0 +1,146 @@
+---
+id: generateproxysourcegeneratordemo
+title: 源生成代理推荐写法
+---
+
+### 定义
+
+命名空间：TouchSocket.Rpc <br/>
+程序集：[TouchSocket.Rpc.dll](https://www.nuget.org/packages/TouchSocket.Rpc)
+
+
+## 一、声明接口
+
+在`TouchSocket`中，关于`Rpc`，我们有更为推荐的写法。详细步骤如下：
+
+（1）新建类库项目，命名为`RpcClassLibrary`。然后在该程序集中，定义服务接口，和接口参数实体类。
+
+```csharp showLineNumbers
+/// <summary>
+/// 定义服务接口。
+/// </summary>
+[GeneratorRpcProxy]
+public interface IUserServer:IRpcServer
+{
+    [DmtpRpc]
+    LoginResponse Login(LoginRequest request);
+}
+```
+
+```csharp showLineNumbers
+public class LoginRequest:RequestBase
+{
+    public string Account { get; set; }
+    public string Password { get; set; }
+}
+
+public class LoginResponse : ResponseBase
+{
+}
+
+//下面两个是请求和响应的基类，可以根据业务增加其他字段
+public class RequestBase
+{
+}
+
+public class ResponseBase
+{
+    public Result Result { get; set; }
+}
+```
+
+## 二、实现接口
+
+新建类库项目，命名`RpcImplementationClassLibrary`，引用`RpcClassLibrary`项目，然后用于实现接口。
+
+```csharp showLineNumbers
+public class UserServer : IUserServer
+{
+    public LoginResponse Login(LoginRequest request)
+    {
+        //返回假逻辑
+        return new LoginResponse() {  Result=Result.Success};
+    }
+}
+```
+
+然后新建类文件，命名为`AssemblyInfo.cs`，用于存放程序集相关配置。此处的目的是设置`Rpc`服务自动注册。
+
+所以类文件中，需要添加如下代码：
+
+```csharp showLineNumbers
+using TouchSocket.Rpc;
+
+[assembly: GeneratorRpcServerRegister]
+```
+
+## 三、服务注册、启动
+
+新建控制台项目，作为服务器，需要同时引用`RpcImplementationClassLibrary`和`RpcClassLibrary`。
+
+如果作为服务器，需要按接口注册服务
+
+```csharp showLineNumbers
+var service = new TcpDmtpService();
+var config = new TouchSocketConfig()//配置
+       .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+       .ConfigureContainer(a =>
+       {
+           a.AddConsoleLogger();
+           a.AddRpcStore(store =>
+           {
+               ////此处使用限定名称，因为源代码生成时，也会生成TouchSocket.Rpc.Generators.IUserServer的接口
+               //store.RegisterServer<RpcClassLibrary.ServerInterface.IUserServer, UserServer>();
+
+               //此处使用的是源生成注册，具体可看文档》Rpc》注册服务
+               store.RegisterAllFromRpcImplementationClassLibrary();
+           });
+       })
+       .ConfigurePlugins(a =>
+       {
+           a.UseDmtpRpc();
+       })
+       .SetDmtpOption(new DmtpOption()
+       {
+           VerifyToken = "Dmtp"
+       });//设定连接口令，作用类似账号密码
+
+await service.SetupAsync(config);
+await service.StartAsync();
+
+service.Logger.Info($"{service.GetType().Name}已启动");
+```
+
+## 四、创建客户端
+
+作为客户端仅引用`RpcClassLibrary`即可。直接调用即可。
+
+```csharp {15}
+var client = new TcpDmtpClient();
+await client.SetupAsync(new TouchSocketConfig()
+     .SetRemoteIPHost("127.0.0.1:7789")
+     .ConfigurePlugins(a =>
+     {
+         a.UseDmtpRpc();
+     })
+     .SetDmtpOption(new DmtpOption()
+     {
+         VerifyToken = "Dmtp"
+     }));
+await client.ConnectAsync();
+
+//Login即为在RpcClassLibrary中自动生成的项目
+var response = client.GetDmtpRpcActor().Login(new RpcClassLibrary.Models.LoginRequest() { Account = "Account", Password = "Account" });
+Console.WriteLine(response.Result);
+```
+
+## 五、结束
+
+推荐写法的演示，是为实际项目编写提供参考。经过框架的搭建，后续的开发将变得简单。
+
+例如：当需要添加一个功能时，只需要在`RpcClassLibrary`中添加一个接口服务，或者在现有服务中添加函数，然后在`RpcImplementationClassLibrary`实现接口即可。其余注册工作将自动完成。
+
+同时，当你需要调用Rpc时，只需要把`RpcClassLibrary`作为项目引用，或者dll引用。因为`RpcClassLibrary`中仅包含服务接口、参数实例和源生成的调用方法，所以不会泄漏敏感数据（前提是您在编写代码时，并无在`RpcClassLibrary`中包含敏感信息）。
+
+[推荐写法示例](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Dmtp)
+

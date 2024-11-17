@@ -1,0 +1,99 @@
+---
+id: webapiservice
+title: 定义、发布、启动服务
+---
+
+## 定义服务
+
+在**服务器**端中新建一个类，继承于**RpcServer**类（或实现IRpcServer），然后在该类中写**公共方法**，并用**WebApi**属性标签标记，如果方法有**重载**，需要重新指定**函数键**。
+
+- 支持代理生成**注释**。
+
+```csharp
+public class ApiServer : RpcServer
+{
+    [Router("[api]/[action]ab")]//此路由会以"/Server/Sumab"实现
+    [WebApi(HttpMethodType.GET)]
+    public int Sum(int a, int b)
+    {
+        return a + b;
+    }
+
+    [WebApi(HttpMethodType.POST)]
+    public int TestPost(MyClass myClass)
+    {
+        return myClass.A + myClass.B;
+    }
+
+    /// <summary>
+    /// 使用调用上下文，响应文件下载。
+    /// </summary>
+    /// <param name="callContext"></param>
+    [WebApi(HttpMethodType.GET, MethodFlags = MethodFlags.IncludeCallContext)]
+    public Task<string> DownloadFile(IWebApiCallContext callContext, string id)
+    {
+        if (id == "rrqm")
+        {
+            callContext.HttpContext.Response.FromFile(@"D:\System\Windows.iso", callContext.HttpContext.Request);
+            return Task.FromResult("ok");
+        }
+        return Task.FromResult("id不正确。");
+    }
+
+    /// <summary>
+    /// 使用调用上下文，获取实际请求体。
+    /// </summary>
+    /// <param name="callContext"></param>
+    [WebApi(HttpMethodType.POST, MethodFlags = MethodFlags.IncludeCallContext)]//声明包含调用上下文
+    [Router("[api]/[action]")]
+    public Task<string> PostContent(IWebApiCallContext callContext)
+    {
+        if (callContext.Caller is ISocketClient socketClient)
+        {
+            this.m_logger.Info($"IP:{socketClient.IP},Port:{socketClient.Port}");//获取Ip和端口
+        }
+        if (callContext.HttpContext.Request.TryGetContent(out byte[] content))
+        {
+            this.m_logger.Info($"共计：{content.Length}");
+        }
+
+        return Task.FromResult("ok");
+    }
+}
+
+public class MyClass
+{
+    public int A { get; set; }
+    public int B { get; set; }
+}
+```
+
+<a name="lHhEB"></a>
+
+## 创建简单服务器
+
+```csharp
+ HttpService service = new HttpService();
+ service.Setup(new TouchSocketConfig()
+    .UsePlugin()
+    .SetListenIPHosts(new IPHost[] { new IPHost(7789) })
+    .ConfigureContainer(a =>
+    {
+        a.SetSingletonLogger<ConsoleLogger>();//注册一个日志
+    })
+    .ConfigureRpcStore(a =>
+    {
+        a.RegisterServer<ApiServer>();//注册服务
+    })
+    .ConfigurePlugins(a =>
+    {
+        a.UseCheckClear();
+        a.UseWebApi();//启用WebApi
+    }))
+    .Start();
+
+ Console.WriteLine("以下连接用于测试webApi");
+ Console.WriteLine($"使用：http://127.0.0.1:7789/ApiServer/Sum?a=10&b=20");
+
+ Console.ReadKey();
+```

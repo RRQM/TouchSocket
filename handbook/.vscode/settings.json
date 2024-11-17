@@ -1,0 +1,28 @@
+{
+    "cSpell.enableFiletypes": [
+        "mdx"
+    ],
+    "cSpell.words": [
+        "Avalonia",
+        "Boolens",
+        "bools",
+        "cref",
+        "Dmtp",
+        "endregion",
+        "Handshaked",
+        "modbus",
+        "Multifile",
+        "netstandard",
+        "Newtonsoft",
+        "Querys",
+        "Responsed",
+        "RRQM",
+        "touchsocket",
+        "typeparam",
+        "Unpackage",
+        "ushort",
+        "winform"
+    ],
+    "editor.wordWrap": "on",
+    // "editor.wordWrapColumn": 80
+}

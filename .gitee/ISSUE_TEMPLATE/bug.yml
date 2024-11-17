@@ -1,0 +1,164 @@
+name: 问题反馈
+description: 当你中发现了一个 Bug，导致应用崩溃或抛出异常，或者有一个组件存在问题，或者某些地方看起来不对劲。
+title:
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💢 特别说明：如果 Issue 没有严格按照模板编写且未提供测试源码下载或 Git 测试仓库地址，则视为无效 `Issue`，将无法得到答复。
+  - type: dropdown
+    id: component
+    attributes:
+      label: 组件
+      description: 请选择项目使用的哪个组件？
+      options:
+        - Tcp
+        - Udp
+        - NamedPipe
+        - WebSocket
+        - Http
+        - Dmtp-Tcp
+        - Dmtp-Udp
+        - Dmtp-WebSocket
+        - Dmtp-Http
+        - Dmtp-NamedPipe
+        - Rpc
+        - JsonRpc
+        - XmlRpc
+        - WebApi
+        - 其他
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本号
+      description: 请输入项目使用的 TouchSocket 版本？
+    validations:
+      required: true
+  - type: dropdown
+    id: net_sdk
+    attributes:
+      label: .NET SDK
+      description: 请选择项目使用的 .NET SDK 版本？
+      options:
+        - .NET Framework 45 以上
+        - .NET Framework 462 以上
+        - .NET Framework 472 以上
+        - .NET Framework 481
+        - .NET6
+        - .NET7
+        - .NET8
+        - .NET9
+    validations:
+      required: true
+  - type: dropdown
+    id: project_type
+    attributes:
+      label: 项目类型
+      description: 请选择目标项目类型？
+      options:
+        - WebApi
+        - Unity
+        - MAUI
+        - Blazor
+        - WinForm
+        - WPF
+        - Console
+    validations:
+      required: true
+  - type: dropdown
+    id: os_type
+    attributes:
+      label: 操作系统
+      description: 请选择操作系统类型？
+      options:
+        - Windows 11
+        - Windows 10
+        - Windows 8
+        - Ubuntu
+        - CentOS
+        - Debian
+        - Deepin
+        - Red Hat Linux
+        - 其他 Linux
+        - MacOS
+        - 其他
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 请选择代码运行环境？
+      options:
+        - 开发环境 (Development)
+        - 生产环境 (Production)
+        - 测试环境 (单元测试/集成测试)
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: 这个问题是否已经存在？
+      options:
+        - label: 我已经搜索过现有的问题 (https://gitee.com/RRQM_Home/TouchSocket/issues)
+          required: true
+  - type: textarea
+    attributes:
+      label: 如何复现
+      description: 请详细告诉我们如何复现你遇到的问题，如涉及代码，可提供一个最小代码示例，并使用反引号```附上它
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 预期结果
+      description: 请告诉我们你预期会发生什么。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 实际结果
+      description: 请告诉我们实际发生了什么。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 异常信息
+      description: 如果有异常请把详细异常堆栈粘贴上来。如果可以的话，上传任何关于 bug 的截图。
+    validations:
+      required: true
+  - type: input
+    id: demo
+    attributes:
+      label: Demo 地址（仅限Git地址）
+      description: 请提供复现错误的 Demo 下载
+      placeholder: https://gitee.com/your_id/your_test_project.git
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: 承诺支持
+      options:
+        - label: 我确定我已经对TouchSocket项目进行了“Star”操作。
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 承诺规范
+      options:
+        - label: 我确定已完整阅读[Issue提问规范](https://touchsocket.net/docs/current/troubleshootissue)，并按照要求填写。
+          required: true
+  - type: checkboxes
+    attributes:
+      label: 承诺友好
+      options:
+        - label: 我承诺将本着相互尊重、理解和友善的态度进行交流，共同维护好 TouchSocket 来之不易的良好的社区氛围。
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        感谢你提交 bug，我们会尽快处理。
