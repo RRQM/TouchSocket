@@ -7,7 +7,6 @@
 
 说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket.WebApi.Swagger</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.WebApi.Swagger</PackageOutputPath>
 	</PropertyGroup>
   <ItemGroup>
     <None Remove="api\favicon-16x16.png" />

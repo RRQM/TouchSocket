@@ -36,7 +36,7 @@ namespace TouchSocket.Sockets
         public static IWaitingClient<TClient, TResult> CreateWaitingClient<TClient, TResult>(this TClient client, WaitingOptions waitingOptions) where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
             where TResult : IReceiverResult
         {
-            return new WaitingClient<TClient, TResult>(client, waitingOptions);
+            return new InternalWaitingClient<TClient, TResult>(client, waitingOptions);
         }
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace TouchSocket.Sockets
                 try
                 {
                     // 使用client对象的SendThenReturnAsync方法发送数据并返回响应
-                    return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(false)).Data;
+                    return (await client.SendThenResponseAsync(requestInfo, tokenSource.Token).ConfigureAwait(false)).ByteBlock?.ToArray();
                 }
                 catch (OperationCanceledException)
                 {
@@ -298,7 +298,7 @@ namespace TouchSocket.Sockets
             where TResult : IReceiverResult
         {
             // 使用client对象的SendThenResponseAsync方法发送数据并返回响应
-            return (await client.SendThenResponseAsync(memory, token).ConfigureAwait(false)).Data;
+            return (await client.SendThenResponseAsync(memory, token).ConfigureAwait(false)).ByteBlock?.ToArray();
         }
 
         #endregion SendThenReturnAsync

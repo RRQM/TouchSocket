@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.Rpc.RateLimiting</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.Rpc.RateLimiting</PackageOutputPath>
 	</PropertyGroup>
 	
 	<ItemGroup>

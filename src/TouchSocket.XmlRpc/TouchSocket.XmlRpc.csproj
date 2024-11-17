@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/</Description>
 		<Title>TouchSocket.XmlRpc</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.XmlRpc</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

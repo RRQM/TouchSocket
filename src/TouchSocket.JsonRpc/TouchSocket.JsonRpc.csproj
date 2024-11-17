@@ -6,7 +6,6 @@
 
 说明文档：https://touchsocket.net/	</Description>
 		<Title>TouchSocket.JsonRpc</Title>
-		<PackageOutputPath>..\..\Build\NugetPackages\TouchSocket.JsonRpc</PackageOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\TouchSocket.Shared\Core\ThrowHelperCore.cs" Link="Exceptions\ThrowHelperCore.cs" />
