@@ -339,3 +339,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database 
 healthchecksdb
+handbook/package-lock.json
