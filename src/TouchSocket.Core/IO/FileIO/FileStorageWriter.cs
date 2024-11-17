@@ -21,7 +21,7 @@ namespace TouchSocket.Core
     public partial class FileStorageWriter : SafetyDisposableObject
     {
         private long m_position;
-
+        internal Lock m_lock = LockFactory.Create();
 
         /// <summary>
         /// 初始化FileStorageWriter的实例。

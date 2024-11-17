@@ -160,7 +160,7 @@ namespace TouchSocket.Core
 
             var writer = this.GetFileStorageWriter(dirPath);
 
-            lock (writer)
+            lock (writer.m_lock)
             {
                 try
                 {

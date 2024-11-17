@@ -52,7 +52,7 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private InternalReceiver m_receiver;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
-        private readonly object m_lockForAbort = new object();
+        private readonly Lock m_lockForAbort = LockFactory.Create();
         #endregion 变量
 
         #region 事件

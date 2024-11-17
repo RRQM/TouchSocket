@@ -39,7 +39,7 @@ namespace TouchSocket.Sockets
 
         #region 变量
 
-        private readonly object m_lockForAbort = new object();
+        private readonly Lock m_lockForAbort = LockFactory.Create();
         private readonly SemaphoreSlim m_semaphoreForConnect = new SemaphoreSlim(1, 1);
         private readonly TcpCore m_tcpCore = new TcpCore();
         private Task m_beginReceiveTask;
