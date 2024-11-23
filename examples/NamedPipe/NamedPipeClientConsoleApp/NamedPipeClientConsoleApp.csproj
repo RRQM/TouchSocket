@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.NamedPipe" Version="3.0.3" />
+    <PackageReference Include="TouchSocket.NamedPipe" Version="3.0.4" />
   </ItemGroup>
 
 </Project>

@@ -59,6 +59,7 @@ namespace WebSocketConsoleApp
                  })
                  .ConfigurePlugins(a =>
                  {
+                     a.UseWebSocketReconnection();
                      a.Add(typeof(IWebSocketReceivedPlugin), async (IHttpSession c, WSDataFrameEventArgs e) =>
                      {
                          client.Logger.Info($"收到Add的计算结果：{e.DataFrame.ToText()}");
@@ -70,6 +71,11 @@ namespace WebSocketConsoleApp
 
             await client.SendAsync("Add 10 20");
             await Task.Delay(1000);
+
+            await client.CloseAsync("我想关就关");
+
+            //或者使用关闭状态码
+            //await client.CloseAsync( WebSocketCloseStatus.InternalServerError,"我不想关，但还得关");
         }
 
         private static async Task SendSubstringText()
@@ -237,9 +243,9 @@ namespace WebSocketConsoleApp
                             //.UseAutoPong()//当收到ping报文时自动回应pong
                             ;
 
-                     a.Add<MyReadTextWebSocketPlugin>();
+                     //a.Add<MyReadTextWebSocketPlugin>();
 
-                     a.Add<MyWSCommandLinePlugin>();
+                     //a.Add<MyWSCommandLinePlugin>();
                      a.Add<MyWebSocketPlugin>();
 
                      a.UseWebApi();
@@ -444,7 +450,12 @@ namespace WebSocketConsoleApp
             }
         }
 
-        public class MyWebSocketPlugin : PluginBase, IWebSocketHandshakingPlugin, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
+        public class MyWebSocketPlugin : PluginBase,
+            IWebSocketHandshakingPlugin,
+            IWebSocketHandshakedPlugin,
+            IWebSocketReceivedPlugin,
+            IWebSocketClosingPlugin,
+            IWebSocketClosedPlugin
         {
             public MyWebSocketPlugin(ILog logger)
             {
@@ -482,6 +493,22 @@ namespace WebSocketConsoleApp
                     case WSDataType.Close:
                         {
                             this.m_logger.Info("远程请求断开");
+
+                            //var byteBlock = e.DataFrame.PayloadData;
+                            //byteBlock.SeekToStart();
+                            //var ss = byteBlock.ReadUInt16(EndianType.Big);
+                            //using (var frame = new WSDataFrame())
+                            //{
+                            //    frame.Opcode = WSDataType.Close;
+                            //    frame.FIN = true;
+                            //    frame.PayloadData=new ByteBlock();
+                            //    frame.PayloadData.WriteUInt16(1000, EndianType.Big);
+                            //    frame.PayloadData.Write(Encoding.UTF8.GetBytes("hello"));
+                            //    await client.SendAsync(frame);
+                            //}
+
+                            //client.Client.TryShutdown();
+
                             await client.CloseAsync("断开");
                         }
                         return;
@@ -538,11 +565,23 @@ namespace WebSocketConsoleApp
                                 this.m_logger.Exception(ex);
                                 messageCombinator.Clear();//当组合发生异常时，应该清空组合器数据
                             }
-                            
+
                         }
                         break;
                 }
 
+                await e.InvokeNext();
+            }
+
+            public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
+            {
+                this.m_logger.Info($"WebSocket已断开，状态：{webSocket.CloseStatus}，信息：{e.Message}");
+                await e.InvokeNext();
+            }
+
+            public async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
+            {
+                this.m_logger.Info($"WebSocket请求断开，状态：{webSocket.CloseStatus}，信息：{e.Message}");
                 await e.InvokeNext();
             }
         }
