@@ -77,8 +77,8 @@ Dmtp像http和websocket一样，也是封装的应用层协议。它可以基于
 
 ### 4.1 连接注意事项
 
-Dmtp拥有独立的连接机制，在连接前后会依次触发`IDmtpHandshakingPlugin`与`IDmtpHandshakedPlugin`插件。当完成连接时，其`IDmtpActor.IsHandshaked`方为`true`，此后才可以进行后续操作。
+Dmtp拥有独立的连接机制，在连接前后会依次触发`IDmtpHandshakingPlugin`与`IDmtpHandshakedPlugin`插件。当完成连接时，其`IDmtpActor.Online`方为`true`，此后才可以进行后续操作。
 
-例如：Dmtp-Tcp组件，这是基于Tcp协议的Dmtp，因为它是继承实现，所以会拥有`Online`和`IsHandshaked`两个属性。其中Online仅仅表示已经建立Tcp连接，IsHandshaked才表示Dmtp是否完成握手。
+例如：Dmtp-Tcp组件，这是基于Tcp协议的Dmtp，因为它是继承实现，所以会拥有`Online`和`Online`两个属性。其中Online仅仅表示已经建立Tcp连接，IsHandshaked才表示Dmtp是否完成握手。
 
-所以，在一些情况下，可能可能需要判断`IsHandshaked`完成，才能进行后续操作。
+所以，在一些情况下，可能可能需要判断`Online`完成，才能进行后续操作。

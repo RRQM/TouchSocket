@@ -19,7 +19,7 @@ title: 文件流池
 使用完成后，可以随时释放。
 
 ```csharp showLineNumbers
-int len = 0;
+int Length = 0;
 byte[] buffer = new byte[1024 * 1024];
 
 using (var reader = FilePool.GetReader(path))
@@ -31,11 +31,11 @@ using (var reader = FilePool.GetReader(path))
         {
             break;
         }
-        len += r;
+        Length += r;
     }
 }
 
-Console.WriteLine(len);
+Console.WriteLine(Length);
 ```
 
 ## 三、使用写

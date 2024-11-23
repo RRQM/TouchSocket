@@ -49,7 +49,7 @@ for (int bufferLength = 1; bufferLength < 1024 * 10; bufferLength += 1024)
      , bufferLength, (byteBlock, requestInfo) =>
      {
          //此处就是接收，如果是自定义适配器，可以将requestInfo强制转换为实际对象，然后判断数据的确定性
-         if (byteBlock.Len!=5||(!byteBlock.ToArray().SequenceEqual(data)))
+         if (byteBlock.Length!=5||(!byteBlock.ToArray().SequenceEqual(data)))
          {
              isSuccess = false;
          }
