@@ -38,7 +38,7 @@ adapter.ReceivedCallBack = (byteBlock, requestInfo) =>
 {
     //此处会回调接收的最终触发，例如：此处使用的固定包头，会解析4+n的数据为n。
 
-    if (byteBlock.Len == 4)
+    if (byteBlock.Length == 4)
     {
         receivedCallBack = true;
     }

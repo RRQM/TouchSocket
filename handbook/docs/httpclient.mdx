@@ -3,6 +3,8 @@ id: httpclient
 title: 创建HttpClient
 ---
 
+import CardLink from "@site/src/components/CardLink.js";
+
 ### 定义
 
 命名空间：TouchSocket.Http <br/>
@@ -172,4 +174,24 @@ using (var stream=File.OpenRead("TouchSocket.dll"))
 
 :::  
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Http)
+## 六、传输文件
+
+### 6.1 下载文件
+
+```csharp {4} showLineNumbers
+//直接发起一个Get请求，然后写入到流中。
+using (var stream=File.Create("1.txt"))
+{
+    await client.GetFileAsync("/WeatherForecast",stream);
+}
+```
+
+### 6.2 上传文件
+
+```csharp showLineNumbers
+await client.UploadFileAsync("/upfile", new FileInfo("filePath"));
+```
+
+## 七、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/Http/HttpClientConsoleApp"/>
