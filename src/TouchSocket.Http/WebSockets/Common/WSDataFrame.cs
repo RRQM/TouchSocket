@@ -82,10 +82,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         public int PayloadLength
         {
-            get
-            {
-                return this.m_payloadLength != 0 ? this.m_payloadLength : this.PayloadData != null ? this.PayloadData.Length : 0;
-            }
+            get => this.m_payloadLength != 0 ? this.m_payloadLength : this.PayloadData != null ? this.PayloadData.Length : 0;
 
             set => this.m_payloadLength = value;
         }
@@ -194,7 +191,7 @@ namespace TouchSocket.Http.WebSockets
         {
             if (disposing)
             {
-                this.PayloadData?.Dispose();
+                this.PayloadData.SafeDispose();
             }
             base.Dispose(disposing);
         }

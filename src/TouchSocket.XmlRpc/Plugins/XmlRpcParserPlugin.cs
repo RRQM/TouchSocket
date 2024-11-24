@@ -28,18 +28,16 @@ namespace TouchSocket.XmlRpc
     public class XmlRpcParserPlugin : PluginBase, IHttpPlugin
     {
         private readonly IRpcServerProvider m_rpcServerProvider;
-        private readonly IResolver m_resolver;
         private string m_xmlRpcUrl = "/xmlrpc";
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver)
+        public XmlRpcParserPlugin(IRpcServerProvider rpcServerProvider)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
-            this.m_resolver = resolver;
         }
 
         /// <summary>
@@ -69,126 +67,110 @@ namespace TouchSocket.XmlRpc
                 if (this.m_xmlRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_xmlRpcUrl))
                 {
                     e.Handled = true;
-
-                    var xml = new XmlDocument();
-                    var xmlstring =await e.Context.Request.GetBodyAsync().ConfigureAwait(false);
-                    xml.LoadXml(xmlstring);
-                    var methodName = xml.SelectSingleNode("methodCall/methodName");
-                    var actionKey = methodName.InnerText;
-
-                    object[] ps = null;
-                    var invokeResult = new InvokeResult();
                     XmlRpcCallContext callContext = null;
-
-                    if (this.ActionMap.TryGetRpcMethod(actionKey, out var rpcMethod))
+                    try
                     {
-                        if (rpcMethod.IsEnable)
+                        var xml = new XmlDocument();
+                        var xmlstring = await e.Context.Request.GetBodyAsync().ConfigureAwait(false);
+                        xml.LoadXml(xmlstring);
+                        var methodName = xml.SelectSingleNode("methodCall/methodName");
+                        var actionKey = methodName.InnerText;
+
+                        object[] ps = null;
+                        var invokeResult = new InvokeResult();
+                        if (this.ActionMap.TryGetRpcMethod(actionKey, out var rpcMethod))
                         {
-                            try
+                            if (rpcMethod.IsEnable)
                             {
-                                callContext = new XmlRpcCallContext(client, rpcMethod, this.m_resolver, e.Context, xmlstring);
-
-                                ps = new object[rpcMethod.Parameters.Length];
-                                var paramsNode = xml.SelectSingleNode("methodCall/params");
-
-                                var index = 0;
-                                for (var i = 0; i < ps.Length; i++)
+                                try
                                 {
-                                    var parameter = rpcMethod.Parameters[i];
-                                    if (parameter.IsCallContext)
+                                    callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver.CreateScopedResolver(), e.Context, xmlstring);
+
+                                    ps = new object[rpcMethod.Parameters.Length];
+                                    var paramsNode = xml.SelectSingleNode("methodCall/params");
+
+                                    var index = 0;
+                                    for (var i = 0; i < ps.Length; i++)
                                     {
-                                        ps[i] = callContext;
-                                    }
-                                    else if (parameter.IsFromServices)
-                                    {
-                                        ps[i] = this.m_resolver.Resolve(parameter.Type);
-                                    }
-                                    else if (index < paramsNode.ChildNodes.Count)
-                                    {
-                                        var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;
-                                        ps[i] = XmlDataTool.GetValue(valueNode, parameter.Type);
-                                    }
-                                    else if (parameter.ParameterInfo.HasDefaultValue)
-                                    {
-                                        ps[i] = parameter.ParameterInfo.DefaultValue;
-                                    }
-                                    else
-                                    {
-                                        ps[i] = parameter.Type.GetDefault();
+                                        var parameter = rpcMethod.Parameters[i];
+                                        if (parameter.IsCallContext)
+                                        {
+                                            ps[i] = callContext;
+                                        }
+                                        else if (parameter.IsFromServices)
+                                        {
+                                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                                        }
+                                        else if (index < paramsNode.ChildNodes.Count)
+                                        {
+                                            var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;
+                                            ps[i] = XmlDataTool.GetValue(valueNode, parameter.Type);
+                                        }
+                                        else if (parameter.ParameterInfo.HasDefaultValue)
+                                        {
+                                            ps[i] = parameter.ParameterInfo.DefaultValue;
+                                        }
+                                        else
+                                        {
+                                            ps[i] = parameter.Type.GetDefault();
+                                        }
                                     }
                                 }
-
-                                //if (rpcMethod.IncludeCallContext)
-                                //{
-                                //    ps[0] = callContext;
-                                //    var index = 1;
-                                //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                                //    {
-                                //        var valueNode = paramNode.FirstChild.FirstChild;
-                                //        ps[index] = (XmlDataTool.GetValue(valueNode, rpcMethod.ParameterTypes[index]));
-                                //        index++;
-                                //    }
-                                //}
-                                //else
-                                //{
-                                //    var index = 0;
-                                //    foreach (XmlNode paramNode in paramsNode.ChildNodes)
-                                //    {
-                                //        var valueNode = paramNode.FirstChild.FirstChild;
-                                //        ps[index] = (XmlDataTool.GetValue(valueNode, rpcMethod.ParameterTypes[index]));
-                                //        index++;
-                                //    }
-                                //}
+                                catch (Exception ex)
+                                {
+                                    invokeResult.Status = InvokeStatus.Exception;
+                                    invokeResult.Message = ex.Message;
+                                }
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                invokeResult.Status = InvokeStatus.Exception;
-                                invokeResult.Message = ex.Message;
+                                invokeResult.Status = InvokeStatus.UnEnable;
+                                invokeResult.Message = "服务不可用";
                             }
                         }
                         else
                         {
-                            invokeResult.Status = InvokeStatus.UnEnable;
-                            invokeResult.Message = "服务不可用";
+                            invokeResult.Status = InvokeStatus.UnFound;
+                            invokeResult.Message = "没有找到这个服务。";
                         }
-                    }
-                    else
-                    {
-                        invokeResult.Status = InvokeStatus.UnFound;
-                        invokeResult.Message = "没有找到这个服务。";
-                    }
 
-                    if (invokeResult.Status == InvokeStatus.Ready)
-                    {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                    }
+                        if (invokeResult.Status == InvokeStatus.Ready)
+                        {
+                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, ps).ConfigureAwait(false);
+                        }
 
-                    var httpResponse = e.Context.Response;
+                        var httpResponse = e.Context.Response;
 
-                    var byteBlock = new ByteBlock();
+                        var byteBlock = new ByteBlock();
 
-                    if (invokeResult.Status == InvokeStatus.Success)
-                    {
-                        XmlDataTool.CreatResponse(httpResponse, invokeResult.Result);
-                    }
-                    else
-                    {
-                        httpResponse.StatusCode = 201;
-                        httpResponse.StatusMessage = invokeResult.Message;
-                    }
-                    try
-                    {
-                        await httpResponse.AnswerAsync().ConfigureAwait(false);
+                        if (invokeResult.Status == InvokeStatus.Success)
+                        {
+                            XmlDataTool.CreatResponse(httpResponse, invokeResult.Result);
+                        }
+                        else
+                        {
+                            httpResponse.StatusCode = 201;
+                            httpResponse.StatusMessage = invokeResult.Message;
+                        }
+                        try
+                        {
+                            await httpResponse.AnswerAsync().ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            byteBlock.Dispose();
+                        }
+
+                        if (!e.Context.Request.KeepAlive)
+                        {
+                            client.TryShutdown(SocketShutdown.Both);
+                        }
                     }
                     finally
                     {
-                        byteBlock.Dispose();
+                        callContext.SafeDispose();
                     }
-
-                    if (!e.Context.Request.KeepAlive)
-                    {
-                        client.TryShutdown(SocketShutdown.Both);
-                    }
+                    
                 }
             }
 

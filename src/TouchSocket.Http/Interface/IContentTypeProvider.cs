@@ -20,9 +20,16 @@ namespace TouchSocket.Http
         /// <summary>
         /// 给定文件路径，确定MIME类型
         /// </summary>
-        /// <param name="subpath"></param>
-        /// <param name="contentType"></param>
-        /// <returns></returns>
+        /// <param name="subpath">文件路径</param>
+        /// <param name="contentType">MIME类型</param>
+        /// <returns>如果找到匹配的MIME类型则返回true，否则返回false</returns>
         bool TryGetContentType(string subpath, out string contentType);
+
+        /// <summary>
+        /// 添加文件路径和MIME类型的映射
+        /// </summary>
+        /// <param name="subpath">文件路径</param>
+        /// <param name="contentType">MIME类型</param>
+        void Add(string subpath, string contentType);
     }
 }

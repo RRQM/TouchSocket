@@ -127,6 +127,7 @@ namespace TouchSocket.Rpc
             {
                 throw new RpcException("实例类型必须与注册类型有继承关系。");
             }
+
             foreach (var item in this.m_serverTypes.Keys)
             {
                 if (item.FullName == serverFromType.FullName)
@@ -137,7 +138,7 @@ namespace TouchSocket.Rpc
 
             var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, rpcServer.GetType());
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(rpcMethods));
+            this.m_serverTypes.AddOrUpdate(serverFromType, new List<RpcMethod>(rpcMethods));
             this.m_registrator.RegisterSingleton(serverFromType, rpcServer);
         }
 
@@ -161,7 +162,7 @@ namespace TouchSocket.Rpc
 
             foreach (var item in this.m_serverTypes.Keys)
             {
-                if (item.FullName == serverFromType.FullName)
+                if (item == serverFromType)
                 {
                     return;
                 }
@@ -171,13 +172,17 @@ namespace TouchSocket.Rpc
             {
                 this.m_registrator.RegisterTransient(serverFromType, serverToType);
             }
+            else if (typeof(IScopedRpcServer).IsAssignableFrom(serverFromType))
+            {
+                this.m_registrator.Register(new DependencyDescriptor(serverFromType, serverToType, Lifetime.Scoped));
+            }
             else
             {
                 this.m_registrator.RegisterSingleton(serverFromType, serverToType);
             }
             var rpcMethods = CodeGenerator.GetRpcMethods(serverFromType, serverToType);
 
-            this.m_serverTypes.TryAdd(serverFromType, new List<RpcMethod>(rpcMethods));
+            this.m_serverTypes.AddOrUpdate(serverFromType, new List<RpcMethod>(rpcMethods));
         }
 
         #endregion 注册

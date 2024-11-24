@@ -30,6 +30,11 @@ namespace TouchSocket.Core
             return this;
         }
 
+        public IScopedResolver CreateScopedResolver()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc/>
         public IEnumerable<DependencyDescriptor> GetDescriptors()
         {

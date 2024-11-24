@@ -10,28 +10,20 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.WebApi;
 
 namespace TouchSocket.JsonRpc
 {
-    /// <summary>
-    /// HttpJsonRpcCallContext
-    /// </summary>
+   
     internal class HttpJsonRpcCallContext : JsonRpcCallContextBase, IHttpCallContext
     {
-        /// <summary>
-        /// HttpJsonRpcCallContext
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="jsonString"></param>
-        /// <param name="context"></param>
-        public HttpJsonRpcCallContext(object caller, string jsonString, HttpContext context) : base(caller, jsonString)
+        public HttpJsonRpcCallContext(object caller, string jsonString, HttpContext context,IScopedResolver scopedResolver) :
+            base(caller, jsonString, scopedResolver)
         {
             this.HttpContext = context;
         }
-
-        /// <inheritdoc/>
         public HttpContext HttpContext { get; }
     }
 }

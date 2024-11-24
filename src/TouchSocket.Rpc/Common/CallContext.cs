@@ -20,8 +20,9 @@ namespace TouchSocket.Rpc
     /// </summary>
     public abstract class CallContext : DependencyObject, ICallContext
     {
-        private bool m_canceled;
         private readonly object m_locker = new object();
+        private readonly IScopedResolver m_scopedResolver;
+        private bool m_canceled;
         private CancellationTokenSource m_tokenSource;
 
         /// <summary>
@@ -29,34 +30,23 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
         /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
-        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
-        public CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
+        /// <param name="scopedResolver">IResolver接口的实现，用于解析依赖注入。</param>
+        public CallContext(object caller, RpcMethod rpcMethod, IScopedResolver scopedResolver)
         {
             this.Caller = caller;
             this.RpcMethod = rpcMethod;
-            this.Resolver = resolver;
-        }
-
-        /// <summary>
-        /// CallContext 类的构造函数。
-        /// </summary>
-        /// <remarks>
-        /// 此构造函数不需要任何参数，因此是一个无参数的构造函数。
-        /// 它用于初始化 CallContext 类的新实例。
-        /// 尽管在这个构造函数中没有写任何代码，但可能会在未来的版本中添加初始化逻辑。
-        /// </remarks>
-        public CallContext()
-        {
+            this.m_scopedResolver = scopedResolver;
+            this.Resolver = scopedResolver.Resolver;
         }
 
         /// <inheritdoc/>
         public object Caller { get; protected set; }
 
         /// <inheritdoc/>
-        public RpcMethod RpcMethod { get; protected set; }
+        public IResolver Resolver { get; }
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; protected set; }
+        public RpcMethod RpcMethod { get; protected set; }
 
         /// <inheritdoc/>
         public CancellationToken Token
@@ -90,6 +80,21 @@ namespace TouchSocket.Rpc
                     this.m_canceled = true;
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.m_scopedResolver.SafeDispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

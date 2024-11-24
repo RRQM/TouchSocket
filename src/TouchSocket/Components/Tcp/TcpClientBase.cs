@@ -245,8 +245,12 @@ namespace TouchSocket.Sockets
                     this.m_online = false;
                     // 安全地释放主套接字资源
                     this.MainSocket.SafeDispose();
+
                     // 安全地释放数据处理适配器资源
-                    this.DataHandlingAdapter.SafeDispose();
+                    var adapter = this.m_dataHandlingAdapter;
+                    this.m_dataHandlingAdapter = default;
+                    adapter.SafeDispose();
+
                     // 启动一个新任务来处理连接关闭事件
                     Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
                 }

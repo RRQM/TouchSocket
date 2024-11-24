@@ -17,35 +17,18 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
-    /// <summary>
-    /// RpcServerProvider
-    /// </summary>
-    public sealed class RpcServerProvider : IRpcServerProvider
+    internal sealed class InternalRpcServerProvider : IRpcServerProvider
     {
-        private readonly IResolver m_containerProvider;
         private readonly ILog m_logger;
         private readonly RpcStore m_rpcStore;
 
-        /// <summary>
-        /// RpcServerProvider
-        /// </summary>
-        /// <param name="containerProvider"></param>
-        /// <param name="logger"></param>
-        /// <param name="rpcStore"></param>
-        public RpcServerProvider(IResolver containerProvider, ILog logger, RpcStore rpcStore)
+        public InternalRpcServerProvider(ILog logger, RpcStore rpcStore)
         {
-            this.m_containerProvider = containerProvider;
             this.m_logger = logger;
             this.m_rpcStore = rpcStore;
         }
 
-        /// <summary>
-        /// 异步执行Rpc
-        /// </summary>
-        /// <param name="ps"></param>
-        /// <param name="callContext"></param>
-        /// <returns></returns>
-        public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps)
+        public async Task<InvokeResult> ExecuteAsync1(ICallContext callContext, object[] ps)
         {
             var invokeResult = new InvokeResult();
             var filters = callContext.RpcMethod.GetFilters();
@@ -98,7 +81,7 @@ namespace TouchSocket.Rpc
                 invokeResult.Status = InvokeStatus.Success;
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult,default)
+                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, default)
                         .ConfigureAwait(false);
                 }
             }
@@ -134,10 +117,14 @@ namespace TouchSocket.Rpc
         {
             try
             {
-                var rpcServer = (IRpcServer)this.m_containerProvider.Resolve(callContext.RpcMethod.ServerFromType);
+                var rpcServer = callContext.Resolver.Resolve(callContext.RpcMethod.ServerFromType);
                 if (rpcServer is ITransientRpcServer transientRpcServer)
                 {
                     transientRpcServer.CallContext = callContext;
+                }
+                else if (rpcServer is IScopedRpcServer scopedRpcServer)
+                {
+                    scopedRpcServer.CallContext = callContext;
                 }
                 return rpcServer;
             }
