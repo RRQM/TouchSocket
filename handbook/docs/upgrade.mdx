@@ -19,6 +19,52 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.4
+
+**更新日期：** 2024.11.24
+
+**更新描述：**
+
+修复升级。**WebSocket有少量代码差异**，下面会详细介绍。
+
+**更新详情：**
+
+#### 【TouchSocket.Core】
+- &nbsp;<Tag>新增</Tag> `JsonPackageAdapter`适配器，专门解决纯Json数据格式的粘分包。详情参见：[JsonPackageAdapter](./packageadapter.mdx)。
+- &nbsp;<Tag>新增</Tag> `IByteBlock`新增`WriteNormalString`方法，用于写入普通字符串。
+- &nbsp;<Tag>新增</Tag> `Container`容器新增Scoped生命周期，但是本身容器并未实现功能，如果需使用，请使用[TouchSocket.Core.DependencyInjection](https://www.nuget.org/packages/TouchSocket.Core.DependencyInjection)。 
+- &nbsp;<Tag>新增</Tag> `Tcp、NamedPipe、SerialPort、DmtpRpc、JsonRpc、WebApi`等所有组件，支持Scoped容器。（需配合[TouchSocket.Core.DependencyInjection](https://www.nuget.org/packages/TouchSocket.Core.DependencyInjection)容器）。 
+
+#### 【TouchSocket.Http】
+- &nbsp;<Tag>新增</Tag> `HttpStaticPagePlugin`新增`SetContentTypeProvider(Action<IContentTypeProvider> provider)`方法。
+- &nbsp;<Tag>新增</Tag> `WebSocket`新增`CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)`方法。
+- &nbsp;<Tag>修复</Tag> `WebSocket`在`Close`时，不符合规范的bug。[#IAAF3U](https://gitee.com/RRQM_Home/TouchSocket/issues/IAAF3U)，[#IB5IH0](https://gitee.com/RRQM_Home/TouchSocket/issues/IB5IH0)
+- &nbsp;<Tag>调整</Tag> `IWebSocketClosingPlugin`的事件参数，由`ClosedEventArgs`调整为`ClosingEventArgs`。 <Highlight color="#FFA500">重新实现接口解决</Highlight>
+
+
+#### 【TouchSocket.Sockets】
+
+- &nbsp;<Tag>修复</Tag> `TcpClient`在重连之后，适配器失效的bug。 [#IB6KZJ](https://gitee.com/RRQM_Home/TouchSocket/issues/IB6KZJ)
+
+#### 【TouchSocket.Rpc】
+- &nbsp;<Tag>新增</Tag> `Rpc`服务新增`IScopedRpcServer`。
+
+
+#### 【TouchSocket.SerialPort】
+- &nbsp;<Tag>修复</Tag> `SerialPortClient`在重连之后，适配器失效的bug。 
+
+#### 【TouchSocket.NamedPipe】
+
+- &nbsp;<Tag>新增</Tag> `INamedPipeSession`新增`DataHandlingAdapter`属性。 
+- &nbsp;<Tag>修复</Tag> `NamedPipeClient`在重连之后，适配器失效的bug。 
+
+#### 【TouchSocket.Modbus】
+
+- &nbsp;<Tag>优化</Tag> `Modbus`在写入时，会携带`IModbusResponse`的返回值。 [#IATPWB](https://gitee.com/RRQM_Home/TouchSocket/issues/IATPWB)
+
+
+***
+
 ## v3.0.3
 
 **更新日期：** 2024.11.17
