@@ -67,7 +67,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition="!$(DefineConstants.Contains('SourceGenerator'))">
-		<PackageReference Include="Backport.System.Threading.Lock" Version="3.0.1">
+		<PackageReference Include="Backport.System.Threading.Lock" Version="3.0.3">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>analyzers</IncludeAssets>
 		</PackageReference>
