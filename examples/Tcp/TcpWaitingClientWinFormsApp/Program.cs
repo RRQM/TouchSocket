@@ -21,52 +21,12 @@ namespace TcpWaitingClientWinFormsApp
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        private static async Task Main()
+        private static void Main()
         {
-            await CreateService();
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1());
-        }
-
-        private static async Task CreateService()
-        {
-            var service = new TcpService();
-
-            await service.SetupAsync(new TouchSocketConfig()
-                 .SetListenIPHosts(7789)
-                 .ConfigureContainer(a =>
-                 {
-                     a.AddConsoleLogger();
-                 })
-                 .ConfigurePlugins(a =>
-                 {
-                     a.Add<MyPlugin1>();
-                 }));
-            await service.StartAsync();
-
-            service.Logger.Info("Server started");
-        }
-
-        private class MyPlugin1 : PluginBase, ITcpReceivedPlugin
-        {
-            private readonly ILog m_logger;
-
-            public MyPlugin1(ILog logger)
-            {
-                this.m_logger = logger;
-            }
-
-            public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
-            {
-                this.m_logger.Info($"Plugin:{e.ByteBlock.ToString()}");
-
-                if (client is ITcpSessionClient sessionClient)
-                {
-                    await sessionClient.SendAsync(e.ByteBlock.Memory);
-                }
-            }
         }
     }
 }
