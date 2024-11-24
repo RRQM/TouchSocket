@@ -29,8 +29,8 @@ namespace TouchSocket.JsonRpc
         /// WebSocketJsonRpcParserPlugin
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        /// <param name="resolver"></param>
-        public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
+        /// <param name="logger"></param>
+        public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
         {
         }
 
@@ -136,7 +136,7 @@ namespace TouchSocket.JsonRpc
                 }
                 else
                 {
-                    _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr));
+                    await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr,client.Client.Resolver.CreateScopedResolver()));
                 }
             }
             else

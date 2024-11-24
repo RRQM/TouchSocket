@@ -25,7 +25,7 @@ namespace TouchSocket.Rpc
         /// <param name="callContext">调用上下文，包含本次调用的相关上下文信息</param>
         /// <param name="ps">参数数组，包含传递给Rpc方法的参数</param>
         /// <returns>返回一个任务，结果是InvokeResult类型，包含Rpc调用的结果信息</returns>
-        Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps);
+        Task<InvokeResult> ExecuteAsync1(ICallContext callContext, object[] ps);
 
         /// <summary>
         /// 获取所有Method

@@ -445,5 +445,18 @@ namespace TouchSocket.Http
             var index = path.LastIndexOf('.');
             return index < 0 ? null : path.Substring(index);
         }
+
+        /// <inheritdoc/>
+        public void Add(string subpath, string contentType)
+        {
+            if (this.Mappings.ContainsKey(subpath))
+            {
+                this.Mappings[subpath] = contentType;
+            }
+            else
+            {
+                this.Mappings.Add(subpath, contentType);
+            }
+        }
     }
 }

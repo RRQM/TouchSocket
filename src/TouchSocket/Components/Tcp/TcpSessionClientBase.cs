@@ -61,7 +61,7 @@ namespace TouchSocket.Sockets
         private IPluginManager m_pluginManager;
         private int m_port;
         private InternalReceiver m_receiver;
-        private IResolver m_resolver;
+        //private IResolver m_resolver;
         private Action<TcpCore> m_returnTcpCore;
         private ITcpServiceBase m_service;
         private string m_serviceIP;
@@ -70,6 +70,7 @@ namespace TouchSocket.Sockets
         private Func<TcpSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
         private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
+        private IScopedResolver m_scopedResolver;
 
         #endregion 变量
 
@@ -115,7 +116,7 @@ namespace TouchSocket.Sockets
         public Protocol Protocol { get; protected set; }
 
         /// <inheritdoc/>
-        public override IResolver Resolver => this.m_resolver;
+        public override IResolver Resolver => this.m_scopedResolver.Resolver;
 
         /// <inheritdoc/>
         public ITcpServiceBase Service => this.m_service;
@@ -186,8 +187,10 @@ namespace TouchSocket.Sockets
 
         internal void InternalSetResolver(IResolver resolver)
         {
-            this.m_resolver = resolver;
-            this.Logger ??= resolver.Resolve<ILog>();
+            var scopedResolver = resolver.CreateScopedResolver();
+            //this.m_resolver = resolver;
+            this.m_scopedResolver = scopedResolver;
+            this.Logger ??= scopedResolver.Resolver.Resolve<ILog>();
         }
 
         internal void InternalSetReturnTcpCore(Action<TcpCore> returnTcpCore)
@@ -463,6 +466,7 @@ namespace TouchSocket.Sockets
 
             if (disposing)
             {
+                this.m_scopedResolver.SafeDispose();
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
 

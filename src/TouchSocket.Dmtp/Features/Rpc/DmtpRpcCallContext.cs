@@ -26,8 +26,8 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
         /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
         /// <param name="dmtpRpcPackage">IDmtpRpcRequestPackage对象，表示RPC请求包。</param>
-        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
-        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, IDmtpRpcRequestPackage dmtpRpcPackage, IResolver resolver) : base(caller, rpcMethod, resolver)
+        /// <param name="scopedResolver">IResolver接口的实现，用于解析依赖注入。</param>
+        public DmtpRpcCallContext(object caller, RpcMethod rpcMethod, IDmtpRpcRequestPackage dmtpRpcPackage, IScopedResolver scopedResolver) : base(caller, rpcMethod, scopedResolver)
         {
             this.DmtpRpcPackage = dmtpRpcPackage;
         }

@@ -31,8 +31,8 @@ namespace TouchSocket.NamedPipe
     {
         #region 字段
 
-        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         private readonly object m_lockForAbort = new object();
+        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         private TouchSocketConfig m_config;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private NamedPipeListenOption m_listenOption;
@@ -43,8 +43,11 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private InternalReceiver m_receiver;
         private Task m_receiveTask;
-        private IResolver m_resolver;
+        private IScopedResolver m_scopedResolver;
+
+        //private IResolver m_resolver;
         private INamedPipeServiceBase m_service;
+
         private Func<NamedPipeSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryGet;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryRemoveAction;
@@ -95,13 +98,13 @@ namespace TouchSocket.NamedPipe
         public Protocol Protocol { get; protected set; }
 
         /// <inheritdoc/>
-        public override IResolver Resolver => this.m_resolver;
+        public override IResolver Resolver => this.m_scopedResolver.Resolver;
 
         /// <inheritdoc/>
         public INamedPipeServiceBase Service => this.m_service;
 
         /// <inheritdoc/>
-        protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
+        public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
 
         #region Internal
 
@@ -146,10 +149,10 @@ namespace TouchSocket.NamedPipe
             this.m_config = config;
         }
 
-        internal void InternalSetContainer(IResolver containerProvider)
+        internal void InternalSetContainer(IResolver resolver)
         {
-            this.m_resolver = containerProvider;
-            this.Logger ??= containerProvider.Resolve<ILog>();
+            this.m_scopedResolver = resolver.CreateScopedResolver();
+            this.Logger ??= this.m_scopedResolver.Resolver.Resolve<ILog>();
         }
 
         internal void InternalSetId(string id)
@@ -200,7 +203,6 @@ namespace TouchSocket.NamedPipe
             return this.ProtectedResetIdAsync(newId);
         }
 
-
         /// <summary>
         /// 中止当前操作，并安全地关闭相关资源。
         /// </summary>
@@ -221,7 +223,7 @@ namespace TouchSocket.NamedPipe
                     this.m_pipeStream.SafeDispose();
 
                     // 安全地释放保护数据处理适配器资源，避免资源泄露
-                    this.ProtectedDataHandlingAdapter.SafeDispose();
+                    this.m_dataHandlingAdapter.SafeDispose();
 
                     // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
                     Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
@@ -238,6 +240,7 @@ namespace TouchSocket.NamedPipe
             }
             if (disposing)
             {
+                this.m_scopedResolver.SafeDispose();
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
             base.Dispose(disposing);

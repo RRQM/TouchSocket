@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
+using System.Text;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -46,17 +48,40 @@ namespace TouchSocket.Http.WebSockets
 
         public string Version { get; set; }
 
-        public async Task CloseAsync(string msg)
+        public WebSocketCloseStatus CloseStatus { get; set; }
+
+        public Task CloseAsync(string msg)
         {
-            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close }.AppendText(msg))
+            return this.CloseAsync(WebSocketCloseStatus.NormalClosure, msg);
+        }
+
+        public async Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)
+        {
+            if (!this.Online)
             {
-                await this.SendAsync(frame).ConfigureAwait(false);
+                return;
+            }
+
+            this.CloseStatus = closeStatus;
+
+            using (var frame = new WSDataFrame() { FIN = true, Opcode = WSDataType.Close })
+            {
+                using (var byteBlock = new ByteBlock())
+                {
+                    byteBlock.WriteUInt16((ushort)closeStatus, EndianType.Big);
+                    if (statusDescription.HasValue())
+                    {
+                        byteBlock.WriteNormalString(statusDescription, Encoding.UTF8);
+                    }
+                    frame.PayloadData = byteBlock;
+                    await this.SendAsync(frame).ConfigureAwait(false);
+                }
             }
             this.m_httpClientBase.TryShutdown();
-            await this.m_httpClientBase.SafeCloseAsync(msg).ConfigureAwait(false);
+            await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(false);
 
             this.m_httpSocketClient.TryShutdown();
-            await this.m_httpSocketClient.SafeCloseAsync(msg).ConfigureAwait(false);
+            await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(false);
         }
 
         public async Task PingAsync()

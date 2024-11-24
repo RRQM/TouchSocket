@@ -38,11 +38,11 @@ namespace TouchSocket.Hosting.Sockets.HostService
                 await base.StartAsync(cancellationToken).ConfigureAwait(false);
                 await this.ConfigObject.StartAsync().ConfigureAwait(false);
 
-                this.m_logger.LogInformation(TouchSocketHostingResource.HostServerStarted);
+                this.m_logger.LogInformation("{Message}", TouchSocketHostingResource.HostServerStarted);
             }
             catch (Exception ex)
             {
-                this.m_logger.LogError(ex, ex.Message);
+                this.m_logger.LogError(ex, "{Message}", ex.Message);
             }
         }
 

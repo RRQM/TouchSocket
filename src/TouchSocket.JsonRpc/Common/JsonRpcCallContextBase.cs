@@ -25,9 +25,10 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         /// <param name="caller"></param>
         /// <param name="jsonString"></param>
-        public JsonRpcCallContextBase(object caller, string jsonString)
+        /// <param name="scopedResolver"></param>
+        public JsonRpcCallContextBase(object caller, string jsonString,IScopedResolver scopedResolver):
+            base(caller, null, scopedResolver)
         {
-            this.Caller = caller;
             this.JsonString = jsonString;
         }
 
@@ -41,10 +42,9 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         public string JsonString { get; }
 
-        internal void Init(RpcMethod rpcMethod,IResolver resolver)
+        internal void Init(RpcMethod rpcMethod)
         {
             this.RpcMethod = rpcMethod;
-            this.Resolver = resolver;
         }
     }
 }

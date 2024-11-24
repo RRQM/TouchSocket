@@ -27,8 +27,8 @@ namespace TouchSocket.JsonRpc
         /// 基于Tcp协议的JsonRpc功能插件
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        /// <param name="resolver"></param>
-        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
+        /// <param name="logger"></param>
+        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
         {
         }
 
@@ -99,7 +99,7 @@ namespace TouchSocket.JsonRpc
             return e.InvokeNext();
         }
 
-        private Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+        private async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             if (client.GetIsJsonRpc())
             {
@@ -124,14 +124,12 @@ namespace TouchSocket.JsonRpc
                     }
                     else
                     {
-                        Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
+                        await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr, client.Resolver.CreateScopedResolver()));
                     }
-
-                    return EasyTask.CompletedTask;
                 }
             }
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
     }
 }

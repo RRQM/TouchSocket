@@ -35,9 +35,6 @@ namespace TouchSocket.NamedPipe
 
         #region 属性
 
-        /// <inheritdoc/>
-        public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.ProtectedDataHandlingAdapter;
-
         #endregion 属性
 
         #region Internal

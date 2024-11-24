@@ -25,7 +25,7 @@ namespace TouchSocket.Sockets
         /// <summary>
         /// 客户端集合属性，返回一个客户端集合对象，该对象管理所有连接的客户端。
         /// </summary>
-        /// <value>一个 IClientCollection 泛型接口，用于管理客户端实例。</value>
+        /// <value>一个<see cref="IClientCollection{TClient}"/>泛型接口，用于管理客户端实例。</value>
         public abstract IClientCollection<TClient> Clients { get; }
 
         /// <summary>

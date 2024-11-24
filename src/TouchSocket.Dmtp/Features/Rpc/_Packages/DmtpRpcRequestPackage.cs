@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp.Rpc
         private string m_invokeKey;
         private Metadata m_metadata;
         private object[] m_parameters;
-        private Type m_returnType;
+        private readonly Type m_returnType;
         private RpcMethod m_rpcMethod;
         private ISerializationSelector m_selector;
 
@@ -64,25 +64,25 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 函数名
         /// </summary>
-        public string InvokeKey => m_invokeKey;
+        public string InvokeKey => this.m_invokeKey;
 
         /// <summary>
         /// 元数据
         /// </summary>
-        public Metadata Metadata { get => m_metadata; }
+        public Metadata Metadata => this.m_metadata;
 
         public object[] Parameters => this.m_parameters;
 
-        public Type ReturnType { get => m_returnType; }
+        public Type ReturnType => this.m_returnType;
 
-        public RpcMethod RpcMethod { get => m_rpcMethod; }
+        public RpcMethod RpcMethod => this.m_rpcMethod;
 
         public RpcParameter[] RpcParameters => this.RpcMethod.Parameters;
 
         /// <summary>
         /// 序列化类型
         /// </summary>
-        public SerializationType SerializationType => m_serializationType;
+        public SerializationType SerializationType => this.m_serializationType;
 
         /// <inheritdoc/>
         protected override bool IncludedRouter => true;

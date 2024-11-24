@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Sockets;
@@ -23,11 +24,6 @@ namespace TouchSocket.Http.WebSockets
     public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient
     {
         /// <summary>
-        /// WebSocket版本
-        /// </summary>
-        string Version { get; }
-
-        /// <summary>
         /// 允许异步Read读取
         /// </summary>
         bool AllowAsyncRead { get; set; }
@@ -36,6 +32,24 @@ namespace TouchSocket.Http.WebSockets
         /// 使用的Http客户端
         /// </summary>
         IHttpSession Client { get; }
+
+        /// <summary>
+        /// WebSocket版本
+        /// </summary>
+        string Version { get; }
+
+        /// <summary>
+        /// 获取最后WebSocket关闭状态。
+        /// </summary>
+        WebSocketCloseStatus CloseStatus { get;}
+
+        /// <summary>
+        /// 异步关闭WebSocket连接。
+        /// </summary>
+        /// <param name="closeStatus">关闭状态。</param>
+        /// <param name="statusDescription">状态描述。</param>
+        /// <returns>返回一个任务对象，表示异步操作的结果。</returns>
+        Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription);
 
         /// <summary>
         /// 异步发送Ping请求。
@@ -64,7 +78,6 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>返回一个异步任务，用于指示发送操作的完成状态</returns>
         Task SendAsync(WSDataFrame dataFrame, bool endOfMessage = true);
 
-
         /// <summary>
         /// 异步发送文本消息。
         /// </summary>
@@ -72,7 +85,6 @@ namespace TouchSocket.Http.WebSockets
         /// <param name="endOfMessage">指示是否是消息的结束。默认为true。</param>
         /// <returns>返回一个任务对象，表示异步操作的结果。</returns>
         Task SendAsync(string text, bool endOfMessage = true);
-
 
         /// <summary>
         /// 异步发送指定的字节内存数据。

@@ -44,14 +44,22 @@ namespace TouchSocket.Http
         {
             if (dataFrame.IsClose && this.GetValue(WebSocketFeature.AutoCloseProperty))
             {
-                var msg = dataFrame.PayloadData?.ToString();
-                await this.PrivateWebSocketClosing(new MsgEventArgs(msg)).ConfigureAwait(false);
-                await this.m_webSocket.CloseAsync(msg).ConfigureAwait(false);
+                var bytes = dataFrame.PayloadData;
+                bytes.SeekToStart();
+                if (bytes.Length >= 2)
+                {
+                    this.m_webSocket.CloseStatus = (System.Net.WebSockets.WebSocketCloseStatus)bytes.ReadUInt16(EndianType.Big);
+                }
+
+                var msg = bytes.ReadToSpan(bytes.CanReadLength).ToString(System.Text.Encoding.UTF8);
+
+                await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
+                await this.m_webSocket.CloseAsync("Auto closed successful").ConfigureAwait(false);
                 return;
             }
             if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
             {
-                await this.m_webSocket.PongAsync();
+                await this.m_webSocket.PongAsync().ConfigureAwait(false);
                 return;
             }
 
@@ -64,12 +72,12 @@ namespace TouchSocket.Http
             await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(false);
         }
 
-        private Task PrivateWebSocketClosing(MsgEventArgs e)
+        private Task PrivateWebSocketClosing(ClosingEventArgs e)
         {
             return this.OnWebSocketClosing(this.m_webSocket, e);
         }
 
-        private async Task PrivateWebSocketClosed(MsgEventArgs e)
+        private async Task PrivateWebSocketClosed(ClosedEventArgs e)
         {
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
@@ -123,7 +131,7 @@ namespace TouchSocket.Http
         /// <param name="webSocket">当前的WebSocket实例</param>
         /// <param name="e">关闭事件的参数</param>
         /// <returns>异步任务</returns>
-        protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, MsgEventArgs e)
+        protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
         {
             // 提前通知所有IWebSocketClosingPlugin插件，WebSocket即将关闭
             await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), webSocket, e).ConfigureAwait(false);
@@ -137,7 +145,7 @@ namespace TouchSocket.Http
         /// <remarks>
         /// 此方法通过调用插件管理器，触发IWebSocketClosedPlugin接口的实现来处理WebSocket关闭事件
         /// </remarks>
-        protected virtual async Task OnWebSocketClosed(IWebSocket webSocket, MsgEventArgs e)
+        protected virtual async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
             await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), webSocket, e).ConfigureAwait(false);
         }

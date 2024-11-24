@@ -104,11 +104,10 @@ namespace TouchSocket.JsonRpc
         /// <summary>
         /// BuildRequestContext
         /// </summary>
-        /// <param name="resolver"></param>
         /// <param name="actionMap"></param>
         /// <param name="callContext"></param>
         /// <exception cref="RpcException"></exception>
-        public static void BuildRequestContext(IResolver resolver, ActionMap actionMap, ref JsonRpcCallContextBase callContext)
+        public static void BuildRequestContext(ActionMap actionMap, ref JsonRpcCallContextBase callContext)
         {
             var requestContext = ToJsonRpcRequestContext(callContext.JsonString);
 
@@ -116,7 +115,7 @@ namespace TouchSocket.JsonRpc
 
             if (actionMap.TryGetRpcMethod(requestContext.Method, out var rpcMethod))
             {
-                callContext.Init(rpcMethod,resolver);
+                callContext.Init(rpcMethod);
                 var ps = new object[rpcMethod.Parameters.Length];
 
                 if (requestContext.Params == null)
@@ -130,7 +129,7 @@ namespace TouchSocket.JsonRpc
                         }
                         else if (parameter.IsFromServices)
                         {
-                            ps[i] = resolver.Resolve(parameter.Type);
+                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
                         }
                         else if (parameter.ParameterInfo.HasDefaultValue)
                         {
@@ -141,17 +140,6 @@ namespace TouchSocket.JsonRpc
                             ps[i] = parameter.Type.GetDefault();
                         }
                     }
-                    //if (rpcMethod.IncludeCallContext)
-                    //{
-                    //    requestContext.Parameters = rpcMethod.ParameterNames.Length > 1 ? throw new RpcException("调用参数计数不匹配") : (new object[] { callContext });
-                    //}
-                    //else
-                    //{
-                    //    if (rpcMethod.ParameterNames.Length != 0)
-                    //    {
-                    //        throw new RpcException("调用参数计数不匹配");
-                    //    }
-                    //}
                 }
                 if (requestContext.Params is JObject obj)
                 {
@@ -164,7 +152,7 @@ namespace TouchSocket.JsonRpc
                         }
                         else if (parameter.IsFromServices)
                         {
-                            ps[i] = resolver.Resolve(parameter.Type);
+                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
                         }
                         else if (obj.TryGetValue(parameter.Name, out var jToken))
                         {
@@ -179,34 +167,6 @@ namespace TouchSocket.JsonRpc
                             ps[i] = parameter.Type.GetDefault();
                         }
                     }
-
-                    //requestContext.Parameters = new object[rpcMethod.ParameterNames.Length];
-                    ////内联
-                    //var i = 0;
-                    //if (rpcMethod.IncludeCallContext)
-                    //{
-                    //    requestContext.Parameters[0] = callContext;
-                    //    i = 1;
-                    //}
-                    //for (; i < rpcMethod.ParameterNames.Length; i++)
-                    //{
-                    //    if (obj.TryGetValue(rpcMethod.ParameterNames[i], out var jToken))
-                    //    {
-                    //        var type = rpcMethod.ParameterTypes[i];
-                    //        requestContext.Parameters[i] = jToken.ToJsonString().FromJsonString(type);
-                    //    }
-                    //    else
-                    //    {
-                    //        if (rpcMethod.Parameters[i].HasDefaultValue)
-                    //        {
-                    //            requestContext.Parameters[i] = rpcMethod.Parameters[i].DefaultValue;
-                    //        }
-                    //        else
-                    //        {
-                    //            throw new RpcException("调用参数计数不匹配");
-                    //        }
-                    //    }
-                    //}
                 }
                 else if (requestContext.Params is JArray array)
                 {
@@ -220,7 +180,7 @@ namespace TouchSocket.JsonRpc
                         }
                         else if (parameter.IsFromServices)
                         {
-                            ps[i] = resolver.Resolve(parameter.Type);
+                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
                         }
                         else if (index < array.Count)
                         {
@@ -235,34 +195,6 @@ namespace TouchSocket.JsonRpc
                             ps[i] = parameter.Type.GetDefault();
                         }
                     }
-
-                    //if (rpcMethod.IncludeCallContext)
-                    //{
-                    //    if (array.Count != rpcMethod.ParameterNames.Length - 1)
-                    //    {
-                    //        throw new RpcException("调用参数计数不匹配");
-                    //    }
-                    //    requestContext.Parameters = new object[rpcMethod.ParameterNames.Length];
-
-                    //    requestContext.Parameters[0] = callContext;
-                    //    for (var i = 0; i < array.Count; i++)
-                    //    {
-                    //        requestContext.Parameters[i + 1] = array[i].ToJsonString().FromJsonString(rpcMethod.ParameterTypes[i + 1]);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (array.Count != rpcMethod.ParameterNames.Length)
-                    //    {
-                    //        throw new RpcException("调用参数计数不匹配");
-                    //    }
-                    //    requestContext.Parameters = new object[rpcMethod.ParameterNames.Length];
-
-                    //    for (var i = 0; i < array.Count; i++)
-                    //    {
-                    //        requestContext.Parameters[i] = array[i].ToJsonString().FromJsonString(rpcMethod.ParameterTypes[i]);
-                    //    }
-                    //}
                 }
                 else
                 {

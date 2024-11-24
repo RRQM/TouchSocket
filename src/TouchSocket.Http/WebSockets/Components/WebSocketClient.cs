@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Sockets;
@@ -63,8 +64,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureAwait(false);
+            await base.OnWebSocketClosed(e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="e">提供了关闭事件的相关信息。</param>
         /// <returns>返回一个异步任务。</returns>
-        protected override async Task OnWebSocketClosing(ClosedEventArgs e)
+        protected override async Task OnWebSocketClosing(ClosingEventArgs e)
         {
             // 检查是否注册了关闭事件的处理程序
             if (this.Closing != null)
@@ -85,8 +85,7 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureAwait(false);
+            await base.OnWebSocketClosing(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -101,7 +100,7 @@ namespace TouchSocket.Http.WebSockets
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this, e).ConfigureAwait(false);
+            await base.OnWebSocketHandshaked(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -116,7 +115,7 @@ namespace TouchSocket.Http.WebSockets
                 }
             }
 
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this, e).ConfigureAwait(false);
+            await base.OnWebSocketHandshaking(e).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -130,13 +129,22 @@ namespace TouchSocket.Http.WebSockets
                     return;
                 }
             }
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this, e).ConfigureAwait(false);
+            await base.OnWebSocketReceived(e).ConfigureAwait(false);
         }
 
         #endregion 事件
 
         /// <inheritdoc/>
         public string Version => this.WebSocket.Version;
+
+        /// <inheritdoc/>
+        public WebSocketCloseStatus CloseStatus => this.WebSocket.CloseStatus;
+
+        /// <inheritdoc/>
+        public Task CloseAsync(WebSocketCloseStatus closeStatus, string statusDescription)
+        {
+            return this.WebSocket.CloseAsync(closeStatus, statusDescription);
+        }
 
         /// <inheritdoc/>
         public Task PingAsync()

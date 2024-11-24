@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Core
 {
-        /// <summary>
+    /// <summary>
     /// IResolver 接口定义了如何解析类型实例。
     /// 它继承自 IServiceProvider 和 IRegistered 接口。
     /// </summary>
@@ -34,5 +34,7 @@ namespace TouchSocket.Core
         /// <param name="fromType">要解析的目标类型。</param>
         /// <returns>解析出的实例。</returns>
         object Resolve(Type fromType);
+
+        IScopedResolver CreateScopedResolver();
     }
 }
