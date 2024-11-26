@@ -138,7 +138,11 @@ string value = e.Context.Request.Headers[HttpHeaders.Cookie];
 ### 7.3 获取Form参数
 
 ```csharp showLineNumbers
-string value = e.Context.Request.Forms["key"];
+var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
+foreach (var item in multifileCollection)
+{
+    Console.WriteLine($"key={item.Key},value={item.Value}");
+}
 ```
 
 ### 7.4 获取字符串Body内容
