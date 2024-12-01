@@ -20,12 +20,16 @@ namespace TouchSocket.Core
         private readonly Func<object, PluginEventArgs, Task> m_invokeFunc;
         private readonly bool m_isDelegate;
         private readonly Method m_method;
+        private readonly Type m_pluginType;
+        private readonly PluginManager m_pluginManager;
         private readonly IPlugin m_plugin;
         private readonly Delegate m_sourceDelegate;
+        private readonly bool m_fromIoc;
 
         public PluginEntity(Func<object, PluginEventArgs, Task> invokeFunc, Delegate sourceDelegate)
         {
             this.m_isDelegate = true;
+            this.m_fromIoc = false;
             this.m_invokeFunc = invokeFunc;
             this.m_sourceDelegate = sourceDelegate;
         }
@@ -33,25 +37,43 @@ namespace TouchSocket.Core
         public PluginEntity(Method method, IPlugin plugin)
         {
             this.m_isDelegate = false;
+            this.m_fromIoc = false;
             this.m_method = method;
             this.m_plugin = plugin;
+        }
+
+        public PluginEntity(Method method, Type pluginType, PluginManager pluginManager)
+        {
+            this.m_isDelegate = false;
+            this.m_fromIoc = true;
+            this.m_method = method;
+            this.m_pluginType = pluginType;
+            this.m_pluginManager = pluginManager;
         }
 
         public bool IsDelegate => this.m_isDelegate;
         public Method Method => this.m_method;
         public IPlugin Plugin => this.m_plugin;
-
+        public bool FromIoc => this.m_fromIoc;
         public Delegate SourceDelegate => this.m_sourceDelegate;
 
-        public Task Run(object sender, PluginEventArgs e)
+        public async Task Run(IResolver resolver, object sender, PluginEventArgs e)
         {
             if (this.m_isDelegate)
             {
-                return this.m_invokeFunc.Invoke(sender, e);
+                await this.m_invokeFunc.Invoke(sender, e).ConfigureAwait(false);
+            }
+            else if (this.m_fromIoc)
+            {
+                var plugin = (IPlugin)resolver.Resolve(this.m_pluginType) ?? throw new Exception(Resources.TouchSocketCoreResource.PluginIsNull.Format(this.m_pluginType));
+
+                plugin.Loaded(this.m_pluginManager);
+                await this.m_method.InvokeAsync(plugin, sender, e).ConfigureAwait(false);
+                plugin.Unloaded(this.m_pluginManager);
             }
             else
             {
-                return this.m_method.InvokeAsync(this.m_plugin, sender, e);
+                await this.m_method.InvokeAsync(this.m_plugin, sender, e).ConfigureAwait(false);
             }
         }
     }

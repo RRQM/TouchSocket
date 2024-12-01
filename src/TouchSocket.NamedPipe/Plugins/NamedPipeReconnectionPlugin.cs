@@ -21,7 +21,7 @@ namespace TouchSocket.NamedPipe
     /// 命名管道重连插件
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> where TClient : INamedPipeClient
+    public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> ,INamedPipeClosedPlugin where TClient : INamedPipeClient
     {
         /// <inheritdoc/>
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
@@ -44,13 +44,7 @@ namespace TouchSocket.NamedPipe
         }
 
         /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<INamedPipeSession, ClosedEventArgs>(typeof(INamedPipeClosedPlugin), this.OnClosed);
-        }
-
-        private async Task OnClosed(INamedPipeSession client, ClosedEventArgs e)
+        public async Task OnNamedPipeClosed(INamedPipeSession client, ClosedEventArgs e)
         {
             await e.InvokeNext().ConfigureAwait(false);
 

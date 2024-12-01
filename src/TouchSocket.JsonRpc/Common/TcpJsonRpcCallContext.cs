@@ -16,7 +16,7 @@ namespace TouchSocket.JsonRpc
 {
     internal class TcpJsonRpcCallContext : JsonRpcCallContextBase, ITcpJsonRpcCallContext
     {
-        public TcpJsonRpcCallContext(object caller, string jsonString,IScopedResolver scopedResolver) : base(caller, jsonString, scopedResolver)
+        public TcpJsonRpcCallContext(object caller, string jsonString,IResolver resolver) : base(caller, jsonString, resolver)
         {
         }
     }

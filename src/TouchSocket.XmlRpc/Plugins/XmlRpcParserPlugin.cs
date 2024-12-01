@@ -84,7 +84,7 @@ namespace TouchSocket.XmlRpc
                             {
                                 try
                                 {
-                                    callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver.CreateScopedResolver(), e.Context, xmlstring);
+                                    callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver, e.Context, xmlstring);
 
                                     ps = new object[rpcMethod.Parameters.Length];
                                     var paramsNode = xml.SelectSingleNode("methodCall/params");
@@ -136,7 +136,7 @@ namespace TouchSocket.XmlRpc
 
                         if (invokeResult.Status == InvokeStatus.Ready)
                         {
-                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, ps).ConfigureAwait(false);
+                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                         }
 
                         var httpResponse = e.Context.Response;

@@ -16,12 +16,12 @@ namespace TouchSocket.Core
 {
     /// <summary>
     /// IResolver 接口定义了如何解析类型实例。
-    /// 它继承自 IServiceProvider 和 IRegistered 接口。
+    /// 它继承自 IServiceProvider。
     /// </summary>
-    public interface IResolver : IServiceProvider, IRegistered
+    public interface IResolver : IServiceProvider
     {
         /// <summary>
-        /// 解析给定类型和键对应的实例。
+        /// 解析给定类型和键对应的实例。如果解析失败，则返回 null。
         /// </summary>
         /// <param name="fromType">要解析的目标类型。</param>
         /// <param name="key">可选的实例标识符。</param>
@@ -29,12 +29,16 @@ namespace TouchSocket.Core
         object Resolve(Type fromType, string key);
 
         /// <summary>
-        /// 解析给定类型的实例，不使用键。
+        /// 解析给定类型的实例。如果解析失败，则返回 null。
         /// </summary>
         /// <param name="fromType">要解析的目标类型。</param>
         /// <returns>解析出的实例。</returns>
         object Resolve(Type fromType);
 
+        /// <summary>
+        /// 创建一个新的作用域解析器。
+        /// </summary>
+        /// <returns>新的作用域解析器实例。</returns>
         IScopedResolver CreateScopedResolver();
     }
 }

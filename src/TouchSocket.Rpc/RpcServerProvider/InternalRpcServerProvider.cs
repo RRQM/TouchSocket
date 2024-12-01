@@ -28,8 +28,17 @@ namespace TouchSocket.Rpc
             this.m_rpcStore = rpcStore;
         }
 
-        public async Task<InvokeResult> ExecuteAsync1(ICallContext callContext, object[] ps)
+        public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps)
         {
+            var rpcMethod = callContext.RpcMethod;
+            if (rpcMethod is null)
+            {
+                return new InvokeResult(InvokeStatus.UnFound);
+            }
+            if (!rpcMethod.IsEnable)
+            {
+                return new InvokeResult(InvokeStatus.UnEnable);
+            }
             var invokeResult = new InvokeResult();
             var filters = callContext.RpcMethod.GetFilters();
             try

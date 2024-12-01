@@ -41,6 +41,7 @@ namespace TouchSocket.Core
             return this;
         }
 
+        /// <inheritdoc/>
         public IScopedResolver CreateScopedResolver()
         {
             return new InternalScopedResolver(this);
@@ -156,17 +157,7 @@ namespace TouchSocket.Core
                 }
                 return this.Create(descriptor, descriptor.ToType);
             }
-            else
-            {
-                if (fromType.IsPrimitive || fromType == typeof(string))
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
-                }
-            }
+            return default;
         }
 
         /// <inheritdoc/>
@@ -241,17 +232,7 @@ namespace TouchSocket.Core
                 }
                 return this.Create(descriptor, descriptor.ToType);
             }
-            else
-            {
-                if (fromType.IsPrimitive || fromType == typeof(string))
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new Exception(TouchSocketCoreResource.UnregisteredType.Format(fromType));
-                }
-            }
+            return default;
         }
 
         /// <inheritdoc/>

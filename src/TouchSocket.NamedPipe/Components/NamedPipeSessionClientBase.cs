@@ -252,7 +252,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
         {
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace TouchSocket.NamedPipe
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
             // 将发送事件委托给插件管理器处理，异步调用相关插件的发送逻辑
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -310,7 +310,7 @@ namespace TouchSocket.NamedPipe
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, newId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), sessionClient, e).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, sessionClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
@@ -426,7 +426,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -435,7 +435,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -452,7 +452,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private int GetReceiveBufferSize()

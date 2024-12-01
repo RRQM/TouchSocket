@@ -49,39 +49,6 @@ namespace TouchSocket.Core
             return plugin;
         }
 
-        /// <summary>
-        /// 扩展方法，用于向插件管理器添加插件类型。
-        /// </summary>
-        /// <param name="pluginManager">插件管理器实例，允许通过其调用扩展方法。</param>
-        /// <param name="pluginType">要添加的插件类型，该类型应包含特定的成员以供插件系统访问。</param>
-        /// <returns>返回添加插件类型后的插件管理器实例。</returns>
-        public static object Add(this IPluginManager pluginManager, [DynamicallyAccessedMembers(PluginAccessedMemberTypes)] Type pluginType)
-        {
-            if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
-            {
-                if (optionAttribute.Singleton)
-                {
-                    foreach (var item in pluginManager.Plugins)
-                    {
-                        if (item.GetType() == pluginType)
-                        {
-                            return item;
-                        }
-                    }
-                }
-            }
-            IPlugin plugin;
-            if (pluginManager.Resolver.IsRegistered(pluginType))
-            {
-                plugin = (IPlugin)pluginManager.Resolver.Resolve(pluginType);
-            }
-            else
-            {
-                plugin = (IPlugin)pluginManager.Resolver.ResolveWithoutRoot(pluginType);
-            }
-            pluginManager.Add(plugin);
-            return plugin;
-        }
 
         /// <summary>
         /// 添加插件
@@ -90,17 +57,7 @@ namespace TouchSocket.Core
         /// <returns>插件类型实例</returns>
         public static TPlugin Add<[DynamicallyAccessedMembers(PluginAccessedMemberTypes)] TPlugin>(this IPluginManager pluginManager) where TPlugin : class, IPlugin
         {
-            TPlugin plugin;
-            if (pluginManager.Resolver.IsRegistered(typeof(TPlugin)))
-            {
-                plugin = (TPlugin)pluginManager.Resolver.Resolve(typeof(TPlugin));
-            }
-            else
-            {
-                plugin = (TPlugin)pluginManager.Resolver.ResolveWithoutRoot(typeof(TPlugin));
-            }
-            pluginManager.Add(plugin);
-            return plugin;
+            return (TPlugin)pluginManager.Add(typeof(TPlugin));
         }
 
         /// <summary>
@@ -220,6 +177,11 @@ namespace TouchSocket.Core
 
             // 调用插件管理器的Add方法，注册新的异步处理程序和动作。
             pluginManager.Add(interfaceType, newFunc, action);
+        }
+
+        public static ValueTask<bool> RaiseAsync(this IPluginManager pluginManager, Type pluginType, object sender, PluginEventArgs e)
+        {
+            return pluginManager.RaiseAsync(pluginType, default, sender, e);
         }
     }
 }

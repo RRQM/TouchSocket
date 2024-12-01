@@ -18,7 +18,7 @@ namespace TouchSocket.Core
     /// <summary>
     /// 结果返回
     /// </summary>
-    public struct Result : IResult
+    public record struct Result : IResult
     {
         /// <summary>
         /// 成功

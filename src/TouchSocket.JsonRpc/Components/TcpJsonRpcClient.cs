@@ -119,9 +119,10 @@ namespace TouchSocket.JsonRpc
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
-            if (this.Resolver.IsRegistered(typeof(IRpcServerProvider)))
+
+            var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
+            if (rpcServerProvider != null)
             {
-                var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
                 this.RegisterServer(rpcServerProvider.GetMethods());
                 this.m_rpcServerProvider = rpcServerProvider;
             }
@@ -152,7 +153,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
                 {
-                    Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString,this.Resolver.CreateScopedResolver()));
+                    Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString, this.Resolver.CreateScopedResolver()));
                 }
                 else
                 {
@@ -241,7 +242,7 @@ namespace TouchSocket.JsonRpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
                 }
 
                 if (!callContext.JsonRpcContext.Id.HasValue)
@@ -251,7 +252,7 @@ namespace TouchSocket.JsonRpc
                 var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
                 await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 //这里的异常信息不重要，所以按Debug级别记录
                 this.Logger?.Debug(ex.Message);

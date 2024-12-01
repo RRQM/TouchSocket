@@ -19,7 +19,7 @@ namespace TouchSocket.Sockets
     /// <summary>
     /// 重连插件
     /// </summary>
-    public abstract class ReconnectionPlugin<TClient> : PluginBase where TClient :IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
+    public abstract class ReconnectionPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : IDisposableObject, IConnectableClient, IOnlineClient, ILoggerObject
     {
         private bool m_polling;
         private TimeSpan m_tick = TimeSpan.FromSeconds(1);
@@ -215,13 +215,6 @@ namespace TouchSocket.Sockets
             return this;
         }
 
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IConfigObject, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
-        }
-
         private async Task BeginReconnect(object sender)
         {
             if (!this.m_polling)
@@ -268,13 +261,6 @@ namespace TouchSocket.Sockets
             }
         }
 
-        private async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
-        {
-            this.m_beginReconnectTask = Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
-
-            await e.InvokeNext().ConfigureAwait(false);
-        }
-
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
@@ -284,6 +270,14 @@ namespace TouchSocket.Sockets
                 this.m_beginReconnectTask.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        {
+            this.m_beginReconnectTask = Task.Factory.StartNew(this.BeginReconnect, sender, TaskCreationOptions.LongRunning);
+
+            await e.InvokeNext().ConfigureAwait(false);
         }
     }
 }

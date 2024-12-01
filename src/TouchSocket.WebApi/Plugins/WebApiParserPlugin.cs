@@ -25,7 +25,7 @@ namespace TouchSocket.WebApi
     /// WebApi解析器
     /// </summary>
     [PluginOption(Singleton = true)]
-    public class WebApiParserPlugin : PluginBase
+    public class WebApiParserPlugin : PluginBase, IHttpPlugin
     {
         private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
         private readonly IRpcServerProvider m_rpcServerProvider;
@@ -71,13 +71,6 @@ namespace TouchSocket.WebApi
             return this;
         }
 
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
-            base.Loaded(pluginManager);
-        }
-
         private static object PrimitiveParse(string source, Type targetType)
         {
             if (targetType.IsPrimitive || targetType == TouchSocketCoreUtility.stringType)
@@ -115,7 +108,7 @@ namespace TouchSocket.WebApi
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
 
-                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver.CreateScopedResolver()))
+                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
                 {
                     if (rpcMethod.IsEnable)
                     {
@@ -140,7 +133,7 @@ namespace TouchSocket.WebApi
                     }
                     if (invokeResult.Status == InvokeStatus.Ready)
                     {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, ps).ConfigureAwait(false);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                     }
 
                     if (e.Context.Response.Responsed)
@@ -160,7 +153,7 @@ namespace TouchSocket.WebApi
             {
                 e.Handled = true;
 
-                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver.CreateScopedResolver()))
+                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
                 {
                     var invokeResult = new InvokeResult();
                     object[] ps = null;
@@ -184,7 +177,7 @@ namespace TouchSocket.WebApi
 
                         if (invokeResult.Status == InvokeStatus.Ready)
                         {
-                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, ps).ConfigureAwait(false);
+                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
                         }
 
                         if (e.Context.Response.Responsed)
@@ -203,7 +196,8 @@ namespace TouchSocket.WebApi
             await e.InvokeNext().ConfigureAwait(false);
         }
 
-        private Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Get)
             {

@@ -44,11 +44,10 @@ namespace TouchSocket.Http.WebSockets
         public bool AllowAsyncRead { get => this.m_allowAsyncRead; set => this.m_allowAsyncRead = value; }
 
         public IHttpSession Client => this.m_isServer ? this.m_httpSocketClient : this.m_httpClientBase;
-        public bool Online { get; set; }
-
-        public string Version { get; set; }
-
         public WebSocketCloseStatus CloseStatus { get; set; }
+        public bool Online { get; set; }
+        public IResolver Resolver => this.m_isServer ? this.m_httpSocketClient.Resolver : this.m_httpClientBase.Resolver;
+        public string Version { get; set; }
 
         public Task CloseAsync(string msg)
         {

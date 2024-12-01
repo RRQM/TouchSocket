@@ -63,7 +63,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnNamedPipeConnected(object o)
@@ -315,7 +315,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
         {
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
 
@@ -337,7 +337,7 @@ namespace TouchSocket.NamedPipe
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
             // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -534,7 +534,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>返回一个任务，表示异步操作的结果。</returns>
         /// <remarks>
         /// 此方法用于在发送请求之前验证是否可以发送请求信息，
-        /// 并通过<see cref="ProtectedDataHandlingAdapter"/>适配器安全处理发送过程。
+        /// 并通过<see cref="DataHandlingAdapter"/>适配器安全处理发送过程。
         /// </remarks>
         protected Task ProtectedSendAsync(IRequestInfo requestInfo)
         {

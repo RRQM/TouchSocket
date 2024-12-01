@@ -30,7 +30,7 @@ namespace TouchSocket.WebApi.Swagger
     /// <summary>
     /// SwaggerPlugin
     /// </summary>
-    public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin
+    public sealed class SwaggerPlugin : PluginBase, IServerStartedPlugin, IHttpPlugin
     {
         private readonly ILog m_logger;
         private readonly IResolver m_resolver;
@@ -60,11 +60,6 @@ namespace TouchSocket.WebApi.Swagger
         {
             if (e.ServerState != ServerState.Running)
             {
-                return;
-            }
-            if (!this.m_resolver.IsRegistered(typeof(IRpcServerProvider)))
-            {
-                this.m_logger.Warning($"该服务器中似乎没有添加{nameof(IRpcServerProvider)}。");
                 return;
             }
 
@@ -144,13 +139,6 @@ namespace TouchSocket.WebApi.Swagger
         {
             this.LaunchBrowser = true;
             return this;
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -663,25 +651,6 @@ namespace TouchSocket.WebApi.Swagger
             return tags;
         }
 
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            var context = e.Context;
-            var request = context.Request;
-            //var response = context.Response;
-
-            if (this.m_swagger.TryGetValue(request.RelativeURL, out var bytes))
-            {
-                e.Handled = true;
-                context.Response
-                    .SetStatus()
-                    .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
-                    .SetContent(bytes);
-                await context.Response.AnswerAsync().ConfigureAwait(false);
-                return;
-            }
-            await e.InvokeNext().ConfigureAwait(false);
-        }
-
         private OpenApiDataTypes ParseDataTypes(Type type)
         {
             // 空检查
@@ -731,5 +700,26 @@ namespace TouchSocket.WebApi.Swagger
         }
 
         #endregion Build
+
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            var context = e.Context;
+            var request = context.Request;
+            //var response = context.Response;
+
+            if (this.m_swagger.TryGetValue(request.RelativeURL, out var bytes))
+            {
+                e.Handled = true;
+                context.Response
+                    .SetStatus()
+                    .SetContentTypeByExtension(Path.GetExtension(request.RelativeURL))
+                    .SetContent(bytes);
+                await context.Response.AnswerAsync().ConfigureAwait(false);
+                return;
+            }
+            await e.InvokeNext().ConfigureAwait(false);
+        }
+
     }
 }

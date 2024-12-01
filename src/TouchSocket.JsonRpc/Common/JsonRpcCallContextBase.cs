@@ -25,9 +25,9 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         /// <param name="caller"></param>
         /// <param name="jsonString"></param>
-        /// <param name="scopedResolver"></param>
-        public JsonRpcCallContextBase(object caller, string jsonString,IScopedResolver scopedResolver):
-            base(caller, null, scopedResolver)
+        /// <param name="resolver"></param>
+        public JsonRpcCallContextBase(object caller, string jsonString,IResolver resolver):
+            base(caller, null, resolver)
         {
             this.JsonString = jsonString;
         }

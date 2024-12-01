@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// 检查清理连接插件。服务器与客户端均适用。
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class CheckClearPlugin<TClient> : PluginBase where TClient : class, IClient, IClosableClient
+    public sealed class CheckClearPlugin<TClient> : PluginBase, ILoadedConfigPlugin where TClient : class, IClient, IClosableClient
     {
         private static readonly DependencyProperty<bool> s_checkClearProperty =
             new("CheckClear", false);
@@ -97,6 +97,11 @@ namespace TouchSocket.Sockets
             return this;
         }
 
+        /// <summary>
+        /// 设置在超出时间限定而关闭时的回调操作。
+        /// </summary>
+        /// <param name="func">一个Func委托，包含客户端对象和检查清除类型作为参数，在关闭操作执行时会被调用。</param>
+        /// <returns>返回当前的CheckClearPlugin实例，以支持链式调用。</returns>
         public CheckClearPlugin<TClient> SetOnClose(Func<TClient, CheckClearType, Task> func)
         {
             this.OnClose = func;
@@ -112,13 +117,6 @@ namespace TouchSocket.Sockets
         {
             this.Tick = timeSpan;
             return this;
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<IConfigObject, ConfigEventArgs>(typeof(ILoadedConfigPlugin), this.OnLoadedConfig);
-            base.Loaded(pluginManager);
         }
 
         private void CheckClient(TClient client)
@@ -179,7 +177,8 @@ namespace TouchSocket.Sockets
             });
         }
 
-        private async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
         {
             _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
             await e.InvokeNext().ConfigureAwait(false);
