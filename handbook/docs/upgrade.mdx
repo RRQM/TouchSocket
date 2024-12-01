@@ -19,6 +19,47 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.5
+
+**更新日期：** 2024.12.1
+
+**更新描述：**
+
+兼容性修复升级。全面支持`PluginManager`容器化模块和`Scoped`区域划分。
+
+>此修改不影响现有运行逻辑。但是如果是Asp.Net Core项目，则可能会影响`Scoped`服务运行结果。
+
+**更新详情：**
+
+#### 【TouchSocket.Core】
+
+- &nbsp;<Tag>新增</Tag> `FlowOperator`类。以实现流量速度限制。 
+- &nbsp;<Tag>新增</Tag> `PluginManager`类。新增`FromIoc`的设定，支持插件容器化。 
+- &nbsp;<Tag>优化</Tag> `Result`类。使用`record`修饰，简化使用逻辑。 
+- &nbsp;<Tag>调整</Tag> `IResolver`的`Resolve`行为。当服务未注册时，会返回`null`。不会再触发异常。
+- &nbsp;<Tag>调整</Tag> `SetupConfigObject`在Build时，会创建一个新的Scoped生命周期的容器。这个在现有架构下，不会影响运行结果。
+- &nbsp;<Tag>修复</Tag> `Metadata`在添加相同键值时，会异常的bug，正确操作应该是覆盖旧值。 
+- &nbsp;<Tag>移除</Tag> `IResolver`移除对`IRegistered`接口的实现，所以无法再使用`IResolver`判断某个服务是否已注册。
+- &nbsp;<Tag>移除</Tag> `IResolver`移除对`TryResolve`扩展方法实现，请使用`Resolve`直接代替。
+
+#### 【TouchSocket.Sockets】
+
+- &nbsp;<Tag>修复</Tag> `IPHost`在`.NET Framework`下，设定任意端口无效的bug。 [#IB7PM1](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7PM1)，[#IA8NQ2](https://gitee.com/RRQM_Home/TouchSocket/issues/IA8NQ2)
+
+#### 【TouchSocket.Http】
+
+- &nbsp;<Tag>新增</Tag> `HttpBase`新增`ReadCopyToAsync(Stream stream, HttpFlowOperator flowOperator)`方法。支持传输进度、速度显示。[#IB7GIC](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7GIC)
+- &nbsp;<Tag>新增</Tag> `HttpFlowOperator`类，支持Http上传、下载文件（流）时，可以方便的实现限速、传输进度、速度显示等。
+- &nbsp;<Tag>新增</Tag> `StreamHttpContent`在传输流数据时，支持`HttpFlowOperator`相关操作。
+
+
+#### 【TouchSocket.Rpc】
+- &nbsp;<Tag>修复</Tag> `Rpc`代码生成器在生成通用泛型类型时，会失败的bug。[#IB7IB2](https://gitee.com/RRQM_Home/TouchSocket/issues/IB7IB2)
+
+
+***
+
+
 ## v3.0.4
 
 **更新日期：** 2024.11.24
