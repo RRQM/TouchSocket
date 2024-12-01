@@ -296,6 +296,8 @@ namespace TouchSocket.Http
             var cancellationToken = flowOperator.Token;
             try
             {
+                flowOperator.SetLength(this.ContentLength);
+
                 while (true)
                 {
                     using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
