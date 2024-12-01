@@ -52,9 +52,9 @@ namespace TouchSocket.JsonRpc
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
-            if (this.Resolver.IsRegistered(typeof(IRpcServerProvider)))
+            var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
+            if (rpcServerProvider != null)
             {
-                var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
                 this.RegisterServer(rpcServerProvider.GetMethods());
                 this.m_rpcServerProvider = rpcServerProvider;
             }
@@ -131,7 +131,7 @@ namespace TouchSocket.JsonRpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
                 }
 
                 if (!callContext.JsonRpcContext.Id.HasValue)

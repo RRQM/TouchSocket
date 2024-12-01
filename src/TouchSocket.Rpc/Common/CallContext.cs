@@ -21,7 +21,6 @@ namespace TouchSocket.Rpc
     public abstract class CallContext : DependencyObject, ICallContext
     {
         private readonly object m_locker = new object();
-        private readonly IScopedResolver m_scopedResolver;
         private bool m_canceled;
         private CancellationTokenSource m_tokenSource;
 
@@ -30,13 +29,12 @@ namespace TouchSocket.Rpc
         /// </summary>
         /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
         /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
-        /// <param name="scopedResolver">IResolver接口的实现，用于解析依赖注入。</param>
-        public CallContext(object caller, RpcMethod rpcMethod, IScopedResolver scopedResolver)
+        /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
+        public CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
         {
             this.Caller = caller;
             this.RpcMethod = rpcMethod;
-            this.m_scopedResolver = scopedResolver;
-            this.Resolver = scopedResolver.Resolver;
+            this.Resolver = resolver;
         }
 
         /// <inheritdoc/>
@@ -80,21 +78,6 @@ namespace TouchSocket.Rpc
                     this.m_canceled = true;
                 }
             }
-        }
-
-        /// <inheritdoc/>
-        protected override void Dispose(bool disposing)
-        {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.m_scopedResolver.SafeDispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

@@ -17,7 +17,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
 {
-    internal class DmtpReconnectionPlugin<TClient> :ReconnectionPlugin<TClient> where TClient :IDmtpClient
+    internal class DmtpReconnectionPlugin<TClient> :ReconnectionPlugin<TClient>, IDmtpClosedPlugin where TClient :IDmtpClient
     {
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -41,13 +41,7 @@ namespace TouchSocket.Dmtp
             return await client.PingAsync().ConfigureAwait(false);
         }
 
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IDmtpActorObject, ClosedEventArgs>(typeof(IDmtpClosedPlugin), this.OnClosed);
-        }
-
-        private async Task OnClosed(IDmtpActorObject client, ClosedEventArgs e)
+        public async Task OnDmtpClosed(IDmtpActorObject client, ClosedEventArgs e)
         {
             await e.InvokeNext().ConfigureAwait(false);
 

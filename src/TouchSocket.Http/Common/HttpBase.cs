@@ -233,7 +233,7 @@ namespace TouchSocket.Http
 
         #region Content
 
-        
+
         /// <summary>
         /// 获取一次性内容。
         /// </summary>
@@ -270,6 +270,7 @@ namespace TouchSocket.Http
             {
                 using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
                     {
                         var memory = blockResult.Memory;
@@ -283,18 +284,48 @@ namespace TouchSocket.Http
             }
         }
 
+
+        /// <summary>
+        /// 异步读取并复制流数据
+        /// </summary>
+        /// <param name="stream">需要读取并复制的流</param>
+        /// <param name="flowOperator">用于控制流操作的HttpFlowOperator实例</param>
+        /// <returns>一个表示操作结果的Result任务</returns>
+        public async Task<Result> ReadCopyToAsync(Stream stream, HttpFlowOperator flowOperator)
+        {
+            var cancellationToken = flowOperator.Token;
+            try
+            {
+                while (true)
+                {
+                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
+                        {
+                            var memory = blockResult.Memory;
+                            await stream.WriteAsync(memory, cancellationToken);
+                            await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(false);
+                        }
+                        if (blockResult.IsCompleted)
+                        {
+                            break;
+                        }
+                    }
+                }
+                return flowOperator.SetResult(Result.Success);
+            }
+            catch (OperationCanceledException)
+            {
+                return flowOperator.SetResult(Result.Canceled);
+            }
+            catch (Exception ex)
+            {
+                return flowOperator.SetResult(Result.FromException(ex));
+            }
+        }
+
         #endregion Read
-
-        //#region Write
-
-        ///// <summary>
-        ///// 异步写入字节序列到流中。
-        ///// </summary>
-        ///// <param name="memory">待写入的字节序列，使用<see cref="ReadOnlyMemory{T}"/>类型以提高性能并支持不可变性。</param>
-        ///// <returns>返回一个Task对象，表示异步写入操作的完成。</returns>
-        //public abstract Task WriteAsync(ReadOnlyMemory<byte> memory);
-
-        //#endregion Write
 
         #region Class
 

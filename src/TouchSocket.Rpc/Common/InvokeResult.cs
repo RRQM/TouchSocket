@@ -18,6 +18,16 @@ namespace TouchSocket.Rpc
     public struct InvokeResult
     {
         /// <summary>
+        /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
+        /// </summary>
+        /// <param name="status">调用状态。</param>
+        public InvokeResult(InvokeStatus status)
+        {
+            this.Status = status;
+            this.Message = status.ToString();
+        }
+
+        /// <summary>
         /// 状态
         /// </summary>
         public InvokeStatus Status { get; set; }

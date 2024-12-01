@@ -16,7 +16,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> where TClient : ITcpClient
+    internal sealed class TcpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, ITcpClosedPlugin where TClient : ITcpClient
     {
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -28,13 +28,7 @@ namespace TouchSocket.Sockets
             };
         }
 
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<ITcpSession, ClosedEventArgs>(typeof(ITcpClosedPlugin), this.OnTcpDisconnected);
-        }
-
-        private async Task OnTcpDisconnected(ITcpSession client, ClosedEventArgs e)
+        public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
         {
             await e.InvokeNext().ConfigureAwait(false);
 

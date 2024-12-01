@@ -84,7 +84,7 @@ namespace TouchSocket.JsonRpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
                 }
 
                 if (!callContext.JsonRpcContext.Id.HasValue)

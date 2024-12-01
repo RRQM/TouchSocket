@@ -98,7 +98,7 @@ namespace TouchSocket.Http.WebSockets
         protected virtual async Task OnWebSocketClosed(ClosedEventArgs e)
         {
             // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace TouchSocket.Http.WebSockets
         protected virtual async Task OnWebSocketClosing(ClosingEventArgs e)
         {
             // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个表示任务已完成的Task对象。</returns>
         protected virtual async Task OnWebSocketHandshaked(HttpContextEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个表示异步操作完成的任务</returns>
         protected virtual async Task OnWebSocketHandshaking(HttpContextEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnHandshaked(object obj)
@@ -185,7 +185,7 @@ namespace TouchSocket.Http.WebSockets
         /// <returns>一个Task对象，表示异步操作</returns>
         protected virtual async Task OnWebSocketReceived(WSDataFrameEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private void InitWebSocket()

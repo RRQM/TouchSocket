@@ -16,8 +16,25 @@ namespace TouchSocket.JsonRpc
 {
     internal class WebSocketJsonRpcCallContext : JsonRpcCallContextBase
     {
-        public WebSocketJsonRpcCallContext(object caller, string jsonString,IScopedResolver scopedResolver) : base(caller, jsonString, scopedResolver)
+        private readonly IScopedResolver m_scopedResolver;
+
+        public WebSocketJsonRpcCallContext(object caller, string jsonString, IScopedResolver scopedResolver) : base(caller, jsonString, scopedResolver.Resolver)
         {
+            this.m_scopedResolver = scopedResolver;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.m_scopedResolver.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

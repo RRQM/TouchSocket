@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
-namespace TouchSocket.Dmtp
+namespace TouchSocket.Core
 {
     /// <summary>
     /// 关于具有流速的操作器。
@@ -33,8 +33,6 @@ namespace TouchSocket.Dmtp
         protected float m_progress;
 
         private readonly FlowGate m_flowGate = new FlowGate();
-
-        private long m_speed;
 
         private long m_speedTemp;
 
@@ -65,11 +63,6 @@ namespace TouchSocket.Dmtp
         public virtual long MaxSpeed { get => this.m_flowGate.Maximum; set => this.m_flowGate.Maximum = value; }
 
         /// <summary>
-        /// 元数据
-        /// </summary>
-        public Metadata Metadata { get; set; }
-
-        /// <summary>
         /// 进度
         /// </summary>
         public float Progress => this.m_progress;
@@ -96,11 +89,13 @@ namespace TouchSocket.Dmtp
         public long Speed()
         {
             // 将临时速度变量的值赋给速度变量，以反映本次计算得到的速度
-            this.m_speed = this.m_speedTemp;
+            var speed = this.m_speedTemp;
+
             // 将临时速度变量重置为0，为下一次速度计算做准备
             this.m_speedTemp = 0;
+
             // 返回本次计算得到的速度
-            return this.m_speed;
+            return speed;
         }
 
         /// <summary>
@@ -115,8 +110,11 @@ namespace TouchSocket.Dmtp
             // 使用Interlocked类确保在多线程环境下对m_speedTemp的访问是原子操作
             Interlocked.Add(ref this.m_speedTemp, flow);
 
-            // 更新进度：计算已完成长度与总长度的比例，转换为浮点数表示完成度
-            this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+            if (this.Length > 0)
+            {
+                // 更新进度：计算已完成长度与总长度的比例，转换为浮点数表示完成度
+                this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+            }
         }
 
         /// <summary>
@@ -130,8 +128,12 @@ namespace TouchSocket.Dmtp
             await this.m_flowGate.AddCheckWaitAsync(flow).ConfigureAwait(false);
             // 原子操作更新临时速度值，以确保线程安全
             Interlocked.Add(ref this.m_speedTemp, flow);
-            // 更新进度，计算已完成长度与总长度的比例
-            this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+
+            if (this.Length > 0)
+            {
+                // 更新进度，计算已完成长度与总长度的比例
+                this.m_progress = (float)((double)Interlocked.Add(ref this.completedLength, flow) / this.Length);
+            }
         }
     }
 }

@@ -296,7 +296,7 @@ namespace TouchSocket.Dmtp.Rpc
 
                 if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync1(callContext, parameters).ConfigureAwait(false);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, parameters).ConfigureAwait(false);
                 }
 
                 if (rpcRequestPackage.Feedback != FeedbackType.WaitInvoke)

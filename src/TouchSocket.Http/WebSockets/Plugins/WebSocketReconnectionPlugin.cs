@@ -17,7 +17,7 @@ using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
 {
-    internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> where TClient : IWebSocketClient
+    internal sealed class WebSocketReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IWebSocketClosedPlugin where TClient : IWebSocketClient
     {
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
@@ -29,17 +29,11 @@ namespace TouchSocket.Http.WebSockets
             };
         }
 
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, ClosedEventArgs>(typeof(IWebSocketClosedPlugin), this.OnClosed);
-        }
-
-        private async Task OnClosed(IWebSocket client, ClosedEventArgs e)
+        public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
             await e.InvokeNext().ConfigureAwait(false);
 
-            if (client is not TClient tClient)
+            if (webSocket is not TClient tClient)
             {
                 return;
             }

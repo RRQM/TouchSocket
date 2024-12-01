@@ -23,7 +23,7 @@ namespace TouchSocket.JsonRpc
     /// WebSocketJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase
+    public sealed class WebSocketJsonRpcParserPlugin : JsonRpcParserPluginBase, IWebSocketHandshakedPlugin, IWebSocketReceivedPlugin
     {
         /// <summary>
         /// WebSocketJsonRpcParserPlugin
@@ -38,6 +38,50 @@ namespace TouchSocket.JsonRpc
         /// 经过判断是否标识当前的客户端为JsonRpc
         /// </summary>
         public Func<IWebSocket, HttpContext, Task<bool>> AllowJsonRpc { get; set; }
+
+        /// <inheritdoc/>
+        public async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        {
+            if (this.AllowJsonRpc != null)
+            {
+                if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(false))
+                {
+                    client.Client.SetIsJsonRpc();
+                }
+            }
+
+            await e.InvokeNext().ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
+        {
+            if (e.DataFrame.Opcode == WSDataType.Text && client.Client.GetIsJsonRpc())
+            {
+                var jsonRpcStr = e.DataFrame.ToText();
+                if (jsonRpcStr.IsNullOrEmpty())
+                {
+                    await e.InvokeNext().ConfigureAwait(false);
+                    return;
+                }
+
+                e.Handled = true;
+
+                if (client.Client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
+                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
+                {
+                    actionClient.InputResponseString(jsonRpcStr);
+                }
+                else
+                {
+                    await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr, client.Client.Resolver.CreateScopedResolver()));
+                }
+            }
+            else
+            {
+                await e.InvokeNext().ConfigureAwait(false);
+            }
+        }
 
         /// <summary>
         /// 经过判断是否标识当前的客户端为JsonRpc
@@ -62,15 +106,6 @@ namespace TouchSocket.JsonRpc
                 return Task.FromResult(allowJsonRpc(client, context));
             };
             return this;
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, HttpContextEventArgs>(typeof(IWebSocketHandshakedPlugin), this.OnWebSocketHandshaked);
-
-            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(typeof(IWebSocketReceivedPlugin), this.OnWebSocketReceived);
         }
 
         /// <inheritdoc/>
@@ -100,48 +135,6 @@ namespace TouchSocket.JsonRpc
             }
             catch
             {
-            }
-        }
-
-        private async Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
-        {
-            if (this.AllowJsonRpc != null)
-            {
-                if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(false))
-                {
-                    client.Client.SetIsJsonRpc();
-                }
-            }
-
-            await e.InvokeNext().ConfigureAwait(false);
-        }
-
-        private async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
-        {
-            if (e.DataFrame.Opcode == WSDataType.Text && client.Client.GetIsJsonRpc())
-            {
-                var jsonRpcStr = e.DataFrame.ToText();
-                if (jsonRpcStr.IsNullOrEmpty())
-                {
-                    await e.InvokeNext().ConfigureAwait(false);
-                    return;
-                }
-
-                e.Handled = true;
-
-                if (client.Client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
-                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
-                {
-                    actionClient.InputResponseString(jsonRpcStr);
-                }
-                else
-                {
-                    await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr,client.Client.Resolver.CreateScopedResolver()));
-                }
-            }
-            else
-            {
-                await e.InvokeNext().ConfigureAwait(false);
             }
         }
     }

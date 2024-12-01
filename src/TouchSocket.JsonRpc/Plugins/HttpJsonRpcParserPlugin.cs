@@ -21,7 +21,7 @@ namespace TouchSocket.JsonRpc
     /// HttpJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase
+    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
     {
         private string m_jsonRpcUrl = "/jsonrpc";
 
@@ -36,13 +36,6 @@ namespace TouchSocket.JsonRpc
         /// </remarks>
         public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
         {
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -100,14 +93,15 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Post)
             {
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client,await e.Context.Request.GetBodyAsync().ConfigureAwait(false), e.Context,client.Resolver.CreateScopedResolver())).ConfigureAwait(false);
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client,await e.Context.Request.GetBodyAsync().ConfigureAwait(false), e.Context,client.Resolver)).ConfigureAwait(false);
                     return;
                 }
             }

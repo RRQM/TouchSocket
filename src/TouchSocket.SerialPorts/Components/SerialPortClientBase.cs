@@ -54,7 +54,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.SerialPorts
         /// <param name="e"></param>
         protected virtual async Task OnSerialConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace TouchSocket.SerialPorts
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task OnSerialReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ISerialReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace TouchSocket.SerialPorts
         /// </returns>
         protected virtual ValueTask<bool> OnSerialReceiving(ByteBlock byteBlock)
         {
-            return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(ISerialReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace TouchSocket.SerialPorts
         /// </remarks>
         protected virtual ValueTask<bool> OnSerialSending(ReadOnlyMemory<byte> memory)
         {
-            return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(ISerialSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         private async Task PrivateOnClosing(ClosingEventArgs e)

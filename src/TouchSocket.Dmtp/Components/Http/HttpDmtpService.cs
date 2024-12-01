@@ -64,10 +64,11 @@ namespace TouchSocket.Dmtp
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
-            if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
+            var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+            if (dmtpRouteService != null)
             {
                 this.m_allowRoute = true;
-                this.m_findDmtpActor = this.Resolver.Resolve<IDmtpRouteService>().FindDmtpActor;
+                this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
             }
         }
 

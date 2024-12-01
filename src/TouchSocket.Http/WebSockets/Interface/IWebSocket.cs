@@ -14,6 +14,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -21,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// 定义WebSocket服务的接口，继承自IDisposable, IOnlineClient, IClosableClient接口。
     /// </summary>
-    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient
+    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient,IResolverObject
     {
         /// <summary>
         /// 允许异步Read读取

@@ -30,6 +30,7 @@ namespace TouchSocket.Core
             return this;
         }
 
+        /// <inheritdoc/>
         public IScopedResolver CreateScopedResolver()
         {
             throw new NotImplementedException();

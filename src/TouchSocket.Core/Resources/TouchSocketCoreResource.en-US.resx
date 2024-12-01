@@ -181,4 +181,7 @@
   <data name="InvalidEnum" xml:space="preserve">
     <value>For enumeration type: '{0}', an invalid enumeration value '{1}' was set.</value>
   </data>
+  <data name="PluginIsNull" xml:space="preserve">
+    <value>Plugin '{0}' is null, it may be missing registration information in the container.</value>
+  </data>
 </root>

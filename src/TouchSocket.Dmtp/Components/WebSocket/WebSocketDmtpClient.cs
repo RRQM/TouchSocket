@@ -50,6 +50,7 @@ namespace TouchSocket.Dmtp
         private ClientWebSocket m_client;
         private SealedDmtpActor m_dmtpActor;
         private DmtpAdapter m_dmtpAdapter;
+        private bool m_allowRoute;
         private Func<string, Task<IDmtpActor>> m_findDmtpActor;
         private int m_receiveBufferSize = 1024 * 10;
         private ValueCounter m_receiveCounter;
@@ -79,7 +80,7 @@ namespace TouchSocket.Dmtp
                     this.m_client = new ClientWebSocket();
                     await this.m_client.ConnectAsync(this.RemoteIPHost, token).ConfigureAwait(false);
 
-                    this.m_dmtpActor = new SealedDmtpActor(false)
+                    this.m_dmtpActor = new SealedDmtpActor(this.m_allowRoute)
                     {
                         //OutputSend = this.OnDmtpActorSend,
                         OutputSendAsync = this.OnDmtpActorSendAsync,
@@ -182,9 +183,11 @@ namespace TouchSocket.Dmtp
         protected override void LoadConfig(TouchSocketConfig config)
         {
             this.RemoteIPHost = config.GetValue(TouchSocketConfigExtension.RemoteIPHostProperty);
-            if (this.Resolver.IsRegistered(typeof(IDmtpRouteService)))
+            var dmtpRouteService = this.Resolver.Resolve<IDmtpRouteService>();
+            if (dmtpRouteService != null)
             {
-                this.m_findDmtpActor = this.Resolver.Resolve<IDmtpRouteService>().FindDmtpActor;
+                this.m_allowRoute = true;
+                this.m_findDmtpActor = dmtpRouteService.FindDmtpActor;
             }
         }
 
@@ -235,7 +238,7 @@ namespace TouchSocket.Dmtp
                                 {
                                     if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
                                     {
-                                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin),this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
                                     }
                                 }
                             }
@@ -352,7 +355,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 异步触发插件管理器中的 IDmtpClosedPlugin 接口的事件，并传递相关参数
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
         /// <summary>
         /// 当Dmtp即将被关闭时触发。
@@ -374,7 +377,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 通知插件管理器，触发IDmtpClosingPlugin接口的事件处理程序，并传递相关参数。
-            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -390,7 +393,7 @@ namespace TouchSocket.Dmtp
             }
 
             // 异步调用插件管理器，通知所有实现IDmtpCreatedChannelPlugin接口的插件处理通道创建事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -405,7 +408,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 触发插件管理器中的握手完成插件事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -420,7 +423,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 触发握手过程的插件事件
-            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
         /// <summary>
         /// 当需要转发路由包时
@@ -434,7 +437,7 @@ namespace TouchSocket.Dmtp
                 return;
             }
             // 异步调用插件管理器，通知所有实现了IDmtpRoutingPlugin接口的插件处理路由包
-            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IDmtpRoutingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
         #endregion 事件触发
     }

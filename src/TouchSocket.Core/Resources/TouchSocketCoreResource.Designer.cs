@@ -223,6 +223,15 @@ namespace TouchSocket.Resources {
         }
         
         /// <summary>
+        ///   查找类似 插件‘{0}’为null，它可能在容器中缺少注册信息。 的本地化字符串。
+        /// </summary>
+        public static string PluginIsNull {
+            get {
+                return ResourceManager.GetString("PluginIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 类型：{0}，信息：{1} 的本地化字符串。
         /// </summary>
         public static string ResultToString {

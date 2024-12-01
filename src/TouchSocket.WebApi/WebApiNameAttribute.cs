@@ -6,8 +6,14 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.WebApi
 {
-    public abstract class WebApiNameAttribute:Attribute
+    /// <summary>
+    /// 表示 Web API 名称的特性。
+    /// </summary>
+    public abstract class WebApiNameAttribute : Attribute
     {
+        /// <summary>
+        /// 获取或设置 Web API 的名称。
+        /// </summary>
         public string Name { get; set; }
     }
 }

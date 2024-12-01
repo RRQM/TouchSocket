@@ -16,12 +16,19 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
-    internal class PluginInvokeLine
+    internal sealed class PluginInvokeLine
     {
         private List<PluginEntity> m_pluginEntities = new List<PluginEntity>();
+        private int m_fromIocCount;
+
+        public int FromIocCount => this.m_fromIocCount;
 
         public void Add(PluginEntity pluginEntity)
         {
+            if (pluginEntity.FromIoc)
+            {
+                this.m_fromIocCount++;
+            }
             //调用方线程安全
             var list = new List<PluginEntity>(m_pluginEntities);
             list.Add(pluginEntity);
@@ -40,7 +47,7 @@ namespace TouchSocket.Core
 
             foreach (var item in list)
             {
-                if (!item.IsDelegate&&item.Plugin==plugin)
+                if (!item.IsDelegate && item.Plugin == plugin)
                 {
                     list.Remove(item);
                     break;

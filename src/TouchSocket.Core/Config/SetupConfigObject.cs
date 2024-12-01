@@ -20,9 +20,9 @@ namespace TouchSocket.Core
     /// </summary>
     public abstract class SetupConfigObject : ResolverConfigObject, ISetupConfigObject
     {
-        private IPluginManager m_pluginManager;
-        private IResolver m_resolver;
         private TouchSocketConfig m_config;
+        private IPluginManager m_pluginManager;
+        private IScopedResolver m_scopedResolver;
 
         /// <inheritdoc/>
         public override TouchSocketConfig Config => this.m_config;
@@ -31,13 +31,7 @@ namespace TouchSocket.Core
         public override IPluginManager PluginManager => this.m_pluginManager;
 
         /// <inheritdoc/>
-        public override IResolver Resolver => this.m_resolver;
-
-        private void ClearConfig()
-        {
-            this.m_pluginManager.SafeDispose();
-            this.m_config.SafeDispose();
-        }
+        public override IResolver Resolver => this.m_scopedResolver.Resolver;
 
         /// <inheritdoc/>
         public async Task SetupAsync(TouchSocketConfig config)
@@ -48,9 +42,9 @@ namespace TouchSocket.Core
 
             this.BuildConfig(config);
 
-            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ILoadingConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(false);
             this.LoadConfig(config);
-            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this, new ConfigEventArgs(config)).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ILoadedConfigPlugin), this.Resolver, this, new ConfigEventArgs(config)).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -58,6 +52,7 @@ namespace TouchSocket.Core
         {
             if (disposing)
             {
+                this.m_scopedResolver.SafeDispose();
                 this.ClearConfig();
             }
             base.Dispose(disposing);
@@ -94,17 +89,24 @@ namespace TouchSocket.Core
                 resolver = registrator.BuildResolver();
             }
 
-            var pluginManager = new PluginManager(resolver);
+            this.m_scopedResolver = resolver.CreateScopedResolver();
+
+            var pluginManager = new PluginManager(this.Resolver);
 
             if (this.m_config.GetValue(TouchSocketCoreConfigExtension.ConfigurePluginsProperty) is Action<IPluginManager> actionPluginManager)
             {
                 actionPluginManager.Invoke(pluginManager);
             }
 
-            this.Logger ??= resolver.Resolve<ILog>();
+            this.Logger ??= this.Resolver.Resolve<ILog>();
 
             this.m_pluginManager = pluginManager;
-            this.m_resolver = resolver;
+        }
+
+        private void ClearConfig()
+        {
+            this.m_pluginManager.SafeDispose();
+            this.m_config.SafeDispose();
         }
     }
 }
