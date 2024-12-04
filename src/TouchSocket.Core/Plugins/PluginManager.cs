@@ -25,7 +25,7 @@ namespace TouchSocket.Core
     /// </summary>
     public sealed class PluginManager : DisposableObject, IPluginManager
     {
-        private readonly object m_locker = new object();
+        private readonly Lock m_locker = LockFactory.Create();
         private readonly IScopedResolver m_scopedResolver;
         private Dictionary<Type, PluginInvokeLine> m_pluginMethods = new Dictionary<Type, PluginInvokeLine>();
 

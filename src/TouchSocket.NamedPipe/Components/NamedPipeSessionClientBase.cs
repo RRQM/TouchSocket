@@ -30,9 +30,8 @@ namespace TouchSocket.NamedPipe
     public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedPipeSession, INamedPipeListenableClient, IIdClient
     {
         #region 字段
-
-        private readonly object m_lockForAbort = new object();
         private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
+        private readonly Lock m_lockForAbort = LockFactory.Create();
         private TouchSocketConfig m_config;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private NamedPipeListenOption m_listenOption;

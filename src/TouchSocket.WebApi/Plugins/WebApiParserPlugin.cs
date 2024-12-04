@@ -27,6 +27,7 @@ namespace TouchSocket.WebApi
     [PluginOption(Singleton = true)]
     public class WebApiParserPlugin : PluginBase, IHttpPlugin
     {
+        private readonly Lock m_locker = LockFactory.Create();
         private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
         private readonly IRpcServerProvider m_rpcServerProvider;
 
@@ -89,7 +90,7 @@ namespace TouchSocket.WebApi
                 return webApiParameterInfo;
             }
 
-            lock (this.m_pairsForParameterInfo)
+            lock (this.m_locker)
             {
                 if (!m_pairsForParameterInfo.ContainsKey(parameter))
                 {

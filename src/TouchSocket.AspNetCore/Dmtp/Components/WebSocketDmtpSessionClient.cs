@@ -58,7 +58,7 @@ namespace TouchSocket.Dmtp.AspNetCore
         private WebSocketDmtpService m_service;
         private HttpContext m_httpContext;
         private string m_id;
-        private readonly object m_locker = new object();
+        private readonly Lock m_locker = LockFactory.Create();
 
         #endregion 字段
 

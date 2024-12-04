@@ -2,13 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<LangVersion>9.0</LangVersion>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
 		<ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
 		<BaseOutputPath>bin</BaseOutputPath>
 		<GenerateDocumentationFile>False</GenerateDocumentationFile>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<SignAssembly>false</SignAssembly>
+		<DefineConstants>SourceGenerator</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

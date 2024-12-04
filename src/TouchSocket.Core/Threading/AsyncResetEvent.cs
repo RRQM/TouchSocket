@@ -25,7 +25,7 @@ namespace TouchSocket.Core
     {
         private readonly bool m_autoReset;
 
-        private readonly object m_locker = new object();
+        private readonly Lock m_locker = LockFactory.Create();
 
         private readonly Queue<TaskCompletionSource<bool>> m_waitQueue = new Queue<TaskCompletionSource<bool>>();
 
