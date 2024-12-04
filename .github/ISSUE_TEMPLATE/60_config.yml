@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Documentation
+    url: https://touchsocket.net/
+    about: A simple and easy-to-use library of basic network communication components.
+  - name: 🗨️ Discussions
+    url: https://github.com/RRQM/TouchSocket/discussions
+    about: Please post any questions during use here
+  - name: Generous sponsorship
+    url: https://touchsocket.net/docs/current/donate
+    about: Generous sponsorship
