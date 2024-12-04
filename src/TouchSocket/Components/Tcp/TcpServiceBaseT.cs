@@ -195,13 +195,13 @@ namespace TouchSocket.Sockets
                 }
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
                 throw;
             }
         }
@@ -222,7 +222,7 @@ namespace TouchSocket.Sockets
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
-                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
         }
 

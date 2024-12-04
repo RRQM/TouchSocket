@@ -52,9 +52,9 @@ namespace TouchSocket.JsonRpc
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
-            if (this.Resolver.IsRegistered(typeof(IRpcServerProvider)))
+            var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
+            if (rpcServerProvider != null)
             {
-                var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
                 this.RegisterServer(rpcServerProvider.GetMethods());
                 this.m_rpcServerProvider = rpcServerProvider;
             }
@@ -100,16 +100,16 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private async Task ThisInvoke(object obj)
+        private async Task ThisInvokeAsync(object obj)
         {
+            var callContext = (JsonRpcCallContextBase)obj;
             try
             {
-                var callContext = (JsonRpcCallContextBase)obj;
                 var invokeResult = new InvokeResult();
 
                 try
                 {
-                    JsonRpcUtility.BuildRequestContext(this.Resolver, this.ActionMap, ref callContext);
+                    JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
                 }
                 catch (Exception ex)
                 {
@@ -141,8 +141,13 @@ namespace TouchSocket.JsonRpc
                 var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
                 await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
             }
-            catch
+            catch(Exception ex)
             {
+                this.Logger?.Debug(ex.Message);
+            }
+            finally
+            {
+                callContext.Dispose();
             }
         }
 
@@ -162,7 +167,7 @@ namespace TouchSocket.JsonRpc
 
             if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
             {
-                _ = Task.Factory.StartNew(this.ThisInvoke, new WebSocketJsonRpcCallContext(this, jsonString));
+                _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString,this.Resolver.CreateScopedResolver()));
             }
             else
             {

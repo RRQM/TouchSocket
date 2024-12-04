@@ -88,13 +88,36 @@ namespace TouchSocket.Http
         public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             // 使用using语句确保响应对象正确地被释放
-            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token))
+            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
             {
                 // 提取HTTP响应
                 var response = responseResult.Response;
 
                 // 将响应内容异步读取并复制到指定的流中
-                await response.ReadCopyToAsync(stream, token);
+                await response.ReadCopyToAsync(stream, token).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// 异步获取HTTP请求的文件内容
+        /// </summary>
+        /// <param name="httpClient">HTTP客户端接口</param>
+        /// <param name="request">HTTP请求对象</param>
+        /// <param name="stream">用于存储文件内容的目标流</param>
+        /// <param name="flowOperator">用于控制下载过程的操作符。</param>
+        /// <returns>返回一个Result对象，表示下载结果。</returns>
+        public static async Task<Result> GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, HttpFlowOperator flowOperator)
+        {
+            var token = flowOperator.Token;
+            var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
+            // 使用using语句确保响应对象正确地被释放
+            using (var responseResult = await httpClient.RequestAsync(request, timeout, token).ConfigureAwait(false))
+            {
+                // 提取HTTP响应
+                var response = responseResult.Response;
+
+                // 将响应内容异步读取并复制到指定的流中
+                return await response.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(false);
             }
         }
 
@@ -118,6 +141,25 @@ namespace TouchSocket.Http
             return GetFileAsync(httpClient, request, stream, millisecondsTimeout, token);
         }
 
+        /// <summary>
+        /// 异步获取URL指定的文件，并将其内容写入提供的流中。
+        /// </summary>
+        /// <param name="httpClient">用于发送HTTP请求的客户端。</param>
+        /// <param name="url">要获取的文件的URL。</param>
+        /// <param name="stream">将文件内容写入的流。</param>
+        /// <param name="flowOperator">用于控制下载过程的操作符。</param>
+        /// <returns>返回一个Result对象，表示下载结果。</returns>
+        public static Task<Result> GetFileAsync(this IHttpClient httpClient, string url, Stream stream, HttpFlowOperator flowOperator)
+        {
+            // 创建并初始化HttpRequest对象，用于封装HTTP请求的相关信息和操作
+            var request = new HttpRequest();
+            request.InitHeaders(); // 初始化请求头
+            request.SetUrl(url); // 设置请求的URL
+            request.SetHost(httpClient.RemoteIPHost.Host);
+            // 调用重载的GetFileAsync方法，传入封装好的请求对象
+            return GetFileAsync(httpClient, request, stream, flowOperator);
+        }
+
         #endregion Download
 
         #region Upload
@@ -131,31 +173,68 @@ namespace TouchSocket.Http
         /// <param name="millisecondsTimeout">请求的超时时间，默认为10秒。如果在此时间内未完成上传，请求将被取消。</param>
         /// <param name="token">用于取消操作的取消令牌。</param>
         /// <typeparam name="TClient">客户端类型，必须继承自HttpClientBase并实现IHttpClient接口。</typeparam>
-        public static async Task UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
+        public static async Task<Result> UploadFileAsync<TClient>(this TClient client, string url, FileInfo fileInfo, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
             where TClient : HttpClientBase, IHttpClient
         {
-            //创建一个请求
-            var request = new HttpRequest();
-            request.InitHeaders();
-            request.AddHeader("FileName", fileInfo.Name);
-            request.SetUrl(url);
-            request.SetHost(client.RemoteIPHost.Host);
-            request.AsPost();
-
-
-            using (var responseResult = await client.RequestAsync(request, 1000 * 10))
+            using (var stream = fileInfo.OpenRead())
             {
-                var response = responseResult.Response;
-                using (var stream = fileInfo.OpenRead())
-                {
+                //创建一个请求
+                var request = new HttpRequest();
+                request.InitHeaders();
+                request.SetContent(new StreamHttpContent(stream));
+                request.AddHeader("FileName", fileInfo.Name);
+                request.SetUrl(url);
+                request.SetHost(client.RemoteIPHost.Host);
+                request.AsPost();
 
-                }
-                for (int i = 0; i < 100; i++)
+                using (var responseResult = await client.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
                 {
-                    await response.WriteAsync(new byte[1024]);
+                    var response = responseResult.Response;
+                    if (response.IsSuccess())
+                    {
+                        return Result.Success;
+                    }
+                    return Result.FromFail(response.StatusMessage);
                 }
             }
         }
-        #endregion
+
+        /// <summary>
+        /// 异步上传文件到指定的URL。
+        /// </summary>
+        /// <typeparam name="TClient">客户端类型，必须继承自HttpClientBase并实现IHttpClient接口。</typeparam>
+        /// <param name="client">HttpClient实例，用于发送HTTP请求。</param>
+        /// <param name="request">HTTP请求对象。</param>
+        /// <param name="stream">包含文件内容的流。</param>
+        /// <param name="flowOperator">用于控制上传过程的操作符。</param>
+        /// <returns>返回一个Result对象，表示上传结果。</returns>
+        public static async Task<Result> UploadFileAsync<TClient>(this TClient client, HttpRequest request, Stream stream, HttpFlowOperator flowOperator)
+           where TClient : HttpClientBase, IHttpClient
+        {
+            try
+            {
+                var token = flowOperator.Token;
+                var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
+
+                //创建一个请求
+                request.SetContent(new StreamHttpContent(stream, flowOperator));
+
+                using (var responseResult = await client.RequestAsync(request, timeout, token).ConfigureAwait(false))
+                {
+                    var response = responseResult.Response;
+                    if (response.IsSuccess())
+                    {
+                        return flowOperator.SetResult(Result.Success);
+                    }
+                    return flowOperator.SetResult(Result.FromFail(response.StatusMessage));
+                }
+            }
+            catch (Exception ex)
+            {
+                return flowOperator.SetResult(Result.FromException(ex));
+            }
+        }
+
+        #endregion Upload
     }
 }

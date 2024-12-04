@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using TouchSocket.Core;
+
 namespace TouchSocket.Dmtp
 {
     /// <summary>
     /// 定义包含<see cref="TouchSocket.Dmtp.IDmtpActor"/>成员的接口对象。
     /// </summary>
-    public interface IDmtpActorObject
+    public interface IDmtpActorObject:IResolverObject
     {
         /// <summary>
         /// 提供Dmtp协议的最基础功能件

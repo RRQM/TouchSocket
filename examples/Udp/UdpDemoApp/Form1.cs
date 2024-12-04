@@ -41,7 +41,7 @@ namespace UdpDemoApp
                 {
                     this.m_udpSession.Logger.Info($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
                 }
-
+                var endPoint = e.EndPoint;
                 return EasyTask.CompletedTask;
             };
 

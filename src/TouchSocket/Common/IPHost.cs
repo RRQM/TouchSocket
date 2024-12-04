@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -24,7 +25,7 @@ namespace TouchSocket.Sockets
     public class IPHost : Uri
     {
         private EndPoint m_endPoint;
-
+        private bool zeroPort = false;
         /// <summary>
         /// IP解析映射
         /// <para>
@@ -43,6 +44,11 @@ namespace TouchSocket.Sockets
         /// <param name="uriString"></param>
         public IPHost(string uriString) : base(VerifyUri(uriString))
         {
+            var port = GetPortFromUrl(uriString);
+            if (port == 0)
+            {
+                this.zeroPort = true;
+            }
         }
 
         /// <summary>
@@ -81,10 +87,54 @@ namespace TouchSocket.Sockets
                     throw new Exception(TouchSocketResource.UnableToObtainEndpoint);
                 }
 
-                this.m_endPoint = this.HostNameType == UriHostNameType.Dns
-                    ? new DnsEndPoint(this.DnsSafeHost, this.Port)
-                    : new IPEndPoint(IPAddress.Parse(this.DnsSafeHost), this.Port);
+                if (this.HostNameType == UriHostNameType.Dns)
+                {
+                    this.m_endPoint = new DnsEndPoint(this.DnsSafeHost, this.Port);
+                }
+                else
+                {
+                    this.m_endPoint = new IPEndPoint(IPAddress.Parse(this.DnsSafeHost), this.Port);
+                }
                 return this.m_endPoint;
+            }
+        }
+
+        private static int GetPortFromUrl(string url)
+        {
+            var span = url.AsSpan();
+
+            // 查找最后一个冒号的位置
+            var colonIndex = span.LastIndexOf(':');
+            if (colonIndex == -1)
+            {
+                return -1;
+            }
+
+            // 确定端口号的起始位置
+            var startPortIndex = colonIndex + 1;
+            span = span.Slice(startPortIndex);
+            var endPortIndex = span.IndexOf('/');
+
+            ReadOnlySpan<char> portSpan;
+            // 如果没有找到斜杠，则端口号一直到字符串末尾
+            if (endPortIndex == -1)
+            {
+                portSpan = span;
+            }
+            else
+            {
+                // 提取端口号
+                portSpan = span.Slice(0, endPortIndex);
+            }
+
+            // 尝试转换为整数
+            if (int.TryParse(new string(portSpan.ToArray()), out var port))
+            {
+                return port;
+            }
+            else
+            {
+               return -1;
             }
         }
 
@@ -95,6 +145,10 @@ namespace TouchSocket.Sockets
         {
             get
             {
+                if (this.zeroPort)
+                {
+                    return 0;
+                }
                 if (this.IsDefaultPort)
                 {
                     switch (this.Scheme.ToLower())

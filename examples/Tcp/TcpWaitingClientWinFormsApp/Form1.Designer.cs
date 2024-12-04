@@ -50,6 +50,7 @@ namespace TcpWaitingClientWinFormsApp
             this.groupBox1 = new GroupBox();
             this.button1 = new Button();
             this.button5 = new Button();
+            this.button4 = new Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -123,6 +124,7 @@ namespace TcpWaitingClientWinFormsApp
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button5);
             this.groupBox1.Controls.Add(this.button3);
             this.groupBox1.Controls.Add(this.textBox4);
             this.groupBox1.Controls.Add(this.textBox2);
@@ -149,7 +151,7 @@ namespace TcpWaitingClientWinFormsApp
             // 
             // button5
             // 
-            this.button5.Location = new Point(1112, 35);
+            this.button5.Location = new Point(675, 36);
             this.button5.Name = "button5";
             this.button5.Size = new Size(150, 46);
             this.button5.TabIndex = 9;
@@ -157,12 +159,22 @@ namespace TcpWaitingClientWinFormsApp
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += this.button5_Click;
             // 
+            // button4
+            // 
+            this.button4.Location = new Point(872, 27);
+            this.button4.Name = "button4";
+            this.button4.Size = new Size(150, 46);
+            this.button4.TabIndex = 10;
+            this.button4.Text = "关闭服务器";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += this.button4_Click;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new SizeF(14F, 31F);
             this.AutoScaleMode = AutoScaleMode.Font;
             this.ClientSize = new Size(1437, 325);
-            this.Controls.Add(this.button5);
+            this.Controls.Add(this.button4);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textBox1);
@@ -188,5 +200,6 @@ namespace TcpWaitingClientWinFormsApp
         private GroupBox groupBox1;
         private Button button1;
         private Button button5;
+        private Button button4;
     }
 }

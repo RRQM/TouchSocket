@@ -27,7 +27,6 @@ namespace TouchSocket.Sockets
         /// </summary>
         SingleStreamDataHandlingAdapter DataHandlingAdapter { get; }
 
-
         /// <summary>
         /// IP地址
         /// </summary>

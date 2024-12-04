@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Http.WebSockets;
 using TouchSocket.Sockets;
 
@@ -66,7 +67,7 @@ namespace TouchSocket.Http
             {
                 var e = new HttpContextEventArgs(httpContext);
 
-                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this, e).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IHttpPlugin), this.Resolver, this, e).ConfigureAwait(false);
             }
         }
 

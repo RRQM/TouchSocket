@@ -21,7 +21,7 @@ namespace TouchSocket.Http
     /// Http静态内容插件
     /// </summary>
     [PluginOption(Singleton = false)]
-    public class HttpStaticPagePlugin : PluginBase
+    public class HttpStaticPagePlugin : PluginBase, IHttpPlugin
     {
         private readonly StaticFilesPool m_filesPool;
 
@@ -91,6 +91,17 @@ namespace TouchSocket.Http
         }
 
         /// <summary>
+        /// 设置提供文件扩展名和MIME类型之间的映射。
+        /// </summary>
+        /// <param name="provider">提供文件扩展名和MIME类型之间的映射的操作</param>
+        /// <returns>返回当前的HttpStaticPagePlugin实例</returns>
+        public HttpStaticPagePlugin SetContentTypeProvider(Action<IContentTypeProvider> provider)
+        {
+            provider.Invoke(this.ContentTypeProvider);
+            return this;
+        }
+
+        /// <summary>
         /// 设定重新导航
         /// </summary>
         /// <param name="func"></param>
@@ -141,13 +152,6 @@ namespace TouchSocket.Http
             return this;
         }
 
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
-            base.Loaded(pluginManager);
-        }
-
         #region Remove
 
         /// <summary>
@@ -172,7 +176,8 @@ namespace TouchSocket.Http
 
         #endregion Remove
 
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureAwait(false);
             if (this.m_filesPool.TryFindEntry(url, out var staticEntry))

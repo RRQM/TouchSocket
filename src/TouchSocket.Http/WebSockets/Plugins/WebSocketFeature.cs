@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <para>此组件只能挂载在<see cref="HttpService"/>中</para>
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class WebSocketFeature : PluginBase
+    public sealed class WebSocketFeature : PluginBase, IHttpPlugin
     {
         /// <summary>
         /// 自动响应Close报文
@@ -130,13 +130,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
-        }
-
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (client.Protocol == Protocol.Http)
             {

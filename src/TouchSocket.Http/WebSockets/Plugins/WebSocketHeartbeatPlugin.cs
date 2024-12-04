@@ -20,16 +20,10 @@ namespace TouchSocket.Http.WebSockets
     /// 初始化一个适用于WebSocket的心跳插件
     /// </summary>
     [PluginOption(Singleton = true)]
-    public class WebSocketHeartbeatPlugin : HeartbeatPlugin
+    public class WebSocketHeartbeatPlugin : HeartbeatPlugin, IWebSocketHandshakedPlugin
     {
         /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IWebSocket, HttpContextEventArgs>(typeof(IWebSocketHandshakedPlugin), this.OnWebSocketHandshaked);
-        }
-
-        private Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
+        public Task OnWebSocketHandshaked(IWebSocket client, HttpContextEventArgs e)
         {
             Task.Run(async () =>
             {

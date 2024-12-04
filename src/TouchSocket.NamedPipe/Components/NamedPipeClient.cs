@@ -151,9 +151,6 @@ namespace TouchSocket.NamedPipe
 
         #region 属性
 
-        /// <inheritdoc/>
-        public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.DataHandlingAdapter;
-
         #endregion 属性
 
         #region Connect

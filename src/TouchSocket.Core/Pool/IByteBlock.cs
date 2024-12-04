@@ -778,6 +778,17 @@ namespace TouchSocket.Core
 
         #endregion String
 
+        #region NormalString
+
+        /// <summary>
+        /// 写入一个普通字符串。和<see cref="WriteString(string, FixedHeaderType)"/>不同的是，该方法不会写入字符串的长度。
+        /// 其功能类似于<see cref="Encoding.GetBytes(string)"/>。
+        /// </summary>
+        /// <param name="value">字符串</param>
+        /// <param name="encoding">编码</param>
+        void WriteNormalString(string value, Encoding encoding);
+        #endregion
+
         #region UInt16
 
         /// <summary>

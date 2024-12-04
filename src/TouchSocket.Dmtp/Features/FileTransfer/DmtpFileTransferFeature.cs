@@ -29,7 +29,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="resolver"></param>
         public DmtpFileTransferFeature(IResolver resolver)
         {
-            this.m_fileResourceController = resolver.TryResolve<IFileResourceController>() ?? new FileResourceController();
+            this.m_fileResourceController = resolver.Resolve<IFileResourceController>() ?? FileResourceController.Default;
             this.MaxSmallFileLength = 1024 * 1024;
             this.SetProtocolFlags(30);
         }
@@ -54,11 +54,10 @@ namespace TouchSocket.Dmtp.FileTransfer
         public ushort StartProtocol { get; set; }
 
         /// <inheritdoc/>
-        public Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
+        public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            var dmtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor)
+            var dmtpFileTransferActor = new DmtpFileTransferActor(client.DmtpActor, this.m_fileResourceController)
             {
-                FileController = this.m_fileResourceController,
                 OnFileTransferring = this.OnFileTransfering,
                 OnFileTransferred = this.OnFileTransfered,
                 RootPath = this.RootPath,
@@ -66,7 +65,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             };
             dmtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpFileTransferActor(dmtpFileTransferActor);
-            return e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -114,12 +113,12 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(false);
         }
 
         private async Task OnFileTransfering(IDmtpActor actor, FileTransferringEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(false);
         }
     }
 }

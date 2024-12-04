@@ -23,6 +23,11 @@ namespace TouchSocket.Core
         Singleton,
 
         /// <summary>
+        /// 作用域对象
+        /// </summary>
+        Scoped,
+
+        /// <summary>
         /// 瞬时对象
         /// </summary>
         Transient

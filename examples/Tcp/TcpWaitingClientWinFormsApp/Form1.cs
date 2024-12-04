@@ -21,6 +21,35 @@ namespace TcpWaitingClientWinFormsApp
         public Form1()
         {
             this.InitializeComponent();
+            this.Load += this.Form1_Load;
+        }
+
+        TcpService tcpService;
+        private async void Form1_Load(object? sender, EventArgs e)
+        {
+            this.tcpService = await CreateService();
+
+            this.UpdateServiceButtonUI();
+        }
+        private static async Task<TcpService> CreateService()
+        {
+            var service = new TcpService();
+
+            await service.SetupAsync(new TouchSocketConfig()
+                 .SetListenIPHosts(7789)
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+                 })
+                 .ConfigurePlugins(a =>
+                 {
+                     a.Add<MyPlugin1>();
+                 }));
+            await service.StartAsync();
+
+            service.Logger.Info("Server started");
+
+            return service;
         }
 
         private TcpClient m_tcpClient;
@@ -140,6 +169,45 @@ namespace TcpWaitingClientWinFormsApp
         private void button5_Click(object sender, EventArgs e)
         {
             cts?.Cancel();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            this.tcpService?.Dispose();
+            this.tcpService = default;
+            UpdateServiceButtonUI();
+        }
+
+        private void UpdateServiceButtonUI()
+        {
+            if (this.tcpService==null)
+            {
+                this.button4.Text= "启动服务";
+            }
+            else
+            {
+                this.button4.Text = "停止服务";
+            }
+        }
+    }
+
+    class MyPlugin1 : PluginBase, ITcpReceivedPlugin
+    {
+        private readonly ILog m_logger;
+
+        public MyPlugin1(ILog logger)
+        {
+            this.m_logger = logger;
+        }
+
+        public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+        {
+            this.m_logger.Info($"Plugin:{e.ByteBlock.ToString()}");
+
+            if (client is ITcpSessionClient sessionClient)
+            {
+                await sessionClient.SendAsync(e.ByteBlock.Memory);
+            }
         }
     }
 }

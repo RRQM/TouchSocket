@@ -30,7 +30,6 @@ namespace TouchSocket.NamedPipe
     public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedPipeSession, INamedPipeListenableClient, IIdClient
     {
         #region 字段
-
         private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         private readonly Lock m_lockForAbort = LockFactory.Create();
         private TouchSocketConfig m_config;
@@ -43,8 +42,11 @@ namespace TouchSocket.NamedPipe
         private ValueCounter m_receiveCounter;
         private InternalReceiver m_receiver;
         private Task m_receiveTask;
-        private IResolver m_resolver;
+        private IScopedResolver m_scopedResolver;
+
+        //private IResolver m_resolver;
         private INamedPipeServiceBase m_service;
+
         private Func<NamedPipeSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryGet;
         private TryOutEventHandler<NamedPipeSessionClientBase> m_tryRemoveAction;
@@ -95,13 +97,13 @@ namespace TouchSocket.NamedPipe
         public Protocol Protocol { get; protected set; }
 
         /// <inheritdoc/>
-        public override IResolver Resolver => this.m_resolver;
+        public override IResolver Resolver => this.m_scopedResolver.Resolver;
 
         /// <inheritdoc/>
         public INamedPipeServiceBase Service => this.m_service;
 
         /// <inheritdoc/>
-        protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
+        public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
 
         #region Internal
 
@@ -146,10 +148,10 @@ namespace TouchSocket.NamedPipe
             this.m_config = config;
         }
 
-        internal void InternalSetContainer(IResolver containerProvider)
+        internal void InternalSetContainer(IResolver resolver)
         {
-            this.m_resolver = containerProvider;
-            this.Logger ??= containerProvider.Resolve<ILog>();
+            this.m_scopedResolver = resolver.CreateScopedResolver();
+            this.Logger ??= this.m_scopedResolver.Resolver.Resolve<ILog>();
         }
 
         internal void InternalSetId(string id)
@@ -200,7 +202,6 @@ namespace TouchSocket.NamedPipe
             return this.ProtectedResetIdAsync(newId);
         }
 
-
         /// <summary>
         /// 中止当前操作，并安全地关闭相关资源。
         /// </summary>
@@ -221,7 +222,7 @@ namespace TouchSocket.NamedPipe
                     this.m_pipeStream.SafeDispose();
 
                     // 安全地释放保护数据处理适配器资源，避免资源泄露
-                    this.ProtectedDataHandlingAdapter.SafeDispose();
+                    this.m_dataHandlingAdapter.SafeDispose();
 
                     // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
                     Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
@@ -238,6 +239,7 @@ namespace TouchSocket.NamedPipe
             }
             if (disposing)
             {
+                this.m_scopedResolver.SafeDispose();
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
             base.Dispose(disposing);
@@ -249,7 +251,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -259,7 +261,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
         {
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -270,7 +272,7 @@ namespace TouchSocket.NamedPipe
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
             // 将发送事件委托给插件管理器处理，异步调用相关插件的发送逻辑
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -307,7 +309,7 @@ namespace TouchSocket.NamedPipe
                     if (this.PluginManager.Enable)
                     {
                         var e = new IdChangedEventArgs(sourceId, newId);
-                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), sessionClient, e).ConfigureAwait(false);
+                        await this.PluginManager.RaiseAsync(typeof(IIdChangedPlugin), this.Resolver, sessionClient, e).ConfigureAwait(false);
                     }
                     return;
                 }
@@ -423,7 +425,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -432,7 +434,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -441,7 +443,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -449,7 +451,7 @@ namespace TouchSocket.NamedPipe
         /// </summary>
         protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private int GetReceiveBufferSize()

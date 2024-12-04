@@ -28,13 +28,6 @@ namespace TouchSocket.Core
         bool Enable { get; set; }
 
         /// <summary>
-        /// 获取已添加的指定名称的插件数量。
-        /// </summary>
-        /// <param name="pluginType"></param>
-        /// <returns></returns>
-        int GetPluginCount(Type pluginType);
-
-        /// <summary>
         /// 所包含的所有插件。
         /// </summary>
         IEnumerable<IPlugin> Plugins { get; }
@@ -46,6 +39,12 @@ namespace TouchSocket.Core
         /// <exception cref="ArgumentNullException"></exception>
         void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin;
 
+        /// <summary>
+        /// 添加插件
+        /// </summary>
+        /// <param name="pluginType">插件类型</param>
+        /// <returns>添加的插件实例</returns>
+        IPlugin Add([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type pluginType);
 
         /// <summary>
         /// 添加一个插件类型及其对应的调用处理程序。
@@ -56,13 +55,29 @@ namespace TouchSocket.Core
         void Add(Type pluginType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default);
 
         /// <summary>
+        /// 获取来自IOC容器的指定名称的插件数量。
+        /// </summary>
+        /// <param name="pluginType">插件类型</param>
+        /// <returns>插件数量</returns>
+        int GetFromIocCount(Type pluginType);
+
+        /// <summary>
+        /// 获取已添加的指定名称的插件数量。
+        /// </summary>
+        /// <param name="pluginType"></param>
+        /// <returns></returns>
+        int GetPluginCount(Type pluginType);
+
+        /// <summary>
         /// 触发对应插件
         /// </summary>
         /// <param name="pluginType">插件接口类型</param>
+        /// <param name="resolver">容器</param>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
         /// <returns>表示在执行的插件中，是否处理<see cref="TouchSocketEventArgs.Handled"/>为<see langword="true"/>。</returns>
-        ValueTask<bool> RaiseAsync(Type pluginType, object sender, PluginEventArgs e);
+        ValueTask<bool> RaiseAsync(Type pluginType, IResolver resolver, object sender, PluginEventArgs e);
+
         /// <summary>
         /// 移除指定的插件实例
         /// </summary>

@@ -18,7 +18,7 @@ namespace TouchSocket.WebApi
 {
     internal class WebApiCallContext : CallContext, IWebApiCallContext
     {
-        public WebApiCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext) : base(caller, rpcMethod, resolver)
+        public WebApiCallContext(object caller, RpcMethod rpcMethod, HttpContext httpContext, IResolver resolver) : base(caller, rpcMethod, resolver)
         {
             this.HttpContext = httpContext;
         }

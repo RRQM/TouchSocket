@@ -63,7 +63,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnNamedPipeConnected(object o)
@@ -103,7 +103,7 @@ namespace TouchSocket.NamedPipe
             catch
             {
             }
-           
+
         }
 
         private async Task PrivateOnNamedPipeConnecting(object obj)
@@ -111,7 +111,7 @@ namespace TouchSocket.NamedPipe
             var e = (ConnectingEventArgs)obj;
 
             await this.OnNamedPipeConnecting(e).ConfigureAwait(false);
-            if (this.ProtectedDataHandlingAdapter == null)
+            if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
                 if (adapter != null)
@@ -166,7 +166,7 @@ namespace TouchSocket.NamedPipe
         public Protocol Protocol { get; protected set; }
 
         /// <inheritdoc/>
-        protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
+        public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
 
         /// <inheritdoc/>
         public virtual bool Online => this.m_online;
@@ -188,9 +188,11 @@ namespace TouchSocket.NamedPipe
                 {
                     this.m_online = false;
                     this.m_pipeStream.SafeDispose();
-                    this.ProtectedDataHandlingAdapter.SafeDispose();
 
-                    Task.Factory.StartNew(this.PrivateOnNamedPipeClosed,new ClosedEventArgs(manual, msg));
+                    this.m_dataHandlingAdapter.SafeDispose();
+                    this.m_dataHandlingAdapter = default;
+
+                    Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }
@@ -208,7 +210,7 @@ namespace TouchSocket.NamedPipe
             {
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
-            
+
             base.Dispose(disposing);
         }
 
@@ -313,7 +315,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -323,7 +325,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual ValueTask<bool> OnNamedPipeReceiving(ByteBlock byteBlock)
         {
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
 
@@ -335,7 +337,7 @@ namespace TouchSocket.NamedPipe
         protected virtual ValueTask<bool> OnNamedPipeSending(ReadOnlyMemory<byte> memory)
         {
             // 将发送任务委托给插件管理器，以便在所有相关的插件中引发命名管道发送事件
-            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(INamedPipeSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         /// <summary>
@@ -427,13 +429,13 @@ namespace TouchSocket.NamedPipe
                     return;
                 }
 
-                if (this.ProtectedDataHandlingAdapter == null)
+                if (this.m_dataHandlingAdapter == null)
                 {
                     await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
                 }
                 else
                 {
-                    await this.ProtectedDataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -449,7 +451,7 @@ namespace TouchSocket.NamedPipe
 
         private async Task PrivateHandleReceivedData(ByteBlock byteBlock, IRequestInfo requestInfo)
         {
-            var receiver =this.m_receiver;
+            var receiver = this.m_receiver;
             if (receiver != null)
             {
                 await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(false);
@@ -463,7 +465,7 @@ namespace TouchSocket.NamedPipe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ThrowIfCannotSendRequestInfo()
         {
-            if (this.ProtectedDataHandlingAdapter == null || !this.ProtectedDataHandlingAdapter.CanSendRequestInfo)
+            if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSendRequestInfo)
             {
                 throw new NotSupportedException($"当前适配器为空或者不支持对象发送。");
             }
@@ -513,14 +515,14 @@ namespace TouchSocket.NamedPipe
         protected Task ProtectedSendAsync(in ReadOnlyMemory<byte> memory)
         {
             // 如果未配置数据处理适配器，则使用默认的发送方式。
-            if (this.ProtectedDataHandlingAdapter == null)
+            if (this.m_dataHandlingAdapter == null)
             {
                 return this.ProtectedDefaultSendAsync(memory);
             }
             else
             {
                 // 如果配置了数据处理适配器，则使用适配器指定的发送方式。
-                return this.ProtectedDataHandlingAdapter.SendInputAsync(memory);
+                return this.m_dataHandlingAdapter.SendInputAsync(memory);
             }
         }
 
@@ -532,14 +534,14 @@ namespace TouchSocket.NamedPipe
         /// <returns>返回一个任务，表示异步操作的结果。</returns>
         /// <remarks>
         /// 此方法用于在发送请求之前验证是否可以发送请求信息，
-        /// 并通过<see cref="ProtectedDataHandlingAdapter"/>适配器安全处理发送过程。
+        /// 并通过<see cref="DataHandlingAdapter"/>适配器安全处理发送过程。
         /// </remarks>
         protected Task ProtectedSendAsync(IRequestInfo requestInfo)
         {
             // 验证当前状态是否允许发送请求信息，如果不允许则抛出异常。
             this.ThrowIfCannotSendRequestInfo();
             // 调用ProtectedDataHandlingAdapter的SendInputAsync方法异步发送请求信息。
-            return this.ProtectedDataHandlingAdapter.SendInputAsync(requestInfo);
+            return this.m_dataHandlingAdapter.SendInputAsync(requestInfo);
         }
 
         /// <summary>
@@ -552,7 +554,7 @@ namespace TouchSocket.NamedPipe
         protected async Task ProtectedSendAsync(IList<ArraySegment<byte>> transferBytes)
         {
             // 检查ProtectedDataHandlingAdapter是否已设置且支持拼接发送
-            if (this.ProtectedDataHandlingAdapter == null || !this.ProtectedDataHandlingAdapter.CanSplicingSend)
+            if (this.m_dataHandlingAdapter == null || !this.m_dataHandlingAdapter.CanSplicingSend)
             {
                 // 如果不支持拼接发送，计算所有字节片段的总长度
                 var length = 0;
@@ -569,7 +571,7 @@ namespace TouchSocket.NamedPipe
                         byteBlock.Write(new ReadOnlySpan<byte>(item.Array, item.Offset, item.Count));
                     }
                     // 根据ProtectedDataHandlingAdapter的状态选择发送方法
-                    if (this.ProtectedDataHandlingAdapter == null)
+                    if (this.m_dataHandlingAdapter == null)
                     {
                         // 如果未设置ProtectedDataHandlingAdapter，使用默认发送方法
                         await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
@@ -577,14 +579,14 @@ namespace TouchSocket.NamedPipe
                     else
                     {
                         // 如果已设置ProtectedDataHandlingAdapter但不支持拼接发送，使用Adapter的发送方法
-                        await this.ProtectedDataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
                 // 如果已设置ProtectedDataHandlingAdapter且支持拼接发送，直接使用Adapter的发送方法
-                await this.ProtectedDataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.3</Version>
+		<Version>3.0.6</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -30,11 +30,11 @@
 		<SignAssembly>True</SignAssembly>
 		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Release</PackageOutputPath>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<None Include="$(SolutionDir)\Src\Resources\logo.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
-
+	
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory</DefineConstants>
 	</PropertyGroup>
@@ -66,7 +66,7 @@
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup Condition="!$(DefineConstants.Contains('SourceGenerator'))">
+<ItemGroup Condition="!$(DefineConstants.Contains('SourceGenerator'))">
 		<PackageReference Include="Backport.System.Threading.Lock" Version="3.0.3">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>analyzers</IncludeAssets>
@@ -75,7 +75,6 @@
 		<Using Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="Backport.System.Threading.Lock" />
 		<Using Alias="LockFactory" Include="Backport.System.Threading.LockFactory" />
 	</ItemGroup>
-
 	<Target Name="CopyNuGetPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
 		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
 	</Target>

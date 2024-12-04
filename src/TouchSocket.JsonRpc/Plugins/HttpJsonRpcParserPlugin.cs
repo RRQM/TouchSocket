@@ -21,7 +21,7 @@ namespace TouchSocket.JsonRpc
     /// HttpJsonRpcParserPlugin
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase
+    public sealed class HttpJsonRpcParserPlugin : JsonRpcParserPluginBase, IHttpPlugin
     {
         private string m_jsonRpcUrl = "/jsonrpc";
 
@@ -29,20 +29,13 @@ namespace TouchSocket.JsonRpc
         /// 构造函数，用于初始化 <see cref="HttpJsonRpcParserPlugin"/> 类的新实例。
         /// </summary>
         /// <param name="rpcServerProvider">IRpcServerProvider 类型的参数，提供 RPC 服务器服务。</param>
-        /// <param name="resolver">IResolver 接口类型的参数，用于解析依赖项。</param>
+        /// <param name="logger">IResolver 接口类型的参数，用于解析依赖项。</param>
         /// <remarks>
-        /// 该构造函数调用基类的构造函数，传递 <paramref name="rpcServerProvider"/> 和 <paramref name="resolver"/> 参数。
+        /// 该构造函数调用基类的构造函数，传递 <paramref name="rpcServerProvider"/> 和 <paramref name="logger"/> 参数。
         /// 这对于确保基类能够访问 RPC 服务器提供者和依赖项解析器至关重要。
         /// </remarks>
-        public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
+        public HttpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
         {
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
         }
 
         /// <summary>
@@ -100,14 +93,15 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Post)
             {
                 if (this.m_jsonRpcUrl == "/" || e.Context.Request.UrlEquals(this.m_jsonRpcUrl))
                 {
                     e.Handled = true;
-                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client,await e.Context.Request.GetBodyAsync().ConfigureAwait(false), e.Context)).ConfigureAwait(false);
+                    await this.ThisInvokeAsync(new HttpJsonRpcCallContext(client,await e.Context.Request.GetBodyAsync().ConfigureAwait(false), e.Context,client.Resolver)).ConfigureAwait(false);
                     return;
                 }
             }

@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Http;
@@ -26,17 +25,16 @@ namespace TouchSocket.WebApi
     /// WebApi解析器
     /// </summary>
     [PluginOption(Singleton = true)]
-    public class WebApiParserPlugin : PluginBase
+    public class WebApiParserPlugin : PluginBase, IHttpPlugin
     {
         private readonly Lock m_locker = LockFactory.Create();
         private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
-        private readonly IResolver m_resolver;
         private readonly IRpcServerProvider m_rpcServerProvider;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver)
+        public WebApiParserPlugin(IRpcServerProvider rpcServerProvider)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(IRpcServerProvider));
 
@@ -44,8 +42,6 @@ namespace TouchSocket.WebApi
             this.PostRouteMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
-            this.m_resolver = ThrowHelper.ThrowArgumentNullExceptionIf(resolver, nameof(IResolver));
-
             this.Converter = new WebApiSerializerConverter();
             this.Converter.AddJsonSerializerFormatter(new Newtonsoft.Json.JsonSerializerSettings());
         }
@@ -74,13 +70,6 @@ namespace TouchSocket.WebApi
         {
             action.Invoke(this.Converter);
             return this;
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
-            base.Loaded(pluginManager);
         }
 
         private static object PrimitiveParse(string source, Type targetType)
@@ -120,41 +109,41 @@ namespace TouchSocket.WebApi
                 var invokeResult = new InvokeResult();
                 object[] ps = null;
 
-                var callContext = new WebApiCallContext(client, rpcMethod, this.m_resolver, e.Context);
-
-                if (rpcMethod.IsEnable)
+                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
                 {
-                    try
+                    if (rpcMethod.IsEnable)
                     {
-                        ps = new object[rpcMethod.Parameters.Length];
-                        for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                        try
                         {
-                            var parameter = rpcMethod.Parameters[i];
-                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                            ps = new object[rpcMethod.Parameters.Length];
+                            for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                            {
+                                var parameter = rpcMethod.Parameters[i];
+                                ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            invokeResult.Status = InvokeStatus.Exception;
+                            invokeResult.Message = ex.Message;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        invokeResult.Status = InvokeStatus.Exception;
-                        invokeResult.Message = ex.Message;
+                        invokeResult.Status = InvokeStatus.UnEnable;
                     }
-                }
-                else
-                {
-                    invokeResult.Status = InvokeStatus.UnEnable;
-                }
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                }
+                    if (invokeResult.Status == InvokeStatus.Ready)
+                    {
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
+                    }
 
-                if (e.Context.Response.Responsed)
-                {
-                    return;
-                }
+                    if (e.Context.Response.Responsed)
+                    {
+                        return;
+                    }
 
-                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
-                return;
+                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
+                }
             }
             await e.InvokeNext().ConfigureAwait(false);
         }
@@ -165,48 +154,51 @@ namespace TouchSocket.WebApi
             {
                 e.Handled = true;
 
-                var invokeResult = new InvokeResult();
-                object[] ps = null;
-                if (rpcMethod.IsEnable)
+                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
                 {
-                    var callContext = new WebApiCallContext(client, rpcMethod, this.m_resolver, e.Context);
-                    try
+                    var invokeResult = new InvokeResult();
+                    object[] ps = null;
+                    if (rpcMethod.IsEnable)
                     {
-                        ps = new object[rpcMethod.Parameters.Length];
-
-                        for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                        try
                         {
-                            var parameter = rpcMethod.Parameters[i];
-                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                            ps = new object[rpcMethod.Parameters.Length];
+
+                            for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                            {
+                                var parameter = rpcMethod.Parameters[i];
+                                ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            invokeResult.Status = InvokeStatus.Exception;
+                            invokeResult.Message = ex.Message;
+                        }
+
+                        if (invokeResult.Status == InvokeStatus.Ready)
+                        {
+                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
+                        }
+
+                        if (e.Context.Response.Responsed)
+                        {
+                            return;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        invokeResult.Status = InvokeStatus.Exception;
-                        invokeResult.Message = ex.Message;
+                        invokeResult.Status = InvokeStatus.UnEnable;
                     }
 
-                    if (invokeResult.Status == InvokeStatus.Ready)
-                    {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                    }
-
-                    if (e.Context.Response.Responsed)
-                    {
-                        return;
-                    }
+                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
                 }
-                else
-                {
-                    invokeResult.Status = InvokeStatus.UnEnable;
-                }
-
-                await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
             }
             await e.InvokeNext().ConfigureAwait(false);
         }
 
-        private Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        /// <inheritdoc/>
+        public Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             if (e.Context.Request.Method == HttpMethod.Get)
             {
@@ -232,7 +224,7 @@ namespace TouchSocket.WebApi
             }
             else if (parameter.IsFromServices)
             {
-                return this.m_resolver.Resolve(parameter.Type);
+                return callContext.Resolver.Resolve(parameter.Type);
             }
             else if (parameter.Type.IsPrimitive || parameter.Type == typeof(string))
             {
@@ -271,7 +263,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (parameterInfo.IsFromForm)
                 {
-                    var value =(await request.GetFormCollectionAsync().ConfigureAwait(false)).Get(parameterInfo.FromFormName);
+                    var value = (await request.GetFormCollectionAsync().ConfigureAwait(false)).Get(parameterInfo.FromFormName);
                     if (value.HasValue())
                     {
                         return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
@@ -287,7 +279,7 @@ namespace TouchSocket.WebApi
                 }
                 else
                 {
-                    var value = request.Query.Get(parameterInfo.FromQueryName?? parameter.Name);
+                    var value = request.Query.Get(parameterInfo.FromQueryName ?? parameter.Name);
                     if (value.HasValue())
                     {
                         return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);

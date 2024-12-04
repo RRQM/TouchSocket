@@ -32,6 +32,11 @@ namespace TouchSocket.Dmtp.FileTransfer
         public FileResourceInfo ResourceInfo { get; set; }
 
         /// <summary>
+        /// 元数据
+        /// </summary>
+        public Metadata Metadata { get; set; }
+
+        /// <summary>
         /// 资源文件路径，
         /// 可输入绝对路径，也可以输入相对路径。
         /// </summary>

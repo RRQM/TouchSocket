@@ -164,9 +164,9 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        public static void WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
+        public static IModbusResponse WriteMultipleCoils(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
         {
-            master.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
+            return master.WriteMultipleCoils(1, startingAddress, values, 1000, CancellationToken.None);
         }
 
         /// <summary>
@@ -175,9 +175,9 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        public static void WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
+        public static IModbusResponse WriteMultipleRegisters(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
         {
-            master.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
+            return master.WriteMultipleRegisters(1, startingAddress, bytes, 1000, CancellationToken.None);
         }
 
         /// <summary>
@@ -186,9 +186,9 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static void WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
+        public static IModbusResponse WriteSingleCoil(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
         {
-            master.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
+            return master.WriteSingleCoil(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         /// <summary>
@@ -197,9 +197,9 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static void WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
+        public static IModbusResponse WriteSingleRegister(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
         {
-            master.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
+            return master.WriteSingleRegister(1, startingAddress, value, 1000, CancellationToken.None);
         }
 
         #endregion Write 默认超时
@@ -212,7 +212,7 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="values">待写入集合</param>
-        public static Task WriteMultipleCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
+        public static Task<IModbusResponse> WriteMultipleCoilsAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool[] values)
         {
             return master.WriteMultipleCoilsAsync(1, startingAddress, values, 1000, CancellationToken.None);
         }
@@ -223,7 +223,7 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="bytes">待写入集合</param>
-        public static Task WriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
+        public static Task<IModbusResponse> WriteMultipleRegistersAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, byte[] bytes)
         {
             return master.WriteMultipleRegistersAsync(1, startingAddress, bytes, 1000, CancellationToken.None);
         }
@@ -234,7 +234,7 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static Task WriteSingleCoilAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
+        public static Task<IModbusResponse> WriteSingleCoilAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, bool value)
         {
             return master.WriteSingleCoilAsync(1, startingAddress, value, 1000, CancellationToken.None);
         }
@@ -245,7 +245,7 @@ namespace TouchSocket.Modbus
         /// <param name="master">通讯客户端</param>
         /// <param name="startingAddress">起始位置（从0开始）</param>
         /// <param name="value">待写入数值</param>
-        public static Task WriteSingleRegisterAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
+        public static Task<IModbusResponse> WriteSingleRegisterAsync(this IIgnoreSlaveIdModbusMaster master, ushort startingAddress, short value)
         {
             return master.WriteSingleRegisterAsync(1, startingAddress, value, 1000, CancellationToken.None);
         }

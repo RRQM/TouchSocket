@@ -196,12 +196,12 @@ namespace TouchSocket.Sockets
 
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
                 throw;
             }
         }
@@ -219,7 +219,7 @@ namespace TouchSocket.Sockets
             {
                 await this.m_receiver.Complete(default).ConfigureAwait(false);
             }
-            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -246,7 +246,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
             // 触发所有实现了IUdpReceivedPlugin接口的插件的处理方法，并传递接收到的数据事件参数。
-            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IUdpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -260,7 +260,7 @@ namespace TouchSocket.Sockets
         {
             // 提升插件管理器以异步方式提升IUdpSendingPlugin接口的事件
             // 使用UdpSendingEventArgs包装待发送的数据和目标端点
-            return this.PluginManager.RaiseAsync(typeof(IUdpSendingPlugin), this, new UdpSendingEventArgs(memory, endPoint));
+            return this.PluginManager.RaiseAsync(typeof(IUdpSendingPlugin), this.Resolver, this, new UdpSendingEventArgs(memory, endPoint));
         }
 
         /// <summary>

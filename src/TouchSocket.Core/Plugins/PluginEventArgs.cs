@@ -29,9 +29,12 @@ namespace TouchSocket.Core
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private List<PluginEntity> m_pluginEntities;
-
+        
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private object m_sender;
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private IResolver m_resolver;
 
         /// <summary>
         /// 由使用者自定义的状态对象。
@@ -57,7 +60,7 @@ namespace TouchSocket.Core
             if (this.m_pluginEntities.Count > this.m_index)
             {
                 this.Count++;
-                return this.m_pluginEntities[this.m_index++].Run(this.m_sender, this);
+                return this.m_pluginEntities[this.m_index++].Run(this.m_resolver,this.m_sender, this);
             }
             else
             {
@@ -66,8 +69,9 @@ namespace TouchSocket.Core
             }
         }
 
-        internal void LoadModel(List<PluginEntity> pluginEntities, object sender)
+        internal void LoadModel(List<PluginEntity> pluginEntities, object sender,IResolver resolver)
         {
+            this.m_resolver= resolver;
             this.m_sender = sender;
             this.m_pluginEntities = pluginEntities;
             this.m_end = false;

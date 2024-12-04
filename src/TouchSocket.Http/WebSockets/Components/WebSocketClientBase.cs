@@ -52,7 +52,7 @@ namespace TouchSocket.Http.WebSockets
 
                 var request = WSTools.GetWSRequest(this, option.Version, out var base64Key);
 
-                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request,default))).ConfigureAwait(false);
+                await this.OnWebSocketHandshaking(new HttpContextEventArgs(new HttpContext(request, default))).ConfigureAwait(false);
 
                 using (var responseResult = await this.ProtectedRequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
                 {
@@ -90,47 +90,46 @@ namespace TouchSocket.Http.WebSockets
 
         #region 事件
 
-                        /// <summary>
+        /// <summary>
         /// 当 WebSocket 连接关闭时触发的事件处理程序。
         /// </summary>
         /// <param name="e">包含关闭原因和状态代码的事件参数。</param>
         /// <returns>一个 <see cref="Task"/> 对象，表示异步操作的完成。</returns>
-        protected virtual Task OnWebSocketClosed(ClosedEventArgs e)
+        protected virtual async Task OnWebSocketClosed(ClosedEventArgs e)
         {
-            return EasyTask.CompletedTask;
+            // 通知所有实现IWebSocketClosedPlugin接口的插件，WebSocket已关闭
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
-                /// <summary>
+        /// <summary>
         /// 在WebSocket关闭时触发的事件处理程序。
         /// </summary>
         /// <param name="e">包含关闭原因和状态码的事件参数。</param>
         /// <returns>A <see cref="Task"/> 表示事件处理的异步操作。</returns>
-        protected virtual Task OnWebSocketClosing(ClosedEventArgs e)
+        protected virtual async Task OnWebSocketClosing(ClosingEventArgs e)
         {
-            // 返回一个已完成的任务，表示没有额外的异步操作需要执行。
-            return EasyTask.CompletedTask;
+            // 通知所有实现了IWebSocketClosingPlugin接口的插件，WebSocket即将关闭
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
-                /// <summary>
+        /// <summary>
         /// 表示完成握手后。
         /// </summary>
         /// <param name="e">包含HTTP上下文信息的参数对象。</param>
         /// <returns>一个表示任务已完成的Task对象。</returns>
-        protected virtual Task OnWebSocketHandshaked(HttpContextEventArgs e)
+        protected virtual async Task OnWebSocketHandshaked(HttpContextEventArgs e)
         {
-            // 在握手完成后执行一些操作，当前实现直接返回一个已完成的任务，实际使用时可根据需要进行扩展。
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
-                /// <summary>
+        /// <summary>
         /// 表示在即将握手连接时。
         /// </summary>
         /// <param name="e">包含HTTP上下文信息的参数对象</param>
         /// <returns>一个表示异步操作完成的任务</returns>
-        protected virtual Task OnWebSocketHandshaking(HttpContextEventArgs e)
+        protected virtual async Task OnWebSocketHandshaking(HttpContextEventArgs e)
         {
-            // 在WebSocket握手过程中无需执行任何额外操作，直接返回已完成的任务
-            return EasyTask.CompletedTask;
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private async Task PrivateOnHandshaked(object obj)
@@ -179,12 +178,15 @@ namespace TouchSocket.Http.WebSockets
 
         #endregion 事件
 
-                /// <summary>
+        /// <summary>
         /// 当收到WS数据时。
         /// </summary>
         /// <param name="e">包含接收数据的事件参数</param>
         /// <returns>一个Task对象，表示异步操作</returns>
-        protected abstract Task OnWebSocketReceived(WSDataFrameEventArgs e);
+        protected virtual async Task OnWebSocketReceived(WSDataFrameEventArgs e)
+        {
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+        }
 
         private void InitWebSocket()
         {
