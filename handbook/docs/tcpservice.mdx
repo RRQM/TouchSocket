@@ -44,6 +44,8 @@ TcpService是Tcp系服务器基类，它不参与实际的数据交互，只是�
 
 ## 四、服务器架构
 
+### 4.1 连接架构
+
 服务器在收到**新客户端连接**时，会创建一个SessionClient的派生类实例，与客户端TcpClient一一对应，后续的数据通信均由此实例负责。
 
 SessionClient在Service里面以字典映射。ID为键，SessionClient本身为值。
@@ -58,6 +60,14 @@ flowchart TD;
     TcpSessionClient-3-->TcpClient-3;
    
 ```
+
+### 4.2 Scoped 生命周期
+
+`TcpService`在[支持Scoped](ioc.mdx)的`IOC`容器中工作时，也是支持`Scoped`区域划分的。
+
+一般情况下，`TcpService`在`Setup`时，首先会创建一个`Scoped`区域，用于整个`TcpService`的生命周期。在`TcpService`释放（`Dispose`）时释放。
+
+然后，当有新客户端连接后，会为每个`SessionClient`的派生类实例也创建一个`Scoped`区域，用于`SessionClient`的生命周期。当连接断开时，会释放此区域。
 
 ## 五、可配置项
 
