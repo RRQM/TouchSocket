@@ -86,7 +86,7 @@ await client.SetupAsync(new TouchSocketConfig()
          PortName = "COM1",//COM
          StopBits = System.IO.Ports.StopBits.One//停止位
      })
-     .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter())
+     .SetSerialDataHandlingAdapter(() => new PeriodPackageAdapter(){ CacheTimeout = TimeSpan.FromMilliseconds(100) })
      .ConfigurePlugins(a =>
      {
          a.Add<MyPlugin>();
@@ -95,6 +95,12 @@ await client.SetupAsync(new TouchSocketConfig()
 await client.ConnectAsync();
 Console.WriteLine("连接成功");
 ```
+
+:::info 信息
+
+上述示例中使用了`PeriodPackageAdapter`适配器，具体作用是确保把`100ms`内收到数据，作为一个包解析，在实际使用时，可以根据业务情况自由修改时间值。详情： [PeriodPackageAdapter](packageadapter.mdx)
+
+:::  
 
 #### 6.2 继承实现
 
