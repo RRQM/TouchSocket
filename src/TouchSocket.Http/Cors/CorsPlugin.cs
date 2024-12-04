@@ -19,7 +19,7 @@ namespace TouchSocket.Http
     /// <summary>
     /// 可以配置跨域的插件
     /// </summary>
-    public class CorsPlugin : PluginBase
+    public class CorsPlugin : PluginBase, IHttpPlugin
     {
         private readonly ICorsService m_corsService;
         private readonly string m_policyName;
@@ -36,13 +36,7 @@ namespace TouchSocket.Http
         }
 
         /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            pluginManager.Add<IHttpSessionClient, HttpContextEventArgs>(typeof(IHttpPlugin), this.OnHttpRequest);
-            base.Loaded(pluginManager);
-        }
-
-        private async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
             var corsPolicy = this.m_corsService.GetPolicy(this.m_policyName) ?? throw new Exception($"没有找到名称为{this.m_policyName}的跨域策略。");
 

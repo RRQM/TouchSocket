@@ -27,6 +27,6 @@ namespace TouchSocket.Http.WebSockets
         /// </summary>
         /// <param name="webSocket"></param>
         /// <param name="e"></param>
-        Task OnWebSocketClosing(IWebSocket webSocket, ClosedEventArgs e);
+        Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e);
     }
 }

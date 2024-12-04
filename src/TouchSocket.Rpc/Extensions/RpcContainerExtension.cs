@@ -64,7 +64,7 @@ namespace TouchSocket.Rpc
         /// <returns></returns>
         public static IRegistrator AddRpcServerProvider(this IRegistrator registrator)
         {
-            return AddRpcServerProvider<RpcServerProvider>(registrator);
+            return AddRpcServerProvider<InternalRpcServerProvider>(registrator);
         }
     }
 }

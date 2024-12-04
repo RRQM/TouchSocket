@@ -622,8 +622,8 @@ internal sealed class DefaultSerializationSelector : ISerializationSelector
                 return SerializeConvert.XmlDeserializeFromBytes(byteBlock.ReadBytesPackage(), parameterType);
             case (SerializationType)4:
                 {
-                    var len = byteBlock.ReadInt32();
-                    var span = byteBlock.ReadToSpan(len);
+                    var Length = byteBlock.ReadInt32();
+                    var span = byteBlock.ReadToSpan(Length);
                     return MemoryPackSerializer.Deserialize(parameterType, span);
                 }
             default:
@@ -876,7 +876,7 @@ Task task = Task.Run(() =>//这里必须用异步
     {
         foreach (var currentByteBlock in channel)
         {
-            size += currentByteBlock.Len;//此处可以处理传递来的流数据
+            size += currentByteBlock.Length;//此处可以处理传递来的流数据
         }
         status = channel.Status;//最后状态
     }
@@ -910,7 +910,7 @@ public int RpcPushChannel(ICallContext callContext, int channelID)
         {
             foreach (var item in channel)
             {
-                size += item.Len;//此处处理流数据
+                size += item.Length;//此处处理流数据
             }
         }
     }

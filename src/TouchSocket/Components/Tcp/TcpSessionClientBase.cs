@@ -61,7 +61,7 @@ namespace TouchSocket.Sockets
         private IPluginManager m_pluginManager;
         private int m_port;
         private InternalReceiver m_receiver;
-        private IResolver m_resolver;
+        //private IResolver m_resolver;
         private Action<TcpCore> m_returnTcpCore;
         private ITcpServiceBase m_service;
         private string m_serviceIP;
@@ -70,6 +70,7 @@ namespace TouchSocket.Sockets
         private Func<TcpSessionClientBase, bool> m_tryAddAction;
         private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
         private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
+        private IScopedResolver m_scopedResolver;
 
         #endregion 变量
 
@@ -115,7 +116,7 @@ namespace TouchSocket.Sockets
         public Protocol Protocol { get; protected set; }
 
         /// <inheritdoc/>
-        public override IResolver Resolver => this.m_resolver;
+        public override IResolver Resolver => this.m_scopedResolver.Resolver;
 
         /// <inheritdoc/>
         public ITcpServiceBase Service => this.m_service;
@@ -186,8 +187,10 @@ namespace TouchSocket.Sockets
 
         internal void InternalSetResolver(IResolver resolver)
         {
-            this.m_resolver = resolver;
-            this.Logger ??= resolver.Resolve<ILog>();
+            var scopedResolver = resolver.CreateScopedResolver();
+            //this.m_resolver = resolver;
+            this.m_scopedResolver = scopedResolver;
+            this.Logger ??= scopedResolver.Resolver.Resolve<ILog>();
         }
 
         internal void InternalSetReturnTcpCore(Action<TcpCore> returnTcpCore)
@@ -352,7 +355,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpClosed(ClosedEventArgs e)
         {
             // 调用插件管理器，通知所有实现ITcpClosedPlugin接口的插件客户端已断开连接
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -365,7 +368,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpClosing(ClosingEventArgs e)
         {
             // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -378,7 +381,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
         {
             // 调用插件管理器，异步触发所有实现ITcpConnectedPlugin接口的插件
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -390,7 +393,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
         {
             // 调用插件管理器，异步触发所有ITcpConnectingPlugin插件的对应事件
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         private Task PrivateOnClosing(ClosingEventArgs e)
@@ -463,6 +466,7 @@ namespace TouchSocket.Sockets
 
             if (disposing)
             {
+                this.m_scopedResolver.SafeDispose();
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
 
@@ -489,7 +493,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             // 提供适配器处理的数据给所有相关的插件处理
-            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -500,7 +504,7 @@ namespace TouchSocket.Sockets
         protected virtual ValueTask<bool> OnTcpReceiving(ByteBlock byteBlock)
         {
             // 将原始数据传递给所有相关的预处理插件，以进行初步的数据处理
-            return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this, new ByteBlockEventArgs(byteBlock));
+            return this.PluginManager.RaiseAsync(typeof(ITcpReceivingPlugin), this.Resolver, this, new ByteBlockEventArgs(byteBlock));
         }
 
         /// <summary>
@@ -513,7 +517,7 @@ namespace TouchSocket.Sockets
         {
             // 通过PluginManager委托调用ITcpSendingPlugin接口，传递当前实例和待发送的数据事件。
             // 这里使用RaiseAsync方法异步触发相关插件，以实现对发送行为的扩展或拦截。
-            return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this, new SendingEventArgs(memory));
+            return this.PluginManager.RaiseAsync(typeof(ITcpSendingPlugin), this.Resolver, this, new SendingEventArgs(memory));
         }
 
         /// <summary>

@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System.Buffers;
+using System.Drawing;
 using TouchSocket.Core;
 
 namespace PackageConsoleApp
@@ -243,6 +244,53 @@ namespace PackageConsoleApp
         public double P4 { get; set; }
         public List<int> P5 { get; set; }
         public Dictionary<int, MyClassModel> P6 { get; set; }
+
+        [PackageMember(Behavior = PackageBehavior.Ignore)]
+        public string P7 { get; set; }
+
+        [PackageMember(Behavior = PackageBehavior.Include)]
+        private int P8;
+
+        [PackageMember(Index = -1)]
+        public string P9 { get; set; }
+    }
+
+
+    [GeneratorPackage]
+    internal partial class MyGeneratorIndexPackage : PackageBase
+    {
+        [PackageMember(Index = 2)]
+        public int P1 { get; private set; }
+
+        [PackageMember(Index = 0)]
+        public string P2 { get; set; }
+
+        [PackageMember(Index = 1)]
+        public char P3 { get; set; }
+    }
+
+    [GeneratorPackage]
+    internal partial class MyGeneratorConvertPackage : PackageBase
+    {
+        [PackageMember(Converter =typeof(RectangleConverter))]
+        public Rectangle P1 { get; set; }
+    }
+
+    class RectangleConverter : FastBinaryConverter<Rectangle>
+    {
+        protected override Rectangle Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
+        {
+            var rectangle = new Rectangle(byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32(), byteBlock.ReadInt32());
+            return rectangle;
+        }
+
+        protected override void Write<TByteBlock>(ref TByteBlock byteBlock, in Rectangle obj)
+        {
+            byteBlock.WriteInt32(obj.X);
+            byteBlock.WriteInt32(obj.Y);
+            byteBlock.WriteInt32(obj.Width);
+            byteBlock.WriteInt32(obj.Height);
+        }
     }
 
     public class MyClassModel : PackageBase

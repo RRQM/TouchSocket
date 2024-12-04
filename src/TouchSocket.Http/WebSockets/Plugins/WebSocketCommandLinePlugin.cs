@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// WS命令行插件。
     /// </summary>
-    public abstract class WebSocketCommandLinePlugin : PluginBase
+    public abstract class WebSocketCommandLinePlugin : PluginBase, IWebSocketReceivedPlugin
     {
         private readonly ILog m_logger;
         private readonly Dictionary<string, Method> m_pairs = new Dictionary<string, Method>();
@@ -41,14 +41,6 @@ namespace TouchSocket.Http.WebSockets
             {
                 this.m_pairs.Add(item.Name.Replace("Command", string.Empty), new Method(item));
             }
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-
-            pluginManager.Add<IWebSocket, WSDataFrameEventArgs>(typeof(IWebSocketReceivedPlugin), this.OnWebSocketReceived);
         }
 
         /// <summary>
@@ -72,7 +64,7 @@ namespace TouchSocket.Http.WebSockets
         }
 
         /// <inheritdoc/>
-        private async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
+        public async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
             if (e.DataFrame.Opcode != WSDataType.Text)
             {

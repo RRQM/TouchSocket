@@ -3,7 +3,10 @@ id: enterprise
 title: Pro相关
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import Tag from "@site/src/components/Tag.js";
+import Paypal from '@site/src/components/Paypal.js';
 
 :::tip Pro限免相关
 
@@ -184,9 +187,35 @@ catch (Exception ex)
 
 ## 七、购买通道
 
-购买可通过以下方式。**购买前请先联系作者若汝棋茗**。联系QQ：505554090。
+购买可通过以下方式。**购买前请先联系作者若汝棋茗**。
 
-扫描下列微信码，或者点击[淘宝链接](https://item.taobao.com/item.htm?spm=a2126o.success.result.1.382c4831HDDIvA&id=691874706840)。
+- QQ：505554090。
+- Email:505554090@qq.com。
 
+<Tabs
+    defaultValue="tab1"
+    values=
+    {[
+        { label: "微信支付",value: "tab1"},
+        { label: "淘宝支持", value: "tab2" },
+        { label: "Paypal", value: "tab3" },
+    ]}
+>
+
+
+
+<TabItem value="tab1">
 <img src={require('@site/static/img/docs/enterprise-1.jpg').default} width="500" />
+</TabItem>
+<TabItem value="tab2">
+点击[淘宝链接](https://item.taobao.com/item.htm?spm=a2126o.success.result.1.382c4831HDDIvA&id=691874706840)。
+</TabItem>
+<TabItem value="tab3">
+<Paypal></Paypal>
+</TabItem>
+</Tabs>
+
+
+
+
 

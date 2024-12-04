@@ -292,7 +292,7 @@ namespace TouchSocket.Core
         public byte[] ReadBytesPackage()
         {
             var memory = this.ReadBytesPackageMemory();
-            return memory == null ? memory.ToArray() : null;
+            return memory.ToArray();
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace TouchSocket.Core
             // 如果长度小于0，则认为读取失败，返回null。
             if (length < 0)
             {
-                return null;
+                return default;
             }
 
             // 根据读取的长度，从当前位置开始，截取一个长度为length的内存块。

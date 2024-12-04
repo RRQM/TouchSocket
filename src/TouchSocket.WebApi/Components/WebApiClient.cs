@@ -102,12 +102,12 @@ namespace TouchSocket.WebApi
 
             invokeOption ??= InvokeOption.WaitInvoke;
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this, new WebApiEventArgs(request, default));
+            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin),this.Resolver, this, new WebApiEventArgs(request, default));
 
             using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
             {
                 var response = responseResult.Response;
-                await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this, new WebApiEventArgs(request, response));
+                await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
 
                 if (invokeOption.FeedbackType != FeedbackType.WaitInvoke)
                 {

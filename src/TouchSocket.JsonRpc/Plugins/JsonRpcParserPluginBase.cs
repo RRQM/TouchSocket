@@ -24,17 +24,17 @@ namespace TouchSocket.JsonRpc
     public abstract class JsonRpcParserPluginBase : PluginBase
     {
         private readonly IRpcServerProvider m_rpcServerProvider;
-        private readonly IResolver m_resolver;
+        private readonly ILog m_logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider, IResolver resolver)
+        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider,ILog logger)
         {
             this.ActionMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
-            this.m_resolver = resolver;
+            this.m_logger = logger;
         }
 
         /// <summary>
@@ -55,14 +55,14 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         protected async Task ThisInvokeAsync(object obj)
         {
+            var callContext = (JsonRpcCallContextBase)obj;
             try
             {
-                var callContext = (JsonRpcCallContextBase)obj;
                 var invokeResult = new InvokeResult();
 
                 try
                 {
-                    JsonRpcUtility.BuildRequestContext(this.m_resolver, this.ActionMap, ref callContext);
+                    JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
                 }
                 catch (Exception ex)
                 {
@@ -94,8 +94,13 @@ namespace TouchSocket.JsonRpc
                 var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
                 await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
             }
-            catch
+            catch(Exception ex)
             {
+                this.m_logger?.Debug(ex.Message);
+            }
+            finally
+            {
+                callContext.Dispose();
             }
         }
 

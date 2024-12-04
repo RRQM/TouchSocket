@@ -18,12 +18,19 @@ namespace TouchSocket.Core
     /// 元数据键值对。
     /// </summary>
     [FastConverter(typeof(MetadataFastBinaryConverter))]
-    public class Metadata : Dictionary<string, string>, IPackage
+    public sealed class Metadata : Dictionary<string, string>, IPackage
     {
-        /// <inheritdoc/>
+
+        /// <summary>
+        /// 获取或设置指定键的值。
+        /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public new string this[string key] => this.TryGetValue(key, out var value) ? value : null;
+        public new string this[string key]
+        {
+            get => this.TryGetValue(key, out var value) ? value : null;
+            set => this.Add(key, value);
+        }
 
         /// <summary>
         /// 向元数据集合添加一个键值对。如果键已经存在，则覆盖其值。
@@ -33,8 +40,16 @@ namespace TouchSocket.Core
         /// <returns>返回当前元数据对象，以支持链式调用。</returns>
         public new Metadata Add(string name, string value)
         {
-            base.Add(name, value); // 调用基类方法添加键值对，如果键存在则覆盖值。
-            return this; // 返回当前元数据对象，允许进行链式调用。
+            if (this.ContainsKey(name))
+            {
+                this[name] = value;
+            }
+            else
+            {
+                base.Add(name, value);
+            }
+
+            return this;
         }
 
         /// <inheritdoc/>

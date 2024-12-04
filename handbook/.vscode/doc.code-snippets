@@ -150,8 +150,8 @@
 		],
 		"description": "importTag"
 	},
-	"tagHighlight": {
-		"prefix": "tagHighlight",
+	"Highlight": {
+		"prefix": "Highlight",
 		"body": [
 			"<Highlight color=\"#25c2a0\">Docusaurus 绿</Highlight>"
 		],

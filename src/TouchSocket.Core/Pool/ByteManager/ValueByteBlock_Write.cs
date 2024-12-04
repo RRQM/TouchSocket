@@ -281,6 +281,33 @@ namespace TouchSocket.Core
 
         #endregion String
 
+        #region NormalString
+        /// <inheritdoc/>
+        public void WriteNormalString(string value, Encoding encoding)
+        {
+            ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(value));
+            var maxSize = encoding.GetMaxByteCount(value.Length);
+            this.ExtendSize(maxSize);
+            var chars = value.AsSpan();
+
+            unsafe
+            {
+                fixed (char* p = &chars[0])
+                {
+                    fixed (byte* p1 = &this.m_buffer[this.m_position])
+                    {
+                        var len = Encoding.UTF8.GetBytes(p, chars.Length, p1, maxSize);
+
+                        this.m_position += len;
+
+                        this.m_length = Math.Max(this.m_position, this.m_length);
+                    }
+
+                }
+            }
+        }
+        #endregion
+
         #region VarUInt32
 
         /// <inheritdoc/>

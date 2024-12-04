@@ -154,17 +154,21 @@ namespace TouchSocket.Rpc
                 var typeString = $"System.Collections.Generic.{type.Name.Replace("`1", string.Empty)}<{typeInnerString}>";
                 return typeString;
             }
-            else if (s_listType.Contains(type.Name) || s_dicType.Contains(type.Name))
+            else if (this.PropertyDic.ContainsKey(type))
             {
-                var keyString = this.GetTypeFullName(type.GetGenericArguments()[0]);
-                var valueString = this.GetTypeFullName(type.GetGenericArguments()[1]);
-                var typeString = $"System.Collections.Generic.{type.Name.Replace("`2", string.Empty)}<{keyString},{valueString}>";
-                return typeString;
+                return this.PropertyDic[type].Name;
+            }
+            else if (type.IsGenericType)
+            {
+                var typeString = ExtractNonGenericTypeName(type.FullName);
+                var typesStrings = type.GetGenericArguments().Select(a => GetTypeFullName(a));
+                return $"{typeString}<{string.Join(",", typesStrings)}>";
             }
             else
             {
-                return this.PropertyDic.ContainsKey(type) ? this.PropertyDic[type].Name : type.FullName;
+                return type.FullName;
             }
+
         }
 
         /// <summary>
@@ -250,14 +254,48 @@ namespace TouchSocket.Rpc
             }
             else if (this.AllowAssembly(type.Assembly))
             {
-                className = type.Name;
+                if (type.IsGenericType)
+                {
+                    className = ExtractNonGenericTypeName(type.Name);
+                    var strings = type.GenericTypeArguments.Select(a => this.GetClassName(a));
+
+                    return $"{className}_{string.Join("_", strings)}";
+                }
+                else
+                {
+                    return type.Name;
+                }
+            }
+            else if (type.IsPrimitive())
+            {
+                return type.Name;
             }
             else
             {
-                return null;
+               return null;
+            }
+            return className;
+        }
+
+        private static string ExtractNonGenericTypeName(string typeName)
+        {
+            // 检查输入是否为null或空字符串
+            if (string.IsNullOrEmpty(typeName))
+            {
+                throw new ArgumentException("Type name cannot be null or empty.", nameof(typeName));
             }
 
-            return className;
+            // 查找泛型参数开始的反引号位置
+            var genericStartIndex = typeName.IndexOf('`');
+            if (genericStartIndex == -1)
+            {
+                // 如果没有找到反引号，说明不是泛型类型，直接返回完整的名字
+                return typeName;
+            }
+
+            // 提取非泛型部分
+            var nonGenericType = typeName.Substring(0, genericStartIndex);
+            return nonGenericType;
         }
 
         private void GetTransmitTypes(Type type, ref List<Type> types)
@@ -297,6 +335,8 @@ namespace TouchSocket.Rpc
                 {
                     this.GetTransmitTypes(itemType, ref types);
                 }
+
+                types.Add(type);
             }
             else if (type.IsEnum)
             {

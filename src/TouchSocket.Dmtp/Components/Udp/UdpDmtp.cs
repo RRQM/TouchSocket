@@ -98,7 +98,7 @@ namespace TouchSocket.Dmtp
             {
                 if (this.PluginManager.Enable)
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), client, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
                 }
             }
         }

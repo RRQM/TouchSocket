@@ -3,6 +3,8 @@ id: websocketservice
 title: 创建WebSocket服务器
 ---
 
+import CardLink from "@site/src/components/CardLink.js";
+
 ### 定义
 
 命名空间：TouchSocket.Http.WebSockets <br/>
@@ -838,17 +840,18 @@ await webSocket.SendAsync(new byte[10]);
 ### 6.5 直接发送自定义构建的数据帧
 
 ```csharp showLineNumbers
-WSDataFrame frame=new WSDataFrame();
-frame.Opcode= WSDataType.Text;
-frame.FIN= true;
-frame.RSV1= true;
-frame.RSV2= true;
-frame.RSV3= true;
-frame.AppendText("I");
-frame.AppendText("Love");
-frame.AppendText("U");
-
-await webSocket.SendAsync(frame);
+using (var frame = new WSDataFrame())
+{
+    frame.Opcode = WSDataType.Text;
+    frame.FIN = true;
+    frame.RSV1 = true;
+    frame.RSV2 = true;
+    frame.RSV3 = true;
+    frame.AppendText("I");
+    frame.AppendText("Love");
+    frame.AppendText("U");
+    await webSocket.SendAsync(frame);
+} 
 ```
 :::info 备注
 
@@ -886,12 +889,23 @@ while (true)
 }
 ```
 
-### 6.9 关闭连接
+
+## 七、关闭连接
+
+在使用`WebSocket`时，如果想主动关闭连接，可以使用`CloseAsync`方法，同时可以携带一个关闭原因。
+
+默认关闭状态码为1000。意为：正常关闭。
 
 ```csharp showLineNumbers
 await webSocket.CloseAsync("关闭");
 ```
 
+如果你想使用其他状态码，可以参考如下代码。
 
+```csharp showLineNumbers
+await webSocket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable,"关闭");//状态码为1001，意为：服务端不可用。
+```
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket/WebSocketConsoleApp)
+## 八、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebSocket/WebSocketConsoleApp"/>

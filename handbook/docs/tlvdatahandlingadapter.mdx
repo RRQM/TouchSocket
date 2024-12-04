@@ -62,7 +62,7 @@ config.UsePlugin()
 .ConfigurePlugins(a =>
 {
     a.Add<TLVPlugin>()//使用插件，相当于自动设置适配器，并且主动回应Ping。
-    .SetLengthType(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
+    .SetLengthype(FixedHeaderType.Int);//设置支持的最大数据类型，该值还受SetMaxPackageSize影响。
 });
 ```
 

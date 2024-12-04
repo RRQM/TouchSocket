@@ -21,23 +21,15 @@ namespace TouchSocket.JsonRpc
     /// 基于Tcp协议的JsonRpc功能插件
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase
+    public sealed class TcpJsonRpcParserPlugin : JsonRpcParserPluginBase, ITcpConnectedPlugin, ITcpReceivedPlugin
     {
         /// <summary>
         /// 基于Tcp协议的JsonRpc功能插件
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        /// <param name="resolver"></param>
-        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, IResolver resolver) : base(rpcServerProvider, resolver)
+        /// <param name="logger"></param>
+        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
         {
-        }
-
-        /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
-        {
-            base.Loaded(pluginManager);
-            pluginManager.Add<ITcpSession, ConnectedEventArgs>(typeof(ITcpConnectedPlugin), this.OnTcpConnected);
-            pluginManager.Add<ITcpSession, ReceivedDataEventArgs>(typeof(ITcpReceivedPlugin), this.OnTcpReceived);
         }
 
         /// <summary>
@@ -89,7 +81,8 @@ namespace TouchSocket.JsonRpc
             }
         }
 
-        private Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
+        /// <inheritdoc/>
+        public Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
         {
             if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
             {
@@ -99,7 +92,8 @@ namespace TouchSocket.JsonRpc
             return e.InvokeNext();
         }
 
-        private Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
             if (client.GetIsJsonRpc())
             {
@@ -124,14 +118,12 @@ namespace TouchSocket.JsonRpc
                     }
                     else
                     {
-                        Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr));
+                        await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr, client.Resolver.CreateScopedResolver()));
                     }
-
-                    return EasyTask.CompletedTask;
                 }
             }
 
-            return e.InvokeNext();
+            await e.InvokeNext();
         }
     }
 }

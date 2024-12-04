@@ -70,7 +70,7 @@ namespace TouchSocket.Rpc
 
             this.PrivateGetFilters();
 
-            if (typeof(ITransientRpcServer).IsAssignableFrom(this.ServerToType))
+            if (typeof(ITransientRpcServer).IsAssignableFrom(this.ServerToType)|| typeof(IScopedRpcServer).IsAssignableFrom(this.ServerToType))
             {
                 this.HasCallContext = true;
             }

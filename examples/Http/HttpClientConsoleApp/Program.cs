@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -45,7 +46,7 @@ namespace ClientConsoleApp
         {
             var client = await GetHttpClient();
 
-            using (var stream=File.OpenRead("TouchSocket.dll"))
+            using (var stream = File.OpenRead("TouchSocket.dll"))
             {
                 //创建一个请求
                 var request = new HttpRequest();
@@ -190,7 +191,7 @@ namespace ClientConsoleApp
 
         protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
         {
-            var buffer=new byte[bufferLength];
+            var buffer = new byte[bufferLength];
             for (int i = 0; i < count; i++)
             {
                 await writeFunc.Invoke(buffer);

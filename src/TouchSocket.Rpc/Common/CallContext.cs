@@ -37,26 +37,14 @@ namespace TouchSocket.Rpc
             this.Resolver = resolver;
         }
 
-        /// <summary>
-        /// CallContext 类的构造函数。
-        /// </summary>
-        /// <remarks>
-        /// 此构造函数不需要任何参数，因此是一个无参数的构造函数。
-        /// 它用于初始化 CallContext 类的新实例。
-        /// 尽管在这个构造函数中没有写任何代码，但可能会在未来的版本中添加初始化逻辑。
-        /// </remarks>
-        public CallContext()
-        {
-        }
-
         /// <inheritdoc/>
         public object Caller { get; protected set; }
 
         /// <inheritdoc/>
-        public RpcMethod RpcMethod { get; protected set; }
+        public IResolver Resolver { get; }
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; protected set; }
+        public RpcMethod RpcMethod { get; protected set; }
 
         /// <inheritdoc/>
         public CancellationToken Token

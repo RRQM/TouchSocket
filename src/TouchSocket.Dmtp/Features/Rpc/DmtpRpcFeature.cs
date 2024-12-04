@@ -20,9 +20,8 @@ namespace TouchSocket.Dmtp.Rpc
     /// <summary>
     /// 能够基于Dmtp协议，提供Rpc的功能
     /// </summary>
-    public class DmtpRpcFeature : PluginBase, IDmtpFeature
+    public class DmtpRpcFeature : PluginBase, IDmtpFeature, IDmtpHandshakingPlugin, IDmtpReceivedPlugin
     {
-        private readonly IResolver m_resolver;
         private readonly IRpcServerProvider m_rpcServerProvider;
 
         /// <summary>
@@ -31,16 +30,16 @@ namespace TouchSocket.Dmtp.Rpc
         /// <param name="resolver"></param>
         public DmtpRpcFeature(IResolver resolver)
         {
-            if (resolver.IsRegistered<IRpcServerProvider>())
+            var rpcServerProvider = resolver.Resolve<IRpcServerProvider>();
+
+            if (rpcServerProvider!=null)
             {
-                var rpcServerProvider = resolver.Resolve<IRpcServerProvider>();
                 this.RegisterServer(rpcServerProvider.GetMethods());
                 this.m_rpcServerProvider = rpcServerProvider;
             }
 
             this.CreateDmtpRpcActor = PrivateCreateDmtpRpcActor;
             this.SetProtocolFlags(20);
-            this.m_resolver = resolver;
         }
 
         /// <summary>
@@ -51,7 +50,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 创建DmtpRpc实例
         /// </summary>
-        public Func<IDmtpActor, IRpcServerProvider, IResolver, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
+        public Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
 
         /// <inheritdoc/>
         public ushort ReserveProtocolSize => 5;
@@ -69,7 +68,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="createDmtpRpcActor"></param>
         /// <returns></returns>
-        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, IResolver, DmtpRpcActor> createDmtpRpcActor)
+        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> createDmtpRpcActor)
         {
             this.CreateDmtpRpcActor = createDmtpRpcActor;
             return this;
@@ -100,9 +99,9 @@ namespace TouchSocket.Dmtp.Rpc
             return this;
         }
 
-        private static DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IResolver resolver)
+        private static DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider)
         {
-            return new DmtpRpcActor(dmtpActor, rpcServerProvider, resolver);
+            return new DmtpRpcActor(dmtpActor, rpcServerProvider, dmtpActor.Client.Resolver);
         }
 
         private RpcMethod GetInvokeMethod(string name)
@@ -124,16 +123,9 @@ namespace TouchSocket.Dmtp.Rpc
         #region Config
 
         /// <inheritdoc/>
-        protected override void Loaded(IPluginManager pluginManager)
+        public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            base.Loaded(pluginManager);
-            pluginManager.Add<IDmtpActorObject, DmtpVerifyEventArgs>(typeof(IDmtpHandshakingPlugin), this.OnDmtpHandshaking);
-            pluginManager.Add<IDmtpActorObject, DmtpMessageEventArgs>(typeof(IDmtpReceivedPlugin), this.OnDmtpReceived);
-        }
-
-        private async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
-        {
-            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.m_resolver);
+            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider);
             dmtpRpcActor.SerializationSelector = this.SerializationSelector;
             dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 
@@ -143,7 +135,8 @@ namespace TouchSocket.Dmtp.Rpc
             await e.InvokeNext().ConfigureAwait(false);
         }
 
-        private async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
+        /// <inheritdoc/>
+        public async Task OnDmtpReceived(IDmtpActorObject client, DmtpMessageEventArgs e)
         {
             if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor dmtpRpcActor)
             {

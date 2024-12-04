@@ -44,7 +44,7 @@ namespace TouchSocket.Dmtp
 
         private async Task OnDmtpActorCreatedChannel(DmtpActor actor, CreateChannelEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), this, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpCreatedChannelPlugin), m_udpSession.Resolver, this, e).ConfigureAwait(false);
         }
 
         public async Task<bool> CreatedAsync(IPluginManager pluginManager)
@@ -55,7 +55,7 @@ namespace TouchSocket.Dmtp
                 Id = this.Id,
                 IsPermitOperation = true
             };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), this, args).ConfigureAwait(false);
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakingPlugin), m_udpSession.Resolver, this, args).ConfigureAwait(false);
 
             if (args.IsPermitOperation == false)
             {
@@ -68,7 +68,7 @@ namespace TouchSocket.Dmtp
             {
                 Id = this.Id
             };
-            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), this, args).ConfigureAwait(false);
+            await pluginManager.RaiseAsync(typeof(IDmtpHandshakedPlugin), m_udpSession.Resolver,this, args).ConfigureAwait(false);
 
             return true;
         }
@@ -81,6 +81,9 @@ namespace TouchSocket.Dmtp
 
         /// <inheritdoc/>
         public UdpSessionBase UdpSession => this.m_udpSession;
+
+        /// <inheritdoc/>
+        public IResolver Resolver => this.m_udpSession.Resolver;
 
         /// <summary>
         /// 不支持该操作

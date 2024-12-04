@@ -26,7 +26,7 @@ namespace TouchSocket.Core
     public sealed class PluginManager : DisposableObject, IPluginManager
     {
         private readonly Lock m_locker = LockFactory.Create();
-        private readonly IResolver m_resolver;
+        private readonly IScopedResolver m_scopedResolver;
         private Dictionary<Type, PluginInvokeLine> m_pluginMethods = new Dictionary<Type, PluginInvokeLine>();
 
         private List<IPlugin> m_plugins = new List<IPlugin>();
@@ -37,7 +37,7 @@ namespace TouchSocket.Core
         /// <param name="resolver"></param>
         public PluginManager(IResolver resolver)
         {
-            this.m_resolver = resolver;
+            this.m_scopedResolver = resolver.CreateScopedResolver();
             this.Enable = true;
         }
 
@@ -48,7 +48,91 @@ namespace TouchSocket.Core
         public IEnumerable<IPlugin> Plugins => this.m_plugins;
 
         /// <inheritdoc/>
-        public IResolver Resolver => this.m_resolver;
+        public IResolver Resolver => this.m_scopedResolver.Resolver;
+
+        /// <inheritdoc/>
+        public void Add(Type pluginType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default)
+        {
+            lock (this.m_locker)
+            {
+                var pluginInvokeLine = this.GetPluginInvokeLine(pluginType);
+                pluginInvokeLine.Add(new PluginEntity(pluginInvokeHandler, sourceDelegate ?? pluginInvokeHandler));
+            }
+        }
+
+        /// <inheritdoc/>
+        public IPlugin Add([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type pluginType)
+        {
+            ThrowHelper.ThrowArgumentNullExceptionIf(pluginType, nameof(pluginType));
+
+            this.ThrowIfDisposed();
+
+            IPlugin plugin;
+
+            lock (this.m_locker)
+            {
+                var fromIoc = false;
+                if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
+                {
+                    fromIoc = optionAttribute.FromIoc;
+                    if (fromIoc)
+                    {
+                        plugin = default;
+                    }
+                    else
+                    {
+                        plugin = (IPlugin)this.Resolver.ResolveWithoutRoot(pluginType);
+                        if (optionAttribute.Singleton)
+                        {
+                            foreach (var item in this.Plugins)
+                            {
+                                if (item.GetType() == pluginType)
+                                {
+                                    return item;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    plugin = (IPlugin)this.Resolver.ResolveWithoutRoot(pluginType);
+                }
+
+                foreach (var pluginInterface in pluginType.GetInterfaces())
+                {
+                    if (!IsPluginInterface(pluginInterface))
+                    {
+                        continue;
+                    }
+                    var pluginInvokeLine = this.GetPluginInvokeLine(pluginInterface);
+
+                    foreach (var methodInfo in pluginInterface.GetMethods())
+                    {
+                        if (IsPluginMethod(methodInfo))
+                        {
+                            if (fromIoc)
+                            {
+                                var pluginEntity = new PluginEntity(new Method(methodInfo), pluginType, this);
+                                pluginInvokeLine.Add(pluginEntity);
+                            }
+                            else
+                            {
+                                var pluginEntity = new PluginEntity(new Method(methodInfo), plugin);
+                                pluginInvokeLine.Add(pluginEntity);
+                            }
+                        }
+                    }
+                }
+
+                if (plugin != null)
+                {
+                    plugin.Loaded(this);
+                    this.m_plugins.Add(plugin);
+                }
+                return plugin;
+            }
+        }
 
         /// <inheritdoc/>
         public void Add<[DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] TPlugin>(TPlugin plugin) where TPlugin : class, IPlugin
@@ -61,8 +145,10 @@ namespace TouchSocket.Core
             {
                 var pluginType = plugin.GetType();
 
+                var fromIoc = false;
                 if (pluginType.GetCustomAttribute<PluginOptionAttribute>() is PluginOptionAttribute optionAttribute)
                 {
+                    fromIoc = optionAttribute.FromIoc;
                     if (optionAttribute.Singleton)
                     {
                         foreach (var item in this.Plugins)
@@ -99,19 +185,25 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public void Add(Type interfeceType, Func<object, PluginEventArgs, Task> pluginInvokeHandler, Delegate sourceDelegate = default)
+        public int GetFromIocCount(Type pluginType)
         {
-            lock (this.m_locker)
+            if (!this.Enable)
             {
-                var pluginInvokeLine = this.GetPluginInvokeLine(interfeceType);
-                pluginInvokeLine.Add(new PluginEntity(pluginInvokeHandler, sourceDelegate ?? pluginInvokeHandler));
+                return 0;
             }
+
+            if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
+            {
+                return pluginInvokeLine.FromIocCount;
+            }
+
+            return 0;
         }
 
         /// <inheritdoc/>
-        public int GetPluginCount(Type interfeceType)
+        public int GetPluginCount(Type pluginType)
         {
-            if (this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+            if (this.m_pluginMethods.TryGetValue(pluginType, out var pluginModel))
             {
                 return pluginModel.GetPluginEntities().Count;
             }
@@ -122,7 +214,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public ValueTask<bool> RaiseAsync(Type interfeceType, object sender, PluginEventArgs e)
+        public ValueTask<bool> RaiseAsync(Type pluginType, IResolver resolver, object sender, PluginEventArgs e)
         {
             if (!this.Enable)
             {
@@ -134,12 +226,11 @@ namespace TouchSocket.Core
                 return new ValueTask<bool>(true);
             }
 
-            if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
+            if (!this.m_pluginMethods.TryGetValue(pluginType, out var pluginInvokeLine))
             {
                 return new ValueTask<bool>(false);
             }
-
-            return new ValueTask<bool>(RaisePluginAsync(pluginModel, sender, e));
+            return new ValueTask<bool>(this.RaisePluginAsync(pluginInvokeLine, resolver, sender, e));
         }
 
         /// <inheritdoc/>
@@ -169,11 +260,11 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public void Remove(Type interfeceType, Delegate func)
+        public void Remove(Type pluginType, Delegate func)
         {
             lock (this.m_locker)
             {
-                var pluginInvokeLine = this.GetPluginInvokeLine(interfeceType);
+                var pluginInvokeLine = this.GetPluginInvokeLine(pluginType);
 
                 pluginInvokeLine.Remove(func);
             }
@@ -192,6 +283,7 @@ namespace TouchSocket.Core
                     }
                     this.m_pluginMethods.Clear();
                     this.m_plugins.Clear();
+                    this.m_scopedResolver.SafeDispose();
                 }
             }
             base.Dispose(disposing);
@@ -211,13 +303,6 @@ namespace TouchSocket.Core
             return methodInfo.GetParameters().Length == 2 && typeof(PluginEventArgs).IsAssignableFrom(methodInfo.GetParameters()[1].ParameterType) && methodInfo.ReturnType == typeof(Task);
         }
 
-        private static async Task<bool> RaisePluginAsync(PluginInvokeLine pluginModel, object sender, PluginEventArgs e)
-        {
-            e.LoadModel(pluginModel.GetPluginEntities(), sender);
-            await e.InvokeNext().ConfigureAwait(false);
-            return e.Handled;
-        }
-
         private PluginInvokeLine GetPluginInvokeLine([DynamicallyAccessedMembers(PluginManagerExtension.PluginAccessedMemberTypes)] Type interfeceType)
         {
             if (!this.m_pluginMethods.TryGetValue(interfeceType, out var pluginModel))
@@ -226,6 +311,22 @@ namespace TouchSocket.Core
                 this.m_pluginMethods.Add(interfeceType, pluginModel);
             }
             return pluginModel;
+        }
+
+        private async Task<bool> RaisePluginAsync(PluginInvokeLine pluginInvokeLine, IResolver resolver, object sender, PluginEventArgs e)
+        {
+            if (resolver == null)
+            {
+                e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, this.Resolver);
+                await e.InvokeNext().ConfigureAwait(false);
+                return e.Handled;
+            }
+            else
+            {
+                e.LoadModel(pluginInvokeLine.GetPluginEntities(), sender, resolver);
+                await e.InvokeNext().ConfigureAwait(false);
+                return e.Handled;
+            }
         }
     }
 }

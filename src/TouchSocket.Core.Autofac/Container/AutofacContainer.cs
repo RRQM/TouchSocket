@@ -147,6 +147,22 @@ namespace TouchSocket.Core
             return this.m_serviceProvider.Resolve(fromType);
         }
 
+        /// <inheritdoc/>
+        public IScopedResolver CreateScopedResolver()
+        {
+            return new InternalScopedResolver(this);
+        }
+
         #endregion Resolve
+
+        internal class InternalScopedResolver : DisposableObject, IScopedResolver
+        {
+            public IResolver Resolver { get; set; }
+
+            public InternalScopedResolver(IResolver resolver)
+            {
+                this.Resolver = resolver;
+            }
+        }
     }
 }

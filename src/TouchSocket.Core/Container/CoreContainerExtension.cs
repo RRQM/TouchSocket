@@ -582,7 +582,7 @@ namespace TouchSocket.Core
         #region Resolve
 
         /// <summary>
-        /// 创建类型对应的实例
+        /// 创建类型对应的实例。如果解析失败，则返回 null。
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver"></param>
@@ -593,7 +593,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 创建类型对应的实例
+        /// 创建类型对应的实例。如果解析失败，则返回 null。
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver"></param>
@@ -676,53 +676,6 @@ namespace TouchSocket.Core
         {
             return (T)ResolveWithoutRoot(resolver, typeof(T));
         }
-
-        /// <summary>
-        ///  尝试创建类型对应的实例，如果类型没有注册，则会返回null或者默认值类型。
-        /// </summary>
-        /// <param name="resolver"></param>
-        /// <param name="fromType"></param>
-        /// <returns></returns>
-        public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType)
-        {
-            return resolver.IsRegistered(fromType) ? resolver.Resolve(fromType) : default;
-        }
-
-        /// <summary>
-        ///  尝试创建类型对应的实例，如果类型没有注册，则会返回null或者默认值类型。
-        /// </summary>
-        /// <param name="resolver"></param>
-        /// <param name="fromType"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static object TryResolve(this IResolver resolver, [DynamicallyAccessedMembers(DynamicallyAccessed)] Type fromType, string key)
-        {
-            return resolver.IsRegistered(fromType) ? resolver.Resolve(fromType, key) : default;
-        }
-
-        /// <summary>
-        /// 尝试创建类型对应的实例，如果类型没有注册，则会返回null或者默认值类型。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="resolver"></param>
-        /// <returns></returns>
-        public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
-        {
-            return (T)TryResolve(resolver, typeof(T));
-        }
-
-        /// <summary>
-        /// 尝试创建类型对应的实例，如果类型没有注册，则会返回null或者默认值类型。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="resolver"></param>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public static T TryResolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver, string key)
-        {
-            return (T)TryResolve(resolver, typeof(T), key);
-        }
-
         #endregion Resolve
 
         #region IsRegistered

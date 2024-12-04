@@ -20,17 +20,18 @@ namespace TouchSocket.Dmtp.Rpc
 {
     internal class DmtpRpcResponsePackage : WaitRouterPackage
     {
+        private object m_returnParameter;
+
+        private Type m_returnType;
+
+        private ISerializationSelector m_selector;
+
+        private SerializationType m_serializationType;
+
         public DmtpRpcResponsePackage()
         {
-
         }
 
-        public void LoadInfo(Type retuenType, ISerializationSelector selector, SerializationType serializationType)
-        {
-            this.m_returnType = retuenType;
-            this.m_selector = selector;
-            this.m_serializationType = serializationType;
-        }
         public DmtpRpcResponsePackage(DmtpRpcRequestPackage requestPackage, ISerializationSelector selector, object returnParameter)
         {
             this.TargetId = requestPackage.SourceId;
@@ -53,12 +54,6 @@ namespace TouchSocket.Dmtp.Rpc
             this.m_serializationType = requestPackage.SerializationType;
         }
 
-        private ISerializationSelector m_selector;
-
-        private SerializationType m_serializationType;
-        private object m_returnParameter;
-        private Type m_returnType;
-
         /// <summary>
         /// 返回参数数据
         /// </summary>
@@ -66,6 +61,14 @@ namespace TouchSocket.Dmtp.Rpc
 
         /// <inheritdoc/>
         protected override bool IncludedRouter => true;
+
+        public void LoadInfo(Type retuenType, ISerializationSelector selector, SerializationType serializationType)
+        {
+            this.m_returnType = retuenType;
+            this.m_selector = selector;
+            this.m_serializationType = serializationType;
+        }
+
         /// <inheritdoc/>
         public override void PackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {

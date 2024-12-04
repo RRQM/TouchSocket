@@ -24,14 +24,8 @@ namespace TouchSocket.Core.AspNetCore
     /// </summary>
     public class AspNetCoreContainer : IRegistrator, IResolver, IKeyedServiceProvider
     {
+        private readonly ScopedResolver m_scopedResolver;
         private readonly IServiceCollection m_services;
-        private IServiceProvider m_serviceProvider;
-
-        /// <summary>
-        /// 获取当前对象的IServiceProvider实例。
-        /// </summary>
-        public IServiceProvider ServiceProvider => this.m_serviceProvider;
-
 
         /// <summary>
         /// 初始化AspNetCoreContainer实例。
@@ -40,27 +34,18 @@ namespace TouchSocket.Core.AspNetCore
         public AspNetCoreContainer(IServiceCollection services)
         {
             this.m_services = services ?? throw new ArgumentNullException(nameof(services));
-
-            if (services.IsReadOnly)
-            {
-                return;
-            }
-            services.AddSingleton<IResolver>(provider =>
-            {
-                this.m_serviceProvider ??= provider;
-                return this;
-            });
-
-            if (!this.IsRegistered(typeof(ILog)))
-            {
-                this.RegisterSingleton<ILog>(new LoggerGroup());
-            }
+            this.m_scopedResolver = new ScopedResolver(services);
         }
+
+        /// <summary>
+        /// 获取当前对象的IServiceProvider实例。
+        /// </summary>
+        public IServiceProvider ServiceProvider => this.m_scopedResolver.ServiceProvider;
 
         /// <inheritdoc/>
         public IResolver BuildResolver()
         {
-            this.m_serviceProvider = this.m_services.BuildServiceProvider();
+            this.m_scopedResolver.ServiceProvider = this.m_services.BuildServiceProvider();
             return this;
         }
 
@@ -71,7 +56,7 @@ namespace TouchSocket.Core.AspNetCore
         /// <returns></returns>
         public IResolver BuildResolver(IServiceProvider provider)
         {
-            this.m_serviceProvider = provider;
+            this.m_scopedResolver.ServiceProvider = provider;
             return this;
         }
 
@@ -91,39 +76,13 @@ namespace TouchSocket.Core.AspNetCore
         /// <inheritdoc/>
         public bool IsRegistered(Type fromType, string key)
         {
-            if (typeof(IResolver) == fromType)
-            {
-                return true;
-            }
-            foreach (var item in this.m_services)
-            {
-                if (!item.IsKeyedService)
-                {
-                    continue;
-                }
-                if (item.ServiceType == fromType && item.ServiceKey?.ToString() == key)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return this.m_scopedResolver.IsRegistered(fromType, key);
         }
 
         /// <inheritdoc/>
         public bool IsRegistered(Type fromType)
         {
-            if (typeof(IResolver) == fromType)
-            {
-                return true;
-            }
-            foreach (var item in this.m_services)
-            {
-                if (item.ServiceType == fromType)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return this.m_scopedResolver.IsRegistered(fromType);
         }
 
         /// <inheritdoc/>
@@ -132,15 +91,22 @@ namespace TouchSocket.Core.AspNetCore
             switch (descriptor.Lifetime)
             {
                 case Lifetime.Singleton:
-                    if (descriptor.ToInstance != null)
                     {
-                        this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToInstance);
+                        if (descriptor.ToInstance != null)
+                        {
+                            this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToInstance);
+                        }
+                        else
+                        {
+                            this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToType);
+                        }
+                        break;
                     }
-                    else
+                case Lifetime.Scoped:
                     {
-                        this.m_services.AddKeyedSingleton(descriptor.FromType, key, descriptor.ToType);
+                        this.m_services.AddKeyedScoped(descriptor.FromType, key, descriptor.ToType);
+                        break;
                     }
-                    break;
 
                 case Lifetime.Transient:
                 default:
@@ -155,16 +121,22 @@ namespace TouchSocket.Core.AspNetCore
             switch (descriptor.Lifetime)
             {
                 case Lifetime.Singleton:
-                    if (descriptor.ToInstance != null)
                     {
-                        this.m_services.AddSingleton(descriptor.FromType, descriptor.ToInstance);
+                        if (descriptor.ToInstance != null)
+                        {
+                            this.m_services.AddSingleton(descriptor.FromType, descriptor.ToInstance);
+                        }
+                        else
+                        {
+                            this.m_services.AddSingleton(descriptor.FromType, descriptor.ToType);
+                        }
+                        break;
                     }
-                    else
+                case Lifetime.Scoped:
                     {
-                        this.m_services.AddSingleton(descriptor.FromType, descriptor.ToType);
+                        this.m_services.AddScoped(descriptor.FromType, descriptor.ToType);
+                        break;
                     }
-                    break;
-
                 case Lifetime.Transient:
                 default:
                     this.m_services.AddTransient(descriptor.FromType, descriptor.ToType);
@@ -207,33 +179,40 @@ namespace TouchSocket.Core.AspNetCore
         #region Resolve
 
         /// <inheritdoc/>
-        public object GetService(Type serviceType)
+        public IScopedResolver CreateScopedResolver()
         {
-            return this.m_serviceProvider.GetService(serviceType);
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType, string key)
-        {
-            return this.m_serviceProvider.GetRequiredKeyedService(fromType, key);
-        }
-
-        /// <inheritdoc/>
-        public object Resolve(Type fromType)
-        {
-            return this.m_serviceProvider.GetService(fromType);
+            var serviceScope = this.m_scopedResolver.CreateScope();
+            return new InternalScopedResolver(serviceScope, this.m_services);
         }
 
         /// <inheritdoc/>
         public object GetKeyedService(Type fromType, object serviceKey)
         {
-            return this.m_serviceProvider.GetRequiredKeyedService(fromType, serviceKey);
+            return this.m_scopedResolver.GetKeyedService(fromType, serviceKey);
         }
 
         /// <inheritdoc/>
         public object GetRequiredKeyedService(Type fromType, object serviceKey)
         {
-            return this.m_serviceProvider.GetRequiredKeyedService(fromType, serviceKey);
+            return this.GetRequiredKeyedService(fromType, serviceKey);
+        }
+
+        /// <inheritdoc/>
+        public object GetService(Type serviceType)
+        {
+            return this.m_scopedResolver.GetService(serviceType);
+        }
+
+        /// <inheritdoc/>
+        public object Resolve(Type fromType, string key)
+        {
+            return this.m_scopedResolver.GetKeyedService(fromType, key);
+        }
+
+        /// <inheritdoc/>
+        public object Resolve(Type fromType)
+        {
+            return this.m_scopedResolver.GetService(fromType);
         }
 
         #endregion Resolve

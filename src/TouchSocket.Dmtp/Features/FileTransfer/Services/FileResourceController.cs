@@ -26,7 +26,7 @@ namespace TouchSocket.Dmtp.FileTransfer
     public class FileResourceController : DisposableObject, IFileResourceController
     {
         private readonly Timer m_timer;
-
+        public static FileResourceController Default { get; } = new FileResourceController();
         /// <summary>
         /// 文件资源控制器
         /// </summary>
@@ -52,14 +52,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                     }
                 }
             }, null, 1000, 1000);
-        }
-
-        /// <summary>
-        /// 文件资源控制器析构函数
-        /// </summary>
-        ~FileResourceController()
-        {
-            this.Dispose(false);
         }
 
         /// <inheritdoc/>
@@ -144,14 +136,18 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_timer.SafeDispose();
-            foreach (var item in this.FileResourceStore.Keys.ToArray())
+            if (disposing)
             {
-                if (this.FileResourceStore.TryRemove(item, out var locator))
+                this.m_timer.SafeDispose();
+                foreach (var item in this.FileResourceStore.Keys.ToArray())
                 {
-                    locator.SafeDispose();
+                    if (this.FileResourceStore.TryRemove(item, out var locator))
+                    {
+                        locator.SafeDispose();
+                    }
                 }
             }
+           
             base.Dispose(disposing);
         }
     }
