@@ -50,7 +50,7 @@ namespace TouchSocket.Sockets
 
         #region 变量
 
-        private readonly object m_lockForAbort = new object();
+        private readonly Lock m_lockForAbort = LockFactory.Create();
         private Task m_beginReceiveTask;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private string m_id;
