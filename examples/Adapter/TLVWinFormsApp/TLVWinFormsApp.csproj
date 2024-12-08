@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.5" />
-    <PackageReference Include="TouchSocket.Rpc" Version="3.0.5" />
-    <PackageReference Include="TouchSocket.WebApi" Version="3.0.5" />
-    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.5" />
-    <PackageReference Include="TouchSocketPro" Version="3.0.5" />
-    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.5" />
+    <PackageReference Include="TouchSocket.JsonRpc" Version="3.0.7-build.16" />
+    <PackageReference Include="TouchSocket.Rpc" Version="3.0.7-build.16" />
+    <PackageReference Include="TouchSocket.WebApi" Version="3.0.7-build.16" />
+    <PackageReference Include="TouchSocket.XmlRpc" Version="3.0.7-build.16" />
+    <PackageReference Include="TouchSocketPro" Version="3.0.7-build.16" />
+    <PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.7-build.16" />
   </ItemGroup>
 
 </Project>

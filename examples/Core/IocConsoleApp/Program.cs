@@ -10,6 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Reflection;
+using TouchSocket.Core;
+
 namespace IocConsoleApp
 {
     internal class Program
