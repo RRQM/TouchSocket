@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
@@ -11,12 +12,13 @@ namespace DmtpRpcConsoleApp
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             try
             {
-                var service = GetService();
-                var client = GetClient();
+                var service = await GetService();
+                var client = await GetClient();
+
                 while (true)
                 {
                     Console.WriteLine("请输入账号和密码，用空格隔开。");
@@ -27,8 +29,15 @@ namespace DmtpRpcConsoleApp
                         continue;
                     }
 
-                    var result = client.GetDmtpRpcActor().Login(strs[0], strs[1]);
-                    Console.WriteLine($"结果：{result}");
+                    var invokeOption = new DmtpInvokeOption()
+                    {
+                        FeedbackType = FeedbackType.WaitInvoke,
+                        SerializationType = SerializationType.FastBinary,
+                        Timeout = 5000
+                    };
+
+                    var result = await client.GetDmtpRpcActor().LoginAsync(strs[0], strs[1], invokeOption);
+                    Console.WriteLine($"结果：{result.IsSuccess}");
                 }
             }
             catch (Exception ex)
@@ -38,34 +47,43 @@ namespace DmtpRpcConsoleApp
             }
 
         }
-        static TcpDmtpClient GetClient()
+        static async Task<TcpDmtpClient> GetClient()
         {
             var client = new TcpDmtpClient();
-            client.Setup(new TouchSocketConfig()
-                //.SetRegistrator(new MyContainer())
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();
-                })
-                .SetRemoteIPHost("127.0.0.1:7789")
-                .ConfigurePlugins(a =>
-                {
-                    a.UseDmtpRpc();
-                })
-                .SetDmtpOption(new DmtpOption()
-                {
-                    VerifyToken = "Rpc"
-                }));
-            client.Connect();
+            await client.SetupAsync(new TouchSocketConfig()
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+                 })
+                 .SetRemoteIPHost("127.0.0.1:7789")
+                 .ConfigurePlugins(a =>
+                 {
+                     a.UseDmtpRpc()
+                     .ConfigureDefaultSerializationSelector(selector =>
+                     {
+                         //配置Fast序列化器
+                         selector.FastSerializerContext = new AppFastSerializerContext();
+
+                         //配置System.Text.Json序列化器
+                         selector.UseSystemTextJson(options =>
+                         {
+                             options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                         });
+                     });
+                 })
+                 .SetDmtpOption(new DmtpOption()
+                 {
+                     VerifyToken = "Rpc"
+                 }));
+            await client.ConnectAsync();
             client.Logger.Info($"客户端已连接");
             return client;
         }
-        static TcpDmtpService GetService()
+        static async Task<TcpDmtpService> GetService()
         {
             var service = new TcpDmtpService();
             var config = new TouchSocketConfig()//配置
                    .SetListenIPHosts(7789)
-                   //.SetRegistrator(new MyContainer())
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();
@@ -76,66 +94,98 @@ namespace DmtpRpcConsoleApp
                    })
                    .ConfigurePlugins(a =>
                    {
-                       a.UseDmtpRpc();
+                       a.UseDmtpRpc()
+                       .ConfigureDefaultSerializationSelector(selector =>
+                       {
+                           //配置Fast序列化器
+                           selector.FastSerializerContext = new AppFastSerializerContext();
+
+                           //配置System.Text.Json序列化器
+                           selector.UseSystemTextJson(options =>
+                           {
+                               options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                           });
+                       });
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
                        VerifyToken = "Rpc"
                    });
 
-            service.Setup(config);
-            service.Start();
+            await service.SetupAsync(config);
+            await service.StartAsync();
 
             service.Logger.Info($"{service.GetType().Name}已启动");
             return service;
         }
     }
 
-    #region Rpc服务
-    [GeneratorRpcProxy]
-    [AutoInjectForSingleton(ToType = typeof(MyRpcServer))]
-    public interface IMyRpcServer : IRpcServer
+    #region Fast序列化
+
+    [FastSerializable(typeof(MyResult))]
+    [FastSerializable(typeof(IMyRpcServer), TypeMode.All)]//直接按类型，搜索其属性，字段，方法参数，方法返回值的类型进行注册序列化
+    partial class AppFastSerializerContext : FastSerializerContext
     {
-        [DmtpRpc(MethodInvoke =true)]
-        [Description("登录")]//服务描述，在生成代理时，会变成注释。
-        bool Login(string account, string password);
+
     }
+    #endregion
 
-    public partial class MyRpcServer : IMyRpcServer
+    #region System.Text.Json序列化
+    [JsonSerializable(typeof(MyResult))]
+    internal partial class AppJsonSerializerContext : JsonSerializerContext
     {
-        public bool Login(string account, string password)
-        {
-            if (account == "123" && password == "abc")
-            {
-                return true;
-            }
-
-            return false;
-        }
     }
 
     #endregion
 
-    //#region IOC
-    ///// <summary>
-    ///// IOC容器
-    ///// </summary>
-    //[AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    //[AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    //[AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
-    //[AddSingletonInject(typeof(DmtpRpcFeature))]
-    //[AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
-    //[GeneratorContainer]
-    //public partial class MyContainer : ManualContainer
-    //{
-    //    public override bool IsRegistered(Type fromType, string key = "")
-    //    {
-    //        if (fromType == typeof(IDmtpRouteService))
-    //        {
-    //            return false;
-    //        }
-    //        return base.IsRegistered(fromType, key);
-    //    }
-    //}
-    //#endregion
+    #region Rpc服务
+    [GeneratorRpcProxy]
+    public interface IMyRpcServer : IRpcServer
+    {
+        [DmtpRpc(MethodInvoke = true)]
+        [Description("登录")]//服务描述，在生成代理时，会变成注释。
+        MyResult Login(string account, string password);
+
+        [DmtpRpc(MethodInvoke = true)]
+        [Description("注册")]
+        RpcResponse Register(RpcRequest request);
+    }
+
+    public partial class MyRpcServer : IMyRpcServer
+    {
+        public MyResult Login(string account, string password)
+        {
+            if (account == "123" && password == "abc")
+            {
+                return new MyResult() { Account = account, IsSuccess = true };
+            }
+
+            return new MyResult() { Account = account, IsSuccess = false };
+        }
+
+        public RpcResponse Register(RpcRequest request)
+        {
+            return new RpcResponse() { MyProperty = request.MyProperty };
+        }
+    }
+
+    [GeneratorPackage]
+    public partial class MyResult : PackageBase
+    {
+        public string? Account { get; set; }
+        public bool IsSuccess { get; set; }
+    }
+
+    [GeneratorPackage]
+    public partial class RpcRequest : PackageBase
+    {
+        public int MyProperty { get; set; }
+    }
+
+    [GeneratorPackage]
+    public partial class RpcResponse : PackageBase
+    {
+        public int MyProperty { get; set; }
+    }
+    #endregion
 }
