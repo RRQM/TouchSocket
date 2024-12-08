@@ -22,7 +22,7 @@ namespace ConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             //如果需要创建https，则需要证书文件，此处提供一个测试证书文件
             //证书在Ssl证书相关/证书生成.zip  解压获取。
@@ -30,39 +30,40 @@ namespace ConsoleApp
             //最后客户端需要先安装证书。
 
             var service = new HttpService();
-            service.SetupAsync(new TouchSocketConfig()//加载配置
-                .SetListenIPHosts(7789)
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();
-                })
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyHttpPlug1>();
-                    a.Add<MyHttpPlug2>();
-                    a.Add<MyHttpPlug3>();
-                    a.Add<MyHttpPlug4>();
-                    a.Add<MyBigFileHttpPlug>();
-                    a.Add<MyBigWriteHttpPlug>();
+            await service.SetupAsync(new TouchSocketConfig()//加载配置
+                  .SetListenIPHosts(7789)
+                  .ConfigureContainer(a =>
+                  {
+                      a.AddConsoleLogger();
+                  })
+                  .ConfigurePlugins(a =>
+                  {
+                      a.Add<MyHttpPlug1>();
+                      a.Add<MyHttpPlug2>();
+                      a.Add<MyHttpPlug3>();
+                      a.Add<MyHttpPlug4>();
+                      a.Add<MyUploadBigFileHttpPlug>();
+                      a.Add<MyBigWriteHttpPlug>();
+                      a.Add<MyCustomDownloadHttpPlug>();
 
-                    a.UseHttpStaticPage()
-                    .SetNavigateAction(request =>
-                    {
-                        //此处可以设置重定向
-                        return request.RelativeURL;
-                    })
-                    .SetResponseAction(response =>
-                    {
-                        //可以设置响应头
-                    })
-                    .AddFolder("api/");//添加静态页面文件夹
+                      a.UseHttpStaticPage()
+                      .SetNavigateAction(request =>
+                      {
+                          //此处可以设置重定向
+                          return request.RelativeURL;
+                      })
+                      .SetResponseAction(response =>
+                      {
+                          //可以设置响应头
+                      })
+                      .AddFolder("api/");//添加静态页面文件夹
 
-                    //default插件应该最后添加，其作用是
-                    //1、为找不到的路由返回404
-                    //2、处理header为Option的探视跨域请求。
-                    a.UseDefaultHttpServicePlugin();
-                }));
-            service.StartAsync();
+                      //default插件应该最后添加，其作用是
+                      //1、为找不到的路由返回404
+                      //2、处理header为Option的探视跨域请求。
+                      a.UseDefaultHttpServicePlugin();
+                  }));
+            await service.StartAsync();
 
             Console.WriteLine("Http服务器已启动");
             Console.WriteLine("访问 http://127.0.0.1:7789/index.html 访问静态网页");
@@ -120,7 +121,7 @@ namespace ConsoleApp
         }
     }
 
-    public class MyBigFileHttpPlug : PluginBase, IHttpPlugin
+    public class MyUploadBigFileHttpPlug : PluginBase, IHttpPlugin
     {
         public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
@@ -134,7 +135,7 @@ namespace ConsoleApp
                         if (fileName.IsNullOrEmpty())
                         {
                             await e.Context.Response
-                                 .SetStatus(502,"fileName is null")
+                                 .SetStatus(502, "fileName is null")
                                  .FromText("fileName is null")
                                  .AnswerAsync();
                             return;
@@ -210,7 +211,7 @@ namespace ConsoleApp
 
                         //此操作会先接收全部数据，然后再分割数据。
                         //所以上传文件不宜过大，不然会内存溢出。
-                        var multifileCollection =await e.Context.Request.GetFormCollectionAsync();
+                        var multifileCollection = await e.Context.Request.GetFormCollectionAsync();
 
                         foreach (var file in multifileCollection.Files)
                         {
@@ -321,6 +322,74 @@ namespace ConsoleApp
 
             //无法处理，调用下一个插件
             await e.InvokeNext();
+        }
+    }
+
+    public class MyCustomDownloadHttpPlug : PluginBase, IHttpPlugin
+    {
+        private readonly ILog logger;
+
+        public MyCustomDownloadHttpPlug(ILog logger)
+        {
+            this.logger = logger;
+        }
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            var request = e.Context.Request;//http请求体
+            var response = e.Context.Response;//http响应体
+
+            if (request.IsGet() && request.UrlEquals("/CustomDownload"))
+            {
+                await TransferFileToResponse(response, "D:\\迅雷下载\\QQMusic_Setup_2045.exe");
+                return;
+            }
+
+
+            //无法处理，调用下一个插件
+            await e.InvokeNext();
+        }
+
+        public async Task TransferFileToResponse(HttpResponse response, string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    await response.SetStatus(403, $"Object Not Exist")
+                        .AnswerAsync();
+                    return;
+                }
+
+                using (var fileStream = File.OpenRead(filePath))
+                {
+                    response.SetContentTypeFromFileName(Path.GetFileName(filePath));
+                    response.SetStatus(200, "Success");
+
+                    var len = fileStream.Length;
+                    response.ContentLength = len;
+
+                    var buffer = new Memory<byte>(new byte[1024 * 512]);
+                    while (true)
+                    {
+                        var readLen = await fileStream.ReadAsync(buffer);
+                        if (readLen == 0)
+                        {
+                            break;
+                        }
+
+                        await response.WriteAsync(buffer.Slice(0, readLen));
+                    }
+                }
+
+                logger.Info("Success");
+            }
+            catch (Exception ex)
+            {
+                logger.Exception(ex);
+                //await response.SetStatus(403, ex.Message)
+                //    .AnswerAsync();
+            }
+
         }
     }
 }

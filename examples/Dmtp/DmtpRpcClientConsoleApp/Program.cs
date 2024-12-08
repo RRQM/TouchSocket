@@ -169,7 +169,7 @@ namespace ClientConsoleApp
                  {
                      a.UseDmtpRpc()
                      //.SetSerializationSelector(new MySerializationSelector())//自定义序列化器
-                     .SetCreateDmtpRpcActor((actor, serverprovider, resolver) => new MyDmtpRpcActor(actor, serverprovider, resolver));
+                     .SetCreateDmtpRpcActor((actor, serverprovider, dispatcher) => new MyDmtpRpcActor(actor, serverprovider,dispatcher));
 
                      a.UseDmtpHeartbeat()
                      .SetTick(TimeSpan.FromSeconds(3))
@@ -200,7 +200,7 @@ namespace ClientConsoleApp
 
     internal class MyDmtpRpcActor : DmtpRpcActor, IRpcClient1, IRpcClient2
     {
-        public MyDmtpRpcActor(IDmtpActor smtpActor, IRpcServerProvider rpcServerProvider, IResolver resolver) : base(smtpActor, rpcServerProvider, resolver)
+        public MyDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> dispatcher) : base(dmtpActor, rpcServerProvider, dmtpActor.Client.Resolver, dispatcher)
         {
         }
     }

@@ -295,6 +295,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NamedPipeWebApplication", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonPackageAdapterConsoleApp", "Adapter\JsonPackageAdapterConsoleApp\JsonPackageAdapterConsoleApp.csproj", "{E81C54A4-6D9F-4AAA-A288-4F6BBAB9B895}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScopedTcpServiceConsoleApp", "Tcp\ScopedTcpServiceConsoleApp\ScopedTcpServiceConsoleApp.csproj", "{0B5E9F7A-54C9-4A27-964E-5A568E5D7626}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -661,6 +663,10 @@ Global
 		{E81C54A4-6D9F-4AAA-A288-4F6BBAB9B895}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E81C54A4-6D9F-4AAA-A288-4F6BBAB9B895}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E81C54A4-6D9F-4AAA-A288-4F6BBAB9B895}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B5E9F7A-54C9-4A27-964E-5A568E5D7626}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B5E9F7A-54C9-4A27-964E-5A568E5D7626}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B5E9F7A-54C9-4A27-964E-5A568E5D7626}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B5E9F7A-54C9-4A27-964E-5A568E5D7626}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -787,6 +793,7 @@ Global
 		{B31BF274-5600-4CAD-A2E4-64B51B89EF42} = {5126C261-9A81-4FBC-8653-7710C1D1D735}
 		{FE53A35A-9234-44B8-ABFF-F4511EC8B196} = {B31BF274-5600-4CAD-A2E4-64B51B89EF42}
 		{E81C54A4-6D9F-4AAA-A288-4F6BBAB9B895} = {F8C07F29-7233-4FD3-A3DC-45963071E20A}
+		{0B5E9F7A-54C9-4A27-964E-5A568E5D7626} = {DB89FCB6-E4F9-4BD4-93F3-4E857741D749}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB787235-A13A-4A3D-B5A8-5DFEB6511EEE}

@@ -7,8 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="TouchSocketPro.Modbus" Version="3.0.7-build.16" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<PackageReference Include="TouchSocket" Version="3.0.7-build.16" />
+		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="3.0.7-build.16" />
+	</ItemGroup>
+	
 </Project>
