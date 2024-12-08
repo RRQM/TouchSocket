@@ -19,6 +19,48 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.7
+
+**更新日期：** 2024.12.8
+
+**更新描述：**
+
+兼容性修复升级。在.Net9.0中，启用Lock锁代替object锁，提高锁效率。
+
+
+**更新详情：**
+
+#### 【TouchSocket.Core】
+
+- &nbsp;<Tag>修复</Tag> `ValueByteBlock`类，在`WritePackage`时数据无效的bug。 
+- &nbsp;<Tag>优化</Tag> 开放`PackageFastBinaryConverter`类，以支持二进制数据序列化源生成。 
+
+#### 【TouchSocket.Dmtp】
+
+- &nbsp;<Tag>新增</Tag> `DmtpRpc`新增`RpcDispatcher`调度器，支持多线程并发，或者单线程调度。
+- &nbsp;<Tag>优化</Tag> `DefaultSerializationSelector`优化支持`System.Text.Json`源生成模式的序列化。
+- &nbsp;<Tag>调整</Tag> 触发`OnFileTransferred`事件的时机调到`SendAsync`前面，目的是保证调用方在收到回复时，响应方已经完成事件处理。此操作理论上不会对现有运行逻辑造成影响。
+- &nbsp;<Tag>修复</Tag> `DmtpRpc`在发送`Rpc`请求时，如果请求模式使用`OnlySend`、或者`WaitSend`，则会抛出异常的bug。[#IB9F8P](https://gitee.com/RRQM_Home/TouchSocket/issues/IB9F8P)
+
+
+#### 【TouchSocket.Modbus】
+
+- &nbsp;<Tag>新增</Tag> 在`IModbusResponse`返回响应时，会同时携带返回响应的当前请求`IModbusRequest`。
+
+#### 【TouchSocket.WebApi】
+
+- &nbsp;<Tag>优化</Tag> `WebApiSerializerConverter`类，以支持更好的`System.Text.Json`源生成模式的序列化。
+
+#### 【TouchSocket.Rpc】
+
+- &nbsp;<Tag>新增</Tag> 在`ReenterableAttribute`特性，可以强制设置`Rpc`函数是否为重入模式。
+- &nbsp;<Tag>新增</Tag> `ConcurrencyRpcDispatcher`并发调度器，支持多线程并发。
+- &nbsp;<Tag>新增</Tag> `ImmediateRpcDispatcher`当前调度器，直接在当前线程执行。
+- &nbsp;<Tag>新增</Tag> `QueueRpcDispatcher`队列调度器，把所有请求，放在一个队列中，等待处理。
+
+***
+
+
 ## v3.0.5(6)
 
 **更新日期：** 2024.12.1
