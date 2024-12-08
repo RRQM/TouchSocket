@@ -1,8 +1,10 @@
+using System.Text.Json.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Http;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 using TouchSocket.WebApi;
+using TouchSocket.WebApi.Swagger;
 
 namespace WebApiConsoleApp
 {
@@ -28,7 +30,18 @@ namespace WebApiConsoleApp
                 {
                     //a.UseCheckClear();
 
-                    a.UseWebApi();
+                    a.UseWebApi()
+                    .ConfigureConverter(converter =>
+                    {
+                        converter.Clear();
+                        converter.AddSystemTextJsonSerializerFormatter(options => 
+                        {
+                            options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+                        });
+                    });
+
+                    //a.UseSwagger()
+                    //.UseLaunchBrowser();
 
                     //a.UseHttpStaticPage()
                     //.SetNavigateAction(request =>
@@ -52,6 +65,14 @@ namespace WebApiConsoleApp
         }
     }
 
+
+    [JsonSerializable(typeof(MyClass))]
+    [JsonSerializable(typeof(MySum))]
+    internal partial class AppJsonSerializerContext : JsonSerializerContext
+    {
+
+    }
+
     public partial class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
@@ -71,10 +92,10 @@ namespace WebApiConsoleApp
         }
 
         [WebApi(Method = HttpMethodType.Post)]
-        public int TestPost(MyClass myClass)
+        public MySum TestPost(MyClass myClass)
         {
             m_logger.Info("TestPost");
-            return myClass.A + myClass.B;
+            return new MySum() { A = myClass.A, B = myClass.B, Sum = myClass.A + myClass.B };
         }
 
     }
@@ -83,5 +104,10 @@ namespace WebApiConsoleApp
     {
         public int A { get; set; }
         public int B { get; set; }
+    }
+
+    public class MySum : MyClass
+    {
+        public int Sum { get; set; }
     }
 }

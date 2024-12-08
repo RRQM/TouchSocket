@@ -162,27 +162,4 @@ namespace RpcPerformanceConsoleApp
             return stringBuilder.ToString();
         }
     }
-
-    #region IOC
-    /// <summary>
-    /// IOC容器
-    /// </summary>
-    [AddSingletonInject(typeof(IPluginManager), typeof(PluginManager))]
-    [AddSingletonInject(typeof(ILog), typeof(LoggerGroup))]
-    [AddSingletonInject(typeof(DmtpRpcFeature))]
-    [AddSingletonInject(typeof(IRpcServerProvider), typeof(RpcServerProvider))]
-    [AddSingletonInject(typeof(IDmtpRouteService), typeof(DmtpRouteService))]
-    [GeneratorContainer]
-    public partial class MyContainer : ManualContainer
-    {
-        public override bool IsRegistered(Type fromType, string key = "")
-        {
-            if (fromType == typeof(IDmtpRouteService))
-            {
-                return false;
-            }
-            return base.IsRegistered(fromType, key);
-        }
-    }
-    #endregion
 }
