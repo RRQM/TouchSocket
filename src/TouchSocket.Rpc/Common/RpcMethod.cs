@@ -48,7 +48,7 @@ namespace TouchSocket.Rpc
             this.ServerToType = serverToType;
 
             this.Parameters = method.GetParameters().Select(a => new RpcParameter(a)).ToArray();
-           
+
             var fromMethodInfos = new Dictionary<string, MethodInfo>();
             CodeGenerator.GetMethodInfos(this.ServerFromType, ref fromMethodInfos);
 
@@ -70,7 +70,7 @@ namespace TouchSocket.Rpc
 
             this.PrivateGetFilters();
 
-            if (typeof(ITransientRpcServer).IsAssignableFrom(this.ServerToType)|| typeof(IScopedRpcServer).IsAssignableFrom(this.ServerToType))
+            if (typeof(ITransientRpcServer).IsAssignableFrom(this.ServerToType) || typeof(IScopedRpcServer).IsAssignableFrom(this.ServerToType))
             {
                 this.HasCallContext = true;
             }
@@ -78,6 +78,32 @@ namespace TouchSocket.Rpc
             {
                 this.HasCallContext = this.Parameters.Where(a => a.IsCallContext).Any();
             }
+
+            var reenterableAttribute = this.PrivateGetReenterableAttribute();
+            this.Reenterable = reenterableAttribute?.Reenterable;
+        }
+
+        private ReenterableAttribute PrivateGetReenterableAttribute()
+        {
+            var reenterableAttribute = this.Info.GetCustomAttribute<ReenterableAttribute>();
+            if (reenterableAttribute != null)
+            {
+                return reenterableAttribute;
+            }
+
+            reenterableAttribute = this.ServerFromType.GetCustomAttribute<ReenterableAttribute>();
+            if (reenterableAttribute != null)
+            {
+                return reenterableAttribute;
+            }
+
+            reenterableAttribute = this.ServerFromType.Assembly.GetCustomAttribute<ReenterableAttribute>();
+            if (reenterableAttribute != null)
+            {
+                return reenterableAttribute;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -148,6 +174,14 @@ namespace TouchSocket.Rpc
         /// 注册类型
         /// </summary>
         public Type ServerFromType { get; private set; }
+
+        /// <summary>
+        /// 获取是否允许重新进入的标志。
+        /// </summary>
+        /// <value>
+        /// 如果允许重新进入，则为 true；如果不允许重新进入，则为 false；如果未定义，则为 null。
+        /// </value>
+        public bool? Reenterable { get; }
 
         /// <summary>
         /// Rpc服务属性集合

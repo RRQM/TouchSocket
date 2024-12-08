@@ -86,9 +86,15 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         public void WritePackage<TPackage>(TPackage package) where TPackage : class, IPackage
         {
-            this.WriteIsNull(package);
-            var byteBlock = this;
-            package?.Package(ref byteBlock);
+            if (package is null)
+            {
+                this.WriteNull();
+            }
+            else
+            {
+                this.WriteNotNull();
+                package.Package(ref this);
+            }
         }
 
         #endregion Package

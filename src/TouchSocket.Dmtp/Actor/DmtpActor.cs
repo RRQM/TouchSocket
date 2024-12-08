@@ -100,16 +100,18 @@ namespace TouchSocket.Dmtp
         public ILog Logger { get; set; }
 
         /// <inheritdoc/>
-        public object SyncRoot { get; } = new object();
+        public WaitHandlePool<IWaitResult> WaitHandlePool { get; protected set; }
 
         /// <inheritdoc/>
-        public WaitHandlePool<IWaitResult> WaitHandlePool { get; protected set; }
+        public CancellationToken ClosedToken => this.m_cancellationTokenSource.Token;
 
         #endregion 属性
 
         #region 字段
         private readonly ConcurrentDictionary<int, InternalChannel> m_userChannels = new ConcurrentDictionary<int, InternalChannel>();
         private readonly AsyncResetEvent m_handshakeFinished = new AsyncResetEvent(false, false);
+        private CancellationTokenSource m_cancellationTokenSource;
+        private readonly Lock m_syncRoot = LockFactory.Create();
         #endregion
 
         /// <summary>
@@ -183,9 +185,10 @@ namespace TouchSocket.Dmtp
                                     Id = verifyResult.Id,
                                     Metadata = verifyResult.Metadata,
                                     Token = verifyResult.Token,
-                                });
+                                }).ConfigureAwait(false);
+
+                                this.m_cancellationTokenSource = new CancellationTokenSource();
                                 this.m_handshakeFinished.Set();
-                                //verifyResult.Handle = true;
                                 break;
                             }
                             else
@@ -218,7 +221,7 @@ namespace TouchSocket.Dmtp
         /// <param name="msg"></param>
         protected virtual async Task OnClosed(bool manual, string msg)
         {
-            lock (this.SyncRoot)
+            lock (this.m_syncRoot)
             {
                 if (!this.Online)
                 {
@@ -226,6 +229,7 @@ namespace TouchSocket.Dmtp
                 }
                 this.Online = false;
                 this.WaitHandlePool.CancelAll();
+                this.m_cancellationTokenSource?.Cancel();
             }
 
             if (manual || this.Closing == null)
@@ -426,7 +430,8 @@ namespace TouchSocket.Dmtp
                                 await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
                                 this.Online = true;
                                 args.Message = "Success";
-                                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args);
+                                this.m_cancellationTokenSource = new CancellationTokenSource();
+                                _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args).ConfigureAwait(false);
                             }
                             else//不允许连接
                             {
@@ -869,12 +874,11 @@ namespace TouchSocket.Dmtp
         #region 断开
 
         /// <inheritdoc/>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                lock (this.SyncRoot)
+                lock (this.m_syncRoot)
                 {
                     if (!this.Online)
                     {
@@ -948,12 +952,6 @@ namespace TouchSocket.Dmtp
             this.LastActiveTime = DateTime.UtcNow;
         }
 
-        ///// <inheritdoc/>
-        //public virtual Task SendAsync(ushort protocol, ByteBlock byteBlock)
-        //{
-        //    return this.SendAsync(protocol, byteBlock.Buffer, 0, byteBlock.Length);
-        //}
-
         #endregion 协议异步发送
 
         #region IDmtpChannel
@@ -972,53 +970,6 @@ namespace TouchSocket.Dmtp
             this.CheckChannelShouldBeReliable();
             return this.m_userChannels.ContainsKey(id);
         }
-
-        ///// <inheritdoc/>
-        //public virtual IDmtpChannel CreateChannelAsync(Metadata metadata = default)
-        //{
-        //    return this.PrivateCreateChannel(default, true, 0, metadata);
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual IDmtpChannel CreateChannel(int id, Metadata metadata = default)
-        //{
-        //    return this.PrivateCreateChannel(default, false, id, metadata);
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual IDmtpChannel CreateChannel(string targetId, int id, Metadata metadata = default)
-        //{
-        //    if (string.IsNullOrEmpty(targetId))
-        //    {
-        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-        //    }
-        //    if (this.AllowRoute && this.TryFindDmtpActor(targetId).GetFalseAwaitResult() is DmtpActor actor)
-        //    {
-        //        return actor.CreateChannel(id, metadata);
-        //    }
-        //    else
-        //    {
-        //        return this.PrivateCreateChannel(targetId, false, id, metadata);
-        //    }
-        //}
-
-        ///// <inheritdoc/>
-        //public virtual IDmtpChannel CreateChannel(string targetId, Metadata metadata = default)
-        //{
-        //    if (string.IsNullOrEmpty(targetId))
-        //    {
-        //        throw new ArgumentException($"“{nameof(targetId)}”不能为 null 或空。", nameof(targetId));
-        //    }
-
-        //    if (this.AllowRoute && this.TryFindDmtpActor(targetId).GetFalseAwaitResult() is DmtpActor actor)
-        //    {
-        //        return actor.CreateChannel(metadata);
-        //    }
-        //    else
-        //    {
-        //        return this.PrivateCreateChannel(targetId, true, 0, metadata);
-        //    }
-        //}
 
         /// <inheritdoc/>
         public virtual Task<IDmtpChannel> CreateChannelAsync(Metadata metadata = default)
@@ -1090,15 +1041,6 @@ namespace TouchSocket.Dmtp
             return this.m_userChannels.TryRemove(id, out _);
         }
 
-        //internal async Task SendChannelPackage(ChannelPackage channelPackage)
-        //{
-        //    using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
-        //    {
-        //        channelPackage.Package(byteBlock);
-        //        await this.SendAsync(P9_ChannelPackage, byteBlock);
-        //    }
-        //}
-
         internal async Task SendChannelPackageAsync(ChannelPackage channelPackage)
         {
             using (var byteBlock = new ByteBlock(channelPackage.GetLen()))
@@ -1108,87 +1050,6 @@ namespace TouchSocket.Dmtp
                 await this.SendAsync(P9_ChannelPackage, byteBlock.Memory).ConfigureAwait(false);
             }
         }
-
-        //private IDmtpChannel PrivateCreateChannel(string targetId, bool random, int id, Metadata metadata)
-        //{
-        //    this.CheckChannelShouldBeReliable();
-
-        //    if (random)
-        //    {
-        //        id = new object().GetHashCode();
-        //    }
-        //    else
-        //    {
-        //        if (this.ChannelExisted(id))
-        //        {
-        //            throw new Exception(TouchSocketDmtpStatus.ChannelExisted.GetDescription(id));
-        //        }
-        //    }
-
-        //    var byteBlock = new ByteBlock();
-        //    var waitCreateChannel = new WaitCreateChannelPackage()
-        //    {
-        //        Random = random,
-        //        ChannelId = id,
-        //        SourceId = this.Id,
-        //        TargetId = targetId,
-        //        Metadata = metadata,
-        //        Route = targetId.HasValue()
-        //    };
-        //    var waitData = this.WaitHandlePool.GetWaitData(waitCreateChannel);
-
-        //    try
-        //    {
-        //        waitCreateChannel.Package(byteBlock);
-        //        this.123Send(P7_CreateChannel_Request, byteBlock);
-        //        switch (waitData.Wait(10 * 1000))
-        //        {
-        //            case WaitDataStatus.SetRunning:
-        //                {
-        //                    var result = (WaitCreateChannelPackage)waitData.WaitResult;
-        //                    switch (result.Status.ToStatus())
-        //                    {
-        //                        case TouchSocketDmtpStatus.Success:
-        //                            {
-        //                                var channel = new InternalChannel(this, targetId, result.Metadata);
-        //                                channel.SetId(result.ChannelId);
-        //                                channel.SetUsing();
-        //                                if (this.m_userChannels.TryAdd(result.ChannelId, channel))
-        //                                {
-        //                                    return channel;
-        //                                }
-        //                                else
-        //                                {
-        //                                    throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
-        //                                }
-        //                            }
-        //                        case TouchSocketDmtpStatus.ClientNotFind:
-        //                            {
-        //                                throw new Exception(TouchSocketDmtpStatus.ClientNotFind.GetDescription(targetId));
-        //                            }
-        //                        case TouchSocketDmtpStatus.RoutingNotAllowed:
-        //                        default:
-        //                            {
-        //                                throw new Exception(result.Status.ToStatus().GetDescription(result.Message));
-        //                            }
-        //                    }
-        //                }
-        //            case WaitDataStatus.Overtime:
-        //                {
-        //                    throw new TimeoutException(TouchSocketDmtpStatus.Overtime.GetDescription());
-        //                }
-        //            default:
-        //                {
-        //                    throw new Exception(TouchSocketDmtpStatus.UnknownError.GetDescription());
-        //                }
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        this.WaitHandlePool.Destroy(waitData);
-        //        byteBlock.Dispose();
-        //    }
-        //}
 
         private async Task<IDmtpChannel> PrivateCreateChannelAsync(string targetId, bool random, int id, Metadata metadata)
         {
@@ -1281,13 +1142,13 @@ namespace TouchSocket.Dmtp
 
         private bool RequestCreateChannel(int id, string targetId, Metadata metadata)
         {
-            lock (this.SyncRoot)
+            lock (this.m_syncRoot)
             {
                 var channel = new InternalChannel(this, targetId, metadata);
                 channel.SetId(id);
                 if (this.m_userChannels.TryAdd(id, channel))
                 {
-                    Task.Factory.StartNew(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
+                    _=Task.Factory.StartNew(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
                     return true;
                 }
                 else

@@ -312,7 +312,7 @@ namespace TouchSocket.Sockets
                 if (this.Count < this.MaxCount)
                 {
                     //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                    Task.Factory.StartNew(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                    _=Task.Factory.StartNew(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                 }
                 else
                 {

@@ -250,7 +250,7 @@ namespace TouchSocket.Sockets
                     // 安全地释放数据处理适配器资源
                     this.m_dataHandlingAdapter.SafeDispose();
                     // 启动一个新的任务，用于处理TCP关闭事件
-                    Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                    _=Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

@@ -98,8 +98,7 @@ namespace TouchSocket.Core
     {
         private long m_actualSize;
         private long m_maxSize;
-        private Lock m_lock = LockFactory.Create();
-
+        private readonly Lock m_lock = LockFactory.Create();
         /// <summary>
         /// 智能数据安全队列
         /// </summary>
@@ -176,7 +175,7 @@ namespace TouchSocket.Core
         /// <param name="item"></param>
         public new void Enqueue(T item)
         {
-            lock (m_lock)
+            lock (this.m_lock)
             {
                 var free = this.m_actualSize < this.m_maxSize;
                 if (this.Free != free)

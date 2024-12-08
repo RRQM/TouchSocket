@@ -31,5 +31,10 @@ namespace TouchSocket.Modbus
         /// 错误码
         /// </summary>
         ModbusErrorCode ErrorCode { get; }
+
+        /// <summary>
+        /// 获取和当前响应对应的请求
+        /// </summary>
+        IModbusRequest Request { get;}
     }
 }

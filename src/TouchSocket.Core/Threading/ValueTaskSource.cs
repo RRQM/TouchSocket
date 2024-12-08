@@ -30,7 +30,7 @@ namespace TouchSocket.Core
         /// 表示继续操作已完成的静态操作委托。
         /// </summary>
         private static readonly Action<object> s_continuationCompleted = _ => { };
-       
+
         /// <summary>
         /// 异步操作继续操作委托。
         /// </summary>
@@ -186,15 +186,21 @@ namespace TouchSocket.Core
             return this.GetResult();
         }
 
+        
+        ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short token)
+        {
+            return this.GetStatus(token);
+        }
+
         /// <summary>
         /// 获取状态。
         /// </summary>
         /// <param name="token">令牌。</param>
         /// <returns>操作状态。</returns>
-        ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short token)
+        protected virtual ValueTaskSourceStatus GetStatus(short token)
         {
             return !ReferenceEquals(this.m_continuation, s_continuationCompleted) ? ValueTaskSourceStatus.Pending :
-                   ValueTaskSourceStatus.Succeeded;
+                       ValueTaskSourceStatus.Succeeded;
         }
 
         /// <summary>

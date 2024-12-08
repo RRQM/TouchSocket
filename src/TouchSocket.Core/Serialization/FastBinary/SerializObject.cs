@@ -117,10 +117,6 @@ namespace TouchSocket.Core
                 {
                     this.Converter = (IFastBinaryConverter)Activator.CreateInstance(attribute.Type);
                 }
-                else if (typeof(IPackage).IsAssignableFrom(type))
-                {
-                    this.Converter = new PackageFastBinaryConverter();
-                }
 
                 if (type.GetCustomAttribute(typeof(FastSerializedAttribute), false) is FastSerializedAttribute fastSerializedAttribute)
                 {

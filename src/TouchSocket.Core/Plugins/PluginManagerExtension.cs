@@ -179,6 +179,7 @@ namespace TouchSocket.Core
             pluginManager.Add(interfaceType, newFunc, action);
         }
 
+        ///<inheritdoc cref="IPluginManager.RaiseAsync(Type, IResolver, object, PluginEventArgs)"/>
         public static ValueTask<bool> RaiseAsync(this IPluginManager pluginManager, Type pluginType, object sender, PluginEventArgs e)
         {
             return pluginManager.RaiseAsync(pluginType, default, sender, e);

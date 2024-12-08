@@ -14,18 +14,18 @@ using System;
 
 namespace TouchSocket.Core
 {
-    internal class PackageFastBinaryConverter : IFastBinaryConverter
+    public sealed class PackageFastBinaryConverter<TPackage> : IFastBinaryConverter where TPackage : IPackage, new()
     {
-        public object Read<TByteBlock>(ref TByteBlock byteBlock, Type type) where TByteBlock : IByteBlock
+        object IFastBinaryConverter.Read<TByteBlock>(ref TByteBlock byteBlock, Type type)
         {
-            var ipackage = (IPackage)InstanceCreater.Create(type, default);
+            var ipackage = new TPackage();
             ipackage.Unpackage(ref byteBlock);
             return ipackage;
         }
 
-        public void Write<TByteBlock>(ref TByteBlock byteBlock, in object obj) where TByteBlock : IByteBlock
+        void IFastBinaryConverter.Write<TByteBlock>(ref TByteBlock byteBlock, in object obj)
         {
-            var ipackage = (IPackage)obj;
+            var ipackage = (TPackage)obj;
 
             ipackage.Package(ref byteBlock);
         }

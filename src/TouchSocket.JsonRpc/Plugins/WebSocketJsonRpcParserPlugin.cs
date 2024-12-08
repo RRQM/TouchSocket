@@ -74,7 +74,7 @@ namespace TouchSocket.JsonRpc
                 }
                 else
                 {
-                    await Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr, client.Client.Resolver.CreateScopedResolver()));
+                    _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr, client.Client.Resolver.CreateScopedResolver()));
                 }
             }
             else

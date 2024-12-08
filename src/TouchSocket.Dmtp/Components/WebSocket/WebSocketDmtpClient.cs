@@ -200,7 +200,7 @@ namespace TouchSocket.Dmtp
                     this.m_online = false;
                     this.m_client.SafeDispose();
                     this.m_dmtpActor.SafeDispose();
-                    Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
+                    _=Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

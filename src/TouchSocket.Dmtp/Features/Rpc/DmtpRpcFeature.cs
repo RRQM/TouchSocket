@@ -11,6 +11,8 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -28,11 +30,11 @@ namespace TouchSocket.Dmtp.Rpc
         /// 能够基于Dmtp协议，提供Rpc的功能
         /// </summary>
         /// <param name="resolver"></param>
-        public DmtpRpcFeature(IResolver resolver)
+        public DmtpRpcFeature(IServiceProvider resolver)
         {
             var rpcServerProvider = resolver.Resolve<IRpcServerProvider>();
 
-            if (rpcServerProvider!=null)
+            if (rpcServerProvider != null)
             {
                 this.RegisterServer(rpcServerProvider.GetMethods());
                 this.m_rpcServerProvider = rpcServerProvider;
@@ -40,6 +42,8 @@ namespace TouchSocket.Dmtp.Rpc
 
             this.CreateDmtpRpcActor = PrivateCreateDmtpRpcActor;
             this.SetProtocolFlags(20);
+
+            this.UseConcurrencyDispatcher();
         }
 
         /// <summary>
@@ -50,7 +54,15 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 创建DmtpRpc实例
         /// </summary>
-        public Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
+        public Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>,DmtpRpcActor> CreateDmtpRpcActor { get; set; }
+
+        /// <summary>
+        /// 获取或设置一个函数，该函数创建一个RPC调度器，用于处理IDmtpActor的RPC调用。
+        /// </summary>
+        /// <value>
+        /// 一个函数，接受一个IDmtpActor实例作为参数，并返回一个IRpcDispatcher接口，该接口泛型化于IDmtpActor和IDmtpRpcCallContext。
+        /// </value>
+        public Func<IDmtpActor, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>> CreateDispatcher { get; set; }
 
         /// <inheritdoc/>
         public ushort ReserveProtocolSize => 5;
@@ -68,9 +80,44 @@ namespace TouchSocket.Dmtp.Rpc
         /// </summary>
         /// <param name="createDmtpRpcActor"></param>
         /// <returns></returns>
-        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, DmtpRpcActor> createDmtpRpcActor)
+        public DmtpRpcFeature SetCreateDmtpRpcActor(Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>, DmtpRpcActor> createDmtpRpcActor)
         {
             this.CreateDmtpRpcActor = createDmtpRpcActor;
+            return this;
+        }
+
+
+        /// <summary>
+        /// 使用并发调度器处理请求
+        /// </summary>
+        /// <returns>返回当前实例，以支持链式调用</returns>
+        public DmtpRpcFeature UseConcurrencyDispatcher()
+        {
+            // 设置创建调度器的委托，使用支持并发的 Rpc 调度器
+            this.CreateDispatcher = (actor) => new ConcurrencyRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
+            // 支持链式调用，返回当前实例
+            return this;
+        }
+
+        /// <summary>
+        /// 使用即时RPC调度器配置RPC特性
+        /// </summary>
+        /// <returns>返回配置了即时RPC调度器的DmtpRpcFeature实例</returns>
+        public DmtpRpcFeature UseImmediateRpcDispatcher()
+        {
+            // 设置创建调度器的委托，使用ImmediateRpcDispatcher实现
+            this.CreateDispatcher = (actor) => new ImmediateRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
+            return this;
+        }
+
+        /// <summary>
+        /// 使用队列RPC调度器配置RPC特性
+        /// </summary>
+        /// <returns>返回配置了队列RPC调度器的DmtpRpcFeature实例</returns>
+        public DmtpRpcFeature UseQueueRpcDispatcher()
+        {
+            // 设置创建调度器的委托，使用QueueRpcDispatcher实现
+            this.CreateDispatcher = (actor) => new QueueRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>();
             return this;
         }
 
@@ -99,9 +146,17 @@ namespace TouchSocket.Dmtp.Rpc
             return this;
         }
 
-        private static DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider)
+        public DmtpRpcFeature ConfigureDefaultSerializationSelector(Action<DefaultSerializationSelector> selector)
         {
-            return new DmtpRpcActor(dmtpActor, rpcServerProvider, dmtpActor.Client.Resolver);
+            var serializationSelector = new DefaultSerializationSelector();
+            selector.Invoke(serializationSelector);
+            this.SerializationSelector = serializationSelector;
+            return this;
+        }
+
+        private static DmtpRpcActor PrivateCreateDmtpRpcActor(IDmtpActor dmtpActor, IRpcServerProvider rpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> dispatcher)
+        {
+            return new DmtpRpcActor(dmtpActor, rpcServerProvider, dmtpActor.Client.Resolver, dispatcher);
         }
 
         private RpcMethod GetInvokeMethod(string name)
@@ -125,7 +180,8 @@ namespace TouchSocket.Dmtp.Rpc
         /// <inheritdoc/>
         public async Task OnDmtpHandshaking(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider);
+            var dmtpRpcActor = this.CreateDmtpRpcActor(client.DmtpActor, this.m_rpcServerProvider, this.CreateDispatcher.Invoke(client.DmtpActor));
+
             dmtpRpcActor.SerializationSelector = this.SerializationSelector;
             dmtpRpcActor.GetInvokeMethod = this.GetInvokeMethod;
 

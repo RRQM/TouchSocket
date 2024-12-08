@@ -30,8 +30,9 @@ namespace TouchSocket.NamedPipe
     public abstract class NamedPipeSessionClientBase : ResolverConfigObject, INamedPipeSession, INamedPipeListenableClient, IIdClient
     {
         #region 字段
-        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
+
         private readonly Lock m_lockForAbort = LockFactory.Create();
+        private readonly SemaphoreSlim m_semaphoreSlimForSend = new SemaphoreSlim(1, 1);
         private TouchSocketConfig m_config;
         private SingleStreamDataHandlingAdapter m_dataHandlingAdapter;
         private NamedPipeListenOption m_listenOption;
@@ -225,7 +226,7 @@ namespace TouchSocket.NamedPipe
                     this.m_dataHandlingAdapter.SafeDispose();
 
                     // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
-                    Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
+                    _=Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

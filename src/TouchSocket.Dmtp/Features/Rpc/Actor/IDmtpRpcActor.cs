@@ -19,5 +19,9 @@ namespace TouchSocket.Dmtp.Rpc
     /// </summary>
     public interface IDmtpRpcActor : IRpcClient, IActor, ITargetRpcClient
     {
+        /// <summary>
+        /// Rpc调度器
+        /// </summary>
+        IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext> Dispatcher { get; }
     }
 }

@@ -19,8 +19,6 @@ namespace TouchSocket.Core
     /// </summary>
     public sealed class ConsoleLogger : LoggerBase
     {
-        private static readonly Lock m_lock = LockFactory.Create();
-
         static ConsoleLogger()
         {
             Default = new ConsoleLogger();
@@ -48,7 +46,7 @@ namespace TouchSocket.Core
         /// <param name="exception"></param>
         protected override void WriteLog(LogLevel logLevel, object source, string message, Exception exception)
         {
-            lock (m_lock)
+            lock (typeof(ConsoleLogger))
             {
                 Console.Write(DateTime.Now.ToString(this.DateTimeFormat));
                 Console.Write(" | ");

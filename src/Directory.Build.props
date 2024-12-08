@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.6</Version>
+		<Version>3.0.7</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -19,6 +19,14 @@
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(MSBuildProjectName.StartsWith(`TouchSocketPro`))'">
+		<IsPro>True</IsPro>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(MSBuildProjectName.EndsWith(`SourceGenerator`))'">
+		<IsSourceGenerator>True</IsSourceGenerator>
+	</PropertyGroup>
+
 	<Import Project="Props\*.props" />
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -30,11 +38,11 @@
 		<SignAssembly>True</SignAssembly>
 		<PackageOutputPath>$(SolutionDir)\Build\NugetPackages\Release</PackageOutputPath>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<None Include="$(SolutionDir)\Src\Resources\logo.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
-	
+
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory</DefineConstants>
 	</PropertyGroup>
@@ -66,7 +74,12 @@
 		<DefineConstants>ValueTask;Unsafe;SystemNetHttp;SystemMemory;SystemTextJson;AsyncEnumerable;DisposeAsync;DefaultInterfaceMethods</DefineConstants>
 	</PropertyGroup>
 
-<ItemGroup Condition="!$(DefineConstants.Contains('SourceGenerator'))">
+
+	<Target Name="CopyNuGetPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
+	</Target>
+
+	<ItemGroup Condition="'$(IsSourceGenerator)'!='True'">
 		<PackageReference Include="Backport.System.Threading.Lock" Version="3.0.3">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>analyzers</IncludeAssets>
@@ -75,7 +88,4 @@
 		<Using Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" Alias="Lock" Include="Backport.System.Threading.Lock" />
 		<Using Alias="LockFactory" Include="Backport.System.Threading.LockFactory" />
 	</ItemGroup>
-	<Target Name="CopyNuGetPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
-		<Copy SourceFiles="$(PackageOutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="D:\Nuget\local" />
-	</Target>
 </Project>

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Sources;
 
 namespace TouchSocket.Core
 {
@@ -40,6 +41,16 @@ namespace TouchSocket.Core
             return base.ValueWaitAsync(cancellationToken);
         }
 
+        /// <inheritdoc/>
+        protected override ValueTaskSourceStatus GetStatus(short token)
+        {
+            if (this.m_queue.IsEmpty)
+            {
+                return ValueTaskSourceStatus.Pending;
+            }
+            return ValueTaskSourceStatus.Succeeded;
+        }
+
         /// <summary>
         /// 异步向队列中添加一个元素。
         /// </summary>
@@ -59,9 +70,9 @@ namespace TouchSocket.Core
         /// <returns>队列中的一个元素。</returns>
         protected override T GetResult()
         {
-            this.m_writeLock.Release();
             if (this.m_queue.TryDequeue(out var result))
             {
+                this.m_writeLock.Release();
                 return result;
             }
 

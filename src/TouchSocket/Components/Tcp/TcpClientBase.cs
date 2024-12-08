@@ -252,7 +252,7 @@ namespace TouchSocket.Sockets
                     adapter.SafeDispose();
 
                     // 启动一个新任务来处理连接关闭事件
-                    Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                    _=Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

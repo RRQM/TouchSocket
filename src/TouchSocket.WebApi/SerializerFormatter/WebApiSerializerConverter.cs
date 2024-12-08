@@ -13,6 +13,7 @@
 using Newtonsoft.Json;
 using TouchSocket.Core;
 using TouchSocket.Http;
+using System;
 
 namespace TouchSocket.WebApi
 {
@@ -25,7 +26,7 @@ namespace TouchSocket.WebApi
         public override string Serialize(HttpContext state, in object target)
         {
             var accept = state.Request.Accept;
-            if (accept != null&& accept.Equals("text/plain"))
+            if (accept != null && accept.Equals("text/plain"))
             {
                 if (target == null)
                 {
@@ -55,5 +56,16 @@ namespace TouchSocket.WebApi
         {
             this.Add(new WebApiXmlSerializerFormatter());
         }
+
+#if SystemTextJson
+        public void AddSystemTextJsonSerializerFormatter(Action<System.Text.Json.JsonSerializerOptions> options)
+        {
+            var jsonSerializerOptions = new System.Text.Json.JsonSerializerOptions();
+            jsonSerializerOptions.TypeInfoResolverChain.Add(WebApiSystemTextJsonSerializerContext.Default);
+            options.Invoke(jsonSerializerOptions);
+
+            this.Add(new WebApiSystemTextJsonSerializerFormatter(jsonSerializerOptions));
+        }
+#endif
     }
 }

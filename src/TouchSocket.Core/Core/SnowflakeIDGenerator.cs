@@ -42,8 +42,6 @@ namespace TouchSocket.Core
 
         private long m_lastTimestamp = -1L;
 
-        private Lock m_lock = LockFactory.Create();
-
         static SnowflakeIdGenerator()
         {
         }
@@ -84,7 +82,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public long NextId()
         {
-            lock (m_lock)
+            lock (this)
             {
                 var timestamp = this.TimeGen();
                 if (this.m_lastTimestamp == timestamp)

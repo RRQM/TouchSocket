@@ -15,6 +15,9 @@ using System;
 using System.Runtime.Serialization;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
+#if SystemTextJson
+using System.Text.Json;
+#endif
 
 namespace TouchSocket.Dmtp.Rpc
 {
@@ -24,21 +27,9 @@ namespace TouchSocket.Dmtp.Rpc
     public sealed class DefaultSerializationSelector : ISerializationSelector
     {
         /// <summary>
-        /// 默认序列化选择器的构造函数。
-        /// </summary>
-        /// <remarks>
-        /// 初始化默认的序列化选择器，并设置快速序列化上下文为默认上下文。
-        /// </remarks>
-        public DefaultSerializationSelector()
-        {
-            // 初始化快速序列化上下文为默认的上下文
-            this.FastSerializerContext = FastBinaryFormatter.DefaultFastSerializerContext;
-        }
-
-        /// <summary>
         /// 快速序列化上下文属性
         /// </summary>
-        public FastSerializerContext FastSerializerContext { get; set; }
+        public FastSerializerContext FastSerializerContext { get; set; } = FastBinaryFormatter.DefaultFastSerializerContext;
 
         /// <summary>
         /// Json序列化配置
@@ -49,6 +40,24 @@ namespace TouchSocket.Dmtp.Rpc
         /// 序列化绑定器属性
         /// </summary>
         public SerializationBinder SerializationBinder { get; set; }
+
+#if SystemTextJson
+
+        private bool m_useSystemTextJson;
+        private JsonSerializerOptions m_jsonSerializerOptions;
+
+        /// <summary>
+        /// 使用System.Text.Json进行序列化
+        /// </summary>
+        /// <param name="options"></param>
+        public void UseSystemTextJson(Action<JsonSerializerOptions> options)
+        {
+            var serializerOptions = new JsonSerializerOptions();
+            options.Invoke(serializerOptions);
+            this.m_useSystemTextJson = true;
+            this.m_jsonSerializerOptions = serializerOptions;
+        }
+#endif
 
         /// <summary>
         /// 根据指定的序列化类型反序列化字节块中的数据。
@@ -81,16 +90,25 @@ namespace TouchSocket.Dmtp.Rpc
                         return SerializeConvert.BinaryDeserialize(block.AsStream(), SerializationBinder);
                     }
                 case SerializationType.Json:
-                    // 检查字节块是否为null
-                    if (byteBlock.ReadIsNull())
                     {
-                        // 如果为null，则返回该类型的默认值
-                        return parameterType.GetDefault();
+                        // 检查字节块是否为null
+                        if (byteBlock.ReadIsNull())
+                        {
+                            // 如果为null，则返回该类型的默认值
+                            return parameterType.GetDefault();
+                        }
+
+#if SystemTextJson
+                        if (this.m_useSystemTextJson)
+                        {
+                            return System.Text.Json.JsonSerializer.Deserialize(byteBlock.ReadString(), parameterType, this.m_jsonSerializerOptions);
+                        }
+#endif
+
+                        // 使用Json格式进行反序列化
+                        return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType, this.JsonSerializerSettings);
+
                     }
-
-                    // 使用Json格式进行反序列化
-                    return JsonConvert.DeserializeObject(byteBlock.ReadString(), parameterType, this.JsonSerializerSettings);
-
                 case SerializationType.Xml:
                     // 检查字节块是否为null
                     if (byteBlock.ReadIsNull())
@@ -147,6 +165,23 @@ namespace TouchSocket.Dmtp.Rpc
                     }
                 case SerializationType.Json:
                     {
+#if SystemTextJson
+                        if (this.m_useSystemTextJson)
+                        {
+                            // 参数为null时，写入空值标记
+                            if (parameter is null)
+                            {
+                                byteBlock.WriteNull();
+                            }
+                            else
+                            {
+                                // 参数不为null时，标记并转换为JSON字符串
+                                byteBlock.WriteNotNull();
+                                byteBlock.WriteString(System.Text.Json.JsonSerializer.Serialize(parameter, parameter.GetType(), this.m_jsonSerializerOptions));
+                            }
+                            return;
+                        }
+#endif
                         // 参数为null时，写入空值标记
                         if (parameter is null)
                         {
