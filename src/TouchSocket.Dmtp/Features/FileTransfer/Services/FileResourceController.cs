@@ -26,6 +26,10 @@ namespace TouchSocket.Dmtp.FileTransfer
     public class FileResourceController : DisposableObject, IFileResourceController
     {
         private readonly Timer m_timer;
+        /// <summary>
+        /// 获取默认的文件资源控制器实例。
+        /// </summary>
+        /// <value>一个预定义的<see cref="FileResourceController"/>实例，用于统一处理文件资源。</value>
         public static FileResourceController Default { get; } = new FileResourceController();
         /// <summary>
         /// 文件资源控制器
@@ -147,7 +151,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     }
                 }
             }
-           
+
             base.Dispose(disposing);
         }
     }

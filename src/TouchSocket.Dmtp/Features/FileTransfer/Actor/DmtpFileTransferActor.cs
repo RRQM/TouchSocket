@@ -364,7 +364,7 @@ namespace TouchSocket.Dmtp.FileTransfer
                     else
                     {
                         waitFinishedPackage.UnpackageBody(ref byteBlock);
-                        _ = this.RequestFinishedFileResourceInfo(waitFinishedPackage);
+                        _ = Task.Factory.StartNew(this.RequestFinishedFileResourceInfo, waitFinishedPackage);
                     }
                 }
                 catch (Exception ex)
@@ -573,7 +573,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         public IDmtpActor DmtpActor { get; }
 
         /// <inheritdoc/>
-        public IFileResourceController FileController { get;}
+        public IFileResourceController FileController { get; }
 
         /// <inheritdoc/>
         public int MaxSmallFileLength { get; set; } = 1024 * 1024;
@@ -1220,6 +1220,17 @@ namespace TouchSocket.Dmtp.FileTransfer
                     waitFinishedPackage.Message = ex.Message;
                 }
 
+                var args = new FileTransferredEventArgs(transferType, waitFinishedPackage?.Metadata, resourceInfo?.FileInfo, waitFinishedPackage.Code == ResultCode.Canceled ? Result.Canceled : resultThis)
+                {
+                    ResourcePath = resourcePath,
+                    SavePath = savePath
+                };
+
+
+                //触发事件的时机调到SendAsync前面，目的是保证调用方在收到回复时，响应方已经完成事件处理。
+                await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureAwait(false);
+
+
                 using (var byteBlock = new ByteBlock())
                 {
                     waitFinishedPackage.SwitchId();
@@ -1227,13 +1238,6 @@ namespace TouchSocket.Dmtp.FileTransfer
                     waitFinishedPackage.Package(ref block);
                     await this.DmtpActor.SendAsync(this.m_finishedFileResourceInfo_Response, byteBlock.Memory).ConfigureAwait(false);
                 }
-
-                var args = new FileTransferredEventArgs(transferType, waitFinishedPackage?.Metadata, resourceInfo?.FileInfo, waitFinishedPackage.Code == ResultCode.Canceled ? Result.Canceled : resultThis)
-                {
-                    ResourcePath = resourcePath,
-                    SavePath = savePath
-                };
-                await this.OnFileTransferred.Invoke(this.DmtpActor, args).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

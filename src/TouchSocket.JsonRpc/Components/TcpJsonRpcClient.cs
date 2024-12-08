@@ -153,7 +153,7 @@ namespace TouchSocket.JsonRpc
             {
                 if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
                 {
-                    Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString, this.Resolver.CreateScopedResolver()));
+                    _=Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString, this.Resolver.CreateScopedResolver()));
                 }
                 else
                 {

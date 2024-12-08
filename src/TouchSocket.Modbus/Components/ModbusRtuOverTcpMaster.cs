@@ -57,6 +57,7 @@ namespace TouchSocket.Modbus
                 waitDataStatus.ThrowIfNotRunning();
 
                 var response = this.m_waitData.WaitResult;
+                response.Request = request;
                 TouchSocketModbusThrowHelper.ThrowIfNotSuccess(response.ErrorCode);
                 return response;
             }

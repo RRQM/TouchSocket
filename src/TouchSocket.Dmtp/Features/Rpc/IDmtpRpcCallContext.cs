@@ -21,11 +21,6 @@ namespace TouchSocket.Dmtp.Rpc
     public interface IDmtpRpcCallContext : ICallContext
     {
         /// <summary>
-        /// DmtpRpcPackage
-        /// </summary>
-        IDmtpRpcRequestPackage DmtpRpcPackage { get; }
-
-        /// <summary>
         /// 序列化类型
         /// </summary>
         public SerializationType SerializationType { get; }

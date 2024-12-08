@@ -17,5 +17,7 @@ namespace TouchSocket.Modbus
     internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse,IRequestInfo
     {
         public ModbusErrorCode ErrorCode { get; set; }
+
+        public IModbusRequest Request { get; set; }
     }
 }

@@ -63,7 +63,7 @@ namespace TouchSocket.NamedPipe
 
             var networkMonitor = new NamedPipeMonitor(option);
 
-            Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
+            _=Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
             this.m_monitors.Add(networkMonitor);
         }
 

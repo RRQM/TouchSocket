@@ -11,6 +11,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Sockets;
@@ -50,14 +51,14 @@ namespace TouchSocket.Dmtp
         ILog Logger { get; }
 
         /// <summary>
-        ///  获取可用于同步对当前的访问对象进行锁同步。
-        /// </summary>
-        object SyncRoot { get; }
-
-        /// <summary>
         /// 等待返回池
         /// </summary>
         WaitHandlePool<IWaitResult> WaitHandlePool { get; }
+
+        /// <summary>
+        /// 关闭标记
+        /// </summary>
+        CancellationToken ClosedToken { get; }
 
         #endregion 属性
 

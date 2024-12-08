@@ -587,9 +587,9 @@ namespace TouchSocket.Core
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IResolver resolver)
+        public static T Resolve<[DynamicallyAccessedMembers(DynamicallyAccessed)] T>(this IServiceProvider resolver)
         {
-            return (T)resolver.Resolve(typeof(T));
+            return (T)resolver.GetService(typeof(T));
         }
 
         /// <summary>

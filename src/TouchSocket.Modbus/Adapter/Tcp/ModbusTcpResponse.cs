@@ -83,5 +83,7 @@ namespace TouchSocket.Modbus
 
             return false;
         }
+
+        public IModbusRequest Request { get; set; }
     }
 }

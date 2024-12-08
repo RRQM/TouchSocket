@@ -25,6 +25,9 @@ namespace TouchSocket.Core
         /// </summary>
         public bool Singleton { get; set; }
 
+        /// <summary>
+        /// 获取或设置一个值，该值指示对象是否从IoC容器中解析。
+        /// </summary>
         public bool FromIoc { get; set; }
     }
 }

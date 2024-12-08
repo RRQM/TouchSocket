@@ -287,10 +287,10 @@ namespace TouchSocket.SerialPorts
 
                     // 安全释放数据处理适配器资源
                     this.m_dataHandlingAdapter.SafeDispose();
-                    this.m_dataHandlingAdapter=default;
+                    this.m_dataHandlingAdapter = default;
 
                     // 启动一个新的任务，用于处理串口关闭事件
-                    Task.Factory.StartNew(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
+                    _ = Task.Factory.StartNew(this.PrivateOnSerialClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

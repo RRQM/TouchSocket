@@ -192,7 +192,7 @@ namespace TouchSocket.NamedPipe
                     this.m_dataHandlingAdapter.SafeDispose();
                     this.m_dataHandlingAdapter = default;
 
-                    Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
+                    _=Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }
