@@ -3,6 +3,7 @@
         "mdx"
     ],
     "cSpell.words": [
+        "appsettings",
         "Avalonia",
         "Boolens",
         "bools",
@@ -15,6 +16,7 @@
         "netstandard",
         "Newtonsoft",
         "Querys",
+        "Reenterable",
         "Responsed",
         "RRQM",
         "touchsocket",

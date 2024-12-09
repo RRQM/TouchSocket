@@ -96,7 +96,7 @@ const config = {
         },
       },
       prism: {
-        additionalLanguages: ["powershell", "csharp", "sql"],
+        additionalLanguages: ["powershell", "csharp", "sql", "json"],
       },
       navbar: {
         title: "TouchSocket",

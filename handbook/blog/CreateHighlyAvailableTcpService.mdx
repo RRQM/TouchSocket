@@ -1,0 +1,761 @@
+---
+slug: CreatehighlyavailableTcpService
+title: 创建一个高可用Tcp服务器
+authors: [rrqm]
+tags: [TcpService]
+---
+
+import CardLink from "@site/src/components/CardLink.js";
+
+## 一、引言
+
+在当今万物互联的世界中，物联网（IoT）设备的数量呈爆炸式增长，这些设备通过网络传输海量的数据。作为连接物理世界与数字世界的桥梁，一个高效、稳定的TCP服务器是确保数据可靠传输和处理的关键。然而，在实践中，很多开发者在构建TCP服务器时遇到了各种挑战，尤其是在面对高并发连接和大数据量处理的情况下。
+
+作为TouchSocket网络通信框架的作者，我经常遇到这样的问题：开发者们在实现基于TouchSocket的TCP服务器时，往往缺乏一个全局视角，未能充分认识到TCP服务器在高负载环境下的复杂性。很多时候，开发者将TCP服务器视为一个简单的类或组件，随意嵌入到项目中的任何位置，期望它能即插即用，随时创建、使用并销毁。这种做法虽然简化了初期开发，但在面对实际生产环境中成千上万的并发连接和数以百万计的数据交换时，却显得力不从心。
+
+为此，我决定撰写这篇文章，旨在为那些正在探索如何构建高效、稳定TCP服务器的开发者提供一份详尽的指南。本文不仅会介绍TCP服务器的基本原理，还会分享一些最佳实践，希望通过这篇博客，能够引导开发者建立正确的TCP服务器开发理念，掌握必要的技术手段，从而更加自信地迎接物联网时代带来的机遇与挑战。同时，也希望借此机会，为社区贡献一份力量，共同推动网络编程技术的发展。
+
+## 二、技术细节
+
+### 2.1 技术框架
+
+使用微软提供的通用主机进行构建，支持：
+
+- 跨平台（windows、linux、macos等）
+- Window服务
+- IIS托管
+- Options选项配置
+- 插件化加载
+- IOC容器
+- Native AOT
+
+### 2.2 框架版本
+
+在框架方面支持：
+
+- Net Framework 4.6.2以上
+- 以及.NET 6以上
+
+### 2.3 实现功能
+
+- 接收、发送数据
+- 实现消息单次响应、广播
+
+{/* truncate */}
+
+## 三、实践应用
+
+本文示例使用Net8.0构建，基本上实现了插件化、高并发、高可靠、高可用等特性。
+
+也支持完成的Native AOT。
+
+## 四、创建项目
+
+首先，我们使用`辅助角色服务`创建一个基于的.NET 8.0项目。项目名称为`HighlyAvailableTcpService.App`，作为主程序。
+
+如果想要应用于.Net Framework 4.6.2，也可以先按net8创建。只不过要**勾选不使用顶级语句**和**取消勾选AOT**。
+
+<img src={require('@site/static/img/blog/CreatehighlyavailableTcpService-1.png').default} />
+
+创建完成后，如果想要切换.Net Framework 4.6.2，则可以双击项目。
+
+修改：`<TargetFramework>net8.0</TargetFramework>`为`<TargetFramework>net462</TargetFramework>`。
+
+
+然后使用nuget安装`TouchSocket.Hosting`。如果对nuget的使用不熟悉，可以参考[入门指南](https://touchsocket.net/docs/current/startguide)。
+
+主项目创建完成后，还需要再新建3个类库项目，以分层项目使用。
+
+首先，新建类项目，名称为`HighlyAvailableTcpService.Core`。
+
+<img src={require('@site/static/img/blog/CreatehighlyavailableTcpService-2.png').default} />
+
+同理，如果要对.Net Framework 4.6.2进行操作，则依然需要修改：`<TargetFramework>net8.0</TargetFramework>`为`<TargetFramework>net462</TargetFramework>`。
+
+接下来，再新建一个插件项目，名称为`HighlyAvailableTcpService.Plugins`和一个适配器项目，名称为`HighlyAvailableTcpService.DataHandlingAdapters`。
+
+完成以上4个项目后，得先确定项目引用顺序。一般来说：
+
+`HighlyAvailableTcpService.App`引用：
+
+- HighlyAvailableTcpService.Core
+- HighlyAvailableTcpService.Plugins
+- HighlyAvailableTcpService.DataHandlingAdapters
+
+`HighlyAvailableTcpService.Plugins`引用：
+
+- HighlyAvailableTcpService.Core
+- HighlyAvailableTcpService.DataHandlingAdapters
+
+`HighlyAvailableTcpService.DataHandlingAdapters`引用：
+
+- HighlyAvailableTcpService.Core
+
+
+完成以上步骤后，就可以开始编写代码了。
+
+## 五、完善HighlyAvailableTcpService.Core项目
+
+HighlyAvailableTcpService.Core库中，我们主要完成如下工作：
+
+- 创建自定义Tcp服务器及接口
+- 定义其他通用接口
+- 定义Options配置类
+
+### 5.1 创建自定义Tcp服务器及接口
+
+首先，新建一个接口，名为`IHighlyAvailableSessionClient`，继承`ITcpSessionClient`。主要规范定义客户端连接的行为。
+
+接口中我们定义了`SetHighlyAvailableAdapter`方法，用于直接设置数据处理适配器。详情见[适配器介绍与使用](https://touchsocket.net/docs/current/adapterdescription)
+
+```csharp showLineNumbers
+public interface IHighlyAvailableSessionClient : ITcpSessionClient
+{
+    void SetHighlyAvailableAdapter(SingleStreamDataHandlingAdapter adapter);
+}
+```
+
+接下来，我们定义一个类，名为`HighlyAvailableSessionClient`，继承`TcpSessionClient`，并且实现`IHighlyAvailableSessionClient`接口。
+
+在实现`SetHighlyAvailableAdapter`方法中，我们直接调用了`base.SetAdapter`方法，将数据处理适配器设置到当前会话中。
+
+```csharp showLineNumbers
+public class HighlyAvailableSessionClient : TcpSessionClient, IHighlyAvailableSessionClient
+{
+    public void SetHighlyAvailableAdapter(SingleStreamDataHandlingAdapter adapter)
+    {
+        base.SetAdapter(adapter);
+    }
+}
+```
+
+接下来，我们再定义一个接口，名为`IHighlyAvailableTcpService`，继承`ITcpService<HighlyAvailableSessionClient>`。
+
+其目的是统一项目接口。这样后续如果需要新增功能的话，就直接可以在接口中新增实现即可。
+
+```csharp showLineNumbers
+public interface IHighlyAvailableTcpService : ITcpService<HighlyAvailableSessionClient>
+{
+}
+```
+
+接下来，我们定义一个类，名为`HighlyAvailableTcpService`，继承`TcpService<HighlyAvailableSessionClient>`，并且实现`IHighlyAvailableTcpService`接口。
+
+其中`NewClient`方法是我们重写的，用于创建客户端实例。
+
+```csharp  showLineNumbers
+internal class HighlyAvailableTcpService : TcpService<HighlyAvailableSessionClient>, IHighlyAvailableTcpService
+{
+    protected override HighlyAvailableSessionClient NewClient()
+    {
+        return new HighlyAvailableSessionClient();
+    }
+}
+```
+
+### 5.2 定义Options配置类
+
+首先，我们定义一个类，名为`HighlyAvailableTcpServiceOption`，主要用来映射Options配置文件。
+
+```csharp showLineNumbers
+public class HighlyAvailableTcpServiceOption
+{
+    /// <summary>
+    /// 名称
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// 监听地址
+    /// </summary>
+    public string? Ip { get; set; }
+
+    /// <summary>
+    /// 监听端口
+    /// </summary>
+    public int Port { get; set; }
+
+    /// <summary>
+    /// Tcp处理并发连接时最大半连接队列
+    /// </summary>
+    public int Backlog { get; set; } = 100;
+
+    /// <summary>
+    /// 用于Ssl加密的证书
+    /// </summary>
+    public string? SslPath { get; set; }
+    public string? SslKey { get; set; }
+}
+```
+
+接下来，我们定义一个类，名为`HighlyAvailableTcpServiceOptions`，主要用来映射`HighlyAvailableTcpServiceOption`集合配置。因为我们预想的服务器可以多监听多个端口，所以这里我们定义了一个集合。
+
+下面是考虑了Native AOT 模式下的兼容性。如果你不想使用，可以删除`ValidateHighlyAvailableTcpServiceOptions`。
+
+```csharp showLineNumbers
+public class HighlyAvailableTcpServiceOptions
+{
+    [Required]
+    public HighlyAvailableTcpServiceOption[]? Options { get; set; }
+}
+
+[OptionsValidator]
+public partial class ValidateHighlyAvailableTcpServiceOptions : IValidateOptions<HighlyAvailableTcpServiceOptions>
+{
+}
+```
+
+### 5.3 定义其他扩展类
+
+细心的同学应该已经注意到了，HighlyAvailableTcpService类我们定义的是internal的，所以外部项目无法访问。实际上你也可以把它定义为public的，这样外部项目也可以访问。
+
+但是，一般的情况下，我们不希望外部项目直接访问HighlyAvailableTcpService类。
+
+所以，我们需要创建一个扩展类。来注册HighlyAvailableTcpService服务和Options配置。
+
+```csharp showLineNumbers
+public static class IServiceCollectionExtension
+{
+    public static IServiceCollection AddHighlyAvailableTcpService(this IServiceCollection services, Action<TouchSocketConfig> config)
+    {
+        services.AddTcpService<IHighlyAvailableTcpService, HighlyAvailableTcpService>(config);
+        services.AddOptions<HighlyAvailableTcpServiceOptions>();
+
+        return services;
+    }
+}
+```
+
+### 5.4 主项目中应用
+
+在完成5.1到5.3步骤后，HighlyAvailableTcpService.Core库，已经可以正常使用了。
+
+这时候，我们就可以在主项目中应用HighlyAvailableTcpService.Core库了。
+
+首先，我们先需要匹配Options配置文件。
+
+```csharp showLineNumbers
+builder.Services.Configure<HighlyAvailableTcpServiceOptions>(builder.Configuration.GetSection(nameof(HighlyAvailableTcpServiceOptions)));
+```
+
+对应的配置文件如下：
+
+```json showLineNumbers title="appsettings.Development.json"
+{
+  ...
+  "HighlyAvailableTcpServiceOptions": {
+    "Options": [
+      {
+        "Name": "HighlyAvailableTcpService",
+        "Port": 7789,
+        "Ip": "127.0.0.1",
+        "Backlog": 100,
+        "SslPath": "",
+        "SslKey": ""
+      }
+    ]
+  }
+}
+
+```
+
+:::info 备注
+
+配置文件有两个`json`文件，一个是生产环境配置文件（`appsettings.json`），一个则是开发环境配置文件（`appsettings.Development.json`）。一般我们在开发是只配置开发配置文件即可。等发布正式运行时，再参考配置生产环境配置文件。
+
+:::  
+
+然后需要添加HighlyAvailableTcpService服务。
+
+在添加服务时，我们除了添加了健康清理插件。没有再做其他配置。尤其是对于监听端口的配置，我们并没有做。
+
+我们的主要思路是，利用[插件机制](https://touchsocket.net/docs/current/pluginsmanager) 和[动态监听](https://touchsocket.net/docs/current/tcpservice) 机制，来完成我们的需求。这个在`HighlyAvailableTcpService.Plugins`项目中会介绍。
+
+```csharp showLineNumbers
+builder.Services.AddHighlyAvailableTcpService(config =>
+{
+    config.ConfigurePlugins(a =>
+    {
+        //使用健康清理插件
+        a.UseCheckClear();
+    });
+});
+```
+
+完成以上步骤，我们可以试着启动项目，看看是否能正常启动。一般来说，我们会在控制台中看到类似以下的日志：
+
+```bash
+info: TouchSocket.Hosting.AspNetCoreLogger[0]
+      TouchSocket.Sockets.CheckClearPlugin`1[TouchSocket.Sockets.ITcpSession] begin polling
+info: TouchSocket.Hosting.Sockets.HostService.ServiceHost[0]
+      服务器已启动。
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\OpenCode\PrivateTouchSocketPro\examples-pro\HighlyAvailableTcpService\HighlyAvailableTcpService.App
+```
+
+## 六、完善HighlyAvailableTcpService.DataHandlingAdapters项目
+
+HighlyAvailableTcpService.DataHandlingAdapters项目，主要用来处理数据。
+
+例如一些工业仪表的采集数据。或者读取一些传感器的数据。关于适配器的详细介绍，可以参考[适配器文档](https://touchsocket.net/docs/current/adapterdescription)。
+
+我们在本示例中，只演示简单的数据处理。规则如下：
+
+- 接收字符串数据，然后遇到`\r\n`就进行数据处理。
+
+### 6.1 解析数据
+
+首先，新建一个类，名为`HighlyAvailableRequestInfo`，实现`IBetweenAndRequestInfo`接口，主要用来承载解析后的数据。
+
+```csharp showLineNumbers
+public class HighlyAvailableRequestInfo : IBetweenAndRequestInfo
+{
+    public string? Data { get; private set; }
+
+    public void OnParsingBody(ReadOnlySpan<byte> body)
+    {
+        this.Data = body.ToString(Encoding.UTF8);
+    }
+
+    public bool OnParsingEndCode(ReadOnlySpan<byte> endCode)
+    {
+        return true;//该返回值决定，是否执行Receive
+    }
+
+    public bool OnParsingStartCode(ReadOnlySpan<byte> startCode)
+    {
+        return true;
+    }
+}
+```
+
+接下来，我们定义一个类，名为`HighlyAvailableDataAdapter`，继承自`CustomBetweenAndDataHandlingAdapter<HighlyAvailableRequestInfo>`，主要用来解析数据。
+
+```csharp  showLineNumbers
+public class HighlyAvailableDataAdapter : CustomBetweenAndDataHandlingAdapter<HighlyAvailableRequestInfo>
+{
+    public override byte[] StartCode => [];
+
+    public override byte[] EndCode => Encoding.UTF8.GetBytes("\r\n");
+
+    protected override HighlyAvailableRequestInfo GetInstance()
+    {
+        return new HighlyAvailableRequestInfo();
+    }
+}
+```
+
+:::tip 提示
+
+关于`CustomBetweenAndDataHandlingAdapter`的详细介绍，可以参考[文档](https://touchsocket.net/docs/current/custombetweenanddatahandlingadapter)。
+
+:::  
+
+### 6.2 应用适配器
+
+适配器可以直接在`TouchSocketConfig`中直接进行全局配置，例如：
+
+```csharp {3} showLineNumbers
+builder.Services.AddHighlyAvailableTcpService(config =>
+{
+    config.SetTcpDataHandlingAdapter(()=>new HighlyAvailableDataAdapter());
+    ...
+});
+```
+
+但是，我们在示例中，已经在`IHighlyAvailableSessionClient`接口中，预留了`SetHighlyAvailableAdapter`方法。我们的思路是可以为每个会话单独设置。或者每一类会话类型进行单独设置。
+
+所以这里我们也不用全局配置，而是计划在`HighlyAvailableTcpService.Plugins`项目中，通过插件的方式来完成。
+
+
+## 七、完善HighlyAvailableTcpService.Plugins项目
+
+HighlyAvailableTcpService.Plugins项目，主要用来完成我们的业务逻辑。
+
+### 7.1 监听配置插件
+
+我们在上述步骤中，把一些监听配置的需求计划放在了插件中，所以我们先来实现配置插件。
+
+监听配置插件，主要用来完成监听配置的初始化。
+
+一般的，当服务器启动时，会触发`IServerStartedPlugin`插件。详情：[Tcp服务器](https://touchsocket.net/docs/current/tcpservice)。
+
+然后，此时，我们可以利用动态监听的机制来完成需求。
+
+首先，新建一个类，名为`TcpListenPlugin`，继承`PluginBase`，然后实现`IServerStartedPlugin`接口。
+
+```csharp showLineNumbers
+internal class TcpListenPlugin : PluginBase, IServerStartedPlugin
+{
+    private readonly ILogger<TcpListenPlugin> m_logger;
+
+    public TcpListenPlugin(IOptions<HighlyAvailableTcpServiceOptions> ioption, ILogger<TcpListenPlugin> logger)
+    {
+        this.Options = ioption.Value.Options ?? [];
+        this.m_logger = logger;
+    }
+
+    [NotNull]
+    public HighlyAvailableTcpServiceOption[]? Options { get; }
+
+    public async Task OnServerStarted(IServiceBase sender, ServiceStateEventArgs e)
+    {
+        if (e.ServerState == ServerState.Running && sender is ITcpServiceBase tcpServiceBase)
+        {
+            var count = 0;
+            foreach (var item in this.Options)
+            {
+                try
+                {
+                    var listenOption = new TcpListenOption()
+                    {
+                        IpHost = new IPHost($"{item.Ip}:{item.Port}"),
+                        Backlog = item.Backlog,
+                        Name = item.Name,
+                        ServiceSslOption = GetServiceSslOption(item.SslPath,item.SslKey)
+                    };
+                    tcpServiceBase.AddListen(listenOption);
+                    count++;
+                    this.m_logger.LogInformation("监听成功,Name={Name},IpHost={Ip}:{Port}", item.Name, item.Ip, item.Port);
+                }
+                catch (Exception ex)
+                {
+                    this.m_logger.LogError(ex, "添加监听失败");
+                }
+
+            }
+
+            this.m_logger.LogInformation("共添加{Count}个监听", count);
+        }
+        await e.InvokeNext();
+    }
+
+    private static ServiceSslOption? GetServiceSslOption(string? sslPath, string? sslKey)
+    {
+        if (string.IsNullOrEmpty(sslPath) || string.IsNullOrEmpty(sslKey))
+        {
+            return null;
+        }
+
+        return new ServiceSslOption() { Certificate=new X509Certificate2(sslPath,sslKey) };
+    }
+}
+```
+
+### 7.2 适配器插件
+
+在上述，我们希望能对每个会话连接，或者每一类会话类型进行单独配置。
+
+所以，我们用插件来实现适配器的设置。
+
+首先，新建一个类，名为`AdapterPlugin`，继承`PluginBase`，然后实现`ITcpConnectingPlugin`接口。
+
+我们的思路很简单，是在Tcp会话刚刚连接时，就设置适配器为我们自定义的`HighlyAvailableDataAdapter`。
+
+实际上，这里我们可以判断更多信息，来绝对设置什么适配器。
+
+```csharp showLineNumbers
+internal class AdapterPlugin : PluginBase, ITcpConnectingPlugin
+{
+    public async Task OnTcpConnecting(ITcpSession client, ConnectingEventArgs e)
+    {
+        if (client is IHighlyAvailableSessionClient highlyAvailableSessionClient)
+        {
+            highlyAvailableSessionClient.SetHighlyAvailableAdapter(new HighlyAvailableDataAdapter());
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+### 7.3 日志插件
+
+我们在任何程序开发中，日志都是重要的，它不仅能帮助程序员调试，还能帮助用户理解程序运行情况。
+
+所以，我们可以定义下列插件，来完善日志记录：
+
+```csharp showLineNumbers
+[PluginOption(FromIoc = true)]
+internal class LogPlugin : PluginBase, ITcpConnectedPlugin, ITcpClosedPlugin, ITcpReceivedPlugin
+{
+    private readonly ILogger<LogPlugin> m_logger;
+
+    public LogPlugin(ILogger<LogPlugin> logger)
+    {
+        this.m_logger = logger;
+    }
+
+    public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
+    {
+        this.m_logger.LogInformation("[{IP}:{Port}]=>断开", client.IP, client.Port);
+        await e.InvokeNext();
+    }
+
+    public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
+    {
+        this.m_logger.LogInformation("[{IP}:{Port}]=>连接", client.IP, client.Port);
+        await e.InvokeNext();
+    }
+
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        var dateTimeStart = DateTime.UtcNow;
+        await e.InvokeNext();
+        var dateTimeEnd = DateTime.UtcNow;
+        this.m_logger.LogInformation("[{IP}:{Port}]=>处理数据，耗时：{Time}", client.IP, client.Port, dateTimeEnd - dateTimeStart);
+    }
+}
+```
+
+:::tip 提示
+
+这里细心的同学可能发现了，和前面的插件不同的是，我们在这里使用了`PluginOption`特性。并且，我们使用了`FromIoc`属性。
+
+`PluginOption`特性，可以指定是否使用依赖注入，以及从依赖注入中获取实例。可以实现来自`Scoped`的依赖注入。从而让插件被每个会话客户端单独实例化。
+
+:::
+
+定义好了日志插件，实际上还需要定义日志组件，不过我们一般都会使用现成的。这里我们就使用`NLog`来实现。
+
+首先，nuget 安装`NLog.Extensions.Logging`。因为我们要使用注入的形式。
+
+然后配置日志即可。
+
+```csharp showLineNumbers
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddNLog();
+```
+
+同时，我们也可以在`TouchSocket`中，配置日志组件。
+
+```csharp {4} showLineNumbers
+builder.Services.ConfigureContainer(a =>
+{
+    ...
+    a.AddAspNetCoreLogger();
+});
+```
+
+这样，我们就做好了一个日志组件。
+
+
+### 7.4 数据处理插件
+
+数据处理插件，就是正式可用于处理实际数据业务数据的插件。
+
+按照我们设计插件的初衷，每个插件中只处理一种业务逻辑，无法处理的业务逻辑，可以交给下一个插件处理。
+
+这样就能保证插件之间的解耦合。插件代码也可以很轻松的实现复用。
+
+例如：
+
+我们想实现，当服务器收到“hello”字符串时，会给当前会话客户端回复个“hi”。
+
+那么们可以使用下面逻辑实现：
+
+```csharp {13-26} showLineNumbers
+[PluginOption(FromIoc = true)]
+internal class HelloPlugin : PluginBase, ITcpReceivedPlugin
+{
+    private readonly ILogger<HelloPlugin> m_logger;
+
+    public HelloPlugin(ILogger<HelloPlugin> logger)
+    {
+        this.m_logger = logger;
+    }
+
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        if (e.RequestInfo is HighlyAvailableRequestInfo highlyAvailableRequestInfo)
+        {
+            if (highlyAvailableRequestInfo.Data == "hello")
+            {
+                if (client is IHighlyAvailableSessionClient highlyAvailableSessionClient)
+                {
+                    await Task.Delay(1000);//模拟处理时间
+                    await highlyAvailableSessionClient.SendAsync("hi");
+                }
+
+                this.m_logger.LogInformation("已响应");
+                return;
+            }
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+插件的代码非常简单，我们只需要判断是否是`HighlyAvailableRequestInfo`类型，并且数据是“hello”，就回复“hi”。
+
+然后，我们通过`IHighlyAvailableSessionClient`接口，获取到当前会话客户端，然后调用`SendAsync`方法，发送数据。
+
+当然，这里我们使用了`Task.Delay`方法，模拟处理时间。
+
+### 7.5 使用插件
+
+插件的注册，非常简单，只需要在`TouchSocketConfig`中，配置添加插件即可。
+
+例如：
+
+```csharp showLineNumbers
+config.ConfigurePlugins(a =>
+{
+    a.Add<TcpListenPlugin>();
+
+    a.Add<AdapterPlugin>();
+    a.Add<LogPlugin>();//日志插件放在处理数据的插件前面
+
+    //下面是处理数据的插件
+    a.Add<HelloPlugin>();
+   
+    ...
+});
+```
+
+但是，按照目前我们的分层架构，我们认为，插件应该仅为当前层业务逻辑，不应该为整个系统做全局配置。所以细心的同学或许已经发现，我们在前面声明插件时，都是使用的internal访问修饰符。
+
+所以，我们就必须再新建一个扩展类，来暴露给外部使用。
+
+```csharp showLineNumbers
+public static class PluginManagerExtension
+{
+    public static void UseHighlyAvailableTcpServicePlugins(this IPluginManager manager)
+    {
+        //服务器监听插件
+        manager.Add<TcpListenPlugin>();
+
+        manager.Add<AdapterPlugin>();
+        manager.Add<LogPlugin>();//日志插件放在处理数据的插件前面
+
+        //下面是处理数据的插件
+        manager.Add<HelloPlugin>();
+    }
+}
+```
+
+调用使用
+
+```csharp {6} showLineNumbers
+config.ConfigurePlugins(a =>
+{
+    ...
+    //添加当前组件中的插件
+    a.UseHighlyAvailableTcpServicePlugins();
+});
+```
+
+## 八、最佳实践
+
+我们在实际开发中，不断的积累经验，为大家提供下面最佳实践，希望能帮助大家解决问题。
+
+### 8.1 暂存数据到会话
+
+有时候，我们希望对于某个会话客户端，暂存一些数据，例如：用户信息、会话状态等。
+
+那么我们可以使用插件和扩展属性来实现。
+
+例如，假如对于当前适配器，我们希望在收到“Login”字符串时，暂存后面的数据为用户信息：
+
+那么首先可以定义一个扩展属性扩展类。类中定义一个扩展属性UserNameProperty，然后定义两个方法，分别获取和设置用户名。其中设置用户名的方法我们可以使用internal。这样我们就可以仅在我们定义的插件中，设置用户名了。
+
+```csharp showLineNumbers
+ public static class IHighlyAvailableSessionClientExtension
+{
+    private readonly static DependencyProperty<string> UserNameProperty = new DependencyProperty<string>(nameof(UserNameProperty),string.Empty);
+
+    public static string GetUserName(this IHighlyAvailableSessionClient client)
+    {
+        return client.GetValue(UserNameProperty);
+    }
+
+    internal static void SetUserName(this IHighlyAvailableSessionClient client, string value)
+    {
+        client.SetValue(UserNameProperty, value);
+    }
+}
+```
+
+然后，定义一个插件，用来处理登录请求。
+
+```csharp showLineNumbers
+internal class LoginPlugin : PluginBase, ITcpReceivedPlugin
+{
+    private readonly ILogger<LoginPlugin> m_logger;
+
+    public LoginPlugin(ILogger<LoginPlugin> logger)
+    {
+        this.m_logger = logger;
+    }
+
+    public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
+    {
+        if (e.RequestInfo is HighlyAvailableRequestInfo highlyAvailableRequestInfo)
+        {
+            var data = highlyAvailableRequestInfo.Data;
+            if (data.HasValue())
+            {
+                if (data.StartsWith("Login"))
+                {
+                    var userName = data.Replace("Login", string.Empty);
+                    if (client is IHighlyAvailableSessionClient highlyAvailableSessionClient)
+                    {
+                        this.m_logger.LogInformation($"{client} 登录成功，用户名为：{userName}");
+                        highlyAvailableSessionClient.SetUserName(userName);//设置用户名
+                        return;
+                    }
+                }
+            }
+            
+        }
+        await e.InvokeNext();
+    }
+}
+```
+
+
+在实际开发时，使用插件的方式，可以很好的实现解耦合，代码的复用，也方便我们进行插件的升级。
+
+甚至，如果你不追求AOT的话，可以实现插件动态加载。
+
+同时，我们的插件都是支持IOC容器的，细心的同学或许已发现，插件中的`ILogger`接口，就是通过依赖注入的方式，获取到。
+
+所以这很容易和一些现有的ORM框架进行集成。
+
+总之，使用插件的方式，是非常好的处理数据的方式。
+
+## 九、总结
+
+本文详细介绍了如何使用TouchSocket网络通信框架构建一个高效、稳定的TCP服务器。通过采用插件化、高并发、高可靠的设计理念，我们不仅实现了基本的数据接收与发送功能，还增强了系统的灵活性和可维护性。具体来说：
+
+- **技术框架**：使用了微软提供的通用主机，支持跨平台、Windows服务、IIS托管等多种部署方式。
+- **项目结构**：通过分层设计，将核心功能、插件管理和数据处理适配器分别封装在不同的项目中，确保了各部分职责清晰、互不干扰。
+- **插件机制**：利用插件机制实现了监听配置、适配器设置、日志记录和数据处理等功能，使得系统具备高度的可扩展性和灵活性。
+- **配置管理**：通过Options配置类和配置文件，实现了对服务器各项参数的灵活配置，便于在不同环境下快速调整。
+
+通过本文的示例，读者可以掌握构建高可用TCP服务器的关键技术和最佳实践，为应对物联网时代的挑战做好准备。希望本文能够为开发者提供有价值的参考，共同推动网络编程技术的发展。
+
+
+## 十、参考资料
+
+1. [TouchSocket官网](https://touchsocket.net/)
+2. [.NET 通用主机](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)
+
+## 七、本文示例Demo
+
+:::info 信息
+
+本文所涉及所有技术均是开源的，大家可以直接按照教程搭建项目。
+
+但是长期以往，我们对于Pro用户的福利实在是遗憾。所以成品示例，我们仅为企业版Pro用户提供。
+
+我们也欢迎大家通过Pro的[购买](https://touchsocket.net/docs/current/enterprise)，来支持我们和我们开源的项目。
+
+:::  
+
+<CardLink link="https://github.com/RRQM/PrivateTouchSocketPro/tree/main/examples-pro/HighlyAvailableTcpService" isPro="true"/>
+
