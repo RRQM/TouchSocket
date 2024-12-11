@@ -649,11 +649,77 @@ config.ConfigurePlugins(a =>
 });
 ```
 
-## 八、最佳实践
+## 八、Native AOT
+
+如果你的项目是`.Net 8.0`以上版本，则可以使用`Native AOT`进行优化。
+
+只需要在项目文件中，添加`<PublishAot>true</PublishAot>`即可。
+
+然后右击项目，选择“发布”，然后新建一个发布配置。最终配置如下：
+
+<img src={require('@site/static/img/blog/CreatehighlyavailableTcpService-3.png').default} />
+
+然后发布即可。
+
+发布后结果：
+
+发布后可执行文件仅6.6Mb。
+
+<img src={require('@site/static/img/blog/CreatehighlyavailableTcpService-4.png').default} />
+
+:::tip 提示
+
+目前`TouchSocket`组件，已完整支持`Native AOT`。但是在开发时，还应该考虑其他所需组件是否支持。
+
+:::  
+
+## 九、设为Windows服务
+
+### 9.1 创建Windows服务
+
+通用主机模式，可以很方便的将程序设置为Windows服务。详细介绍，请参考：[使用BackgroundService创建 Windows 服务](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/windows-service)。
+
+首先，nuget 安装`Microsoft.Extensions.Hosting.WindowsServices`。
+
+然后配置服务：
+
+```csharp showLineNumbers
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = "HighlyAvailableTcpService";
+});
+```
+
+### 9.2 安装、启动服务
+
+```bash showLineNumbers title="cmd"
+cd ..
+sc create HighlyAvailableTcpService binPath= %~dp0DocsWorkerService.exe start= auto 
+sc description HighlyAvailableTcpService "HighlyAvailableTcpService"
+Net Start HighlyAvailableTcpService
+pause
+```
+
+### 9.3 卸载、停止服务
+
+```bash showLineNumbers title="cmd"
+net stop HighlyAvailableTcpService
+sc delete HighlyAvailableTcpService
+pause
+```
+
+
+## 十、最佳实践
 
 我们在实际开发中，不断的积累经验，为大家提供下面最佳实践，希望能帮助大家解决问题。
 
-### 8.1 暂存数据到会话
+### 10.1 日志设置
+
+上述示例中，我们使用了`NLog`作为日志组件。并且使用了`AddAspNetCoreLogger`把`TouchSocket`日志也输出到`NLog`中。
+
+但是一般来说，对于通信组件，我们并不关心一些不影响使用的日志。例如，在回复数据时，突然连接断开的了，这时候，业务逻辑需要做一些异常处理，但是对于通信组件来说，这些日志其实没有太大意义。但是`TouchSocket`组件，依然会把这些日志进行输出，而没有内部直接吞没，这样设计是为了让调用者能了解到最真实的网络环境。但是对于日志记录，我们可以考虑输出到其他目录中。
+
+### 10.2 暂存数据到会话
 
 有时候，我们希望对于某个会话客户端，暂存一些数据，例如：用户信息、会话状态等。
 
@@ -728,7 +794,7 @@ internal class LoginPlugin : PluginBase, ITcpReceivedPlugin
 
 总之，使用插件的方式，是非常好的处理数据的方式。
 
-## 九、总结
+## 十一、总结
 
 本文详细介绍了如何使用TouchSocket网络通信框架构建一个高效、稳定的TCP服务器。通过采用插件化、高并发、高可靠的设计理念，我们不仅实现了基本的数据接收与发送功能，还增强了系统的灵活性和可维护性。具体来说：
 
@@ -740,12 +806,12 @@ internal class LoginPlugin : PluginBase, ITcpReceivedPlugin
 通过本文的示例，读者可以掌握构建高可用TCP服务器的关键技术和最佳实践，为应对物联网时代的挑战做好准备。希望本文能够为开发者提供有价值的参考，共同推动网络编程技术的发展。
 
 
-## 十、参考资料
+## 十二、参考资料
 
 1. [TouchSocket官网](https://touchsocket.net/)
 2. [.NET 通用主机](https://learn.microsoft.com/zh-cn/dotnet/core/extensions/generic-host)
 
-## 七、本文示例Demo
+## 十三、本文示例Demo
 
 :::info 信息
 
