@@ -14,21 +14,22 @@ namespace WebApiConsoleApp
         {
             var builder = Host.CreateApplicationBuilder(args);
 
+            builder.Services.ConfigureContainer(a => 
+            {
+                a.AddRpcStore(store =>
+                {
+                    store.RegisterServer<ApiServer>();//注册服务
+                });
+
+                a.AddAspNetCoreLogger();
+            });
+
             builder.Services.AddServiceHostedService<IHttpService, HttpService>(config =>
             {
                 config.SetListenIPHosts(7789)
-                .ConfigureContainer(a =>
-                {
-                    a.AddRpcStore(store =>
-                    {
-                        store.RegisterServer<ApiServer>();//注册服务
-                    });
-
-                    a.AddConsoleLogger();
-                })
                 .ConfigurePlugins(a =>
                 {
-                    //a.UseCheckClear();
+                    a.UseCheckClear();
 
                     a.UseWebApi()
                     .ConfigureConverter(converter =>
