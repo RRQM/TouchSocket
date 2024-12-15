@@ -105,10 +105,16 @@ namespace TouchSocket.Dmtp.AspNetCore
         public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <inheritdoc/>
-        public Task CloseAsync(string msg)
+        public async Task CloseAsync(string msg)
         {
-            this.Abort(true, msg);
-            return EasyTask.CompletedTask;
+            if (this.m_dmtpActor != null)
+            {
+                await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
+            }
+            if (this.m_client!= null)
+            {
+                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure,msg, CancellationToken.None).ConfigureAwait(false);
+            }
         }
 
         /// <inheritdoc/>
@@ -188,6 +194,17 @@ namespace TouchSocket.Dmtp.AspNetCore
                     {
                         var result = await this.m_client.ReceiveAsync(byteBlock.TotalMemory, default).ConfigureAwait(false);
 
+                        if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            try
+                            {
+                                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                            }
+                            break;
+                        }
                         if (result.Count == 0)
                         {
                             break;
@@ -199,7 +216,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                     }
                 }
 
-                this.Abort(false, "远程终端主动关闭");
+                this.Abort(false, TouchSocketResource.RemoteDisconnects);
             }
             catch (Exception ex)
             {

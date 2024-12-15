@@ -22,40 +22,39 @@ namespace TouchSocket.SerialPorts
     /// <summary>
     /// Serial核心
     /// </summary>
-    internal class SerialCore : SerialPort, IValueTaskSource<SerialOperationResult>
+    internal class SerialCore : ValueTaskSource<SerialOperationResult>
     {
-        private static readonly Action<object> s_continuationCompleted = _ => { };
-
-        private volatile Action<object> m_continuation;
+        private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
+        private readonly SerialPort m_serialPort;
+        private ByteBlock m_byteBlock;
         private SerialData m_eventType;
+        private int m_receiveBufferSize = 1024 * 10;
+
+        private ValueCounter m_receiveCounter;
+
+        private int m_sendBufferSize = 1024 * 10;
+
+        private ValueCounter m_sendCounter;
 
         /// <summary>
         /// Serial核心
         /// </summary>
-        public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits) :
-            base(portName, baudRate, parity, dataBits, stopBits)
+        public SerialCore(string portName, int baudRate, Parity parity, int dataBits, StopBits stopBits)
         {
             this.m_receiveCounter = new ValueCounter
             {
                 Period = TimeSpan.FromSeconds(1),
                 OnPeriod = this.OnReceivePeriod
             };
- 
+
             this.m_sendCounter = new ValueCounter
             {
                 Period = TimeSpan.FromSeconds(1),
                 OnPeriod = this.OnSendPeriod
             };
 
-            this.DataReceived += this.SerialCore_DataReceived;
-        }
-
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~SerialCore()
-        {
-            this.Dispose(false);
+            m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
+            m_serialPort.DataReceived += this.SerialCore_DataReceived;
         }
 
         /// <summary>
@@ -88,38 +87,7 @@ namespace TouchSocket.SerialPorts
         /// </summary>
         public ValueCounter SendCounter => this.m_sendCounter;
 
-        public SerialOperationResult GetResult(short token)
-        {
-            this.m_continuation = null;
-
-            var length = Math.Min(this.BytesToRead, this.m_byteBlock.Capacity);
-            var bytes = this.m_byteBlock.Memory.GetArray();
-            var r = this.Read(bytes.Array, 0, length);
-
-            return new SerialOperationResult(r, this.m_eventType);
-        }
-
-        public ValueTaskSourceStatus GetStatus(short token)
-        {
-            return !ReferenceEquals(this.m_continuation, s_continuationCompleted) ? ValueTaskSourceStatus.Pending : this.IsOpen ? ValueTaskSourceStatus.Succeeded : ValueTaskSourceStatus.Faulted;
-        }
-
-        public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
-        {
-            this.m_userToken = state;
-            var prevContinuation = Interlocked.CompareExchange(ref this.m_continuation, continuation, null);
-            if (ReferenceEquals(prevContinuation, s_continuationCompleted))
-            {
-                this.m_userToken = null;
-
-                void Run(object o)
-                {
-                    continuation.Invoke(o);
-                }
-
-                ThreadPool.UnsafeQueueUserWorkItem(Run, state);
-            }
-        }
+        public SerialPort SerialPort => this.m_serialPort;
 
         public ValueTask<SerialOperationResult> ReceiveAsync(ByteBlock byteBlock)
         {
@@ -128,37 +96,13 @@ namespace TouchSocket.SerialPorts
             return new ValueTask<SerialOperationResult>(this, 0);
         }
 
-        /// <summary>
-        /// 发送数据。
-        /// <para>
-        /// 内部会根据是否启用Ssl，进行直接发送，还是Ssl发送。
-        /// </para>
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="length"></param>
-        public virtual void Send(byte[] buffer, int offset, int length)
-        {
-            this.m_semaphoreForSend.Wait();
-            try
-            {
-                this.Write(buffer, offset, length);
-                this.m_sendCounter.Increment(length);
-            }
-            finally
-            {
-                this.m_semaphoreForSend.Release();
-            }
-        }
-
-        
         public virtual async Task SendAsync(ReadOnlyMemory<byte> memory)
         {
             await this.m_semaphoreForSend.WaitAsync().ConfigureAwait(false);
             try
             {
                 var segment = memory.GetArray();
-                this.Write(segment.Array, segment.Offset, segment.Count);
+                m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
 
                 this.m_sendCounter.Increment(memory.Length);
             }
@@ -166,6 +110,44 @@ namespace TouchSocket.SerialPorts
             {
                 this.m_semaphoreForSend.Release();
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+            if (disposing)
+            {
+                try
+                {
+                    this.m_serialPort.Close();
+                    this.m_serialPort.Dispose();
+                }
+                catch
+                {
+                }
+            }
+            base.Dispose(disposing);
+        }
+
+        protected override SerialOperationResult GetResult()
+        {
+            var length = Math.Min(this.m_serialPort.BytesToRead, this.m_byteBlock.Capacity);
+            var bytes = this.m_byteBlock.Memory.GetArray();
+            var r = this.m_serialPort.Read(bytes.Array, 0, length);
+
+            return new SerialOperationResult(r, this.m_eventType);
+        }
+
+        protected override void Scheduler(Action<object> action, object state)
+        {
+            void Run(object o)
+            {
+                action.Invoke(o);
+            }
+            ThreadPool.UnsafeQueueUserWorkItem(Run, state);
         }
 
         private void OnReceivePeriod(long value)
@@ -180,38 +162,13 @@ namespace TouchSocket.SerialPorts
 
         private void SerialCore_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            var c = this.m_continuation;
-
-            if (c != null || (c = Interlocked.CompareExchange(ref this.m_continuation, s_continuationCompleted, null)) != null)
-            {
-                var continuationState = this.m_userToken;
-                this.m_userToken = null;
-
-                this.m_continuation = s_continuationCompleted; // in case someone's polling IsCompleted
-                this.m_eventType = e.EventType;
-                void Run(object o)
-                {
-                    c.Invoke(o);
-                }
-                ThreadPool.UnsafeQueueUserWorkItem(Run, continuationState);
-            }
+            this.m_eventType = e.EventType;
+            base.Complete(true);
         }
 
         private void SetBuffer(ByteBlock byteBlock)
         {
             this.m_byteBlock = byteBlock;
         }
-
-        #region 字段
-
-        private readonly SemaphoreSlim m_semaphoreForSend = new SemaphoreSlim(1, 1);
-        private ByteBlock m_byteBlock;
-        private int m_receiveBufferSize = 1024 * 10;
-        private ValueCounter m_receiveCounter;
-        private int m_sendBufferSize = 1024 * 10;
-        private ValueCounter m_sendCounter;
-        private object m_userToken;
-
-        #endregion 字段
     }
 }

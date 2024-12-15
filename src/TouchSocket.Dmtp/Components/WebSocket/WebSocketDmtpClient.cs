@@ -97,7 +97,7 @@ namespace TouchSocket.Dmtp
                     this.m_dmtpAdapter = new DmtpAdapter();
                     this.m_dmtpAdapter.Config(this.Config);
 
-                    this.m_receiveTask =Task.Factory.StartNew(this.BeginReceive).Unwrap();
+                    this.m_receiveTask = Task.Factory.StartNew(this.BeginReceive).Unwrap();
                     this.m_receiveTask.FireAndForget();
                 }
 
@@ -145,16 +145,17 @@ namespace TouchSocket.Dmtp
         /// <returns>异步操作的任务</returns>
         public async Task CloseAsync(string msg)
         {
-            // 如果当前的IDmtpActor实例不为空，则发送关闭消息
             if (this.m_dmtpActor != null)
             {
+                // 向IDmtpActor对象发送关闭消息
+                await this.m_dmtpActor.SendCloseAsync(msg).ConfigureAwait(false);
+                // 关闭IDmtpActor对象
                 await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
             }
-            // 如果当前状态为在线，则触发关闭事件并执行中止操作
-            if (this.m_online)
+
+            if (this.m_client != null)
             {
-                await this.OnDmtpClosing(new ClosingEventArgs(msg));
-                this.Abort(true, msg);
+                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -200,7 +201,7 @@ namespace TouchSocket.Dmtp
                     this.m_online = false;
                     this.m_client.SafeDispose();
                     this.m_dmtpActor.SafeDispose();
-                    _=Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
+                    _ = Task.Factory.StartNew(this.PrivateOnDmtpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }
@@ -238,7 +239,7 @@ namespace TouchSocket.Dmtp
                                 {
                                     if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))
                                     {
-                                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin),this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                                        await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, this, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
                                     }
                                 }
                             }

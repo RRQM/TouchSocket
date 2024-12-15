@@ -416,7 +416,7 @@ namespace TouchSocket.Sockets
 
                 this.m_lastReceivedTime = DateTime.UtcNow;
 
-                if (await this.ReceivingData(byteBlock).ConfigureAwait(false))
+                if (await this.OnUdpReceiving(new ByteBlockEventArgs(byteBlock)).ConfigureAwait(false))
                 {
                     return;
                 }
@@ -440,15 +440,14 @@ namespace TouchSocket.Sockets
         /// 当收到原始数据时，处理数据。
         /// 该方法提供了一个机制，通过该机制可以对原始数据进行自定义处理，而不必修改具体的传输逻辑。
         /// </summary>
-        /// <param name="byteBlock">包含收到的原始数据的字节块。</param>
+        /// <param name="e">包含收到的原始数据的字节块。</param>
         /// <returns>
         /// 如果返回<see langword="true"/>，则表示数据已被当前处理者完全处理，且不会再向下传递至其他处理者或消费者。
         /// 返回<see langword="false"/>表示当前处理者未处理数据，数据可能会被传递给下一个处理者或消费者。
         /// </returns>
-        protected virtual ValueTask<bool> ReceivingData(ByteBlock byteBlock)
+        protected virtual ValueTask<bool> OnUdpReceiving(ByteBlockEventArgs e)
         {
-            // 默认实现选择不处理数据，允许数据继续传递到下一个处理者或消费者。
-            return EasyValueTask.FromResult(false);
+            return this.PluginManager.RaiseAsync(typeof(IUdpReceivingPlugin), this.Resolver, this, e);
         }
 
         private async Task PrivateHandleReceivedData(EndPoint remoteEndPoint, ByteBlock byteBlock, IRequestInfo requestInfo)
