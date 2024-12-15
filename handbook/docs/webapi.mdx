@@ -3,6 +3,8 @@ id: webapi
 title: 产品及架构介绍
 ---
 
+import CardLink from "@site/src/components/CardLink.js";
+
 ### 定义
 
 命名空间：TouchSocket.WebApi <br/>
@@ -664,5 +666,81 @@ public partial class ApiServer : RpcServer
 
 :::  
 
-[本文示例Demo](https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebApi)
+## 十二、AOT相关
+
+`WebApi`组件目前已**完全支持**使用AOT进行编译。具体使用步骤如下：
+
+首先，使用通用主机模型进行新建项目。详情查看[通用主机模型](./generichost.mdx)。
+
+然后基本代码如下：
+
+```csharp showLineNumbers
+var builder = Host.CreateApplicationBuilder(args);
+
+builder.Services.ConfigureContainer(a => 
+{
+    a.AddRpcStore(store =>
+    {
+        store.RegisterServer<ApiServer>();//注册服务
+    });
+
+    a.AddAspNetCoreLogger();
+});
+
+builder.Services.AddServiceHostedService<IHttpService, HttpService>(config =>
+{
+    config.SetListenIPHosts(7789)
+    .ConfigurePlugins(a =>
+    {
+        a.UseCheckClear();
+
+        a.UseWebApi();
+    });
+});
+
+var host = builder.Build();
+host.Run();
+```
+
+然后需要解决支持Aot的序列化问题。目前仅支持`System.Text.Json`。所以需要新建一个序列化上下文。然后把需要序列化的类型添加到`JsonSerializable`中。
+
+```csharp showLineNumbers
+[JsonSerializable(typeof(MyClass))]//实际类型1
+[JsonSerializable(typeof(MySum))]//实际类型2
+internal partial class AppJsonSerializerContext : JsonSerializerContext
+{
+
+}
+```
+
+:::info 信息
+
+`JsonSerializable`中，可以添加多个类型。具体要添加哪些类型要看你服务中端需要序列化的类型。**一般来说需要包含服务方法中的所有参数类型和返回值类型**。
+
+:::  
+
+然后使用序列化上下文。
+
+```csharp {5-12} showLineNumbers
+.ConfigurePlugins(a =>
+{
+    ...
+    a.UseWebApi()
+    .ConfigureConverter(converter =>
+    {
+        converter.Clear();
+        converter.AddSystemTextJsonSerializerFormatter(options => 
+        {
+            options.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+        });
+    });
+})
+```
+
+
+
+## 十三、本文示例Demo
+
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples/WebApi"/>
+<CardLink link="https://gitee.com/RRQM_Home/TouchSocket/tree/master/examples-aot/WebApi/WebApiConsoleApp"/>
 
