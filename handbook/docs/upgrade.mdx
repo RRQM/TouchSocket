@@ -19,6 +19,37 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.8
+
+**更新日期：** 2024.12.15
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### 【TouchSocket.Sockets】
+
+- &nbsp;<Tag>修复</Tag> `IPHost`类，在`Mono`运行时会异常的bug。 [#IBAG51](https://gitee.com/RRQM_Home/TouchSocket/issues/IBAG51)
+- &nbsp;<Tag>调整</Tag> `UdpSessionBase`类调整`ReceivingData`为`OnUdpReceiving`。 
+- &nbsp;<Tag>新增</Tag> `Udp`组件，新增`IUdpReceivingPlugin`插件。[#IBB1F6](https://gitee.com/RRQM_Home/TouchSocket/issues/IBB1F6)
+
+#### 【TouchSocket.AspNetCore】
+
+- &nbsp;<Tag>修复</Tag> 当使用基于`WebSocket`协议，搭建`DmtpServer`服务时 使用`app.UseOutputCache()`缓存中间件导致连接失败后，重连无响应。[#IBAPTQ](https://gitee.com/RRQM_Home/TouchSocket/issues/IBAPTQ)
+
+#### 【TouchSocket.Dmtp】
+
+- &nbsp;<Tag>修复</Tag> `DmtpActor`类，在连接成功时，`Handshaking`事件参数`e.Message`无法传回到请求端。
+
+#### 【TouchSocket.SerialPorts】
+
+- &nbsp;<Tag>修复</Tag> `SerialPortClient`类，在关闭或者释放时，资源无法释放的bug。 [#IBB8FD](https://gitee.com/RRQM_Home/TouchSocket/issues/IBB8FD)
+
+***
+
 ## v3.0.7
 
 **更新日期：** 2024.12.8
