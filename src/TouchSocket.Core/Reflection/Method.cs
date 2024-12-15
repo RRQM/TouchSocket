@@ -16,6 +16,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -68,19 +69,19 @@ namespace TouchSocket.Core
                 switch (dynamicBuilderType.Value)
                 {
                     case DynamicBuilderType.IL:
-                        if (!CreateInvokeFromIL())
+                        if (!this.CreateInvokeFromIL())
                         {
                             ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
                         }
                         break;
                     case DynamicBuilderType.Expression:
-                        if (!CreateInvokeFromExpression())
+                        if (!this.CreateInvokeFromExpression())
                         {
                             ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
                         }
                         break;
                     case DynamicBuilderType.SourceGenerator:
-                        if (!CreateInvokeFromSG())
+                        if (!this.CreateInvokeFromSG())
                         {
                             ThrowHelper.ThrowNotSupportedException($"当前环境不支持{dynamicBuilderType.Value}");
                         }
@@ -89,9 +90,10 @@ namespace TouchSocket.Core
             }
             else
             {
+                //RuntimeFeature
                 this.CreateInvokeFromSG();
-                this.CreateInvokeFromIL();
                 this.CreateInvokeFromExpression();
+                this.CreateInvokeFromIL();
             }
 
             if (this.m_invoker == null)

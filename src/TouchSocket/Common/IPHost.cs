@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using TouchSocket.Core;
@@ -101,7 +102,13 @@ namespace TouchSocket.Sockets
 
         private static int GetPortFromUrl(string url)
         {
+#if NETFRAMEWORK
+            //解决mono下的问题
+            //https://gitee.com/RRQM_Home/TouchSocket/issues/IBAG51
+            var span = new ReadOnlySpan<char>(url.ToArray());
+#else
             var span = url.AsSpan();
+#endif
 
             // 查找最后一个冒号的位置
             var colonIndex = span.LastIndexOf(':');
@@ -134,7 +141,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-               return -1;
+                return -1;
             }
         }
 

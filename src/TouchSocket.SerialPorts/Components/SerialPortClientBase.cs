@@ -181,7 +181,7 @@ namespace TouchSocket.SerialPorts
         public DateTime LastSentTime => this.m_serialCore.SendCounter.LastIncrement;
 
         /// <inheritdoc/>
-        public bool Online => this.m_online && this.m_serialCore != null && this.m_serialCore.IsOpen;
+        public bool Online => this.m_online && this.m_serialCore != null && this.m_serialCore.SerialPort.IsOpen;
 
         /// <inheritdoc/>
         public Protocol Protocol { get; protected set; }
@@ -190,7 +190,7 @@ namespace TouchSocket.SerialPorts
         protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
 
         /// <inheritdoc/>
-        protected SerialPort ProtectedMainSerialPort => this.m_serialCore;
+        protected SerialPort ProtectedMainSerialPort => this.m_serialCore.SerialPort;
 
         #endregion 属性
 
@@ -202,24 +202,16 @@ namespace TouchSocket.SerialPorts
             if (this.m_online)
             {
                 await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
-                lock (this.m_lockForAbort)
-                {
-                    this.m_serialCore.TryClose();
-                    this.Abort(true, msg);
-                }
+                this.Abort(true, msg);
             }
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            lock (this.m_semaphoreForConnect)
+            if (disposing)
             {
-                if (this.m_online)
-                {
-                    this.PrivateOnClosing(new ClosingEventArgs($"{nameof(Dispose)}主动断开")).GetFalseAwaitResult();
-                    this.Abort(true, $"{nameof(Dispose)}主动断开");
-                }
+                this.Abort(true, $"{nameof(Dispose)}主动断开");
             }
             base.Dispose(disposing);
         }
@@ -248,7 +240,7 @@ namespace TouchSocket.SerialPorts
                 var serialCore = CreateSerial(serialPortOption);
                 await this.PrivateOnSerialConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
 
-                serialCore.Open();
+                serialCore.SerialPort.Open();
 
                 this.m_online = true;
 
@@ -329,13 +321,10 @@ namespace TouchSocket.SerialPorts
 
         private static SerialCore CreateSerial(SerialPortOption option)
         {
-            var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits)
-            {
-                Handshake = option.Handshake,
-                RtsEnable = option.RtsEnable,
-                DtrEnable = option.DtrEnable
-            };
-
+            var serialPort = new SerialCore(option.PortName, option.BaudRate, option.Parity, option.DataBits, option.StopBits);
+            serialPort.SerialPort.Handshake = option.Handshake;
+            serialPort.SerialPort.RtsEnable = option.RtsEnable;
+            serialPort.SerialPort.DtrEnable = option.DtrEnable;
             return serialPort;
         }
 
@@ -359,6 +348,7 @@ namespace TouchSocket.SerialPorts
                 catch (Exception ex)
                 {
                     this.Abort(false, ex.Message);
+                    break;
                 }
             }
         }

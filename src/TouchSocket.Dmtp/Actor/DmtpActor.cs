@@ -429,14 +429,14 @@ namespace TouchSocket.Dmtp
                                 waitVerify.Status = 1;
                                 await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
                                 this.Online = true;
-                                args.Message = "Success";
+                                args.Message ??= TouchSocketCoreResource.OperationSuccessful;
                                 this.m_cancellationTokenSource = new CancellationTokenSource();
                                 _ = Task.Factory.StartNew(this.PrivateOnHandshaked, args).ConfigureAwait(false);
                             }
                             else//不允许连接
                             {
                                 waitVerify.Status = 2;
-                                waitVerify.Message = args.Message;
+                                waitVerify.Message ??= "Fail";
                                 await this.SendJsonObjectAsync(P2_Handshake_Response, waitVerify).ConfigureAwait(false);
                                 await this.OnClosed(false, args.Message).ConfigureAwait(false);
                             }
@@ -1148,7 +1148,7 @@ namespace TouchSocket.Dmtp
                 channel.SetId(id);
                 if (this.m_userChannels.TryAdd(id, channel))
                 {
-                    _=Task.Factory.StartNew(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
+                    _ = Task.Factory.StartNew(this.PrivateOnCreatedChannel, new CreateChannelEventArgs(id, metadata));
                     return true;
                 }
                 else
