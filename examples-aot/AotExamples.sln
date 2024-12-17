@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tcp", "Tcp", "{F95587FB-433
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcpConsoleApp", "Tcp\TcpConsoleApp\TcpConsoleApp.csproj", "{4E9607D7-48F7-426E-89D4-2BA0B4FAFAB4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rpc", "Rpc", "{835AD087-6FDC-47DC-B5C4-0850F91B577D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DmtpRpc", "DmtpRpc", "{835AD087-6FDC-47DC-B5C4-0850F91B577D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DmtpRpcConsoleApp", "Rpc\DmtpRpcConsoleApp\DmtpRpcConsoleApp.csproj", "{5F28E40F-FCAF-4BDA-A0C1-854057E7422B}"
 EndProject
@@ -22,6 +22,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApiConsoleApp", "WebApi\WebApiConsoleApp\WebApiConsoleApp.csproj", "{E4E96E75-C1C2-47C7-B48D-9E2C647D6E09}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginConsoleApp", "Core\PluginConsoleApp\PluginConsoleApp.csproj", "{F2D96B93-23AD-41CC-9E3F-B22B0AA94A77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JsonRpc", "JsonRpc", "{DD02CC5F-83CB-402D-AB75-A2B79BE4A271}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonRpcAotConsoleApp", "JsonRpc\JsonRpcAotConsoleApp\JsonRpcAotConsoleApp.csproj", "{81745F03-A519-48D1-956D-EF941097FA74}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +57,10 @@ Global
 		{F2D96B93-23AD-41CC-9E3F-B22B0AA94A77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2D96B93-23AD-41CC-9E3F-B22B0AA94A77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2D96B93-23AD-41CC-9E3F-B22B0AA94A77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81745F03-A519-48D1-956D-EF941097FA74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81745F03-A519-48D1-956D-EF941097FA74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81745F03-A519-48D1-956D-EF941097FA74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81745F03-A519-48D1-956D-EF941097FA74}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,6 +72,7 @@ Global
 		{8BF2B719-0B9C-43F4-9EA5-32A19DBC9998} = {1C5264FB-E4D3-474E-BD8B-BC59F2786C07}
 		{E4E96E75-C1C2-47C7-B48D-9E2C647D6E09} = {75D559D7-F52D-4065-8072-3970811D04CE}
 		{F2D96B93-23AD-41CC-9E3F-B22B0AA94A77} = {1C5264FB-E4D3-474E-BD8B-BC59F2786C07}
+		{81745F03-A519-48D1-956D-EF941097FA74} = {DD02CC5F-83CB-402D-AB75-A2B79BE4A271}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D63AFF97-3A68-43E1-92DA-A19E6889439C}
