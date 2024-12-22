@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
 using System.Diagnostics;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
@@ -52,10 +52,7 @@ namespace TouchSocket.Http
         /// <param name="value">值</param>
         public HttpMethod(string value)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new ArgumentNullException();
-            }
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(value));
             this.m_value = value.ToUpper();
         }
 
@@ -66,15 +63,6 @@ namespace TouchSocket.Http
         public override string ToString()
         {
             return this.m_value;
-        }
-
-        /// <summary>
-        /// 获取哈希码
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return this.m_value.GetHashCode();
         }
     }
 }

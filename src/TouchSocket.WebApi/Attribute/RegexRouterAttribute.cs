@@ -10,28 +10,21 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System.Threading.Tasks;
-using TouchSocket.Sockets;
+using System;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.WebApi
 {
-    internal class TcpServerJsonRpcClient : JsonRpcActionClientBase
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+    public sealed class RegexRouterAttribute : Attribute
     {
-        private readonly ITcpSessionClient m_client;
+        /// <summary>
+        /// 路由模板。
+        /// </summary>
+        public string RegexTemple { get; }
 
-        public TcpServerJsonRpcClient(ITcpSessionClient sessionClient)
+        public RegexRouterAttribute(string regexTemple)
         {
-            this.m_client = sessionClient;
-        }
-
-        //protected override void SendJsonString(string jsonString)
-        //{
-        //    this.m_client.Send(jsonString);
-        //}
-
-        protected override Task SendJsonStringAsync(string jsonString)
-        {
-            return this.m_client.SendAsync(jsonString);
+            this.RegexTemple = regexTemple;
         }
     }
 }

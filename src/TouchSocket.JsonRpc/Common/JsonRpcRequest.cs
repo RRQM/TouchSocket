@@ -10,37 +10,16 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-
 namespace TouchSocket.JsonRpc
 {
-    /// <summary>
-    /// JsonRpcRequest
-    /// </summary>
-    public class JsonRpcRequest
+    internal class InternalJsonRpcRequest
     {
-        /// <summary>
-        /// jsonrpc
-        /// </summary>
-        [JsonProperty("jsonrpc")]
+        public int? Id { get; set; }
         public string Jsonrpc { get; set; } = "2.0";
 
-        /// <summary>
-        /// method
-        /// </summary>
-        [JsonProperty("method")]
         public string Method { get; set; }
 
-        /// <summary>
-        /// @params
-        /// </summary>
-        [JsonProperty("params")]
-        public object Params { get; set; }
-
-        /// <summary>
-        /// id
-        /// </summary>
-        [JsonProperty("id")]
-        public int? Id { get; set; }
+        public object ParamsObject { get; set; }
+        public string[] ParamsStrings { get; set; }
     }
 }

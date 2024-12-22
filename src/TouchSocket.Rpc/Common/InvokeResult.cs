@@ -10,12 +10,14 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+
 namespace TouchSocket.Rpc
 {
     /// <summary>
     /// 调用结果
     /// </summary>
-    public struct InvokeResult
+    public sealed class InvokeResult
     {
         /// <summary>
         /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
@@ -28,9 +30,16 @@ namespace TouchSocket.Rpc
         }
 
         /// <summary>
-        /// 状态
+        /// 初始化 <see cref="InvokeResult"/> 结构的新实例。
         /// </summary>
-        public InvokeStatus Status { get; set; }
+        public InvokeResult()
+        {
+        }
+
+        /// <summary>
+        /// 异常
+        /// </summary>
+        public Exception Exception { get; set; }
 
         /// <summary>
         /// 信息
@@ -41,5 +50,10 @@ namespace TouchSocket.Rpc
         /// 执行返回值结果
         /// </summary>
         public object Result { get; set; }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public InvokeStatus Status { get; set; }
     }
 }

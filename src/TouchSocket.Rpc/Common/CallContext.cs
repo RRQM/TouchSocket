@@ -30,18 +30,28 @@ namespace TouchSocket.Rpc
         /// <param name="caller">调用者对象，表示触发RPC方法的实例。</param>
         /// <param name="rpcMethod">RpcMethod对象，表示将要调用的RPC方法。</param>
         /// <param name="resolver">IResolver接口的实现，用于解析依赖注入。</param>
-        public CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
+        protected CallContext(object caller, RpcMethod rpcMethod, IResolver resolver)
         {
             this.Caller = caller;
             this.RpcMethod = rpcMethod;
             this.Resolver = resolver;
         }
 
+        /// <summary>
+        /// 初始化CallContext对象。
+        /// </summary>
+        protected CallContext()
+        {
+        }
+
         /// <inheritdoc/>
         public object Caller { get; protected set; }
 
         /// <inheritdoc/>
-        public IResolver Resolver { get; }
+        public object[] Parameters { get; protected set; }
+
+        /// <inheritdoc/>
+        public IResolver Resolver { get; protected set; }
 
         /// <inheritdoc/>
         public RpcMethod RpcMethod { get; protected set; }

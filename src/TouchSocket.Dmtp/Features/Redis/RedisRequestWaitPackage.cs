@@ -27,12 +27,12 @@ namespace TouchSocket.Dmtp.Redis
             byteBlock.WriteByte((byte)this.packageType);
             if (this.timeSpan.HasValue)
             {
-                byteBlock.WriteByte((byte)1);
+                byteBlock.WriteByte(1);
                 byteBlock.WriteTimeSpan(this.timeSpan.Value);
             }
             else
             {
-                byteBlock.WriteByte((byte)0);
+                byteBlock.WriteByte(0);
             }
         }
 

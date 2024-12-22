@@ -59,6 +59,9 @@ namespace TouchSocket.Modbus
                 var newCrc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(pos, byteBlock.Position - pos));
                 var crc = byteBlock.ReadUInt16(EndianType.Big);
 
+                //下面crc验证失败时，不再抛出错误，而是返回错误码。
+                //https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2
+
                 if (crc == newCrc)
                 {
                     request = new ModbusRtuResponse()
@@ -72,7 +75,14 @@ namespace TouchSocket.Modbus
                 }
                 else
                 {
-                    throw new System.Exception("crc验证失败");
+                    request = new ModbusRtuResponse()
+                    {
+                        SlaveId = slaveId,
+                        ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                        FunctionCode = functionCode,
+                    };
+
+                    return FilterResult.Success;
                 }
             }
             else
@@ -104,7 +114,14 @@ namespace TouchSocket.Modbus
                     }
                     else
                     {
-                        throw new System.Exception("crc验证失败");
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
                     }
                 }
                 else if (functionCode == FunctionCode.WriteSingleCoil || functionCode == FunctionCode.WriteSingleRegister)
@@ -133,7 +150,15 @@ namespace TouchSocket.Modbus
                     }
                     else
                     {
-                        throw new System.Exception("crc验证失败");
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            StartingAddress = startingAddress,
+                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
                     }
 
                     //this.m_headerLength = byteBlock.Position - pos;
@@ -168,7 +193,16 @@ namespace TouchSocket.Modbus
                     }
                     else
                     {
-                        throw new System.Exception("crc验证失败");
+                        request = new ModbusRtuResponse()
+                        {
+                            SlaveId = slaveId,
+                            FunctionCode = functionCode,
+                            StartingAddress = startingAddress,
+                            Quantity = quantity,
+                            ErrorCode = ModbusErrorCode.ResponseMemoryVerificationError,
+                            Data = data,
+                        };
+                        return FilterResult.Success;
                     }
                 }
                 else

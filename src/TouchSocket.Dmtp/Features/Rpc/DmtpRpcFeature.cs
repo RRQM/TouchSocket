@@ -11,8 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -54,7 +52,7 @@ namespace TouchSocket.Dmtp.Rpc
         /// <summary>
         /// 创建DmtpRpc实例
         /// </summary>
-        public Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>,DmtpRpcActor> CreateDmtpRpcActor { get; set; }
+        public Func<IDmtpActor, IRpcServerProvider, IRpcDispatcher<IDmtpActor, IDmtpRpcCallContext>, DmtpRpcActor> CreateDmtpRpcActor { get; set; }
 
         /// <summary>
         /// 获取或设置一个函数，该函数创建一个RPC调度器，用于处理IDmtpActor的RPC调用。

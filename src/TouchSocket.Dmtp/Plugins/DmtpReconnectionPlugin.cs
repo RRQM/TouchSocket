@@ -13,17 +13,16 @@
 using System;
 using System.Threading.Tasks;
 using TouchSocket.Sockets;
-using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp
 {
-    internal class DmtpReconnectionPlugin<TClient> :ReconnectionPlugin<TClient>, IDmtpClosedPlugin where TClient :IDmtpClient
+    internal class DmtpReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, IDmtpClosedPlugin where TClient : IDmtpClient
     {
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }
 
         public DmtpReconnectionPlugin()
         {
-            this.ActionForCheck = OnActionForCheck;
+            this.ActionForCheck = this.OnActionForCheck;
         }
 
         private async Task<bool?> OnActionForCheck(TClient client, int i)

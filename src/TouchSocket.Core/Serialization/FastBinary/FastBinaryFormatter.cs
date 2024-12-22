@@ -10,9 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Serialization;
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -346,7 +344,7 @@ namespace TouchSocket.Core
                                     }
                                     else
                                     {
-                                        SerializeMutilDimensionalArray(ref byteBlock,array, serializerContext);
+                                        SerializeMutilDimensionalArray(ref byteBlock, array, serializerContext);
                                     }
                                     break;
 
@@ -713,14 +711,14 @@ namespace TouchSocket.Core
                         else
                         {
                             var rankArray = new int[rank];
-                            for (int i = 0; i < rank; i++)
+                            for (var i = 0; i < rank; i++)
                             {
                                 rankArray[i] = byteBlock.ReadInt32();
                             }
 
                             //var paramLen = (int)byteBlock.ReadUInt32();
                             var array = Array.CreateInstance(serializeObject.ArgTypes[0], rankArray);
-                            
+
                             //for (int i = 0; i < rank; i++)
                             //{
                             //    var obj = Deserialize(serializeObject.ArgTypes[0], ref byteBlock, serializerContext);
@@ -728,11 +726,11 @@ namespace TouchSocket.Core
                             //}
 
                             var indices = new int[rank];
-                            FillArrayRecursive(serializeObject,ref byteBlock,serializerContext,array,rankArray, indices,0);
+                            FillArrayRecursive(serializeObject, ref byteBlock, serializerContext, array, rankArray, indices, 0);
 
                             instance = array;
                         }
-                        
+
                         break;
                     }
                 case InstanceType.Dictionary:
@@ -755,8 +753,8 @@ namespace TouchSocket.Core
             return instance;
         }
 
-       private static void FillArrayRecursive<TByteBlock>(SerializObject serializObject,ref TByteBlock byteBlock,FastSerializerContext serializerContext, Array array, int[] rankArray, int[] indices, int dimension)
-            where TByteBlock:IByteBlock
+        private static void FillArrayRecursive<TByteBlock>(SerializObject serializObject, ref TByteBlock byteBlock, FastSerializerContext serializerContext, Array array, int[] rankArray, int[] indices, int dimension)
+             where TByteBlock : IByteBlock
         {
             if (dimension == rankArray.Length)
             {
@@ -769,7 +767,7 @@ namespace TouchSocket.Core
             for (var i = 0; i < rankArray[dimension]; i++)
             {
                 indices[dimension] = i;
-                FillArrayRecursive(serializObject,ref byteBlock,serializerContext,array,rankArray, indices, dimension + 1);
+                FillArrayRecursive(serializObject, ref byteBlock, serializerContext, array, rankArray, indices, dimension + 1);
             }
         }
 

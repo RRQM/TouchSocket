@@ -20,31 +20,52 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public abstract class JsonRpcCallContextBase : CallContext, IJsonRpcCallContext
     {
-        /// <summary>
-        ///  JsonRpc调用上下文
-        /// </summary>
-        /// <param name="caller"></param>
-        /// <param name="jsonString"></param>
-        /// <param name="resolver"></param>
-        public JsonRpcCallContextBase(object caller, string jsonString,IResolver resolver):
-            base(caller, null, resolver)
+        private IScopedResolver m_scopedResolver;
+
+        public int? JsonRpcId { get; private set; }
+
+        ///// <summary>
+        ///// JsonRpc上下文
+        ///// </summary>
+        //public InternalJsonRpcRequest JsonRpcContext { get; internal set; }
+
+        internal void SetJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
         {
-            this.JsonString = jsonString;
+            this.JsonRpcId = jsonRpcRequest.Id;
         }
 
-        /// <summary>
-        /// JsonRpc上下文
-        /// </summary>
-        public JsonRpcRequestContext JsonRpcContext { get; internal set; }
-
-        /// <summary>
-        /// Json字符串
-        /// </summary>
-        public string JsonString { get; }
-
-        internal void Init(RpcMethod rpcMethod)
+        internal void SetRpcMethod(RpcMethod rpcMethod)
         {
             this.RpcMethod = rpcMethod;
+        }
+
+        internal void SetParameters(object[] parameters)
+        {
+            this.Parameters = parameters;
+        }
+
+        internal void SetResolver(IResolver resolver)
+        {
+            this.Resolver = resolver;
+        }
+
+        internal void SetResolver(IScopedResolver scopedResolver)
+        {
+            this.Resolver = scopedResolver.Resolver;
+            this.m_scopedResolver = scopedResolver;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (this.DisposedValue)
+            {
+                return;
+            }
+            if (disposing)
+            {
+                this.m_scopedResolver.SafeDispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

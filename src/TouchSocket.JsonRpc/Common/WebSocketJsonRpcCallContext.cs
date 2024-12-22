@@ -10,31 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.JsonRpc
 {
     internal class WebSocketJsonRpcCallContext : JsonRpcCallContextBase
     {
-        private readonly IScopedResolver m_scopedResolver;
-
-        public WebSocketJsonRpcCallContext(object caller, string jsonString, IScopedResolver scopedResolver) : base(caller, jsonString, scopedResolver.Resolver)
+        public WebSocketJsonRpcCallContext(object caller)
         {
-            this.m_scopedResolver = scopedResolver;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (this.DisposedValue)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.m_scopedResolver.Dispose();
-            }
-            base.Dispose(disposing);
+            this.Caller = caller;
         }
     }
 }

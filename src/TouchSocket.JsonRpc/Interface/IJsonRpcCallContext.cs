@@ -19,14 +19,9 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public interface IJsonRpcCallContext : ICallContext
     {
-        /// <summary>
-        /// Json字符串
-        /// </summary>
-        public string JsonString { get; }
-
-        /// <summary>
-        /// JsonRpc数据包
-        /// </summary>
-        public JsonRpcRequestContext JsonRpcContext { get; }
+        ///// <summary>
+        ///// JsonRpc数据包
+        ///// </summary>
+        //public JsonRpcRequestContext JsonRpcContext { get; }
     }
 }

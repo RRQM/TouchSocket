@@ -35,6 +35,6 @@ namespace TouchSocket.Modbus
         /// <summary>
         /// 获取和当前响应对应的请求
         /// </summary>
-        IModbusRequest Request { get;}
+        IModbusRequest Request { get; }
     }
 }

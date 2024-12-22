@@ -11,12 +11,10 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.CodeDom.Compiler;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace TouchSocket.Core
@@ -140,7 +138,7 @@ namespace TouchSocket.Core
 
         private bool CreateInvokeFromSG()
         {
-            if (this.m_invoker!=null)
+            if (this.m_invoker != null)
             {
                 return false;
             }

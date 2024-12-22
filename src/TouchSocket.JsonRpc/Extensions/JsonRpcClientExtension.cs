@@ -10,8 +10,8 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using TouchSocket.Core;
-using TouchSocket.Http;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
@@ -22,59 +22,20 @@ namespace TouchSocket.JsonRpc
     public static class JsonRpcClientExtension
     {
         /// <summary>
-        /// 标识是否为JsonRpc
+        /// JsonRpcActorProperty
         /// </summary>
-        public static readonly DependencyProperty<bool> IsJsonRpcProperty =
-            new("IsJsonRpc", false);
+        public static readonly DependencyProperty<JsonRpcActor> JsonRpcActorProperty =
+           new("JsonRpcActor", default);
 
         /// <summary>
-        /// IJsonRpcActionClient
-        /// </summary>
-        public static readonly DependencyProperty<IJsonRpcActionClient> JsonRpcActionClientProperty =
-            new("JsonRpcActionClient", default);
-
-        /// <summary>
-        /// 获取<see cref="IsJsonRpcProperty"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <returns></returns>
-        internal static bool GetIsJsonRpc(this IDependencyObject client)
-        {
-            return client.GetValue(IsJsonRpcProperty);
-        }
-
-        /// <summary>
-        /// 设置<see cref="IsJsonRpcProperty"/>
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="value"></param>
-        internal static void SetIsJsonRpc(this IDependencyObject client, bool value = true)
-        {
-            client.SetValue(IsJsonRpcProperty, value);
-        }
-
-        /// <summary>
-        /// 获取基于Tcp协议或者WebSocket协议的双工JsonRpc端
+        /// 获取基于会话内部的双工JsonRpc端
         /// </summary>
         /// <param name="sessionClient"></param>
         /// <returns></returns>
-        public static IJsonRpcActionClient GetJsonRpcActionClient(this ISessionClient sessionClient)
+        public static IJsonRpcClient GetJsonRpcActionClient(this ISessionClient sessionClient)
         {
-            if (sessionClient.TryGetValue(JsonRpcActionClientProperty, out var actionClient))
+            if (sessionClient.TryGetValue(JsonRpcActorProperty, out var actionClient))
             {
-                return actionClient;
-            }
-
-            if (sessionClient.Protocol == Protocol.Tcp)
-            {
-                actionClient = new TcpServerJsonRpcClient((ITcpSessionClient)sessionClient);
-                sessionClient.SetValue(JsonRpcActionClientProperty, actionClient);
-                return actionClient;
-            }
-            else if (sessionClient.Protocol == Protocol.WebSocket)
-            {
-                actionClient = new WebSocketServerJsonRpcClient((IHttpSessionClient)sessionClient);
-                sessionClient.SetValue(JsonRpcActionClientProperty, actionClient);
                 return actionClient;
             }
             else
@@ -82,5 +43,24 @@ namespace TouchSocket.JsonRpc
                 throw new System.Exception("SessionClient必须是Tcp协议，或者完成WebSocket连接");
             }
         }
+
+#if SystemTextJson
+
+        /// <summary>
+        /// 使用System.Text.Json进行序列化
+        /// </summary>
+        /// <param name="jsonRpcClient"></param>
+        /// <param name="options"></param>
+        public static TJsonRpcClient UseSystemTextJson<TJsonRpcClient>(this TJsonRpcClient jsonRpcClient, Action<System.Text.Json.JsonSerializerOptions> options)
+            where TJsonRpcClient : IJsonRpcClient
+        {
+            var serializerOptions = new System.Text.Json.JsonSerializerOptions();
+            options.Invoke(serializerOptions);
+            jsonRpcClient.SerializerConverter.Clear();
+            jsonRpcClient.SerializerConverter.Add(new SystemTextJsonStringToClassSerializerFormatter<JsonRpcActor>() { JsonSettings = serializerOptions });
+
+            return jsonRpcClient;
+        }
+#endif
     }
 }

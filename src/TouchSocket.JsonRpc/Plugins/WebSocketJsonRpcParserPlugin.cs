@@ -30,7 +30,7 @@ namespace TouchSocket.JsonRpc
         /// </summary>
         /// <param name="rpcServerProvider"></param>
         /// <param name="logger"></param>
-        public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
+        public WebSocketJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
         {
         }
 
@@ -46,7 +46,15 @@ namespace TouchSocket.JsonRpc
             {
                 if (await this.AllowJsonRpc.Invoke(client, e.Context).ConfigureAwait(false))
                 {
-                    client.Client.SetIsJsonRpc();
+                    var jsonRpcActor = new JsonRpcActor()
+                    {
+                        SerializerConverter = this.SerializerConverter,
+                        Resolver = client.Client.Resolver,
+                        SendAction = (data) => client.SendAsync(data, WSDataType.Text)
+                    };
+
+                    jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
+                    client.Client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
                 }
             }
 
@@ -56,26 +64,12 @@ namespace TouchSocket.JsonRpc
         /// <inheritdoc/>
         public async Task OnWebSocketReceived(IWebSocket client, WSDataFrameEventArgs e)
         {
-            if (e.DataFrame.Opcode == WSDataType.Text && client.Client.GetIsJsonRpc())
+            var dataFrame = e.DataFrame;
+            if (dataFrame.Opcode == WSDataType.Text && client.Client.TryGetValue(JsonRpcClientExtension.JsonRpcActorProperty, out var jsonRpcActor))
             {
-                var jsonRpcStr = e.DataFrame.ToText();
-                if (jsonRpcStr.IsNullOrEmpty())
-                {
-                    await e.InvokeNext().ConfigureAwait(false);
-                    return;
-                }
-
                 e.Handled = true;
 
-                if (client.Client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
-                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
-                {
-                    actionClient.InputResponseString(jsonRpcStr);
-                }
-                else
-                {
-                    _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client.Client, jsonRpcStr, client.Client.Resolver.CreateScopedResolver()));
-                }
+                await jsonRpcActor.InputReceiveAsync(dataFrame.PayloadData.Memory, new WebSocketJsonRpcCallContext(client.Client)).ConfigureAwait(false);
             }
             else
             {
@@ -108,34 +102,6 @@ namespace TouchSocket.JsonRpc
             return this;
         }
 
-        /// <inheritdoc/>
-        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
-        {
-            try
-            {
-                JsonRpcResponseBase response;
-                if (error == null)
-                {
-                    response = new JsonRpcSuccessResponse
-                    {
-                        Result = result,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                else
-                {
-                    response = new JsonRpcErrorResponse
-                    {
-                        Error = error,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                await ((IHttpSessionClient)callContext.Caller).WebSocket.SendAsync(str).ConfigureAwait(false);
-            }
-            catch
-            {
-            }
-        }
+
     }
 }

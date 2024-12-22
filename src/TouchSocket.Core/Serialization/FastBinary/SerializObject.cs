@@ -199,7 +199,7 @@ namespace TouchSocket.Core
                                   return false;
                               }
 
-                              if (p.CanPublicRead()&&p.CanPublicWrite())
+                              if (p.CanPublicRead() && p.CanPublicWrite())
                               {
                                   return true;
                               }

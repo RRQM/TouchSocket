@@ -11,7 +11,6 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Text;
 
 namespace TouchSocket.Core
 {

@@ -70,10 +70,10 @@ namespace TouchSocket.WebApi
             var returnTypeString = rpcMethod.HasReturn ? string.Format("typeof({0})", this.GetProxyParameterName(rpcMethod.Info.ReturnParameter)) : "null";
 
             var codeString = new StringBuilder();
-            
+
             codeString.AppendLine("var _request=new WebApiRequest();");
             codeString.AppendLine($"_request.Method = HttpMethodType.{webApiAttribute.Method};");
-            codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod,webApiParameterInfos)};");
+            codeString.AppendLine($"_request.Headers = {this.GetFromHeaderString(rpcMethod, webApiParameterInfos)};");
             codeString.AppendLine($"_request.Querys = {this.GetFromQueryString(webApiParameterInfos)};");
             codeString.AppendLine($"_request.Forms = {this.GetFromFormString(webApiParameterInfos)};");
 
@@ -164,17 +164,17 @@ namespace TouchSocket.WebApi
             return $"{parameter.Name}?.ToString()";
         }
 
-        private string GetFromHeaderString(RpcMethod rpcMethod,IEnumerable<WebApiParameterInfo> webApiParameterInfos)
+        private string GetFromHeaderString(RpcMethod rpcMethod, IEnumerable<WebApiParameterInfo> webApiParameterInfos)
         {
             var parameterInfos = webApiParameterInfos.Where(a => a.IsFromHeader);
-           var list= parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{GetParameterToString(a.Parameter)})").ToList();
+            var list = parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromHeaderName}\",{this.GetParameterToString(a.Parameter)})").ToList();
 
-            if (rpcMethod.HasReturn&&rpcMethod.ReturnType==typeof(string))
+            if (rpcMethod.HasReturn && rpcMethod.ReturnType == typeof(string))
             {
                 list.Add($"new KeyValuePair<string, string>(\"Accept\",\"text/plain\")");
             }
 
-            if (list.Count>0)
+            if (list.Count > 0)
             {
                 var codeString = new StringBuilder();
                 codeString.Append("new KeyValuePair<string, string>[] {");
@@ -233,7 +233,7 @@ namespace TouchSocket.WebApi
 
             var codeString = new StringBuilder();
             codeString.Append("new KeyValuePair<string, string>[] {");
-            codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromQueryName?? a.Parameter.Name}\",{this.GetParameterToString(a.Parameter)})")));
+            codeString.Append(string.Join(",", parameterInfos.Select(a => $"new KeyValuePair<string, string>(\"{a.FromQueryName ?? a.Parameter.Name}\",{this.GetParameterToString(a.Parameter)})")));
             codeString.Append("}");
 
             return codeString.ToString();
@@ -385,6 +385,47 @@ namespace TouchSocket.WebApi
                     else
                     {
                         urls.Add($"/{rpcMethod.Info.DeclaringType.Name}/{rpcMethod.Name}".ToLower());
+                    }
+                }
+
+                return urls.ToArray();
+            }
+            return default;
+        }
+
+        public string[] GetRegexRouteUrls(RpcMethod rpcMethod)
+        {
+            if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute webApiAttribute)
+            {
+                var urls = new List<string>();
+                //如果方法有特性，则会覆盖类的特性
+                var attrs = rpcMethod.Info.GetCustomAttributes(typeof(RegexRouterAttribute), false);
+                if (attrs.Length > 0)
+                {
+                    foreach (var item in attrs.Cast<RegexRouterAttribute>())
+                    {
+                        var url = item.RegexTemple.ToLower();
+
+                        if (!urls.Contains(url))
+                        {
+                            urls.Add(url);
+                        }
+                    }
+                }
+                else
+                {
+                    attrs = rpcMethod.ServerFromType.GetCustomAttributes(typeof(RegexRouterAttribute), false);
+                    if (attrs.Length > 0)
+                    {
+                        foreach (var item in attrs.Cast<RegexRouterAttribute>())
+                        {
+                            var url = item.RegexTemple.ToLower();
+
+                            if (!urls.Contains(url))
+                            {
+                                urls.Add(url);
+                            }
+                        }
                     }
                 }
 

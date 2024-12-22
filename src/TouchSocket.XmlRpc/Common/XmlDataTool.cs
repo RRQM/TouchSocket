@@ -250,7 +250,7 @@ namespace TouchSocket.XmlRpc
             {
                 xml.Save(xmlBlock.AsStream());
 
-                var xmlString =xmlBlock.Span.ToString(Encoding.UTF8);
+                var xmlString = xmlBlock.Span.ToString(Encoding.UTF8);
 
                 httpResponse.FromXML(xmlString);
             }

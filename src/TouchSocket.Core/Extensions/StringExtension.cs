@@ -45,7 +45,7 @@ namespace TouchSocket.Core
         public static string MakeIdentifier(string input)
         {
             // 替换非法字符
-            string result = Regex.Replace(input, "[^a-zA-Z0-9_]", "_");
+            var result = Regex.Replace(input, "[^a-zA-Z0-9_]", "_");
             // 如果结果以数字开头，则添加前缀 _
             if (char.IsDigit(result[0]))
             {

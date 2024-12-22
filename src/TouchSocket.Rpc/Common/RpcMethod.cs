@@ -109,6 +109,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 是否可用
         /// </summary>
+        [Obsolete("此属性已被弃用", true)]
         public bool IsEnable { get; set; } = true;
 
         /// <summary>

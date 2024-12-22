@@ -133,7 +133,7 @@ namespace TouchSocket.Core
         /// <returns>一个从指定偏移量开始，长度为可读长度的数组段。</returns>
         public static ArraySegment<byte> AsSegment<TByteBlock>(this TByteBlock byteBlock, int offset) where TByteBlock : IByteBlock
         {
-            return AsSegment(byteBlock, offset, byteBlock.Length-offset);
+            return AsSegment(byteBlock, offset, byteBlock.Length - offset);
         }
 
         /// <summary>

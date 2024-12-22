@@ -13,7 +13,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using TouchSocket.Core;
-using System;
 
 namespace TouchSocket.Dmtp
 {

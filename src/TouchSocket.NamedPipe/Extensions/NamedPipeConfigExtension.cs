@@ -119,7 +119,7 @@ namespace TouchSocket.NamedPipe
             return reconnectionPlugin;
         }
 
-        
+
         #endregion Reconnection
     }
 }

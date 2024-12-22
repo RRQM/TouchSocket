@@ -653,7 +653,7 @@ namespace TouchSocket.Core
             var size = 16;
             this.ExtendSize(size);
 #if NET6_0_OR_GREATER
-            value.TryWriteBytes(this.TotalMemory.Span.Slice(this.m_position,size));
+            value.TryWriteBytes(this.TotalMemory.Span.Slice(this.m_position, size));
 #else
             var bytes = value.ToByteArray();
             this.Write(bytes);

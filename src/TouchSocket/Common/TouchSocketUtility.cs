@@ -17,6 +17,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class TouchSocketUtility
     {
-        
+
     }
 }

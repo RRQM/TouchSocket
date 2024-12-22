@@ -21,9 +21,9 @@ namespace TouchSocket.Sockets
     /// 该接口用于通知实现该接口的插件，某个ID发生了更改。
     /// </summary>
     [DynamicMethod]
-    public interface IIdChangedPlugin: IPlugin
+    public interface IIdChangedPlugin : IPlugin
     {
-       
+
         /// <summary>
         /// 当客户端ID发生变化时触发的异步事件处理程序。
         /// </summary>

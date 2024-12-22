@@ -68,10 +68,10 @@ namespace TouchSocket.Core
         {
             // 使用种子生成器创建一个新的随机数生成器实例
             // 种子递增以保持随机性
-            Random random = new Random(s_seed++);
+            var random = new Random(s_seed++);
 
             // 生成一个0到1之间的随机双精度浮点数
-            double randomDouble = random.NextDouble();
+            var randomDouble = random.NextDouble();
 
             // 将随机双精度浮点数乘以10000000，然后取其整数部分
             // 以获得一个在0到10000000之间的随机Int64整数

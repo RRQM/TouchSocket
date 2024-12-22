@@ -29,7 +29,7 @@ namespace TouchSocket.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Dictionary<int, object> GetDp()
         {
-            return this.m_dp ??= new Dictionary<int, object>() ;
+            return this.m_dp ??= new Dictionary<int, object>();
         }
 
         /// <inheritdoc/>
@@ -163,13 +163,13 @@ namespace TouchSocket.Core
                 this.m_lock.Enter(ref lockTakenFotThis);
                 dependencyObject.m_lock.Enter(ref lockTakenFotOther);
 
-                ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject,nameof(dependencyObject));
+                ThrowHelper.ThrowArgumentNullExceptionIf(dependencyObject, nameof(dependencyObject));
 
                 ThrowHelper.ThrowObjectDisposedExceptionIf(dependencyObject);
 
                 this.ThrowIfDisposed();
 
-                foreach (var item in this.  GetDp())
+                foreach (var item in this.GetDp())
                 {
                     if (dependencyObject.GetDp().ContainsKey(item.Key))
                     {

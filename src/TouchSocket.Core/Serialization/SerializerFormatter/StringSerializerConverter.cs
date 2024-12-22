@@ -20,7 +20,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// String类型数据转换器
         /// </summary>
-        public StringSerializerConverter(params ISerializerFormatter<string, TState>[] converters):base(converters)
+        public StringSerializerConverter(params ISerializerFormatter<string, TState>[] converters) : base(converters)
         {
         }
     }

@@ -24,7 +24,41 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public class HttpJsonRpcClient : HttpClientBase, IHttpJsonRpcClient
     {
-        private int m_idCount;
+        private readonly JsonRpcActor m_jsonRpcActor;
+
+        public HttpJsonRpcClient()
+        {
+            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+            this.m_jsonRpcActor = new JsonRpcActor()
+            {
+                SendAction = this.SendAction,
+                SerializerConverter = this.SerializerConverter
+            };
+        }
+
+        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+
+        #region JsonRpcActor
+
+        private async Task SendAction(ReadOnlyMemory<byte> memory)
+        {
+            var request = new HttpRequest();
+            request.Method = HttpMethod.Post;
+            request.SetUrl(this.RemoteIPHost.PathAndQuery);
+            request.SetContent(memory);
+
+            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(false))
+            {
+                var response = responseResult.Response;
+
+                if (response.IsSuccess())
+                {
+                    await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(false), default);
+                }
+            }
+        }
+
+        #endregion JsonRpcActor
 
         /// <inheritdoc/>
         public Task ConnectAsync(int millisecondsTimeout, CancellationToken token)
@@ -33,75 +67,16 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            invokeOption ??= InvokeOption.WaitInvoke;
-            parameters ??= new object[0];
+            return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
+        }
 
-            var id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? Interlocked.Increment(ref this.m_idCount) : 0;
-
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = invokeKey,
-                Params = parameters,
-                Id = id
-            };
-            var request = new HttpRequest();
-            request.Method = HttpMethod.Post;
-            request.SetUrl(this.RemoteIPHost.PathAndQuery);
-            request.FromJson(jsonRpcRequest.ToJsonString());
-
-            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(false))
-            {
-                var response = responseResult.Response;
-
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                    case FeedbackType.WaitSend:
-                        {
-                            return default;
-                        }
-                    case FeedbackType.WaitInvoke:
-                        {
-                            var responseJsonString = await response.GetBodyAsync().ConfigureAwait(false);
-
-                            ThrowHelper.ThrowArgumentNullExceptionIf(responseJsonString, nameof(responseJsonString));
-
-                            var resultContext = JsonRpcUtility.ToJsonRpcWaitResult(responseJsonString);
-
-                            if (resultContext.Error != null)
-                            {
-                                ThrowHelper.ThrowRpcException(resultContext.Error.Message);
-                            }
-
-                            if (resultContext.Result == null)
-                            {
-                                return default;
-                            }
-                            else
-                            {
-                                if (returnType != null)
-                                {
-                                    if (returnType.IsPrimitive || returnType == typeof(string))
-                                    {
-                                        return resultContext.Result.ToString().ParseToType(returnType);
-                                    }
-                                    else
-                                    {
-                                        return resultContext.Result.ToJsonString().FromJsonString(returnType);
-                                    }
-                                }
-                                else
-                                {
-                                    return default;
-                                }
-                            }
-                        }
-                    default:
-                        return default;
-                }
-            }
+        /// <inheritdoc/>
+        protected override void LoadConfig(TouchSocketConfig config)
+        {
+            base.LoadConfig(config);
+            this.m_jsonRpcActor.Logger = this.Logger;
         }
     }
 }

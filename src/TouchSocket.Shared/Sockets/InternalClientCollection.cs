@@ -10,30 +10,41 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace TouchSocket.Sockets
 {
-   
     [DebuggerDisplay("Count={Count}")]
-    internal class InternalClientCollection<TClient> : ConcurrentDictionary<string, TClient>, IClientCollection<TClient> where TClient : IIdClient
+    internal class InternalClientCollection<TClient> : IClientCollection<TClient> where TClient : IIdClient
     {
+        private readonly ConcurrentDictionary<string, TClient> m_clients = new();
+
+        public int Count => this.m_clients.Count;
+
+        public TClient this[string id] => this.m_clients[id];
+
         public bool ClientExist(string id)
         {
-            return !string.IsNullOrEmpty(id) && this.ContainsKey(id);
+            return !string.IsNullOrEmpty(id) && this.m_clients.ContainsKey(id);
         }
 
         IEnumerator<TClient> IEnumerable<TClient>.GetEnumerator()
         {
-            return this.Values.GetEnumerator();
+            return this.m_clients.Values.GetEnumerator();
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return this.m_clients.Values.GetEnumerator();
         }
 
         /// <inheritdoc/>
         public IEnumerable<string> GetIds()
         {
-            return this.Keys;
+            return this.m_clients.Keys;
         }
 
         /// <summary>
@@ -43,7 +54,7 @@ namespace TouchSocket.Sockets
         /// <returns></returns>
         public bool TryAdd(TClient client)
         {
-            return this.TryAdd(client.Id, client);
+            return this.m_clients.TryAdd(client.Id, client);
         }
 
         /// <inheritdoc/>
@@ -55,7 +66,7 @@ namespace TouchSocket.Sockets
                 return false;
             }
 
-            return this.TryGetValue(id, out client);
+            return this.m_clients.TryGetValue(id, out client);
         }
 
         /// <summary>
@@ -72,7 +83,7 @@ namespace TouchSocket.Sockets
                 return false;
             }
 
-            if (base.TryRemove(id, out var newClient))
+            if (this.m_clients.TryRemove(id, out var newClient))
             {
                 client = newClient;
                 return true;

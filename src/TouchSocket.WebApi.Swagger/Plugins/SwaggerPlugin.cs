@@ -62,11 +62,11 @@ namespace TouchSocket.WebApi.Swagger
             {
                 return;
             }
-
-            var rpcServerProvider = this.m_resolver.Resolve<IRpcServerProvider>();
-            if (rpcServerProvider == null)
+           var webApiParserPlugin = sender.PluginManager.Plugins.OfType<WebApiParserPlugin>().FirstOrDefault();
+           
+            if (webApiParserPlugin == null)
             {
-                this.m_logger.Warning($"该服务器中似乎没有添加{nameof(IRpcServerProvider)}。");
+                this.m_logger.Warning($"该服务器中似乎没有添加{nameof(WebApiParserPlugin)}。");
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace TouchSocket.WebApi.Swagger
                     {
                         try
                         {
-                            bytes = this.BuildOpenApi(rpcServerProvider.GetMethods());
+                            bytes = this.BuildOpenApi(webApiParserPlugin);
                         }
                         catch (Exception ex)
                         {
@@ -235,52 +235,7 @@ namespace TouchSocket.WebApi.Swagger
             }
         }
 
-        private void BuildGet(string url, RpcMethod rpcMethod, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
-        {
-            //解析get
-            var openApiPath = new OpenApiPath();
-
-            var openApiPathValue = new OpenApiPathValue
-            {
-                Tags = this.GetTags(rpcMethod),
-                Description = rpcMethod.GetDescription(),
-                Summary = rpcMethod.GetDescription()
-            };
-            //var i = 0;
-            //if (rpcMethod.IncludeCallContext)
-            //{
-            //    i = 1;
-            //}
-
-            var parameters = new List<OpenApiParameter>();
-            foreach (var parameter in rpcMethod.GetNormalParameters())
-            {
-                var openApiParameter = this.GetParameter(parameter.ParameterInfo);
-                openApiParameter.In = "query";
-
-                this.AddSchemaType(parameter.Type, schemaTypeList);
-                parameters.Add(openApiParameter);
-            }
-
-            //for (; i < rpcMethod.Parameters.Length; i++)
-            //{
-            //    var parameter = rpcMethod.Parameters[i];
-            //    var openApiParameter = this.GetParameter(parameter);
-            //    openApiParameter.In = "query";
-
-            //    this.AddSchemaType(parameter.ParameterType, schemaTypeList);
-            //    parameters.Add(openApiParameter);
-            //}
-
-            openApiPathValue.Parameters = parameters.Count > 0 ? parameters : null;
-
-            this.BuildResponse(rpcMethod, openApiPathValue, schemaTypeList);
-
-            openApiPath.Add("get", openApiPathValue);
-            paths.Add(url, openApiPath);
-        }
-
-        private byte[] BuildOpenApi(RpcMethod[] rpcMethods)
+        private byte[] BuildOpenApi(WebApiParserPlugin webApiParserPlugin)
         {
             var openApiRoot = new OpenApiRoot();
             openApiRoot.Info = new OpenApiInfo();
@@ -288,27 +243,22 @@ namespace TouchSocket.WebApi.Swagger
             var paths = new Dictionary<string, OpenApiPath>();
 
             var schemaTypeList = new List<Type>();
-
-            foreach (var rpcMethod in rpcMethods)
+            var rpcMethods = new List<RpcMethod>();
+            foreach (var mappingMethod in webApiParserPlugin.Mapping)
             {
-                if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute attribute)
+                if (rpcMethods.Contains(mappingMethod.RpcMethod))
                 {
-                    var actionUrls = attribute.GetRouteUrls(rpcMethod);
-                    if (actionUrls != null)
-                    {
-                        foreach (var url in actionUrls)
-                        {
-                            if (attribute.Method == HttpMethodType.Get)
-                            {
-                                this.BuildGet(url, rpcMethod, schemaTypeList, paths);
-                            }
-                            else if (attribute.Method == HttpMethodType.Post)
-                            {
-                                this.BuildPost(url, rpcMethod, schemaTypeList, paths);
-                            }
-                        }
-                    }
+                    continue;
                 }
+
+                if (mappingMethod.IsRegex)
+                {
+                    continue;
+                }
+
+                this.BuildHttpMethod(mappingMethod.Url, mappingMethod.HttpMethod,mappingMethod.RpcMethod, schemaTypeList, paths);
+
+                rpcMethods.Add(mappingMethod.RpcMethod);
             }
 
             openApiRoot.Paths = paths;
@@ -319,7 +269,7 @@ namespace TouchSocket.WebApi.Swagger
             return JsonConvert.SerializeObject(openApiRoot, Formatting.Indented, jsonSetting).ToUTF8Bytes();
         }
 
-        private void BuildPost(string url, RpcMethod rpcMethod, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
+        private void BuildHttpMethod(string url,HttpMethod httpMethod, RpcMethod rpcMethod, in List<Type> schemaTypeList, in Dictionary<string, OpenApiPath> paths)
         {
             //解析post
             var openApiPath = new OpenApiPath();
@@ -374,7 +324,7 @@ namespace TouchSocket.WebApi.Swagger
 
             this.BuildResponse(rpcMethod, openApiPathValue, schemaTypeList);
 
-            openApiPath.Add("post", openApiPathValue);
+            openApiPath.Add(httpMethod.ToString().ToLower(), openApiPathValue);
             paths.Add(url, openApiPath);
         }
 

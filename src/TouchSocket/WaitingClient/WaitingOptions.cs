@@ -35,7 +35,7 @@ namespace TouchSocket.Sockets
                 {
                     Task<bool> FilterFuncValue(ResponsedData data)
                     {
-                        var task= Task.FromResult(value.Invoke(data));
+                        var task = Task.FromResult(value.Invoke(data));
                         task.ConfigureAwait(false);
                         return task;
                     }

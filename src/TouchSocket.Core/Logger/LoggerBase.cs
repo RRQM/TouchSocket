@@ -68,7 +68,7 @@ namespace TouchSocket.Core
             var stringBuilder = new StringBuilder();
 
             // 添加当前时间到日志字符串中
-            stringBuilder.Append(DateTime.Now.ToString(DateTimeFormat));
+            stringBuilder.Append(DateTime.Now.ToString(this.DateTimeFormat));
             stringBuilder.Append(" | ");
 
             // 添加日志级别到日志字符串中

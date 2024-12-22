@@ -54,13 +54,13 @@ namespace TouchSocket.WebApi
             {
                 throw new Exception("参数不正确");
             }
-            
+
             var request = new HttpRequest();
             request.SetUrl(invokeKey);
             switch (webApiRequest.Method)
             {
                 case HttpMethodType.Get:
-                    request.Method= HttpMethod.Get;
+                    request.Method = HttpMethod.Get;
                     break;
                 case HttpMethodType.Post:
                     request.Method = HttpMethod.Post;
@@ -75,11 +75,11 @@ namespace TouchSocket.WebApi
                     break;
             }
             request.InitHeaders();
-            if (webApiRequest.Headers!=null)
+            if (webApiRequest.Headers != null)
             {
                 foreach (var item in webApiRequest.Headers)
                 {
-                    request.Headers.Add(item.Key,item.Value);
+                    request.Headers.Add(item.Key, item.Value);
                 }
             }
             if (webApiRequest.Querys != null)
@@ -95,14 +95,14 @@ namespace TouchSocket.WebApi
             {
                 request.SetContent(this.Converter.Serialize(request, webApiRequest.Body));
             }
-            else if (webApiRequest.Forms!=null)
+            else if (webApiRequest.Forms != null)
             {
                 request.SetFormUrlEncodedContent(webApiRequest.Forms);
             }
 
             invokeOption ??= InvokeOption.WaitInvoke;
 
-            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin),this.Resolver, this, new WebApiEventArgs(request, default));
+            await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
 
             using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
             {
@@ -129,7 +129,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (response.StatusCode == 422)
                 {
-                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request,await response.GetBodyAsync().ConfigureAwait(false),typeof(ActionResult))).Message);
+                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(false), typeof(ActionResult))).Message);
                 }
                 else
                 {

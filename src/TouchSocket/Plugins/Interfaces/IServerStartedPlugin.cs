@@ -21,7 +21,7 @@ namespace TouchSocket.Sockets
     /// 该接口的目的是为那些需要在服务器启动时执行特定操作的插件提供一个标识。
     /// </summary>
     [DynamicMethod]
-    public interface IServerStartedPlugin: IPlugin
+    public interface IServerStartedPlugin : IPlugin
     {
         /// <summary>
         /// 当服务器执行<see cref="IServiceBase.StartAsync"/>方法后时。

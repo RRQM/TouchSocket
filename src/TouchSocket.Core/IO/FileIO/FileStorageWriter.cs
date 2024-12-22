@@ -50,7 +50,7 @@ namespace TouchSocket.Core
         /// <summary>
         /// 游标位置
         /// </summary>
-        public long Position { get => m_position; set => m_position = value; }
+        public long Position { get => this.m_position; set => this.m_position = value; }
 
 
         /// <summary>

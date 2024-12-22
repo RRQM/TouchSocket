@@ -15,7 +15,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-       /// <summary>
+    /// <summary>
     /// 监听配置
     /// </summary>
     public class TcpListenOption

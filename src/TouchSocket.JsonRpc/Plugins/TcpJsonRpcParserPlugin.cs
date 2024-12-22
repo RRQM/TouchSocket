@@ -10,6 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
@@ -27,14 +28,50 @@ namespace TouchSocket.JsonRpc
         /// 基于Tcp协议的JsonRpc功能插件
         /// </summary>
         /// <param name="rpcServerProvider"></param>
-        /// <param name="logger"></param>
-        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider, ILog logger) : base(rpcServerProvider, logger)
+        public TcpJsonRpcParserPlugin(IRpcServerProvider rpcServerProvider) : base(rpcServerProvider)
         {
+            this.AllowJsonRpc = (client) =>
+            {
+                return Task.FromResult(true);
+            };
         }
+
+        /// <summary>
+        /// 经过判断是否标识当前的客户端为JsonRpc
+        /// </summary>
+        /// <param name="allowJsonRpc"></param>
+        /// <returns></returns>
+        public TcpJsonRpcParserPlugin SetAllowJsonRpc(Func<ITcpSession, Task<bool>> allowJsonRpc)
+        {
+            this.AllowJsonRpc = allowJsonRpc;
+            return this;
+        }
+
+        /// <summary>
+        /// 经过判断是否标识当前的客户端为JsonRpc
+        /// </summary>
+        /// <param name="allowJsonRpc"></param>
+        /// <returns></returns>
+        public TcpJsonRpcParserPlugin SetAllowJsonRpc(Func<ITcpSession, bool> allowJsonRpc)
+        {
+            this.AllowJsonRpc = (client) =>
+            {
+                return Task.FromResult(allowJsonRpc(client));
+            };
+            return this;
+        }
+
+
+
+        /// <summary>
+        /// 经过判断是否标识当前的客户端为JsonRpc
+        /// </summary>
+        public Func<ITcpSession, Task<bool>> AllowJsonRpc { get; set; }
 
         /// <summary>
         /// 自动转换协议
         /// </summary>
+        [Obsolete("此配置已被弃用，如果需要筛选客户端，请使用SetAllowJsonRpc方法实现", true)]
         public bool AutoSwitch { get; set; } = true;
 
         /// <summary>
@@ -42,6 +79,7 @@ namespace TouchSocket.JsonRpc
         /// <para>仅当服务器是Tcp时生效。才会解释为jsonRpc。</para>
         /// </summary>
         /// <returns></returns>
+        [Obsolete("此配置已被弃用，如果需要筛选客户端，请使用SetAllowJsonRpc方法实现", true)]
         public TcpJsonRpcParserPlugin NoSwitchProtocol()
         {
             this.AutoSwitch = false;
@@ -49,81 +87,58 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        protected override sealed async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
+        public async Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
         {
-            try
+            if (client is IClientSender clientSender)
             {
-                JsonRpcResponseBase response;
-                if (error == null)
+                if (this.AllowJsonRpc != null)
                 {
-                    response = new JsonRpcSuccessResponse
+                    if (await this.AllowJsonRpc.Invoke(client).ConfigureAwait(false))
                     {
-                        Result = result,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                else
-                {
-                    response = new JsonRpcErrorResponse
-                    {
-                        Error = error,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                if (callContext.Caller is ISender sender)
-                {
-                    await sender.SendAsync(str.ToUTF8Bytes()).ConfigureAwait(false);
-                }
-            }
-            catch
-            {
-            }
-        }
+                        var jsonRpcActor = new JsonRpcActor()
+                        {
+                            SerializerConverter = this.SerializerConverter,
+                            Resolver = client.Resolver,
+                            SendAction = (data) => clientSender.SendAsync(data),
+                            Logger = client.Logger
+                        };
 
-        /// <inheritdoc/>
-        public Task OnTcpConnected(ITcpSession client, ConnectedEventArgs e)
-        {
-            if (this.AutoSwitch && client.Protocol == Protocol.Tcp)
-            {
-                client.SetIsJsonRpc();
+                        jsonRpcActor.SetRpcServerProvider(this.RpcServerProvider, this.ActionMap);
+                        client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
+                    }
+                }
             }
 
-            return e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
         public async Task OnTcpReceived(ITcpSession client, ReceivedDataEventArgs e)
         {
-            if (client.GetIsJsonRpc())
+            if (client.TryGetValue(JsonRpcClientExtension.JsonRpcActorProperty, out var jsonRpcActor))
             {
-                var jsonRpcStr = string.Empty;
+                var jsonRpcMemory = ReadOnlyMemory<byte>.Empty;
                 if (e.RequestInfo is IJsonRpcRequestInfo requestInfo)
                 {
-                    jsonRpcStr = requestInfo.GetJsonRpcString();
+                    jsonRpcMemory = requestInfo.GetJsonRpcMemory();
+                }
+                else if (e.RequestInfo is JsonPackage jsonPackage)
+                {
+                    jsonRpcMemory = jsonPackage.Data;
                 }
                 else if (e.ByteBlock != null)
                 {
-                    jsonRpcStr = e.ByteBlock.ToString();
+                    jsonRpcMemory = e.ByteBlock.Memory;
                 }
 
-                if (jsonRpcStr.HasValue())
+                if (jsonRpcMemory.IsEmpty)
                 {
-                    e.Handled = true;
-
-                    if (client.TryGetValue(JsonRpcClientExtension.JsonRpcActionClientProperty, out var actionClient)
-                    && !JsonRpcUtility.IsJsonRpcRequest(jsonRpcStr))
-                    {
-                        actionClient.InputResponseString(jsonRpcStr);
-                    }
-                    else
-                    {
-                        _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(client, jsonRpcStr, client.Resolver.CreateScopedResolver()));
-                    }
+                    return;
                 }
+                await jsonRpcActor.InputReceiveAsync(jsonRpcMemory, new TcpJsonRpcCallContext(client)).ConfigureAwait(false);
+                return;
             }
-
-            await e.InvokeNext();
+            await e.InvokeNext().ConfigureAwait(false);
         }
     }
 }

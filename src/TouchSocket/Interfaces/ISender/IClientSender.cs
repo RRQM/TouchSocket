@@ -17,12 +17,12 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// 客户端发送接口
     /// </summary>
     public interface IClientSender : ISender, IRequestInfoSender
     {
-       
+
         /// <summary>
         /// 异步组合发送数据。
         /// <para>该发送会经过适配器封装，具体封装内容由适配器决定。</para>

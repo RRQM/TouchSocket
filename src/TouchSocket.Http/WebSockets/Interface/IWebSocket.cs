@@ -22,7 +22,7 @@ namespace TouchSocket.Http.WebSockets
     /// <summary>
     /// 定义WebSocket服务的接口，继承自IDisposable, IOnlineClient, IClosableClient接口。
     /// </summary>
-    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient,IResolverObject
+    public interface IWebSocket : IDisposable, IOnlineClient, IClosableClient, IResolverObject
     {
         /// <summary>
         /// 允许异步Read读取
@@ -42,7 +42,7 @@ namespace TouchSocket.Http.WebSockets
         /// <summary>
         /// 获取最后WebSocket关闭状态。
         /// </summary>
-        WebSocketCloseStatus CloseStatus { get;}
+        WebSocketCloseStatus CloseStatus { get; }
 
         /// <summary>
         /// 异步关闭WebSocket连接。

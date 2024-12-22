@@ -25,8 +25,9 @@ namespace TouchSocket.WebApi
     /// WebApi解析器
     /// </summary>
     [PluginOption(Singleton = true)]
-    public class WebApiParserPlugin : PluginBase, IHttpPlugin
+    public sealed class WebApiParserPlugin : PluginBase, IHttpPlugin
     {
+        private readonly InternalWebApiMapping m_mapping = new InternalWebApiMapping();
         private readonly Dictionary<RpcParameter, WebApiParameterInfo> m_pairsForParameterInfo = new Dictionary<RpcParameter, WebApiParameterInfo>();
         private readonly IRpcServerProvider m_rpcServerProvider;
 
@@ -36,9 +37,6 @@ namespace TouchSocket.WebApi
         public WebApiParserPlugin(IRpcServerProvider rpcServerProvider)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(IRpcServerProvider));
-
-            this.GetRouteMap = new ActionMap(true);
-            this.PostRouteMap = new ActionMap(true);
             this.RegisterServer(rpcServerProvider.GetMethods());
             this.m_rpcServerProvider = rpcServerProvider;
             this.Converter = new WebApiSerializerConverter();
@@ -53,11 +51,18 @@ namespace TouchSocket.WebApi
         /// <summary>
         /// 获取Get函数路由映射图
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用Mapping属性代替", true)]
         public ActionMap GetRouteMap { get; private set; }
+
+        /// <summary>
+        /// 获取WebApi映射
+        /// </summary>
+        public IWebApiMapping Mapping => this.m_mapping;
 
         /// <summary>
         /// 获取Post函数路由映射图
         /// </summary>
+        [Obsolete("此配置已被弃用，请使用Mapping属性代替", true)]
         public ActionMap PostRouteMap { get; private set; }
 
         /// <summary>
@@ -69,6 +74,47 @@ namespace TouchSocket.WebApi
         {
             action.Invoke(this.Converter);
             return this;
+        }
+
+        /// <inheritdoc/>
+        public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
+        {
+            var httpMethod = e.Context.Request.Method;
+            var url = e.Context.Request.RelativeURL;
+            var rpcMethod = this.Mapping.Match(url, httpMethod);
+            if (rpcMethod != null)
+            {
+                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
+                {
+                    var invokeResult = new InvokeResult();
+                    var ps = new object[rpcMethod.Parameters.Length];
+                    try
+                    {
+                        for (var i = 0; i < rpcMethod.Parameters.Length; i++)
+                        {
+                            var parameter = rpcMethod.Parameters[i];
+                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        invokeResult.Status = InvokeStatus.Exception;
+                        invokeResult.Message = ex.Message;
+                        invokeResult.Exception = ex;
+                    }
+
+                    callContext.SetParameters(ps);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
+
+                    if (e.Context.Response.Responsed)
+                    {
+                        return;
+                    }
+
+                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
+                }
+            }
+            await e.InvokeNext().ConfigureAwait(false);
         }
 
         private static object PrimitiveParse(string source, Type targetType)
@@ -91,126 +137,12 @@ namespace TouchSocket.WebApi
 
             lock (this.m_pairsForParameterInfo)
             {
-                if (!m_pairsForParameterInfo.ContainsKey(parameter))
+                if (!this.m_pairsForParameterInfo.ContainsKey(parameter))
                 {
-                    m_pairsForParameterInfo.Add(parameter, new WebApiParameterInfo(parameter));
+                    this.m_pairsForParameterInfo.Add(parameter, new WebApiParameterInfo(parameter));
                 }
             }
             return this.GetParameterInfo(parameter);
-        }
-
-        private async Task OnHttpGet(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            if (this.GetRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
-            {
-                e.Handled = true;
-
-                var invokeResult = new InvokeResult();
-                object[] ps = null;
-
-                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
-                {
-                    if (rpcMethod.IsEnable)
-                    {
-                        try
-                        {
-                            ps = new object[rpcMethod.Parameters.Length];
-                            for (var i = 0; i < rpcMethod.Parameters.Length; i++)
-                            {
-                                var parameter = rpcMethod.Parameters[i];
-                                ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            invokeResult.Status = InvokeStatus.Exception;
-                            invokeResult.Message = ex.Message;
-                        }
-                    }
-                    else
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
-                    }
-                    if (invokeResult.Status == InvokeStatus.Ready)
-                    {
-                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                    }
-
-                    if (e.Context.Response.Responsed)
-                    {
-                        return;
-                    }
-
-                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
-                }
-            }
-            await e.InvokeNext().ConfigureAwait(false);
-        }
-
-        private async Task OnHttpPost(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            if (this.PostRouteMap.TryGetRpcMethod(e.Context.Request.RelativeURL, out var rpcMethod))
-            {
-                e.Handled = true;
-
-                using (var callContext = new WebApiCallContext(client, rpcMethod, e.Context, client.Resolver))
-                {
-                    var invokeResult = new InvokeResult();
-                    object[] ps = null;
-                    if (rpcMethod.IsEnable)
-                    {
-                        try
-                        {
-                            ps = new object[rpcMethod.Parameters.Length];
-
-                            for (var i = 0; i < rpcMethod.Parameters.Length; i++)
-                            {
-                                var parameter = rpcMethod.Parameters[i];
-                                ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            invokeResult.Status = InvokeStatus.Exception;
-                            invokeResult.Message = ex.Message;
-                        }
-
-                        if (invokeResult.Status == InvokeStatus.Ready)
-                        {
-                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                        }
-
-                        if (e.Context.Response.Responsed)
-                        {
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
-                    }
-
-                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
-                }
-            }
-            await e.InvokeNext().ConfigureAwait(false);
-        }
-
-        /// <inheritdoc/>
-        public Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
-        {
-            if (e.Context.Request.Method == HttpMethod.Get)
-            {
-                return this.OnHttpGet(client, e);
-            }
-            else if (e.Context.Request.Method == HttpMethod.Post)
-            {
-                return this.OnHttpPost(client, e);
-            }
-            else
-            {
-                return e.InvokeNext();
-            }
         }
 
         private async Task<object> ParseParameterAsync(RpcParameter parameter, WebApiCallContext callContext)
@@ -304,24 +236,7 @@ namespace TouchSocket.WebApi
         {
             foreach (var rpcMethod in rpcMethods)
             {
-                if (rpcMethod.GetAttribute<WebApiAttribute>() is WebApiAttribute attribute)
-                {
-                    var actionUrls = attribute.GetRouteUrls(rpcMethod);
-                    if (actionUrls != null)
-                    {
-                        foreach (var item in actionUrls)
-                        {
-                            if (attribute.Method == HttpMethodType.Get)
-                            {
-                                this.GetRouteMap.Add(item, rpcMethod);
-                            }
-                            else if (attribute.Method == HttpMethodType.Post)
-                            {
-                                this.PostRouteMap.Add(item, rpcMethod);
-                            }
-                        }
-                    }
-                }
+                this.m_mapping.AddRpcMethod(rpcMethod);
             }
         }
 

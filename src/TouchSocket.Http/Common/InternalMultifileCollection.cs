@@ -10,17 +10,11 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Text;
-using System.Threading;
-using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
-    internal class InternalMultifileCollection :List<IFormFile> ,IMultifileCollection
+    internal class InternalMultifileCollection : List<IFormFile>, IMultifileCollection
     {
     }
 }

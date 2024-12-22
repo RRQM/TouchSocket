@@ -56,7 +56,7 @@ namespace TouchSocket.Core
         public static void AddEasyLogger(this LoggerGroup loggerGroup, Action<LogLevel, object, string, Exception> action)
         {
             // 创建一个EasyLogger实例，传入日志记录的委托方法
-            EasyLogger easyLogger = new EasyLogger(action);
+            var easyLogger = new EasyLogger(action);
 
             // 将创建的EasyLogger实例添加到loggerGroup中
             loggerGroup.AddLogger(easyLogger);
@@ -70,7 +70,7 @@ namespace TouchSocket.Core
         public static void AddEasyLogger(this LoggerGroup loggerGroup, Action<string> action)
         {
             // 创建一个使用提供的日志委托的EasyLogger实例
-            EasyLogger easyLogger = new EasyLogger(action);
+            var easyLogger = new EasyLogger(action);
 
             // 将新创建的EasyLogger实例添加到日志组中
             loggerGroup.AddLogger(easyLogger);

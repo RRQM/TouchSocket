@@ -20,7 +20,7 @@ namespace TouchSocket.Core
     public static class JsonRpcPluginManagerExtension
     {
         /// <summary>
-        /// 使用基于Tcp协议的JsonRpc的插件。
+        /// 使用基于Tcp协议的JsonRpc的插件。仅服务器有用。
         /// </summary>
         /// <param name="pluginManager"></param>
         /// <returns></returns>
@@ -40,7 +40,7 @@ namespace TouchSocket.Core
         }
 
         /// <summary>
-        /// 使用基于WebSocket协议的JsonRpc的插件。
+        /// 使用基于WebSocket协议的JsonRpc的插件。仅服务器有用。
         /// </summary>
         /// <param name="pluginManager"></param>
         /// <returns></returns>

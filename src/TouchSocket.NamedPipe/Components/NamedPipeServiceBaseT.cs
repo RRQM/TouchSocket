@@ -63,7 +63,7 @@ namespace TouchSocket.NamedPipe
 
             var networkMonitor = new NamedPipeMonitor(option);
 
-            _=Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
+            _ = Task.Factory.StartNew(this.ThreadBegin, networkMonitor, TaskCreationOptions.LongRunning);
             this.m_monitors.Add(networkMonitor);
         }
 
@@ -285,7 +285,7 @@ namespace TouchSocket.NamedPipe
 
         private bool TryGet(string id, out NamedPipeSessionClientBase client)
         {
-            if (this.m_clients.TryGetValue(id, out var newClient))
+            if (this.m_clients.TryGetClient(id, out var newClient))
             {
                 client = newClient;
                 return true;

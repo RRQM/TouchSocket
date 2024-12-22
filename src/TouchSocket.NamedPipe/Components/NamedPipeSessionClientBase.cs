@@ -226,7 +226,7 @@ namespace TouchSocket.NamedPipe
                     this.m_dataHandlingAdapter.SafeDispose();
 
                     // 启动一个新的任务来处理管道关闭后的操作，传递中止操作的参数
-                    _=Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
+                    _ = Task.Factory.StartNew(this.PrivateOnNamedPipeClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

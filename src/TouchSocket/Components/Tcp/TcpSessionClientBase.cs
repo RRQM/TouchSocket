@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Resources;
@@ -57,7 +58,7 @@ namespace TouchSocket.Sockets
         private string m_iP;
         private TcpListenOption m_listenOption;
         private Socket m_mainSocket;
-        private bool m_online;
+        private volatile bool m_online;
         private IPluginManager m_pluginManager;
         private int m_port;
         private InternalReceiver m_receiver;
@@ -71,13 +72,12 @@ namespace TouchSocket.Sockets
         private TryOutEventHandler<TcpSessionClientBase> m_tryGet;
         private TryOutEventHandler<TcpSessionClientBase> m_tryRemoveAction;
         private IScopedResolver m_scopedResolver;
-
         #endregion 变量
 
         #region 属性
 
         /// <inheritdoc/>
-        public override sealed TouchSocketConfig Config => this.Service?.Config;
+        public sealed override TouchSocketConfig Config => this.Service?.Config;
 
         /// <inheritdoc/>
         public SingleStreamDataHandlingAdapter DataHandlingAdapter => this.m_dataHandlingAdapter;
@@ -172,6 +172,7 @@ namespace TouchSocket.Sockets
 
         internal void InternalSetId(string id)
         {
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(id, nameof(id));
             this.m_id = id;
         }
 
@@ -236,21 +237,36 @@ namespace TouchSocket.Sockets
             lock (this.m_lockForAbort)
             {
                 // 如果当前实例没有有效的ID，则无需执行中止操作
-                if (this.m_id == null)
+
+                var id = this.m_id;
+                if (!this.m_online)
                 {
                     return;
                 }
+
+                //此处的设计是为了防止多次调用Abort方法。
+                //一般情况下，由于m_tryRemoveAction是线程安全，所以移除客户端只会被调用一次，
+                //但是在ResetId的某些情况下，可能会被多次调用。
+                //所以这里加了一个判断，如果已经中止，则直接返回。
+                //https://gitee.com/RRQM_Home/TouchSocket/issues/IBCUHW
+                this.m_online = false;
+
                 // 尝试移除与ID关联的操作
-                if (this.m_tryRemoveAction(this.m_id, out _) && this.m_online)
+                if (this.m_tryRemoveAction(id, out var outClient))
                 {
-                    // 将实例状态设置为离线
-                    this.m_online = false;
+                    if (!ReferenceEquals(this,outClient))
+                    {
+                        //如果移除的客户端和当前实例不相等，则抛出异常。
+                        //由于m_online的设计，一般这里不会被执行。
+                        ThrowHelper.ThrowInvalidOperationException("移除的客户端和当前实例不相等，可能Id已经被修改。");
+                    }
+
                     // 安全地释放MainSocket资源
                     this.MainSocket.SafeDispose();
                     // 安全地释放数据处理适配器资源
                     this.m_dataHandlingAdapter.SafeDispose();
                     // 启动一个新的任务，用于处理TCP关闭事件
-                    _=Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                    _ = Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }
@@ -464,13 +480,12 @@ namespace TouchSocket.Sockets
                 return;
             }
 
+            base.Dispose(disposing);
             if (disposing)
             {
                 this.m_scopedResolver.SafeDispose();
                 this.Abort(true, TouchSocketResource.DisposeClose);
             }
-
-            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -530,23 +545,30 @@ namespace TouchSocket.Sockets
             this.ThrowIfDisposed();
             // 如果目标Id为空或仅含空格，则抛出参数为空异常。
             ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
+           
+            // 保存当前对象的旧Id。
+            var oldId = this.m_id;
+
             // 如果当前对象的Id与目标Id相同，则无需进行任何操作。
-            if (this.m_id == targetId)
+            if (oldId == targetId)
             {
                 return;
             }
-            // 保存当前对象的旧Id。
-            var sourceId = this.m_id;
+
             // 尝试从内部存储中移除当前对象的Id，并获取关联的socket客户端。
-            if (this.m_tryRemoveAction(sourceId, out var sessionClient))
+            if (this.m_tryRemoveAction(oldId, out var sessionClient))
             {
+                if (!ReferenceEquals(sessionClient,this))
+                {
+                    ThrowHelper.ThrowInvalidOperationException("原Id对应的客户端和当前实例不相符，可能Id已经被修改。");
+                }
                 // 将获取到的socket客户端的Id更新为目标Id。
                 sessionClient.m_id = targetId;
                 // 尝试将更新了Id的socket客户端重新添加到内部存储中。
                 if (this.m_tryAddAction(sessionClient))
                 {
                     // 如果添加成功，触发Id更改事件，并等待所有更改完成。
-                    await this.IdChanged(sourceId, targetId).ConfigureAwait(false);
+                    await this.IdChanged(oldId, targetId).ConfigureAwait(false);
                 }
                 else
                 {

@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -252,7 +251,7 @@ namespace TouchSocket.Sockets
                     adapter.SafeDispose();
 
                     // 启动一个新任务来处理连接关闭事件
-                    _=Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
+                    _ = Task.Factory.StartNew(this.PrivateOnTcpClosed, new ClosedEventArgs(manual, msg));
                 }
             }
         }

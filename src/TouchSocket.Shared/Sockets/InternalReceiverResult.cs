@@ -28,7 +28,7 @@ namespace TouchSocket.Sockets
         /// <param name="disAction"></param>
         public InternalReceiverResult(Action disAction)
         {
-            this.m_disAction =disAction;
+            this.m_disAction = disAction;
         }
 
         /// <summary>

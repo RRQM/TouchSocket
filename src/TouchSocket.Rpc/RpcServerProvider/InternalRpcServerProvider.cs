@@ -28,18 +28,15 @@ namespace TouchSocket.Rpc
             this.m_rpcStore = rpcStore;
         }
 
-        public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, object[] ps)
+        public async Task<InvokeResult> ExecuteAsync(ICallContext callContext, InvokeResult invokeResult)
         {
+            var ps = callContext.Parameters;
             var rpcMethod = callContext.RpcMethod;
             if (rpcMethod is null)
             {
                 return new InvokeResult(InvokeStatus.UnFound);
             }
-            if (!rpcMethod.IsEnable)
-            {
-                return new InvokeResult(InvokeStatus.UnEnable);
-            }
-            var invokeResult = new InvokeResult();
+
             var filters = callContext.RpcMethod.GetFilters();
             try
             {
@@ -49,67 +46,60 @@ namespace TouchSocket.Rpc
                         .ConfigureAwait(false);
                 }
 
-                if (invokeResult.Status != InvokeStatus.Ready)
+                if (invokeResult.Status == InvokeStatus.Ready)
                 {
-                    return invokeResult;
-                }
+                    var rpcServer = this.GetRpcServer(callContext);
 
-                var rpcServer = this.GetRpcServer(callContext);
-
-                //调用
-                switch (callContext.RpcMethod.TaskType)
-                {
-                    case TaskReturnType.Task:
-                        {
-                            await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(false);
-                        }
-                        break;
-
-                    case TaskReturnType.TaskObject:
-                        {
-                            invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
-                                .ConfigureAwait(false);
-                        }
-                        break;
-
-                    default:
-                    case TaskReturnType.None:
-                        {
-                            if (callContext.RpcMethod.HasReturn)
+                    //调用
+                    switch (callContext.RpcMethod.TaskType)
+                    {
+                        case TaskReturnType.Task:
                             {
-                                invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
+                                await ((Task)callContext.RpcMethod.Invoke(rpcServer, ps)).ConfigureAwait(false);
                             }
-                            else
-                            {
-                                callContext.RpcMethod.Invoke(rpcServer, ps);
-                            }
-                        }
-                        break;
-                }
+                            break;
 
-                invokeResult.Status = InvokeStatus.Success;
-                for (var i = 0; i < filters.Count; i++)
-                {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, default)
-                        .ConfigureAwait(false);
+                        case TaskReturnType.TaskObject:
+                            {
+                                invokeResult.Result = await callContext.RpcMethod.InvokeObjectAsync(rpcServer, ps)
+                                    .ConfigureAwait(false);
+                            }
+                            break;
+
+                        default:
+                        case TaskReturnType.None:
+                            {
+                                if (callContext.RpcMethod.HasReturn)
+                                {
+                                    invokeResult.Result = callContext.RpcMethod.Invoke(rpcServer, ps);
+                                }
+                                else
+                                {
+                                    callContext.RpcMethod.Invoke(rpcServer, ps);
+                                }
+                            }
+                            break;
+                    }
+
+                    invokeResult.Status = InvokeStatus.Success;
                 }
             }
             catch (TargetInvocationException ex)
             {
                 invokeResult.Status = InvokeStatus.InvocationException;
                 invokeResult.Message = ex.InnerException != null ? "函数内部发生异常，信息：" + ex.InnerException.Message : "函数内部发生异常，信息：未知";
-                for (var i = 0; i < filters.Count; i++)
-                {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false);
-                }
             }
             catch (Exception ex)
             {
                 invokeResult.Status = InvokeStatus.Exception;
                 invokeResult.Message = ex.Message;
+            }
+            finally
+            {
                 for (var i = 0; i < filters.Count; i++)
                 {
-                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, ex).ConfigureAwait(false);
+                    invokeResult = await filters[i].ExecutedAsync(callContext, ps, invokeResult, invokeResult.Exception)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -139,7 +129,7 @@ namespace TouchSocket.Rpc
             }
             catch (Exception ex)
             {
-                this.m_logger.Exception(ex);
+                this.m_logger?.Exception(ex);
                 throw;
             }
         }

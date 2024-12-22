@@ -61,7 +61,7 @@ namespace TouchSocket.Core
 
 #if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER
 
-               /// <summary>
+        /// <summary>
         /// 尝试向字典中添加键值对。
         /// </summary>
         /// <typeparam name="TKey">键的类型。</typeparam>

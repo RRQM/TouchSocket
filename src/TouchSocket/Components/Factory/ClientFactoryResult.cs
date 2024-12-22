@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// 客户端工厂结果
     /// </summary>
     /// <typeparam name="TClient">客户端类型，必须实现IClient接口</typeparam>

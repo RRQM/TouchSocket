@@ -31,7 +31,7 @@ namespace TouchSocket.Dmtp.Rpc
         private SerializationType m_serializationType;
         public DmtpRpcRequestPackage()
         {
-            
+
         }
 
         public DmtpRpcRequestPackage(string invokeKey, IInvokeOption option, object[] parameters, Type returnType, ISerializationSelector selector)
@@ -92,7 +92,7 @@ namespace TouchSocket.Dmtp.Rpc
             this.m_rpcMethod = rpcMethod;
         }
 
-        public void LoadInfo(DmtpRpcCallContext callContext,ISerializationSelector selector)
+        public void LoadInfo(DmtpRpcCallContext callContext, ISerializationSelector selector)
         {
             this.m_callContext = callContext;
             this.m_rpcMethod = callContext.RpcMethod;
@@ -113,7 +113,7 @@ namespace TouchSocket.Dmtp.Rpc
             }
             else
             {
-                byteBlock.WriteByte((byte)0);
+                byteBlock.WriteByte(0);
             }
         }
 
@@ -131,13 +131,13 @@ namespace TouchSocket.Dmtp.Rpc
         public override void UnpackageBody<TByteBlock>(ref TByteBlock byteBlock)
         {
             base.UnpackageBody(ref byteBlock);
-            var countPar = (byte)byteBlock.ReadByte();
-            var ps = new object[RpcParameters.Length];
+            var countPar = byteBlock.ReadByte();
+            var ps = new object[this.RpcParameters.Length];
 
             var index = 0;
             for (var i = 0; i < ps.Length; i++)
             {
-                var parameter = RpcParameters[i];
+                var parameter = this.RpcParameters[i];
                 if (parameter.IsCallContext)
                 {
                     ps[i] = this.m_callContext;

@@ -18,7 +18,7 @@ namespace TouchSocket.Rpc
     /// <summary>
     /// Rpc调用上下文
     /// </summary>
-    public interface ICallContext : IResolverObject,IDependencyObject
+    public interface ICallContext : IResolverObject, IDependencyObject
     {
         /// <summary>
         /// 调用此服务的主体。
@@ -45,6 +45,11 @@ namespace TouchSocket.Rpc
         /// 执行取消<see cref="ICallContext.Token"/>。
         /// </summary>
         /// <returns></returns>
-        public void Cancel();
+        void Cancel();
+
+        /// <summary>
+        /// 调用参数
+        /// </summary>
+        object[] Parameters { get; }
     }
 }

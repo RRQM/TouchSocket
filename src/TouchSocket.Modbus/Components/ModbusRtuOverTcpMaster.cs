@@ -30,7 +30,7 @@ namespace TouchSocket.Modbus
             this.Protocol = TouchSocketModbusUtility.ModbusRtuOverTcp;
         }
 
-        
+
         /// <inheritdoc/>
         public async Task<IModbusResponse> SendModbusRequestAsync(ModbusRequest request, int millisecondsTimeout, CancellationToken token)
         {
@@ -51,7 +51,7 @@ namespace TouchSocket.Modbus
                 {
                     byteBlock.Dispose();
                 }
-               
+
                 this.m_waitDataAsync.SetCancellationToken(token);
                 var waitDataStatus = await this.m_waitDataAsync.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
                 waitDataStatus.ThrowIfNotRunning();

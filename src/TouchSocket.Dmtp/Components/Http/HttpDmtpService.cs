@@ -25,7 +25,7 @@ namespace TouchSocket.Dmtp
     public class HttpDmtpService : HttpDmtpService<HttpDmtpSessionClient>, IHttpDmtpService
     {
         /// <inheritdoc/>
-        protected override sealed HttpDmtpSessionClient NewClient()
+        protected sealed override HttpDmtpSessionClient NewClient()
         {
             return new PrivateHttpDmtpSessionClient();
         }

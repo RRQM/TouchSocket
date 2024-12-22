@@ -151,7 +151,7 @@ namespace TouchSocket.Sockets
                     {
                         return;
                     }
-                 
+
                     if (this.CheckClearType == CheckClearType.OnlyReceive)
                     {
                         if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
@@ -188,7 +188,7 @@ namespace TouchSocket.Sockets
         {
             try
             {
-                this.m_logger.Info($"{this.GetType()} begin polling");
+                this.m_logger.Debug($"{this.GetType()} begin polling");
                 while (true)
                 {
                     if (this.DisposedValue)
@@ -212,17 +212,17 @@ namespace TouchSocket.Sockets
                     }
                     catch (Exception ex)
                     {
-                        this.m_logger.Exception(ex);
+                        this.m_logger.Debug(ex.Message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                this.m_logger.Exception(ex);
+                this.m_logger.Debug(ex.Message);
             }
             finally
             {
-                this.m_logger.Info($"{this.GetType()} end polling");
+                this.m_logger.Debug($"{this.GetType()} end polling");
             }
         }
     }

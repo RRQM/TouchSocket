@@ -95,7 +95,7 @@ namespace TouchSocket.Rpc
                         break;
                     }
             }
-           
+
             this.OnAfter(targetMethod, invokeKey, ref args, ref result);
 
             return result;

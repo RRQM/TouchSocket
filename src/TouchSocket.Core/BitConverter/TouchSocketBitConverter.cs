@@ -12,7 +12,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using TouchSocket.Resources;
 
 namespace TouchSocket.Core
 {
@@ -115,14 +114,14 @@ namespace TouchSocket.Core
         {
             switch (endianType)
             {
-                case EndianType.Little:return LittleEndian;
-                   
+                case EndianType.Little: return LittleEndian;
+
                 case EndianType.Big: return BigEndian;
-                   
+
                 case EndianType.LittleSwap: return LittleSwapEndian;
-                    
-                case EndianType.BigSwap: return  BigSwapEndian;
-                    
+
+                case EndianType.BigSwap: return BigSwapEndian;
+
                 default:
                     ThrowHelper.ThrowInvalidEnumArgumentException(endianType);
                     return default;
@@ -599,9 +598,9 @@ namespace TouchSocket.Core
             for (var i = 0; i < bools.Length; i++)
             {
                 // 计算当前bool值所在的字节位置，每8个bool值共用一个字节。
-                int byteIndex = offset + i / 8;
+                var byteIndex = offset + i / 8;
                 // 获取当前bool值在字节中的位置，范围为0到7。
-                int bitIndex = i % 8;
+                var bitIndex = i % 8;
                 // 通过GetBit方法从字节中获取指定位置的位值，并将其转换为bool类型。
                 bools[i] = Convert.ToBoolean(buffer[byteIndex].GetBit(bitIndex));
             }

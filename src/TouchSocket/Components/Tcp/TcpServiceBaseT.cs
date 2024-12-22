@@ -211,14 +211,14 @@ namespace TouchSocket.Sockets
         {
             this.ThrowIfDisposed();
 
-            var serverState= this.m_serverState;
+            var serverState = this.m_serverState;
 
             //调整这行语句顺序，修复Stop时可能会抛出异常的bug
             //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
             this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
             //无条件释放
             await this.ReleaseAll().ConfigureAwait(false);
-           
+
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
@@ -312,7 +312,7 @@ namespace TouchSocket.Sockets
                 if (this.Count < this.MaxCount)
                 {
                     //this.OnClientSocketInit(Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken)).GetFalseAwaitResult();
-                    _=Task.Factory.StartNew(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
+                    _ = Task.Factory.StartNew(this.OnClientInit, Tuple.Create(socket, (TcpNetworkMonitor)e.UserToken));
                 }
                 else
                 {
@@ -394,20 +394,22 @@ namespace TouchSocket.Sockets
                         socket.SafeDispose();
                         return;
                     }
+
+                    if (monitor.Option.UseSsl)
+                    {
+                        try
+                        {
+                            await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.OnAuthenticatingError(ex);
+                            throw;
+                        }
+                    }
+
                     if (this.m_clients.TryAdd(client))
                     {
-                        if (monitor.Option.UseSsl)
-                        {
-                            try
-                            {
-                                await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(false);
-                            }
-                            catch (Exception ex)
-                            {
-                                this.OnAuthenticatingError(ex);
-                                return;
-                            }
-                        }
                         await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(false);
                     }
                     else
@@ -447,7 +449,7 @@ namespace TouchSocket.Sockets
 
         private bool TryGet(string id, out TcpSessionClientBase client)
         {
-            if (this.m_clients.TryGetValue(id, out var newClient))
+            if (this.m_clients.TryGetClient(id, out var newClient))
             {
                 client = newClient;
                 return true;

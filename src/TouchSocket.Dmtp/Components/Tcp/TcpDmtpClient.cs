@@ -306,7 +306,7 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        protected override sealed async Task OnTcpConnecting(ConnectingEventArgs e)
+        protected sealed override async Task OnTcpConnecting(ConnectingEventArgs e)
         {
             this.m_dmtpAdapter = new DmtpAdapter();
             this.SetAdapter(this.m_dmtpAdapter);
@@ -314,7 +314,7 @@ namespace TouchSocket.Dmtp
         }
 
         /// <inheritdoc/>
-        protected override sealed async Task OnTcpReceived(ReceivedDataEventArgs e)
+        protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             var message = (DmtpMessage)e.RequestInfo;
             if (!await this.m_dmtpActor.InputReceivedData(message).ConfigureAwait(false))

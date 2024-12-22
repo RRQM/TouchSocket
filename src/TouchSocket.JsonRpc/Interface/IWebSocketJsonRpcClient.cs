@@ -11,14 +11,20 @@
 //------------------------------------------------------------------------------
 
 using TouchSocket.Core;
+using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.JsonRpc
 {
+
     /// <summary>
-    /// IWebSocketJsonRpcClient
+    /// 表示一个WebSocket Json RPC客户端接口。
     /// </summary>
     public interface IWebSocketJsonRpcClient : ISetupConfigObject, IJsonRpcClient, IOnlineClient, IClosableClient, IConnectableClient
     {
+        /// <summary>
+        /// 获取或设置动作映射。
+        /// </summary>
+        ActionMap ActionMap { get; }
     }
 }

@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 
@@ -207,7 +206,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        protected override sealed async Task OnTcpClosed(ClosedEventArgs e)
+        protected sealed override async Task OnTcpClosed(ClosedEventArgs e)
         {
             await this.OnNatClosed(e).ConfigureAwait(false);
 
@@ -223,7 +222,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        protected override sealed async Task OnTcpReceived(ReceivedDataEventArgs e)
+        protected sealed override async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             await base.OnTcpReceived(e).ConfigureAwait(false);
             await this.OnNatReceived(e).ConfigureAwait(false);

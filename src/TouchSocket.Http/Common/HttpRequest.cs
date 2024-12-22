@@ -48,7 +48,7 @@ namespace TouchSocket.Http
         /// 初始化 HttpRequest 实例。
         /// </summary>
         /// <param name="httpClientBase">提供底层 HTTP 通信功能的 HttpClientBase 实例。</param>
-        [Obsolete("此构造函数已被弃用，请使用无参构造函数代替",true)]
+        [Obsolete("此构造函数已被弃用，请使用无参构造函数代替", true)]
         public HttpRequest(HttpClientBase httpClientBase)
         {
         }
@@ -79,7 +79,7 @@ namespace TouchSocket.Http
         public string URL { get; private set; } = "/";
 
         /// <inheritdoc/>
-        public override bool IsServer =>this.m_isServer;
+        public override bool IsServer => this.m_isServer;
 
         /// <inheritdoc/>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
@@ -298,7 +298,7 @@ namespace TouchSocket.Http
             byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
         }
 
-     
+
         private void ParseUrl()
         {
             if (this.URL.Contains('?'))

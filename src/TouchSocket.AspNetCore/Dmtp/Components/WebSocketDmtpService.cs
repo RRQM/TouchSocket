@@ -36,33 +36,22 @@ namespace TouchSocket.Dmtp.AspNetCore
         }
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 获取所有客户端的标识符。
-        /// </summary>
-        /// <returns>客户端标识符的集合。</returns>
         public override IEnumerable<string> GetIds()
         {
-            return this.m_clients.Keys;
+            return this.m_clients.GetIds();
         }
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 异步重置客户端标识符。
-        /// </summary>
-        /// <param name="sourceId">源客户端标识符。</param>
-        /// <param name="targetId">目标客户端标识符。</param>
-        /// <exception cref="ArgumentException">抛出异常，如果sourceId或targetId为空。</exception>
-        /// <exception cref="ClientNotFindException">抛出异常，如果源客户端不存在。</exception>
         public override async Task ResetIdAsync(string sourceId, string targetId)
         {
             ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(sourceId, nameof(sourceId));
             ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(targetId, nameof(targetId));
-            
+
             if (sourceId == targetId)
             {
                 return;
             }
-            if (this.m_clients.TryGetValue(sourceId, out var sessionClient))
+            if (this.m_clients.TryGetClient(sourceId, out var sessionClient))
             {
                 await sessionClient.ResetIdAsync(targetId).ConfigureAwait(false);
             }
@@ -73,24 +62,9 @@ namespace TouchSocket.Dmtp.AspNetCore
         }
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 检查指定标识符的客户端是否存在。
-        /// </summary>
-        /// <param name="id">要检查的客户端标识符。</param>
-        /// <returns>如果客户端存在返回true，否则返回false。</returns>
         public override bool ClientExists(string id)
         {
-
-            if (string.IsNullOrEmpty(id))
-            {
-                return false;
-            }
-
-            if (this.m_clients.ContainsKey(id))
-            {
-                return true;
-            }
-            return false;
+            return this.m_clients.ClientExist(id);
         }
 
         /// <summary>
@@ -105,7 +79,8 @@ namespace TouchSocket.Dmtp.AspNetCore
                 var webSocket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
                 var id = this.GetNextNewId();
                 var client = new WebSocketDmtpSessionClient();
-                if (!this.m_clients.TryAdd(id, client))
+                client.InternalSetId(id);
+                if (!this.m_clients.TryAdd(client))
                 {
                     // 如果添加失败，抛出异常，提示该Id已经存在。
                     ThrowHelper.ThrowException(TouchSocketResource.IdAlreadyExists.Format(id));
@@ -113,7 +88,6 @@ namespace TouchSocket.Dmtp.AspNetCore
                 client.InternalSetService(this);
                 client.InternalSetConfig(this.Config);
                 client.InternalSetContainer(this.Resolver);
-                client.InternalSetId(id);
                 client.InternalSetPluginManager(this.PluginManager);
                 client.SetDmtpActor(this.CreateDmtpActor(client));
                 await client.Start(webSocket, context).ConfigureAwait(false);
@@ -141,27 +115,15 @@ namespace TouchSocket.Dmtp.AspNetCore
         #region 属性
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 获取客户端数量。
-        /// </summary>
         public override int Count => this.m_clients.Count;
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 获取服务器状态。
-        /// </summary>
         public override ServerState ServerState => this.m_serverState;
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 获取验证令牌。
-        /// </summary>
         public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <inheritdoc/>
-        /// <summary>
-        /// 获取客户端集合。
-        /// </summary>
         public override IClientCollection<WebSocketDmtpSessionClient> Clients => this.m_clients;
 
         #endregion 属性
@@ -253,12 +215,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         /// <summary>
         /// 尝试添加客户端到集合中。
         /// </summary>
-        /// <param name="id">客户端标识符。</param>
         /// <param name="sessionClient">WebSocketDmtpSessionClient对象。</param>
         /// <returns>如果添加成功返回true，否则返回false。</returns>
-        internal bool TryAdd(string id, WebSocketDmtpSessionClient sessionClient)
+        internal bool TryAdd(WebSocketDmtpSessionClient sessionClient)
         {
-            return this.m_clients.TryAdd(id, sessionClient);
+            return this.m_clients.TryAdd(sessionClient);
         }
 
         /// <summary>
