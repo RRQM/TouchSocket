@@ -118,7 +118,7 @@ namespace WebApiServerApp
         }
     }
 
-    //[CustomResponse]
+    [CustomResponse]
     public partial class ApiServer : RpcServer
     {
         private readonly ILog m_logger;
@@ -317,42 +317,42 @@ namespace WebApiServerApp
     }
 
 
-    class CustomResponseAttribute : RpcActionFilterAttribute
+    public class CustomResponseAttribute : RpcActionFilterAttribute
     {
         public override async Task<InvokeResult> ExecutedAsync(ICallContext callContext, object[] parameters, InvokeResult invokeResult, Exception exception)
         {
-            //if (invokeResult.Status == InvokeStatus.Success)
-            //{
-            //    //正常情况，直接返回数据
-            //    return invokeResult;
-            //}
-            //else
-            //{
-            //    //非正常情况，可以获取到错误信息
-            //    var errorMsg = invokeResult.Message;
-            //    //和异常
-            //    var errorException = exception;
-
-            //    return new InvokeResult()
-            //    {
-            //        Status = InvokeStatus.Success,
-            //        Result = "自定义结果"
-            //    };
-            //}
-
-
-            if (callContext is IWebApiCallContext webApiCallContext)
+            if (invokeResult.Status == InvokeStatus.Success)
             {
-                var response = webApiCallContext.HttpContext.Response;
-                if (!response.Responsed)
+                //正常情况，直接返回数据
+                return invokeResult;
+            }
+            else
+            {
+                //非正常情况，可以获取到错误信息
+                var errorMsg = invokeResult.Message;
+                //和异常
+                var errorException = exception;
+
+                return new InvokeResult()
                 {
-                    response.SetStatus(500, "自定义状态码");
-                    await response.AnswerAsync();
-                }
-             
+                    Status = InvokeStatus.Success,
+                    Result = exception?.Message ?? "自定义结果"
+                };
             }
 
-            return invokeResult;
+
+            //if (callContext is IWebApiCallContext webApiCallContext)
+            //{
+            //    var response = webApiCallContext.HttpContext.Response;
+            //    if (!response.Responsed)
+            //    {
+            //        response.SetStatus(500, "自定义状态码");
+            //        await response.AnswerAsync();
+            //    }
+
+            //}
+
+            //return invokeResult;
         }
     }
 
