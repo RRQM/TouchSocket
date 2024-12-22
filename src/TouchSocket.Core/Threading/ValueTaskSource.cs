@@ -186,7 +186,7 @@ namespace TouchSocket.Core
             return this.GetResult();
         }
 
-        
+
         ValueTaskSourceStatus IValueTaskSource<TResult>.GetStatus(short token)
         {
             return this.GetStatus(token);

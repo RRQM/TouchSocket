@@ -10,256 +10,256 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using TouchSocket.Core;
-using TouchSocket.Rpc;
+//using Newtonsoft.Json;
+//using Newtonsoft.Json.Linq;
+//using System;
+//using TouchSocket.Core;
+//using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
-{
-    /// <summary>
-    /// JsonRpcUtility
-    /// </summary>
-    public static class JsonRpcUtility
-    {
-        /// <summary>
-        /// 是否属于JsonRpc请求
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static bool IsJsonRpcRequest(string jsonString)
-        {
-            if (jsonString.Contains("error") || jsonString.Contains("result"))
-            {
-                return false;
-            }
+//namespace TouchSocket.JsonRpc
+//{
+//    /// <summary>
+//    /// JsonRpcUtility
+//    /// </summary>
+//    public static class JsonRpcUtility
+//    {
+//        /// <summary>
+//        /// 是否属于JsonRpc请求
+//        /// </summary>
+//        /// <param name="jsonString"></param>
+//        /// <returns></returns>
+//        public static bool IsJsonRpcRequest(string jsonString)
+//        {
+//            if (jsonString.Contains("error") || jsonString.Contains("result"))
+//            {
+//                return false;
+//            }
 
-            return true;
-        }
+//            return true;
+//        }
 
-        /// <summary>
-        /// ToJsonRpcWaitResult
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static JsonRpcWaitResult ToJsonRpcWaitResult(string jsonString)
-        {
-#if NET6_0_OR_GREATER
-            return jsonString.FromJsonString<JsonRpcWaitResult>();
-            return (JsonRpcWaitResult)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcWaitResult), TouchSocketJsonRpcSourceGenerationContext.Default);
-#else
-            return jsonString.FromJsonString<JsonRpcWaitResult>();
-#endif
-        }
+//        /// <summary>
+//        /// ToJsonRpcWaitResult
+//        /// </summary>
+//        /// <param name="jsonString"></param>
+//        /// <returns></returns>
+//        public static JsonRpcWaitResult ToJsonRpcWaitResult(string jsonString)
+//        {
+//#if NET6_0_OR_GREATER
+//            return jsonString.FromJsonString<JsonRpcWaitResult>();
+//            return (JsonRpcWaitResult)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcWaitResult), TouchSocketJsonRpcSourceGenerationContext.Default);
+//#else
+//            return jsonString.FromJsonString<JsonRpcWaitResult>();
+//#endif
+//        }
 
-        /// <summary>
-        /// ToJsonRpcRequestContext
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static JsonRpcRequestContext ToJsonRpcRequestContext(string jsonString)
-        {
-#if NET6_0_OR_GREATER
-            return jsonString.FromJsonString<JsonRpcRequestContext>();
-            //return (JsonRpcRequestContext)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcRequestContext), TouchSokcetJsonRpcSourceGenerationContext.Default);
-#else
-            return jsonString.FromJsonString<JsonRpcRequestContext>();
-#endif
-        }
+//        /// <summary>
+//        /// ToJsonRpcRequestContext
+//        /// </summary>
+//        /// <param name="jsonString"></param>
+//        /// <returns></returns>
+//        public static JsonRpcRequestContext ToJsonRpcRequestContext(string jsonString)
+//        {
+//#if NET6_0_OR_GREATER
+//            return jsonString.FromJsonString<JsonRpcRequestContext>();
+//            //return (JsonRpcRequestContext)System.Text.Json.JsonSerializer.Deserialize(jsonString, typeof(JsonRpcRequestContext), TouchSokcetJsonRpcSourceGenerationContext.Default);
+//#else
+//            return jsonString.FromJsonString<JsonRpcRequestContext>();
+//#endif
+//        }
 
-        /// <summary>
-        /// ToJsonRpcResponseString
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns></returns>
-        public static string ToJsonRpcResponseString(JsonRpcResponseBase response)
-        {
-#if NET6_0_OR_GREATER
-            return JsonConvert.SerializeObject(response);
-            return System.Text.Json.JsonSerializer.Serialize(response);
-#else
-            return JsonConvert.SerializeObject(response);
-#endif
-        }
+//        /// <summary>
+//        /// ToJsonRpcResponseString
+//        /// </summary>
+//        /// <param name="response"></param>
+//        /// <returns></returns>
+//        public static string ToJsonRpcResponseString(JsonRpcResponseBase response)
+//        {
+//#if NET6_0_OR_GREATER
+//            return JsonConvert.SerializeObject(response);
+//            return System.Text.Json.JsonSerializer.Serialize(response);
+//#else
+//            return JsonConvert.SerializeObject(response);
+//#endif
+//        }
 
-        /// <summary>
-        /// ResultParseToType
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="returnType"></param>
-        /// <returns></returns>
-        public static object ResultParseToType(object result, Type returnType)
-        {
-            if (returnType.IsPrimitive || returnType == typeof(string))
-            {
-                return result.ToString().ParseToType(returnType);
-            }
-            else
-            {
-                return result.ToJsonString().FromJsonString(returnType);
-            }
-        }
+//        /// <summary>
+//        /// ResultParseToType
+//        /// </summary>
+//        /// <param name="result"></param>
+//        /// <param name="returnType"></param>
+//        /// <returns></returns>
+//        public static object ResultParseToType(object result, Type returnType)
+//        {
+//            if (returnType.IsPrimitive || returnType == typeof(string))
+//            {
+//                return result.ToString().ParseToType(returnType);
+//            }
+//            else
+//            {
+//                return result.ToJsonString().FromJsonString(returnType);
+//            }
+//        }
 
-        /// <summary>
-        /// BuildRequestContext
-        /// </summary>
-        /// <param name="actionMap"></param>
-        /// <param name="callContext"></param>
-        /// <exception cref="RpcException"></exception>
-        public static void BuildRequestContext(ActionMap actionMap, ref JsonRpcCallContextBase callContext)
-        {
-            var requestContext = ToJsonRpcRequestContext(callContext.JsonString);
+//        /// <summary>
+//        /// BuildRequestContext
+//        /// </summary>
+//        /// <param name="actionMap"></param>
+//        /// <param name="callContext"></param>
+//        /// <exception cref="RpcException"></exception>
+//        public static void BuildRequestContext(ActionMap actionMap, ref JsonRpcCallContextBase callContext)
+//        {
+//            var requestContext = ToJsonRpcRequestContext(callContext.JsonString);
 
-            callContext.JsonRpcContext = requestContext;
+//            callContext.JsonRpcContext = requestContext;
 
-            if (actionMap.TryGetRpcMethod(requestContext.Method, out var rpcMethod))
-            {
-                callContext.Init(rpcMethod);
-                var ps = new object[rpcMethod.Parameters.Length];
+//            if (actionMap.TryGetRpcMethod(requestContext.Method, out var rpcMethod))
+//            {
+//                callContext.SetRpcMethod(rpcMethod);
+//                var ps = new object[rpcMethod.Parameters.Length];
 
-                if (requestContext.Params == null)
-                {
-                    for (var i = 0; i < ps.Length; i++)
-                    {
-                        var parameter = rpcMethod.Parameters[i];
-                        if (parameter.IsCallContext)
-                        {
-                            ps[i] = callContext;
-                        }
-                        else if (parameter.IsFromServices)
-                        {
-                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                        }
-                        else if (parameter.ParameterInfo.HasDefaultValue)
-                        {
-                            ps[i] = parameter.ParameterInfo.DefaultValue;
-                        }
-                        else
-                        {
-                            ps[i] = parameter.Type.GetDefault();
-                        }
-                    }
-                }
-                if (requestContext.Params is JObject obj)
-                {
-                    for (var i = 0; i < ps.Length; i++)
-                    {
-                        var parameter = rpcMethod.Parameters[i];
-                        if (parameter.IsCallContext)
-                        {
-                            ps[i] = callContext;
-                        }
-                        else if (parameter.IsFromServices)
-                        {
-                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                        }
-                        else if (obj.TryGetValue(parameter.Name, out var jToken))
-                        {
-                            ps[i] = jToken.ToJsonString().FromJsonString(parameter.Type);
-                        }
-                        else if (parameter.ParameterInfo.HasDefaultValue)
-                        {
-                            ps[i] = parameter.ParameterInfo.DefaultValue;
-                        }
-                        else
-                        {
-                            ps[i] = parameter.Type.GetDefault();
-                        }
-                    }
-                }
-                else if (requestContext.Params is JArray array)
-                {
-                    var index = 0;
-                    for (var i = 0; i < ps.Length; i++)
-                    {
-                        var parameter = rpcMethod.Parameters[i];
-                        if (parameter.IsCallContext)
-                        {
-                            ps[i] = callContext;
-                        }
-                        else if (parameter.IsFromServices)
-                        {
-                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                        }
-                        else if (index < array.Count)
-                        {
-                            ps[i] = array[index++].ToJsonString().FromJsonString(parameter.Type);
-                        }
-                        else if (parameter.ParameterInfo.HasDefaultValue)
-                        {
-                            ps[i] = parameter.ParameterInfo.DefaultValue;
-                        }
-                        else
-                        {
-                            ps[i] = parameter.Type.GetDefault();
-                        }
-                    }
-                }
-                else
-                {
-                    throw new RpcException("未知参数类型");
-                }
+//                if (requestContext.Params == null)
+//                {
+//                    for (var i = 0; i < ps.Length; i++)
+//                    {
+//                        var parameter = rpcMethod.Parameters[i];
+//                        if (parameter.IsCallContext)
+//                        {
+//                            ps[i] = callContext;
+//                        }
+//                        else if (parameter.IsFromServices)
+//                        {
+//                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+//                        }
+//                        else if (parameter.ParameterInfo.HasDefaultValue)
+//                        {
+//                            ps[i] = parameter.ParameterInfo.DefaultValue;
+//                        }
+//                        else
+//                        {
+//                            ps[i] = parameter.Type.GetDefault();
+//                        }
+//                    }
+//                }
+//                if (requestContext.Params is JObject obj)
+//                {
+//                    for (var i = 0; i < ps.Length; i++)
+//                    {
+//                        var parameter = rpcMethod.Parameters[i];
+//                        if (parameter.IsCallContext)
+//                        {
+//                            ps[i] = callContext;
+//                        }
+//                        else if (parameter.IsFromServices)
+//                        {
+//                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+//                        }
+//                        else if (obj.TryGetValue(parameter.Name, out var jToken))
+//                        {
+//                            ps[i] = jToken.ToJsonString().FromJsonString(parameter.Type);
+//                        }
+//                        else if (parameter.ParameterInfo.HasDefaultValue)
+//                        {
+//                            ps[i] = parameter.ParameterInfo.DefaultValue;
+//                        }
+//                        else
+//                        {
+//                            ps[i] = parameter.Type.GetDefault();
+//                        }
+//                    }
+//                }
+//                else if (requestContext.Params is JArray array)
+//                {
+//                    var index = 0;
+//                    for (var i = 0; i < ps.Length; i++)
+//                    {
+//                        var parameter = rpcMethod.Parameters[i];
+//                        if (parameter.IsCallContext)
+//                        {
+//                            ps[i] = callContext;
+//                        }
+//                        else if (parameter.IsFromServices)
+//                        {
+//                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
+//                        }
+//                        else if (index < array.Count)
+//                        {
+//                            ps[i] = array[index++].ToJsonString().FromJsonString(parameter.Type);
+//                        }
+//                        else if (parameter.ParameterInfo.HasDefaultValue)
+//                        {
+//                            ps[i] = parameter.ParameterInfo.DefaultValue;
+//                        }
+//                        else
+//                        {
+//                            ps[i] = parameter.Type.GetDefault();
+//                        }
+//                    }
+//                }
+//                else
+//                {
+//                    throw new RpcException("未知参数类型");
+//                }
 
-                requestContext.Parameters = ps;
-            }
-        }
+//                requestContext.Parameters = ps;
+//            }
+//        }
 
-        /// <summary>
-        /// GetJsonRpcError
-        /// </summary>
-        /// <param name="invokeResult"></param>
-        /// <returns></returns>
-        public static JsonRpcError GetJsonRpcError(InvokeResult invokeResult)
-        {
-            JsonRpcError error = null;
-            switch (invokeResult.Status)
-            {
-                case InvokeStatus.Success:
-                    {
-                        break;
-                    }
-                case InvokeStatus.UnFound:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32601,
-                            Message = "函数未找到"
-                        };
-                        break;
-                    }
-                case InvokeStatus.UnEnable:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32601,
-                            Message = "函数已被禁用"
-                        };
-                        break;
-                    }
-                case InvokeStatus.InvocationException:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32603,
-                            Message = "函数内部异常"
-                        };
-                        break;
-                    }
-                case InvokeStatus.Exception:
-                    {
-                        error = new JsonRpcError
-                        {
-                            Code = -32602,
-                            Message = invokeResult.Message
-                        };
-                        break;
-                    }
-                default:
-                    return default;
-            }
+//        /// <summary>
+//        /// GetJsonRpcError
+//        /// </summary>
+//        /// <param name="invokeResult"></param>
+//        /// <returns></returns>
+//        public static JsonRpcError GetJsonRpcError(InvokeResult invokeResult)
+//        {
+//            JsonRpcError error = null;
+//            switch (invokeResult.Status)
+//            {
+//                case InvokeStatus.Success:
+//                    {
+//                        break;
+//                    }
+//                case InvokeStatus.UnFound:
+//                    {
+//                        error = new JsonRpcError
+//                        {
+//                            Code = -32601,
+//                            Message = "函数未找到"
+//                        };
+//                        break;
+//                    }
+//                case InvokeStatus.UnEnable:
+//                    {
+//                        error = new JsonRpcError
+//                        {
+//                            Code = -32601,
+//                            Message = "函数已被禁用"
+//                        };
+//                        break;
+//                    }
+//                case InvokeStatus.InvocationException:
+//                    {
+//                        error = new JsonRpcError
+//                        {
+//                            Code = -32603,
+//                            Message = "函数内部异常"
+//                        };
+//                        break;
+//                    }
+//                case InvokeStatus.Exception:
+//                    {
+//                        error = new JsonRpcError
+//                        {
+//                            Code = -32602,
+//                            Message = invokeResult.Message
+//                        };
+//                        break;
+//                    }
+//                default:
+//                    return default;
+//            }
 
-            return error;
-        }
-    }
-}
+//            return error;
+//        }
+//    }
+//}

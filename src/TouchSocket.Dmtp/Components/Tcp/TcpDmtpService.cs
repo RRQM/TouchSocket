@@ -24,7 +24,7 @@ namespace TouchSocket.Dmtp
     public class TcpDmtpService : TcpDmtpService<TcpDmtpSessionClient>, ITcpDmtpService
     {
         /// <inheritdoc/>
-        protected override sealed TcpDmtpSessionClient NewClient()
+        protected sealed override TcpDmtpSessionClient NewClient()
         {
             return new PrivateTcpDmtpSessionClient();
         }
@@ -49,9 +49,7 @@ namespace TouchSocket.Dmtp
 
         #endregion 字段
 
-        /// <summary>
-        /// 连接令箭
-        /// </summary>
+        /// <inheritdoc/>
         public string VerifyToken => this.Config.GetValue(DmtpConfigExtension.DmtpOptionProperty).VerifyToken;
 
         /// <inheritdoc/>

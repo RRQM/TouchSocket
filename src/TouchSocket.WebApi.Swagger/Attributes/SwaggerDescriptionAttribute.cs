@@ -17,7 +17,7 @@ namespace TouchSocket.WebApi.Swagger
     /// <summary>
     /// Swagger描述特性
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Method)]
     public sealed class SwaggerDescriptionAttribute : Attribute
     {
         /// <summary>

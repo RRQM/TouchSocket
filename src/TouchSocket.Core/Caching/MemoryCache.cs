@@ -186,7 +186,7 @@ namespace TouchSocket.Core
             return Task.FromResult(this.SetCache(entity));
         }
 
-        
+
         private bool OnRemove(TKey key, out ICacheEntry<TKey, TValue> cache)
         {
             if (this.m_pairs.TryRemove(key, out cache))

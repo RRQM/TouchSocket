@@ -161,7 +161,7 @@ namespace TouchSocket.Rpc
             else if (type.IsGenericType)
             {
                 var typeString = ExtractNonGenericTypeName(type.FullName);
-                var typesStrings = type.GetGenericArguments().Select(a => GetTypeFullName(a));
+                var typesStrings = type.GetGenericArguments().Select(a => this.GetTypeFullName(a));
                 return $"{typeString}<{string.Join(",", typesStrings)}>";
             }
             else
@@ -272,7 +272,7 @@ namespace TouchSocket.Rpc
             }
             else
             {
-               return null;
+                return null;
             }
             return className;
         }

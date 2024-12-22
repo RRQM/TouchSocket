@@ -10,8 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using System;
-using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Rpc;
 
@@ -20,99 +18,35 @@ namespace TouchSocket.JsonRpc
     /// <summary>
     /// JsonRpcParser解析器插件
     /// </summary>
-    [PluginOption(Singleton = true)]
     public abstract class JsonRpcParserPluginBase : PluginBase
     {
-        private readonly IRpcServerProvider m_rpcServerProvider;
-        private readonly ILog m_logger;
+        /// <summary>
+        /// 获取RPC服务器提供程序。
+        /// </summary>
+        public IRpcServerProvider RpcServerProvider { get; }
 
         /// <summary>
-        /// 构造函数
+        /// 获取动作映射。
         /// </summary>
-        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider,ILog logger)
+        public ActionMap ActionMap { get; } = new ActionMap(true);
+
+        /// <summary>
+        /// 初始化 <see cref="JsonRpcParserPluginBase"/> 类的新实例。
+        /// </summary>
+        /// <param name="rpcServerProvider">RPC服务器提供程序。</param>
+        public JsonRpcParserPluginBase(IRpcServerProvider rpcServerProvider)
         {
-            this.ActionMap = new ActionMap(true);
-            this.RegisterServer(rpcServerProvider.GetMethods());
-            this.m_rpcServerProvider = rpcServerProvider;
-            this.m_logger = logger;
+            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+            if (rpcServerProvider is not null)
+            {
+                this.RpcServerProvider = rpcServerProvider;
+                JsonRpcActor.AddRpcToMap(rpcServerProvider, this.ActionMap);
+            }
         }
 
         /// <summary>
-        /// JsonRpc的调用键。
+        /// 获取序列化转换器。
         /// </summary>
-        public ActionMap ActionMap { get; private set; }
-
-        /// <summary>
-        /// 处理响应结果。
-        /// </summary>
-        /// <param name="callContext"></param>
-        /// <param name="result"></param>
-        /// <param name="error"></param>
-        protected abstract Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error);
-
-        /// <summary>
-        /// 调用JsonRpc
-        /// </summary>
-        protected async Task ThisInvokeAsync(object obj)
-        {
-            var callContext = (JsonRpcCallContextBase)obj;
-            try
-            {
-                var invokeResult = new InvokeResult();
-
-                try
-                {
-                    JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
-                }
-                catch (Exception ex)
-                {
-                    invokeResult.Status = InvokeStatus.Exception;
-                    invokeResult.Message = ex.Message;
-                }
-
-                if (callContext.RpcMethod != null)
-                {
-                    if (!callContext.RpcMethod.IsEnable)
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
-                    }
-                }
-                else
-                {
-                    invokeResult.Status = InvokeStatus.UnFound;
-                }
-
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
-                }
-
-                if (!callContext.JsonRpcContext.Id.HasValue)
-                {
-                    return;
-                }
-                var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-                await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
-            }
-            catch(Exception ex)
-            {
-                this.m_logger?.Debug(ex.Message);
-            }
-            finally
-            {
-                callContext.Dispose();
-            }
-        }
-
-        private void RegisterServer(RpcMethod[] rpcMethods)
-        {
-            foreach (var rpcMethod in rpcMethods)
-            {
-                if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
-                }
-            }
-        }
+        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
     }
 }

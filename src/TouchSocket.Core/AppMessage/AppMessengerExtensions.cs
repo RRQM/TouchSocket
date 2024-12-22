@@ -131,7 +131,7 @@ namespace TouchSocket.Core
         /// <exception cref="ArgumentNullException"></exception>
         public static void Unregister(this AppMessenger appMessenger, string token)
         {
-            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(token,nameof(token));
+            ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(token, nameof(token));
             appMessenger.Remove(token);
         }
 

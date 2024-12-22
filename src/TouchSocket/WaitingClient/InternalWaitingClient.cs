@@ -17,8 +17,8 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-    internal sealed class InternalWaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult> 
-        where TClient : IReceiverClient<TResult>, ISender , IRequestInfoSender
+    internal sealed class InternalWaitingClient<TClient, TResult> : DisposableObject, IWaitingClient<TClient, TResult>
+        where TClient : IReceiverClient<TResult>, ISender, IRequestInfoSender
         where TResult : IReceiverResult
     {
         private readonly SemaphoreSlim m_semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -51,7 +51,13 @@ namespace TouchSocket.Sockets
                         {
                             using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
                             {
-                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+                                var byteBlock = receiverResult.ByteBlock;
+                                ByteBlock newByteBlock = default;
+                                if (byteBlock != null)
+                                {
+                                    newByteBlock = new ByteBlock(byteBlock.ToArray());
+                                }
+                                var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
 
                                 var filterFunc = this.WaitingOptions.FilterFuncAsync;
                                 if (filterFunc == null)
@@ -82,7 +88,14 @@ namespace TouchSocket.Sockets
                                 {
                                     ThrowHelper.ThrowClientNotConnectedException();
                                 }
-                                var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
+
+                                var byteBlock = receiverResult.ByteBlock;
+                                ByteBlock newByteBlock = default;
+                                if (byteBlock != null)
+                                {
+                                    newByteBlock = new ByteBlock(byteBlock.ToArray());
+                                }
+                                var response = new ResponsedData(newByteBlock, receiverResult.RequestInfo);
 
                                 var filterFunc = this.WaitingOptions.FilterFuncAsync;
                                 if (filterFunc == null)

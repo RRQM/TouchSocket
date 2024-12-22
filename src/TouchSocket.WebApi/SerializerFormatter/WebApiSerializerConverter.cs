@@ -11,9 +11,9 @@
 //------------------------------------------------------------------------------
 
 using Newtonsoft.Json;
+using System;
 using TouchSocket.Core;
 using TouchSocket.Http;
-using System;
 
 namespace TouchSocket.WebApi
 {
@@ -58,6 +58,10 @@ namespace TouchSocket.WebApi
         }
 
 #if SystemTextJson
+        /// <summary>
+        /// 添加System.Text.Json序列化器
+        /// </summary>
+        /// <param name="options">配置JsonSerializerOptions的操作</param>
         public void AddSystemTextJsonSerializerFormatter(Action<System.Text.Json.JsonSerializerOptions> options)
         {
             var jsonSerializerOptions = new System.Text.Json.JsonSerializerOptions();

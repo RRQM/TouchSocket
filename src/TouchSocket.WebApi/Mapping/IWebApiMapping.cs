@@ -10,23 +10,28 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
+using System.Collections.Generic;
+using TouchSocket.Http;
+using TouchSocket.Rpc;
 
-namespace TouchSocket.JsonRpc
+namespace TouchSocket.WebApi
 {
     /// <summary>
-    /// JsonRpcSuccessResponse
+    /// Web API 映射接口。
     /// </summary>
-    public class JsonRpcSuccessResponse : JsonRpcResponseBase
+    public interface IWebApiMapping : IEnumerable<MappingMethod>
     {
         /// <summary>
-        /// result
+        /// 将映射设置为只读。
         /// </summary>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("result")]
-#endif
+        void MakeReadonly();
 
-        [JsonProperty("result")]
-        public object Result { get; set; }
+        /// <summary>
+        /// 根据指定的 URL 和 HTTP 方法匹配 RPC 方法。
+        /// </summary>
+        /// <param name="url">要匹配的 URL。</param>
+        /// <param name="httpMethod">要匹配的 HTTP 方法。</param>
+        /// <returns>匹配的 RPC 方法。</returns>
+        RpcMethod Match(string url, HttpMethod httpMethod);
     }
 }

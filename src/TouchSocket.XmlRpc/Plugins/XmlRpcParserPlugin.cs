@@ -80,52 +80,44 @@ namespace TouchSocket.XmlRpc
                         var invokeResult = new InvokeResult();
                         if (this.ActionMap.TryGetRpcMethod(actionKey, out var rpcMethod))
                         {
-                            if (rpcMethod.IsEnable)
+                            try
                             {
-                                try
+                                callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver, e.Context, xmlstring);
+
+                                ps = new object[rpcMethod.Parameters.Length];
+                                var paramsNode = xml.SelectSingleNode("methodCall/params");
+
+                                var index = 0;
+                                for (var i = 0; i < ps.Length; i++)
                                 {
-                                    callContext = new XmlRpcCallContext(client, rpcMethod, client.Resolver, e.Context, xmlstring);
-
-                                    ps = new object[rpcMethod.Parameters.Length];
-                                    var paramsNode = xml.SelectSingleNode("methodCall/params");
-
-                                    var index = 0;
-                                    for (var i = 0; i < ps.Length; i++)
+                                    var parameter = rpcMethod.Parameters[i];
+                                    if (parameter.IsCallContext)
                                     {
-                                        var parameter = rpcMethod.Parameters[i];
-                                        if (parameter.IsCallContext)
-                                        {
-                                            ps[i] = callContext;
-                                        }
-                                        else if (parameter.IsFromServices)
-                                        {
-                                            ps[i] = callContext.Resolver.Resolve(parameter.Type);
-                                        }
-                                        else if (index < paramsNode.ChildNodes.Count)
-                                        {
-                                            var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;
-                                            ps[i] = XmlDataTool.GetValue(valueNode, parameter.Type);
-                                        }
-                                        else if (parameter.ParameterInfo.HasDefaultValue)
-                                        {
-                                            ps[i] = parameter.ParameterInfo.DefaultValue;
-                                        }
-                                        else
-                                        {
-                                            ps[i] = parameter.Type.GetDefault();
-                                        }
+                                        ps[i] = callContext;
+                                    }
+                                    else if (parameter.IsFromServices)
+                                    {
+                                        ps[i] = callContext.Resolver.Resolve(parameter.Type);
+                                    }
+                                    else if (index < paramsNode.ChildNodes.Count)
+                                    {
+                                        var valueNode = paramsNode.ChildNodes[index++].FirstChild.FirstChild;
+                                        ps[i] = XmlDataTool.GetValue(valueNode, parameter.Type);
+                                    }
+                                    else if (parameter.ParameterInfo.HasDefaultValue)
+                                    {
+                                        ps[i] = parameter.ParameterInfo.DefaultValue;
+                                    }
+                                    else
+                                    {
+                                        ps[i] = parameter.Type.GetDefault();
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    invokeResult.Status = InvokeStatus.Exception;
-                                    invokeResult.Message = ex.Message;
-                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                invokeResult.Status = InvokeStatus.UnEnable;
-                                invokeResult.Message = "服务不可用";
+                                invokeResult.Status = InvokeStatus.Exception;
+                                invokeResult.Message = ex.Message;
                             }
                         }
                         else
@@ -134,10 +126,8 @@ namespace TouchSocket.XmlRpc
                             invokeResult.Message = "没有找到这个服务。";
                         }
 
-                        if (invokeResult.Status == InvokeStatus.Ready)
-                        {
-                            invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, ps).ConfigureAwait(false);
-                        }
+                        callContext.SetParameters(ps);
+                        invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
 
                         var httpResponse = e.Context.Response;
 
@@ -170,7 +160,7 @@ namespace TouchSocket.XmlRpc
                     {
                         callContext.SafeDispose();
                     }
-                    
+
                 }
             }
 

@@ -61,7 +61,7 @@ namespace TouchSocket.Rpc.RateLimiting
             set
             {
                 this.m_maxLifetime = value;
-                this.m_valueCounter.Period = TimeSpan.FromTicks(m_maxLifetime.Ticks / 10);
+                this.m_valueCounter.Period = TimeSpan.FromTicks(this.m_maxLifetime.Ticks / 10);
             }
         }
 

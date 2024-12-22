@@ -131,7 +131,7 @@ namespace TouchSocket.Core
             return (T)BinaryDeserialize(stream);
         }
 
-                /// <summary>
+        /// <summary>
         /// 从流中反序列化对象。
         /// </summary>
         /// <param name="stream">包含序列化对象数据的流。</param>

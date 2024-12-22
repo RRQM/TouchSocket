@@ -259,7 +259,7 @@ namespace TouchSocket.Dmtp.Rpc
         {
             var callContext = (DmtpRpcCallContext)o;
             var rpcRequestPackage = callContext.DmtpRpcPackage;
-            var parameters = rpcRequestPackage.Parameters;
+            callContext.SetParameters(rpcRequestPackage.Parameters);
             var rpcMethod = callContext.RpcMethod;
 
             try
@@ -291,23 +291,13 @@ namespace TouchSocket.Dmtp.Rpc
                 }
                 else
                 {
-                    if (rpcMethod.IsEnable)
+                    if (rpcRequestPackage.Feedback == FeedbackType.WaitInvoke && rpcMethod.HasCallContext)
                     {
-                        if (rpcRequestPackage.Feedback == FeedbackType.WaitInvoke && rpcMethod.HasCallContext)
-                        {
-                            this.m_callContextDic.TryAdd(rpcRequestPackage.Sign, callContext);
-                        }
-                    }
-                    else
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
+                        this.m_callContextDic.TryAdd(rpcRequestPackage.Sign, callContext);
                     }
                 }
 
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, parameters).ConfigureAwait(false);
-                }
+                invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
 
                 if (rpcRequestPackage.Feedback != FeedbackType.WaitInvoke)
                 {

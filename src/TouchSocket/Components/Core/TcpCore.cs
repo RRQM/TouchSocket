@@ -135,7 +135,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         public bool UseSsl => this.m_useSsl;
 
-       
+
         /// <summary>
         /// 以Ssl服务器模式授权
         /// </summary>
@@ -202,7 +202,7 @@ namespace TouchSocket.Sockets
             }
             else
             {
-              var  result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
+                var result = await this.m_socketReceiver.ReceiveAsync(this.m_socket, memory).ConfigureAwait(false);
                 this.m_receiveCounter.Increment(result.BytesTransferred);
                 return result;
             }
@@ -368,10 +368,10 @@ namespace TouchSocket.Sockets
         {
             var length = memory.Length;
 #if NET6_0_OR_GREATER
-                if (this.UseSsl)
-                {
-                    await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
-                }
+            if (this.UseSsl)
+            {
+                await this.SslStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+            }
 #else
             if (this.m_useSsl)
             {
@@ -414,7 +414,7 @@ namespace TouchSocket.Sockets
             this.m_sendBufferSize = Math.Max(TouchSocketCoreUtility.HitBufferLength(value), this.MinBufferSize);
         }
 
-        struct SendSegment
+        private struct SendSegment
         {
             public byte[] Date;
             public int Length;

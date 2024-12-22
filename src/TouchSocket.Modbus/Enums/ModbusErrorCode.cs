@@ -83,6 +83,16 @@ namespace TouchSocket.Modbus
         /// 专用于Modbus网关的响应。当从站无法响应时发送
         /// </summary>
         [Description("专用于Modbus网关的响应。当从站无法响应时发送")]
-        GatewayUnavailable = 11
+        GatewayUnavailable = 11,
+
+        /// <summary>
+        /// 在接收数据时，内存中检测到CRC校验错误。
+        /// <para>
+        /// TouchSocket自定义规定错误码。
+        /// https://gitee.com/RRQM_Home/TouchSocket/issues/IBC1J2
+        /// </para>
+        /// </summary>
+        [Description("在接收数据时，内存中检测到CRC校验错误。")]
+        ResponseMemoryVerificationError = 99,
     }
 }

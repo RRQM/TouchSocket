@@ -10,6 +10,9 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
+using System;
+using System.Threading.Tasks;
+
 namespace TouchSocket.Http.WebSockets
 {
     /// <summary>
@@ -17,5 +20,13 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public static class WebSocketClientExtension
     {
+        public static async Task SendAsync(this IWebSocket webSocket, ReadOnlyMemory<byte> memory, WSDataType dataType, bool endOfMessage = true)
+        {
+            using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })
+            {
+                frame.AppendBinary(memory.Span);
+                await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(false);
+            }
+        }
     }
 }

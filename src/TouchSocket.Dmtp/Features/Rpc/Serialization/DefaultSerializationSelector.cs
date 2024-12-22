@@ -87,7 +87,7 @@ namespace TouchSocket.Dmtp.Rpc
                     using (var block = byteBlock.ReadByteBlock())
                     {
                         // 将字节块转换为流并进行反序列化
-                        return SerializeConvert.BinaryDeserialize(block.AsStream(), SerializationBinder);
+                        return SerializeConvert.BinaryDeserialize(block.AsStream(), this.SerializationBinder);
                     }
                 case SerializationType.Json:
                     {
@@ -191,7 +191,7 @@ namespace TouchSocket.Dmtp.Rpc
                         {
                             // 参数不为null时，标记并转换为JSON字符串
                             byteBlock.WriteNotNull();
-                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter, JsonSerializerSettings));
+                            byteBlock.WriteString(JsonConvert.SerializeObject(parameter, this.JsonSerializerSettings));
                         }
                         break;
                     }

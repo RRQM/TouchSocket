@@ -12,7 +12,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using TouchSocket.Resources;
 
@@ -87,7 +86,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowArgumentNullExceptionIfStringIsNullOrEmpty(string stringValue,string name)
+        public static void ThrowArgumentNullExceptionIfStringIsNullOrEmpty(string stringValue, string name)
         {
             if (string.IsNullOrEmpty(stringValue))
             {
@@ -96,7 +95,7 @@ namespace TouchSocket.Core
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static T ThrowArgumentNullExceptionIf<T>(T obj,string objectName) where T : class
+        public static T ThrowArgumentNullExceptionIf<T>(T obj, string objectName) where T : class
         {
             return obj ?? throw new ArgumentNullException(TouchSocketCoreResource.ArgumentIsNull.Format(objectName));
         }

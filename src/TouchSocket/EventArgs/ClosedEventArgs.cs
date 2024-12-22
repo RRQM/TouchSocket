@@ -12,7 +12,7 @@
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// 断开连接事件参数
     /// </summary>
     public class ClosedEventArgs : ClosingEventArgs

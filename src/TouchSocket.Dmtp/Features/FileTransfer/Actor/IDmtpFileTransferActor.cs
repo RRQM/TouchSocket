@@ -40,7 +40,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         #region Id小文件
 
-    
+
         /// <summary>
         /// 拉取小文件。默认设置1024*1024字节大小。
         /// </summary>
@@ -68,7 +68,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         #region 小文件
 
-     
+
         /// <summary>
         /// 拉取小文件。默认设置1024*1024字节大小。
         /// </summary>
@@ -79,7 +79,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<PullSmallFileResult> PullSmallFileAsync(string path, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 推送小文件。默认设置1024*1024字节大小。
         /// </summary>
@@ -95,7 +95,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         #region Id
 
-        
+
         /// <summary>
         /// 请求完成一个资源。
         /// <para>如果是Push，当正常返回时，则说明整个过程已完成。</para>
@@ -110,7 +110,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FinishedResult> FinishedFileResourceInfoAsync(string targetId, FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 拉取文件信息。
         /// <para>注意：</para>
@@ -128,7 +128,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FileResourceInfoResult> PullFileResourceInfoAsync(string targetId, string path, Metadata metadata = null, int fileSectionSize = 1024 * 512, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-       
+
         /// <summary>
         /// 拉取文件块。
         /// <para>注意：拉取文件块时，两个成功块之间的时间应该在设定时间（60秒）内完成。</para>
@@ -140,7 +140,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FileSectionResult> PullFileSectionAsync(string targetId, FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 推送文件信息。
         /// <para>注意：</para>
@@ -158,7 +158,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<Result> PushFileResourceInfoAsync(string targetId, string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-       
+
         /// <summary>
         /// 推送文件块。
         /// <para>注意：推送文件块时，两个成功块之间的时间应该在设定时间（60秒）内完成。</para>
@@ -175,7 +175,7 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         #region 文件传输
 
-      
+
         /// <summary>
         /// 请求完成一个资源。
         /// <para>如果是Push，当正常返回时，则说明整个过程已完成。</para>
@@ -189,7 +189,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FinishedResult> FinishedFileResourceInfoAsync(FileResourceInfo fileResourceInfo, ResultCode code, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 拉取文件信息。
         /// <para>注意：</para>
@@ -206,7 +206,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FileResourceInfoResult> PullFileResourceInfoAsync(string path, Metadata metadata = null, int fileSectionSize = 1024 * 512, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 拉取文件块。
         /// <para>注意：拉取文件块时，两个成功块之间的时间应该在设定时间（60秒）内完成。</para>
@@ -217,7 +217,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <returns></returns>
         Task<FileSectionResult> PullFileSectionAsync(FileSection fileSection, int millisecondsTimeout = 5000, CancellationToken token = default);
 
-        
+
         /// <summary>
         /// 推送文件信息。
         /// <para>注意：</para>
@@ -233,7 +233,7 @@ namespace TouchSocket.Dmtp.FileTransfer
         /// <param name="token">可取消令箭</param>
         /// <returns></returns>
         Task<Result> PushFileResourceInfoAsync(string savePath, FileResourceLocator fileResourceLocator, Metadata metadata = null, int millisecondsTimeout = 5000, CancellationToken token = default);
-        
+
         /// <summary>
         /// 推送文件块。
         /// <para>注意：推送文件块时，两个成功块之间的时间应该在设定时间（60秒）内完成。</para>

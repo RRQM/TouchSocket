@@ -12,7 +12,7 @@
 
 namespace TouchSocket.Sockets
 {
-    
+
     /// <summary>
     /// 定义 ITcpSessionClient 接口，继承自多个接口，以支持 TCP 会话客户端的功能。
     /// </summary>

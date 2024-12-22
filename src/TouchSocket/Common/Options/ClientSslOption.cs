@@ -14,7 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// 客户端Ssl验证
     /// </summary>
     public class ClientSslOption : SslOption

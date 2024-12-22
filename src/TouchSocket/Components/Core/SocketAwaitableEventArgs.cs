@@ -56,7 +56,7 @@ namespace TouchSocket.Sockets
                 this.m_socketOperationResult.SocketError = CreateException(this.SocketError);
                 this.m_socketOperationResult.BytesTransferred = default;
                 this.m_socketOperationResult.RemoteEndPoint = default;
-                this.m_socketOperationResult.ReceiveMessageFromPacketInfo =default;
+                this.m_socketOperationResult.ReceiveMessageFromPacketInfo = default;
             }
             else
             {

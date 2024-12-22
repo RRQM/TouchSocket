@@ -14,7 +14,6 @@ using System;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 using TouchSocket.Core;
 
 namespace TouchSocket.SerialPorts
@@ -53,8 +52,8 @@ namespace TouchSocket.SerialPorts
                 OnPeriod = this.OnSendPeriod
             };
 
-            m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
-            m_serialPort.DataReceived += this.SerialCore_DataReceived;
+            this.m_serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
+            this.m_serialPort.DataReceived += this.SerialCore_DataReceived;
         }
 
         /// <summary>
@@ -102,7 +101,7 @@ namespace TouchSocket.SerialPorts
             try
             {
                 var segment = memory.GetArray();
-                m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
+                this.m_serialPort.Write(segment.Array, segment.Offset, segment.Count);
 
                 this.m_sendCounter.Increment(memory.Length);
             }

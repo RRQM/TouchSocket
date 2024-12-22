@@ -44,6 +44,6 @@ namespace TouchSocket.Dmtp.FileTransfer
         public string Message { get; private set; }
 
         /// <inheritdoc/>
-        public bool IsSuccess => this.ResultCode== ResultCode.Success;
+        public bool IsSuccess => this.ResultCode == ResultCode.Success;
     }
 }

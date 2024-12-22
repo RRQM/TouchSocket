@@ -171,7 +171,7 @@ namespace TouchSocket.NamedPipe
             {
                 return;
             }
-           await base.OnNamedPipeReceived(e).ConfigureAwait(false);
+            await base.OnNamedPipeReceived(e).ConfigureAwait(false);
         }
 
         #region 异步发送

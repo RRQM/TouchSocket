@@ -39,7 +39,7 @@ namespace TouchSocket.Sockets
         }
 
         /// <inheritdoc/>
-        protected override sealed Task<TClient> CreateClient()
+        protected sealed override Task<TClient> CreateClient()
         {
             return this.CreateClient(this.OnGetConfig());
         }

@@ -846,7 +846,7 @@ namespace TouchSocket.Core
             return ret;
         }
 
-               /// <summary>
+        /// <summary>
         /// 计算给定字节序列的CRC-16校验值。
         /// </summary>
         /// <param name="span">要计算CRC-16校验值的字节序列。</param>

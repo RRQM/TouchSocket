@@ -10,58 +10,18 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
 using TouchSocket.Core;
 
 namespace TouchSocket.JsonRpc
 {
-    /// <summary>
-    /// JsonRpcWaitResult
-    /// </summary>
-    public class JsonRpcWaitResult : JsonRpcResponseBase, IWaitResult
+    internal class InternalJsonRpcWaitResult : JsonRpcResponseBase, IWaitResult
     {
-        /// <summary>
-        /// Result
-        /// </summary>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("result")]
-#endif
-
-        [JsonProperty("result")]
-        public object Result { get; set; }
-
-        /// <summary>
-        /// Error
-        /// </summary>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonPropertyName("error")]
-#endif
-
-        [JsonProperty("error")]
-        public JsonRpcError Error { get; set; }
-
-        /// <inheritdoc/>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonIgnore]
-#endif
-
-        [JsonIgnore]
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
         public string Message { get; set; }
+        public string Result { get; set; }
+        public int Sign { get => this.Id.HasValue ? this.Id.Value : -1; set => this.Id = value; }
 
-        /// <inheritdoc/>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonIgnore]
-#endif
-
-        [JsonIgnore]
-        public int Sign { get => (int)this.Id; set => this.Id = value; }
-
-        /// <inheritdoc/>
-#if NET6_0_OR_GREATER
-        [System.Text.Json.Serialization.JsonIgnore]
-#endif
-
-        [JsonIgnore]
         public byte Status { get; set; }
     }
 }

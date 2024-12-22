@@ -628,7 +628,7 @@ namespace TouchSocket.Core
         /// <returns></returns>
         public static bool IsPrimitive(this Type type)
         {
-            return type.IsPrimitive||type==typeof(string);
+            return type.IsPrimitive || type == typeof(string);
         }
 
         #endregion Type

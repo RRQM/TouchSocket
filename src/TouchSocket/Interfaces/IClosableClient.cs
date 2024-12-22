@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// 具有关闭动作的对象。
     /// </summary>
     public interface IClosableClient

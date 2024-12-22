@@ -190,7 +190,7 @@ namespace TouchSocket.SerialPorts
         protected SingleStreamDataHandlingAdapter ProtectedDataHandlingAdapter => this.m_dataHandlingAdapter;
 
         /// <inheritdoc/>
-        protected SerialPort ProtectedMainSerialPort => this.m_serialCore.SerialPort;
+        protected SerialPort ProtectedMainSerialPort => this.m_serialCore?.SerialPort;
 
         #endregion 属性
 

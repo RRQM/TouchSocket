@@ -13,8 +13,8 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
-using TouchSocket.Core;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {

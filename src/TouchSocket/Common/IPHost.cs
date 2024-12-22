@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
 using TouchSocket.Core;
 using TouchSocket.Resources;
 
@@ -26,7 +25,7 @@ namespace TouchSocket.Sockets
     public class IPHost : Uri
     {
         private EndPoint m_endPoint;
-        private bool zeroPort = false;
+        private readonly bool m_zeroPort = false;
         /// <summary>
         /// IP解析映射
         /// <para>
@@ -48,7 +47,7 @@ namespace TouchSocket.Sockets
             var port = GetPortFromUrl(uriString);
             if (port == 0)
             {
-                this.zeroPort = true;
+                this.m_zeroPort = true;
             }
         }
 
@@ -152,7 +151,7 @@ namespace TouchSocket.Sockets
         {
             get
             {
-                if (this.zeroPort)
+                if (this.m_zeroPort)
                 {
                     return 0;
                 }

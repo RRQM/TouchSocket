@@ -16,7 +16,7 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.XmlRpc
 {
-    internal class XmlRpcCallContext : CallContext, IXmlRpcCallContext
+    internal sealed class XmlRpcCallContext : CallContext, IXmlRpcCallContext
     {
         public XmlRpcCallContext(object caller, RpcMethod rpcMethod, IResolver resolver, HttpContext httpContext, string xmlString) : base(caller, rpcMethod, resolver)
         {
@@ -27,5 +27,10 @@ namespace TouchSocket.XmlRpc
         public HttpContext HttpContext { get; }
 
         public string XmlString { get; }
+
+        public void SetParameters(object[] ps)
+        {
+            base.Parameters = ps;
+        }
     }
 }

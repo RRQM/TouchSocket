@@ -58,7 +58,7 @@ namespace TouchSocket.WebApi
             }
 
             var request = new HttpRequestMessage();
-            
+
             switch (webApiRequest.Method)
             {
                 case HttpMethodType.Get:
@@ -86,7 +86,7 @@ namespace TouchSocket.WebApi
             }
             if (webApiRequest.Querys != null)
             {
-                invokeKey= invokeKey +"?"+ string.Join("&", webApiRequest.Querys.Select(a => $"{a.Key}={a.Value}"));
+                invokeKey = invokeKey + "?" + string.Join("&", webApiRequest.Querys.Select(a => $"{a.Key}={a.Value}"));
             }
 
             request.RequestUri = new Uri(this.HttpClient.BaseAddress, invokeKey);
@@ -96,12 +96,12 @@ namespace TouchSocket.WebApi
                 var body = this.Converter.Serialize(request, webApiRequest.Body);
                 request.Content = new StringContent(body);
             }
-            else if (webApiRequest.Forms!=null)
+            else if (webApiRequest.Forms != null)
             {
                 var content = new FormUrlEncodedContent(webApiRequest.Forms);
                 request.Content = content;
             }
-           
+
             invokeOption ??= InvokeOption.WaitInvoke;
 
             await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default)).ConfigureAwait(false);

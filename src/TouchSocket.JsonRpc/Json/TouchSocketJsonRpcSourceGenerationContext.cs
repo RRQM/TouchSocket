@@ -10,7 +10,7 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-#if NET6_0_OR_GREATER
+#if SystemTextJson
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,12 +24,6 @@ namespace TouchSocket.JsonRpc
     /// TouchSocketJsonRpcSourceGenerationContext
     /// </summary>
     [JsonSourceGenerationOptions(WriteIndented = true)]
-    [JsonSerializable(typeof(JsonRpcResponseContext))]
-    [JsonSerializable(typeof(JsonRpcError))]
-    [JsonSerializable(typeof(JsonRpcRequestContext))]
-    [JsonSerializable(typeof(JsonRpcSuccessResponse))]
-    [JsonSerializable(typeof(JsonRpcErrorResponse))]
-    [JsonSerializable(typeof(JsonRpcWaitResult))]
     [JsonSerializable(typeof(object))]
     internal partial class TouchSocketJsonRpcSourceGenerationContext : JsonSerializerContext
     {

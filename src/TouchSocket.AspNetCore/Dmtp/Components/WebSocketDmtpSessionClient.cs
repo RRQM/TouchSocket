@@ -111,9 +111,9 @@ namespace TouchSocket.Dmtp.AspNetCore
             {
                 await this.m_dmtpActor.CloseAsync(msg).ConfigureAwait(false);
             }
-            if (this.m_client!= null)
+            if (this.m_client != null)
             {
-                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure,msg, CancellationToken.None).ConfigureAwait(false);
+                await this.m_client.CloseAsync(WebSocketCloseStatus.NormalClosure, msg, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -236,7 +236,7 @@ namespace TouchSocket.Dmtp.AspNetCore
             if (this.m_service.TryRemove(this.m_id, out var sessionClient))
             {
                 sessionClient.m_id = targetId;
-                if (this.m_service.TryAdd(this.m_id, sessionClient))
+                if (this.m_service.TryAdd(sessionClient))
                 {
                     if (this.PluginManager.Enable)
                     {
@@ -248,7 +248,7 @@ namespace TouchSocket.Dmtp.AspNetCore
                 else
                 {
                     sessionClient.m_id = sourceId;
-                    if (this.m_service.TryAdd(sessionClient.m_id, sessionClient))
+                    if (this.m_service.TryAdd(sessionClient))
                     {
                         throw new Exception("Id重复");
                     }

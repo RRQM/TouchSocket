@@ -26,7 +26,7 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         public async Task OnDmtpHandshaked(IDmtpActorObject client, DmtpVerifyEventArgs e)
         {
-            _=Task.Factory.StartNew(async () =>
+            _ = Task.Factory.StartNew(async () =>
             {
                 var failedCount = 0;
                 while (true)

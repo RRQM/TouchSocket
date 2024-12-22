@@ -39,7 +39,7 @@ namespace TouchSocket.Hosting
             switch (logLevel)
             {
                 case LogLevel.Trace:
-                    this.GetLogger(source).LogTrace(exception,message);
+                    this.GetLogger(source).LogTrace(exception, message);
                     break;
                 case LogLevel.Debug:
                     this.GetLogger(source).LogDebug(exception, message);

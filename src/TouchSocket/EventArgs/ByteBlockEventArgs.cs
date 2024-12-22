@@ -14,7 +14,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-       /// <summary>
+    /// <summary>
     /// 字节事件参数类，用于在插件之间传递字节块数据
     /// </summary>
     public class ByteBlockEventArgs : PluginEventArgs

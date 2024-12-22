@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Core
 {
-       /// <summary>
+    /// <summary>
     /// 具有释放的对象，包含一个<see cref="DisposedValue"/>来标识是否该对象已被释放。
     /// </summary>
     public partial interface IDisposableObject : IDisposable

@@ -110,7 +110,7 @@ namespace TouchSocket.Sockets
                     //Buffer.BlockCopy(TouchSocketBitConverter.Default.GetBytes(sn++), 0, data, 8, 2);
                     if (surLen > freeRoom)//有余
                     {
-                        byteBlock.WriteByte((byte)0);
+                        byteBlock.WriteByte(0);
                         byteBlock.Write(memory.Span.Slice(off, freeRoom));
                         //Buffer.BlockCopy(buffer, off, data, 11, freeRoom);
                         off += freeRoom;
@@ -140,7 +140,7 @@ namespace TouchSocket.Sockets
                     }
                     else//结束但不能容纳Crc
                     {
-                        byteBlock.WriteByte((byte)0);
+                        byteBlock.WriteByte(0);
                         byteBlock.Write(memory.Span.Slice(off, surLen));
                         //Buffer.BlockCopy(buffer, off, data, 11, surLen);
                         await this.GoSendAsync(endPoint, byteBlock.Memory);

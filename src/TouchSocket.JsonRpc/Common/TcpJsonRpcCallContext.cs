@@ -10,14 +10,13 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using TouchSocket.Core;
-
 namespace TouchSocket.JsonRpc
 {
     internal class TcpJsonRpcCallContext : JsonRpcCallContextBase, ITcpJsonRpcCallContext
     {
-        public TcpJsonRpcCallContext(object caller, string jsonString,IResolver resolver) : base(caller, jsonString, resolver)
+        public TcpJsonRpcCallContext(object caller)
         {
+            base.Caller = caller;
         }
     }
 }

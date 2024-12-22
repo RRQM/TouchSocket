@@ -986,7 +986,7 @@ namespace TouchSocket.Core
         {
             Guid guid;
 #if NET6_0_OR_GREATER
-            guid = new Guid(this.Span.Slice(this.m_position,16)) ;
+            guid = new Guid(this.Span.Slice(this.m_position, 16));
 #else
 
             var bytes = this.Span.Slice(this.m_position, 16).ToArray();

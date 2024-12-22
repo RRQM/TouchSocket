@@ -11,12 +11,12 @@
 //------------------------------------------------------------------------------
 
 using System;
-using TouchSocket.Core;
 using System.Net.Sockets;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
-        /// <summary>
+    /// <summary>
     /// Tcp网络监听器
     /// </summary>
     public class TcpNetworkMonitor

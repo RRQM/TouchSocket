@@ -251,8 +251,8 @@ namespace TouchSocket.Core
             return waitData;
         }
 
-       
-               /// <summary>
+
+        /// <summary>
         /// 根据标志设置异步等待数据为运行状态。
         /// </summary>
         /// <param name="sign">操作的标志。</param>
@@ -345,8 +345,8 @@ namespace TouchSocket.Core
         {
             return this.m_waitDicAsync.TryGetValue(sign, out waitDataAsync);
         }
-        
-         /// <inheritdoc/>
+
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

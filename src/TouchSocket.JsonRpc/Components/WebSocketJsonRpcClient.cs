@@ -12,7 +12,6 @@
 
 using System;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
@@ -27,159 +26,72 @@ namespace TouchSocket.JsonRpc
     /// </summary>
     public class WebSocketJsonRpcClient : SetupClientWebSocket, IWebSocketJsonRpcClient
     {
-        private readonly WaitHandlePool<JsonRpcWaitResult> m_waitHandle = new WaitHandlePool<JsonRpcWaitResult>();
-        private IRpcServerProvider m_rpcServerProvider;
+        private readonly JsonRpcActor m_jsonRpcActor;
+
+        /// <summary>
+        /// 初始化 <see cref="WebSocketJsonRpcClient"/> 类的新实例。
+        /// </summary>
+        public WebSocketJsonRpcClient()
+        {
+            this.SerializerConverter.Add(new JsonStringToClassSerializerFormatter<JsonRpcActor>());
+            this.m_jsonRpcActor = new JsonRpcActor()
+            {
+                SendAction = this.SendAction,
+                SerializerConverter = this.SerializerConverter
+            };
+        }
+
+        /// <inheritdoc/>
+        public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; } = new TouchSocketSerializerConverter<string, JsonRpcActor>();
+
+        #region JsonRpcActor
+
+        private Task SendAction(ReadOnlyMemory<byte> memory)
+        {
+            var array = memory.GetArray();
+            return base.Client.SendAsync(array, WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        #endregion JsonRpcActor
 
         /// <summary>
         /// JsonRpc的调用键。
         /// </summary>
-        public ActionMap ActionMap { get; private set; } = new ActionMap(true);
-
-        /// <summary>
-        /// WaitHandle
-        /// </summary>
-        public WaitHandlePool<JsonRpcWaitResult> WaitHandle => this.m_waitHandle;
+        public ActionMap ActionMap => this.m_jsonRpcActor.ActionMap;
 
         /// <inheritdoc/>
         public bool Online => base.ProtectedIsHandshaked;
-
-        private ArraySegment<byte> GetInvokeBytes(JsonRpcRequest request)
-        {
-            return new ArraySegment<byte>(Encoding.UTF8.GetBytes(request.ToJsonString()));
-        }
 
         /// <inheritdoc/>
         protected override void LoadConfig(TouchSocketConfig config)
         {
             base.LoadConfig(config);
+
+            this.m_jsonRpcActor.Logger = this.Logger;
+            this.m_jsonRpcActor.Resolver = this.Resolver;
             var rpcServerProvider = this.Resolver.Resolve<IRpcServerProvider>();
-            if (rpcServerProvider != null)
+            if (rpcServerProvider is not null)
             {
-                this.RegisterServer(rpcServerProvider.GetMethods());
-                this.m_rpcServerProvider = rpcServerProvider;
+                this.m_jsonRpcActor.SetRpcServerProvider(rpcServerProvider);
             }
         }
 
-        private void RegisterServer(RpcMethod[] rpcMethods)
+
+        /// <inheritdoc/>
+        protected override async Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
         {
-            foreach (var rpcMethod in rpcMethods)
+            if (result.MessageType == WebSocketMessageType.Text)
             {
-                if (rpcMethod.GetAttribute<JsonRpcAttribute>() is JsonRpcAttribute attribute)
-                {
-                    this.ActionMap.Add(attribute.GetInvokeKey(rpcMethod), rpcMethod);
-                }
-            }
-        }
+                var jsonMemory = byteBlock.Memory;
 
-        private async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
-        {
-            try
-            {
-                JsonRpcResponseBase response;
-                if (error == null)
-                {
-                    response = new JsonRpcSuccessResponse
-                    {
-                        Result = result,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                else
-                {
-                    response = new JsonRpcErrorResponse
-                    {
-                        Error = error,
-                        Id = callContext.JsonRpcContext.Id
-                    };
-                }
-                var str = JsonRpcUtility.ToJsonRpcResponseString(response);
-                await this.Client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(str)), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureAwait(false);
-            }
-            catch
-            {
-            }
-        }
-
-        private async Task ThisInvokeAsync(object obj)
-        {
-            var callContext = (JsonRpcCallContextBase)obj;
-            try
-            {
-                var invokeResult = new InvokeResult();
-
-                try
-                {
-                    JsonRpcUtility.BuildRequestContext(this.ActionMap, ref callContext);
-                }
-                catch (Exception ex)
-                {
-                    invokeResult.Status = InvokeStatus.Exception;
-                    invokeResult.Message = ex.Message;
-                }
-
-                if (callContext.RpcMethod != null)
-                {
-                    if (!callContext.RpcMethod.IsEnable)
-                    {
-                        invokeResult.Status = InvokeStatus.UnEnable;
-                    }
-                }
-                else
-                {
-                    invokeResult.Status = InvokeStatus.UnFound;
-                }
-
-                if (invokeResult.Status == InvokeStatus.Ready)
-                {
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, callContext.JsonRpcContext.Parameters).ConfigureAwait(false);
-                }
-
-                if (!callContext.JsonRpcContext.Id.HasValue)
+                if (jsonMemory.IsEmpty)
                 {
                     return;
                 }
-                var error = JsonRpcUtility.GetJsonRpcError(invokeResult);
-                await this.ResponseAsync(callContext, invokeResult.Result, error).ConfigureAwait(false);
-            }
-            catch(Exception ex)
-            {
-                this.Logger?.Debug(ex.Message);
-            }
-            finally
-            {
-                callContext.Dispose();
-            }
-        }
 
-        /// <inheritdoc/>
-        protected override Task OnReceived(System.Net.WebSockets.WebSocketReceiveResult result, ByteBlock byteBlock)
-        {
-            if (result.MessageType != WebSocketMessageType.Text)
-            {
-                return EasyTask.CompletedTask;
+                var callContext = new WebSocketJsonRpcCallContext(this);
+                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(false);
             }
-
-            var jsonString = byteBlock.Span.ToString(Encoding.UTF8);
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                return EasyTask.CompletedTask;
-            }
-
-            if (this.ActionMap.Count > 0 && JsonRpcUtility.IsJsonRpcRequest(jsonString))
-            {
-                _ = Task.Factory.StartNew(this.ThisInvokeAsync, new WebSocketJsonRpcCallContext(this, jsonString,this.Resolver.CreateScopedResolver()));
-            }
-            else
-            {
-                var waitResult = JsonRpcUtility.ToJsonRpcWaitResult(jsonString);
-                if (waitResult != null)
-                {
-                    waitResult.Status = 1;
-                    this.m_waitHandle.SetRun(waitResult);
-                }
-            }
-
-            return EasyTask.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -188,74 +100,9 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <inheritdoc/>
-        public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
+        public Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            var context = new JsonRpcWaitResult();
-            var waitData = this.m_waitHandle.GetWaitDataAsync(context);
-            invokeOption ??= InvokeOption.WaitInvoke;
-
-            parameters ??= new object[0];
-
-            var jsonRpcRequest = new JsonRpcRequest
-            {
-                Method = invokeKey,
-                Params = parameters,
-                Id = invokeOption.FeedbackType == FeedbackType.WaitInvoke ? context.Sign : 0
-            };
-            try
-            {
-                await this.Client.SendAsync(this.GetInvokeBytes(jsonRpcRequest), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureAwait(false);
-                switch (invokeOption.FeedbackType)
-                {
-                    case FeedbackType.OnlySend:
-                    case FeedbackType.WaitSend:
-                        {
-                            return default;
-                        }
-                    case FeedbackType.WaitInvoke:
-                    default:
-                        {
-                            if (invokeOption.Token.CanBeCanceled)
-                            {
-                                waitData.SetCancellationToken(invokeOption.Token);
-                            }
-
-                            switch (await waitData.WaitAsync(invokeOption.Timeout).ConfigureAwait(false))
-                            {
-                                case WaitDataStatus.SetRunning:
-                                    {
-                                        var resultContext = waitData.WaitResult;
-                                        if (resultContext.Error != null)
-                                        {
-                                            throw new RpcException(resultContext.Error.Message);
-                                        }
-
-                                        if (resultContext.Result == null)
-                                        {
-                                            return default;
-                                        }
-                                        else
-                                        {
-                                            return JsonRpcUtility.ResultParseToType(resultContext.Result, returnType);
-                                        }
-                                    }
-                                case WaitDataStatus.Overtime:
-                                    throw new TimeoutException("等待结果超时");
-                                case WaitDataStatus.Canceled:
-                                    return default;
-
-                                case WaitDataStatus.Default:
-                                case WaitDataStatus.Disposed:
-                                default:
-                                    throw new UnknownErrorException();
-                            }
-                        }
-                }
-            }
-            finally
-            {
-                this.m_waitHandle.Destroy(waitData);
-            }
+            return this.m_jsonRpcActor.InvokeAsync(invokeKey, returnType, invokeOption, parameters);
         }
     }
 }

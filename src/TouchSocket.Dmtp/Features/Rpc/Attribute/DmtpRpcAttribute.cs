@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp.Rpc
     /// DmtpRpc方法标记属性类
     /// </summary>
     [DynamicMethod]
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false,Inherited =false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class DmtpRpcAttribute : RpcAttribute
     {
         /// <summary>

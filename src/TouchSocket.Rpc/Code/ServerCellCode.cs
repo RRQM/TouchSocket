@@ -51,7 +51,7 @@ namespace TouchSocket.Rpc
         /// <summary>
         /// 生成代理时，额外的命名空间
         /// </summary>
-        public List<string> Namespaces { get;} = new List<string>();
+        public List<string> Namespaces { get; } = new List<string>();
 
         /// <summary>
         /// 方法集合

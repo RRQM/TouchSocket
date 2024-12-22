@@ -19,7 +19,7 @@ namespace TouchSocket.Http.WebSockets
     /// </summary>
     public sealed class WebSocketDataHandlingAdapter2 : CustomBigUnfixedHeaderDataHandlingAdapter<WSDataFrame>
     {
-       /// <inheritdoc/>
+        /// <inheritdoc/>
         protected override WSDataFrame GetInstance()
         {
             return new WSDataFrame();

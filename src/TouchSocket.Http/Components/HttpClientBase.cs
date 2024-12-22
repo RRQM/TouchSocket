@@ -10,7 +10,6 @@
 //  感谢您的下载和使用
 //------------------------------------------------------------------------------
 
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,7 +129,7 @@ namespace TouchSocket.Http
                 {
                     request.BuildHeader(byteBlock);
 
-                   var result = content.InternalBuildingContent(ref byteBlock);
+                    var result = content.InternalBuildingContent(ref byteBlock);
 
                     // 异步发送请求
                     await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);

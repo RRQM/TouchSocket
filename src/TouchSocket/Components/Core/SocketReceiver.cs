@@ -22,7 +22,7 @@ namespace TouchSocket.Sockets
         public ValueTask<SocketOperationResult> WaitForDataAsync(Socket socket)
         {
 #if NET6_0_OR_GREATER
-            SetBuffer(Memory<byte>.Empty);
+            this.SetBuffer(Memory<byte>.Empty);
 #else
             var empty = new byte[0];
             this.SetBuffer(empty, 0, 0);

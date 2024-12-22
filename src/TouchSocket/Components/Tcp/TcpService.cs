@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
         /// </summary>
         private sealed class PrivateTcpSessionClient : TcpSessionClient
         {
-            
+
         }
     }
 }

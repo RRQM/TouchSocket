@@ -14,7 +14,7 @@ using TouchSocket.Core;
 
 namespace TouchSocket.Modbus
 {
-    internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse,IRequestInfo
+    internal class ModbusRtuResponse : ModbusRtuBase, IModbusResponse, IRequestInfo
     {
         public ModbusErrorCode ErrorCode { get; set; }
 

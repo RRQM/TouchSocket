@@ -34,7 +34,7 @@ namespace TouchSocket.XmlRpc
         /// <inheritdoc/>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
-            invokeOption  ??= InvokeOption.WaitInvoke;
+            invokeOption ??= InvokeOption.WaitInvoke;
 
             using (var byteBlock = new ByteBlock())
             {
@@ -55,8 +55,8 @@ namespace TouchSocket.XmlRpc
                     }
                     else
                     {
-                       
-                        if (returnType!=null)
+
+                        if (returnType != null)
                         {
                             var xml = new XmlDocument();
                             xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(false));

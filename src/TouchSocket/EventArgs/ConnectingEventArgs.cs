@@ -20,6 +20,8 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ConnectingEventArgs : MsgPermitEventArgs
     {
+        private string m_id;
+
         /// <summary>
         /// 构造函数
         /// 初始化IsPermitOperation属性为true，表示默认允许操作。
@@ -33,6 +35,14 @@ namespace TouchSocket.Sockets
         /// 客户端Id。该Id的赋值，仅在服务器适用。
         /// 用于标识唯一的客户端连接。
         /// </summary>
-        public string Id { get; set; }
+        public string Id
+        {
+            get => this.m_id;
+            set
+            {
+                ThrowHelper.ThrowArgumentNullExceptionIfStringIsNullOrEmpty(value, nameof(this.Id));
+                this.m_id = value;
+            }
+        }
     }
 }

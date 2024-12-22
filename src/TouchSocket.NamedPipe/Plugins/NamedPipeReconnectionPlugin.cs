@@ -21,7 +21,7 @@ namespace TouchSocket.NamedPipe
     /// 命名管道重连插件
     /// </summary>
     [PluginOption(Singleton = true)]
-    public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient> ,INamedPipeClosedPlugin where TClient : INamedPipeClient
+    public sealed class NamedPipeReconnectionPlugin<TClient> : ReconnectionPlugin<TClient>, INamedPipeClosedPlugin where TClient : INamedPipeClient
     {
         /// <inheritdoc/>
         public override Func<TClient, int, Task<bool?>> ActionForCheck { get; set; }

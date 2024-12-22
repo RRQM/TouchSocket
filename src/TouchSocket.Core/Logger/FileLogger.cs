@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Reflection.Emit;
 using System.Text;
 
 namespace TouchSocket.Core
@@ -41,7 +40,7 @@ namespace TouchSocket.Core
             // 定义一个lambda表达式，根据当前时间生成日志文件夹的路径
             // 这里的lambda表达式接收一个日志级别参数，但实际上并不使用它，只是为了符合委托的定义
             // 表达式的结果是根据当前日期格式化后的字符串，确保每天的日志被打包在不同的文件夹中
-            m_createLogFolder = (logLevel) =>
+            this.m_createLogFolder = (logLevel) =>
             {
                 return $"logs\\{DateTime.Now.ToString("[yyyy-MM-dd]")}";
             };
@@ -69,8 +68,8 @@ namespace TouchSocket.Core
         /// </exception>
         public Func<LogLevel, string> CreateLogFolder
         {
-            get => m_createLogFolder;
-            set => m_createLogFolder = ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(CreateLogFolder));
+            get => this.m_createLogFolder;
+            set => this.m_createLogFolder = ThrowHelper.ThrowArgumentNullExceptionIf(value, nameof(this.CreateLogFolder));
         }
 
         /// <summary>
@@ -174,7 +173,7 @@ namespace TouchSocket.Core
                         }
                     }
 
-                    m_retryCount = 0;
+                    this.m_retryCount = 0;
                 }
                 catch
                 {
@@ -183,9 +182,9 @@ namespace TouchSocket.Core
                         fileStorageWriter.SafeDispose();
                     }
 
-                    if (++m_retryCount < MaxRetryCount)
+                    if (++this.m_retryCount < MaxRetryCount)
                     {
-                        WriteLogStringToFile(logString, logLevel);
+                        this.WriteLogStringToFile(logString, logLevel);
                     }
                 }
             }

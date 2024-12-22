@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace TouchSocket.Core
 {
@@ -30,7 +29,7 @@ namespace TouchSocket.Core
                 this.m_fromIocCount++;
             }
             //调用方线程安全
-            var list = new List<PluginEntity>(m_pluginEntities);
+            var list = new List<PluginEntity>(this.m_pluginEntities);
             list.Add(pluginEntity);
             this.m_pluginEntities = list;
         }

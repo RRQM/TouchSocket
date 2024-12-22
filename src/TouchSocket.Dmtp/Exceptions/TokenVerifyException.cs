@@ -14,7 +14,7 @@ using System;
 
 namespace TouchSocket.Dmtp
 {
-        /// <summary>
+    /// <summary>
     /// Token验证异常
     /// </summary>
     [Serializable]

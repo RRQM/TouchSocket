@@ -20,7 +20,7 @@ namespace TouchSocket.Dmtp.AspNetCore
     /// <summary>
     /// 定义一个接口，用于通过WebSocket提供Dmtp服务
     /// </summary>
-    public interface IWebSocketDmtpService : IDmtpService, IConnectableService
+    public interface IWebSocketDmtpService : IDmtpService, IConnectableService<WebSocketDmtpSessionClient>
     {
         /// <summary>
         /// 转换客户端

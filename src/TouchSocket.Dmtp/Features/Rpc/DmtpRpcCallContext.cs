@@ -36,12 +36,17 @@ namespace TouchSocket.Dmtp.Rpc
 
         /// <inheritdoc/>
         public DmtpRpcRequestPackage DmtpRpcPackage { get; }
-      
+
         /// <inheritdoc/>
         public Metadata Metadata => this.DmtpRpcPackage.Metadata;
 
         /// <inheritdoc/>
         public SerializationType SerializationType => this.DmtpRpcPackage == null ? (SerializationType)byte.MaxValue : this.DmtpRpcPackage.SerializationType;
+
+        public void SetParameters(object[] ps)
+        {
+            base.Parameters = ps;
+        }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
