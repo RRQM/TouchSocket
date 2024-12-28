@@ -25,7 +25,8 @@ namespace ServiceConsoleApp
         {
             var consoleAction = new ConsoleAction();
             consoleAction.Add("1", "以Received委托接收", RunClientForReceived);
-            consoleAction.Add("2", "以ReadAsync异步阻塞接收", RunClientForReadAsync);
+            consoleAction.Add("2", "以Ipv6的Received委托接收", RunClientForReceivedWithIpv6);
+            consoleAction.Add("3", "以ReadAsync异步阻塞接收", RunClientForReadAsync);
 
             var service =await CreateService();
 
@@ -38,7 +39,7 @@ namespace ServiceConsoleApp
         {
             var service = new TcpService();
             await service.SetupAsync(new TouchSocketConfig()//载入配置
-                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790)//同时监听两个地址
+                 .SetListenIPHosts("tcp://127.0.0.1:7789", 7790,new IPHost(System.Net.IPAddress.IPv6Any,7791))//同时监听两个地址
                  .ConfigureContainer(a =>//容器的配置顺序应该在最前面
                  {
                      a.AddConsoleLogger();//添加一个控制台日志注入（注意：在maui中控制台日志不可用）
@@ -78,7 +79,17 @@ namespace ServiceConsoleApp
                 return EasyTask.CompletedTask;
             };
 
-            await client.SetupAsync(GetConfig());//载入配置
+            await client.SetupAsync(new TouchSocketConfig()
+                    .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
+                    .ConfigurePlugins(a =>
+                    {
+                        a.UseTcpReconnection()
+                        .UsePolling(TimeSpan.FromSeconds(1));
+                    })
+                    .ConfigureContainer(a =>
+                    {
+                        a.AddConsoleLogger();//添加一个日志注入
+                    }));//载入配置
             await client.ConnectAsync();//连接
             client.Logger.Info("客户端成功连接");
 
@@ -89,9 +100,44 @@ namespace ServiceConsoleApp
             }
         }
 
-        private static TouchSocketConfig GetConfig()
+        private static async Task RunClientForReceivedWithIpv6()
         {
-            return new TouchSocketConfig()
+            var client = new TcpClient();
+            client.Connected = (client, e) => { return EasyTask.CompletedTask; };//成功连接到服务器
+            client.Closed = (client, e) => { return EasyTask.CompletedTask; };//从服务器断开连接，当连接不成功时不会触发。
+            client.Received = (client, e) =>
+            {
+                //从服务器收到信息
+                var mes = e.ByteBlock.Span.ToString(Encoding.UTF8);
+                client.Logger.Info($"客户端接收到信息：{mes}");
+                return EasyTask.CompletedTask;
+            };
+
+            await client.SetupAsync(new TouchSocketConfig()
+                    .SetRemoteIPHost(new IPHost("[::1]:7791"))
+                    .ConfigurePlugins(a =>
+                    {
+                        a.UseTcpReconnection()
+                        .UsePolling(TimeSpan.FromSeconds(1));
+                    })
+                    .ConfigureContainer(a =>
+                    {
+                        a.AddConsoleLogger();//添加一个日志注入
+                    }));//载入配置
+            await client.ConnectAsync();//连接
+            client.Logger.Info("客户端成功连接");
+
+            Console.WriteLine("输入任意内容，回车发送");
+            while (true)
+            {
+                await client.SendAsync(Console.ReadLine());
+            }
+        }
+
+        private static async Task RunClientForReadAsync()
+        {
+            var client = new TcpClient();
+            await client.SetupAsync(new TouchSocketConfig()
                     .SetRemoteIPHost(new IPHost("127.0.0.1:7789"))
                     .ConfigurePlugins(a =>
                     {
@@ -101,14 +147,8 @@ namespace ServiceConsoleApp
                     .ConfigureContainer(a =>
                     {
                         a.AddConsoleLogger();//添加一个日志注入
-                    });
-        }
-
-        private static async Task RunClientForReadAsync()
-        {
-            var client = new TcpClient();
-            await client.SetupAsync(GetConfig());//载入配置
-            await client.ConnectAsync("127.0.0.1:7789");//连接
+                    }));//载入配置
+            await client.ConnectAsync();//连接
             client.Logger.Info("客户端成功连接");
 
             Console.WriteLine("输入任意内容，回车发送");

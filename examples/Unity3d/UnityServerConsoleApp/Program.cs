@@ -94,7 +94,7 @@ namespace UnityServerConsoleApp
         {
             var service = new TcpService();
             service.SetupAsync(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                .SetListenIPHosts(new IPHost(port))
                 .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
                 .ConfigurePlugins(a =>
                 {
