@@ -1,6 +1,6 @@
 ﻿<Project>
 	<PropertyGroup>
-		<Version>3.0.9</Version>
+		<Version>3.0.10</Version>
 		<CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -18,6 +18,10 @@
 		<GenerateSatelliteAssembliesCore>true</GenerateSatelliteAssembliesCore>
 		<!--<Nullable>enable</Nullable>-->
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="dotnetCampus.LatestCSharpFeatures" Version="12.0.0" PrivateAssets="all" />
+	</ItemGroup>
 
 	<PropertyGroup Condition="'$(MSBuildProjectName.StartsWith(`TouchSocketPro`))'">
 		<IsPro>True</IsPro>

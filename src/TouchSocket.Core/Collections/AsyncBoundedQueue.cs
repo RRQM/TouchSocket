@@ -30,6 +30,26 @@ namespace TouchSocket.Core
         private readonly SemaphoreSlim m_writeLock;
 
         /// <summary>
+        /// 获取队列的最大容量。
+        /// </summary>
+        public int Capacity { get; }
+
+        /// <summary>
+        /// 获取队列中的元素数量。
+        /// </summary>
+        public int Count => this.m_queue.Count;
+
+        /// <summary>
+        /// 获取一个值，该值指示队列是否为空。
+        /// </summary>
+        public bool IsEmpty => this.m_queue.IsEmpty;
+
+        /// <summary>
+        /// 获取队列中剩余的可用空间数量。
+        /// </summary>
+        public int FreeCount => this.Capacity - this.Count;
+
+        /// <summary>
         /// 构造函数，初始化有界队列。
         /// </summary>
         /// <param name="capacity">队列的最大容量，必须为正数。</param>
@@ -41,6 +61,7 @@ namespace TouchSocket.Core
             }
 
             this.m_writeLock = new SemaphoreSlim(capacity, capacity);
+            this.Capacity = capacity;
         }
 
         /// <summary>
@@ -63,6 +84,15 @@ namespace TouchSocket.Core
             return ValueTaskSourceStatus.Succeeded;
         }
 
+        /// <inheritdoc/>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                this.m_writeLock.Dispose();
+            }
+        }
         /// <summary>
         /// 异步向队列中添加一个元素。
         /// </summary>
@@ -70,7 +100,23 @@ namespace TouchSocket.Core
         /// <param name="cancellationToken">取消操作的令牌。</param>
         public async Task EnqueueAsync(T item, CancellationToken cancellationToken = default)
         {
+            this.ThrowIfDisposed();
             await this.m_writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            this.m_queue.Enqueue(item);
+            base.Complete(false);
+        }
+
+        /// <summary>
+        /// 异步向队列中添加一个元素。
+        /// </summary>
+        /// <param name="item">要添加到队列中的元素。</param>
+        /// <param name="timeout">等待添加操作完成的超时时间（以毫秒为单位）。</param>
+        /// <param name="cancellationToken">取消操作的令牌。</param>
+        public async Task EnqueueAsync(T item, int timeout, CancellationToken cancellationToken)
+        {
+            this.ThrowIfDisposed();
+            await this.m_writeLock.WaitTimeAsync(timeout, cancellationToken).ConfigureAwait(false);
 
             this.m_queue.Enqueue(item);
             base.Complete(false);
@@ -89,7 +135,7 @@ namespace TouchSocket.Core
             }
 
             ThrowHelper.ThrowInvalidOperationException("队列意外为空。");
-            return default(T);
+            return default;
         }
 
         /// <summary>

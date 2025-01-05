@@ -67,6 +67,13 @@ namespace TouchSocket.Sockets
         /// </summary>
         public TimeSpan Tick { get; set; } = TimeSpan.FromSeconds(60);
 
+        /// <inheritdoc/>
+        public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        {
+            _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
+            await e.InvokeNext().ConfigureAwait(false);
+        }
+
         /// <summary>
         /// 设置清理统计类型。此方法允许指定在何种情况下应清理统计信息。
         /// 默认情况下，清理类型设置为<see cref="CheckClearType.All"/>，表示所有情况都进行清理。
@@ -156,32 +163,42 @@ namespace TouchSocket.Sockets
                     {
                         if (DateTime.UtcNow - client.LastReceivedTime > this.Tick)
                         {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            return;
                         }
                     }
                     else if (this.CheckClearType == CheckClearType.OnlySend)
                     {
                         if (DateTime.UtcNow - client.LastSentTime > this.Tick)
                         {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            return;
                         }
                     }
                     else
                     {
                         if (DateTime.UtcNow - client.GetLastActiveTime() > this.Tick)
                         {
-                            this.OnClose?.Invoke(client, this.CheckClearType);
+                            await this.CloseClientAsync(client, this.CheckClearType).ConfigureAwait(false);
+                            return;
                         }
                     }
                 }
             });
         }
 
-        /// <inheritdoc/>
-        public async Task OnLoadedConfig(IConfigObject sender, ConfigEventArgs e)
+        private async Task CloseClientAsync(TClient client, CheckClearType checkClearType)
         {
-            _ = Task.Factory.StartNew(this.Polling, sender, TaskCreationOptions.LongRunning);
-            await e.InvokeNext().ConfigureAwait(false);
+            if (this.OnClose != null)
+            {
+                try
+                {
+                    await this.OnClose.Invoke(client, checkClearType).ConfigureAwait(false);
+                }
+                catch
+                {
+                }
+            }
         }
 
         private async Task Polling(object sender)

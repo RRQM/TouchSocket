@@ -528,6 +528,24 @@ namespace TouchSocket.Core
         void WriteUInt64(ulong value, EndianType endianType);
         #endregion UInt64
 
+        #region T
+
+      
+        T ReadT<T>() where T : unmanaged;
+
+        
+        T ReadT<T>(EndianType endianType) where T : unmanaged;
+
+        
+        IEnumerable<T> ToTs<T>() where T : unmanaged;
+
+        IEnumerable<T> ToTs<T>(EndianType endianType) where T : unmanaged;
+
+        void WriteT<T>(T value) where T : unmanaged;
+
+        void WriteT<T>(T value, EndianType endianType) where T : unmanaged;
+        #endregion T
+
         #region Seek
 
         /// <summary>

@@ -72,4 +72,12 @@
 			<CustomToolNamespace>TouchSocket.Resources</CustomToolNamespace>
 		</EmbeddedResource>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="Backport.System.Threading.Lock" Version="3.1.4">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>analyzers</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Update="dotnetCampus.LatestCSharpFeatures" Version="12.0.1" />
+	</ItemGroup>
 </Project>
