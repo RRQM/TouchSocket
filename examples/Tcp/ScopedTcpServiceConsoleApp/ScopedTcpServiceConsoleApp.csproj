@@ -8,8 +8,8 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="TouchSocket" Version="3.0.9" />
-		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="3.0.9" />
+		<PackageReference Include="TouchSocket" Version="3.0.10" />
+		<PackageReference Include="TouchSocket.Core.DependencyInjection" Version="3.0.10" />
 	</ItemGroup>
 	
 </Project>
