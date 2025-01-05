@@ -303,32 +303,32 @@ module.exports =
             {
               "type": "doc",
               "id": "bigfixedheadercustomdatahandlingadapter",
-              "label": "f.模板解析大数据固定包头适配器"
+              "label": "e.模板解析大数据固定包头适配器"
             },
             {
               "type": "doc",
               "id": "customunfixedheaderdatahandlingadapter",
-              "label": "e.模板解析非固定包头适配器"
+              "label": "f.模板解析非固定包头适配器"
             },
             {
               "type": "doc",
               "id": "custombigunfixedheaderdatahandlingadapter",
-              "label": "f.模板解析大数据非固定包头适配器"
+              "label": "g.模板解析大数据非固定包头适配器"
             },
             {
               "type": "doc",
               "id": "custombetweenanddatahandlingadapter",
-              "label": "g.模板解析区间数据适配器"
+              "label": "h.模板解析区间数据适配器"
             },
             {
               "type": "doc",
-              "id": "pipelinedatahandlingadapter",
-              "label": "h.Pipeline数据适配器"
+              "id": "customjsondatahandlingadapter",
+              "label": "i.模板解析“Json”数据适配器"
             },
             {
               "type": "doc",
-              "id": "tlvdatahandlingadapter",
-              "label": "i.三元组编码TLV适配器"
+              "id": "customcountspliterdatahandlingadapter",
+              "label": "j.模板解析“固定数量分隔符”数据适配器"
             }
           ]
         },
