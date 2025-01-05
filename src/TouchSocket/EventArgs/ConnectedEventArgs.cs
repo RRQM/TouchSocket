@@ -19,5 +19,6 @@ namespace TouchSocket.Sockets
     /// </summary>
     public class ConnectedEventArgs : PluginEventArgs
     {
+
     }
 }

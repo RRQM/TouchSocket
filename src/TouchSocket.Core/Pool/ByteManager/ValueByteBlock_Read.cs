@@ -195,6 +195,70 @@ namespace TouchSocket.Core
 
         #endregion VarUInt32
 
+        #region T
+
+        /// <inheritdoc/>
+        public T ReadT<T>() where T : unmanaged
+        {
+            var size = Unsafe.SizeOf<T>();
+            if (this.CanReadLength < size)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), this.CanReadLength, size);
+            }
+            var value = TouchSocketBitConverter.Default.UnsafeTo<T>(ref this.m_buffer[this.m_position]);
+            this.m_position += size;
+            return value;
+        }
+
+        /// <inheritdoc/>
+        public T ReadT<T>(EndianType endianType) where T : unmanaged
+        {
+            var size = Unsafe.SizeOf<T>();
+            if (this.CanReadLength < size)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_LessThan(nameof(size), this.CanReadLength, size);
+            }
+            var value = TouchSocketBitConverter.GetBitConverter(endianType).UnsafeTo<T>(ref this.m_buffer[this.m_position]);
+            this.m_position += size;
+            return value;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<T> ToTs<T>() where T : unmanaged
+        {
+            this.m_position = 0;
+            var list = new List<T>();
+            var size = Unsafe.SizeOf<T>();
+            while (true)
+            {
+                if (this.m_position + size > this.m_length)
+                {
+                    break;
+                }
+                list.Add(this.ReadT<T>());
+            }
+            return list;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<T> ToTs<T>(EndianType endianType) where T : unmanaged
+        {
+            this.m_position = 0;
+            var list = new List<T>();
+            var size = Unsafe.SizeOf<T>();
+            while (true)
+            {
+                if (this.m_position + size > this.m_length)
+                {
+                    break;
+                }
+                list.Add(this.ReadT<T>(endianType));
+            }
+            return list;
+        }
+
+        #endregion T
+
         #region Int32
 
         /// <inheritdoc/>

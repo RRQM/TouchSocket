@@ -30,12 +30,20 @@ namespace TouchSocket.Core
         {
             throw new MessageNotFoundException(TouchSocketCoreResource.MessageNotFound.Format(tokenString));
         }
-
+        #region NotSupportedException
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowNotSupportedException(string message)
         {
-            throw new NotSupportedException(message);
+            throw CreateNotSupportedException(message);
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static NotSupportedException CreateNotSupportedException(string message)
+        {
+            return new NotSupportedException(message);
+        }
+        #endregion
+
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowArgumentOutOfRangeException_BetweenAnd(string name, long actualValue, long min, long max)
@@ -112,11 +120,20 @@ namespace TouchSocket.Core
             throw new UnknownErrorException();
         }
 
+        #region InvalidEnumArgumentException
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidEnumArgumentException(Enum @enum)
         {
-            throw new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
+            throw CreateInvalidEnumArgumentException(@enum);
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static InvalidEnumArgumentException CreateInvalidEnumArgumentException(Enum @enum)
+        {
+            return new InvalidEnumArgumentException(TouchSocketCoreResource.InvalidEnum.Format(@enum.GetType(), @enum));
+        }
+        #endregion
+
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowObjectDisposedException(object obj)

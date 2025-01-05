@@ -20,6 +20,9 @@ using TouchSocket.Rpc;
 
 namespace TouchSocket.JsonRpc
 {
+    /// <summary>
+    /// 表示一个JsonRpcActor类，用于处理JsonRpc请求和响应。
+    /// </summary>
     public sealed class JsonRpcActor : IJsonRpcClient
     {
         private readonly JsonRpcRequestConverter m_jsonRpcRequestConverter = new JsonRpcRequestConverter();
@@ -27,15 +30,46 @@ namespace TouchSocket.JsonRpc
         private readonly WaitHandlePool<InternalJsonRpcWaitResult> m_waitHandle = new WaitHandlePool<InternalJsonRpcWaitResult>();
         private IRpcServerProvider m_rpcServerProvider;
 
+        /// <summary>
+        /// 获取或设置动作映射。
+        /// </summary>
         public ActionMap ActionMap { get; private set; } = new ActionMap(true);
 
+        /// <summary>
+        /// 获取或设置编码。
+        /// </summary>
         public Encoding Encoding { get; set; } = Encoding.UTF8;
+
+        /// <summary>
+        /// 获取或设置日志记录器。
+        /// </summary>
         public ILog Logger { get; set; }
+
+        /// <summary>
+        /// 获取或设置解析器。
+        /// </summary>
         public IResolver Resolver { get; set; }
+
+        /// <summary>
+        /// 获取或设置RPC调度器。
+        /// </summary>
         public IRpcDispatcher<JsonRpcActor, IJsonRpcCallContext> RpcDispatcher { get; set; } = new ConcurrencyRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>();
+
+        /// <summary>
+        /// 获取或设置发送动作。
+        /// </summary>
         public Func<ReadOnlyMemory<byte>, Task> SendAction { get; set; }
+
+        /// <summary>
+        /// 获取或设置序列化转换器。
+        /// </summary>
         public TouchSocketSerializerConverter<string, JsonRpcActor> SerializerConverter { get; set; }
 
+        /// <summary>
+        /// 将RPC添加到映射中。
+        /// </summary>
+        /// <param name="rpcServerProvider">RPC服务器提供者。</param>
+        /// <param name="actionMap">动作映射。</param>
         public static void AddRpcToMap(IRpcServerProvider rpcServerProvider, ActionMap actionMap)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(rpcServerProvider));
@@ -50,6 +84,12 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        /// <summary>
+        /// 异步接收输入。
+        /// </summary>
+        /// <param name="memory">输入内存。</param>
+        /// <param name="callContext">调用上下文。</param>
+        /// <returns>任务。</returns>
         public async Task InputReceiveAsync(ReadOnlyMemory<byte> memory, JsonRpcCallContextBase callContext)
         {
             try
@@ -90,6 +130,14 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        /// <summary>
+        /// 异步调用。
+        /// </summary>
+        /// <param name="invokeKey">调用键。</param>
+        /// <param name="returnType">返回类型。</param>
+        /// <param name="invokeOption">调用选项。</param>
+        /// <param name="parameters">参数。</param>
+        /// <returns>任务对象。</returns>
         public async Task<object> InvokeAsync(string invokeKey, Type returnType, IInvokeOption invokeOption, params object[] parameters)
         {
             var waitData = this.m_waitHandle.GetWaitDataAsync(out var sign);
@@ -172,12 +220,21 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        /// <summary>
+        /// 设置RPC服务器提供者。
+        /// </summary>
+        /// <param name="rpcServerProvider">RPC服务器提供者。</param>
         public void SetRpcServerProvider(IRpcServerProvider rpcServerProvider)
         {
             AddRpcToMap(rpcServerProvider, this.ActionMap);
             this.m_rpcServerProvider = rpcServerProvider;
         }
 
+        /// <summary>
+        /// 设置RPC服务器提供者和动作映射。
+        /// </summary>
+        /// <param name="rpcServerProvider">RPC服务器提供者。</param>
+        /// <param name="actionMap">动作映射。</param>
         public void SetRpcServerProvider(IRpcServerProvider rpcServerProvider, ActionMap actionMap)
         {
             ThrowHelper.ThrowArgumentNullExceptionIf(rpcServerProvider, nameof(rpcServerProvider));
@@ -187,10 +244,10 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <summary>
-        /// GetJsonRpcError
+        /// 获取JsonRpc错误。
         /// </summary>
-        /// <param name="invokeResult"></param>
-        /// <returns></returns>
+        /// <param name="invokeResult">调用结果。</param>
+        /// <returns>JsonRpc错误。</returns>
         private static JsonRpcError GetJsonRpcError(InvokeResult invokeResult)
         {
             switch (invokeResult.Status)
@@ -219,11 +276,21 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        /// <summary>
+        /// 构建JsonRpc请求。
+        /// </summary>
+        /// <param name="jsonRpcRequest">JsonRpc请求。</param>
+        /// <returns>Json字符串。</returns>
         private string BuildJsonRpcRequest(InternalJsonRpcRequest jsonRpcRequest)
         {
             return JsonConvert.SerializeObject(jsonRpcRequest, this.m_jsonRpcRequestConverter);
         }
 
+        /// <summary>
+        /// 构建请求上下文。
+        /// </summary>
+        /// <param name="callContext">调用上下文。</param>
+        /// <param name="jsonRpcRequest">JsonRpc请求。</param>
         private void BuildRequestContext(JsonRpcCallContextBase callContext, InternalJsonRpcRequest jsonRpcRequest)
         {
             if (this.ActionMap.TryGetRpcMethod(jsonRpcRequest.Method, out var rpcMethod))
@@ -321,6 +388,13 @@ namespace TouchSocket.JsonRpc
             }
         }
 
+        /// <summary>
+        /// 异步响应。
+        /// </summary>
+        /// <param name="callContext">调用上下文。</param>
+        /// <param name="result">结果。</param>
+        /// <param name="error">错误。</param>
+        /// <returns>任务。</returns>
         private async Task ResponseAsync(JsonRpcCallContextBase callContext, object result, JsonRpcError error)
         {
             try
@@ -347,11 +421,11 @@ namespace TouchSocket.JsonRpc
         }
 
         /// <summary>
-        /// ResultParseToType
+        /// 结果解析为类型。
         /// </summary>
-        /// <param name="result"></param>
-        /// <param name="returnType"></param>
-        /// <returns></returns>
+        /// <param name="result">结果。</param>
+        /// <param name="returnType">返回类型。</param>
+        /// <returns>解析后的对象。</returns>
         private object ResultParseToType(string result, Type returnType)
         {
             if (returnType == default)
@@ -367,6 +441,11 @@ namespace TouchSocket.JsonRpc
             return this.SerializerConverter.Deserialize(this, result, returnType);
         }
 
+        /// <summary>
+        /// 异步调用。
+        /// </summary>
+        /// <param name="obj">对象。</param>
+        /// <returns>任务。</returns>
         private async Task ThisInvokeAsync(object obj)
         {
             var callContext = (JsonRpcCallContextBase)obj;
@@ -394,7 +473,7 @@ namespace TouchSocket.JsonRpc
         #region Class
 
         /// <summary>
-        /// JsonRpcError
+        /// JsonRpc错误。
         /// </summary>
         private readonly struct JsonRpcError
         {
@@ -410,6 +489,12 @@ namespace TouchSocket.JsonRpc
 
         #endregion Class
 
+        /// <summary>
+        /// 尝试解析请求。
+        /// </summary>
+        /// <param name="str">字符串。</param>
+        /// <param name="request">请求。</param>
+        /// <returns>是否成功。</returns>
         private bool TryParseRequest(string str, out InternalJsonRpcRequest request)
         {
             var jsonRpcRequest = JsonConvert.DeserializeObject<InternalJsonRpcRequest>(str, this.m_jsonRpcRequestConverter);
@@ -423,6 +508,12 @@ namespace TouchSocket.JsonRpc
             return true;
         }
 
+        /// <summary>
+        /// 尝试解析响应。
+        /// </summary>
+        /// <param name="str">字符串。</param>
+        /// <param name="response">响应。</param>
+        /// <returns>是否成功。</returns>
         private bool TryParseResponse(string str, out InternalJsonRpcWaitResult response)
         {
             var rpcWaitResult = JsonConvert.DeserializeObject<InternalJsonRpcWaitResult>(str, this.m_jsonRpcWaitResultConverter);

@@ -353,6 +353,30 @@ namespace TouchSocket.Core
 
         #endregion Int32
 
+        #region T
+
+        /// <inheritdoc/>
+        public void WriteT<T>(T value) where T : unmanaged
+        {
+            var size = Unsafe.SizeOf<T>();
+            this.ExtendSize(size);
+            TouchSocketBitConverter.Default.UnsafeWriteBytes(ref this.m_buffer[this.m_position], value);
+            this.m_position += size;
+            this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
+        }
+
+        /// <inheritdoc/>
+        public void WriteT<T>(T value, EndianType endianType) where T : unmanaged
+        {
+            var size = Unsafe.SizeOf<T>();
+            this.ExtendSize(size);
+            TouchSocketBitConverter.GetBitConverter(endianType).UnsafeWriteBytes(ref this.m_buffer[this.m_position], value);
+            this.m_position += size;
+            this.m_length = this.m_position > this.m_length ? this.m_position : this.m_length;
+        }
+
+        #endregion T
+
         #region Int16
 
         /// <inheritdoc/>
