@@ -19,6 +19,30 @@ import Highlight from '@site/src/components/Highlight.js';
 
 :::
 
+## v3.0.10
+
+**更新日期：** 2025.1.5
+
+**更新描述：**
+
+兼容性修复升级。
+
+
+**更新详情：**
+
+#### TouchSocket.Core
+
+- &nbsp;<Tag>新增</Tag> `AsyncBoundedQueue`新增`Capacity`、`Count`等属性。
+- &nbsp;<Tag>新增</Tag> `CustomJsonDataHandlingAdapter`自定义适配器，方便自定义继承实现。
+- &nbsp;<Tag>新增</Tag> `CustomCountSpliterDataHandlingAdapter`固定数量分隔符适配器。[#IBF0Z7](https://gitee.com/RRQM_Home/TouchSocket/issues/IBF0Z7)
+- &nbsp;<Tag>新增</Tag> `IByteBlock`新增`ReadT`和`WriteT`方法。
+
+#### TouchSocket.Sockets
+
+- &nbsp;<Tag>修复</Tag> `CheckClearPlugin`在客户端断开后，仍然会触发断开的bug。[#IBECPA](https://gitee.com/RRQM_Home/TouchSocket/issues/IBECPA)
+
+***
+
 ## v3.0.9
 
 **更新日期：** 2024.12.22
