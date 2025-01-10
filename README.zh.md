@@ -11,6 +11,7 @@
 [![NuGet(TouchSocket)](https://img.shields.io/nuget/dt/TouchSocket.svg)](https://www.nuget.org/packages/TouchSocket/)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![star](https://gitee.com/RRQM_Home/TouchSocket/badge/star.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket/stargazers) 
+[![star](https://gitcode.com/RRQM_Home/TouchSocket/star/badge.svg)](https://gitcode.com/RRQM_Home/TouchSocket) 
 [![fork](https://gitee.com/RRQM_Home/TouchSocket/badge/fork.svg?theme=gvp)](https://gitee.com/RRQM_Home/TouchSocket/members)
 <a href="https://jq.qq.com/?_wv=1027&k=gN7UL4fw">
 <img src="https://img.shields.io/badge/QQ群-234762506-red" alt="QQ">
