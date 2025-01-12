@@ -36,7 +36,7 @@ namespace TouchSocket.Core
 
         private async Task DelayGo()
         {
-            await Task.Delay(this.CacheTimeout).ConfigureAwait(false);
+            await Task.Delay(this.CacheTimeout).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (Interlocked.Decrement(ref this.m_count) == 0)
             {
                 using (var byteBlock = new ByteBlock())
@@ -50,7 +50,7 @@ namespace TouchSocket.Core
 
                     try
                     {
-                        await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(false);
+                        await this.GoReceivedAsync(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {

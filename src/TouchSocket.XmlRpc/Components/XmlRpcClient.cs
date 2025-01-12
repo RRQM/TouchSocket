@@ -40,7 +40,7 @@ namespace TouchSocket.XmlRpc
             {
                 var request = XmlDataTool.CreateRequest(this, invokeKey, parameters);
 
-                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
+                using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var response = responseResult.Response;
 
@@ -59,7 +59,7 @@ namespace TouchSocket.XmlRpc
                         if (returnType != null)
                         {
                             var xml = new XmlDocument();
-                            xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(false));
+                            xml.LoadXml(await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext));
                             var paramNode = xml.SelectSingleNode("methodResponse/params/param");
                             return paramNode != null ? XmlDataTool.GetValue(paramNode.FirstChild.FirstChild, returnType) : default;
                         }

@@ -13,6 +13,7 @@
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Dmtp.AspNetCore
 {
@@ -54,11 +55,11 @@ namespace TouchSocket.Dmtp.AspNetCore
         {
             if (context.Request.Path.Equals(this.Url, StringComparison.OrdinalIgnoreCase))
             {
-                await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureAwait(false);
+                await this.m_websocketDmtpService.SwitchClientAsync(context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
-                await this.m_next(context).ConfigureAwait(false);
+                await this.m_next(context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

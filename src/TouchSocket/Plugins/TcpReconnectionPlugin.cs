@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Sockets
 {
@@ -29,7 +30,7 @@ namespace TouchSocket.Sockets
 
         public async Task OnTcpClosed(ITcpSession client, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (client is not TClient tClient)
             {
@@ -49,7 +50,7 @@ namespace TouchSocket.Sockets
                     {
                         return;
                     }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         return;
                     }

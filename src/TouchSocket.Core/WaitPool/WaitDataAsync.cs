@@ -20,7 +20,7 @@ namespace TouchSocket.Core
     /// 等待数据对象
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class WaitDataAsync<T> : DisposableObject, IWaitData<T>
+    public class WaitDataAsync<T> : DisposableObject, IWaitDataAsync<T>
     {
         private readonly AsyncAutoResetEvent m_asyncWaitHandle;
         private volatile WaitDataStatus m_status;
@@ -93,14 +93,10 @@ namespace TouchSocket.Core
             this.WaitResult = result;
         }
 
-        /// <summary>
-        /// 等待指定时间
-        /// </summary>
-        /// <param name="timeSpan"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public async Task<WaitDataStatus> WaitAsync(TimeSpan timeSpan)
         {
-            if (!await this.m_asyncWaitHandle.WaitOneAsync(timeSpan).ConfigureAwait(false))
+            if (!await this.m_asyncWaitHandle.WaitOneAsync(timeSpan).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 this.m_status = WaitDataStatus.Overtime;
             }
@@ -108,10 +104,7 @@ namespace TouchSocket.Core
             return this.m_status;
         }
 
-        /// <summary>
-        /// 等待指定毫秒
-        /// </summary>
-        /// <param name="millisecond"></param>
+        /// <inheritdoc/>
         public Task<WaitDataStatus> WaitAsync(int millisecond)
         {
             return this.WaitAsync(TimeSpan.FromMilliseconds(millisecond));
@@ -120,10 +113,14 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_status = WaitDataStatus.Disposed;
-            this.WaitResult = default;
-            this.m_asyncWaitHandle.SafeDispose();
-            this.m_tokenRegistration.Dispose();
+            if (disposing)
+            {
+                this.m_status = WaitDataStatus.Disposed;
+                this.WaitResult = default;
+                this.m_asyncWaitHandle.SafeDispose();
+                this.m_tokenRegistration.Dispose();
+            }
+            
             base.Dispose(disposing);
         }
     }

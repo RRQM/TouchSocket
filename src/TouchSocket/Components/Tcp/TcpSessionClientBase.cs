@@ -142,12 +142,12 @@ namespace TouchSocket.Sockets
 
             this.m_beginReceiveTask.FireAndForget();
 
-            await this.OnTcpConnected(e).ConfigureAwait(false);
+            await this.OnTcpConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         internal async Task InternalConnecting(ConnectingEventArgs e)
         {
-            await this.OnTcpConnecting(e).ConfigureAwait(false);
+            await this.OnTcpConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.m_listenOption.Adapter?.Invoke();
@@ -278,7 +278,7 @@ namespace TouchSocket.Sockets
             {
                 try
                 {
-                    var result = await this.m_tcpCore.ReadAsync(byteBlock.TotalMemory).ConfigureAwait(false);
+                    var result = await this.m_tcpCore.ReadAsync(byteBlock.TotalMemory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (this.DisposedValue)
                     {
@@ -291,18 +291,18 @@ namespace TouchSocket.Sockets
                         byteBlock.SetLength(result.BytesTransferred);
                         try
                         {
-                            if (await this.OnTcpReceiving(byteBlock).ConfigureAwait(false))
+                            if (await this.OnTcpReceiving(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 continue;
                             }
 
                             if (this.m_dataHandlingAdapter == null)
                             {
-                                await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
+                                await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             else
                             {
-                                await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                                await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                         catch (Exception ex)
@@ -371,7 +371,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpClosed(ClosedEventArgs e)
         {
             // 调用插件管理器，通知所有实现ITcpClosedPlugin接口的插件客户端已断开连接
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -384,7 +384,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpClosing(ClosingEventArgs e)
         {
             // 调用插件管理器，触发所有ITcpClosingPlugin类型的插件事件
-            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -397,7 +397,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpConnected(ConnectedEventArgs e)
         {
             // 调用插件管理器，异步触发所有实现ITcpConnectedPlugin接口的插件
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpConnecting(ConnectingEventArgs e)
         {
             // 调用插件管理器，异步触发所有ITcpConnectingPlugin插件的对应事件
-            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private Task PrivateOnClosing(ClosingEventArgs e)
@@ -424,7 +424,7 @@ namespace TouchSocket.Sockets
                 var beginReceiveTask = this.m_beginReceiveTask;
                 if (beginReceiveTask != null)
                 {
-                    await beginReceiveTask.ConfigureAwait(false);
+                    await beginReceiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 var e = (ClosedEventArgs)obj;
@@ -432,10 +432,10 @@ namespace TouchSocket.Sockets
                 var receiver = this.m_receiver;
                 if (receiver != null)
                 {
-                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                    await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
-                await this.OnTcpClosed(e).ConfigureAwait(false);
+                await this.OnTcpClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -456,7 +456,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_online)
             {
-                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
+                await this.PrivateOnClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 lock (this.m_lockForAbort)
                 {
                     //https://gitee.com/RRQM_Home/TouchSocket/issues/IASH1A
@@ -508,7 +508,7 @@ namespace TouchSocket.Sockets
         protected virtual async Task OnTcpReceived(ReceivedDataEventArgs e)
         {
             // 提供适配器处理的数据给所有相关的插件处理
-            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(ITcpReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -568,7 +568,7 @@ namespace TouchSocket.Sockets
                 if (this.m_tryAddAction(sessionClient))
                 {
                     // 如果添加成功，触发Id更改事件，并等待所有更改完成。
-                    await this.IdChanged(oldId, targetId).ConfigureAwait(false);
+                    await this.IdChanged(oldId, targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
@@ -632,10 +632,10 @@ namespace TouchSocket.Sockets
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(false);
+                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-            await this.OnTcpReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
+            await this.OnTcpReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region Throw
@@ -682,9 +682,9 @@ namespace TouchSocket.Sockets
             // 检查客户端是否已连接
             this.ThrowIfClientNotConnected();
             // 调用OnTcpSending事件处理程序进行预发送处理
-            await this.OnTcpSending(memory).ConfigureAwait(false);
+            await this.OnTcpSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             // 通过TCP核心组件实际发送数据
-            await this.m_tcpCore.SendAsync(memory).ConfigureAwait(false);
+            await this.m_tcpCore.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 直接发送
@@ -749,18 +749,18 @@ namespace TouchSocket.Sockets
                     // 根据数据处理适配器是否初始化，调用默认发送方法或适配器的发送方法。
                     if (this.m_dataHandlingAdapter == null)
                     {
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }
             else
             {
                 // 如果数据处理适配器支持拼接发送，则直接使用适配器发送传输列表。
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

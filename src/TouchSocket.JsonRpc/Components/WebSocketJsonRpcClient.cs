@@ -90,7 +90,7 @@ namespace TouchSocket.JsonRpc
                 }
 
                 var callContext = new WebSocketJsonRpcCallContext(this);
-                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(false);
+                await this.m_jsonRpcActor.InputReceiveAsync(jsonMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

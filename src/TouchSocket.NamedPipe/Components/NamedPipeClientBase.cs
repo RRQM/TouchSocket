@@ -63,7 +63,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnected(ConnectedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeConnecting(ConnectingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeConnectingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosed(ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TouchSocket.NamedPipe
         /// <param name="e"></param>
         protected virtual async Task OnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeClosingPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task PrivateOnNamedPipeConnected(object o)
@@ -98,7 +98,7 @@ namespace TouchSocket.NamedPipe
             try
             {
                 var e = (ConnectedEventArgs)o;
-                await this.OnNamedPipeConnected(e).ConfigureAwait(false);
+                await this.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -110,7 +110,7 @@ namespace TouchSocket.NamedPipe
         {
             var e = (ConnectingEventArgs)obj;
 
-            await this.OnNamedPipeConnecting(e).ConfigureAwait(false);
+            await this.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (this.m_dataHandlingAdapter == null)
             {
                 var adapter = this.Config.GetValue(NamedPipeConfigExtension.NamedPipeDataHandlingAdapterProperty)?.Invoke();
@@ -127,14 +127,14 @@ namespace TouchSocket.NamedPipe
             {
                 var e = (ClosedEventArgs)o;
 
-                await this.receiveTask.ConfigureAwait(false);
+                await this.receiveTask.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 var receiver = this.m_receiver;
                 if (receiver != null)
                 {
-                    await receiver.Complete(e.Message).ConfigureAwait(false);
+                    await receiver.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
-                await this.OnNamedPipeClosed(e).ConfigureAwait(false);
+                await this.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -143,7 +143,7 @@ namespace TouchSocket.NamedPipe
 
         private async Task PrivateOnNamedPipeClosing(ClosingEventArgs e)
         {
-            await this.OnNamedPipeClosing(e).ConfigureAwait(false);
+            await this.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件
@@ -219,7 +219,7 @@ namespace TouchSocket.NamedPipe
         {
             if (this.m_online)
             {
-                await this.PrivateOnNamedPipeClosing(new ClosedEventArgs(true, msg)).ConfigureAwait(false);
+                await this.PrivateOnNamedPipeClosing(new ClosedEventArgs(true, msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 lock (this.m_lockForAbort)
                 {
@@ -244,7 +244,7 @@ namespace TouchSocket.NamedPipe
         /// <exception cref="TimeoutException"></exception>
         protected async Task PipeConnectAsync(int millisecondsTimeout, CancellationToken token)
         {
-            await this.m_semaphoreSlimForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreSlimForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 if (this.m_online)
@@ -265,12 +265,12 @@ namespace TouchSocket.NamedPipe
                 this.m_pipeStream.SafeDispose();
 
                 var namedPipe = CreatePipeClient(serverName, pipeName);
-                await this.PrivateOnNamedPipeConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
+                await this.PrivateOnNamedPipeConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
 #if NET45
                 namedPipe.Connect(millisecondsTimeout);
 #else
-                await namedPipe.ConnectAsync(millisecondsTimeout, token).ConfigureAwait(false);
+                await namedPipe.ConnectAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 #endif
 
                 if (namedPipe.IsConnected)
@@ -315,7 +315,7 @@ namespace TouchSocket.NamedPipe
         /// <returns>如果返回<see langword="true"/>则表示数据已被处理，且不会再向下传递。</returns>
         protected virtual async Task OnNamedPipeReceived(ReceivedDataEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(INamedPipeReceivedPlugin), this.Resolver, this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -387,7 +387,7 @@ namespace TouchSocket.NamedPipe
                 {
                     try
                     {
-                        var r = await this.m_pipeStream.ReadAsync(byteBlock.TotalMemory, CancellationToken.None).ConfigureAwait(false);
+                        var r = await this.m_pipeStream.ReadAsync(byteBlock.TotalMemory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         if (r == 0)
                         {
                             this.Abort(false, "远程终端主动关闭");
@@ -395,7 +395,7 @@ namespace TouchSocket.NamedPipe
                         }
 
                         byteBlock.SetLength(r);
-                        await this.HandleReceivingData(byteBlock).ConfigureAwait(false);
+                        await this.HandleReceivingData(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     catch (Exception ex)
                     {
@@ -424,18 +424,18 @@ namespace TouchSocket.NamedPipe
 
                 this.m_receiveCounter.Increment(byteBlock.Length);
 
-                if (await this.OnNamedPipeReceiving(byteBlock).ConfigureAwait(false))
+                if (await this.OnNamedPipeReceiving(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     return;
                 }
 
                 if (this.m_dataHandlingAdapter == null)
                 {
-                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(false);
+                    await this.PrivateHandleReceivedData(byteBlock, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
-                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                    await this.m_dataHandlingAdapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
@@ -454,10 +454,10 @@ namespace TouchSocket.NamedPipe
             var receiver = this.m_receiver;
             if (receiver != null)
             {
-                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(false);
+                await receiver.InputReceiveAsync(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
-            await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(false);
+            await this.OnNamedPipeReceived(new ReceivedDataEventArgs(byteBlock, requestInfo)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region Throw
@@ -490,11 +490,11 @@ namespace TouchSocket.NamedPipe
         {
             this.ThrowIfDisposed();
             this.ThrowIfClientNotConnected();
-            await this.OnNamedPipeSending(memory).ConfigureAwait(false);
+            await this.OnNamedPipeSending(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
-                await this.m_semaphoreSlimForSend.WaitAsync().ConfigureAwait(false);
-                await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(false);
+                await this.m_semaphoreSlimForSend.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_pipeStream.WriteAsync(memory, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 this.LastSentTime = DateTime.UtcNow;
             }
             finally
@@ -574,19 +574,19 @@ namespace TouchSocket.NamedPipe
                     if (this.m_dataHandlingAdapter == null)
                     {
                         // 如果未设置ProtectedDataHandlingAdapter，使用默认发送方法
-                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.ProtectedDefaultSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
                         // 如果已设置ProtectedDataHandlingAdapter但不支持拼接发送，使用Adapter的发送方法
-                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(false);
+                        await this.m_dataHandlingAdapter.SendInputAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
             }
             else
             {
                 // 如果已设置ProtectedDataHandlingAdapter且支持拼接发送，直接使用Adapter的发送方法
-                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(false);
+                await this.m_dataHandlingAdapter.SendInputAsync(transferBytes).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 

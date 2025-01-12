@@ -131,7 +131,7 @@ namespace TouchSocket.Core
             {
                 try
                 {
-                    await vAction.Action.Invoke().ConfigureAwait(false);
+                    await vAction.Action.Invoke().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 catch (Exception ex)
                 {
@@ -153,7 +153,7 @@ namespace TouchSocket.Core
             while (true)
             {
                 var str = Console.ReadLine();
-                if (!await this.RunAsync(str).ConfigureAwait(false))
+                if (!await this.RunAsync(str).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     Console.WriteLine($"没有这个指令。");
                 }

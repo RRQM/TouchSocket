@@ -179,7 +179,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public async Task OnHttpRequest(IHttpSessionClient client, HttpContextEventArgs e)
         {
-            var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureAwait(false);
+            var url = await this.NavigateAction.Invoke(e.Context.Request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (this.m_filesPool.TryFindEntry(url, out var staticEntry))
             {
                 var request = e.Context.Request;
@@ -216,22 +216,22 @@ namespace TouchSocket.Http
                 }
                 if (this.ResponseAction != null)
                 {
-                    await this.ResponseAction.Invoke(e.Context).ConfigureAwait(false);
+                    await this.ResponseAction.Invoke(e.Context).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 if (staticEntry.IsCacheBytes)
                 {
-                    await response.AnswerAsync().ConfigureAwait(false);
+                    await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
-                    await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureAwait(false);
+                    await response.FromFileAsync(staticEntry.FileInfo, request).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 e.Handled = true;
             }
             else
             {
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

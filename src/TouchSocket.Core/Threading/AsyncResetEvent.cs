@@ -60,7 +60,7 @@ namespace TouchSocket.Core
             {
                 using (var timeoutSource = new CancellationTokenSource(millisecondsTimeout))
                 {
-                    await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(false);
+                    await this.WaitOneAsync(timeoutSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return true;
                 }
             }

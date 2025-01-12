@@ -65,7 +65,7 @@ namespace TouchSocket.JsonRpc
                                 var response = e.Context.Response;
                                 response.SetContent(data);
                                 response.SetStatus();
-                                await response.AnswerAsync().ConfigureAwait(false);
+                                await response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             },
                             SerializerConverter = this.SerializerConverter,
                             RpcDispatcher = new ImmediateRpcDispatcher<JsonRpcActor, IJsonRpcCallContext>()
@@ -75,11 +75,11 @@ namespace TouchSocket.JsonRpc
                         client.SetValue(JsonRpcClientExtension.JsonRpcActorProperty, jsonRpcActor);
                     }
 
-                    await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(false), new HttpJsonRpcCallContext(client, e.Context)).ConfigureAwait(false);
+                    await jsonRpcActor.InputReceiveAsync(await e.Context.Request.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), new HttpJsonRpcCallContext(client, e.Context)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>

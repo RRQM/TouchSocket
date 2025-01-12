@@ -42,7 +42,7 @@ namespace TouchSocket.Sockets
             // 检查配置是否为空
             this.ThrowIfConfigIsNull();
             // 等待信号量，以控制并发连接
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             try
             {
                 // 如果已经在线，则无需再次连接
@@ -59,11 +59,11 @@ namespace TouchSocket.Sockets
                 var socket = this.CreateSocket(iPHost);
                 // 触发连接前的事件
                 var args = new ConnectingEventArgs();
-                await this.PrivateOnTcpConnecting(args).ConfigureAwait(false);
+                await this.PrivateOnTcpConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 根据取消令牌决定是否支持异步取消
                 if (token.CanBeCanceled)
                 {
-                    await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(false);
+                    await socket.ConnectAsync(iPHost.Host, iPHost.Port, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
@@ -73,7 +73,7 @@ namespace TouchSocket.Sockets
                         try
                         {
                             // 尝试连接
-                            await socket.ConnectAsync(iPHost.Host, iPHost.Port, tokenSource.Token).ConfigureAwait(false);
+                            await socket.ConnectAsync(iPHost.Host, iPHost.Port, tokenSource.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (OperationCanceledException)
                         {
@@ -87,7 +87,7 @@ namespace TouchSocket.Sockets
                 // 设置当前Socket
                 this.SetSocket(socket);
                 // 进行身份验证
-                await this.AuthenticateAsync().ConfigureAwait(false);
+                await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 触发连接成功的事件
                 _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
             }
@@ -112,7 +112,7 @@ namespace TouchSocket.Sockets
             // 检查配置是否为空
             this.ThrowIfConfigIsNull();
             // 等待信号量，以确保同时只有一个连接操作
-            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(false);
+            await this.m_semaphoreForConnect.WaitTimeAsync(millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -128,17 +128,17 @@ namespace TouchSocket.Sockets
                 // 创建新的Socket连接
                 var socket = this.CreateSocket(iPHost);
                 // 触发连接前的事件
-                await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(false);
+                await this.PrivateOnTcpConnecting(new ConnectingEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 异步开始连接
                 var task = Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, iPHost.Host, iPHost.Port, null);
                 // 等待连接完成，设置超时时间
-                await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout)).ConfigureAwait(false);
+                await task.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 更新在线状态
                 this.m_online = true;
                 // 设置新的Socket为当前使用
                 this.SetSocket(socket);
                 // 进行身份验证
-                await this.AuthenticateAsync().ConfigureAwait(false);
+                await this.AuthenticateAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 启动新任务，处理连接后的操作
                 _ = Task.Factory.StartNew(this.PrivateOnTcpConnected, new ConnectedEventArgs());
             }

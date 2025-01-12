@@ -333,7 +333,7 @@ namespace TouchSocket.Core
                             task = (Task)this.m_invoker.Invoke(instance, parameters);
                         }
 
-                        await task.ConfigureAwait(false);
+                        await task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return DynamicMethodMemberAccessor.Default.GetValue(task, "Result");
                     }
                 default:

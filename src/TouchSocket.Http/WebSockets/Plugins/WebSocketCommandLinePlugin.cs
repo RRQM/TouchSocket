@@ -68,13 +68,13 @@ namespace TouchSocket.Http.WebSockets
         {
             if (e.DataFrame.Opcode != WSDataType.Text)
             {
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             var strs = e.DataFrame.ToText().Split(' ');
             if (!this.m_pairs.TryGetValue(strs[0], out var method))
             {
-                await e.InvokeNext().ConfigureAwait(false);
+                await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             var ps = method.Info.GetParameters();
@@ -108,12 +108,12 @@ namespace TouchSocket.Http.WebSockets
                 switch (method.TaskType)
                 {
                     case TaskReturnType.Task:
-                        await method.InvokeAsync(this, os).ConfigureAwait(false);
+                        await method.InvokeAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         result = default;
                         break;
 
                     case TaskReturnType.TaskObject:
-                        result = await method.InvokeObjectAsync(this, os).ConfigureAwait(false);
+                        result = await method.InvokeObjectAsync(this, os).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         break;
 
                     case TaskReturnType.None:
@@ -124,14 +124,14 @@ namespace TouchSocket.Http.WebSockets
 
                 if (method.HasReturn)
                 {
-                    await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(false);
+                    await webSocket.SendAsync(this.Converter.Serialize(null, result)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             catch (Exception ex)
             {
                 if (this.ReturnException)
                 {
-                    await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureAwait(false);
+                    await webSocket.SendAsync(this.Converter.Serialize(null, ex.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }

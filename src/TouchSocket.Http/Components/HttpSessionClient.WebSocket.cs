@@ -53,23 +53,23 @@ namespace TouchSocket.Http
 
                 var msg = bytes.ReadToSpan(bytes.CanReadLength).ToString(System.Text.Encoding.UTF8);
 
-                await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(false);
-                await this.m_webSocket.CloseAsync("Auto closed successful").ConfigureAwait(false);
+                await this.PrivateWebSocketClosing(new ClosingEventArgs(msg)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                await this.m_webSocket.CloseAsync("Auto closed successful").ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
             if (dataFrame.IsPing && this.GetValue(WebSocketFeature.AutoPongProperty))
             {
-                await this.m_webSocket.PongAsync().ConfigureAwait(false);
+                await this.m_webSocket.PongAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
 
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(false);
+                await this.m_webSocket.InputReceiveAsync(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return;
             }
 
-            await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(false);
+            await this.OnWebSocketReceived(this.m_webSocket, new WSDataFrameEventArgs(dataFrame)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private Task PrivateWebSocketClosing(ClosingEventArgs e)
@@ -82,9 +82,9 @@ namespace TouchSocket.Http
             this.m_webSocket.Online = false;
             if (this.m_webSocket.AllowAsyncRead)
             {
-                await this.m_webSocket.Complete(e.Message).ConfigureAwait(false);
+                await this.m_webSocket.Complete(e.Message).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
-            await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureAwait(false);
+            await this.OnWebSocketClosed(this.m_webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace TouchSocket.Http
         protected virtual async Task OnWebSocketHandshaking(IWebSocket webSocket, HttpContextEventArgs e)
         {
             // 提前WebSocket握手过程中的插件执行
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, webSocket, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketHandshakingPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace TouchSocket.Http
         /// </remarks>
         protected virtual async Task OnWebSocketReceived(IWebSocket webSocket, WSDataFrameEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, webSocket, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketReceivedPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace TouchSocket.Http
         protected virtual async Task OnWebSocketClosing(IWebSocket webSocket, ClosingEventArgs e)
         {
             // 提前通知所有IWebSocketClosingPlugin插件，WebSocket即将关闭
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, webSocket, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosingPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace TouchSocket.Http
         /// </remarks>
         protected virtual async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
-            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, webSocket, e).ConfigureAwait(false);
+            await this.PluginManager.RaiseAsync(typeof(IWebSocketClosedPlugin), this.Resolver, webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件
@@ -170,7 +170,7 @@ namespace TouchSocket.Http
 
                     var webSocket = new InternalWebSocket(this);
 
-                    await this.PrivateWebSocketHandshaking(webSocket, e).ConfigureAwait(false);
+                    await this.PrivateWebSocketHandshaking(webSocket, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (this.m_httpContext.Response.Responsed)
                     {
@@ -181,7 +181,7 @@ namespace TouchSocket.Http
                     {
                         this.InitWebSocket(webSocket);
 
-                        await this.m_httpContext.Response.AnswerAsync().ConfigureAwait(false);
+                        await this.m_httpContext.Response.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         _ = this.PrivateWebSocketHandshaked(webSocket, new HttpContextEventArgs(httpContext));
                         return true;
@@ -190,12 +190,12 @@ namespace TouchSocket.Http
                     {
                         this.m_httpContext.Response.SetStatus(403, "Forbidden");
                         await this.m_httpContext.Response.AnswerAsync();
-                        await this.CloseAsync(TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message)).ConfigureAwait(false);
+                        await this.CloseAsync(TouchSocketHttpResource.RefuseWebSocketConnection.Format(e.Message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
                 else
                 {
-                    await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureAwait(false);
+                    await this.CloseAsync(TouchSocketHttpResource.WebSocketConnectionProtocolIsIncorrect).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             return false;

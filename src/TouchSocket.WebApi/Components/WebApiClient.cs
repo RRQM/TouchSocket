@@ -104,7 +104,7 @@ namespace TouchSocket.WebApi
 
             await this.PluginManager.RaiseAsync(typeof(IWebApiRequestPlugin), this.Resolver, this, new WebApiEventArgs(request, default));
 
-            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(false))
+            using (var responseResult = await this.ProtectedRequestContentAsync(request, invokeOption.Timeout, invokeOption.Token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
                 await this.PluginManager.RaiseAsync(typeof(IWebApiResponsePlugin), this.Resolver, this, new WebApiEventArgs(request, response));
@@ -118,7 +118,7 @@ namespace TouchSocket.WebApi
                 {
                     if (returnType != null)
                     {
-                        var body = await response.GetBodyAsync().ConfigureAwait(false);
+                        var body = await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         return this.Converter.Deserialize(request, body, returnType);
                     }
                     else
@@ -129,7 +129,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (response.StatusCode == 422)
                 {
-                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(false), typeof(ActionResult))).Message);
+                    throw new RpcException(((ActionResult)this.Converter.Deserialize(request, await response.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), typeof(ActionResult))).Message);
                 }
                 else
                 {

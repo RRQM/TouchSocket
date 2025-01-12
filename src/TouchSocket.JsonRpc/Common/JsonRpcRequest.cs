@@ -12,11 +12,8 @@
 
 namespace TouchSocket.JsonRpc
 {
-    internal class InternalJsonRpcRequest
+    internal class InternalJsonRpcRequest:JsonRpcBase
     {
-        public int? Id { get; set; }
-        public string Jsonrpc { get; set; } = "2.0";
-
         public string Method { get; set; }
 
         public object ParamsObject { get; set; }

@@ -70,7 +70,7 @@ namespace TouchSocket.Http
             if (this.m_tempByteBlock == null)
             {
                 byteBlock.Position = 0;
-                await this.Single(byteBlock).ConfigureAwait(false);
+                await this.Single(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -80,7 +80,7 @@ namespace TouchSocket.Http
                 block.Position = 0;
                 using (block)
                 {
-                    await this.Single(block).ConfigureAwait(false);
+                    await this.Single(block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }
@@ -120,7 +120,7 @@ namespace TouchSocket.Http
                         return FilterResult.Cache;
                     }
 
-                    await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, count)).ConfigureAwait(false);
+                    await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, count)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     byteBlock.Position += count;
                     byteBlock.Position += 2;
                     return FilterResult.GoOn;
@@ -149,7 +149,7 @@ namespace TouchSocket.Http
                 var adapter = this.WarpAdapter;
                 if (adapter != null)
                 {
-                    await adapter.ReceivedInputAsync(byteBlock).ConfigureAwait(false);
+                    await adapter.ReceivedInputAsync(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     return;
                 }
                 if (this.m_httpResponse == null)
@@ -166,8 +166,8 @@ namespace TouchSocket.Http
                         else
                         {
                             this.m_httpResponse.InternalSetContent(byteBlock.ReadToSpan((int)this.m_httpResponse.ContentLength).ToArray());
-                            await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureAwait(false);
-                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
+                            await this.GoReceivedAsync(null, this.m_httpResponse).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.m_httpResponse = null;
                         }
                     }
@@ -178,8 +178,8 @@ namespace TouchSocket.Http
 
                         if (this.m_task != null)
                         {
-                            await this.m_task.ConfigureAwait(false);
-                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
+                            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.m_task = null;
                         }
                         return;
@@ -189,7 +189,7 @@ namespace TouchSocket.Http
                 {
                     if (this.m_httpResponse.IsChunk)
                     {
-                        switch (await this.ReadChunk(byteBlock).ConfigureAwait(false))
+                        switch (await this.ReadChunk(byteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                         {
                             case FilterResult.Cache:
                                 this.Cache(byteBlock);
@@ -197,16 +197,16 @@ namespace TouchSocket.Http
 
                             case FilterResult.Success:
 
-                                await this.m_httpResponse.CompleteInput().ConfigureAwait(false);
+                                await this.m_httpResponse.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                                 this.m_httpResponse = null;
                                 if (this.m_task != null)
                                 {
-                                    await this.m_task.ConfigureAwait(false);
+                                    await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     this.m_task = null;
                                 }
 
-                                await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
+                                await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 break;
 
                             case FilterResult.GoOn:
@@ -219,20 +219,20 @@ namespace TouchSocket.Http
                         if (byteBlock.CanRead)
                         {
                             var len = (int)Math.Min(this.m_surLen, byteBlock.CanReadLength);
-                            await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(false);
+                            await this.m_httpResponse.InternalInputAsync(byteBlock.Memory.Slice(byteBlock.Position, len)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.m_surLen -= len;
                             byteBlock.Position += len;
                             if (this.m_surLen == 0)
                             {
-                                await this.m_httpResponse.CompleteInput().ConfigureAwait(false);
+                                await this.m_httpResponse.CompleteInput().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 this.m_httpResponse = null;
                                 if (this.m_task != null)
                                 {
-                                    await this.m_task.ConfigureAwait(false);
+                                    await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     this.m_task = null;
                                 }
 
-                                await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
+                                await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                         }
                     }
@@ -241,10 +241,10 @@ namespace TouchSocket.Http
                         this.m_httpResponse = null;
                         if (this.m_task != null)
                         {
-                            await this.m_task.ConfigureAwait(false);
+                            await this.m_task.ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             this.m_task = null;
 
-                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(false);
+                            await this.m_autoResetEvent.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                 }

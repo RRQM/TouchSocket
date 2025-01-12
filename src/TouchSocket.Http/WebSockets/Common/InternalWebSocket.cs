@@ -73,24 +73,24 @@ namespace TouchSocket.Http.WebSockets
                         byteBlock.WriteNormalString(statusDescription, Encoding.UTF8);
                     }
                     frame.PayloadData = byteBlock;
-                    await this.SendAsync(frame).ConfigureAwait(false);
+                    await this.SendAsync(frame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             this.m_httpClientBase.TryShutdown();
-            await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(false);
+            await this.m_httpClientBase.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             this.m_httpSocketClient.TryShutdown();
-            await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(false);
+            await this.m_httpSocketClient.SafeCloseAsync(statusDescription).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         public async Task PingAsync()
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureAwait(false);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Ping }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         public async Task PongAsync()
         {
-            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureAwait(false);
+            await this.SendAsync(new WSDataFrame() { FIN = true, Opcode = WSDataType.Pong }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #region 发送
@@ -99,7 +99,7 @@ namespace TouchSocket.Http.WebSockets
         {
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Text }.AppendText(text))
             {
-                await this.SendAsync(frame, endOfMessage).ConfigureAwait(false);
+                await this.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -108,7 +108,7 @@ namespace TouchSocket.Http.WebSockets
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = WSDataType.Binary })
             {
                 frame.AppendBinary(memory.Span);
-                await this.SendAsync(frame, endOfMessage).ConfigureAwait(false);
+                await this.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -139,12 +139,12 @@ namespace TouchSocket.Http.WebSockets
                 if (this.m_isServer)
                 {
                     dataFrame.BuildResponse(ref byteBlock);
-                    await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                    await this.m_httpSocketClient.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
                     dataFrame.BuildRequest(ref byteBlock);
-                    await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                    await this.m_httpClientBase.InternalSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
             finally

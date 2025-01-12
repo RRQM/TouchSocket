@@ -105,7 +105,7 @@ namespace TouchSocket.Sockets
             }
 
             this.Complete(false);
-            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(false);
+            await this.m_resetEventForComplateRead.WaitOneAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         public async Task Complete(string msg)
@@ -114,7 +114,7 @@ namespace TouchSocket.Sockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceiveAsync(default, default).ConfigureAwait(false);
+                await this.InputReceiveAsync(default, default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {
@@ -228,9 +228,9 @@ namespace TouchSocket.Sockets
     //    /// <inheritdoc/>
     //    public async Task<IReceiverResult> ReadAsync(CancellationToken token)
     //    {
-    //        return await this.ValueReadAsync(token).ConfigureAwait(false);
+    //        return await this.ValueReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     //        //this.ThrowIfDisposed();
-    //        //await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
+    //        //await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     //        //if (this.m_cacheMode)
     //        //{
     //        //    this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
@@ -435,7 +435,7 @@ namespace TouchSocket.Sockets
     //    public async Task<IReceiverResult> ReadAsync(CancellationToken token)
     //    {
     //        this.ThrowIfDisposed();
-    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
+    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
     //        if (this.m_cacheMode)
     //        {
     //            this.m_receiverResult.ByteBlock = this.m_cacheByteBlock;
@@ -453,7 +453,7 @@ namespace TouchSocket.Sockets
     //    public async ValueTask<IReceiverResult> ValueReadAsync(CancellationToken token)
     //    {
     //        this.ThrowIfDisposed();
-    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(false);
+    //        await this.m_resetEventForRead.WaitOneAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
     //        if (this.m_cacheMode)
     //        {

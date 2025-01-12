@@ -99,9 +99,9 @@ namespace TouchSocket.JsonRpc
                 return;
             }
             var callContext = new TcpJsonRpcCallContext(this);
-            await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(false);
+            await this.m_jsonRpcActor.InputReceiveAsync(jsonRpcMemory, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-            await base.OnTcpReceived(e).ConfigureAwait(false);
+            await base.OnTcpReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

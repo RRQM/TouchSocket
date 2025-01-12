@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 using TouchSocket.Sockets;
 
 namespace TouchSocket.Http.WebSockets
@@ -30,7 +31,7 @@ namespace TouchSocket.Http.WebSockets
 
         public async Task OnWebSocketClosed(IWebSocket webSocket, ClosedEventArgs e)
         {
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (webSocket is not TClient tClient)
             {
@@ -50,7 +51,7 @@ namespace TouchSocket.Http.WebSockets
                     {
                         return;
                     }
-                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(false))
+                    if (await this.ActionForConnect.Invoke(tClient).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         return;
                     }

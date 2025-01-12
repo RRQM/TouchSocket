@@ -137,23 +137,23 @@ namespace TouchSocket.Http.WebSockets
 
             if (this.m_dataFrameTemp == null)
             {
-                await this.SplitPackageAsync(buffer, 0, r).ConfigureAwait(false);
+                await this.SplitPackageAsync(buffer, 0, r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 if (this.m_surPlusLength == r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     this.m_dataFrameTemp = null;
                     this.m_surPlusLength = 0;
                 }
                 else if (this.m_surPlusLength < r)
                 {
                     this.m_dataFrameTemp.PayloadData.Write(new System.ReadOnlySpan<byte>(buffer, 0, this.m_surPlusLength));
-                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(false);
+                    await this.PreviewHandle(this.m_dataFrameTemp).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     this.m_dataFrameTemp = null;
-                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureAwait(false);
+                    await this.SplitPackageAsync(buffer, this.m_surPlusLength, r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
                 else
                 {
@@ -181,7 +181,7 @@ namespace TouchSocket.Http.WebSockets
                 {
                     WSTools.DoMask(dataFrame.PayloadData.TotalMemory.Span, dataFrame.PayloadData.Memory.Span, dataFrame.MaskingKey);
                 }
-                await this.GoReceivedAsync(null, dataFrame).ConfigureAwait(false);
+                await this.GoReceivedAsync(null, dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -218,7 +218,7 @@ namespace TouchSocket.Http.WebSockets
                         {
                             if (dataFrame.PayloadLength == dataFrame.PayloadData.Length)
                             {
-                                await this.PreviewHandle(dataFrame).ConfigureAwait(false);
+                                await this.PreviewHandle(dataFrame).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             }
                             else
                             {

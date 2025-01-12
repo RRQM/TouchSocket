@@ -65,7 +65,7 @@ namespace TouchSocket.Dmtp.FileTransfer
             };
             dmtpFileTransferActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpFileTransferActor(dmtpFileTransferActor);
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -73,14 +73,14 @@ namespace TouchSocket.Dmtp.FileTransfer
         {
             if (client.DmtpActor.GetDmtpFileTransferActor() is DmtpFileTransferActor dmtpFileTransferActor)
             {
-                if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
+                if (await dmtpFileTransferActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     e.Handled = true;
                     return;
                 }
             }
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc cref="IDmtpFileTransferActor.MaxSmallFileLength"/>
@@ -113,12 +113,12 @@ namespace TouchSocket.Dmtp.FileTransfer
 
         private async Task OnFileTransfered(IDmtpActor actor, FileTransferredEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferredPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task OnFileTransfering(IDmtpActor actor, FileTransferringEventArgs e)
         {
-            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(false);
+            await this.m_pluginManager.RaiseAsync(typeof(IDmtpFileTransferringPlugin), actor.Client.Resolver, actor.Client, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

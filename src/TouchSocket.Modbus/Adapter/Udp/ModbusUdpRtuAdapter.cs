@@ -53,7 +53,7 @@ namespace TouchSocket.Modbus
             var crc = TouchSocketModbusUtility.ToModbusCrcValue(byteBlock.Span.Slice(0, crcLen));
             if (crc == (response.Crc))
             {
-                await base.GoReceived(remoteEndPoint, null, response).ConfigureAwait(false);
+                await base.GoReceived(remoteEndPoint, null, response).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

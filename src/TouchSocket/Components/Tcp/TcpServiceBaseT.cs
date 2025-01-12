@@ -89,7 +89,7 @@ namespace TouchSocket.Sockets
             {
                 if (this.TryGetClient(id, out var client))
                 {
-                    await client.CloseAsync().ConfigureAwait(false);
+                    await client.CloseAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     client.SafeDispose();
                 }
             }
@@ -134,7 +134,7 @@ namespace TouchSocket.Sockets
 
             if (this.m_clients.TryGetClient(sourceId, out var client))
             {
-                await client.ResetIdAsync(targetId).ConfigureAwait(false);
+                await client.ResetIdAsync(targetId).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
@@ -195,13 +195,13 @@ namespace TouchSocket.Sockets
                 }
                 this.m_serverState = ServerState.Running;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
                 this.m_serverState = ServerState.Exception;
 
-                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStartedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, ex) { Message = ex.Message }).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 throw;
             }
         }
@@ -217,12 +217,12 @@ namespace TouchSocket.Sockets
             //https://gitee.com/RRQM_Home/TouchSocket/issues/IAWD4N
             this.m_serverState = ServerState.Stopped;//当无异常执行释放时重置状态到Stopped。意味可恢复启动
             //无条件释放
-            await this.ReleaseAll().ConfigureAwait(false);
+            await this.ReleaseAll().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (serverState == ServerState.Running)
             {
                 //当且仅当服务器的状态是Running时才触发ServerStoped
-                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(false);
+                await this.PluginManager.RaiseAsync(typeof(IServerStopedPlugin), this.Resolver, this, new ServiceStateEventArgs(this.m_serverState, default)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -379,13 +379,13 @@ namespace TouchSocket.Sockets
 
                 this.ClientInitialized(client);
 
-                await client.InternalInitialized().ConfigureAwait(false);
+                await client.InternalInitialized().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                 var args = new ConnectingEventArgs()
                 {
                     Id = this.GetNextNewId()
                 };
-                await client.InternalConnecting(args).ConfigureAwait(false);//Connecting
+                await client.InternalConnecting(args).ConfigureAwait(EasyTask.ContinueOnCapturedContext);//Connecting
                 if (args.IsPermitOperation)
                 {
                     client.InternalSetId(args.Id);
@@ -399,7 +399,7 @@ namespace TouchSocket.Sockets
                     {
                         try
                         {
-                            await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(false);
+                            await tcpCore.AuthenticateAsync(monitor.Option.ServiceSslOption).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch (Exception ex)
                         {
@@ -410,7 +410,7 @@ namespace TouchSocket.Sockets
 
                     if (this.m_clients.TryAdd(client))
                     {
-                        await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(false);
+                        await client.InternalConnected(new ConnectedEventArgs()).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
@@ -439,7 +439,7 @@ namespace TouchSocket.Sockets
 
             this.m_monitors.Clear();
 
-            await this.ClearAsync().ConfigureAwait(false);
+            await this.ClearAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private bool TryAdd(TcpSessionClientBase client)

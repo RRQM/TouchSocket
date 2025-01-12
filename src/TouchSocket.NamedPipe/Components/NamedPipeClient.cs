@@ -53,13 +53,13 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Closed != null)
                 {
-                    await this.Closed.Invoke(this, e).ConfigureAwait(false);
+                    await this.Closed.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-                await base.OnNamedPipeClosed(e).ConfigureAwait(false);
+                await base.OnNamedPipeClosed(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -75,13 +75,13 @@ namespace TouchSocket.NamedPipe
         {
             if (this.Closing != null)
             {
-                await this.Closing.Invoke(this, e).ConfigureAwait(false);
+                await this.Closing.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnNamedPipeClosing(e).ConfigureAwait(false);
+            await base.OnNamedPipeClosing(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <summary>
@@ -94,13 +94,13 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Connected != null)
                 {
-                    await this.Connected.Invoke(this, e).ConfigureAwait(false);
+                    await this.Connected.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
-                await base.OnNamedPipeConnected(e).ConfigureAwait(false);
+                await base.OnNamedPipeConnected(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -118,14 +118,14 @@ namespace TouchSocket.NamedPipe
             {
                 if (this.Connecting != null)
                 {
-                    await this.Connecting.Invoke(this, e).ConfigureAwait(false);
+                    await this.Connecting.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (e.Handled)
                     {
                         return;
                     }
                 }
 
-                await base.OnNamedPipeConnecting(e).ConfigureAwait(false);
+                await base.OnNamedPipeConnecting(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch (Exception ex)
             {
@@ -138,13 +138,13 @@ namespace TouchSocket.NamedPipe
         {
             if (this.Received != null)
             {
-                await this.Received.Invoke(this, e).ConfigureAwait(false);
+                await this.Received.Invoke(this, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 if (e.Handled)
                 {
                     return;
                 }
             }
-            await base.OnNamedPipeReceived(e).ConfigureAwait(false);
+            await base.OnNamedPipeReceived(e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion 事件

@@ -58,6 +58,22 @@ namespace TouchSocket.Http
             this.m_isServer = true;
         }
 
+        /// <inheritdoc/>
+        public override HttpContent Content 
+        { 
+            get => base.Content;
+            set 
+            {
+                if (value is ReadonlyMemoryHttpContent readonlyMemoryHttpContent)
+                {
+                    this.ContentLength = readonlyMemoryHttpContent.Memory.Length;
+                    this.ContentCompleted = true;
+                    this.m_contentMemory = readonlyMemoryHttpContent.Memory;
+                }
+                base.Content = value;
+            } 
+        }
+
         /// <summary>
         /// HTTP请求方式。
         /// </summary>
@@ -84,8 +100,14 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         public override async ValueTask<ReadOnlyMemory<byte>> GetContentAsync(CancellationToken cancellationToken = default)
         {
+            
             if (!this.ContentCompleted.HasValue)
             {
+                if (!this.IsServer)
+                {
+                    //非Server模式下不允许获取
+                    return default;
+                }
                 if (this.ContentLength == 0)
                 {
                     this.m_contentMemory = ReadOnlyMemory<byte>.Empty;
@@ -250,52 +272,132 @@ namespace TouchSocket.Http
             }
         }
 
-        internal void BuildHeader(ByteBlock byteBlock)
+        internal void BuildHeader<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
         {
-            var stringBuilder = new StringBuilder();
+            //var stringBuilder = new StringBuilder();
 
-            string url = null;
-            if (!string.IsNullOrEmpty(this.RelativeURL))
+            //string url = null;
+            //if (!string.IsNullOrEmpty(this.RelativeURL))
+            //{
+            //    if (this.m_query.Count == 0)
+            //    {
+            //        url = this.RelativeURL;
+            //    }
+            //    else
+            //    {
+            //        var urlBuilder = new StringBuilder();
+            //        urlBuilder.Append(this.RelativeURL);
+            //        urlBuilder.Append('?');
+            //        var i = 0;
+            //        foreach (var item in this.m_query.Keys)
+            //        {
+            //            urlBuilder.Append($"{item}={Uri.EscapeDataString(this.m_query[item])}");
+            //            if (++i < this.m_query.Count)
+            //            {
+            //                urlBuilder.Append('&');
+            //            }
+            //        }
+            //        url = urlBuilder.ToString();
+            //    }
+            //}
+
+            byteBlock.WriteNormalString(this.Method.ToString(), Encoding.UTF8);//Get
+            AppendSpace(ref byteBlock);//空格
+            byteBlock.WriteNormalString(this.RelativeURL, Encoding.UTF8);//URL
+            if (this.m_query.Count > 0)
             {
-                if (this.m_query.Count == 0)
+                AppendQuestionMark(ref byteBlock);
+                var i = 0;
+                foreach (var item in this.m_query.Keys)
                 {
-                    url = this.RelativeURL;
-                }
-                else
-                {
-                    var urlBuilder = new StringBuilder();
-                    urlBuilder.Append(this.RelativeURL);
-                    urlBuilder.Append('?');
-                    var i = 0;
-                    foreach (var item in this.m_query.Keys)
+                    byteBlock.WriteNormalString(item, Encoding.UTF8);
+                    AppendEqual(ref byteBlock);
+                    var value = this.m_query[item];
+                    if (value.HasValue())
                     {
-                        urlBuilder.Append($"{item}={this.m_query[item]}");
-                        if (++i < this.m_query.Count)
-                        {
-                            urlBuilder.Append('&');
-                        }
+                        byteBlock.WriteNormalString(Uri.EscapeDataString(value), Encoding.UTF8);
                     }
-                    url = urlBuilder.ToString();
+
+                    if (++i < this.m_query.Count)
+                    {
+                        AppendAnd(ref byteBlock);
+                    }
                 }
             }
-
-            if (string.IsNullOrEmpty(url))
-            {
-                stringBuilder.Append($"{this.Method} / HTTP/{this.ProtocolVersion}\r\n");
-            }
-            else
-            {
-                stringBuilder.Append($"{this.Method} {url} HTTP/{this.ProtocolVersion}\r\n");
-            }
+            AppendSpace(ref byteBlock);//空格
+            AppendHTTP(ref byteBlock);//HTTP
+            AppendSlash(ref byteBlock);//斜杠
+            byteBlock.WriteNormalString(this.ProtocolVersion, Encoding.UTF8);//1.1
+            AppendRn(ref byteBlock);//换行
 
             foreach (var headerKey in this.Headers.Keys)
             {
-                stringBuilder.Append($"{headerKey}: ");
-                stringBuilder.Append(this.Headers[headerKey] + "\r\n");
+                byteBlock.WriteNormalString(headerKey, Encoding.UTF8);//key
+                AppendColon(ref byteBlock);//冒号
+                AppendSpace(ref byteBlock);//空格
+                byteBlock.WriteNormalString(this.Headers[headerKey], Encoding.UTF8);//value
+                AppendRn(ref byteBlock);//换行
             }
 
-            stringBuilder.Append("\r\n");
-            byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+            AppendRn(ref byteBlock);
+
+            //if (string.IsNullOrEmpty(url))
+            //{
+            //    stringBuilder.Append($"{this.Method} / HTTP/{this.ProtocolVersion}\r\n");
+            //}
+            //else
+            //{
+            //    stringBuilder.Append($"{this.Method} {url} HTTP/{this.ProtocolVersion}\r\n");
+            //}
+
+            //foreach (var headerKey in this.Headers.Keys)
+            //{
+            //    stringBuilder.Append($"{headerKey}: ");
+            //    stringBuilder.Append(this.Headers[headerKey] + "\r\n");
+            //}
+
+            //stringBuilder.Append("\r\n");
+            //byteBlock.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
+        }
+
+        private static void AppendColon<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write(":"u8);
+        }
+
+        private static void AppendHTTP<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("HTTP"u8);
+        }
+
+        private static void AppendAnd<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("&"u8);
+        }
+
+        private static void AppendEqual<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("="u8);
+        }
+
+        private static void AppendRn<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("\r\n"u8);
+        }
+
+        private static void AppendSpace<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write(" "u8);
+        }
+
+        private static void AppendSlash<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("/"u8);
+        }
+
+        private static void AppendQuestionMark<TByteBlock>(ref TByteBlock byteBlock) where TByteBlock : IByteBlock
+        {
+            byteBlock.Write("?"u8);
         }
 
 

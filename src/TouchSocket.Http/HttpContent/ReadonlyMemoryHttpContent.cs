@@ -13,6 +13,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http
 {
@@ -31,6 +32,9 @@ namespace TouchSocket.Http
         {
             this.m_memory = memory;
         }
+
+
+        public ReadOnlyMemory<byte> Memory => this.m_memory;
 
         /// <inheritdoc/>
         protected override bool OnBuildingContent<TByteBlock>(ref TByteBlock byteBlock)
@@ -59,7 +63,7 @@ namespace TouchSocket.Http
         /// <inheritdoc/>
         protected override async Task WriteContent(Func<ReadOnlyMemory<byte>, Task> writeFunc, CancellationToken token)
         {
-            await writeFunc(this.m_memory).ConfigureAwait(false);
+            await writeFunc(this.m_memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
     }
 }

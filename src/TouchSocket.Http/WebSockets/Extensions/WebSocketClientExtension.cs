@@ -12,6 +12,7 @@
 
 using System;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Http.WebSockets
 {
@@ -25,7 +26,7 @@ namespace TouchSocket.Http.WebSockets
             using (var frame = new WSDataFrame() { FIN = endOfMessage, Opcode = dataType })
             {
                 frame.AppendBinary(memory.Span);
-                await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(false);
+                await webSocket.SendAsync(frame, endOfMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

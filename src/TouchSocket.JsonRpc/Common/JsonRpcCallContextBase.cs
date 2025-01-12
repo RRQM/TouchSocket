@@ -22,7 +22,7 @@ namespace TouchSocket.JsonRpc
     {
         private IScopedResolver m_scopedResolver;
 
-        public int? JsonRpcId { get; private set; }
+        public int? JsonRpcId { get; protected set; }
 
         ///// <summary>
         ///// JsonRpc上下文
@@ -55,6 +55,7 @@ namespace TouchSocket.JsonRpc
             this.m_scopedResolver = scopedResolver;
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (this.DisposedValue)

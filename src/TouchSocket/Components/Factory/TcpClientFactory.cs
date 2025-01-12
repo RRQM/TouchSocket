@@ -42,8 +42,8 @@ namespace TouchSocket.Sockets
         protected override async Task<TcpClient> CreateClient(TouchSocketConfig config)
         {
             var client = new TcpClient();
-            await client.SetupAsync(config).ConfigureAwait(false);
-            await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(false);
+            await client.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
+            await client.ConnectAsync((int)this.ConnectTimeout.TotalMilliseconds, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             return client;
         }
     }

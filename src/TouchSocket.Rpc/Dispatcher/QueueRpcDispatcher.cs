@@ -14,6 +14,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using TouchSocket.Core;
 
 namespace TouchSocket.Rpc
 {
@@ -37,12 +38,12 @@ namespace TouchSocket.Rpc
         public async Task Dispatcher(TRpcActor actor, TCallContext callContext, Func<object, Task> func)
         {
             this.m_queue.Enqueue(new InvokeContext(callContext, func));
-            await Task.Factory.StartNew(this.RpcTrigger).ConfigureAwait(false);
+            await Task.Factory.StartNew(this.RpcTrigger).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private async Task RpcTrigger()
         {
-            await this.m_semaphore.WaitAsync().ConfigureAwait(false);
+            await this.m_semaphore.WaitAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -54,7 +55,7 @@ namespace TouchSocket.Rpc
                         var func = invokeContext.Func;
                         try
                         {
-                            await func(callContext).ConfigureAwait(false);
+                            await func(callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         catch
                         {

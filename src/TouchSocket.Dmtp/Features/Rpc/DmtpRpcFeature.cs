@@ -186,7 +186,7 @@ namespace TouchSocket.Dmtp.Rpc
             dmtpRpcActor.SetProtocolFlags(this.StartProtocol);
             client.DmtpActor.SetDmtpRpcActor(dmtpRpcActor);
 
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         /// <inheritdoc/>
@@ -194,13 +194,13 @@ namespace TouchSocket.Dmtp.Rpc
         {
             if (client.DmtpActor.GetDmtpRpcActor() is DmtpRpcActor dmtpRpcActor)
             {
-                if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(false))
+                if (await dmtpRpcActor.InputReceivedData(e.DmtpMessage).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     e.Handled = true;
                     return;
                 }
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion Config

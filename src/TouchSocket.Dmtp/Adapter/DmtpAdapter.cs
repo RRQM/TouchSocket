@@ -62,7 +62,7 @@ namespace TouchSocket.Dmtp
             {
                 var block = byteBlock;
                 message.Build(ref block);
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

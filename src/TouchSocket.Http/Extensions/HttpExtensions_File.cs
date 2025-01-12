@@ -108,17 +108,17 @@ namespace TouchSocket.Http
                             {
                                 while (true)
                                 {
-                                    var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(false);
+                                    var r = await streamReader.ReadAsync(buffer, 0, bufferLen).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                     if (r == 0)
                                     {
                                         gzip.Close();
-                                        await response.CompleteChunkAsync().ConfigureAwait(false);
+                                        await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                         break;
                                     }
 
-                                    await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
+                                    await flowGate.AddCheckWaitAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                                    await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(false);
+                                    await gzip.WriteAsync(buffer, 0, r, CancellationToken.None).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                                 }
                             }
                         }
@@ -128,21 +128,21 @@ namespace TouchSocket.Http
                         var surLen = httpRange.Length;
                         while (surLen > 0)
                         {
-                            var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(false);
+                            var r = await streamReader.ReadAsync(buffer, 0, (int)Math.Min(bufferLen, surLen)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             if (r == 0)
                             {
                                 break;
                             }
 
-                            await flowGate.AddCheckWaitAsync(r).ConfigureAwait(false);
+                            await flowGate.AddCheckWaitAsync(r).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
-                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(false);
+                            await response.WriteAsync(new ReadOnlyMemory<byte>(buffer, 0, r)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                             surLen -= r;
                         }
 
                         if (response.IsChunk)
                         {
-                            await response.CompleteChunkAsync().ConfigureAwait(false);
+                            await response.CompleteChunkAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                 }

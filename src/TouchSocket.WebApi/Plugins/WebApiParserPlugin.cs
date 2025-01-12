@@ -93,7 +93,7 @@ namespace TouchSocket.WebApi
                         for (var i = 0; i < rpcMethod.Parameters.Length; i++)
                         {
                             var parameter = rpcMethod.Parameters[i];
-                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(false);
+                            ps[i] = await this.ParseParameterAsync(parameter, callContext).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                     }
                     catch (Exception ex)
@@ -104,17 +104,17 @@ namespace TouchSocket.WebApi
                     }
 
                     callContext.SetParameters(ps);
-                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(false);
+                    invokeResult = await this.m_rpcServerProvider.ExecuteAsync(callContext, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                     if (e.Context.Response.Responsed)
                     {
                         return;
                     }
 
-                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(false);
+                    await this.ResponseAsync(client, e.Context, invokeResult).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
-            await e.InvokeNext().ConfigureAwait(false);
+            await e.InvokeNext().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         private static object PrimitiveParse(string source, Type targetType)
@@ -162,7 +162,7 @@ namespace TouchSocket.WebApi
                 var parameterInfo = this.GetParameterInfo(parameter);
                 if (parameterInfo.IsFromBody)
                 {
-                    var body = await request.GetBodyAsync().ConfigureAwait(false);
+                    var body = await request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     if (body.HasValue())
                     {
                         return WebApiParserPlugin.PrimitiveParse(body, parameter.Type);
@@ -194,7 +194,7 @@ namespace TouchSocket.WebApi
                 }
                 else if (parameterInfo.IsFromForm)
                 {
-                    var value = (await request.GetFormCollectionAsync().ConfigureAwait(false)).Get(parameterInfo.FromFormName);
+                    var value = (await request.GetFormCollectionAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext)).Get(parameterInfo.FromFormName);
                     if (value.HasValue())
                     {
                         return WebApiParserPlugin.PrimitiveParse(value, parameter.Type);
@@ -227,7 +227,7 @@ namespace TouchSocket.WebApi
             }
             else
             {
-                var str = await request.GetBodyAsync().ConfigureAwait(false);
+                var str = await request.GetBodyAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return this.Converter.Deserialize(callContext.HttpContext, str, parameter.Type);
             }
         }
@@ -293,7 +293,7 @@ namespace TouchSocket.WebApi
                     }
             }
 
-            await httpResponse.AnswerAsync().ConfigureAwait(false);
+            await httpResponse.AnswerAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             if (!httpContext.Request.KeepAlive)
             {

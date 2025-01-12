@@ -76,5 +76,7 @@ namespace TouchSocket.Core
             return Task.FromCanceled<T>(cancellationToken);
 #endif
         }
+
+        public static bool ContinueOnCapturedContext { get; set; } = false;
     }
 }

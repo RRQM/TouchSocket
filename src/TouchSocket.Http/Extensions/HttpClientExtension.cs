@@ -44,7 +44,7 @@ namespace TouchSocket.Http
             request.SetUrl(url);
 
             // 使用指定的超时时间和取消令牌发起HTTP请求
-            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
+            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 // 获取HTTP响应
                 var response = responseResult.Response;
@@ -88,13 +88,13 @@ namespace TouchSocket.Http
         public static async Task GetFileAsync(this IHttpClient httpClient, HttpRequest request, Stream stream, int millisecondsTimeout = 10 * 1000, CancellationToken token = default)
         {
             // 使用using语句确保响应对象正确地被释放
-            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
+            using (var responseResult = await httpClient.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 // 提取HTTP响应
                 var response = responseResult.Response;
 
                 // 将响应内容异步读取并复制到指定的流中
-                await response.ReadCopyToAsync(stream, token).ConfigureAwait(false);
+                await response.ReadCopyToAsync(stream, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -111,13 +111,13 @@ namespace TouchSocket.Http
             var token = flowOperator.Token;
             var timeout = (int)flowOperator.Timeout.TotalMilliseconds;
             // 使用using语句确保响应对象正确地被释放
-            using (var responseResult = await httpClient.RequestAsync(request, timeout, token).ConfigureAwait(false))
+            using (var responseResult = await httpClient.RequestAsync(request, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 // 提取HTTP响应
                 var response = responseResult.Response;
 
                 // 将响应内容异步读取并复制到指定的流中
-                return await response.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(false);
+                return await response.ReadCopyToAsync(stream, flowOperator).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -187,7 +187,7 @@ namespace TouchSocket.Http
                 request.SetHost(client.RemoteIPHost.Host);
                 request.AsPost();
 
-                using (var responseResult = await client.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(false))
+                using (var responseResult = await client.RequestAsync(request, millisecondsTimeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var response = responseResult.Response;
                     if (response.IsSuccess())
@@ -219,7 +219,7 @@ namespace TouchSocket.Http
                 //创建一个请求
                 request.SetContent(new StreamHttpContent(stream, flowOperator));
 
-                using (var responseResult = await client.RequestAsync(request, timeout, token).ConfigureAwait(false))
+                using (var responseResult = await client.RequestAsync(request, timeout, token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     var response = responseResult.Response;
                     if (response.IsSuccess())

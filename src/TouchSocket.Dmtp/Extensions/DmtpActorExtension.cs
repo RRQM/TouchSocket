@@ -127,7 +127,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 // 调用客户端的SendAsync方法发送数据，不等待任务完成后再继续执行下面的代码。
-                await client.DmtpActor.SendAsync(protocol, memory).ConfigureAwait(false);
+                await client.DmtpActor.SendAsync(protocol, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
             catch
@@ -148,7 +148,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 // 使用空的内存数据发送协议命令。
-                await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureAwait(false);
+                await client.DmtpActor.SendAsync(protocol, ReadOnlyMemory<byte>.Empty).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
             catch
@@ -181,7 +181,7 @@ namespace TouchSocket.Dmtp
                 // 准备数据包，将数据写入到block中。
                 package.Package(ref block);
                 // 使用异步方法发送数据包和协议。
-                await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(false);
+                await client.DmtpActor.SendAsync(protocol, byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
 
@@ -218,7 +218,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 // 实际执行发送操作。
-                await SendAsync(client, protocol, package, maxSize).ConfigureAwait(false);
+                await SendAsync(client, protocol, package, maxSize).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 // 发送成功，返回true。
                 return true;
             }
@@ -242,7 +242,7 @@ namespace TouchSocket.Dmtp
             try
             {
                 // 实际执行发送操作，64KB是根据业务需求预设的限制
-                await SendAsync(client, protocol, package, 1024 * 64).ConfigureAwait(false);
+                await SendAsync(client, protocol, package, 1024 * 64).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 return true;
             }
             catch

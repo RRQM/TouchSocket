@@ -62,7 +62,7 @@ namespace TouchSocket.Dmtp
         public async Task<IUdpDmtpClient> GetUdpDmtpClientAsync(EndPoint endPoint)
         {
             // 调用内部私有方法来获取 UDP DMTP 客户端实例，且不在调用上下文中等待结果。
-            return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(false);
+            return await this.PrivateGetUdpDmtpClientAsync(endPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         internal Task InternalSendAsync(EndPoint m_endPoint, ReadOnlyMemory<byte> memory)
@@ -87,18 +87,18 @@ namespace TouchSocket.Dmtp
         /// <inheritdoc/>
         protected override async Task OnUdpReceived(UdpReceivedDataEventArgs e)
         {
-            var client = await this.PrivateGetUdpDmtpClientAsync(e.EndPoint).ConfigureAwait(false);
+            var client = await this.PrivateGetUdpDmtpClientAsync(e.EndPoint).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             if (client == null)
             {
                 return;
             }
 
             var message = DmtpMessage.CreateFrom(e.ByteBlock.Span);
-            if (!await client.InputReceivedData(message).ConfigureAwait(false))
+            if (!await client.InputReceivedData(message).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 if (this.PluginManager.Enable)
                 {
-                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureAwait(false);
+                    await this.PluginManager.RaiseAsync(typeof(IDmtpReceivedPlugin), this.Resolver, client, new DmtpMessageEventArgs(message)).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             }
         }
@@ -111,7 +111,7 @@ namespace TouchSocket.Dmtp
                 {
                     Client = this,
                 };
-                if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureAwait(false))
+                if (await udpRpcActor.CreatedAsync(this.PluginManager).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     this.m_udpDmtpClients.TryAdd(endPoint, udpRpcActor);
                 }

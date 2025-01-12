@@ -72,7 +72,7 @@ namespace TouchSocket.Http.WebSockets
             {
                 this.m_receiverResult.IsCompleted = true;
                 this.m_receiverResult.Message = msg;
-                await this.InputReceiveAsync(default).ConfigureAwait(false);
+                await this.InputReceiveAsync(default).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             catch
             {

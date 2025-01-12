@@ -38,7 +38,7 @@ namespace TouchSocket.Http
         /// <summary>
         /// 获取或设置HTTP内容。
         /// </summary>
-        public HttpContent Content { get; set; }
+        public virtual HttpContent Content { get; set; }
 
         /// <summary>
         /// 服务器版本
@@ -268,7 +268,7 @@ namespace TouchSocket.Http
         {
             while (true)
             {
-                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
+                using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
@@ -300,14 +300,14 @@ namespace TouchSocket.Http
 
                 while (true)
                 {
-                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    using (var blockResult = await this.ReadAsync(cancellationToken).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         if (!blockResult.Memory.Equals(ReadOnlyMemory<byte>.Empty))
                         {
                             var memory = blockResult.Memory;
                             await stream.WriteAsync(memory, cancellationToken);
-                            await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(false);
+                            await flowOperator.AddFlowAsync(memory.Length).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         if (blockResult.IsCompleted)
                         {

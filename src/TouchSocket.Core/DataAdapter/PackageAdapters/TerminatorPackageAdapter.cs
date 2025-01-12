@@ -119,7 +119,7 @@ namespace TouchSocket.Core
 
                     //var mes = Encoding.UTF8.GetString(packageByteBlock.Buffer, 0, packageByteBlock.Position);
 
-                    await this.PreviewHandle(packageByteBlock).ConfigureAwait(false);
+                    await this.PreviewHandle(packageByteBlock).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     startIndex = lastIndex + 1;
                 }
                 this.Reset();
@@ -149,7 +149,7 @@ namespace TouchSocket.Core
 
             try
             {
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -180,7 +180,7 @@ namespace TouchSocket.Core
 
             try
             {
-                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(false);
+                await this.GoSendAsync(byteBlock.Memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {
@@ -201,7 +201,7 @@ namespace TouchSocket.Core
             try
             {
                 byteBlock.Position = 0;
-                await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(false);
+                await this.GoReceivedAsync(byteBlock, null).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             finally
             {

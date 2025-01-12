@@ -37,7 +37,7 @@ namespace TouchSocket.Sockets
 
         public async Task<ResponsedData> SendThenResponseAsync(ReadOnlyMemory<byte> memory, CancellationToken token = default)
         {
-            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -45,11 +45,11 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureAwait(false);
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 var byteBlock = receiverResult.ByteBlock;
                                 ByteBlock newByteBlock = default;
@@ -66,7 +66,7 @@ namespace TouchSocket.Sockets
                                 }
                                 else
                                 {
-                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                     {
                                         return response;
                                     }
@@ -79,10 +79,10 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        await this.Client.SendAsync(memory).ConfigureAwait(false);
+                        await this.Client.SendAsync(memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 if (receiverResult.IsCompleted)
                                 {
@@ -104,7 +104,7 @@ namespace TouchSocket.Sockets
                                 }
                                 else
                                 {
-                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                     {
                                         return response;
                                     }
@@ -122,7 +122,7 @@ namespace TouchSocket.Sockets
 
         public async Task<ResponsedData> SendThenResponseAsync(IRequestInfo requestInfo, CancellationToken token)
         {
-            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+            await this.m_semaphoreSlim.WaitAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
             try
             {
@@ -130,11 +130,11 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = session.CreateReceiver())
                     {
-                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureAwait(false);
+                        await session.SendAsync(this.WaitingOptions.RemoteIPHost.EndPoint, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
 
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 var response = new ResponsedData(receiverResult.ByteBlock, receiverResult.RequestInfo);
 
@@ -145,7 +145,7 @@ namespace TouchSocket.Sockets
                                 }
                                 else
                                 {
-                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                     {
                                         return response;
                                     }
@@ -158,10 +158,10 @@ namespace TouchSocket.Sockets
                 {
                     using (var receiver = this.Client.CreateReceiver())
                     {
-                        await this.Client.SendAsync(requestInfo).ConfigureAwait(false);
+                        await this.Client.SendAsync(requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         while (true)
                         {
-                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(false))
+                            using (var receiverResult = await receiver.ReadAsync(token).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                             {
                                 if (receiverResult.IsCompleted)
                                 {
@@ -176,7 +176,7 @@ namespace TouchSocket.Sockets
                                 }
                                 else
                                 {
-                                    if (await filterFunc.Invoke(response).ConfigureAwait(false))
+                                    if (await filterFunc.Invoke(response).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
                                     {
                                         return response;
                                     }

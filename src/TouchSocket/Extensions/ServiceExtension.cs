@@ -65,14 +65,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetListenIPHosts(iPHosts);
-                await service.SetupAsync(config).ConfigureAwait(false);
+                await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 config = service.Config;
                 config.SetListenIPHosts(iPHosts);
             }
-            await service.StartAsync().ConfigureAwait(false);
+            await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion ITcpService
@@ -93,14 +93,14 @@ namespace TouchSocket.Sockets
             {
                 config = new TouchSocketConfig();
                 config.SetBindIPHost(iPHost);
-                await service.SetupAsync(config).ConfigureAwait(false);
+                await service.SetupAsync(config).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else
             {
                 config = service.Config;
                 config.SetBindIPHost(iPHost);
             }
-            await service.StartAsync().ConfigureAwait(false);
+            await service.StartAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext);
         }
 
         #endregion Udp

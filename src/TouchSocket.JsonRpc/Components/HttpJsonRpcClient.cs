@@ -47,13 +47,13 @@ namespace TouchSocket.JsonRpc
             request.SetUrl(this.RemoteIPHost.PathAndQuery);
             request.SetContent(memory);
 
-            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(false))
+            using (var responseResult = await base.ProtectedRequestAsync(request).ConfigureAwait(EasyTask.ContinueOnCapturedContext))
             {
                 var response = responseResult.Response;
 
                 if (response.IsSuccess())
                 {
-                    await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(false), default);
+                    await this.m_jsonRpcActor.InputReceiveAsync(await response.GetContentAsync().ConfigureAwait(EasyTask.ContinueOnCapturedContext), default);
                 }
             }
         }

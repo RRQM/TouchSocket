@@ -87,7 +87,7 @@ namespace TouchSocket.Sockets
             {
                 for (var i = 0; i < testCount; i++)
                 {
-                    await this.m_adapter.SendInputAsync(null, memory).ConfigureAwait(false);
+                    await this.m_adapter.SendInputAsync(null, memory).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
             });
             if (SpinWait.SpinUntil(() => this.m_count == this.m_expectedCount, this.m_millisecondsTimeout))
@@ -110,7 +110,7 @@ namespace TouchSocket.Sockets
                     {
                         try
                         {
-                            await this.m_adapter.ReceivedInput(null, block).ConfigureAwait(false);
+                            await this.m_adapter.ReceivedInput(null, block).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                         }
                         finally
                         {
@@ -129,7 +129,7 @@ namespace TouchSocket.Sockets
         {
             if (this.m_receivedCallBack != null)
             {
-                await this.m_receivedCallBack(byteBlock, requestInfo).ConfigureAwait(false);
+                await this.m_receivedCallBack(byteBlock, requestInfo).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             Interlocked.Increment(ref this.m_count);
         }

@@ -34,7 +34,7 @@ namespace TouchSocket.Core
         }
 
         /// <inheritdoc/>
-        public WaitDataStatus Status { get => this.m_status; }
+        public WaitDataStatus Status => this.m_status;
 
         /// <inheritdoc/>
         public T WaitResult { get; private set; }
@@ -96,19 +96,13 @@ namespace TouchSocket.Core
             this.WaitResult = result;
         }
 
-        /// <summary>
-        /// 等待指定时间
-        /// </summary>
-        /// <param name="timeSpan"></param>
+        /// <inheritdoc/>
         public WaitDataStatus Wait(TimeSpan timeSpan)
         {
             return this.Wait((int)timeSpan.TotalMilliseconds);
         }
 
-        /// <summary>
-        /// 等待指定毫秒
-        /// </summary>
-        /// <param name="millisecond"></param>
+        /// <inheritdoc/>
         public WaitDataStatus Wait(int millisecond)
         {
             if (!this.m_waitHandle.WaitOne(millisecond))
@@ -121,10 +115,13 @@ namespace TouchSocket.Core
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            this.m_status = WaitDataStatus.Disposed;
-            this.WaitResult = default;
-            this.m_waitHandle.SafeDispose();
-            this.m_tokenRegistration.Dispose();
+            if (disposing)
+            {
+                this.m_status = WaitDataStatus.Disposed;
+                this.WaitResult = default;
+                this.m_waitHandle.SafeDispose();
+                this.m_tokenRegistration.Dispose();
+            }
             base.Dispose(disposing);
         }
     }

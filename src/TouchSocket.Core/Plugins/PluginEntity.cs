@@ -61,19 +61,19 @@ namespace TouchSocket.Core
         {
             if (this.m_isDelegate)
             {
-                await this.m_invokeFunc.Invoke(sender, e).ConfigureAwait(false);
+                await this.m_invokeFunc.Invoke(sender, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
             else if (this.m_fromIoc)
             {
                 var plugin = (IPlugin)resolver.Resolve(this.m_pluginType) ?? throw new Exception(Resources.TouchSocketCoreResource.PluginIsNull.Format(this.m_pluginType));
 
                 plugin.Loaded(this.m_pluginManager);
-                await this.m_method.InvokeAsync(plugin, sender, e).ConfigureAwait(false);
+                await this.m_method.InvokeAsync(plugin, sender, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 plugin.Unloaded(this.m_pluginManager);
             }
             else
             {
-                await this.m_method.InvokeAsync(this.m_plugin, sender, e).ConfigureAwait(false);
+                await this.m_method.InvokeAsync(this.m_plugin, sender, e).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
             }
         }
     }

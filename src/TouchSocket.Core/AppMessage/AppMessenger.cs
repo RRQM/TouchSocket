@@ -157,7 +157,7 @@ namespace TouchSocket.Core
                         clear.Add(item);
                         continue;
                     }
-                    await item.InvokeAsync(item.MessageObject, parameters).ConfigureAwait(false);
+                    await item.InvokeAsync(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                 }
 
                 foreach (var item in clear)
@@ -196,11 +196,11 @@ namespace TouchSocket.Core
 
                     if (i == list.Count - 1)
                     {
-                        result = await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(false);
+                        result = await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                     else
                     {
-                        await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(false);
+                        await item.InvokeAsync<T>(item.MessageObject, parameters).ConfigureAwait(EasyTask.ContinueOnCapturedContext);
                     }
                 }
 

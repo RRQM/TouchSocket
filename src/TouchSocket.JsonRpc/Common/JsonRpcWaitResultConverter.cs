@@ -20,12 +20,12 @@ namespace TouchSocket.JsonRpc
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(InternalJsonRpcWaitResult);
+            return objectType == typeof(JsonRpcWaitResult);
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var jsonRpcWaitResult = new InternalJsonRpcWaitResult();
+            var jsonRpcWaitResult = new JsonRpcWaitResult();
             var jsonObject = JObject.Load(reader);
             jsonRpcWaitResult.Jsonrpc = (string)jsonObject["jsonrpc"];
             jsonRpcWaitResult.Id = (int?)jsonObject["id"];
@@ -44,7 +44,7 @@ namespace TouchSocket.JsonRpc
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var jsonRpcWaitResult = (InternalJsonRpcWaitResult)value;
+            var jsonRpcWaitResult = (JsonRpcWaitResult)value;
             writer.WriteStartObject();
             writer.WritePropertyName("jsonrpc");
             writer.WriteValue(jsonRpcWaitResult.Jsonrpc);
