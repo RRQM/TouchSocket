@@ -5,6 +5,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="TouchSocketPro.Dmtp" Version="3.0.10" />
+		<PackageReference Include="TouchSocket.Dmtp" Version="3.0.11" />
+		<PackageReference Include="TouchSocket.JsonRpc" Version="3.0.11" />
 	</ItemGroup>
 </Project>

@@ -13,12 +13,14 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TouchSocket.Core;
 using TouchSocket.Dmtp;
 using TouchSocket.Dmtp.Rpc;
+using TouchSocket.JsonRpc;
 using TouchSocket.Rpc;
 using TouchSocket.Sockets;
 
@@ -26,86 +28,103 @@ namespace UnityServerConsoleApp
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        static UdpSession udpService = new UdpSession();
+        static HttpDmtpService httpDmtpService = new HttpDmtpService();
+        static TcpService tcpService = new TcpService();
+
+        private static async Task Main(string[] args)
         {
             //unitypackage在本级目录下。
-            StartTcpService(7789);
-            StartTcpRpcService(7790);
-            StartUdpService(7791);
+            await StartTcpService(7789);
+            await StartDmtpService(7790);
+            await StartUdpService(7791);
             Console.ReadKey();
         }
 
-        private static void StartUdpService(int port)
+
+        private static async Task StartUdpService(int port)
         {
-            var udpService = new UdpSession();
+
             udpService.Received = async (c, e) =>
             {
                 await udpService.SendAsync(e.EndPoint, e.ByteBlock.Memory);
                 Console.WriteLine($"收到：{e.ByteBlock.Span.ToString(Encoding.UTF8)}");
             };
-            udpService.SetupAsync(new TouchSocketConfig()
-                 .SetBindIPHost(new IPHost(port))
-                 .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
-                                                                                     //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
-                 .ConfigureContainer(a =>
-                 {
-                     a.AddConsoleLogger();//添加一个日志注入
-                 }));
-            udpService.StartAsync();
+            await udpService.SetupAsync(new TouchSocketConfig()
+                   .SetBindIPHost(new IPHost(port))
+                   .SetUdpDataHandlingAdapter(() => new NormalUdpDataHandlingAdapter())//常规udp
+                                                                                       //.SetUdpDataHandlingAdapter(() => new UdpPackageAdapter())//Udp包模式，支持超过64k数据。
+                   .ConfigureContainer(a =>
+                   {
+                       a.AddConsoleLogger();//添加一个日志注入
+                   }));
+            await udpService.StartAsync();
 
             udpService.Logger.Info($"UdpService已启动，端口：{port}");
         }
 
-        private static void StartTcpRpcService(int port)
+
+        private static async Task StartDmtpService(int port)
         {
-            var service = new TcpDmtpService();
+
             var config = new TouchSocketConfig()//配置
-                   .SetListenIPHosts(new IPHost[] { new IPHost(port) })
+                   .SetListenIPHosts(port)
                    .ConfigureContainer(a =>
                    {
                        a.AddConsoleLogger();//注册一个日志组
+
+                       //注册rpc服务
                        a.AddRpcStore(store =>
                        {
                            store.RegisterServer<MyRpcServer>();
 #if DEBUG
-                           var code = store.GetProxyCodes("UnityRpcProxy", typeof(DmtpRpcAttribute));
+                           var code = store.GetProxyCodes("UnityRpcProxy", typeof(DmtpRpcAttribute), typeof(JsonRpcAttribute));
                            File.WriteAllText("../../../UnityRpcProxy.cs", code);
 #endif
                        });
                    })
                    .ConfigurePlugins(a =>
                    {
+                       //启用dmtp rpc插件
                        a.UseDmtpRpc();
+
+                       //启用websocket插件
+                       a.UseWebSocket()
+                       .SetWSUrl("/ws");
+
+                       //启用json rpc插件
+                       a.UseWebSocketJsonRpc()
+                       .SetAllowJsonRpc((websocket, context) => true);//让所有请求WebSocket都加载JsonRpc插件
 
                        a.Add<MyTcpRpcPlguin>();
                    })
                    .SetDmtpOption(new DmtpOption()
                    {
-                       VerifyToken = "Dmtp"
+                       VerifyToken = "Dmtp"//设置验证token
                    });
 
-            service.SetupAsync(config);
-            service.StartAsync();
+            await httpDmtpService.SetupAsync(config);
+            await httpDmtpService.StartAsync();
 
-            service.Logger.Info($"{service.GetType().Name}已启动，监听端口：{port}");
+            httpDmtpService.Logger.Info($"{httpDmtpService.GetType().Name}已启动，监听端口：{port}");
         }
 
-        private static void StartTcpService(int port)
+        private static async Task StartTcpService(int port)
         {
-            var service = new TcpService();
-            service.SetupAsync(new TouchSocketConfig()//载入配置
-                .SetListenIPHosts(new IPHost(port))
-                .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
-                .ConfigurePlugins(a =>
-                {
-                    a.Add<MyPlguin>();//此处可以添加插件
-                })
-                .ConfigureContainer(a =>
-                {
-                    a.AddConsoleLogger();//添加一个日志注入
-                }));
-            service.StartAsync();//启动
-            service.Logger.Info($"Tcp服务器已启动，端口{port}");
+
+            await tcpService.SetupAsync(new TouchSocketConfig()//载入配置
+                 .SetListenIPHosts(new IPHost(port))
+                 .SetTcpDataHandlingAdapter(() => new FixedHeaderPackageAdapter())
+                 .ConfigurePlugins(a =>
+                 {
+                     a.Add<MyPlguin>();//此处可以添加插件
+                 })
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();//添加一个日志注入
+                 }));
+            await tcpService.StartAsync();//启动
+            tcpService.Logger.Info($"Tcp服务器已启动，端口{port}");
         }
     }
 
@@ -142,9 +161,7 @@ namespace UnityServerConsoleApp
         }
     }
 
-    /// <summary>
-    /// 单例服务
-    /// </summary>
+
     public partial class MyRpcServer : RpcServer
     {
         public MyRpcServer(ILog logger)
@@ -161,19 +178,21 @@ namespace UnityServerConsoleApp
         private readonly ILog m_logger;
 
         [Description("登录")]
-        [DmtpRpc(MethodInvoke = true)]
+        [DmtpRpc(MethodInvoke = true, MethodName = "DmtpRpc_{0}")]
+        [JsonRpc(MethodInvoke = true, MethodName = "JsonRpc_{0}")]
         public MyLoginModelResult Login(ICallContext callContext, MyLoginModel model)
         {
             if (model.Account == "123" && model.Password == "abc")
             {
-                return new MyLoginModelResult() { Status = 1, Message = "Success" };
+                return new MyLoginModelResult() { ResultCode = ResultCode.Success, Message = "Success" };
             }
 
-            return new MyLoginModelResult() { Status = 2, Message = "账号或密码错误" };
+            return new MyLoginModelResult() { ResultCode = ResultCode.Fail, Message = "账号或密码错误" };
         }
 
         [Description("性能测试")]
-        [DmtpRpc(MethodInvoke = true)]
+        [DmtpRpc(MethodInvoke = true, MethodName = "DmtpRpc_{0}")]
+        [JsonRpc(MethodInvoke = true, MethodName = "JsonRpc_{0}")]
         public int Performance(int i)
         {
             Interlocked.Increment(ref this.count);
@@ -190,7 +209,8 @@ namespace UnityServerConsoleApp
 
     public class MyLoginModelResult
     {
-        public byte Status { get; set; }
+        public ResultCode ResultCode { get; set; }
         public string Message { get; set; }
     }
+
 }
